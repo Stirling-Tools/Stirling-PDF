@@ -96,7 +96,11 @@ const AddFileCard = ({
         <div className={styles.addFileContent}>
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
-            <Wordmark alt="Stirling PDF" muted style={{ height: "2.2rem", width: "auto" }} />
+            <Wordmark
+              alt="Stirling PDF"
+              muted
+              style={{ height: "2.2rem", width: "auto" }}
+            />
           </Group>
 
           {/* Add Files + Native Upload Buttons - styled like LandingPage */}

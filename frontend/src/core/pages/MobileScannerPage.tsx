@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Card } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Stack,
+  Text,
+  Group,
+  Alert,
+  Progress,
+  Switch,
+  Card,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -31,7 +41,9 @@ export default function MobileScannerPage() {
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
 
-  const [mode, setMode] = useState<"choice" | "camera" | "file" | null>("choice");
+  const [mode, setMode] = useState<"choice" | "camera" | "file" | null>(
+    "choice",
+  );
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [currentPreview, setCurrentPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -66,13 +78,20 @@ export default function MobileScannerPage() {
       setLoadingStatus("Validating session...");
       if (!sessionId) {
         setSessionValid(false);
-        setSessionError(t("mobileScanner.noSessionMessage", "Session not found. Please try again."));
+        setSessionError(
+          t(
+            "mobileScanner.noSessionMessage",
+            "Session not found. Please try again.",
+          ),
+        );
         setLoadingStatus("Session validation failed");
         return;
       }
 
       try {
-        const response = await fetch(`/api/v1/mobile-scanner/validate-session/${sessionId}`);
+        const response = await fetch(
+          `/api/v1/mobile-scanner/validate-session/${sessionId}`,
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -83,18 +102,33 @@ export default function MobileScannerPage() {
             console.log("Session validated successfully:", data);
           } else {
             setSessionValid(false);
-            setSessionError(t("mobileScanner.sessionExpired", "This session has expired. Please refresh and try again."));
+            setSessionError(
+              t(
+                "mobileScanner.sessionExpired",
+                "This session has expired. Please refresh and try again.",
+              ),
+            );
             setLoadingStatus("Session expired ✗");
           }
         } else {
           setSessionValid(false);
-          setSessionError(t("mobileScanner.sessionNotFound", "Session not found. Please refresh and try again."));
+          setSessionError(
+            t(
+              "mobileScanner.sessionNotFound",
+              "Session not found. Please refresh and try again.",
+            ),
+          );
           setLoadingStatus("Session not found ✗");
         }
       } catch (err) {
         console.error("Failed to validate session:", err);
         setSessionValid(false);
-        setSessionError(t("mobileScanner.sessionValidationError", "Unable to verify session. Please try again."));
+        setSessionError(
+          t(
+            "mobileScanner.sessionValidationError",
+            "Unable to verify session. Please try again.",
+          ),
+        );
         setLoadingStatus("Session validation error: " + (err as Error).message);
       }
     };
@@ -113,12 +147,17 @@ export default function MobileScannerPage() {
         retryCount++;
         if (retryCount < MAX_RETRIES) {
           if (retryCount % 10 === 1) {
-            setLoadingStatus(`Loading OpenCV... (${retryCount}/${MAX_RETRIES})`);
-            console.log(`[${retryCount}/${MAX_RETRIES}] Waiting for OpenCV to load...`);
+            setLoadingStatus(
+              `Loading OpenCV... (${retryCount}/${MAX_RETRIES})`,
+            );
+            console.log(
+              `[${retryCount}/${MAX_RETRIES}] Waiting for OpenCV to load...`,
+            );
           }
           setTimeout(initScanner, 100);
         } else {
-          const error = "OpenCV failed to load after 5 seconds. Check that /vendor/jscanify/opencv.js is accessible.";
+          const error =
+            "OpenCV failed to load after 5 seconds. Check that /vendor/jscanify/opencv.js is accessible.";
           setLoadingStatus("OpenCV load failed ✗");
           console.error(error);
         }
@@ -129,12 +168,17 @@ export default function MobileScannerPage() {
         retryCount++;
         if (retryCount < MAX_RETRIES) {
           if (retryCount % 10 === 1) {
-            setLoadingStatus(`Loading jscanify... (${retryCount}/${MAX_RETRIES})`);
-            console.log(`[${retryCount}/${MAX_RETRIES}] Waiting for jscanify to load...`);
+            setLoadingStatus(
+              `Loading jscanify... (${retryCount}/${MAX_RETRIES})`,
+            );
+            console.log(
+              `[${retryCount}/${MAX_RETRIES}] Waiting for jscanify to load...`,
+            );
           }
           setTimeout(initScanner, 100);
         } else {
-          const error = "jscanify failed to load after 5 seconds. Check that /vendor/jscanify/jscanify.js is accessible.";
+          const error =
+            "jscanify failed to load after 5 seconds. Check that /vendor/jscanify/jscanify.js is accessible.";
           setLoadingStatus("jscanify load failed ✗");
           console.error(error);
         }
@@ -164,11 +208,14 @@ export default function MobileScannerPage() {
     );
 
     if (mode === "camera" && !cameraError && !currentPreview) {
-      console.log("[Mobile Scanner] Camera effect: Starting camera initialization");
+      console.log(
+        "[Mobile Scanner] Camera effect: Starting camera initialization",
+      );
 
       // Check if mediaDevices API is available (requires HTTPS or localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const error = "MediaDevices API not available - requires HTTPS or localhost";
+        const error =
+          "MediaDevices API not available - requires HTTPS or localhost";
         console.error(error);
         setLoadingStatus("Camera API not available ✗");
         setCameraError(
@@ -195,7 +242,9 @@ export default function MobileScannerPage() {
           audio: false,
         })
         .then(async (stream) => {
-          console.log("[Mobile Scanner] Camera permission granted, stream received");
+          console.log(
+            "[Mobile Scanner] Camera permission granted, stream received",
+          );
           streamRef.current = stream;
           if (videoRef.current) {
             const video = videoRef.current;
@@ -203,8 +252,15 @@ export default function MobileScannerPage() {
 
             // Wait for video metadata to load before marking camera as ready
             const handleLoadedMetadata = () => {
-              console.log("[Mobile Scanner] Video metadata loaded, dimensions:", video.videoWidth, "x", video.videoHeight);
-              setLoadingStatus(`Camera ready: ${video.videoWidth}x${video.videoHeight} ✓`);
+              console.log(
+                "[Mobile Scanner] Video metadata loaded, dimensions:",
+                video.videoWidth,
+                "x",
+                video.videoHeight,
+              );
+              setLoadingStatus(
+                `Camera ready: ${video.videoWidth}x${video.videoHeight} ✓`,
+              );
 
               // Signal that camera is ready - this will trigger detection effect
               console.log("[Mobile Scanner] Setting cameraReady = true");
@@ -217,13 +273,20 @@ export default function MobileScannerPage() {
               handleLoadedMetadata();
             } else {
               // Wait for loadedmetadata event
-              video.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
+              video.addEventListener("loadedmetadata", handleLoadedMetadata, {
+                once: true,
+              });
             }
 
             // Log actual resolution we got from stream settings
             const videoTrack = stream.getVideoTracks()[0];
             const settings = videoTrack.getSettings();
-            console.log("[Mobile Scanner] Camera stream settings:", settings.width, "x", settings.height);
+            console.log(
+              "[Mobile Scanner] Camera stream settings:",
+              settings.width,
+              "x",
+              settings.height,
+            );
 
             // Configure camera capabilities for document scanning
             try {
@@ -231,13 +294,19 @@ export default function MobileScannerPage() {
               const constraints: any = { advanced: [] };
 
               // 1. Enable continuous autofocus
-              if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
+              if (
+                capabilities.focusMode &&
+                capabilities.focusMode.includes("continuous")
+              ) {
                 constraints.advanced.push({ focusMode: "continuous" });
                 console.log("✓ Continuous autofocus enabled");
               }
 
               // 2. Enable continuous auto-exposure for varying lighting
-              if (capabilities.exposureMode && capabilities.exposureMode.includes("continuous")) {
+              if (
+                capabilities.exposureMode &&
+                capabilities.exposureMode.includes("continuous")
+              ) {
                 constraints.advanced.push({ exposureMode: "continuous" });
                 console.log("✓ Auto-exposure enabled");
               }
@@ -260,7 +329,12 @@ export default function MobileScannerPage() {
         .catch((err) => {
           console.error("Camera error:", err);
           setLoadingStatus("Camera access denied ✗");
-          setCameraError(t("mobileScanner.cameraAccessDenied", "Camera access denied. Please enable camera access."));
+          setCameraError(
+            t(
+              "mobileScanner.cameraAccessDenied",
+              "Camera access denied. Please enable camera access.",
+            ),
+          );
           // Auto-switch to file upload if camera fails
           setMode("file");
         });
@@ -297,21 +371,34 @@ export default function MobileScannerPage() {
       }
     }
 
-    if (mode === "camera" && autoEnhance && openCvReady && cameraReady && scannerRef.current && !currentPreview) {
+    if (
+      mode === "camera" &&
+      autoEnhance &&
+      openCvReady &&
+      cameraReady &&
+      scannerRef.current &&
+      !currentPreview
+    ) {
       const startHighlighting = () => {
         console.log("[Mobile Scanner] startHighlighting() called");
 
         if (!videoRef.current || !highlightCanvasRef.current) {
           setLoadingStatus("Missing video/canvas refs ✗");
           console.error(
-            "[Mobile Scanner] Missing refs: video=" + !!videoRef.current + ", canvas=" + !!highlightCanvasRef.current,
+            "[Mobile Scanner] Missing refs: video=" +
+              !!videoRef.current +
+              ", canvas=" +
+              !!highlightCanvasRef.current,
           );
           return;
         }
         if (!videoRef.current.videoWidth || !videoRef.current.videoHeight) {
           setLoadingStatus("Video has no dimensions ✗");
           console.error(
-            "[Mobile Scanner] Missing video dimensions: " + videoRef.current.videoWidth + "x" + videoRef.current.videoHeight,
+            "[Mobile Scanner] Missing video dimensions: " +
+              videoRef.current.videoWidth +
+              "x" +
+              videoRef.current.videoHeight,
           );
           return;
         }
@@ -320,12 +407,18 @@ export default function MobileScannerPage() {
         const highlightCanvas = highlightCanvasRef.current;
         setLoadingStatus("Detection active ✓");
         console.log(
-          "[Mobile Scanner] Starting highlighting loop for " + video.videoWidth + "x" + video.videoHeight + " video",
+          "[Mobile Scanner] Starting highlighting loop for " +
+            video.videoWidth +
+            "x" +
+            video.videoHeight +
+            " video",
         );
 
         // Create low-res detection canvas with optimized context for frequent pixel reading
         const detectionCanvas = document.createElement("canvas");
-        const detectionCtx = detectionCanvas.getContext("2d", { willReadFrequently: true });
+        const detectionCtx = detectionCanvas.getContext("2d", {
+          willReadFrequently: true,
+        });
         if (!detectionCtx) return;
 
         // Calculate scaled dimensions for detection (160px wide max)
@@ -338,17 +431,23 @@ export default function MobileScannerPage() {
         highlightCanvas.width = DETECTION_WIDTH;
         highlightCanvas.height = Math.round(video.videoHeight * scale);
 
-        console.log(`[Mobile Scanner] Video: ${video.videoWidth}x${video.videoHeight}`);
+        console.log(
+          `[Mobile Scanner] Video: ${video.videoWidth}x${video.videoHeight}`,
+        );
         console.log(
           `[Mobile Scanner] Detection: ${detectionCanvas.width}x${detectionCanvas.height} (${Math.round(scale * 100)}%)`,
         );
-        console.log(`[Mobile Scanner] Highlight canvas: ${highlightCanvas.width}x${highlightCanvas.height}`);
+        console.log(
+          `[Mobile Scanner] Highlight canvas: ${highlightCanvas.width}x${highlightCanvas.height}`,
+        );
         console.log(`[Mobile Scanner] Starting interval at 1 FPS`);
 
         // Set highlight canvas to match video for vector drawing
         highlightCanvas.width = video.videoWidth;
         highlightCanvas.height = video.videoHeight;
-        const highlightCtx = highlightCanvas.getContext("2d", { willReadFrequently: true });
+        const highlightCtx = highlightCanvas.getContext("2d", {
+          willReadFrequently: true,
+        });
         if (!highlightCtx) return;
 
         // Use requestAnimationFrame with adaptive throttle based on device performance
@@ -370,7 +469,13 @@ export default function MobileScannerPage() {
             try {
               // Step 1: Copy video to low-res detection canvas
               const copyStart = performance.now();
-              detectionCtx.drawImage(video, 0, 0, detectionCanvas.width, detectionCanvas.height);
+              detectionCtx.drawImage(
+                video,
+                0,
+                0,
+                detectionCanvas.width,
+                detectionCanvas.height,
+              );
               const copyTime = performance.now() - copyStart;
 
               // Step 2: Simple jscanify detection
@@ -390,7 +495,12 @@ export default function MobileScannerPage() {
 
               // Step 3: Draw corner lines on full-res canvas
               const drawStart = performance.now();
-              highlightCtx.clearRect(0, 0, highlightCanvas.width, highlightCanvas.height);
+              highlightCtx.clearRect(
+                0,
+                0,
+                highlightCanvas.width,
+                highlightCanvas.height,
+              );
 
               // Draw lines if corners detected
               if (
@@ -402,10 +512,22 @@ export default function MobileScannerPage() {
               ) {
                 // Scale corner points from low-res to full-res
                 const scaleFactor = video.videoWidth / detectionCanvas.width;
-                const tl = { x: corners.topLeftCorner.x * scaleFactor, y: corners.topLeftCorner.y * scaleFactor };
-                const tr = { x: corners.topRightCorner.x * scaleFactor, y: corners.topRightCorner.y * scaleFactor };
-                const br = { x: corners.bottomRightCorner.x * scaleFactor, y: corners.bottomRightCorner.y * scaleFactor };
-                const bl = { x: corners.bottomLeftCorner.x * scaleFactor, y: corners.bottomLeftCorner.y * scaleFactor };
+                const tl = {
+                  x: corners.topLeftCorner.x * scaleFactor,
+                  y: corners.topLeftCorner.y * scaleFactor,
+                };
+                const tr = {
+                  x: corners.topRightCorner.x * scaleFactor,
+                  y: corners.topRightCorner.y * scaleFactor,
+                };
+                const br = {
+                  x: corners.bottomRightCorner.x * scaleFactor,
+                  y: corners.bottomRightCorner.y * scaleFactor,
+                };
+                const bl = {
+                  x: corners.bottomLeftCorner.x * scaleFactor,
+                  y: corners.bottomLeftCorner.y * scaleFactor,
+                };
 
                 // Draw green lines connecting corners
                 highlightCtx.strokeStyle = "#00FF00";
@@ -433,7 +555,9 @@ export default function MobileScannerPage() {
 
               // Adaptive performance adjustment (after warmup period)
               if (frameCount > 5 && detectionTimings.length >= 5) {
-                const avgTime = detectionTimings.reduce((a, b) => a + b, 0) / detectionTimings.length;
+                const avgTime =
+                  detectionTimings.reduce((a, b) => a + b, 0) /
+                  detectionTimings.length;
 
                 // Adjust detection interval based on average performance
                 if (avgTime < 20) {
@@ -458,7 +582,8 @@ export default function MobileScannerPage() {
               }
 
               if (frameCount === 10) {
-                const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+                const avg =
+                  frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
                 console.log(
                   `[Mobile Scanner] Average of first 10 frames: ${Math.round(avg)}ms - Adaptive rate: ${Math.round(1000 / detectionInterval)} FPS`,
                 );
@@ -493,7 +618,11 @@ export default function MobileScannerPage() {
           `[Mobile Scanner] Video check: readyState=${video.readyState}, width=${video.videoWidth}, height=${video.videoHeight}`,
         );
 
-        if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+        if (
+          video.readyState >= 2 &&
+          video.videoWidth > 0 &&
+          video.videoHeight > 0
+        ) {
           setLoadingStatus("Detection starting... ✓");
           console.log("[Mobile Scanner] ✓ Video ready, starting detection now");
           startHighlighting();
@@ -501,11 +630,15 @@ export default function MobileScannerPage() {
           // Retry up to 50 times (5 seconds)
           retryCount++;
           setLoadingStatus(`Waiting for video... (${retryCount}/50)`);
-          console.log(`[Mobile Scanner] Video not ready yet, retry ${retryCount}/50...`);
+          console.log(
+            `[Mobile Scanner] Video not ready yet, retry ${retryCount}/50...`,
+          );
           retryTimeout = window.setTimeout(startWhenReady, 100);
         } else {
           setLoadingStatus("Video failed to load ✗");
-          console.error("[Mobile Scanner] ✗ Video failed to become ready after 5 seconds");
+          console.error(
+            "[Mobile Scanner] ✗ Video failed to become ready after 5 seconds",
+          );
         }
       };
 
@@ -567,7 +700,9 @@ export default function MobileScannerPage() {
         try {
           // Create low-res canvas for detection (faster processing)
           const detectionCanvas = document.createElement("canvas");
-          const detectionCtx = detectionCanvas.getContext("2d", { willReadFrequently: true });
+          const detectionCtx = detectionCanvas.getContext("2d", {
+            willReadFrequently: true,
+          });
           if (!detectionCtx) throw new Error("Cannot create detection context");
 
           const scale = DETECTION_WIDTH / video.videoWidth;
@@ -575,7 +710,13 @@ export default function MobileScannerPage() {
           detectionCanvas.height = Math.round(video.videoHeight * scale);
 
           // Draw downscaled image for detection
-          detectionCtx.drawImage(video, 0, 0, detectionCanvas.width, detectionCanvas.height);
+          detectionCtx.drawImage(
+            video,
+            0,
+            0,
+            detectionCanvas.width,
+            detectionCanvas.height,
+          );
 
           // Run detection on low-res image
           const mat = (window as any).cv.imread(detectionCanvas);
@@ -607,27 +748,46 @@ export default function MobileScannerPage() {
               };
 
               // Use scaled corners for extraction
-              const { topLeftCorner, topRightCorner, bottomLeftCorner, bottomRightCorner } = scaledCorners;
+              const {
+                topLeftCorner,
+                topRightCorner,
+                bottomLeftCorner,
+                bottomRightCorner,
+              } = scaledCorners;
 
               console.log("Document detected at full resolution:", {
                 corners: scaledCorners,
               });
 
               // Calculate width and height of the document
-              const topWidth = Math.hypot(topRightCorner.x - topLeftCorner.x, topRightCorner.y - topLeftCorner.y);
+              const topWidth = Math.hypot(
+                topRightCorner.x - topLeftCorner.x,
+                topRightCorner.y - topLeftCorner.y,
+              );
               const bottomWidth = Math.hypot(
                 bottomRightCorner.x - bottomLeftCorner.x,
                 bottomRightCorner.y - bottomLeftCorner.y,
               );
-              const leftHeight = Math.hypot(bottomLeftCorner.x - topLeftCorner.x, bottomLeftCorner.y - topLeftCorner.y);
-              const rightHeight = Math.hypot(bottomRightCorner.x - topRightCorner.x, bottomRightCorner.y - topRightCorner.y);
+              const leftHeight = Math.hypot(
+                bottomLeftCorner.x - topLeftCorner.x,
+                bottomLeftCorner.y - topLeftCorner.y,
+              );
+              const rightHeight = Math.hypot(
+                bottomRightCorner.x - topRightCorner.x,
+                bottomRightCorner.y - topRightCorner.y,
+              );
 
               // Use average dimensions to maintain proper aspect ratio
               const docWidth = Math.round((topWidth + bottomWidth) / 2);
               const docHeight = Math.round((leftHeight + rightHeight) / 2);
 
               // Extract paper from full-resolution canvas with scaled corner points
-              const resultCanvas = scannerRef.current.extractPaper(canvas, docWidth, docHeight, scaledCorners);
+              const resultCanvas = scannerRef.current.extractPaper(
+                canvas,
+                docWidth,
+                docHeight,
+                scaledCorners,
+              );
 
               // Clean up Mat
               mat.delete();
@@ -645,7 +805,10 @@ export default function MobileScannerPage() {
             finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
           }
         } catch (err) {
-          console.warn("jscanify processing failed, using original image:", err);
+          console.warn(
+            "jscanify processing failed, using original image:",
+            err,
+          );
           finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
         }
       } else {
@@ -659,21 +822,24 @@ export default function MobileScannerPage() {
     }
   }, [autoEnhance, openCvReady]);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-    const file = files[0];
-    const reader = new FileReader();
+      const file = files[0];
+      const reader = new FileReader();
 
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setCurrentPreview(event.target.result as string);
-      }
-    };
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setCurrentPreview(event.target.result as string);
+        }
+      };
 
-    reader.readAsDataURL(file);
-  }, []);
+      reader.readAsDataURL(file);
+    },
+    [],
+  );
 
   const addToBatch = useCallback(() => {
     if (currentPreview) {
@@ -683,7 +849,9 @@ export default function MobileScannerPage() {
   }, [currentPreview]);
 
   const uploadImages = useCallback(async () => {
-    const imagesToUpload = currentPreview ? [currentPreview, ...capturedImages] : capturedImages;
+    const imagesToUpload = currentPreview
+      ? [currentPreview, ...capturedImages]
+      : capturedImages;
 
     if (imagesToUpload.length === 0) return;
     if (!sessionId) return;
@@ -699,7 +867,9 @@ export default function MobileScannerPage() {
         const dataUrl = imagesToUpload[i];
         const response = await fetch(dataUrl);
         const blob = await response.blob();
-        const file = new File([blob], `scan-${Date.now()}-${i}.jpg`, { type: "image/jpeg" });
+        const file = new File([blob], `scan-${Date.now()}-${i}.jpg`, {
+          type: "image/jpeg",
+        });
         files.push(file);
         setUploadProgress(((i + 1) / (imagesToUpload.length + 1)) * 50); // 0-50% for conversion
       }
@@ -710,10 +880,13 @@ export default function MobileScannerPage() {
         formData.append("files", file);
       });
 
-      const uploadResponse = await fetch(`/api/v1/mobile-scanner/upload/${sessionId}`, {
-        method: "POST",
-        body: formData,
-      });
+      const uploadResponse = await fetch(
+        `/api/v1/mobile-scanner/upload/${sessionId}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
       if (!uploadResponse.ok) {
         throw new Error("Upload failed");
@@ -732,7 +905,9 @@ export default function MobileScannerPage() {
       }, 1500);
     } catch (err) {
       console.error("Upload failed:", err);
-      setUploadError(t("mobileScanner.uploadFailed", "Upload failed. Please try again."));
+      setUploadError(
+        t("mobileScanner.uploadFailed", "Upload failed. Please try again."),
+      );
     } finally {
       setIsUploading(false);
     }
@@ -764,8 +939,18 @@ export default function MobileScannerPage() {
   // Show loading while validating
   if (sessionValid === null) {
     return (
-      <Box p="xl" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-        <Text size="lg">{t("mobileScanner.validating", "Validating session...")}</Text>
+      <Box
+        p="xl"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1rem",
+        }}
+      >
+        <Text size="lg">
+          {t("mobileScanner.validating", "Validating session...")}
+        </Text>
       </Box>
     );
   }
@@ -774,8 +959,15 @@ export default function MobileScannerPage() {
   if (!sessionValid || !sessionId) {
     return (
       <Box p="xl">
-        <Alert color="red" title={t("mobileScanner.sessionInvalid", "Session Error")}>
-          {sessionError || t("mobileScanner.noSessionMessage", "Session not found. Please try again.")}
+        <Alert
+          color="red"
+          title={t("mobileScanner.sessionInvalid", "Session Error")}
+        >
+          {sessionError ||
+            t(
+              "mobileScanner.noSessionMessage",
+              "Session not found. Please try again.",
+            )}
         </Alert>
       </Box>
     );
@@ -793,12 +985,17 @@ export default function MobileScannerPage() {
           padding: "2rem",
         }}
       >
-        <CheckCircleRoundedIcon style={{ fontSize: "4rem", color: "var(--mantine-color-green-6)" }} />
+        <CheckCircleRoundedIcon
+          style={{ fontSize: "4rem", color: "var(--mantine-color-green-6)" }}
+        />
         <Text size="xl" fw="bold" mt="md">
           {t("mobileScanner.uploadSuccess", "Upload Successful!")}
         </Text>
         <Text size="sm" c="dimmed">
-          {t("mobileScanner.uploadSuccessMessage", "Your images have been transferred.")}
+          {t(
+            "mobileScanner.uploadSuccessMessage",
+            "Your images have been transferred.",
+          )}
         </Text>
       </Box>
     );
@@ -822,7 +1019,10 @@ export default function MobileScannerPage() {
         }}
       >
         <Group gap="sm" align="center">
-          <LogoIcon alt={t("home.mobile.brandAlt", "Stirling PDF logo")} style={{ height: "32px", width: "32px" }} />
+          <LogoIcon
+            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
+            style={{ height: "32px", width: "32px" }}
+          />
           <Wordmark alt="Stirling PDF" style={{ height: "24px" }} />
         </Group>
       </Box>
@@ -832,7 +1032,9 @@ export default function MobileScannerPage() {
         <Box
           p="xs"
           style={{
-            background: loadingStatus.includes("✗") ? "var(--mantine-color-red-1)" : "var(--mantine-color-blue-1)",
+            background: loadingStatus.includes("✗")
+              ? "var(--mantine-color-red-1)"
+              : "var(--mantine-color-blue-1)",
             borderBottom: "1px solid var(--border-subtle)",
             fontSize: "0.85rem",
             fontFamily: "monospace",
@@ -845,7 +1047,12 @@ export default function MobileScannerPage() {
 
       {uploadError && (
         <Box p="md">
-          <Alert color="red" icon={<ErrorRoundedIcon />} onClose={() => setUploadError(null)} withCloseButton>
+          <Alert
+            color="red"
+            icon={<ErrorRoundedIcon />}
+            onClose={() => setUploadError(null)}
+            withCloseButton
+          >
             {uploadError}
           </Alert>
         </Box>
@@ -870,13 +1077,21 @@ export default function MobileScannerPage() {
 
       {/* Choice screen */}
       {mode === "choice" && !currentPreview && (
-        <Stack gap="lg" p="xl" align="center" style={{ maxWidth: "500px", margin: "0 auto" }}>
+        <Stack
+          gap="lg"
+          p="xl"
+          align="center"
+          style={{ maxWidth: "500px", margin: "0 auto" }}
+        >
           <Stack gap="xs" align="center">
             <Text size="xl" fw={700} ta="center">
               {t("mobileScanner.chooseMethod", "Choose Upload Method")}
             </Text>
             <Text size="sm" c="dimmed" ta="center">
-              {t("mobileScanner.chooseMethodDescription", "Select how you want to scan and upload documents")}
+              {t(
+                "mobileScanner.chooseMethodDescription",
+                "Select how you want to scan and upload documents",
+              )}
             </Text>
           </Stack>
 
@@ -899,7 +1114,12 @@ export default function MobileScannerPage() {
               }}
             >
               <Stack align="center" gap="md">
-                <PhotoCameraRoundedIcon style={{ fontSize: "3rem", color: "var(--mantine-color-blue-6)" }} />
+                <PhotoCameraRoundedIcon
+                  style={{
+                    fontSize: "3rem",
+                    color: "var(--mantine-color-blue-6)",
+                  }}
+                />
                 <Text size="lg" fw={600}>
                   {t("mobileScanner.camera", "Camera")}
                 </Text>
@@ -930,12 +1150,20 @@ export default function MobileScannerPage() {
               }}
             >
               <Stack align="center" gap="md">
-                <UploadRoundedIcon style={{ fontSize: "3rem", color: "var(--mantine-color-green-6)" }} />
+                <UploadRoundedIcon
+                  style={{
+                    fontSize: "3rem",
+                    color: "var(--mantine-color-green-6)",
+                  }}
+                />
                 <Text size="lg" fw={600}>
                   {t("mobileScanner.fileUpload", "File Upload")}
                 </Text>
                 <Text size="sm" c="dimmed" ta="center">
-                  {t("mobileScanner.fileDescription", "Upload existing photos or documents from your device")}
+                  {t(
+                    "mobileScanner.fileDescription",
+                    "Upload existing photos or documents from your device",
+                  )}
                 </Text>
               </Stack>
             </Card>
@@ -945,7 +1173,14 @@ export default function MobileScannerPage() {
 
       {/* Camera interface */}
       {mode === "camera" && !currentPreview && (
-        <Box style={{ position: "relative", height: "calc(100dvh - 60px)", display: "flex", flexDirection: "column" }}>
+        <Box
+          style={{
+            position: "relative",
+            height: "calc(100dvh - 60px)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           {/* Back button - floating top left */}
           <Button
             onClick={() => setMode("choice")}
@@ -965,7 +1200,14 @@ export default function MobileScannerPage() {
           </Button>
 
           {/* Video feed - fills available space */}
-          <Box style={{ position: "relative", flex: 1, background: "#000", overflow: "hidden" }}>
+          <Box
+            style={{
+              position: "relative",
+              flex: 1,
+              background: "#000",
+              overflow: "hidden",
+            }}
+          >
             <video
               ref={videoRef}
               autoPlay
@@ -1015,19 +1257,36 @@ export default function MobileScannerPage() {
                     onChange={(e) => setAutoEnhance(e.currentTarget.checked)}
                     disabled={!openCvReady}
                   />
-                  <Text size="xs">{t("mobileScanner.edgeDetection", "Edge Detection")}</Text>
+                  <Text size="xs">
+                    {t("mobileScanner.edgeDetection", "Edge Detection")}
+                  </Text>
                 </Group>
                 {torchSupported && (
                   <Group gap="xs">
-                    <Switch size="sm" checked={torchEnabled} onChange={toggleTorch} />
-                    <Text size="xs">{t("mobileScanner.flashlight", "Flash")}</Text>
+                    <Switch
+                      size="sm"
+                      checked={torchEnabled}
+                      onChange={toggleTorch}
+                    />
+                    <Text size="xs">
+                      {t("mobileScanner.flashlight", "Flash")}
+                    </Text>
                   </Group>
                 )}
               </Group>
 
               {/* Capture button */}
-              <Button fullWidth size="lg" onClick={captureImage} loading={isProcessing} variant="filled" radius="xl">
-                {isProcessing ? t("mobileScanner.processing", "Processing...") : t("mobileScanner.capture", "Capture")}
+              <Button
+                fullWidth
+                size="lg"
+                onClick={captureImage}
+                loading={isProcessing}
+                variant="filled"
+                radius="xl"
+              >
+                {isProcessing
+                  ? t("mobileScanner.processing", "Processing...")
+                  : t("mobileScanner.capture", "Capture")}
               </Button>
             </Stack>
           </Box>
@@ -1036,14 +1295,35 @@ export default function MobileScannerPage() {
 
       {/* File upload interface */}
       {mode === "file" && !currentPreview && (
-        <Stack gap="lg" p="xl" align="center" style={{ maxWidth: "500px", margin: "0 auto" }}>
-          <Button onClick={() => setMode("choice")} variant="subtle" size="sm" style={{ alignSelf: "flex-start" }}>
+        <Stack
+          gap="lg"
+          p="xl"
+          align="center"
+          style={{ maxWidth: "500px", margin: "0 auto" }}
+        >
+          <Button
+            onClick={() => setMode("choice")}
+            variant="subtle"
+            size="sm"
+            style={{ alignSelf: "flex-start" }}
+          >
             ← {t("mobileScanner.back", "Back")}
           </Button>
 
-          <Card shadow="sm" padding="xl" radius="md" withBorder style={{ width: "100%" }}>
+          <Card
+            shadow="sm"
+            padding="xl"
+            radius="md"
+            withBorder
+            style={{ width: "100%" }}
+          >
             <Stack align="center" gap="lg">
-              <UploadRoundedIcon style={{ fontSize: "4rem", color: "var(--mantine-color-gray-5)" }} />
+              <UploadRoundedIcon
+                style={{
+                  fontSize: "4rem",
+                  color: "var(--mantine-color-gray-5)",
+                }}
+              />
               <Text size="lg" fw={600} ta="center">
                 {t("mobileScanner.selectFilesPrompt", "Select files to upload")}
               </Text>
@@ -1071,7 +1351,14 @@ export default function MobileScannerPage() {
 
       {/* Preview interface */}
       {currentPreview && (
-        <Box style={{ position: "relative", height: "calc(100dvh - 60px)", display: "flex", flexDirection: "column" }}>
+        <Box
+          style={{
+            position: "relative",
+            height: "calc(100dvh - 60px)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           {/* Preview image - fills available space */}
           <Box
             style={{
@@ -1087,7 +1374,12 @@ export default function MobileScannerPage() {
             <img
               src={currentPreview}
               alt="Preview"
-              style={{ maxWidth: "100%", maxHeight: "100%", display: "block", objectFit: "contain" }}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                display: "block",
+                objectFit: "contain",
+              }}
             />
           </Box>
 
@@ -1108,7 +1400,14 @@ export default function MobileScannerPage() {
                   {t("mobileScanner.addToBatch", "Add to Batch")}
                 </Button>
               </Group>
-              <Button fullWidth variant="filled" size="lg" onClick={uploadImages} loading={isUploading} radius="xl">
+              <Button
+                fullWidth
+                variant="filled"
+                size="lg"
+                onClick={uploadImages}
+                loading={isUploading}
+                radius="xl"
+              >
                 {t("mobileScanner.upload", "Upload")}
               </Button>
             </Stack>
@@ -1120,10 +1419,16 @@ export default function MobileScannerPage() {
         <Box p="sm" style={{ borderTop: "1px solid var(--border-subtle)" }}>
           <Group justify="space-between" mb="sm">
             <Text size="sm" fw={600}>
-              {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length})
+              {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length}
+              )
             </Text>
             <Group gap="xs">
-              <Button size="xs" variant="outline" onClick={clearBatch} color="red">
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={clearBatch}
+                color="red"
+              >
                 {t("mobileScanner.clearBatch", "Clear")}
               </Button>
               <Button size="xs" onClick={uploadImages} loading={isUploading}>
@@ -1131,7 +1436,14 @@ export default function MobileScannerPage() {
               </Button>
             </Group>
           </Group>
-          <Box style={{ display: "flex", gap: "var(--space-sm)", overflowX: "auto", paddingBottom: "var(--space-sm)" }}>
+          <Box
+            style={{
+              display: "flex",
+              gap: "var(--space-sm)",
+              overflowX: "auto",
+              paddingBottom: "var(--space-sm)",
+            }}
+          >
             {capturedImages.map((img, idx) => (
               <Box
                 key={idx}
@@ -1143,7 +1455,11 @@ export default function MobileScannerPage() {
                   border: "2px solid var(--border-subtle)",
                 }}
               >
-                <img src={img} alt={`Capture ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img
+                  src={img}
+                  alt={`Capture ${idx + 1}`}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
               </Box>
             ))}
           </Box>

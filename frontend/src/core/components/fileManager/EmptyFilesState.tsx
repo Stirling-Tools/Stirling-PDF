@@ -57,7 +57,11 @@ const EmptyFilesState: React.FC = () => {
 
         {/* Stirling PDF Logo */}
         <Group gap="xs" align="center">
-          <Wordmark alt="Stirling PDF" muted style={{ height: "2.2rem", width: "auto" }} />
+          <Wordmark
+            alt="Stirling PDF"
+            muted
+            style={{ height: "2.2rem", width: "auto" }}
+          />
         </Group>
 
         {/* Upload Button */}

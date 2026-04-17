@@ -1,5 +1,14 @@
 import { useState, useMemo } from "react";
-import { Stack, Text, Group, Button, Box, Popover, UnstyledButton, useMantineTheme } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Button,
+  Box,
+  Popover,
+  UnstyledButton,
+  useMantineTheme,
+} from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -54,7 +63,9 @@ const GroupedFormatDropdown = ({
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
     const selected = options.find((opt) => opt.value === value);
-    return selected ? `${selected.group} (${selected.label})` : value.toUpperCase();
+    return selected
+      ? `${selected.group} (${selected.label})`
+      : value.toUpperCase();
   }, [value, options, placeholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
@@ -85,10 +96,14 @@ const GroupedFormatDropdown = ({
             padding: "0.5rem 0.75rem",
             border: `0.0625rem solid ${theme.colors.gray[4]}`,
             borderRadius: theme.radius.sm,
-            backgroundColor: disabled ? theme.colors.gray[1] : "var(--dropdown-trigger-bg)",
+            backgroundColor: disabled
+              ? theme.colors.gray[1]
+              : "var(--dropdown-trigger-bg)",
             cursor: disabled ? "not-allowed" : "pointer",
             width: "100%",
-            color: disabled ? "var(--dropdown-trigger-text-disabled)" : "var(--dropdown-trigger-text)",
+            color: disabled
+              ? "var(--dropdown-trigger-text-disabled)"
+              : "var(--dropdown-trigger-text)",
           }}
         >
           <Group justify="space-between">
@@ -119,7 +134,12 @@ const GroupedFormatDropdown = ({
         <Stack gap="md">
           {Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
             <Box key={groupName}>
-              <Text size="sm" fw={600} mb="xs" style={{ color: "var(--dropdown-group-label)" }}>
+              <Text
+                size="sm"
+                fw={600}
+                mb="xs"
+                style={{ color: "var(--dropdown-group-label)" }}
+              >
                 {groupName}
               </Text>
               <Group gap="xs" style={{ flexWrap: "wrap" }}>

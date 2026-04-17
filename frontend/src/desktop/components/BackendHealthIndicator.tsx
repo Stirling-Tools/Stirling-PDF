@@ -7,7 +7,9 @@ interface BackendHealthIndicatorProps {
   className?: string;
 }
 
-export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ className = "" }) => {
+export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
+  className = "",
+}) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { status, isOnline, checkHealth } = useBackendHealth();
@@ -32,7 +34,13 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
       return theme.colors.green?.[5] ?? "#37b24d";
     }
     return theme.colors.red?.[6] ?? "#e03131";
-  }, [status, isOnline, theme.colors.green, theme.colors.red, theme.colors.yellow]);
+  }, [
+    status,
+    isOnline,
+    theme.colors.green,
+    theme.colors.red,
+    theme.colors.yellow,
+  ]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLSpanElement>) => {

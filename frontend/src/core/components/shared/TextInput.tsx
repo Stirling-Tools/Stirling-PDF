@@ -68,12 +68,16 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       }
     };
 
-    const shouldShowClearButton = showClearButton && value.trim().length > 0 && !disabled && !readOnly;
+    const shouldShowClearButton =
+      showClearButton && value.trim().length > 0 && !disabled && !readOnly;
 
     return (
       <div className={`${styles.container} ${className}`} style={style}>
         {icon && (
-          <span className={styles.icon} style={{ color: "var(--search-text-and-icon-color)" }}>
+          <span
+            className={styles.icon}
+            style={{ color: "var(--search-text-and-icon-color)" }}
+          >
             {icon}
           </span>
         )}

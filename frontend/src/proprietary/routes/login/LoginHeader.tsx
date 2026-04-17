@@ -6,9 +6,15 @@ interface LoginHeaderProps {
   centerOnly?: boolean;
 }
 
-export default function LoginHeader({ title, subtitle, centerOnly = false }: LoginHeaderProps) {
+export default function LoginHeader({
+  title,
+  subtitle,
+  centerOnly = false,
+}: LoginHeaderProps) {
   return (
-    <div className={`login-header${centerOnly ? " login-header-centered" : ""}`}>
+    <div
+      className={`login-header${centerOnly ? " login-header-centered" : ""}`}
+    >
       <div className="login-header-logos">
         <Wordmark alt="Stirling PDF" className="login-logo-text" />
       </div>
