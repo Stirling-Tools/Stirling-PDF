@@ -1,5 +1,4 @@
 import React, { forwardRef } from "react";
-import { useMantineColorScheme } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/shared/textInput/TextInput.module.css";
 
@@ -61,8 +60,6 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     },
     ref,
   ) => {
-    const { colorScheme } = useMantineColorScheme();
-
     const handleClear = () => {
       if (onClear) {
         onClear();
@@ -79,7 +76,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {icon && (
           <span
             className={styles.icon}
-            style={{ color: colorScheme === "dark" ? "#FFFFFF" : "#6B7382" }}
+            style={{ color: "var(--search-text-and-icon-color)" }}
           >
             {icon}
           </span>
@@ -99,8 +96,8 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           aria-label={ariaLabel}
           onFocus={onFocus}
           style={{
-            backgroundColor: colorScheme === "dark" ? "#4B525A" : "#FFFFFF",
-            color: colorScheme === "dark" ? "#FFFFFF" : "#6B7382",
+            backgroundColor: "var(--input-bg)",
+            color: "var(--search-text-and-icon-color)",
             paddingRight: shouldShowClearButton ? "40px" : "12px",
             paddingLeft: icon ? "40px" : "12px",
           }}
@@ -111,7 +108,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             type="button"
             className={styles.clearButton}
             onClick={handleClear}
-            style={{ color: colorScheme === "dark" ? "#FFFFFF" : "#6B7382" }}
+            style={{ color: "var(--search-text-and-icon-color)" }}
             aria-label="Clear input"
           >
             <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { Group, useMantineColorScheme } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import {
   useNavigationState,
@@ -50,7 +50,6 @@ export default function HomePage() {
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
-  const { colorScheme } = useMantineColorScheme();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -112,9 +111,6 @@ export default function HomePage() {
     )?.hideToolPanel ?? false;
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = useLogoPath();
-  const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -241,17 +237,8 @@ export default function HomePage() {
           <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
-                <img
-                  src={brandIconSrc}
-                  alt=""
-                  aria-hidden="true"
-                  className="mobile-brand-icon"
-                />
-                <img
-                  src={brandTextSrc}
-                  alt={brandAltText}
-                  className="mobile-brand-text"
-                />
+                <LogoIcon className="mobile-brand-icon" />
+                <Wordmark alt={brandAltText} className="mobile-brand-text" />
               </div>
             </div>
             <div

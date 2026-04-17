@@ -1,10 +1,5 @@
 import { useState, useRef } from "react";
-import {
-  ActionIcon,
-  ScrollArea,
-  Switch,
-  useMantineColorScheme,
-} from "@mantine/core";
+import { ActionIcon, ScrollArea, Switch } from "@mantine/core";
 import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
 import { useTranslation } from "react-i18next";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -12,8 +7,8 @@ import FullscreenToolList from "@app/components/tools/FullscreenToolList";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useFocusTrap } from "@app/hooks/useFocusTrap";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import "@app/components/tools/ToolPanel.css";
 import { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
@@ -52,7 +47,6 @@ const FullscreenToolSurface = ({
   geometry,
 }: FullscreenToolSurfaceProps) => {
   const { t } = useTranslation();
-  const { colorScheme } = useMantineColorScheme();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const isRTL =
@@ -62,9 +56,6 @@ const FullscreenToolSurface = ({
   useFocusTrap(surfaceRef, !isExiting);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = useLogoPath();
-  const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleExit = () => {
     const prefersReducedMotion = window.matchMedia(
@@ -118,13 +109,8 @@ const FullscreenToolSurface = ({
       >
         <header className="tool-panel__fullscreen-header">
           <div className="tool-panel__fullscreen-brand">
-            <img
-              src={brandIconSrc}
-              alt=""
-              className="tool-panel__fullscreen-brand-icon"
-            />
-            <img
-              src={brandTextSrc}
+            <LogoIcon className="tool-panel__fullscreen-brand-icon" />
+            <Wordmark
               alt={brandAltText}
               className="tool-panel__fullscreen-brand-text"
             />

@@ -391,6 +391,25 @@
   /* Compare page label chip (light mode): slightly lighter than surrounding rows */
   --compare-page-label-bg: var(--bg-muted);
   --compare-page-label-fg: var(--text-secondary);
+
+  /* Status indicator dot ring shadow */
+  --status-dot-ring: 0 0 0 2px rgba(0, 0, 0, 0.08);
+
+  /* Input element styling */
+  --input-bg: #ffffff;
+
+  /* Select/dropdown placeholder state */
+  --select-placeholder-bg: var(--mantine-color-gray-1);
+  --select-placeholder-text: var(--mantine-color-gray-6);
+
+  /* Grouped format dropdown */
+  --dropdown-trigger-bg: var(--mantine-color-white);
+  --dropdown-trigger-text: var(--mantine-color-dark-9);
+  --dropdown-trigger-text-disabled: var(--mantine-color-dark-7);
+  --dropdown-trigger-icon: var(--mantine-color-gray-6);
+  --dropdown-panel-bg: var(--mantine-color-white);
+  --dropdown-panel-border: var(--mantine-color-gray-4);
+  --dropdown-group-label: var(--mantine-color-gray-6);
 }
 
 /* Onboarding (light mode) */
@@ -681,6 +700,25 @@
   /* Compare page label chip (dark mode): slightly darker than surrounding rows */
   --compare-page-label-bg: #1f2329;
   --compare-page-label-fg: var(--text-secondary);
+
+  /* Status indicator dot ring shadow (dark) */
+  --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.18);
+
+  /* Input element styling (dark) */
+  --input-bg: #4b525a;
+
+  /* Select/dropdown placeholder state (dark) */
+  --select-placeholder-bg: var(--mantine-color-dark-5);
+  --select-placeholder-text: var(--mantine-color-dark-2);
+
+  /* Grouped format dropdown (dark) */
+  --dropdown-trigger-bg: var(--mantine-color-dark-6);
+  --dropdown-trigger-text: var(--mantine-color-dark-0);
+  --dropdown-trigger-text-disabled: var(--mantine-color-dark-1);
+  --dropdown-trigger-icon: var(--mantine-color-dark-2);
+  --dropdown-panel-bg: var(--mantine-color-dark-7);
+  --dropdown-panel-border: var(--mantine-color-dark-4);
+  --dropdown-group-label: var(--mantine-color-dark-2);
 }
 
 /* Dropzone drop state styling */
@@ -968,4 +1006,88 @@
 
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Theme-aware image display utilities */
+/* Use .theme-img-light-only for images to show in light mode only */
+/* Use .theme-img-dark-only for images to show in dark mode only */
+.theme-img-light-only {
+  display: inline;
+}
+.theme-img-dark-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .theme-img-light-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .theme-img-dark-only {
+  display: inline;
+}
+
+/* Modern logo icon */
+.logo-icon-modern__path1 {
+  fill: #acacac;
+  fill-opacity: 0.3;
+}
+.logo-icon-modern__path2 {
+  fill: #fc9999;
+  fill-opacity: 0.5;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-modern__path1 {
+  fill: #e6e6e6;
+  fill-opacity: 0.4;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-modern__path2 {
+  fill: #e6e6e6;
+  fill-opacity: 0.7;
+}
+
+/* Classic logo icon — single path structure, colors change per theme */
+.logo-icon-classic__group {
+  opacity: 0.2;
+}
+.logo-icon-classic__body {
+  fill: #ff4b4b;
+}
+.logo-icon-classic__flap {
+  fill: #545454;
+}
+.logo-icon-classic__triangle {
+  fill: #d0dbdc;
+}
+.logo-icon-classic__s {
+  fill: white;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__group {
+  opacity: 1;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__body {
+  fill: white;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__flap {
+  fill: #d3d3d3;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__triangle {
+  fill: #d0dbdc;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__s {
+  fill: var(--mantine-color-body);
+}
+
+/* Wordmark muted variant (used in empty/placeholder states) */
+/* Stirling text: 30% opacity in light mode, full opacity in dark */
+.wordmark__text--muted {
+  fill-opacity: 0.3;
+}
+[data-mantine-color-scheme="dark"] .wordmark__text--muted {
+  fill-opacity: 1;
+}
+/* PDF text: dimmed red in light mode, standard red in dark */
+.wordmark__pdf--muted {
+  fill: #d62626;
+  fill-opacity: 0.7;
+}
+[data-mantine-color-scheme="dark"] .wordmark__pdf--muted {
+  fill: #c56565;
+  fill-opacity: 1;
 }
