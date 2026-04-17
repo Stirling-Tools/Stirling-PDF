@@ -48,4 +48,12 @@ public class AsyncConfig {
         adapter.setTaskDecorator(new MDCContextTaskDecorator());
         return adapter;
     }
+
+    @Bean(name = "aiStreamExecutor")
+    public Executor aiStreamExecutor() {
+        TaskExecutorAdapter adapter =
+                new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+        adapter.setTaskDecorator(new MDCContextTaskDecorator());
+        return adapter;
+    }
 }

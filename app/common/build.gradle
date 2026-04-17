@@ -7,6 +7,8 @@ spotless {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
+        suppressLintsFor { setStep('google-java-format') }
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         trimTrailingWhitespace()
