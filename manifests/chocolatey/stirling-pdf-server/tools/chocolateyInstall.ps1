@@ -13,7 +13,8 @@ $version     = '2.8.0'
 $jarUrl      = "https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${version}/Stirling-PDF-server.jar"
 $jarChecksum = 'PLACEHOLDER_SHA256_UPDATED_BY_CI'
 
-$jreUrl      = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_windows_hotspot_21.0.5_11.zip"
+# TODO: bump Adoptium URL + sha256 to latest 25.0.X point release before release.
+$jreUrl      = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.1%2B9/OpenJDK25U-jre_x64_windows_hotspot_25.0.1_9.zip"
 $jreChecksum = 'PLACEHOLDER_JRE_SHA256'
 
 # ── Install paths ─────────────────────────────────────────────────────────────
@@ -45,8 +46,8 @@ Get-ChocolateyWebFile -PackageName $packageName `
 
 # ── Download and unpack JRE ───────────────────────────────────────────────────
 
-$jreZip = Join-Path $env:TEMP 'temurin21-jre.zip'
-Write-Host "Downloading Temurin JRE 21..."
+$jreZip = Join-Path $env:TEMP 'temurin25-jre.zip'
+Write-Host "Downloading Temurin JRE 25..."
 Get-ChocolateyWebFile -PackageName $packageName `
                       -FileFullPath $jreZip `
                       -Url $jreUrl `

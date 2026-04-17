@@ -18,8 +18,9 @@ description: |
 grade: stable
 confinement: classic
 base: core22
-license: Proprietary
+license: MIT AND LicenseRef-Stirling-PDF-Proprietary
 # Copyright (c) 2025 Stirling PDF Inc — https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+# Open-core: MIT core with proprietary carve-outs for specific directories (see LICENSE).
 compression: lzo
 
 architectures:
@@ -80,13 +81,14 @@ parts:
       - libatk1.0-0
       - libasound2
 
-  # ── Temurin JRE 21 ───────────────────────────────────────────────────────
+  # ── Temurin JRE 25 ───────────────────────────────────────────────────────
+  # TODO: bump Adoptium URL + sha256 to latest 25.0.X point release before release.
   jre:
     plugin: nil
     source: .
     override-build: |
-      JRE_URL="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz"
-      JRE_SHA256="3b6d2f3be6d2985c3e5b8b9a3c2d6e7f9a1b4c8e0f2a5d7c9e1b3f5a7c9e0b2d"
+      JRE_URL="https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.1%2B9/OpenJDK25U-jre_x64_linux_hotspot_25.0.1_9.tar.gz"
+      JRE_SHA256="placeholder-update-with-real-sha256-before-release"
       curl -fsSL "$JRE_URL" -o /tmp/jre.tar.gz
       mkdir -p "${SNAPCRAFT_PART_INSTALL}/jre"
       tar -xzf /tmp/jre.tar.gz -C "${SNAPCRAFT_PART_INSTALL}/jre" --strip-components=1

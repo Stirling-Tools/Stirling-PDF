@@ -10,7 +10,7 @@
   <metadata_license>MIT</metadata_license>
   <!-- The desktop application itself is proprietary. Flathub accepts proprietary apps
        in the "non-free" tier — see https://docs.flathub.org/docs/for-app-authors/submission/#proprietary-applications -->
-  <project_license>LicenseRef-OpenCore</project_license>
+  <project_license>MIT AND LicenseRef-Stirling-PDF-Proprietary</project_license>
   <copyright>Copyright (c) 2025 Stirling PDF Inc</copyright>
 
   <description>
@@ -40,7 +40,7 @@
 
   <launchable type="desktop-id">org.stirlingtools.StirlingPDF.desktop</launchable>
 
-  <url type="homepage">https://stirlingpdf.com</url>
+  <url type="homepage">https://www.stirling.com</url>
   <url type="bugtracker">https://github.com/Stirling-Tools/Stirling-PDF/issues</url>
   <url type="donation">https://github.com/sponsors/Frooodle</url>
   <url type="vcs-browser">https://github.com/Stirling-Tools/Stirling-PDF</url>

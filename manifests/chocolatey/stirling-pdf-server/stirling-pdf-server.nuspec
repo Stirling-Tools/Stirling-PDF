@@ -9,8 +9,9 @@
 
     <title>Stirling PDF Server</title>
     <authors>Stirling PDF Inc</authors>
-    <projectUrl>https://stirlingpdf.com</projectUrl>
+    <projectUrl>https://www.stirling.com</projectUrl>
     <!-- Contact: contact@stirlingpdf.com -->
+    <!-- License: MIT AND LicenseRef-Stirling-PDF-Proprietary (open-core) -->
     <iconUrl>https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png</iconUrl>
     <licenseUrl>https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE</licenseUrl>
     <copyright>Copyright (c) 2025 Stirling PDF Inc</copyright>
@@ -28,7 +29,7 @@ All processing happens locally on your machine — no data is sent to any server
 **What is installed:**
 - The Stirling-PDF Spring Boot JAR to `C:\ProgramData\StirlingPDF\`
 - A Windows service (`StirlingPDFServer`) managed via NSSM
-- A bundled Temurin JRE 21 (no separate Java installation required)
+- A bundled Temurin JRE 25 (no separate Java installation required)
 - Log output to `C:\ProgramData\StirlingPDF\logs\`
 
 For the full desktop GUI application use the `stirling-pdf` package instead.

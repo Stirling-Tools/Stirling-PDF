@@ -5,7 +5,7 @@ summary: Headless Stirling PDF server daemon (port 8080)
 description: |
   Stirling PDF is a robust, locally hosted web-based PDF manipulation tool.
   This snap runs the Spring Boot backend as a system daemon listening on
-  port 8080. A bundled Temurin JRE 21 means no separate Java installation
+  port 8080. A bundled Temurin JRE 25 means no separate Java installation
   is needed.
 
   Access the web UI at http://localhost:8080 once the snap is installed and
@@ -18,8 +18,9 @@ description: |
 grade: stable
 confinement: strict
 base: core22
-license: MIT
+license: MIT AND LicenseRef-Stirling-PDF-Proprietary
 # Copyright (c) 2025 Stirling PDF Inc — https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+# Open-core: MIT core with proprietary carve-outs for specific directories (see LICENSE).
 compression: lzo
 
 architectures:
@@ -71,12 +72,13 @@ parts:
       mkdir -p "${SNAPCRAFT_PART_INSTALL}/app"
       cp "$JAR" "${SNAPCRAFT_PART_INSTALL}/app/stirling-pdf.jar"
 
-  # ── Temurin JRE 21 ───────────────────────────────────────────────────────
+  # ── Temurin JRE 25 ───────────────────────────────────────────────────────
+  # TODO: bump Adoptium URL to latest 25.0.X point release before release.
   jre:
     plugin: nil
     source: .
     override-build: |
-      JRE_URL="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz"
+      JRE_URL="https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.1%2B9/OpenJDK25U-jre_x64_linux_hotspot_25.0.1_9.tar.gz"
       curl -fsSL "$JRE_URL" -o /tmp/jre.tar.gz
       mkdir -p "${SNAPCRAFT_PART_INSTALL}/jre"
       tar -xzf /tmp/jre.tar.gz -C "${SNAPCRAFT_PART_INSTALL}/jre" --strip-components=1

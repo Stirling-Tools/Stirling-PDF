@@ -9,10 +9,10 @@
 
     <title>Stirling PDF</title>
     <authors>Stirling PDF Inc</authors>
-    <projectUrl>https://stirlingpdf.com</projectUrl>
+    <projectUrl>https://www.stirling.com</projectUrl>
     <!-- Contact: contact@stirlingpdf.com -->
     <iconUrl>https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png</iconUrl>
-    <!-- License: Open Core — see LICENSE file for full terms -->
+    <!-- License: MIT AND LicenseRef-Stirling-PDF-Proprietary (open-core) — see LICENSE file for full terms -->
     <licenseUrl>https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE</licenseUrl>
     <copyright>Copyright (c) 2025 Stirling PDF Inc</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

@@ -26,17 +26,19 @@ finish-args:
   - --socket=pulseaudio
 
 modules:
-  # ── Temurin JRE 21 (pre-built tarball) ────────────────────────────────────
+  # ── Temurin JRE 25 (pre-built tarball) ────────────────────────────────────
+  # TODO: verify Adoptium URL + sha256 before submission — bump the point release
+  # as needed (e.g. 25.0.2, 25.0.3 etc).
   - name: temurin-jre
     buildsystem: simple
     build-commands:
       - mkdir -p /app/jre
-      - tar -xzf OpenJDK21U-jre_x64_linux_hotspot.tar.gz -C /app/jre --strip-components=1
+      - tar -xzf OpenJDK25U-jre_x64_linux_hotspot.tar.gz -C /app/jre --strip-components=1
     sources:
       - type: file
-        url: https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz
+        url: https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.1%2B9/OpenJDK25U-jre_x64_linux_hotspot_25.0.1_9.tar.gz
         sha256: "placeholder-update-with-real-sha256-before-submission"
-        dest-filename: OpenJDK21U-jre_x64_linux_hotspot.tar.gz
+        dest-filename: OpenJDK25U-jre_x64_linux_hotspot.tar.gz
 
   # ── WebKitGTK (required by Tauri) ─────────────────────────────────────────
   - name: webkitgtk
