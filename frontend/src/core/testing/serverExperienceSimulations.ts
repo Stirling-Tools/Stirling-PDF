@@ -165,10 +165,14 @@ function getActiveScenario(): SimulationScenario | null {
   }
   const scenario = SIMULATION_SCENARIOS[SIMULATION_INDEX];
   if (!scenario) {
-    console.warn("[Simulation] SIMULATION_INDEX out of range, using live backend.");
+    console.warn(
+      "[Simulation] SIMULATION_INDEX out of range, using live backend.",
+    );
     return null;
   }
-  console.warn(`[Simulation] Using scenario #${SIMULATION_INDEX} (${scenario.label}).`);
+  console.warn(
+    `[Simulation] Using scenario #${SIMULATION_INDEX} (${scenario.label}).`,
+  );
   return scenario;
 }
 

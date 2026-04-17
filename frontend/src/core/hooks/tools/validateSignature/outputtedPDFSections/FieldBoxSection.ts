@@ -13,7 +13,16 @@ interface FieldBoxOptions {
   value: string;
 }
 
-export const drawFieldBox = ({ page, font, fontBold, x, top, width, label, value }: FieldBoxOptions): number => {
+export const drawFieldBox = ({
+  page,
+  font,
+  fontBold,
+  x,
+  top,
+  width,
+  label,
+  value,
+}: FieldBoxOptions): number => {
   const labelFontSize = 8;
   const valueFontSize = 11;
   const valueLineHeight = valueFontSize * 1.25;
@@ -30,7 +39,8 @@ export const drawFieldBox = ({ page, font, fontBold, x, top, width, label, value
   const boxTop = top - labelFontSize - 6;
   const rawValue = value && value.trim().length > 0 ? value : "--";
   const lines = wrapText(rawValue, font, valueFontSize, width - boxPadding * 2);
-  const boxHeight = Math.max(valueLineHeight, lines.length * valueLineHeight) + boxPadding * 2;
+  const boxHeight =
+    Math.max(valueLineHeight, lines.length * valueLineHeight) + boxPadding * 2;
 
   page.drawRectangle({
     x,

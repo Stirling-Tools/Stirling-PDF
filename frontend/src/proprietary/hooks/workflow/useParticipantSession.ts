@@ -20,9 +20,13 @@ export interface UseParticipantSessionResult {
 /**
  * Hook for managing workflow session from participant perspective
  */
-export const useParticipantSession = (token?: string): UseParticipantSessionResult => {
+export const useParticipantSession = (
+  token?: string,
+): UseParticipantSessionResult => {
   const [session, setSession] = useState<WorkflowSessionResponse | null>(null);
-  const [participant, setParticipant] = useState<ParticipantResponse | null>(null);
+  const [participant, setParticipant] = useState<ParticipantResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +43,8 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
     } catch (err: unknown) {
       const errorMsg = isAxiosError(err)
         ? err.response?.data?.message || err.message
-        : (err instanceof Error ? err.message : undefined) || "Failed to load session";
+        : (err instanceof Error ? err.message : undefined) ||
+          "Failed to load session";
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -51,7 +56,8 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
       setLoading(true);
       setError(null);
       try {
-        const updatedParticipant = await workflowService.submitSignature(request);
+        const updatedParticipant =
+          await workflowService.submitSignature(request);
         setParticipant(updatedParticipant);
         // Reload session to get updated status
         if (request.participantToken) {
@@ -60,7 +66,8 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
       } catch (err: unknown) {
         const errorMsg = isAxiosError(err)
           ? err.response?.data?.message || err.message
-          : (err instanceof Error ? err.message : undefined) || "Failed to submit signature";
+          : (err instanceof Error ? err.message : undefined) ||
+            "Failed to submit signature";
         setError(errorMsg);
         throw new Error(errorMsg, { cause: err });
       } finally {
@@ -75,14 +82,18 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
       setLoading(true);
       setError(null);
       try {
-        const updatedParticipant = await workflowService.declineParticipation(token, reason);
+        const updatedParticipant = await workflowService.declineParticipation(
+          token,
+          reason,
+        );
         setParticipant(updatedParticipant);
         // Reload session
         await loadSession(token);
       } catch (err: unknown) {
         const errorMsg = isAxiosError(err)
           ? err.response?.data?.message || err.message
-          : (err instanceof Error ? err.message : undefined) || "Failed to decline";
+          : (err instanceof Error ? err.message : undefined) ||
+            "Failed to decline";
         setError(errorMsg);
         throw new Error(errorMsg, { cause: err });
       } finally {
@@ -109,7 +120,8 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
       } catch (err: unknown) {
         const errorMsg = isAxiosError(err)
           ? err.response?.data?.message || err.message
-          : (err instanceof Error ? err.message : undefined) || "Failed to download document";
+          : (err instanceof Error ? err.message : undefined) ||
+            "Failed to download document";
         setError(errorMsg);
       } finally {
         setLoading(false);

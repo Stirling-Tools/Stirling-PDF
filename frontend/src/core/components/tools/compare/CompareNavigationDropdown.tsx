@@ -26,7 +26,10 @@ const CompareNavigationDropdown = ({
       requestAnimationFrame(() => {
         const viewport = viewportRef.current;
         if (viewport) viewport.scrollTop = scrollTopRef.current;
-        const headers = Array.from(viewportRef.current?.querySelectorAll(".compare-dropdown-group") ?? []) as HTMLElement[];
+        const headers = Array.from(
+          viewportRef.current?.querySelectorAll(".compare-dropdown-group") ??
+            [],
+        ) as HTMLElement[];
         groupOffsetsRef.current = headers.map((el) => {
           const text = el.textContent || "";
           const page = parseInt(text.replace(/[^0-9]/g, ""), 10) || 0;
@@ -46,7 +49,13 @@ const CompareNavigationDropdown = ({
       .map((char) => {
         const code = char.charCodeAt(0);
         // Replace control chars (0-31, 127) and special separators with space
-        if (code <= 31 || code === 127 || code === 0x2028 || code === 0x2029 || (code >= 0x200b && code <= 0x200f)) {
+        if (
+          code <= 31 ||
+          code === 127 ||
+          code === 0x2028 ||
+          code === 0x2029 ||
+          (code >= 0x200b && code <= 0x200f)
+        ) {
           return " ";
         }
         return char;
@@ -91,8 +100,17 @@ const CompareNavigationDropdown = ({
         .trim();
 
     const cleaned = changes
-      .map((c) => ({ value: c.value, label: stripNewLine(sanitize(c.label)), pageNumber: c.pageNumber }))
-      .filter((c) => isMeaningful(c.label) && c.label.length > 0 && c.label.toLowerCase() !== newLineLabel.toLowerCase());
+      .map((c) => ({
+        value: c.value,
+        label: stripNewLine(sanitize(c.label)),
+        pageNumber: c.pageNumber,
+      }))
+      .filter(
+        (c) =>
+          isMeaningful(c.label) &&
+          c.label.length > 0 &&
+          c.label.toLowerCase() !== newLineLabel.toLowerCase(),
+      );
     const q = sanitize(query).toLowerCase();
     if (!q) return cleaned;
     return cleaned.filter((c) => c.label.toLowerCase().includes(q));
@@ -103,7 +121,9 @@ const CompareNavigationDropdown = ({
     if (!isOpen) return;
     const viewport = viewportRef.current;
     if (!viewport) return;
-    const headers = Array.from(viewport.querySelectorAll(".compare-dropdown-group")) as HTMLElement[];
+    const headers = Array.from(
+      viewport.querySelectorAll(".compare-dropdown-group"),
+    ) as HTMLElement[];
     groupOffsetsRef.current = headers.map((el) => {
       const text = el.textContent || "";
       const page = parseInt(text.replace(/[^0-9]/g, ""), 10) || 0;
@@ -147,10 +167,14 @@ const CompareNavigationDropdown = ({
     >
       <Combobox.Target>
         <div
-          className={["compare-changes-select", className].filter(Boolean).join(" ")}
+          className={["compare-changes-select", className]
+            .filter(Boolean)
+            .join(" ")}
           onClick={() => combobox.toggleDropdown()}
         >
-          <span className="compare-changes-select__placeholder">{placeholder}</span>
+          <span className="compare-changes-select__placeholder">
+            {placeholder}
+          </span>
           <Combobox.Chevron />
         </div>
       </Combobox.Target>
@@ -159,7 +183,10 @@ const CompareNavigationDropdown = ({
         {/* Header sits outside scroll so it stays fixed at top */}
         <div>
           <Combobox.Search
-            placeholder={t("compare.dropdown.searchPlaceholder", "Search changes...")}
+            placeholder={t(
+              "compare.dropdown.searchPlaceholder",
+              "Search changes...",
+            )}
             value={query}
             onChange={(e) => setQuery(e.currentTarget.value)}
           />
@@ -167,13 +194,21 @@ const CompareNavigationDropdown = ({
         {/* Lazy render the scrollable content only when open */}
         {isOpen && (
           <div className="compare-dropdown-scrollwrap">
-            <ScrollArea.Autosize mah={300} viewportRef={viewportRef} onScrollPositionChange={handleScrollPos}>
+            <ScrollArea.Autosize
+              mah={300}
+              viewportRef={viewportRef}
+              onScrollPositionChange={handleScrollPos}
+            >
               {stickyPage != null && (
                 <div className="compare-dropdown-sticky" style={{ top: 0 }}>
                   {t("compare.summary.pageLabel", "Page")} {stickyPage}
-                  {renderedPageNumbers && !renderedPageNumbers.has(stickyPage) && (
-                    <span className="compare-dropdown-rendering-flag"> — {t("compare.rendering.rendering", "rendering")}</span>
-                  )}
+                  {renderedPageNumbers &&
+                    !renderedPageNumbers.has(stickyPage) && (
+                      <span className="compare-dropdown-rendering-flag">
+                        {" "}
+                        — {t("compare.rendering.rendering", "rendering")}
+                      </span>
+                    )}
                 </div>
               )}
               <Combobox.Options className="compare-dropdown-options">
@@ -188,19 +223,26 @@ const CompareNavigationDropdown = ({
                           <div
                             className={[
                               "compare-dropdown-group",
-                              stickyPage === lastPage ? "compare-dropdown-group--hidden" : "",
+                              stickyPage === lastPage
+                                ? "compare-dropdown-group--hidden"
+                                : "",
                             ]
                               .filter(Boolean)
                               .join(" ")}
                             key={`group-${lastPage}`}
                           >
                             {t("compare.summary.pageLabel", "Page")} {lastPage}
-                            {renderedPageNumbers && !renderedPageNumbers.has(lastPage) && (
-                              <span className="compare-dropdown-rendering-flag">
-                                {" "}
-                                — {t("compare.rendering.rendering", "rendering")}
-                              </span>
-                            )}
+                            {renderedPageNumbers &&
+                              !renderedPageNumbers.has(lastPage) && (
+                                <span className="compare-dropdown-rendering-flag">
+                                  {" "}
+                                  —{" "}
+                                  {t(
+                                    "compare.rendering.rendering",
+                                    "rendering",
+                                  )}
+                                </span>
+                              )}
                           </div>,
                         );
                       }
@@ -214,7 +256,9 @@ const CompareNavigationDropdown = ({
                           }}
                         >
                           <div className="compare-dropdown-option">
-                            <span className="compare-dropdown-option__text">{item.label}</span>
+                            <span className="compare-dropdown-option__text">
+                              {item.label}
+                            </span>
                           </div>
                         </Combobox.Option>,
                       );
@@ -222,7 +266,9 @@ const CompareNavigationDropdown = ({
                     return nodes;
                   })()
                 ) : (
-                  <Combobox.Empty>{t("compare.dropdown.noResults", "No changes found")}</Combobox.Empty>
+                  <Combobox.Empty>
+                    {t("compare.dropdown.noResults", "No changes found")}
+                  </Combobox.Empty>
                 )}
               </Combobox.Options>
             </ScrollArea.Autosize>

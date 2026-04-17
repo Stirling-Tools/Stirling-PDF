@@ -2,7 +2,11 @@ import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { appendWord as sharedAppendWord } from "@app/utils/textDiff";
 import { PARAGRAPH_SENTINEL } from "@app/types/compare";
 import type { StirlingFile } from "@app/types/fileContext";
-import type { PDFPageProxy, TextContent, TextItem } from "pdfjs-dist/types/src/display/api";
+import type {
+  PDFPageProxy,
+  TextContent,
+  TextItem,
+} from "pdfjs-dist/types/src/display/api";
 import type {
   CompareChange,
   CompareDiffToken,
@@ -24,9 +28,14 @@ export interface ExtractedContent {
   paragraphs: CompareParagraph[];
 }
 
-const measurementCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
-const measurementContext = measurementCanvas ? measurementCanvas.getContext("2d") : null;
-const textMeasurementCache: Map<string, number> | null = measurementContext ? new Map() : null;
+const measurementCanvas =
+  typeof document !== "undefined" ? document.createElement("canvas") : null;
+const measurementContext = measurementCanvas
+  ? measurementCanvas.getContext("2d")
+  : null;
+const textMeasurementCache: Map<string, number> | null = measurementContext
+  ? new Map()
+  : null;
 let lastMeasurementFont = "";
 
 const DEFAULT_CHAR_WIDTH = 1;
@@ -200,7 +209,10 @@ export const buildChanges = (
             paragraph: paragraph,
           };
         } else {
-          active.comparison.text = appendWord(active.comparison.text, token.text);
+          active.comparison.text = appendWord(
+            active.comparison.text,
+            token.text,
+          );
         }
         if (meta && active.comparison.page === null) {
           active.comparison.page = meta.page;
@@ -258,14 +270,20 @@ export const createSummaryFile = (result: CompareResultData): File => {
   };
 
   const filename = `compare-summary-${new Date(result.totals.processedAt).toISOString().replace(/[:.]/g, "-")}.json`;
-  return new File([JSON.stringify(exportPayload, null, 2)], filename, { type: "application/json" });
+  return new File([JSON.stringify(exportPayload, null, 2)], filename, {
+    type: "application/json",
+  });
 };
 
 export const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
-export const getWorkerErrorCode = (value: unknown): "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" | undefined => {
+export const getWorkerErrorCode = (
+  value: unknown,
+): "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" | undefined => {
   if (typeof value === "object" && value !== null && "code" in value) {
-    const potentialCode = (value as { code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" }).code;
+    const potentialCode = (
+      value as { code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" }
+    ).code;
     return potentialCode;
   }
   return undefined;
@@ -276,13 +294,18 @@ export const getWorkerErrorCode = (value: unknown): "EMPTY_TEXT" | "TOO_LARGE" |
 export const filterTokensForDiff = (
   tokens: string[],
   metadata: TokenMetadata[],
-): { tokens: string[]; metadata: TokenMetadata[]; filteredToOriginal: number[] } => {
+): {
+  tokens: string[];
+  metadata: TokenMetadata[];
+  filteredToOriginal: number[];
+} => {
   const outTokens: string[] = [];
   const outMeta: TokenMetadata[] = [];
   const map: number[] = [];
   for (let i = 0; i < tokens.length; i += 1) {
     const t = tokens[i];
-    const isPara = t === PARAGRAPH_SENTINEL || t.startsWith("\uE000") || t.includes("PARA");
+    const isPara =
+      t === PARAGRAPH_SENTINEL || t.startsWith("\uE000") || t.includes("PARA");
     if (!isPara) {
       outTokens.push(t);
       if (metadata[i]) outMeta.push(metadata[i]);
@@ -292,7 +315,9 @@ export const filterTokensForDiff = (
   return { tokens: outTokens, metadata: outMeta, filteredToOriginal: map };
 };
 
-export const extractContentFromPdf = async (file: StirlingFile): Promise<ExtractedContent> => {
+export const extractContentFromPdf = async (
+  file: StirlingFile,
+): Promise<ExtractedContent> => {
   const arrayBuffer = await file.arrayBuffer();
   const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
     disableAutoFetch: true,
@@ -310,7 +335,10 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
       const content: TextContent = await page.getTextContent({
         disableCombineTextItems: true,
       } as Parameters<PDFPageProxy["getTextContent"]>[0]);
-      const styles: Record<string, { fontFamily?: string; ascent?: number; descent?: number }> = content.styles ?? {};
+      const styles: Record<
+        string,
+        { fontFamily?: string; ascent?: number; descent?: number }
+      > = content.styles ?? {};
 
       let paragraphIndex = 1;
       let paragraphBuffer = "";
@@ -338,13 +366,21 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         const dy = Math.abs(currY - prevY);
         const currX = curr.transform[4];
         const prevX = prev.transform[4];
-        const approxLine = Math.max(10, Math.abs((curr as any).height ?? 0) * 0.9);
+        const approxLine = Math.max(
+          10,
+          Math.abs((curr as any).height ?? 0) * 0.9,
+        );
         const looksLikeParagraph = dy > approxLine * 1.8;
         const likelySoftWrap = currX < prevX && dy < approxLine * 0.6;
         return looksLikeParagraph && !likelySoftWrap;
       };
 
-      const adjustBoundingBox = (left: number, top: number, width: number, height: number): TokenBoundingBox | null => {
+      const adjustBoundingBox = (
+        left: number,
+        top: number,
+        width: number,
+        height: number,
+      ): TokenBoundingBox | null => {
         if (width <= 0 || height <= 0) {
           return null;
         }
@@ -355,8 +391,14 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         const MIN_VERTICAL_PAD = 0.0008;
         const VERTICAL_PAD_RATIO = 0.18;
 
-        const horizontalPad = Math.max(width * HORIZONTAL_PAD_RATIO, MIN_HORIZONTAL_PAD);
-        const verticalPad = Math.max(height * VERTICAL_PAD_RATIO, MIN_VERTICAL_PAD);
+        const horizontalPad = Math.max(
+          width * HORIZONTAL_PAD_RATIO,
+          MIN_HORIZONTAL_PAD,
+        );
+        const verticalPad = Math.max(
+          height * VERTICAL_PAD_RATIO,
+          MIN_VERTICAL_PAD,
+        );
 
         let expandedLeft = left - horizontalPad;
         let expandedRight = left + width + horizontalPad;
@@ -396,7 +438,10 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         const totalLen = Math.max(rawText.length, 1);
         const textStyle = item.fontName ? styles[item.fontName] : undefined;
         const fontFamily = textStyle?.fontFamily ?? "sans-serif";
-        const fontScale = Math.max(0.5, Math.hypot(item.transform[0], item.transform[1]) || 0);
+        const fontScale = Math.max(
+          0.5,
+          Math.hypot(item.transform[0], item.transform[1]) || 0,
+        );
         const fontSpec = `${fontScale}px ${fontFamily}`;
 
         const weights: number[] = new Array(totalLen);
@@ -407,19 +452,22 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
           const advance = measureTextWidth(fontSpec, runningText);
           let width = advance - previousAdvance;
           if (!Number.isFinite(width) || width <= 0) {
-            width = rawText[i] === " " ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
+            width =
+              rawText[i] === " " ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
           }
           weights[i] = width;
           previousAdvance = advance;
         }
         if (!Number.isFinite(previousAdvance) || previousAdvance <= 0) {
           for (let i = 0; i < totalLen; i += 1) {
-            weights[i] = rawText[i] === " " ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
+            weights[i] =
+              rawText[i] === " " ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
           }
         }
         const prefix: number[] = new Array(totalLen + 1);
         prefix[0] = 0;
-        for (let i = 0; i < totalLen; i += 1) prefix[i + 1] = prefix[i] + weights[i];
+        for (let i = 0; i < totalLen; i += 1)
+          prefix[i + 1] = prefix[i] + weights[i];
         const totalWeight = prefix[totalLen] || 1;
 
         const rawX = item.transform[4];
@@ -428,7 +476,10 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
           viewport.convertToViewportPoint(rawX, rawY),
           viewport.convertToViewportPoint(rawX + item.width, rawY),
           viewport.convertToViewportPoint(rawX, rawY + item.height),
-          viewport.convertToViewportPoint(rawX + item.width, rawY + item.height),
+          viewport.convertToViewportPoint(
+            rawX + item.width,
+            rawY + item.height,
+          ),
         ];
         const xs = transformed.map(([px]) => px);
         const ys = transformed.map(([, py]) => py);
@@ -437,21 +488,45 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         const top = Math.min(...ys);
         const bottom = Math.max(...ys);
 
-        if (!Number.isFinite(left) || !Number.isFinite(right) || !Number.isFinite(top) || !Number.isFinite(bottom)) {
+        if (
+          !Number.isFinite(left) ||
+          !Number.isFinite(right) ||
+          !Number.isFinite(top) ||
+          !Number.isFinite(bottom)
+        ) {
           prevItem = item;
           continue;
         }
 
         const [baselineStart, baselineEnd, verticalEnd] = transformed;
-        const baselineVector: [number, number] = [baselineEnd[0] - baselineStart[0], baselineEnd[1] - baselineStart[1]];
-        const verticalVector: [number, number] = [verticalEnd[0] - baselineStart[0], verticalEnd[1] - baselineStart[1]];
-        const baselineMagnitude = Math.hypot(baselineVector[0], baselineVector[1]);
-        const verticalMagnitude = Math.hypot(verticalVector[0], verticalVector[1]);
-        const hasOrientationVectors = baselineMagnitude > 1e-6 && verticalMagnitude > 1e-6;
+        const baselineVector: [number, number] = [
+          baselineEnd[0] - baselineStart[0],
+          baselineEnd[1] - baselineStart[1],
+        ];
+        const verticalVector: [number, number] = [
+          verticalEnd[0] - baselineStart[0],
+          verticalEnd[1] - baselineStart[1],
+        ];
+        const baselineMagnitude = Math.hypot(
+          baselineVector[0],
+          baselineVector[1],
+        );
+        const verticalMagnitude = Math.hypot(
+          verticalVector[0],
+          verticalVector[1],
+        );
+        const hasOrientationVectors =
+          baselineMagnitude > 1e-6 && verticalMagnitude > 1e-6;
 
         const font = item.fontName ? styles[item.fontName] : undefined;
-        const ascent = typeof font?.ascent === "number" ? Math.max(0.7, Math.min(1.1, font.ascent)) : 0.9;
-        const descent = typeof font?.descent === "number" ? Math.max(0.0, Math.min(0.5, Math.abs(font.descent))) : 0.2;
+        const ascent =
+          typeof font?.ascent === "number"
+            ? Math.max(0.7, Math.min(1.1, font.ascent))
+            : 0.9;
+        const descent =
+          typeof font?.descent === "number"
+            ? Math.max(0.0, Math.min(0.5, Math.abs(font.descent)))
+            : 0.2;
         const verticalScale = Math.min(1, Math.max(0.75, ascent + descent));
 
         const wordRegex = /[A-Za-z0-9]+|[^\sA-Za-z0-9]/g;
@@ -484,7 +559,10 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
             ];
             const cornerPoints: Array<[number, number]> = [
               segStart,
-              [segStart[0] + verticalVector[0], segStart[1] + verticalVector[1]],
+              [
+                segStart[0] + verticalVector[0],
+                segStart[1] + verticalVector[1],
+              ],
               [segEnd[0] + verticalVector[0], segEnd[1] + verticalVector[1]],
               segEnd,
             ];
@@ -517,14 +595,24 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
             const newTop = clamp(midY - half);
             const newBottom = clamp(midY + half);
             wordHeight = Math.max(0, newBottom - newTop);
-            const bbox = adjustBoundingBox(wordLeft, newTop, wordWidth, wordHeight);
+            const bbox = adjustBoundingBox(
+              wordLeft,
+              newTop,
+              wordWidth,
+              wordHeight,
+            );
             tokens.push(normalizedWord);
             metadata.push({ page: pageIndex, paragraph: paragraphIndex, bbox });
             paragraphBuffer = appendWord(paragraphBuffer, normalizedWord);
             continue;
           }
 
-          const bbox = adjustBoundingBox(wordLeft, wordTop, wordWidth, wordHeight);
+          const bbox = adjustBoundingBox(
+            wordLeft,
+            wordTop,
+            wordWidth,
+            wordHeight,
+          );
 
           tokens.push(normalizedWord);
           metadata.push({
@@ -538,21 +626,37 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
 
         if (isParagraphBreak(item as TextItem, prevItem)) {
           if (paragraphBuffer.trim().length > 0) {
-            paragraphs.push({ page: pageIndex, paragraph: paragraphIndex, text: paragraphBuffer.trim() });
+            paragraphs.push({
+              page: pageIndex,
+              paragraph: paragraphIndex,
+              text: paragraphBuffer.trim(),
+            });
             paragraphBuffer = "";
           }
           tokens.push("\uE000PARA");
-          metadata.push({ page: pageIndex, paragraph: paragraphIndex, bbox: null });
+          metadata.push({
+            page: pageIndex,
+            paragraph: paragraphIndex,
+            bbox: null,
+          });
           paragraphIndex += 1;
         }
         prevItem = item as TextItem;
       }
 
       if (paragraphBuffer.trim().length > 0) {
-        paragraphs.push({ page: pageIndex, paragraph: paragraphIndex, text: paragraphBuffer.trim() });
+        paragraphs.push({
+          page: pageIndex,
+          paragraph: paragraphIndex,
+          text: paragraphBuffer.trim(),
+        });
         paragraphBuffer = "";
         tokens.push("\uE000PARA");
-        metadata.push({ page: pageIndex, paragraph: paragraphIndex, bbox: null });
+        metadata.push({
+          page: pageIndex,
+          paragraph: paragraphIndex,
+          bbox: null,
+        });
       }
     }
     return { tokens, metadata, pageSizes, paragraphs };

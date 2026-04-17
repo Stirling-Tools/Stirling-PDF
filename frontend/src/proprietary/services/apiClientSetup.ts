@@ -44,7 +44,10 @@ function getXsrfToken(): string | null {
     }
     return null;
   } catch (error) {
-    console.error("[API Client] Failed to read XSRF token from cookies:", error);
+    console.error(
+      "[API Client] Failed to read XSRF token from cookies:",
+      error,
+    );
     return null;
   }
 }
@@ -131,13 +134,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+      const originalRequest = error.config as InternalAxiosRequestConfig & {
+        _retry?: boolean;
+      };
 
       // Skip refresh for auth endpoints or if explicitly disabled
       // Exception: /auth/me should trigger refresh (used by getSession)
       if (
         !originalRequest ||
-        (originalRequest.url?.includes("/api/v1/auth/") && !originalRequest.url?.includes("/api/v1/auth/me")) ||
+        (originalRequest.url?.includes("/api/v1/auth/") &&
+          !originalRequest.url?.includes("/api/v1/auth/me")) ||
         originalRequest.headers?.["X-Skip-Auth-Refresh"] ||
         originalRequest._retry
       ) {
@@ -146,7 +152,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Handle 401 errors by attempting token refresh
       if (error.response?.status === 401 && getJwtTokenFromStorage()) {
-        console.warn("[API Client] Received 401 error, attempting token refresh...");
+        console.warn(
+          "[API Client] Received 401 error, attempting token refresh...",
+        );
 
         if (isRefreshing) {
           // Already refreshing - queue this request

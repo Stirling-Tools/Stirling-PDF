@@ -20,8 +20,14 @@ export const useGroupSigningTips = (): TooltipContent => {
             "groupSigning.tooltip.sequential.bullet1",
             "First participant must sign before the second can access the document",
           ),
-          t("groupSigning.tooltip.sequential.bullet2", "Ensures proper signing order for legal compliance"),
-          t("groupSigning.tooltip.sequential.bullet3", "You can reorder participants by dragging them in the list"),
+          t(
+            "groupSigning.tooltip.sequential.bullet2",
+            "Ensures proper signing order for legal compliance",
+          ),
+          t(
+            "groupSigning.tooltip.sequential.bullet3",
+            "You can reorder participants by dragging them in the list",
+          ),
         ],
       },
       {
@@ -35,7 +41,10 @@ export const useGroupSigningTips = (): TooltipContent => {
             "groupSigning.tooltip.roles.bullet1",
             "Owner (you): Creates session, configures signature defaults, finalizes document",
           ),
-          t("groupSigning.tooltip.roles.bullet2", "Participants: Create their signature, choose certificate, place on PDF"),
+          t(
+            "groupSigning.tooltip.roles.bullet2",
+            "Participants: Create their signature, choose certificate, place on PDF",
+          ),
           t(
             "groupSigning.tooltip.roles.bullet3",
             "Participants cannot modify signature visibility, reason, or location settings",
@@ -43,15 +52,27 @@ export const useGroupSigningTips = (): TooltipContent => {
         ],
       },
       {
-        title: t("groupSigning.tooltip.finalization.title", "Finalization Process"),
+        title: t(
+          "groupSigning.tooltip.finalization.title",
+          "Finalization Process",
+        ),
         description: t(
           "groupSigning.tooltip.finalization.description",
           "Once all participants have signed (or you choose to finalize early), you can generate the final signed PDF.",
         ),
         bullets: [
-          t("groupSigning.tooltip.finalization.bullet1", "All signatures are applied in the participant order you specified"),
-          t("groupSigning.tooltip.finalization.bullet2", "You can finalize with partial signatures if needed"),
-          t("groupSigning.tooltip.finalization.bullet3", "Once finalized, the session cannot be modified"),
+          t(
+            "groupSigning.tooltip.finalization.bullet1",
+            "All signatures are applied in the participant order you specified",
+          ),
+          t(
+            "groupSigning.tooltip.finalization.bullet2",
+            "You can finalize with partial signatures if needed",
+          ),
+          t(
+            "groupSigning.tooltip.finalization.bullet3",
+            "Once finalized, the session cannot be modified",
+          ),
         ],
       },
     ],

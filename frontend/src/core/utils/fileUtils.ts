@@ -61,7 +61,10 @@ export function detectFileExtension(filename: string): string {
  * getFilenameWithoutExtension('my.file.name.txt') // 'my.file.name'
  * getFilenameWithoutExtension('REPORT.PDF', { preserveCase: true }) // 'REPORT'
  */
-export function getFilenameWithoutExtension(filename: string, options: { preserveCase?: boolean } = {}): string {
+export function getFilenameWithoutExtension(
+  filename: string,
+  options: { preserveCase?: boolean } = {},
+): string {
   if (!filename || typeof filename !== "string") return "";
 
   const { preserveCase = false } = options;
@@ -75,7 +78,9 @@ export function getFilenameWithoutExtension(filename: string, options: { preserv
  * @param file - File or file-like object with name and type properties
  * @returns true if the file appears to be a PDF
  */
-export function isPdfFile(file: { name?: string; type?: string } | File | Blob | null | undefined): boolean {
+export function isPdfFile(
+  file: { name?: string; type?: string } | File | Blob | null | undefined,
+): boolean {
   if (!file) return false;
 
   const name = "name" in file ? file.name : undefined;
@@ -93,9 +98,26 @@ export function isPdfFile(file: { name?: string; type?: string } | File | Blob |
   return false;
 }
 
-export type NonPdfFileType = "image" | "csv" | "json" | "text" | "markdown" | "html" | "unknown";
+export type NonPdfFileType =
+  | "image"
+  | "csv"
+  | "json"
+  | "text"
+  | "markdown"
+  | "html"
+  | "unknown";
 
-const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "bmp", "svg", "tiff", "tif", "webp"]);
+const IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "bmp",
+  "svg",
+  "tiff",
+  "tif",
+  "webp",
+]);
 const CSV_EXTENSIONS = new Set(["csv", "tsv"]);
 const JSON_EXTENSIONS = new Set(["json"]);
 const TEXT_EXTENSIONS = new Set(["txt"]);
@@ -106,7 +128,9 @@ const HTML_EXTENSIONS = new Set(["html", "htm"]);
  * Detects the non-PDF file type category for viewer routing.
  * Returns 'unknown' for PDFs or unrecognized formats.
  */
-export function detectNonPdfFileType(file: { name?: string; type?: string } | File | null | undefined): NonPdfFileType {
+export function detectNonPdfFileType(
+  file: { name?: string; type?: string } | File | null | undefined,
+): NonPdfFileType {
   if (!file) return "unknown";
 
   const name = "name" in file ? file.name : undefined;

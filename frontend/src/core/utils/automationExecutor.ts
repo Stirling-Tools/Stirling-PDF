@@ -17,7 +17,10 @@ const processMultiFileResponse = async (
   preserveBackendFilename?: boolean,
 ): Promise<File[]> => {
   // Multi-file responses are typically ZIP files, but may be single files (e.g. split with merge=true)
-  if (responseData.type === "application/pdf" || (responseHeaders && responseHeaders["content-type"] === "application/pdf")) {
+  if (
+    responseData.type === "application/pdf" ||
+    (responseHeaders && responseHeaders["content-type"] === "application/pdf")
+  ) {
     // Single PDF response - use processResponse to respect preserveBackendFilename
     const processedFiles = await processResponse(
       responseData,
@@ -29,7 +32,8 @@ const processMultiFileResponse = async (
     return processedFiles;
   } else {
     // ZIP response
-    const result = await AutomationFileProcessor.extractAutomationZipFiles(responseData);
+    const result =
+      await AutomationFileProcessor.extractAutomationZipFiles(responseData);
 
     if (result.errors.length > 0) {
       console.warn(`⚠️ File processing warnings:`, result.errors);
@@ -40,7 +44,9 @@ const processMultiFileResponse = async (
       filePrefix && !preserveBackendFilename
         ? result.files.map((file) => {
             const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
-            return new File([file], `${filePrefix}${nameWithoutPrefix}`, { type: file.type });
+            return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
+              type: file.type,
+            });
           })
         : result.files;
 
@@ -63,7 +69,13 @@ const executeApiRequest = async (
     timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
   });
 
-  return await processMultiFileResponse(response.data, response.headers, files, filePrefix, preserveBackendFilename);
+  return await processMultiFileResponse(
+    response.data,
+    response.headers,
+    files,
+    filePrefix,
+    preserveBackendFilename,
+  );
 };
 
 /**
@@ -78,11 +90,22 @@ const executeSingleFileOperation = async (
   const resultFiles: File[] = [];
 
   for (const file of files) {
-    const endpoint = typeof config.endpoint === "function" ? config.endpoint(parameters) : config.endpoint;
+    const endpoint =
+      typeof config.endpoint === "function"
+        ? config.endpoint(parameters)
+        : config.endpoint;
 
-    const formData = (config.buildFormData as (params: any, file: File) => FormData)(parameters, file);
+    const formData = (
+      config.buildFormData as (params: any, file: File) => FormData
+    )(parameters, file);
 
-    const processedFiles = await executeApiRequest(endpoint, formData, [file], filePrefix, config.preserveBackendFilename);
+    const processedFiles = await executeApiRequest(
+      endpoint,
+      formData,
+      [file],
+      filePrefix,
+      config.preserveBackendFilename,
+    );
     resultFiles.push(...processedFiles);
   }
 
@@ -92,12 +115,28 @@ const executeSingleFileOperation = async (
 /**
  * Execute multi-file tool operation (processes all files in one request)
  */
-const executeMultiFileOperation = async (config: any, parameters: any, files: File[], filePrefix: string): Promise<File[]> => {
-  const endpoint = typeof config.endpoint === "function" ? config.endpoint(parameters) : config.endpoint;
+const executeMultiFileOperation = async (
+  config: any,
+  parameters: any,
+  files: File[],
+  filePrefix: string,
+): Promise<File[]> => {
+  const endpoint =
+    typeof config.endpoint === "function"
+      ? config.endpoint(parameters)
+      : config.endpoint;
 
-  const formData = (config.buildFormData as (params: any, files: File[]) => FormData)(parameters, files);
+  const formData = (
+    config.buildFormData as (params: any, files: File[]) => FormData
+  )(parameters, files);
 
-  return await executeApiRequest(endpoint, formData, files, filePrefix, config.preserveBackendFilename);
+  return await executeApiRequest(
+    endpoint,
+    formData,
+    files,
+    filePrefix,
+    config.preserveBackendFilename,
+  );
 };
 
 /**
@@ -109,7 +148,13 @@ export const executeToolOperation = async (
   files: File[],
   toolRegistry: ToolRegistry,
 ): Promise<File[]> => {
-  return executeToolOperationWithPrefix(operationName, parameters, files, toolRegistry, AUTOMATION_CONSTANTS.FILE_PREFIX);
+  return executeToolOperationWithPrefix(
+    operationName,
+    parameters,
+    files,
+    toolRegistry,
+    AUTOMATION_CONSTANTS.FILE_PREFIX,
+  );
 };
 
 /**
@@ -139,15 +184,28 @@ export const executeToolOperationWithPrefix = async (
 
     // Execute based on tool type
     if (config.toolType === ToolType.multiFile) {
-      return await executeMultiFileOperation(config, mergedParameters, files, filePrefix);
+      return await executeMultiFileOperation(
+        config,
+        mergedParameters,
+        files,
+        filePrefix,
+      );
     } else {
-      return await executeSingleFileOperation(config, mergedParameters, files, filePrefix);
+      return await executeSingleFileOperation(
+        config,
+        mergedParameters,
+        files,
+        filePrefix,
+      );
     }
   } catch (error: any) {
     console.error(`❌ ${operationName} failed:`, error);
-    throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`, {
-      cause: error,
-    });
+    throw new Error(
+      `${operationName} operation failed: ${error.response?.data || error.message}`,
+      {
+        cause: error,
+      },
+    );
   }
 };
 
@@ -170,12 +228,16 @@ export const executeAutomationSequence = async (
   }
 
   let currentFiles = [...initialFiles];
-  const automationPrefix = automation.name ? `${automation.name}_` : "automated_";
+  const automationPrefix = automation.name
+    ? `${automation.name}_`
+    : "automated_";
 
   for (let i = 0; i < automation.operations.length; i++) {
     const operation = automation.operations[i];
 
-    console.log(`\n📋 Step ${i + 1}/${automation.operations.length}: ${operation.operation}`);
+    console.log(
+      `\n📋 Step ${i + 1}/${automation.operations.length}: ${operation.operation}`,
+    );
     console.log(`   Input: ${currentFiles.length} file(s)`);
 
     try {
@@ -189,7 +251,9 @@ export const executeAutomationSequence = async (
         i === automation.operations.length - 1 ? automationPrefix : "", // Only add prefix to final step
       );
 
-      console.log(`✅ Step ${i + 1} completed: ${resultFiles.length} result files`);
+      console.log(
+        `✅ Step ${i + 1} completed: ${resultFiles.length} result files`,
+      );
       currentFiles = resultFiles;
       onStepComplete?.(i, resultFiles);
     } catch (error: any) {

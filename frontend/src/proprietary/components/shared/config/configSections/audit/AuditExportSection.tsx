@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Card, Text, Group, Stack, Button, SegmentedControl, Checkbox } from "@mantine/core";
+import {
+  Card,
+  Text,
+  Group,
+  Stack,
+  Button,
+  SegmentedControl,
+  Checkbox,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -22,20 +30,23 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
   const { t } = useTranslation();
   const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
   const [exporting, setExporting] = useState(false);
-  const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({
-    date: true,
-    username: true,
-    ipaddress: false,
-    tool: true,
-    documentName: true,
-    outcome: true,
-    author: capturePdfAuthor,
-    fileHash: captureFileHash,
-    operationResults: captureOperationResults,
-  });
+  const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>(
+    {
+      date: true,
+      username: true,
+      ipaddress: false,
+      tool: true,
+      documentName: true,
+      outcome: true,
+      author: capturePdfAuthor,
+      fileHash: captureFileHash,
+      operationResults: captureOperationResults,
+    },
+  );
 
   // Use shared filters hook
-  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({}, loginEnabled);
+  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } =
+    useAuditFilters({}, loginEnabled);
 
   const handleExport = async () => {
     if (!loginEnabled) return;
@@ -47,7 +58,10 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
         .filter((k) => selectedFields[k])
         .join(",");
 
-      const blob = await auditService.exportData(exportFormat, { ...filters, fields: fieldsParam });
+      const blob = await auditService.exportData(exportFormat, {
+        ...filters,
+        fields: fieldsParam,
+      });
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -74,7 +88,10 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
         </Text>
 
         <Text size="sm" c="dimmed">
-          {t("audit.export.description", "Export audit events to CSV or JSON format. Use filters to limit the exported data.")}
+          {t(
+            "audit.export.description",
+            "Export audit events to CSV or JSON format. Use filters to limit the exported data.",
+          )}
         </Text>
 
         {/* Format Selection */}
@@ -105,44 +122,82 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
             <Checkbox
               label={t("audit.export.fieldDate", "Date")}
               checked={selectedFields.date}
-              onChange={(e) => setSelectedFields({ ...selectedFields, date: e.currentTarget.checked })}
+              onChange={(e) =>
+                setSelectedFields({
+                  ...selectedFields,
+                  date: e.currentTarget.checked,
+                })
+              }
               disabled={!loginEnabled}
             />
             <Checkbox
               label={t("audit.export.fieldUsername", "Username")}
               checked={selectedFields.username}
-              onChange={(e) => setSelectedFields({ ...selectedFields, username: e.currentTarget.checked })}
+              onChange={(e) =>
+                setSelectedFields({
+                  ...selectedFields,
+                  username: e.currentTarget.checked,
+                })
+              }
               disabled={!loginEnabled}
             />
             <Checkbox
               label={t("audit.export.fieldIpAddress", "IP Address")}
               checked={selectedFields.ipaddress}
-              onChange={(e) => setSelectedFields({ ...selectedFields, ipaddress: e.currentTarget.checked })}
+              onChange={(e) =>
+                setSelectedFields({
+                  ...selectedFields,
+                  ipaddress: e.currentTarget.checked,
+                })
+              }
               disabled={!loginEnabled}
             />
             <Checkbox
               label={t("audit.export.fieldTool", "Tool")}
               checked={selectedFields.tool}
-              onChange={(e) => setSelectedFields({ ...selectedFields, tool: e.currentTarget.checked })}
+              onChange={(e) =>
+                setSelectedFields({
+                  ...selectedFields,
+                  tool: e.currentTarget.checked,
+                })
+              }
               disabled={!loginEnabled}
             />
             <Checkbox
               label={t("audit.export.fieldDocumentName", "Document Name")}
               checked={selectedFields.documentName}
-              onChange={(e) => setSelectedFields({ ...selectedFields, documentName: e.currentTarget.checked })}
+              onChange={(e) =>
+                setSelectedFields({
+                  ...selectedFields,
+                  documentName: e.currentTarget.checked,
+                })
+              }
               disabled={!loginEnabled}
             />
             <Checkbox
-              label={t("audit.export.fieldOutcome", "Outcome (Success/Failure)")}
+              label={t(
+                "audit.export.fieldOutcome",
+                "Outcome (Success/Failure)",
+              )}
               checked={selectedFields.outcome}
-              onChange={(e) => setSelectedFields({ ...selectedFields, outcome: e.currentTarget.checked })}
+              onChange={(e) =>
+                setSelectedFields({
+                  ...selectedFields,
+                  outcome: e.currentTarget.checked,
+                })
+              }
               disabled={!loginEnabled}
             />
             {capturePdfAuthor && (
               <Checkbox
                 label={t("audit.export.fieldAuthor", "Author (from PDF)")}
                 checked={selectedFields.author}
-                onChange={(e) => setSelectedFields({ ...selectedFields, author: e.currentTarget.checked })}
+                onChange={(e) =>
+                  setSelectedFields({
+                    ...selectedFields,
+                    author: e.currentTarget.checked,
+                  })
+                }
                 disabled={!loginEnabled}
               />
             )}
@@ -150,15 +205,28 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
               <Checkbox
                 label={t("audit.export.fieldFileHash", "File Hash (SHA-256)")}
                 checked={selectedFields.fileHash}
-                onChange={(e) => setSelectedFields({ ...selectedFields, fileHash: e.currentTarget.checked })}
+                onChange={(e) =>
+                  setSelectedFields({
+                    ...selectedFields,
+                    fileHash: e.currentTarget.checked,
+                  })
+                }
                 disabled={!loginEnabled}
               />
             )}
             {captureOperationResults && (
               <Checkbox
-                label={t("audit.export.fieldOperationResults", "Operation Results")}
+                label={t(
+                  "audit.export.fieldOperationResults",
+                  "Operation Results",
+                )}
                 checked={selectedFields.operationResults}
-                onChange={(e) => setSelectedFields({ ...selectedFields, operationResults: e.currentTarget.checked })}
+                onChange={(e) =>
+                  setSelectedFields({
+                    ...selectedFields,
+                    operationResults: e.currentTarget.checked,
+                  })
+                }
                 disabled={!loginEnabled}
               />
             )}
@@ -183,7 +251,9 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
         {/* Export Button */}
         <Group justify="flex-end">
           <Button
-            leftSection={<LocalIcon icon="download" width="1rem" height="1rem" />}
+            leftSection={
+              <LocalIcon icon="download" width="1rem" height="1rem" />
+            }
             onClick={handleExport}
             loading={exporting}
             disabled={!loginEnabled || exporting}

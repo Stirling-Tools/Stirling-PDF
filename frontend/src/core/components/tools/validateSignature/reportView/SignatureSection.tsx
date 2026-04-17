@@ -14,32 +14,76 @@ const formatDate = (value?: string | null) => {
   return value;
 };
 
-const SignatureSection = ({ signature, index }: { signature: SignatureValidationSignature; index: number }) => {
+const SignatureSection = ({
+  signature,
+  index,
+}: {
+  signature: SignatureValidationSignature;
+  index: number;
+}) => {
   const { t } = useTranslation();
   const signatureFields = [
-    FieldBlock(t("validateSignature.signer", "Signer"), signature.signerName || "-"),
-    FieldBlock(t("validateSignature.date", "Date"), formatDate(signature.signatureDate)),
-    FieldBlock(t("validateSignature.reason", "Reason"), signature.reason || "-"),
-    FieldBlock(t("validateSignature.location", "Location"), signature.location || "-"),
+    FieldBlock(
+      t("validateSignature.signer", "Signer"),
+      signature.signerName || "-",
+    ),
+    FieldBlock(
+      t("validateSignature.date", "Date"),
+      formatDate(signature.signatureDate),
+    ),
+    FieldBlock(
+      t("validateSignature.reason", "Reason"),
+      signature.reason || "-",
+    ),
+    FieldBlock(
+      t("validateSignature.location", "Location"),
+      signature.location || "-",
+    ),
   ];
 
   const certificateFields = [
-    FieldBlock(t("validateSignature.cert.issuer", "Issuer"), signature.issuerDN || "-"),
-    FieldBlock(t("validateSignature.cert.subject", "Subject"), signature.subjectDN || "-"),
-    FieldBlock(t("validateSignature.cert.serialNumber", "Serial Number"), signature.serialNumber || "-"),
-    FieldBlock(t("validateSignature.cert.validFrom", "Valid From"), formatDate(signature.validFrom)),
-    FieldBlock(t("validateSignature.cert.validUntil", "Valid Until"), formatDate(signature.validUntil)),
-    FieldBlock(t("validateSignature.cert.algorithm", "Algorithm"), signature.signatureAlgorithm || "-"),
+    FieldBlock(
+      t("validateSignature.cert.issuer", "Issuer"),
+      signature.issuerDN || "-",
+    ),
+    FieldBlock(
+      t("validateSignature.cert.subject", "Subject"),
+      signature.subjectDN || "-",
+    ),
+    FieldBlock(
+      t("validateSignature.cert.serialNumber", "Serial Number"),
+      signature.serialNumber || "-",
+    ),
+    FieldBlock(
+      t("validateSignature.cert.validFrom", "Valid From"),
+      formatDate(signature.validFrom),
+    ),
+    FieldBlock(
+      t("validateSignature.cert.validUntil", "Valid Until"),
+      formatDate(signature.validUntil),
+    ),
+    FieldBlock(
+      t("validateSignature.cert.algorithm", "Algorithm"),
+      signature.signatureAlgorithm || "-",
+    ),
     FieldBlock(
       t("validateSignature.cert.keySize", "Key Size"),
-      signature.keySize != null ? `${signature.keySize} ${t("validateSignature.cert.bits", "bits")}` : "--",
+      signature.keySize != null
+        ? `${signature.keySize} ${t("validateSignature.cert.bits", "bits")}`
+        : "--",
     ),
-    FieldBlock(t("validateSignature.cert.version", "Version"), signature.version || "-"),
+    FieldBlock(
+      t("validateSignature.cert.version", "Version"),
+      signature.version || "-",
+    ),
     FieldBlock(
       t("validateSignature.cert.keyUsage", "Key Usage"),
       signature.keyUsages.length > 0 ? signature.keyUsages.join(", ") : "--",
     ),
-    FieldBlock(t("validateSignature.cert.selfSigned", "Self-Signed"), signature.selfSigned ? t("yes", "Yes") : t("no", "No")),
+    FieldBlock(
+      t("validateSignature.cert.selfSigned", "Self-Signed"),
+      signature.selfSigned ? t("yes", "Yes") : t("no", "No"),
+    ),
   ];
 
   return (
@@ -62,7 +106,13 @@ const SignatureSection = ({ signature, index }: { signature: SignatureValidation
 
       <Divider my="sm" />
 
-      <Text fw={600} size="sm" c="dimmed" tt="uppercase" style={{ letterSpacing: 0.8 }}>
+      <Text
+        fw={600}
+        size="sm"
+        c="dimmed"
+        tt="uppercase"
+        style={{ letterSpacing: 0.8 }}
+      >
         {t("validateSignature.cert.details", "Certificate Details")}
       </Text>
       <div className="grid-container">{certificateFields}</div>

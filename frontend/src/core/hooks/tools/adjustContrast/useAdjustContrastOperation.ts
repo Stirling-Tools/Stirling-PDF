@@ -1,13 +1,24 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation, CustomProcessorResult } from "@app/hooks/tools/shared/useToolOperation";
-import { AdjustContrastParameters, defaultParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import {
+  ToolType,
+  useToolOperation,
+  CustomProcessorResult,
+} from "@app/hooks/tools/shared/useToolOperation";
+import {
+  AdjustContrastParameters,
+  defaultParameters,
+} from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
 import { applyAdjustmentsToCanvas } from "@app/components/tools/adjustContrast/utils";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
 import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
 import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
 
-async function renderPdfPageToCanvas(pdf: any, pageNumber: number, scale: number): Promise<HTMLCanvasElement> {
+async function renderPdfPageToCanvas(
+  pdf: any,
+  pageNumber: number,
+  scale: number,
+): Promise<HTMLCanvasElement> {
   const page = await pdf.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
@@ -20,7 +31,10 @@ async function renderPdfPageToCanvas(pdf: any, pageNumber: number, scale: number
 }
 
 // Render, adjust, and assemble all pages of a single PDF into a new PDF using PDFium
-async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParameters): Promise<File> {
+async function buildAdjustedPdfForFile(
+  file: File,
+  params: AdjustContrastParameters,
+): Promise<File> {
   const m = await getPdfiumModule();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {});
@@ -35,7 +49,9 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
       const adjusted = applyAdjustmentsToCanvas(srcCanvas, params);
       const ctx = adjusted.getContext("2d");
       if (!ctx) {
-        console.warn(`[adjustContrast] Skipping page ${p}: failed to get canvas context`);
+        console.warn(
+          `[adjustContrast] Skipping page ${p}: failed to get canvas context`,
+        );
         continue;
       }
 
@@ -47,9 +63,16 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
       const pdfPageWidth = imgWidth / 2;
       const pdfPageHeight = imgHeight / 2;
 
-      const pagePtr = m.FPDFPage_New(docPtr, p - 1, pdfPageWidth, pdfPageHeight);
+      const pagePtr = m.FPDFPage_New(
+        docPtr,
+        p - 1,
+        pdfPageWidth,
+        pdfPageHeight,
+      );
       if (!pagePtr) {
-        console.warn(`[adjustContrast] Skipping page ${p}: failed to create PDFium page`);
+        console.warn(
+          `[adjustContrast] Skipping page ${p}: failed to create PDFium page`,
+        );
         continue;
       }
 
@@ -57,17 +80,31 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
       try {
         bitmapPtr = m.FPDFBitmap_Create(imgWidth, imgHeight, 1);
         if (!bitmapPtr) {
-          console.warn(`[adjustContrast] Skipping page ${p}: failed to create bitmap`);
+          console.warn(
+            `[adjustContrast] Skipping page ${p}: failed to create bitmap`,
+          );
           continue;
         }
 
         const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
         const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-        copyRgbaToBgraHeap(m, new Uint8Array(imageData.data.buffer), bufferPtr, imgWidth, imgHeight, stride);
+        copyRgbaToBgraHeap(
+          m,
+          new Uint8Array(imageData.data.buffer),
+          bufferPtr,
+          imgWidth,
+          imgHeight,
+          stride,
+        );
 
         const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
         if (imageObjPtr) {
-          const setBitmapOk = m.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjPtr, bitmapPtr);
+          const setBitmapOk = m.FPDFImageObj_SetBitmap(
+            pagePtr,
+            0,
+            imageObjPtr,
+            bitmapPtr,
+          );
           if (setBitmapOk) {
             const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
             try {
@@ -98,7 +135,11 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
     }
 
     const pdfBytes = await saveRawDocument(docPtr);
-    const out = createFileFromApiResponse(pdfBytes, { "content-type": "application/pdf" }, file.name);
+    const out = createFileFromApiResponse(
+      pdfBytes,
+      { "content-type": "application/pdf" },
+      file.name,
+    );
     pdfWorkerManager.destroyDocument(pdf);
     return out;
   } finally {
@@ -106,9 +147,15 @@ async function buildAdjustedPdfForFile(file: File, params: AdjustContrastParamet
   }
 }
 
-async function processPdfClientSide(params: AdjustContrastParameters, files: File[]): Promise<CustomProcessorResult> {
+async function processPdfClientSide(
+  params: AdjustContrastParameters,
+  files: File[],
+): Promise<CustomProcessorResult> {
   let CONCURRENCY_LIMIT = 2;
-  if (typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number") {
+  if (
+    typeof navigator !== "undefined" &&
+    typeof navigator.hardwareConcurrency === "number"
+  ) {
     if (navigator.hardwareConcurrency >= 8) CONCURRENCY_LIMIT = 4;
     else if (navigator.hardwareConcurrency >= 4) CONCURRENCY_LIMIT = 3;
   }
@@ -122,19 +169,25 @@ async function processPdfClientSide(params: AdjustContrastParameters, files: Fil
     const results: R[] = new Array(items.length);
     let nextIndex = 0;
 
-    const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
-      let current = nextIndex++;
-      while (current < items.length) {
-        results[current] = await worker(items[current], current);
-        current = nextIndex++;
-      }
-    });
+    const workers = new Array(Math.min(limit, items.length))
+      .fill(0)
+      .map(async () => {
+        let current = nextIndex++;
+        while (current < items.length) {
+          results[current] = await worker(items[current], current);
+          current = nextIndex++;
+        }
+      });
 
     await Promise.all(workers);
     return results;
   };
 
-  const processedFiles = await mapWithConcurrency(files, CONCURRENCY_LIMIT, (file) => buildAdjustedPdfForFile(file, params));
+  const processedFiles = await mapWithConcurrency(
+    files,
+    CONCURRENCY_LIMIT,
+    (file) => buildAdjustedPdfForFile(file, params),
+  );
 
   return {
     files: processedFiles,
@@ -147,13 +200,15 @@ export const adjustContrastOperationConfig = {
   customProcessor: processPdfClientSide,
   operationType: "adjustContrast",
   defaultParameters,
-  settingsComponentPath: "components/tools/adjustContrast/AdjustContrastSingleStepSettings",
+  settingsComponentPath:
+    "components/tools/adjustContrast/AdjustContrastSingleStepSettings",
 } as const;
 
 export const useAdjustContrastOperation = () => {
   const { t } = useTranslation();
   return useToolOperation<AdjustContrastParameters>({
     ...adjustContrastOperationConfig,
-    getErrorMessage: () => t("adjustContrast.error.failed", "Failed to adjust colors/contrast"),
+    getErrorMessage: () =>
+      t("adjustContrast.error.failed", "Failed to adjust colors/contrast"),
   });
 };

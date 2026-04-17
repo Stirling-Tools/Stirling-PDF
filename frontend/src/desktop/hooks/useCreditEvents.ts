@@ -21,7 +21,10 @@ export function useCreditEvents() {
     if (isSaaSMode && creditBalance <= 0 && prevBalance > 0) {
       window.dispatchEvent(
         new CustomEvent(CREDIT_EVENTS.EXHAUSTED, {
-          detail: { previousBalance: prevBalance, currentBalance: creditBalance },
+          detail: {
+            previousBalance: prevBalance,
+            currentBalance: creditBalance,
+          },
         }),
       );
     }

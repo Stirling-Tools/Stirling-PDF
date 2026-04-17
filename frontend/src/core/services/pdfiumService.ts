@@ -36,7 +36,8 @@ export const PDF_FORM_FIELD_TYPE = {
   TEXTFIELD: FPDF_FORMFIELD_TEXTFIELD,
   SIGNATURE: FPDF_FORMFIELD_SIGNATURE,
 } as const;
-export type PDF_FORM_FIELD_TYPE = (typeof PDF_FORM_FIELD_TYPE)[keyof typeof PDF_FORM_FIELD_TYPE];
+export type PDF_FORM_FIELD_TYPE =
+  (typeof PDF_FORM_FIELD_TYPE)[keyof typeof PDF_FORM_FIELD_TYPE];
 
 let _initPromise: Promise<WrappedPdfiumModule> | null = null;
 let _module: WrappedPdfiumModule | null = null;
@@ -104,7 +105,11 @@ const _docDataPtrs = new Map<number, number>();
  * FS_RECTF memory layout: { left (f32), top (f32), right (f32), bottom (f32) }
  * In PDF coords (origin lower-left): top > bottom.
  */
-export function readAnnotRectAdjusted(m: WrappedPdfiumModule, annotPtr: number, rectBuf: number): boolean {
+export function readAnnotRectAdjusted(
+  m: WrappedPdfiumModule,
+  annotPtr: number,
+  rectBuf: number,
+): boolean {
   const ext = (m as any).EPDFAnnot_GetRect;
   if (typeof ext === "function") {
     return ext.call(m, annotPtr, rectBuf);
@@ -156,7 +161,10 @@ interface PageBox {
  * The returned values use the standard PDF coordinate system:
  *   left < right, bottom < top, origin at lower-left.
  */
-export function readEffectivePageBox(m: WrappedPdfiumModule, pagePtr: number): PageBox {
+export function readEffectivePageBox(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+): PageBox {
   const buf = m.pdfium.wasmExports.malloc(4 * 4); // 4 floats
 
   const read = (): PageBox | null => {
@@ -167,17 +175,27 @@ export function readEffectivePageBox(m: WrappedPdfiumModule, pagePtr: number): P
     const w = Math.abs(r - l);
     const h = Math.abs(t - b);
     if (w < 0.01 || h < 0.01) return null; // degenerate
-    return { left: Math.min(l, r), bottom: Math.min(b, t), right: Math.max(l, r), top: Math.max(b, t) };
+    return {
+      left: Math.min(l, r),
+      bottom: Math.min(b, t),
+      right: Math.max(l, r),
+      top: Math.max(b, t),
+    };
   };
 
   let result: PageBox | null = null;
   try {
     // CropBox is the effective visible area
-    if ((m as any).FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)) {
+    if (
+      (m as any).FPDFPage_GetCropBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
+    ) {
       result = read();
     }
     // Fall back to MediaBox
-    if (!result && (m as any).FPDFPage_GetMediaBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)) {
+    if (
+      !result &&
+      (m as any).FPDFPage_GetMediaBox(pagePtr, buf, buf + 4, buf + 8, buf + 12)
+    ) {
       result = read();
     }
   } catch {
@@ -203,7 +221,11 @@ export function readEffectivePageBox(m: WrappedPdfiumModule, pagePtr: number): P
  * Creates a fresh Uint8Array view of the WASM memory buffer AFTER malloc
  * so it is never stale even if malloc triggered a memory growth.
  */
-function copyToWasmHeap(m: WrappedPdfiumModule, bytes: Uint8Array, ptr: number): void {
+function copyToWasmHeap(
+  m: WrappedPdfiumModule,
+  bytes: Uint8Array,
+  ptr: number,
+): void {
   new Uint8Array((m.pdfium.wasmExports as any).memory.buffer).set(bytes, ptr);
 }
 
@@ -211,7 +233,10 @@ function copyToWasmHeap(m: WrappedPdfiumModule, bytes: Uint8Array, ptr: number):
  * Load a PDF into PDFium memory and return the document pointer.
  * Caller MUST call `closeRawDocument(docPtr)` when finished.
  */
-export async function openRawDocument(data: ArrayBuffer | Uint8Array, password?: string): Promise<number> {
+export async function openRawDocument(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<number> {
   const m = await getPdfiumModule();
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const len = bytes.length;
@@ -233,7 +258,10 @@ export async function openRawDocument(data: ArrayBuffer | Uint8Array, password?:
  * Open a raw document — convenience alias that delegates to {@link openRawDocument}.
  * Kept for API compatibility with callers that were updated to use the "Safe" variant.
  */
-export async function openRawDocumentSafe(data: ArrayBuffer | Uint8Array, password?: string): Promise<number> {
+export async function openRawDocumentSafe(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<number> {
   return openRawDocument(data, password);
 }
 
@@ -249,7 +277,10 @@ export async function closeRawDocument(docPtr: number): Promise<void> {
  * Synchronous close + buffer free — for use inside `finally` blocks that
  * already have the module reference.
  */
-export function closeDocAndFreeBuffer(m: WrappedPdfiumModule, docPtr: number): void {
+export function closeDocAndFreeBuffer(
+  m: WrappedPdfiumModule,
+  docPtr: number,
+): void {
   m.FPDF_CloseDocument(docPtr);
   const dataPtr = _docDataPtrs.get(docPtr);
   if (dataPtr) {
@@ -269,7 +300,10 @@ export async function getRawPageCount(docPtr: number): Promise<number> {
 /**
  * Get raw page dimensions { width, height } for a page.
  */
-export async function getRawPageSize(docPtr: number, pageIndex: number): Promise<{ width: number; height: number }> {
+export async function getRawPageSize(
+  docPtr: number,
+  pageIndex: number,
+): Promise<{ width: number; height: number }> {
   const m = await getPdfiumModule();
   const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
   if (!pagePtr) throw new Error(`PDFium: failed to load page ${pageIndex}`);
@@ -283,7 +317,11 @@ export async function getRawPageSize(docPtr: number, pageIndex: number): Promise
  * Read a UTF-16LE string from PDFium memory at the given pointer up to `len`
  * bytes (including the trailing NUL pair).
  */
-export function readUtf16(m: WrappedPdfiumModule, ptr: number, byteLen: number): string {
+export function readUtf16(
+  m: WrappedPdfiumModule,
+  ptr: number,
+  byteLen: number,
+): string {
   if (byteLen <= 2 || !ptr) return "";
   return m.pdfium.UTF16ToString(ptr);
 }
@@ -331,7 +369,10 @@ export interface PdfiumWidgetRect {
  * Returns an array of parsed form fields with their widget rectangles already
  * converted to CSS coordinate space (upper-left origin).
  */
-export async function extractFormFields(data: ArrayBuffer | Uint8Array, password?: string): Promise<PdfiumFormField[]> {
+export async function extractFormFields(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<PdfiumFormField[]> {
   const m = await getPdfiumModule();
   let docPtr: number;
   try {
@@ -363,7 +404,11 @@ export async function extractFormFields(data: ArrayBuffer | Uint8Array, password
       try {
         pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
       } catch (err) {
-        console.warn("[extractFormFields] FPDF_LoadPage crashed for page", pageIdx, err);
+        console.warn(
+          "[extractFormFields] FPDF_LoadPage crashed for page",
+          pageIdx,
+          err,
+        );
         if (err instanceof WebAssembly.RuntimeError) {
           resetPdfiumModule();
           throw err;
@@ -371,7 +416,10 @@ export async function extractFormFields(data: ArrayBuffer | Uint8Array, password
         continue;
       }
       if (!pagePtr) {
-        console.warn("[extractFormFields] FPDF_LoadPage returned 0 for page", pageIdx);
+        console.warn(
+          "[extractFormFields] FPDF_LoadPage returned 0 for page",
+          pageIdx,
+        );
         continue;
       }
 
@@ -380,7 +428,11 @@ export async function extractFormFields(data: ArrayBuffer | Uint8Array, password
         try {
           m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
         } catch (err) {
-          console.warn("[extractFormFields] FORM_OnAfterLoadPage crashed for page", pageIdx, err);
+          console.warn(
+            "[extractFormFields] FORM_OnAfterLoadPage crashed for page",
+            pageIdx,
+            err,
+          );
         }
       }
 
@@ -406,9 +458,24 @@ export async function extractFormFields(data: ArrayBuffer | Uint8Array, password
 
       for (let annotIdx = 0; annotIdx < annotCount; annotIdx++) {
         try {
-          this_extractAnnotation(m, formEnvPtr, pagePtr, pageIdx, pageBox, cropWidth, cropHeight, annotIdx, fieldMap);
+          this_extractAnnotation(
+            m,
+            formEnvPtr,
+            pagePtr,
+            pageIdx,
+            pageBox,
+            cropWidth,
+            cropHeight,
+            annotIdx,
+            fieldMap,
+          );
         } catch (annotErr) {
-          console.warn("[extractFormFields] Annotation %d on page %d crashed:", annotIdx, pageIdx, annotErr);
+          console.warn(
+            "[extractFormFields] Annotation %d on page %d crashed:",
+            annotIdx,
+            pageIdx,
+            annotErr,
+          );
         }
       }
 
@@ -446,7 +513,10 @@ export async function extractFormFields(data: ArrayBuffer | Uint8Array, password
     return Array.from(fieldMap.values());
   } catch (err) {
     if (err instanceof WebAssembly.RuntimeError) {
-      console.error("[extractFormFields] WASM RuntimeError — resetting module:", err);
+      console.error(
+        "[extractFormFields] WASM RuntimeError — resetting module:",
+        err,
+      );
       resetPdfiumModule();
     }
     throw err;
@@ -489,10 +559,14 @@ function this_extractAnnotation(
     if (subtype !== 20) return;
 
     // Get form field type
-    const fieldType = formEnvPtr ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr) : 0;
+    const fieldType = formEnvPtr
+      ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr)
+      : 0;
 
     // Get field name (requires a valid form environment pointer)
-    const nameLen = formEnvPtr ? m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0) : 0;
+    const nameLen = formEnvPtr
+      ? m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0)
+      : 0;
     let fieldName = "";
     if (nameLen > 0) {
       const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
@@ -502,7 +576,9 @@ function this_extractAnnotation(
     }
 
     // Get field value (requires a valid form environment pointer)
-    const valLen = formEnvPtr ? m.FPDFAnnot_GetFormFieldValue(formEnvPtr, annotPtr, 0, 0) : 0;
+    const valLen = formEnvPtr
+      ? m.FPDFAnnot_GetFormFieldValue(formEnvPtr, annotPtr, 0, 0)
+      : 0;
     let fieldValue = "";
     if (valLen > 0) {
       const valBuf = m.pdfium.wasmExports.malloc(valLen);
@@ -512,12 +588,16 @@ function this_extractAnnotation(
     }
 
     // Get field flags (requires a valid form environment pointer)
-    const fieldFlags = formEnvPtr ? m.FPDFAnnot_GetFormFieldFlags(formEnvPtr, annotPtr) : 0;
+    const fieldFlags = formEnvPtr
+      ? m.FPDFAnnot_GetFormFieldFlags(formEnvPtr, annotPtr)
+      : 0;
     const isReadOnly = (fieldFlags & 1) !== 0; // FORMFLAG_READONLY = 1
     const isRequired = (fieldFlags & 2) !== 0; // FORMFLAG_REQUIRED = 2
 
     // Is checked (for checkboxes/radios)
-    const isChecked = formEnvPtr ? m.FPDFAnnot_IsChecked(formEnvPtr, annotPtr) : false;
+    const isChecked = formEnvPtr
+      ? m.FPDFAnnot_IsChecked(formEnvPtr, annotPtr)
+      : false;
 
     // Get rect using standard FPDFAnnot_GetRect for known struct layout,
     // then apply explicit CropBox adjustment (mirrors the Java PDFBox backend).
@@ -599,12 +679,25 @@ function this_extractAnnotation(
       }
 
       // Get export value and checked state for checkbox/radio
-      if (fieldType === PDF_FORM_FIELD_TYPE.CHECKBOX || fieldType === PDF_FORM_FIELD_TYPE.RADIOBUTTON) {
+      if (
+        fieldType === PDF_FORM_FIELD_TYPE.CHECKBOX ||
+        fieldType === PDF_FORM_FIELD_TYPE.RADIOBUTTON
+      ) {
         try {
-          const expLen = m.FPDFAnnot_GetFormFieldExportValue(formEnvPtr, annotPtr, 0, 0);
+          const expLen = m.FPDFAnnot_GetFormFieldExportValue(
+            formEnvPtr,
+            annotPtr,
+            0,
+            0,
+          );
           if (expLen > 0) {
             const expBuf = m.pdfium.wasmExports.malloc(expLen);
-            m.FPDFAnnot_GetFormFieldExportValue(formEnvPtr, annotPtr, expBuf, expLen);
+            m.FPDFAnnot_GetFormFieldExportValue(
+              formEnvPtr,
+              annotPtr,
+              expBuf,
+              expLen,
+            );
             widgetRect.exportValue = readUtf16(m, expBuf, expLen);
             m.pdfium.wasmExports.free(expBuf);
           }
@@ -626,11 +719,23 @@ function this_extractAnnotation(
       try {
         const optCount = m.FPDFAnnot_GetOptionCount(formEnvPtr, annotPtr);
         for (let oi = 0; oi < optCount; oi++) {
-          const optLabelLen = m.FPDFAnnot_GetOptionLabel(formEnvPtr, annotPtr, oi, 0, 0);
+          const optLabelLen = m.FPDFAnnot_GetOptionLabel(
+            formEnvPtr,
+            annotPtr,
+            oi,
+            0,
+            0,
+          );
           let optLabel = "";
           if (optLabelLen > 0) {
             const optBuf = m.pdfium.wasmExports.malloc(optLabelLen);
-            m.FPDFAnnot_GetOptionLabel(formEnvPtr, annotPtr, oi, optBuf, optLabelLen);
+            m.FPDFAnnot_GetOptionLabel(
+              formEnvPtr,
+              annotPtr,
+              oi,
+              optBuf,
+              optLabelLen,
+            );
             optLabel = readUtf16(m, optBuf, optLabelLen);
             m.pdfium.wasmExports.free(optBuf);
           }
@@ -684,7 +789,10 @@ export interface PdfiumSignature {
 /**
  * Extract digital signature objects from a PDF.
  */
-export async function extractSignatures(data: ArrayBuffer | Uint8Array, password?: string): Promise<PdfiumSignature[]> {
+export async function extractSignatures(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<PdfiumSignature[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
 
@@ -802,10 +910,14 @@ export async function renderPageToBitmap(
         const srcOff = y * stride + x * 4;
         const dstOff = (y * w + x) * 4;
         // BGRA → RGBA
-        pixelData[dstOff] = m.pdfium.getValue(bufferPtr + srcOff + 2, "i8") & 0xff;
-        pixelData[dstOff + 1] = m.pdfium.getValue(bufferPtr + srcOff + 1, "i8") & 0xff;
-        pixelData[dstOff + 2] = m.pdfium.getValue(bufferPtr + srcOff, "i8") & 0xff;
-        pixelData[dstOff + 3] = m.pdfium.getValue(bufferPtr + srcOff + 3, "i8") & 0xff;
+        pixelData[dstOff] =
+          m.pdfium.getValue(bufferPtr + srcOff + 2, "i8") & 0xff;
+        pixelData[dstOff + 1] =
+          m.pdfium.getValue(bufferPtr + srcOff + 1, "i8") & 0xff;
+        pixelData[dstOff + 2] =
+          m.pdfium.getValue(bufferPtr + srcOff, "i8") & 0xff;
+        pixelData[dstOff + 3] =
+          m.pdfium.getValue(bufferPtr + srcOff + 3, "i8") & 0xff;
       }
     }
 
@@ -985,14 +1097,23 @@ export async function importPages(
   insertIndex?: number,
 ): Promise<boolean> {
   const m = await getPdfiumModule();
-  return m.FPDF_ImportPages(destDocPtr, srcDocPtr, pageRange ?? "", insertIndex ?? 0);
+  return m.FPDF_ImportPages(
+    destDocPtr,
+    srcDocPtr,
+    pageRange ?? "",
+    insertIndex ?? 0,
+  );
 }
 
 /**
  * Set page rotation on a raw document.
  * @param rotation 0, 1, 2, 3 for 0°, 90°, 180°, 270°
  */
-export async function setPageRotation(docPtr: number, pageIndex: number, rotation: number): Promise<void> {
+export async function setPageRotation(
+  docPtr: number,
+  pageIndex: number,
+  rotation: number,
+): Promise<void> {
   const m = await getPdfiumModule();
   const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
   if (!pagePtr) throw new Error(`PDFium: failed to load page ${pageIndex}`);
@@ -1003,7 +1124,12 @@ export async function setPageRotation(docPtr: number, pageIndex: number, rotatio
 /**
  * Create a new page in a document.
  */
-export async function addNewPage(docPtr: number, insertIndex: number, width: number, height: number): Promise<void> {
+export async function addNewPage(
+  docPtr: number,
+  insertIndex: number,
+  width: number,
+  height: number,
+): Promise<void> {
   const m = await getPdfiumModule();
   const pagePtr = m.FPDFPage_New(docPtr, insertIndex, width, height);
   if (pagePtr) m.FPDF_ClosePage(pagePtr);
@@ -1012,11 +1138,21 @@ export async function addNewPage(docPtr: number, insertIndex: number, width: num
 /**
  * Get metadata from a document.
  */
-export async function getMetadata(data: ArrayBuffer | Uint8Array, password?: string): Promise<Record<string, string>> {
+export async function getMetadata(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<Record<string, string>> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
   try {
-    const tags = ["Title", "Author", "Subject", "Keywords", "Creator", "Producer"];
+    const tags = [
+      "Title",
+      "Author",
+      "Subject",
+      "Keywords",
+      "Creator",
+      "Producer",
+    ];
     const meta: Record<string, string> = {};
     for (const tag of tags) {
       const len = m.FPDF_GetMetaText(docPtr, tag, 0, 0);
@@ -1079,7 +1215,9 @@ export async function extractSignatureFieldRects(
           continue;
         }
 
-        const fieldType = formEnvPtr ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr) : 0;
+        const fieldType = formEnvPtr
+          ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr)
+          : 0;
 
         if (fieldType !== PDF_FORM_FIELD_TYPE.SIGNATURE) {
           m.FPDFPage_CloseAnnot(annotPtr);
@@ -1087,7 +1225,12 @@ export async function extractSignatureFieldRects(
         }
 
         // Get field name
-        const nameLen = m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0);
+        const nameLen = m.FPDFAnnot_GetFormFieldName(
+          formEnvPtr,
+          annotPtr,
+          0,
+          0,
+        );
         let name = "";
         if (nameLen > 0) {
           const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
@@ -1204,7 +1347,14 @@ async function renderWidgetAppearance(
 
   let ok = false;
   try {
-    ok = !!m.EPDF_RenderAnnotBitmap(bitmapPtr, pagePtr, annotPtr, AP_MODE_NORMAL, matrixPtr, RENDER_FLAG_REVERSE_BYTE_ORDER);
+    ok = !!m.EPDF_RenderAnnotBitmap(
+      bitmapPtr,
+      pagePtr,
+      annotPtr,
+      AP_MODE_NORMAL,
+      matrixPtr,
+      RENDER_FLAG_REVERSE_BYTE_ORDER,
+    );
   } catch {
     /* Extension not available */
   }
@@ -1213,7 +1363,9 @@ async function renderWidgetAppearance(
 
   let imageData: ImageData | null = null;
   if (ok) {
-    const rgba = new Uint8ClampedArray(pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes));
+    const rgba = new Uint8ClampedArray(
+      pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+    );
     let hasVisible = false;
     for (let i = 3; i < rgba.length; i += 4) {
       if (rgba[i] > 0) {
@@ -1237,15 +1389,36 @@ async function renderWidgetAppearance(
     const startY = Math.round(-cssY * dpr);
 
     try {
-      m.FPDF_RenderPageBitmap(bmp2, pagePtr, startX, startY, fullW, fullH, 0, 0x01 | 0x10);
-      m.FPDF_FFLDraw(formEnvPtr, bmp2, pagePtr, startX, startY, fullW, fullH, 0, 0x01 | 0x10);
+      m.FPDF_RenderPageBitmap(
+        bmp2,
+        pagePtr,
+        startX,
+        startY,
+        fullW,
+        fullH,
+        0,
+        0x01 | 0x10,
+      );
+      m.FPDF_FFLDraw(
+        formEnvPtr,
+        bmp2,
+        pagePtr,
+        startX,
+        startY,
+        fullW,
+        fullH,
+        0,
+        0x01 | 0x10,
+      );
     } catch {
       /* fallback not available */
     }
 
     m.FPDFBitmap_Destroy(bmp2);
 
-    const rgba2 = new Uint8ClampedArray(pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes));
+    const rgba2 = new Uint8ClampedArray(
+      pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+    );
     let hasVisible2 = false;
     for (let i = 3; i < rgba2.length; i += 4) {
       if (rgba2[i] > 0) {
@@ -1314,7 +1487,9 @@ export async function renderSignatureFieldAppearances(
           continue;
         }
 
-        const fieldType = formEnvPtr ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr) : 0;
+        const fieldType = formEnvPtr
+          ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr)
+          : 0;
 
         if (fieldType !== PDF_FORM_FIELD_TYPE.SIGNATURE) {
           m.FPDFPage_CloseAnnot(annotPtr);
@@ -1322,7 +1497,12 @@ export async function renderSignatureFieldAppearances(
         }
 
         // --- field name ---
-        const nameLen = m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0);
+        const nameLen = m.FPDFAnnot_GetFormFieldName(
+          formEnvPtr,
+          annotPtr,
+          0,
+          0,
+        );
         let name = "";
         if (nameLen > 0) {
           const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
@@ -1372,7 +1552,10 @@ export async function renderSignatureFieldAppearances(
         let imageData: ImageData | null = null;
 
         if (pdfW > 0.5 && pdfH > 0.5) {
-          const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 3) : 1;
+          const dpr =
+            typeof window !== "undefined"
+              ? Math.min(window.devicePixelRatio || 1, 3)
+              : 1;
           const wDev = Math.max(1, Math.round(pdfW * dpr));
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
@@ -1380,7 +1563,13 @@ export async function renderSignatureFieldAppearances(
           const pdfiumWasm = m.pdfium as any;
 
           const heapPtr = m.pdfium.wasmExports.malloc(bytes);
-          const bitmapPtr = m.FPDFBitmap_CreateEx(wDev, hDev, 4 /* BGRA */, heapPtr, stride);
+          const bitmapPtr = m.FPDFBitmap_CreateEx(
+            wDev,
+            hDev,
+            4 /* BGRA */,
+            heapPtr,
+            stride,
+          );
           m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
 
           // Build user→device matrix: maps annotation rect to bitmap.
@@ -1388,7 +1577,11 @@ export async function renderSignatureFieldAppearances(
           const sx = wDev / pdfW;
           const sy = hDev / pdfH;
           const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-          const matrixView = new Float32Array(pdfiumWasm.HEAPF32.buffer, matrixPtr, 6);
+          const matrixView = new Float32Array(
+            pdfiumWasm.HEAPF32.buffer,
+            matrixPtr,
+            6,
+          );
           matrixView.set([sx, 0, 0, -sy, -sx * annotLeft, sy * annotTop]);
 
           let ok = false;
@@ -1409,7 +1602,9 @@ export async function renderSignatureFieldAppearances(
           m.FPDFBitmap_Destroy(bitmapPtr);
 
           if (ok) {
-            const rgba = new Uint8ClampedArray(pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes));
+            const rgba = new Uint8ClampedArray(
+              pdfiumWasm.HEAPU8.buffer.slice(heapPtr, heapPtr + bytes),
+            );
             let hasVisible = false;
             for (let i = 3; i < rgba.length; i += 4) {
               if (rgba[i] > 0) {
@@ -1450,14 +1645,26 @@ export async function renderSignatureFieldAppearances(
                 0x01 | 0x10, // FPDF_ANNOT | FPDF_REVERSE_BYTE_ORDER
               );
               // Draw form fill layer on top (includes signature appearances)
-              m.FPDF_FFLDraw(formEnvPtr, bmp2, pagePtr, startX, startY, fullW, fullH, 0, 0x01 | 0x10);
+              m.FPDF_FFLDraw(
+                formEnvPtr,
+                bmp2,
+                pagePtr,
+                startX,
+                startY,
+                fullW,
+                fullH,
+                0,
+                0x01 | 0x10,
+              );
             } catch {
               // FPDF_FFLDraw not available or failed.
             }
 
             m.FPDFBitmap_Destroy(bmp2);
 
-            const rgba2 = new Uint8ClampedArray(pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes));
+            const rgba2 = new Uint8ClampedArray(
+              pdfiumWasm.HEAPU8.buffer.slice(heap2, heap2 + bytes),
+            );
             let hasVisible2 = false;
             for (let i = 3; i < rgba2.length; i += 4) {
               if (rgba2[i] > 0) {
@@ -1540,13 +1747,20 @@ export async function renderButtonFieldAppearances(
           continue;
         }
 
-        const fieldType = formEnvPtr ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr) : 0;
+        const fieldType = formEnvPtr
+          ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr)
+          : 0;
         if (fieldType !== PDF_FORM_FIELD_TYPE.PUSHBUTTON) {
           m.FPDFPage_CloseAnnot(annotPtr);
           continue;
         }
 
-        const nameLen = m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0);
+        const nameLen = m.FPDFAnnot_GetFormFieldName(
+          formEnvPtr,
+          annotPtr,
+          0,
+          0,
+        );
         let btnName = "";
         if (nameLen > 0) {
           const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
@@ -1591,13 +1805,22 @@ export async function renderButtonFieldAppearances(
         let imageData: ImageData | null = null;
 
         if (pdfW > 0.5 && pdfH > 0.5) {
-          const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 3) : 1;
+          const dpr =
+            typeof window !== "undefined"
+              ? Math.min(window.devicePixelRatio || 1, 3)
+              : 1;
           const wDev = Math.max(1, Math.round(pdfW * dpr));
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
           const bytes = stride * hDev;
           const heapPtr = m.pdfium.wasmExports.malloc(bytes);
-          const bitmapPtr = m.FPDFBitmap_CreateEx(wDev, hDev, 4, heapPtr, stride);
+          const bitmapPtr = m.FPDFBitmap_CreateEx(
+            wDev,
+            hDev,
+            4,
+            heapPtr,
+            stride,
+          );
           m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
 
           imageData = await renderWidgetAppearance(

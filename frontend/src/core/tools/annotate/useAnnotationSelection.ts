@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AnnotationAPI, AnnotationToolId } from "@app/components/viewer/viewerTypes";
+import type {
+  AnnotationAPI,
+  AnnotationToolId,
+} from "@app/components/viewer/viewerTypes";
 
 interface UseAnnotationSelectionParams {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
@@ -31,7 +34,12 @@ interface UseAnnotationSelectionParams {
   setTextAlignment: (value: "left" | "center" | "right") => void;
 }
 
-const MARKUP_TOOL_IDS = ["highlight", "underline", "strikeout", "squiggly"] as const;
+const MARKUP_TOOL_IDS = [
+  "highlight",
+  "underline",
+  "strikeout",
+  "squiggly",
+] as const;
 const DRAWING_TOOL_IDS = ["ink", "inkHighlighter"] as const;
 const STAY_ACTIVE_TOOL_IDS = [...MARKUP_TOOL_IDS, ...DRAWING_TOOL_IDS] as const;
 
@@ -54,7 +62,10 @@ const isTextMarkupAnnotation = (annotation: any): boolean => {
   return false;
 };
 
-const shouldStayOnPlacementTool = (annotation: any, derivedTool?: string | null | undefined): boolean => {
+const shouldStayOnPlacementTool = (
+  annotation: any,
+  derivedTool?: string | null | undefined,
+): boolean => {
   // Text markup tools (highlight, underline, strikeout, squiggly) and drawing tools (ink, inkHighlighter) stay active
   // All other tools switch to select mode after placement
 
@@ -117,11 +128,17 @@ export function useAnnotationSelection({
       const annObject = ann?.object ?? ann ?? null;
       const annId = annObject?.id ?? null;
       const type = annObject?.type;
-      const derivedTool = annObject ? deriveToolFromAnnotation(annObject) : undefined;
+      const derivedTool = annObject
+        ? deriveToolFromAnnotation(annObject)
+        : undefined;
       selectedAnnIdRef.current = annId;
       setSelectedAnnId(annId);
       // Normalize selected annotation to always expose .object for edit panels
-      const normalizedSelection = ann?.object ? ann : annObject ? { object: annObject } : null;
+      const normalizedSelection = ann?.object
+        ? ann
+        : annObject
+          ? { object: annObject }
+          : null;
       setSelectedAnn(normalizedSelection);
 
       if (annObject?.contents !== undefined) {
@@ -133,17 +150,27 @@ export function useAnnotationSelection({
       if (annObject?.textAlign !== undefined) {
         const align = annObject.textAlign;
         if (typeof align === "string") {
-          const normalized = align === "center" ? "center" : align === "right" ? "right" : "left";
+          const normalized =
+            align === "center"
+              ? "center"
+              : align === "right"
+                ? "right"
+                : "left";
           setTextAlignment(normalized);
         } else if (typeof align === "number") {
-          const normalized = align === 1 ? "center" : align === 2 ? "right" : "left";
+          const normalized =
+            align === 1 ? "center" : align === 2 ? "right" : "left";
           setTextAlignment(normalized);
         }
       }
       if (type === 3) {
         const background =
-          (annObject?.backgroundColor as string | undefined) || (annObject?.fillColor as string | undefined) || undefined;
-        const textColor = (annObject?.textColor as string | undefined) || (annObject?.color as string | undefined);
+          (annObject?.backgroundColor as string | undefined) ||
+          (annObject?.fillColor as string | undefined) ||
+          undefined;
+        const textColor =
+          (annObject?.textColor as string | undefined) ||
+          (annObject?.color as string | undefined);
         if (textColor) {
           setTextColor(textColor);
         }
@@ -155,7 +182,11 @@ export function useAnnotationSelection({
       }
 
       if (type === 15) {
-        const width = annObject?.strokeWidth ?? annObject?.borderWidth ?? annObject?.lineWidth ?? annObject?.thickness;
+        const width =
+          annObject?.strokeWidth ??
+          annObject?.borderWidth ??
+          annObject?.lineWidth ??
+          annObject?.thickness;
         if (derivedTool === "inkHighlighter") {
           if (annObject?.color) setHighlightColor(annObject.color);
           if (annObject?.opacity !== undefined) {
@@ -171,7 +202,10 @@ export function useAnnotationSelection({
           }
         }
       } else if (type >= 4 && type <= 8) {
-        const width = annObject?.strokeWidth ?? annObject?.borderWidth ?? annObject?.lineWidth;
+        const width =
+          annObject?.strokeWidth ??
+          annObject?.borderWidth ??
+          annObject?.lineWidth;
         if (width !== undefined) {
           setShapeThickness(width ?? 1);
         }
@@ -179,43 +213,67 @@ export function useAnnotationSelection({
 
       if (type === 9) {
         if (annObject?.color) setHighlightColor(annObject.color);
-        if (annObject?.opacity !== undefined) setHighlightOpacity(Math.round((annObject.opacity ?? 1) * 100));
+        if (annObject?.opacity !== undefined)
+          setHighlightOpacity(Math.round((annObject.opacity ?? 1) * 100));
       } else if (type === 10) {
         if (annObject?.color) setUnderlineColor(annObject.color);
-        if (annObject?.opacity !== undefined) setUnderlineOpacity(Math.round((annObject.opacity ?? 1) * 100));
+        if (annObject?.opacity !== undefined)
+          setUnderlineOpacity(Math.round((annObject.opacity ?? 1) * 100));
       } else if (type === 12) {
         if (annObject?.color) setStrikeoutColor(annObject.color);
-        if (annObject?.opacity !== undefined) setStrikeoutOpacity(Math.round((annObject.opacity ?? 1) * 100));
+        if (annObject?.opacity !== undefined)
+          setStrikeoutOpacity(Math.round((annObject.opacity ?? 1) * 100));
       } else if (type === 11) {
         if (annObject?.color) setSquigglyColor(annObject.color);
-        if (annObject?.opacity !== undefined) setSquigglyOpacity(Math.round((annObject.opacity ?? 1) * 100));
+        if (annObject?.opacity !== undefined)
+          setSquigglyOpacity(Math.round((annObject.opacity ?? 1) * 100));
       }
 
       if ([4, 5, 6, 7, 8].includes(type)) {
-        const stroke = (annObject?.strokeColor as string | undefined) ?? (annObject?.color as string | undefined);
+        const stroke =
+          (annObject?.strokeColor as string | undefined) ??
+          (annObject?.color as string | undefined);
         if (stroke) setShapeStrokeColor(stroke);
         if ([5, 6, 7].includes(type)) {
-          const fill = (annObject?.color as string | undefined) ?? (annObject?.fillColor as string | undefined);
+          const fill =
+            (annObject?.color as string | undefined) ??
+            (annObject?.fillColor as string | undefined);
           if (fill) setShapeFillColor(fill);
         }
-        const opacity = annObject?.opacity !== undefined ? Math.round((annObject.opacity ?? 1) * 100) : undefined;
+        const opacity =
+          annObject?.opacity !== undefined
+            ? Math.round((annObject.opacity ?? 1) * 100)
+            : undefined;
         const strokeOpacityValue =
-          annObject?.strokeOpacity !== undefined ? Math.round((annObject.strokeOpacity ?? 1) * 100) : undefined;
+          annObject?.strokeOpacity !== undefined
+            ? Math.round((annObject.strokeOpacity ?? 1) * 100)
+            : undefined;
         const fillOpacityValue =
-          annObject?.fillOpacity !== undefined ? Math.round((annObject.fillOpacity ?? 1) * 100) : undefined;
+          annObject?.fillOpacity !== undefined
+            ? Math.round((annObject.fillOpacity ?? 1) * 100)
+            : undefined;
         if (opacity !== undefined) {
           setShapeOpacity(opacity);
           setShapeStrokeOpacity(strokeOpacityValue ?? opacity);
           setShapeFillOpacity(fillOpacityValue ?? opacity);
         } else {
-          if (strokeOpacityValue !== undefined) setShapeStrokeOpacity(strokeOpacityValue);
-          if (fillOpacityValue !== undefined) setShapeFillOpacity(fillOpacityValue);
+          if (strokeOpacityValue !== undefined)
+            setShapeStrokeOpacity(strokeOpacityValue);
+          if (fillOpacityValue !== undefined)
+            setShapeFillOpacity(fillOpacityValue);
         }
       }
 
       const matchingTool = derivedTool;
-      const stayOnPlacement = shouldStayOnPlacementTool(annObject, matchingTool);
-      if (matchingTool && activeToolRef.current !== "select" && !stayOnPlacement) {
+      const stayOnPlacement = shouldStayOnPlacementTool(
+        annObject,
+        matchingTool,
+      );
+      if (
+        matchingTool &&
+        activeToolRef.current !== "select" &&
+        !stayOnPlacement
+      ) {
         activeToolRef.current = "select";
         setActiveTool("select");
         // Immediately enable select tool to avoid re-entering placement after creation.
@@ -271,9 +329,13 @@ export function useAnnotationSelection({
           // an undefined object). Treat this as "no current selection"
           // instead of crashing the annotations tool.
           // Only log unexpected errors - "No active document" is a common expected state during init
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           if (!errorMessage.includes("No active document")) {
-            console.error("[useAnnotationSelection] getSelectedAnnotation failed:", error);
+            console.error(
+              "[useAnnotationSelection] getSelectedAnnotation failed:",
+              error,
+            );
           }
           ann = null;
         }
@@ -302,7 +364,11 @@ export function useAnnotationSelection({
             applySelectionFromAnnotation(eventAnn);
             const currentTool = activeToolRef.current;
             const tool =
-              deriveToolFromAnnotation((eventAnn as any)?.object ?? eventAnn ?? api.getSelectedAnnotation?.()) || currentTool;
+              deriveToolFromAnnotation(
+                (eventAnn as any)?.object ??
+                  eventAnn ??
+                  api.getSelectedAnnotation?.(),
+              ) || currentTool;
             const stayOnPlacement = shouldStayOnPlacementTool(eventAnn, tool);
             if (activeToolRef.current !== "select" && !stayOnPlacement) {
               activeToolRef.current = "select";
@@ -314,8 +380,13 @@ export function useAnnotationSelection({
               const selected = api.getSelectedAnnotation?.();
               applySelectionFromAnnotation(selected ?? eventAnn ?? null);
               const derivedAfter =
-                deriveToolFromAnnotation((selected as any)?.object ?? selected ?? eventAnn ?? null) || activeToolRef.current;
-              const stayOnPlacementAfter = shouldStayOnPlacementTool(selected ?? eventAnn ?? null, derivedAfter);
+                deriveToolFromAnnotation(
+                  (selected as any)?.object ?? selected ?? eventAnn ?? null,
+                ) || activeToolRef.current;
+              const stayOnPlacementAfter = shouldStayOnPlacementTool(
+                selected ?? eventAnn ?? null,
+                derivedAfter,
+              );
               if (activeToolRef.current !== "select" && !stayOnPlacementAfter) {
                 activeToolRef.current = "select";
                 setActiveTool("select");

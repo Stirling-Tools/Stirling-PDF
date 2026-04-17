@@ -43,7 +43,10 @@ export const useRedactWordsTips = (): TooltipContent => {
         ),
         bullets: [
           t("redact.tooltip.words.bullet1", "Add one word at a time"),
-          t("redact.tooltip.words.bullet2", "Press Enter or click 'Add Another' to add"),
+          t(
+            "redact.tooltip.words.bullet2",
+            "Press Enter or click 'Add Another' to add",
+          ),
           t("redact.tooltip.words.bullet3", "Click × to remove words"),
         ],
       },
@@ -63,7 +66,10 @@ export const useRedactAdvancedTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("redact.tooltip.advanced.header.title", "Advanced Redaction Settings"),
+      title: t(
+        "redact.tooltip.advanced.header.title",
+        "Advanced Redaction Settings",
+      ),
     },
     tips: [
       {
@@ -80,19 +86,31 @@ export const useRedactAdvancedTips = (): TooltipContent => {
           "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns.",
         ),
         bullets: [
-          t("redact.tooltip.advanced.regex.bullet1", "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format"),
-          t("redact.tooltip.advanced.regex.bullet2", "Use with caution - test thoroughly"),
+          t(
+            "redact.tooltip.advanced.regex.bullet1",
+            "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format",
+          ),
+          t(
+            "redact.tooltip.advanced.regex.bullet2",
+            "Use with caution - test thoroughly",
+          ),
         ],
       },
       {
-        title: t("redact.tooltip.advanced.wholeWord.title", "Whole Word Search"),
+        title: t(
+          "redact.tooltip.advanced.wholeWord.title",
+          "Whole Word Search",
+        ),
         description: t(
           "redact.tooltip.advanced.wholeWord.text",
           "Only match complete words, not partial matches. 'John' won't match 'Johnson' when enabled.",
         ),
       },
       {
-        title: t("redact.tooltip.advanced.convert.title", "Convert to PDF-Image"),
+        title: t(
+          "redact.tooltip.advanced.convert.title",
+          "Convert to PDF-Image",
+        ),
         description: t(
           "redact.tooltip.advanced.convert.text",
           "Converts the PDF to an image-based PDF after redaction. This ensures text behind redaction boxes is completely removed and unrecoverable.",
@@ -107,7 +125,10 @@ export const useRedactManualTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("redact.tooltip.manual.header.title", "Manual Redaction Controls"),
+      title: t(
+        "redact.tooltip.manual.header.title",
+        "Manual Redaction Controls",
+      ),
     },
     tips: [
       {
@@ -131,9 +152,18 @@ export const useRedactManualTips = (): TooltipContent => {
           "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied.",
         ),
         bullets: [
-          t("redact.tooltip.manual.apply.bullet1", "Mark as many areas as needed before applying"),
-          t("redact.tooltip.manual.apply.bullet2", "All pending redactions are applied at once"),
-          t("redact.tooltip.manual.apply.bullet3", "Redactions cannot be undone after applying"),
+          t(
+            "redact.tooltip.manual.apply.bullet1",
+            "Mark as many areas as needed before applying",
+          ),
+          t(
+            "redact.tooltip.manual.apply.bullet2",
+            "All pending redactions are applied at once",
+          ),
+          t(
+            "redact.tooltip.manual.apply.bullet3",
+            "Redactions cannot be undone after applying",
+          ),
         ],
       },
     ],

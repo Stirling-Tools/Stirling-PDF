@@ -13,12 +13,9 @@ interface SaaSAvailablePlansSectionProps {
   error?: string | null;
 }
 
-export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps> = ({
-  plans,
-  currentTier,
-  loading,
-  error,
-}) => {
+export const SaaSAvailablePlansSection: React.FC<
+  SaaSAvailablePlansSectionProps
+> = ({ plans, currentTier, loading, error }) => {
   const { t } = useTranslation();
   const { openCheckout } = useSaaSCheckout();
 
@@ -33,7 +30,10 @@ export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps>
       return;
     }
 
-    console.log("[SaaSAvailablePlansSection] Upgrade clicked for plan:", plan.id);
+    console.log(
+      "[SaaSAvailablePlansSection] Upgrade clicked for plan:",
+      plan.id,
+    );
     openCheckout(plan.id);
   };
 
@@ -48,7 +48,12 @@ export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps>
   if (error) {
     return (
       <Alert color="orange" variant="light" mt="md">
-        <Text size="sm">{t("plan.availablePlans.loadError", "Unable to load plan pricing. Using default values.")}</Text>
+        <Text size="sm">
+          {t(
+            "plan.availablePlans.loadError",
+            "Unable to load plan pricing. Using default values.",
+          )}
+        </Text>
       </Alert>
     );
   }

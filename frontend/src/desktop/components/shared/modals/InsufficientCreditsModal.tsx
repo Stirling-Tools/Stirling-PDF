@@ -18,19 +18,28 @@ interface InsufficientCreditsModalProps {
  * Desktop Insufficient Credits Modal
  * Shows when user attempts operation without enough credits
  */
-export function InsufficientCreditsModal({ opened, onClose, toolId, requiredCredits }: InsufficientCreditsModalProps) {
+export function InsufficientCreditsModal({
+  opened,
+  onClose,
+  toolId,
+  requiredCredits,
+}: InsufficientCreditsModalProps) {
   const { t } = useTranslation();
-  const { creditBalance, tier, refreshBilling, isManagedTeamMember } = useSaaSBilling();
+  const { creditBalance, tier, refreshBilling, isManagedTeamMember } =
+    useSaaSBilling();
   const { isTeamLeader } = useSaaSTeam();
   const { openCheckout } = useSaaSCheckout();
 
-  const { enablingMetering, meteringError, handleEnableMetering } = useEnableMeteredBilling(
-    refreshBilling,
-    onClose,
-    "InsufficientCreditsModal",
-  );
+  const { enablingMetering, meteringError, handleEnableMetering } =
+    useEnableMeteredBilling(
+      refreshBilling,
+      onClose,
+      "InsufficientCreditsModal",
+    );
 
-  const toolName = toolId ? t(`tool.${toolId}.name`, toolId) : t("common.operation", "this operation");
+  const toolName = toolId
+    ? t(`tool.${toolId}.name`, toolId)
+    : t("common.operation", "this operation");
 
   return (
     <Modal
@@ -42,7 +51,9 @@ export function InsufficientCreditsModal({ opened, onClose, toolId, requiredCred
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       title={
         <Group gap="xs">
-          <WarningIcon sx={{ fontSize: 24, color: "var(--mantine-color-orange-6)" }} />
+          <WarningIcon
+            sx={{ fontSize: 24, color: "var(--mantine-color-orange-6)" }}
+          />
           <Text size="lg" fw={500}>
             {t("credits.insufficient.title", "Insufficient Credits")}
           </Text>
@@ -76,7 +87,10 @@ export function InsufficientCreditsModal({ opened, onClose, toolId, requiredCred
         {isManagedTeamMember ? (
           <>
             <Text size="sm" c="dimmed">
-              {t("credits.insufficient.managedMember", "Please contact your team leader for assistance.")}
+              {t(
+                "credits.insufficient.managedMember",
+                "Please contact your team leader for assistance.",
+              )}
             </Text>
             <Button onClick={onClose} fullWidth>
               {t("common.close", "Close")}
@@ -85,7 +99,10 @@ export function InsufficientCreditsModal({ opened, onClose, toolId, requiredCred
         ) : tier === "team" ? (
           <>
             <Text size="sm" c="dimmed">
-              {t("credits.insufficient.teamMember", "Enable overage billing to never run out of credits.")}
+              {t(
+                "credits.insufficient.teamMember",
+                "Enable overage billing to never run out of credits.",
+              )}
             </Text>
             {meteringError && <Alert color="red">{meteringError}</Alert>}
             <Button
@@ -100,17 +117,28 @@ export function InsufficientCreditsModal({ opened, onClose, toolId, requiredCred
             </Button>
             {!isTeamLeader && (
               <Text size="xs" c="dimmed" ta="center">
-                {t("credits.modal.teamLeaderOnly", "Only team leaders can enable overage billing")}
+                {t(
+                  "credits.modal.teamLeaderOnly",
+                  "Only team leaders can enable overage billing",
+                )}
               </Text>
             )}
-            <Button onClick={onClose} variant="subtle" fullWidth disabled={enablingMetering}>
+            <Button
+              onClick={onClose}
+              variant="subtle"
+              fullWidth
+              disabled={enablingMetering}
+            >
               {t("common.cancel", "Cancel")}
             </Button>
           </>
         ) : (
           <>
             <Text size="sm" c="dimmed">
-              {t("credits.insufficient.freeTier", "Upgrade to Team for 10x more credits and unlimited overage billing.")}
+              {t(
+                "credits.insufficient.freeTier",
+                "Upgrade to Team for 10x more credits and unlimited overage billing.",
+              )}
             </Text>
             <Button
               variant="filled"

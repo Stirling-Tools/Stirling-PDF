@@ -1,5 +1,10 @@
 import { useState, useRef } from "react";
-import { ActionIcon, ScrollArea, Switch, useMantineColorScheme } from "@mantine/core";
+import {
+  ActionIcon,
+  ScrollArea,
+  Switch,
+  useMantineColorScheme,
+} from "@mantine/core";
 import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
 import { useTranslation } from "react-i18next";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -17,7 +22,10 @@ import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 interface FullscreenToolSurfaceProps {
   searchQuery: string;
   toolRegistry: Partial<Record<ToolId, ToolRegistryEntry>>;
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{
+    item: [ToolId, ToolRegistryEntry];
+    matchedText?: string;
+  }>;
   selectedToolKey: string | null;
   showDescriptions: boolean;
   matchedTextMap: Map<string, string>;
@@ -47,7 +55,8 @@ const FullscreenToolSurface = ({
   const { colorScheme } = useMantineColorScheme();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
-  const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  const isRTL =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
   // Enable focus trap when surface is active
   useFocusTrap(surfaceRef, !isExiting);
@@ -58,7 +67,9 @@ const FullscreenToolSurface = ({
   const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleExit = () => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     if (prefersReducedMotion) {
       onExitFullscreenMode();
@@ -95,7 +106,10 @@ const FullscreenToolSurface = ({
       className="tool-panel__fullscreen-surface"
       style={style}
       role="region"
-      aria-label={t("toolPanel.fullscreen.heading", "All tools (fullscreen view)")}
+      aria-label={t(
+        "toolPanel.fullscreen.heading",
+        "All tools (fullscreen view)",
+      )}
       data-tour="tool-panel"
     >
       <div
@@ -104,8 +118,16 @@ const FullscreenToolSurface = ({
       >
         <header className="tool-panel__fullscreen-header">
           <div className="tool-panel__fullscreen-brand">
-            <img src={brandIconSrc} alt="" className="tool-panel__fullscreen-brand-icon" />
-            <img src={brandTextSrc} alt={brandAltText} className="tool-panel__fullscreen-brand-text" />
+            <img
+              src={brandIconSrc}
+              alt=""
+              className="tool-panel__fullscreen-brand-icon"
+            />
+            <img
+              src={brandTextSrc}
+              alt={brandAltText}
+              className="tool-panel__fullscreen-brand-text"
+            />
           </div>
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <Tooltip
@@ -123,14 +145,23 @@ const FullscreenToolSurface = ({
                 aria-label={toggleLabel}
                 style={{ color: "var(--right-rail-icon)" }}
               >
-                <DoubleArrowIcon fontSize="small" style={{ transform: isRTL ? undefined : "rotate(180deg)" }} />
+                <DoubleArrowIcon
+                  fontSize="small"
+                  style={{ transform: isRTL ? undefined : "rotate(180deg)" }}
+                />
               </ActionIcon>
             </Tooltip>
           </div>
         </header>
 
         <div className="tool-panel__fullscreen-controls">
-          <ToolSearch value={searchQuery} onChange={onSearchChange} toolRegistry={toolRegistry} mode="filter" autoFocus />
+          <ToolSearch
+            value={searchQuery}
+            onChange={onSearchChange}
+            toolRegistry={toolRegistry}
+            mode="filter"
+            autoFocus
+          />
           <Switch
             checked={showDescriptions}
             onChange={() => onToggleDescriptions()}
@@ -141,7 +172,10 @@ const FullscreenToolSurface = ({
         </div>
 
         <div className="tool-panel__fullscreen-body">
-          <ScrollArea className="tool-panel__fullscreen-scroll" offsetScrollbars>
+          <ScrollArea
+            className="tool-panel__fullscreen-scroll"
+            offsetScrollbars
+          >
             <FullscreenToolList
               filteredTools={filteredTools}
               searchQuery={searchQuery}

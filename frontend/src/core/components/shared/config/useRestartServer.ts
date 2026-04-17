@@ -26,7 +26,10 @@ export function useRestartServer() {
         alert({
           alertType: "neutral",
           title: t("admin.settings.restarting", "Restarting Server"),
-          body: t("admin.settings.restartingMessage", "The server is restarting. Please wait a moment..."),
+          body: t(
+            "admin.settings.restartingMessage",
+            "The server is restarting. Please wait a moment...",
+          ),
         });
         // Wait a moment then reload the page
         setTimeout(() => {
@@ -37,7 +40,10 @@ export function useRestartServer() {
         alert({
           alertType: "error",
           title: t("admin.error", "Error"),
-          body: t("admin.settings.restartError", "Failed to restart server. Please restart manually."),
+          body: t(
+            "admin.settings.restartError",
+            "Failed to restart server. Please restart manually.",
+          ),
         });
       });
   };

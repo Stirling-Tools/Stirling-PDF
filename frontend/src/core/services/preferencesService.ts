@@ -1,4 +1,7 @@
-import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from "@app/constants/toolPanel";
+import {
+  type ToolPanelMode,
+  DEFAULT_TOOL_PANEL_MODE,
+} from "@app/constants/toolPanel";
 import { type ThemeMode, getSystemTheme } from "@app/constants/theme";
 
 export type LogoVariant = "modern" | "classic";
@@ -7,7 +10,16 @@ export type PdfRenderMode = "normal" | "dark" | "sepia";
 
 export type StartupView = "tools" | "read" | "automate";
 
-export type ViewerZoomSetting = "auto" | "fitWidth" | "fitPage" | "50" | "75" | "100" | "125" | "150" | "200";
+export type ViewerZoomSetting =
+  | "auto"
+  | "fitWidth"
+  | "fitPage"
+  | "50"
+  | "75"
+  | "100"
+  | "125"
+  | "150"
+  | "200";
 
 export interface UserPreferences {
   autoUnzip: boolean;
@@ -76,7 +88,10 @@ class PreferencesService {
     return DEFAULT_PREFERENCES[key];
   }
 
-  setPreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]): void {
+  setPreference<K extends keyof UserPreferences>(
+    key: K,
+    value: UserPreferences[K],
+  ): void {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       const preferences = stored ? JSON.parse(stored) : {};

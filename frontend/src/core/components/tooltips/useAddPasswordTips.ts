@@ -6,7 +6,10 @@ export const useAddPasswordTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("addPassword.tooltip.header.title", "Password Protection Overview"),
+      title: t(
+        "addPassword.tooltip.header.title",
+        "Password Protection Overview",
+      ),
     },
     tips: [
       {
@@ -16,7 +19,10 @@ export const useAddPasswordTips = (): TooltipContent => {
           "User passwords restrict opening the document, while owner passwords control what can be done with the document once opened. You can set both or just one.",
         ),
         bullets: [
-          t("addPassword.tooltip.passwords.bullet1", "User Password: Required to open the PDF"),
+          t(
+            "addPassword.tooltip.passwords.bullet1",
+            "User Password: Required to open the PDF",
+          ),
           t(
             "addPassword.tooltip.passwords.bullet2",
             "Owner Password: Controls document permissions (not supported by all PDF viewers)",
@@ -30,9 +36,18 @@ export const useAddPasswordTips = (): TooltipContent => {
           "Higher encryption levels provide better security but may not be supported by older PDF viewers.",
         ),
         bullets: [
-          t("addPassword.tooltip.encryption.bullet1", "40-bit: Basic security, compatible with older viewers"),
-          t("addPassword.tooltip.encryption.bullet2", "128-bit: Standard security, widely supported"),
-          t("addPassword.tooltip.encryption.bullet3", "256-bit: Maximum security, requires modern viewers"),
+          t(
+            "addPassword.tooltip.encryption.bullet1",
+            "40-bit: Basic security, compatible with older viewers",
+          ),
+          t(
+            "addPassword.tooltip.encryption.bullet2",
+            "128-bit: Standard security, widely supported",
+          ),
+          t(
+            "addPassword.tooltip.encryption.bullet3",
+            "256-bit: Maximum security, requires modern viewers",
+          ),
         ],
       },
     ],

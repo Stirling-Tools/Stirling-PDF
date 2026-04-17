@@ -1,5 +1,18 @@
 import { useState } from "react";
-import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon, ActionIcon, Tooltip, Loader } from "@mantine/core";
+import {
+  Card,
+  Stack,
+  Text,
+  Group,
+  Badge,
+  Button,
+  Box,
+  Image,
+  ThemeIcon,
+  ActionIcon,
+  Tooltip,
+  Loader,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import StorageIcon from "@mui/icons-material/Storage";
@@ -35,7 +48,8 @@ const FileCard = ({
 }: FileCardProps) => {
   const { t } = useTranslation();
   // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
-  const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileStub);
+  const { thumbnail: indexedDBThumb, isGenerating } =
+    useIndexedDBThumbnail(fileStub);
   const thumb = fileStub?.thumbnailUrl || indexedDBThumb;
   const [isHovered, setIsHovered] = useState(false);
 
@@ -55,7 +69,9 @@ const FileCard = ({
         maxWidth: 260,
         cursor: onDoubleClick && isSupported ? "pointer" : undefined,
         position: "relative",
-        border: isSelected ? "2px solid var(--mantine-color-blue-6)" : undefined,
+        border: isSelected
+          ? "2px solid var(--mantine-color-blue-6)"
+          : undefined,
         backgroundColor: isSelected ? "var(--mantine-color-blue-0)" : undefined,
         opacity: isSupported ? 1 : 0.5,
         filter: isSupported ? "none" : "grayscale(50%)",
@@ -131,7 +147,14 @@ const FileCard = ({
             </div>
           )}
           {thumb ? (
-            <Image src={thumb} alt="PDF thumbnail" height={110} width={80} fit="contain" radius="sm" />
+            <Image
+              src={thumb}
+              alt="PDF thumbnail"
+              height={110}
+              width={80}
+              fit="contain"
+              radius="sm"
+            />
           ) : isGenerating || isHydrating ? (
             <Stack align="center" justify="center" gap="xs">
               <Loader size="sm" />
@@ -153,7 +176,11 @@ const FileCard = ({
                 color={file.size > 100 * 1024 * 1024 ? "orange" : "red"}
                 size={60}
                 radius="sm"
-                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
                 <PictureAsPdfIcon style={{ fontSize: 40 }} />
               </ThemeIcon>
@@ -178,7 +205,12 @@ const FileCard = ({
             {getFileDate(file)}
           </Badge>
           {fileStub?.id && (
-            <Badge color="green" variant="light" size="sm" leftSection={<StorageIcon style={{ fontSize: 12 }} />}>
+            <Badge
+              color="green"
+              variant="light"
+              size="sm"
+              leftSection={<StorageIcon style={{ fontSize: 12 }} />}
+            >
               DB
             </Badge>
           )}

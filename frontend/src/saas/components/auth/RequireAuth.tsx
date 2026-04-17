@@ -12,11 +12,19 @@ export function RequireAuth({ fallbackPath = "/login" }: RequireAuthProps) {
   const { isAutoAuthenticating } = useAutoAnonymousAuth();
 
   // Safe development-only auth bypass
-  const isLocalhost = typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-  const devBypassEnabled = Boolean(import.meta.env.DEV && isLocalhost && import.meta.env.VITE_DEV_BYPASS_AUTH === "true");
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+  const devBypassEnabled = Boolean(
+    import.meta.env.DEV &&
+    isLocalhost &&
+    import.meta.env.VITE_DEV_BYPASS_AUTH === "true",
+  );
 
   if (devBypassEnabled) {
-    console.warn("[RequireAuth] DEV BYPASS ACTIVE — allowing access without session on localhost");
+    console.warn(
+      "[RequireAuth] DEV BYPASS ACTIVE — allowing access without session on localhost",
+    );
     return <Outlet />;
   }
 

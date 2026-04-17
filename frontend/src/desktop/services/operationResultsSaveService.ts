@@ -1,10 +1,16 @@
 import type { FileId } from "@app/types/fileContext";
 import type { OperationSaveContext } from "@core/services/operationResultsSaveService";
-import { downloadFile, downloadFromUrl, DownloadResult } from "@app/services/downloadService";
+import {
+  downloadFile,
+  downloadFromUrl,
+  DownloadResult,
+} from "@app/services/downloadService";
 
 export type { OperationSaveContext };
 
-export async function saveOperationResults(context: OperationSaveContext): Promise<DownloadResult | null> {
+export async function saveOperationResults(
+  context: OperationSaveContext,
+): Promise<DownloadResult | null> {
   if (!context.downloadUrl) return null;
 
   if (context.outputFileIds && context.outputFileIds.length > 0) {

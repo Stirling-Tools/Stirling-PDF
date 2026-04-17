@@ -11,7 +11,10 @@ interface ErrorBoundaryProps {
   fallback?: React.ComponentType<{ error?: Error; retry: () => void }>;
 }
 
-export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export default class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -42,7 +45,9 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
       const errorCodeMatch = error.message.match(/#(\d+)/);
       if (errorCodeMatch) {
         const errorCode = errorCodeMatch[1];
-        console.error(`React Error #${errorCode}: https://react.dev/errors/${errorCode}`);
+        console.error(
+          `React Error #${errorCode}: https://react.dev/errors/${errorCode}`,
+        );
       }
     }
 
@@ -75,19 +80,34 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
         <Stack
           align="center"
           justify="center"
-          style={{ minHeight: "200px", padding: "2rem", maxWidth: "800px", margin: "0 auto" }}
+          style={{
+            minHeight: "200px",
+            padding: "2rem",
+            maxWidth: "800px",
+            margin: "0 auto",
+          }}
         >
           <Text size="lg" fw={500} c="red">
             Something went wrong
           </Text>
           {process.env.NODE_ENV === "development" && this.state.error && (
             <>
-              <Text size="sm" c="dimmed" style={{ textAlign: "center", fontFamily: "monospace", marginTop: "1rem" }}>
+              <Text
+                size="sm"
+                c="dimmed"
+                style={{
+                  textAlign: "center",
+                  fontFamily: "monospace",
+                  marginTop: "1rem",
+                }}
+              >
                 {this.state.error.message}
               </Text>
               {this.state.error.stack && (
                 <details style={{ marginTop: "1rem", width: "100%" }}>
-                  <summary style={{ cursor: "pointer", marginBottom: "0.5rem" }}>
+                  <summary
+                    style={{ cursor: "pointer", marginBottom: "0.5rem" }}
+                  >
                     <Text size="sm" component="span">
                       Show stack trace
                     </Text>

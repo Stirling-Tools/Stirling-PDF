@@ -28,25 +28,32 @@ describe("Translation TOML Validation", () => {
     expect(localeDirectories.length).toBeGreaterThan(0);
   });
 
-  test.each(localeDirectories)("should have valid TOML in %s/translation.toml", (localeDir) => {
-    const translationFile = path.join(LOCALES_DIR, localeDir, "translation.toml");
+  test.each(localeDirectories)(
+    "should have valid TOML in %s/translation.toml",
+    (localeDir) => {
+      const translationFile = path.join(
+        LOCALES_DIR,
+        localeDir,
+        "translation.toml",
+      );
 
-    // Check if file exists
-    expect(fs.existsSync(translationFile)).toBe(true);
+      // Check if file exists
+      expect(fs.existsSync(translationFile)).toBe(true);
 
-    // Read file content
-    const content = fs.readFileSync(translationFile, "utf8");
-    expect(content.trim()).not.toBe("");
+      // Read file content
+      const content = fs.readFileSync(translationFile, "utf8");
+      expect(content.trim()).not.toBe("");
 
-    // Parse TOML - this will throw if invalid TOML
-    let tomlData;
-    expect(() => {
-      tomlData = parse(content);
-    }).not.toThrow();
+      // Parse TOML - this will throw if invalid TOML
+      let tomlData;
+      expect(() => {
+        tomlData = parse(content);
+      }).not.toThrow();
 
-    // Ensure it's an object at root level
-    expect(typeof tomlData).toBe("object");
-    expect(tomlData).not.toBeNull();
-    expect(Array.isArray(tomlData)).toBe(false);
-  });
+      // Ensure it's an object at root level
+      expect(typeof tomlData).toBe("object");
+      expect(tomlData).not.toBeNull();
+      expect(Array.isArray(tomlData)).toBe(false);
+    },
+  );
 });

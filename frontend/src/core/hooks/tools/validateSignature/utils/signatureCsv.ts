@@ -6,7 +6,9 @@ import {
   keyUsagesToString,
 } from "@app/hooks/tools/validateSignature/utils/signatureUtils";
 
-const buildCsvRows = (entries: SignatureValidationReportEntry[]): string[][] => {
+const buildCsvRows = (
+  entries: SignatureValidationReportEntry[],
+): string[][] => {
   const headers = [
     "fileName",
     "signatureIndex",
@@ -57,7 +59,9 @@ const buildCsvRows = (entries: SignatureValidationReportEntry[]): string[][] => 
           signature.validFrom || "",
           signature.validUntil || "",
           signature.signatureAlgorithm || "",
-          signature.keySize !== null && signature.keySize !== undefined ? String(signature.keySize) : "",
+          signature.keySize !== null && signature.keySize !== undefined
+            ? String(signature.keySize)
+            : "",
           signature.version || "",
           keyUsagesToString(signature.keyUsages),
           booleanToString(signature.selfSigned),
@@ -96,7 +100,9 @@ const buildCsvRows = (entries: SignatureValidationReportEntry[]): string[][] => 
   return rows;
 };
 
-export const createCsvFile = (entries: SignatureValidationReportEntry[]): File => {
+export const createCsvFile = (
+  entries: SignatureValidationReportEntry[],
+): File => {
   const rows = buildCsvRows(entries);
   const csv = rows.map((row) => row.map(escapeCsvValue).join(",")).join("\r\n");
   return new File([csv], CSV_FILENAME, { type: "text/csv;charset=utf-8;" });

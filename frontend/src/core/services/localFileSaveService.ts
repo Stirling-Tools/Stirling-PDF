@@ -18,7 +18,10 @@ export interface MultiFileSaveResult {
  * Core stub - always returns failure
  * Desktop builds override this with actual implementation
  */
-export async function saveToLocalPath(_data: Blob | File, _filePath: string): Promise<SaveResult> {
+export async function saveToLocalPath(
+  _data: Blob | File,
+  _filePath: string,
+): Promise<SaveResult> {
   return { success: false, error: "Local file save not available in web mode" };
 }
 
@@ -26,7 +29,10 @@ export async function saveToLocalPath(_data: Blob | File, _filePath: string): Pr
  * Show native save dialog
  * Core stub - always returns null
  */
-export async function showSaveDialog(_defaultFilename: string, _defaultDirectory?: string): Promise<string | null> {
+export async function showSaveDialog(
+  _defaultFilename: string,
+  _defaultDirectory?: string,
+): Promise<string | null> {
   return null;
 }
 
@@ -38,5 +44,9 @@ export async function saveMultipleFilesWithPrompt(
   _files: (Blob | File)[],
   _defaultDirectory?: string,
 ): Promise<MultiFileSaveResult> {
-  return { success: false, savedCount: 0, error: "Multi-file save not available in web mode" };
+  return {
+    success: false,
+    savedCount: 0,
+    error: "Multi-file save not available in web mode",
+  };
 }

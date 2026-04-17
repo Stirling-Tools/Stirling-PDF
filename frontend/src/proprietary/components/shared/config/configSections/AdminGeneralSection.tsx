@@ -27,7 +27,11 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
-import { supportedLanguages, toUnderscoreFormat, toUnderscoreLanguages } from "@app/i18n";
+import {
+  supportedLanguages,
+  toUnderscoreFormat,
+  toUnderscoreLanguages,
+} from "@app/i18n";
 import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface GeneralSettingsData {
@@ -73,13 +77,21 @@ export default function AdminGeneralSection() {
   const location = useLocation();
   const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
   const { preferences, updatePreference } = usePreferences();
   const { markClean } = useUnsavedChanges();
   const languageOptions = useMemo(
     () =>
       Object.entries(supportedLanguages)
-        .map(([code, label]) => ({ value: toUnderscoreFormat(code), label: `${label} (${code})` }))
+        .map(([code, label]) => ({
+          value: toUnderscoreFormat(code),
+          label: `${label} (${code})`,
+        }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     [],
   );
@@ -95,119 +107,153 @@ export default function AdminGeneralSection() {
     return uniquePaths;
   }, []);
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<GeneralSettingsData>({
-      sectionName: "general",
-      fetchTransformer: async (): Promise<GeneralSettingsData & { _pending?: Record<string, unknown> }> => {
-        const [uiResponse, systemResponse, premiumResponse] = await Promise.all([
-          apiClient.get("/api/v1/admin/settings/section/ui"),
-          apiClient.get("/api/v1/admin/settings/section/system"),
-          apiClient.get("/api/v1/admin/settings/section/premium"),
-        ]);
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<GeneralSettingsData>({
+    sectionName: "general",
+    fetchTransformer: async (): Promise<
+      GeneralSettingsData & { _pending?: Record<string, unknown> }
+    > => {
+      const [uiResponse, systemResponse, premiumResponse] = await Promise.all([
+        apiClient.get("/api/v1/admin/settings/section/ui"),
+        apiClient.get("/api/v1/admin/settings/section/system"),
+        apiClient.get("/api/v1/admin/settings/section/premium"),
+      ]);
 
-        const ui = { ...(uiResponse.data || {}) };
-        const system = { ...(systemResponse.data || {}) };
-        const premium = { ...(premiumResponse.data || {}) };
+      const ui = { ...(uiResponse.data || {}) };
+      const system = { ...(systemResponse.data || {}) };
+      const premium = { ...(premiumResponse.data || {}) };
 
-        ui.languages = Array.isArray(ui.languages) ? toUnderscoreLanguages(ui.languages) : [];
+      ui.languages = Array.isArray(ui.languages)
+        ? toUnderscoreLanguages(ui.languages)
+        : [];
 
-        const pipelinePaths = system.customPaths?.pipeline || {};
-        const watchedFoldersDirs = Array.isArray(pipelinePaths.watchedFoldersDirs) ? pipelinePaths.watchedFoldersDirs : [];
-        const normalizedWatchedFoldersDirs =
-          watchedFoldersDirs.length > 0
-            ? watchedFoldersDirs
-            : pipelinePaths.watchedFoldersDir
-              ? [pipelinePaths.watchedFoldersDir]
-              : [];
+      const pipelinePaths = system.customPaths?.pipeline || {};
+      const watchedFoldersDirs = Array.isArray(pipelinePaths.watchedFoldersDirs)
+        ? pipelinePaths.watchedFoldersDirs
+        : [];
+      const normalizedWatchedFoldersDirs =
+        watchedFoldersDirs.length > 0
+          ? watchedFoldersDirs
+          : pipelinePaths.watchedFoldersDir
+            ? [pipelinePaths.watchedFoldersDir]
+            : [];
 
-        const result: GeneralSettingsData & { _pending?: Record<string, unknown> } = {
-          ui,
-          system,
-          customPaths: {
-            ...(system.customPaths || {}),
-            pipeline: {
-              ...pipelinePaths,
-              pipelineDir: pipelinePaths.pipelineDir || "",
-              watchedFoldersDir: pipelinePaths.watchedFoldersDir || "",
-              watchedFoldersDirs: normalizedWatchedFoldersDirs,
-              finishedFoldersDir: pipelinePaths.finishedFoldersDir || "",
-            },
-            operations: {
-              ...(system.customPaths?.operations || {}),
-              weasyprint: system.customPaths?.operations?.weasyprint || "",
-              unoconvert: system.customPaths?.operations?.unoconvert || "",
-            },
+      const result: GeneralSettingsData & {
+        _pending?: Record<string, unknown>;
+      } = {
+        ui,
+        system,
+        customPaths: {
+          ...(system.customPaths || {}),
+          pipeline: {
+            ...pipelinePaths,
+            pipelineDir: pipelinePaths.pipelineDir || "",
+            watchedFoldersDir: pipelinePaths.watchedFoldersDir || "",
+            watchedFoldersDirs: normalizedWatchedFoldersDirs,
+            finishedFoldersDir: pipelinePaths.finishedFoldersDir || "",
           },
-          customMetadata: premium.proFeatures?.customMetadata || {
-            autoUpdateMetadata: false,
-            author: "",
-            creator: "",
-            producer: "",
+          operations: {
+            ...(system.customPaths?.operations || {}),
+            weasyprint: system.customPaths?.operations?.weasyprint || "",
+            unoconvert: system.customPaths?.operations?.unoconvert || "",
           },
-        };
+        },
+        customMetadata: premium.proFeatures?.customMetadata || {
+          autoUpdateMetadata: false,
+          author: "",
+          creator: "",
+          producer: "",
+        },
+      };
 
-        // Merge pending blocks from all three endpoints
-        const pendingBlock: Record<string, unknown> = {};
-        if (ui._pending) {
-          pendingBlock.ui = ui._pending;
-        }
-        if (system._pending) {
-          pendingBlock.system = system._pending;
-        }
-        if (system._pending?.customPaths) {
-          pendingBlock.customPaths = system._pending.customPaths;
-        }
-        if (premium._pending?.proFeatures?.customMetadata) {
-          pendingBlock.customMetadata = premium._pending.proFeatures.customMetadata;
-        }
+      // Merge pending blocks from all three endpoints
+      const pendingBlock: Record<string, unknown> = {};
+      if (ui._pending) {
+        pendingBlock.ui = ui._pending;
+      }
+      if (system._pending) {
+        pendingBlock.system = system._pending;
+      }
+      if (system._pending?.customPaths) {
+        pendingBlock.customPaths = system._pending.customPaths;
+      }
+      if (premium._pending?.proFeatures?.customMetadata) {
+        pendingBlock.customMetadata =
+          premium._pending.proFeatures.customMetadata;
+      }
 
-        if (Object.keys(pendingBlock).length > 0) {
-          result._pending = pendingBlock;
-        }
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
 
-        return result;
-      },
-      saveTransformer: (settings: GeneralSettingsData) => {
-        const deltaSettings: Record<string, unknown> = {
-          // UI settings
-          "ui.appNameNavbar": settings.ui?.appNameNavbar,
-          "ui.languages": settings.ui?.languages,
-          "ui.logoStyle": settings.ui?.logoStyle,
-          "ui.hideDisabledTools.googleDrive": settings.ui?.hideDisabledTools?.googleDrive,
-          "ui.hideDisabledTools.mobileQRScanner": settings.ui?.hideDisabledTools?.mobileQRScanner,
-          // System settings
-          "system.defaultLocale": settings.system?.defaultLocale,
-          "system.showUpdate": settings.system?.showUpdate,
-          "system.showUpdateOnlyAdmin": settings.system?.showUpdateOnlyAdmin,
-          "system.customHTMLFiles": settings.system?.customHTMLFiles,
-          "system.fileUploadLimit": settings.system?.fileUploadLimit,
-          "system.frontendUrl": settings.system?.frontendUrl,
-          // Premium custom metadata
-          "premium.proFeatures.customMetadata.autoUpdateMetadata": settings.customMetadata?.autoUpdateMetadata,
-          "premium.proFeatures.customMetadata.author": settings.customMetadata?.author,
-          "premium.proFeatures.customMetadata.creator": settings.customMetadata?.creator,
-          "premium.proFeatures.customMetadata.producer": settings.customMetadata?.producer,
-        };
+      return result;
+    },
+    saveTransformer: (settings: GeneralSettingsData) => {
+      const deltaSettings: Record<string, unknown> = {
+        // UI settings
+        "ui.appNameNavbar": settings.ui?.appNameNavbar,
+        "ui.languages": settings.ui?.languages,
+        "ui.logoStyle": settings.ui?.logoStyle,
+        "ui.hideDisabledTools.googleDrive":
+          settings.ui?.hideDisabledTools?.googleDrive,
+        "ui.hideDisabledTools.mobileQRScanner":
+          settings.ui?.hideDisabledTools?.mobileQRScanner,
+        // System settings
+        "system.defaultLocale": settings.system?.defaultLocale,
+        "system.showUpdate": settings.system?.showUpdate,
+        "system.showUpdateOnlyAdmin": settings.system?.showUpdateOnlyAdmin,
+        "system.customHTMLFiles": settings.system?.customHTMLFiles,
+        "system.fileUploadLimit": settings.system?.fileUploadLimit,
+        "system.frontendUrl": settings.system?.frontendUrl,
+        // Premium custom metadata
+        "premium.proFeatures.customMetadata.autoUpdateMetadata":
+          settings.customMetadata?.autoUpdateMetadata,
+        "premium.proFeatures.customMetadata.author":
+          settings.customMetadata?.author,
+        "premium.proFeatures.customMetadata.creator":
+          settings.customMetadata?.creator,
+        "premium.proFeatures.customMetadata.producer":
+          settings.customMetadata?.producer,
+      };
 
-        if (settings.customPaths) {
-          deltaSettings["system.customPaths.pipeline.pipelineDir"] = settings.customPaths?.pipeline?.pipelineDir;
-          deltaSettings["system.customPaths.pipeline.watchedFoldersDir"] = settings.customPaths?.pipeline?.watchedFoldersDir;
-          deltaSettings["system.customPaths.pipeline.watchedFoldersDirs"] = settings.customPaths?.pipeline?.watchedFoldersDirs;
-          deltaSettings["system.customPaths.pipeline.finishedFoldersDir"] = settings.customPaths?.pipeline?.finishedFoldersDir;
-          deltaSettings["system.customPaths.operations.weasyprint"] = settings.customPaths?.operations?.weasyprint;
-          deltaSettings["system.customPaths.operations.unoconvert"] = settings.customPaths?.operations?.unoconvert;
-        }
+      if (settings.customPaths) {
+        deltaSettings["system.customPaths.pipeline.pipelineDir"] =
+          settings.customPaths?.pipeline?.pipelineDir;
+        deltaSettings["system.customPaths.pipeline.watchedFoldersDir"] =
+          settings.customPaths?.pipeline?.watchedFoldersDir;
+        deltaSettings["system.customPaths.pipeline.watchedFoldersDirs"] =
+          settings.customPaths?.pipeline?.watchedFoldersDirs;
+        deltaSettings["system.customPaths.pipeline.finishedFoldersDir"] =
+          settings.customPaths?.pipeline?.finishedFoldersDir;
+        deltaSettings["system.customPaths.operations.weasyprint"] =
+          settings.customPaths?.operations?.weasyprint;
+        deltaSettings["system.customPaths.operations.unoconvert"] =
+          settings.customPaths?.operations?.unoconvert;
+      }
 
-        return {
-          sectionData: {},
-          deltaSettings,
-        };
-      },
-    });
+      return {
+        sectionData: {},
+        deltaSettings,
+      };
+    },
+  });
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
 
-  const selectedLanguages = useMemo(() => toUnderscoreLanguages(settings.ui?.languages || []), [settings.ui?.languages]);
+  const selectedLanguages = useMemo(
+    () => toUnderscoreLanguages(settings.ui?.languages || []),
+    [settings.ui?.languages],
+  );
   const watchedFoldersInput = useMemo(
     () => (settings.customPaths?.pipeline?.watchedFoldersDirs || []).join("\n"),
     [settings.customPaths?.pipeline?.watchedFoldersDirs],
@@ -215,11 +261,13 @@ export default function AdminGeneralSection() {
 
   const watchedFoldersValidation = useMemo(() => {
     const paths = settings.customPaths?.pipeline?.watchedFoldersDirs || [];
-    const finishedPath = settings.customPaths?.pipeline?.finishedFoldersDir || "";
+    const finishedPath =
+      settings.customPaths?.pipeline?.finishedFoldersDir || "";
     const warnings: string[] = [];
 
     // Normalize paths for comparison (handle both Windows and Unix paths)
-    const normalizePath = (p: string) => p.replace(/\\/g, "/").replace(/\/+$/, "");
+    const normalizePath = (p: string) =>
+      p.replace(/\\/g, "/").replace(/\/+$/, "");
 
     // Check for overlapping watched folders
     if (paths.length >= 2) {
@@ -231,9 +279,13 @@ export default function AdminGeneralSection() {
           if (path1 === path2) {
             warnings.push(`Duplicate path detected: '${paths[i]}'`);
           } else if (path1.startsWith(path2 + "/")) {
-            warnings.push(`'${paths[i]}' is nested inside '${paths[j]}' - may cause duplicate processing`);
+            warnings.push(
+              `'${paths[i]}' is nested inside '${paths[j]}' - may cause duplicate processing`,
+            );
           } else if (path2.startsWith(path1 + "/")) {
-            warnings.push(`'${paths[j]}' is nested inside '${paths[i]}' - may cause duplicate processing`);
+            warnings.push(
+              `'${paths[j]}' is nested inside '${paths[i]}' - may cause duplicate processing`,
+            );
           }
         }
       }
@@ -250,7 +302,9 @@ export default function AdminGeneralSection() {
             `CRITICAL: Watched folder '${watchedPath}' is the same as finished folder - will cause processing loops!`,
           );
         } else if (normalizedFinished.startsWith(normalizedWatched + "/")) {
-          warnings.push(`Finished folder is nested inside watched folder '${watchedPath}' - may cause issues`);
+          warnings.push(
+            `Finished folder is nested inside watched folder '${watchedPath}' - may cause issues`,
+          );
         } else if (normalizedWatched.startsWith(normalizedFinished + "/")) {
           warnings.push(
             `CRITICAL: Watched folder '${watchedPath}' is nested inside finished folder - will cause processing loops!`,
@@ -260,7 +314,10 @@ export default function AdminGeneralSection() {
     }
 
     return warnings.length > 0 ? warnings : null;
-  }, [settings.customPaths?.pipeline?.watchedFoldersDirs, settings.customPaths?.pipeline?.finishedFoldersDir]);
+  }, [
+    settings.customPaths?.pipeline?.watchedFoldersDirs,
+    settings.customPaths?.pipeline?.finishedFoldersDir,
+  ]);
 
   // Filter default locale options based on available languages setting
   const defaultLocaleOptions = useMemo(() => {
@@ -269,7 +326,9 @@ export default function AdminGeneralSection() {
       return languageOptions;
     }
     // Otherwise, only show languages that are in the selected list
-    return languageOptions.filter((option) => selectedLanguages.includes(option.value));
+    return languageOptions.filter((option) =>
+      selectedLanguages.includes(option.value),
+    );
   }, [selectedLanguages, languageOptions]);
 
   useEffect(() => {
@@ -397,13 +456,26 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.appNameNavbar.label", "Navbar Brand")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.general.appNameNavbar.label",
+                        "Navbar Brand",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("ui.appNameNavbar")} />
                   </Group>
                 }
-                description={t("admin.settings.general.appNameNavbar.description", "The name displayed in the navigation bar")}
+                description={t(
+                  "admin.settings.general.appNameNavbar.description",
+                  "The name displayed in the navigation bar",
+                )}
                 value={settings.ui?.appNameNavbar || ""}
-                onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, appNameNavbar: e.target.value } })}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    ui: { ...settings.ui, appNameNavbar: e.target.value },
+                  })
+                }
                 placeholder="Stirling PDF"
                 disabled={!loginEnabled}
               />
@@ -412,7 +484,9 @@ export default function AdminGeneralSection() {
             <div>
               <Text size="sm" fw={500} mb={4}>
                 <Group gap="xs">
-                  <span>{t("admin.settings.general.logoStyle.label", "Logo Style")}</span>
+                  <span>
+                    {t("admin.settings.general.logoStyle.label", "Logo Style")}
+                  </span>
                   <PendingBadge show={isFieldPending("ui.logoStyle")} />
                 </Group>
               </Text>
@@ -429,26 +503,56 @@ export default function AdminGeneralSection() {
                   {
                     value: "classic",
                     label: (
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.25rem 0" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          padding: "0.25rem 0",
+                        }}
+                      >
                         <img
                           src="classic-logo/favicon.ico"
-                          alt={t("admin.settings.general.logoStyle.classicAlt", "Classic logo")}
+                          alt={t(
+                            "admin.settings.general.logoStyle.classicAlt",
+                            "Classic logo",
+                          )}
                           style={{ width: "24px", height: "24px" }}
                         />
-                        <span>{t("admin.settings.general.logoStyle.classic", "Classic")}</span>
+                        <span>
+                          {t(
+                            "admin.settings.general.logoStyle.classic",
+                            "Classic",
+                          )}
+                        </span>
                       </div>
                     ),
                   },
                   {
                     value: "modern",
                     label: (
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.25rem 0" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          padding: "0.25rem 0",
+                        }}
+                      >
                         <img
                           src="modern-logo/StirlingPDFLogoNoTextLight.svg"
-                          alt={t("admin.settings.general.logoStyle.modernAlt", "Modern logo")}
+                          alt={t(
+                            "admin.settings.general.logoStyle.modernAlt",
+                            "Modern logo",
+                          )}
                           style={{ width: "24px", height: "24px" }}
                         />
-                        <span>{t("admin.settings.general.logoStyle.modern", "Modern")}</span>
+                        <span>
+                          {t(
+                            "admin.settings.general.logoStyle.modern",
+                            "Modern",
+                          )}
+                        </span>
                       </div>
                     ),
                   },
@@ -460,7 +564,12 @@ export default function AdminGeneralSection() {
               <MultiSelect
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.languages.label", "Available Languages")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.general.languages.label",
+                        "Available Languages",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("ui.languages")} />
                   </Group>
                 }
@@ -469,11 +578,19 @@ export default function AdminGeneralSection() {
                   "Limit which languages are available (empty = all languages)",
                 )}
                 value={selectedLanguages}
-                onChange={(value) => setSettings({ ...settings, ui: { ...settings.ui, languages: value } })}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    ui: { ...settings.ui, languages: value },
+                  })
+                }
                 data={languageOptions}
                 searchable
                 clearable
-                placeholder={t("admin.settings.general.languages.placeholder", "Select languages")}
+                placeholder={t(
+                  "admin.settings.general.languages.placeholder",
+                  "Select languages",
+                )}
                 comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
                 disabled={!loginEnabled}
               />
@@ -483,8 +600,15 @@ export default function AdminGeneralSection() {
               <Select
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.defaultLocale.label", "Default Locale")}</span>
-                    <PendingBadge show={isFieldPending("system.defaultLocale")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.defaultLocale.label",
+                        "Default Locale",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("system.defaultLocale")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -492,7 +616,12 @@ export default function AdminGeneralSection() {
                   "The default language for new users (e.g., en_US, es_ES)",
                 )}
                 value={settings.system?.defaultLocale || ""}
-                onChange={(value) => setSettings({ ...settings, system: { ...settings.system, defaultLocale: value || "" } })}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    system: { ...settings.system, defaultLocale: value || "" },
+                  })
+                }
                 data={defaultLocaleOptions}
                 searchable
                 clearable
@@ -506,8 +635,15 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.fileUploadLimit.label", "File Upload Limit")}</span>
-                    <PendingBadge show={isFieldPending("system.fileUploadLimit")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.fileUploadLimit.label",
+                        "File Upload Limit",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("system.fileUploadLimit")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -515,7 +651,15 @@ export default function AdminGeneralSection() {
                   "Maximum file upload size (e.g., 100MB, 1GB)",
                 )}
                 value={settings.system?.fileUploadLimit || ""}
-                onChange={(e) => setSettings({ ...settings, system: { ...settings.system, fileUploadLimit: e.target.value } })}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    system: {
+                      ...settings.system,
+                      fileUploadLimit: e.target.value,
+                    },
+                  })
+                }
                 placeholder="100MB"
                 disabled={!loginEnabled}
               />
@@ -525,7 +669,12 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.frontendUrl.label", "Frontend URL")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.general.frontendUrl.label",
+                        "Frontend URL",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("system.frontendUrl")} />
                   </Group>
                 }
@@ -534,17 +683,32 @@ export default function AdminGeneralSection() {
                   "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL.",
                 )}
                 value={settings.system?.frontendUrl || ""}
-                onChange={(e) => setSettings({ ...settings, system: { ...settings.system, frontendUrl: e.target.value } })}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    system: { ...settings.system, frontendUrl: e.target.value },
+                  })
+                }
                 placeholder="https://pdf.example.com"
                 disabled={!loginEnabled}
               />
             </div>
 
             {/* Hide Disabled Tools Settings */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "1rem",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.general.hideDisabledTools.googleDrive.label", "Hide Google Drive")}
+                  {t(
+                    "admin.settings.general.hideDisabledTools.googleDrive.label",
+                    "Hide Google Drive",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -561,20 +725,34 @@ export default function AdminGeneralSection() {
                       ...settings,
                       ui: {
                         ...settings.ui,
-                        hideDisabledTools: { ...settings.ui?.hideDisabledTools, googleDrive: e.target.checked },
+                        hideDisabledTools: {
+                          ...settings.ui?.hideDisabledTools,
+                          googleDrive: e.target.checked,
+                        },
                       },
                     })
                   }
                   disabled={!loginEnabled}
                 />
-                <PendingBadge show={isFieldPending("ui.hideDisabledTools.googleDrive")} />
+                <PendingBadge
+                  show={isFieldPending("ui.hideDisabledTools.googleDrive")}
+                />
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.general.hideDisabledTools.mobileScanner.label", "Hide Mobile Scanner")}
+                  {t(
+                    "admin.settings.general.hideDisabledTools.mobileScanner.label",
+                    "Hide Mobile Scanner",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -585,45 +763,81 @@ export default function AdminGeneralSection() {
               </div>
               <Group gap="xs">
                 <Switch
-                  checked={settings.ui?.hideDisabledTools?.mobileQRScanner || false}
+                  checked={
+                    settings.ui?.hideDisabledTools?.mobileQRScanner || false
+                  }
                   onChange={(e) =>
                     setSettings({
                       ...settings,
                       ui: {
                         ...settings.ui,
-                        hideDisabledTools: { ...settings.ui?.hideDisabledTools, mobileQRScanner: e.target.checked },
+                        hideDisabledTools: {
+                          ...settings.ui?.hideDisabledTools,
+                          mobileQRScanner: e.target.checked,
+                        },
                       },
                     })
                   }
                   disabled={!loginEnabled}
                 />
-                <PendingBadge show={isFieldPending("ui.hideDisabledTools.mobileQRScanner")} />
+                <PendingBadge
+                  show={isFieldPending("ui.hideDisabledTools.mobileQRScanner")}
+                />
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.general.showUpdate.label", "Show Update Notifications")}
+                  {t(
+                    "admin.settings.general.showUpdate.label",
+                    "Show Update Notifications",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t("admin.settings.general.showUpdate.description", "Display notifications when a new version is available")}
+                  {t(
+                    "admin.settings.general.showUpdate.description",
+                    "Display notifications when a new version is available",
+                  )}
                 </Text>
               </div>
               <Group gap="xs">
                 <Switch
                   checked={settings.system?.showUpdate || false}
-                  onChange={(e) => setSettings({ ...settings, system: { ...settings.system, showUpdate: e.target.checked } })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      system: {
+                        ...settings.system,
+                        showUpdate: e.target.checked,
+                      },
+                    })
+                  }
                   disabled={!loginEnabled}
                 />
                 <PendingBadge show={isFieldPending("system.showUpdate")} />
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.general.showUpdateOnlyAdmin.label", "Show Updates to Admins Only")}
+                  {t(
+                    "admin.settings.general.showUpdateOnlyAdmin.label",
+                    "Show Updates to Admins Only",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -636,18 +850,35 @@ export default function AdminGeneralSection() {
                 <Switch
                   checked={settings.system?.showUpdateOnlyAdmin || false}
                   onChange={(e) =>
-                    setSettings({ ...settings, system: { ...settings.system, showUpdateOnlyAdmin: e.target.checked } })
+                    setSettings({
+                      ...settings,
+                      system: {
+                        ...settings.system,
+                        showUpdateOnlyAdmin: e.target.checked,
+                      },
+                    })
                   }
                   disabled={!loginEnabled}
                 />
-                <PendingBadge show={isFieldPending("system.showUpdateOnlyAdmin")} />
+                <PendingBadge
+                  show={isFieldPending("system.showUpdateOnlyAdmin")}
+                />
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.general.customHTMLFiles.label", "Custom HTML Files")}
+                  {t(
+                    "admin.settings.general.customHTMLFiles.label",
+                    "Custom HTML Files",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -660,7 +891,13 @@ export default function AdminGeneralSection() {
                 <Switch
                   checked={settings.system?.customHTMLFiles || false}
                   onChange={(e) =>
-                    setSettings({ ...settings, system: { ...settings.system, customHTMLFiles: e.target.checked } })
+                    setSettings({
+                      ...settings,
+                      system: {
+                        ...settings.system,
+                        customHTMLFiles: e.target.checked,
+                      },
+                    })
                   }
                   disabled={!loginEnabled}
                 />
@@ -675,23 +912,38 @@ export default function AdminGeneralSection() {
           <Stack gap="md">
             <Group justify="space-between" align="center">
               <Text fw={600} size="sm">
-                {t("admin.settings.general.customMetadata.label", "Custom Metadata")}
+                {t(
+                  "admin.settings.general.customMetadata.label",
+                  "Custom Metadata",
+                )}
               </Text>
               <Badge
                 color="grape"
                 size="sm"
                 style={{ cursor: "pointer" }}
                 onClick={() => navigate("/settings/adminPlan")}
-                title={t("admin.settings.badge.clickToUpgrade", "Click to view plan details")}
+                title={t(
+                  "admin.settings.badge.clickToUpgrade",
+                  "Click to view plan details",
+                )}
               >
                 PRO
               </Badge>
             </Group>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.general.customMetadata.autoUpdate.label", "Auto Update Metadata")}
+                  {t(
+                    "admin.settings.general.customMetadata.autoUpdate.label",
+                    "Auto Update Metadata",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -714,7 +966,9 @@ export default function AdminGeneralSection() {
                   }
                   disabled={!loginEnabled}
                 />
-                <PendingBadge show={isFieldPending("customMetadata.autoUpdateMetadata")} />
+                <PendingBadge
+                  show={isFieldPending("customMetadata.autoUpdateMetadata")}
+                />
               </Group>
             </div>
 
@@ -722,8 +976,15 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.customMetadata.author.label", "Default Author")}</span>
-                    <PendingBadge show={isFieldPending("customMetadata.author")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.customMetadata.author.label",
+                        "Default Author",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("customMetadata.author")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -749,8 +1010,15 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.customMetadata.creator.label", "Default Creator")}</span>
-                    <PendingBadge show={isFieldPending("customMetadata.creator")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.customMetadata.creator.label",
+                        "Default Creator",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("customMetadata.creator")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -776,8 +1044,15 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.customMetadata.producer.label", "Default Producer")}</span>
-                    <PendingBadge show={isFieldPending("customMetadata.producer")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.customMetadata.producer.label",
+                        "Default Producer",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("customMetadata.producer")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -817,15 +1092,25 @@ export default function AdminGeneralSection() {
             </div>
 
             <Text fw={500} size="sm" mt="xs">
-              {t("admin.settings.general.customPaths.pipeline.label", "Pipeline Directories")}
+              {t(
+                "admin.settings.general.customPaths.pipeline.label",
+                "Pipeline Directories",
+              )}
             </Text>
 
             <div>
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.customPaths.pipeline.pipelineDir.label", "Pipeline Directory")}</span>
-                    <PendingBadge show={isFieldPending("customPaths.pipeline.pipelineDir")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.customPaths.pipeline.pipelineDir.label",
+                        "Pipeline Directory",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("customPaths.pipeline.pipelineDir")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -862,7 +1147,9 @@ export default function AdminGeneralSection() {
                     </span>
                     <PendingBadge
                       show={
-                        isFieldPending("customPaths.pipeline.watchedFoldersDirs") ||
+                        isFieldPending(
+                          "customPaths.pipeline.watchedFoldersDirs",
+                        ) ||
                         isFieldPending("customPaths.pipeline.watchedFoldersDir")
                       }
                     />
@@ -895,7 +1182,11 @@ export default function AdminGeneralSection() {
               {watchedFoldersValidation && (
                 <Stack gap="xs" mt="xs">
                   {watchedFoldersValidation.map((warning, idx) => (
-                    <Text key={idx} size="sm" c={warning.includes("CRITICAL") ? "red" : "yellow"}>
+                    <Text
+                      key={idx}
+                      size="sm"
+                      c={warning.includes("CRITICAL") ? "red" : "yellow"}
+                    >
                       {warning}
                     </Text>
                   ))}
@@ -908,9 +1199,16 @@ export default function AdminGeneralSection() {
                 label={
                   <Group gap="xs">
                     <span>
-                      {t("admin.settings.general.customPaths.pipeline.finishedFoldersDir.label", "Finished Folders Directory")}
+                      {t(
+                        "admin.settings.general.customPaths.pipeline.finishedFoldersDir.label",
+                        "Finished Folders Directory",
+                      )}
                     </span>
-                    <PendingBadge show={isFieldPending("customPaths.pipeline.finishedFoldersDir")} />
+                    <PendingBadge
+                      show={isFieldPending(
+                        "customPaths.pipeline.finishedFoldersDir",
+                      )}
+                    />
                   </Group>
                 }
                 description={t(
@@ -936,15 +1234,25 @@ export default function AdminGeneralSection() {
             </div>
 
             <Text fw={500} size="sm" mt="md">
-              {t("admin.settings.general.customPaths.operations.label", "External Tool Paths")}
+              {t(
+                "admin.settings.general.customPaths.operations.label",
+                "External Tool Paths",
+              )}
             </Text>
 
             <div>
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.customPaths.operations.weasyprint.label", "WeasyPrint Executable")}</span>
-                    <PendingBadge show={isFieldPending("customPaths.operations.weasyprint")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.customPaths.operations.weasyprint.label",
+                        "WeasyPrint Executable",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("customPaths.operations.weasyprint")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -973,8 +1281,15 @@ export default function AdminGeneralSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.general.customPaths.operations.unoconvert.label", "Unoconvert Executable")}</span>
-                    <PendingBadge show={isFieldPending("customPaths.operations.unoconvert")} />
+                    <span>
+                      {t(
+                        "admin.settings.general.customPaths.operations.unoconvert.label",
+                        "Unoconvert Executable",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("customPaths.operations.unoconvert")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -1011,7 +1326,11 @@ export default function AdminGeneralSection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

@@ -67,7 +67,9 @@ describe("AuthCallback", () => {
       expect(localStorage.getItem("stirling_jwt")).toBe(mockToken);
 
       // Verify jwt-available event was dispatched
-      expect(dispatchEventSpy).toHaveBeenCalledWith(expect.objectContaining({ type: "jwt-available" }));
+      expect(dispatchEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "jwt-available" }),
+      );
 
       // Verify getSession was called to validate token
       expect(springAuth.getSession).toHaveBeenCalled();
@@ -129,7 +131,9 @@ describe("AuthCallback", () => {
     window.location.hash = `#access_token=${mockToken}`;
 
     // Mock getSession throwing error
-    vi.mocked(springAuth.getSession).mockRejectedValueOnce(new Error("Network error"));
+    vi.mocked(springAuth.getSession).mockRejectedValueOnce(
+      new Error("Network error"),
+    );
 
     render(
       <BrowserRouter>

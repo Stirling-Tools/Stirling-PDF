@@ -4,7 +4,10 @@ import { UnlockPdfFormsParameters } from "@app/hooks/tools/unlockPdfForms/useUnl
 
 interface UnlockPdfFormsSettingsProps {
   parameters: UnlockPdfFormsParameters;
-  onParameterChange: <K extends keyof UnlockPdfFormsParameters>(parameter: K, value: UnlockPdfFormsParameters[K]) => void;
+  onParameterChange: <K extends keyof UnlockPdfFormsParameters>(
+    parameter: K,
+    value: UnlockPdfFormsParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 

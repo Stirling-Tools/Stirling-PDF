@@ -7,7 +7,10 @@ import {
   DocumentPermissionsAPIWrapper,
 } from "@app/contexts/viewer/viewerBridges";
 
-function hasPermissionFlag(permissions: number, flag: PdfPermissionFlag): boolean {
+function hasPermissionFlag(
+  permissions: number,
+  flag: PdfPermissionFlag,
+): boolean {
   if (permissions === 0 || permissions === PdfPermissionFlag.AllowAll) {
     return true;
   }
@@ -34,21 +37,41 @@ export function DocumentPermissionsAPIBridge({
       isOwnerUnlocked,
       permissions,
       canPrint: hasPermissionFlag(permissions, PdfPermissionFlag.Print),
-      canModifyContents: hasPermissionFlag(permissions, PdfPermissionFlag.ModifyContents),
-      canCopyContents: hasPermissionFlag(permissions, PdfPermissionFlag.CopyContents),
-      canModifyAnnotations: hasPermissionFlag(permissions, PdfPermissionFlag.ModifyAnnotations),
+      canModifyContents: hasPermissionFlag(
+        permissions,
+        PdfPermissionFlag.ModifyContents,
+      ),
+      canCopyContents: hasPermissionFlag(
+        permissions,
+        PdfPermissionFlag.CopyContents,
+      ),
+      canModifyAnnotations: hasPermissionFlag(
+        permissions,
+        PdfPermissionFlag.ModifyAnnotations,
+      ),
       canFillForms: hasPermissionFlag(permissions, PdfPermissionFlag.FillForms),
-      canExtractForAccessibility: hasPermissionFlag(permissions, PdfPermissionFlag.ExtractForAccessibility),
-      canAssembleDocument: hasPermissionFlag(permissions, PdfPermissionFlag.AssembleDocument),
-      canPrintHighQuality: hasPermissionFlag(permissions, PdfPermissionFlag.PrintHighQuality),
+      canExtractForAccessibility: hasPermissionFlag(
+        permissions,
+        PdfPermissionFlag.ExtractForAccessibility,
+      ),
+      canAssembleDocument: hasPermissionFlag(
+        permissions,
+        PdfPermissionFlag.AssembleDocument,
+      ),
+      canPrintHighQuality: hasPermissionFlag(
+        permissions,
+        PdfPermissionFlag.PrintHighQuality,
+      ),
     }),
     [isEncrypted, isOwnerUnlocked, permissions],
   );
 
   const api = useMemo<DocumentPermissionsAPIWrapper>(
     () => ({
-      hasPermission: (flag: PdfPermissionFlag) => hasPermissionFlag(permissions, flag),
-      hasAllPermissions: (flags: PdfPermissionFlag[]) => flags.every((flag) => hasPermissionFlag(permissions, flag)),
+      hasPermission: (flag: PdfPermissionFlag) =>
+        hasPermissionFlag(permissions, flag),
+      hasAllPermissions: (flags: PdfPermissionFlag[]) =>
+        flags.every((flag) => hasPermissionFlag(permissions, flag)),
       getEffectivePermission: (flag: PdfPermissionFlag) => {
         if (isOwnerUnlocked) return true;
         return hasPermissionFlag(permissions, flag);

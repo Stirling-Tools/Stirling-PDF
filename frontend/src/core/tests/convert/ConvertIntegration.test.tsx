@@ -10,7 +10,15 @@
  */
 
 import React from "react";
-import { describe, test, expect, vi, beforeEach, afterEach, Mock } from "vitest";
+import {
+  describe,
+  test,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  Mock,
+} from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
@@ -77,7 +85,9 @@ vi.mock("../../services/fileStorage", () => ({
 
 vi.mock("../../services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: {
-    generateThumbnail: vi.fn().mockResolvedValue("data:image/png;base64,fake-thumbnail"),
+    generateThumbnail: vi
+      .fn()
+      .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
   },
@@ -178,12 +188,17 @@ describe("Convert Tool Integration Tests", () => {
       });
 
       // Verify axios was called with correct parameters
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/pdf/img", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/pdf/img",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
 
       // Verify FormData contains correct parameters
-      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formDataCall = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formDataCall.get("imageFormat")).toBe("png");
       expect(formDataCall.get("colorType")).toBe("color");
       expect(formDataCall.get("dpi")).toBe("300");
@@ -210,7 +225,11 @@ describe("Convert Tool Integration Tests", () => {
         wrapper: TestWrapper,
       });
 
-      const testFile = createTestStirlingFile("invalid.txt", "not a pdf", "text/plain");
+      const testFile = createTestStirlingFile(
+        "invalid.txt",
+        "not a pdf",
+        "text/plain",
+      );
       const parameters: ConvertParameters = {
         fromExtension: "pdf",
         toExtension: "png",
@@ -265,7 +284,9 @@ describe("Convert Tool Integration Tests", () => {
     });
 
     test("should handle network errors gracefully", async () => {
-      (mockedApiClient.post as Mock).mockRejectedValueOnce(new Error("Network error"));
+      (mockedApiClient.post as Mock).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
 
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper,
@@ -389,7 +410,8 @@ describe("Convert Tool Integration Tests", () => {
       });
 
       // Verify integration: hook parameters → FormData → axios call → hook state
-      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formDataCall = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formDataCall.get("imageFormat")).toBe("jpg");
       expect(formDataCall.get("colorType")).toBe("grayscale");
       expect(formDataCall.get("dpi")).toBe("150");
@@ -463,12 +485,17 @@ describe("Convert Tool Integration Tests", () => {
       });
 
       // Verify correct endpoint is called
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/pdf/csv", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/pdf/csv",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
 
       // Verify FormData contains correct parameters for simplified CSV conversion
-      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formDataCall = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formDataCall.get("pageNumbers")).toBe("all"); // Always "all" for simplified workflow
       expect(formDataCall.get("fileInput")).toBe(testFile);
 
@@ -534,7 +561,9 @@ describe("Convert Tool Integration Tests", () => {
 
       // Verify integration: utils validation prevents API call, hook shows error
       expect(mockedApiClient.post).not.toHaveBeenCalled();
-      expect(result.current.errorMessage).toContain("Unsupported conversion format");
+      expect(result.current.errorMessage).toContain(
+        "Unsupported conversion format",
+      );
       expect(result.current.isLoading).toBe(false);
       expect(result.current.downloadUrl).toBe(null);
     });
@@ -548,7 +577,10 @@ describe("Convert Tool Integration Tests", () => {
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper,
       });
-      const files = [createPDFFile(), createTestStirlingFile("test2.pdf", "%PDF-1.4...", "application/pdf")];
+      const files = [
+        createPDFFile(),
+        createTestStirlingFile("test2.pdf", "%PDF-1.4...", "application/pdf"),
+      ];
       const parameters: ConvertParameters = {
         fromExtension: "pdf",
         toExtension: "png",
@@ -678,7 +710,11 @@ describe("Convert Tool Integration Tests", () => {
         wrapper: TestWrapper,
       });
 
-      const corruptedFile = createTestStirlingFile("corrupted.pdf", "not-a-pdf", "application/pdf");
+      const corruptedFile = createTestStirlingFile(
+        "corrupted.pdf",
+        "not-a-pdf",
+        "application/pdf",
+      );
       const parameters: ConvertParameters = {
         fromExtension: "pdf",
         toExtension: "png",

@@ -17,7 +17,12 @@ export interface PageDocumentHook {
  */
 export function usePageDocument(): PageDocumentHook {
   const { state, selectors } = useFileState();
-  const { fileOrder, currentPages, persistedDocument, persistedDocumentSignature } = usePageEditor();
+  const {
+    fileOrder,
+    currentPages,
+    persistedDocument,
+    persistedDocumentSignature,
+  } = usePageEditor();
 
   // Use PageEditorContext's fileOrder instead of FileContext's global order
   // This ensures the page editor respects its own workspace ordering
@@ -55,9 +60,12 @@ export function usePageDocument(): PageDocumentHook {
   const globalProcessing = state.ui.isProcessing;
 
   // Get primary file record outside useMemo to track processedFile changes
-  const primaryStirlingFileStub = primaryFileId ? selectors.getStirlingFileStub(primaryFileId) : null;
+  const primaryStirlingFileStub = primaryFileId
+    ? selectors.getStirlingFileStub(primaryFileId)
+    : null;
   const processedFilePages = primaryStirlingFileStub?.processedFile?.pages;
-  const processedFileTotalPages = primaryStirlingFileStub?.processedFile?.totalPages;
+  const processedFileTotalPages =
+    primaryStirlingFileStub?.processedFile?.totalPages;
 
   const placeholderDocumentRef = useRef<PDFDocument | null>(null);
   const [placeholderVersion, setPlaceholderVersion] = useState(0);
@@ -89,20 +97,24 @@ export function usePageDocument(): PageDocumentHook {
         const analysis = await FileAnalyzer.quickPDFAnalysis(file);
         if (canceled) return;
         const totalPages = Math.max(1, analysis.pageCount || 1);
-        const pages: PDFPage[] = Array.from({ length: totalPages }, (_, index) => ({
-          id: `placeholder-${primaryFileId}-page-${index + 1}`,
-          pageNumber: index + 1,
-          thumbnail: null,
-          rotation: 0,
-          selected: false,
-          originalFileId: primaryFileId,
-          originalPageNumber: index + 1,
-        }));
+        const pages: PDFPage[] = Array.from(
+          { length: totalPages },
+          (_, index) => ({
+            id: `placeholder-${primaryFileId}-page-${index + 1}`,
+            pageNumber: index + 1,
+            thumbnail: null,
+            rotation: 0,
+            selected: false,
+            originalFileId: primaryFileId,
+            originalPageNumber: index + 1,
+          }),
+        );
 
         if (!canceled) {
           placeholderDocumentRef.current = {
             id: `placeholder-${primaryFileId}`,
-            name: selectors.getStirlingFileStub(primaryFileId)?.name ?? file.name,
+            name:
+              selectors.getStirlingFileStub(primaryFileId)?.name ?? file.name,
             file,
             pages,
             totalPages,
@@ -147,7 +159,13 @@ export function usePageDocument(): PageDocumentHook {
     // Check if persisted document is still valid
     // Must match signature AND have the same number of source files
     const persistedFileIds = persistedDocument
-      ? Array.from(new Set(persistedDocument.pages.map((p) => p.originalFileId).filter(Boolean)))
+      ? Array.from(
+          new Set(
+            persistedDocument.pages
+              .map((p) => p.originalFileId)
+              .filter(Boolean),
+          ),
+        )
       : [];
     const persistedIsValid =
       persistedDocument &&
@@ -160,14 +178,20 @@ export function usePageDocument(): PageDocumentHook {
       console.log("[usePageDocument] Using persisted document");
       return persistedDocument;
     } else if (persistedDocument) {
-      console.log("[usePageDocument] Persisted document invalid - rebuilding:", {
-        sigMatch: persistedDocumentSignature === currentPagesSignature,
-        persistedFiles: persistedFileIds.length,
-        activeFiles: activeFileIds.length,
-      });
+      console.log(
+        "[usePageDocument] Persisted document invalid - rebuilding:",
+        {
+          sigMatch: persistedDocumentSignature === currentPagesSignature,
+          persistedFiles: persistedFileIds.length,
+          activeFiles: activeFileIds.length,
+        },
+      );
     }
 
-    if (!primaryStirlingFileStub?.processedFile && placeholderDocumentRef.current) {
+    if (
+      !primaryStirlingFileStub?.processedFile &&
+      placeholderDocumentRef.current
+    ) {
       return placeholderDocumentRef.current;
     }
 
@@ -175,18 +199,29 @@ export function usePageDocument(): PageDocumentHook {
 
     // If we have file IDs but no file record, something is wrong - return null to show loading
     if (!primaryStirlingFileStub) {
-      console.log("🎬 PageEditor: No primary file record found, showing loading");
+      console.log(
+        "🎬 PageEditor: No primary file record found, showing loading",
+      );
       return null;
     }
 
-    const namingFileIds = selectedActiveFileIds.length > 0 ? selectedActiveFileIds : activeFileIds;
+    const namingFileIds =
+      selectedActiveFileIds.length > 0 ? selectedActiveFileIds : activeFileIds;
 
     const name =
       namingFileIds.length <= 1
         ? namingFileIds[0]
-          ? (selectors.getStirlingFileStub(namingFileIds[0])?.name ?? "document.pdf")
+          ? (selectors.getStirlingFileStub(namingFileIds[0])?.name ??
+            "document.pdf")
           : "document.pdf"
-        : namingFileIds.map((id) => (selectors.getStirlingFileStub(id)?.name ?? "file").replace(/\.pdf$/i, "")).join(" + ");
+        : namingFileIds
+            .map((id) =>
+              (selectors.getStirlingFileStub(id)?.name ?? "file").replace(
+                /\.pdf$/i,
+                "",
+              ),
+            )
+            .join(" + ");
 
     // Build page insertion map from files with insertion positions
     const insertionMap = new Map<string, FileId[]>(); // insertAfterPageId -> fileIds
@@ -218,7 +253,11 @@ export function usePageDocument(): PageDocumentHook {
     let pages: PDFPage[];
 
     // Helper function to create pages from a file (or placeholder if deselected)
-    const createPagesFromFile = (fileId: FileId, startPageNumber: number, isSelected: boolean): PDFPage[] => {
+    const createPagesFromFile = (
+      fileId: FileId,
+      startPageNumber: number,
+      isSelected: boolean,
+    ): PDFPage[] => {
       const stirlingFileStub = selectors.getStirlingFileStub(fileId);
       if (!stirlingFileStub) {
         return [];
@@ -262,17 +301,20 @@ export function usePageDocument(): PageDocumentHook {
 
       if (processedFile?.totalPages) {
         // Fallback: create pages without thumbnails but with correct count
-        return Array.from({ length: processedFile.totalPages }, (_, pageIndex) => ({
-          id: `${fileId}-${pageIndex + 1}`,
-          pageNumber: startPageNumber + pageIndex,
-          originalPageNumber: pageIndex + 1,
-          originalFileId: fileId,
-          rotation: 0,
-          thumbnail: null,
-          selected: false,
-          splitAfter: false,
-          isPlaceholder: false,
-        }));
+        return Array.from(
+          { length: processedFile.totalPages },
+          (_, pageIndex) => ({
+            id: `${fileId}-${pageIndex + 1}`,
+            pageNumber: startPageNumber + pageIndex,
+            originalPageNumber: pageIndex + 1,
+            originalFileId: fileId,
+            rotation: 0,
+            thumbnail: null,
+            selected: false,
+            splitAfter: false,
+            isPlaceholder: false,
+          }),
+        );
       }
 
       // No processedFile yet - create a single loading placeholder
@@ -320,7 +362,9 @@ export function usePageDocument(): PageDocumentHook {
 
     // Process each insertion by finding the page ID and inserting after it
     for (const [insertAfterPageId, fileIds] of insertionMap.entries()) {
-      const targetPageIndex = pages.findIndex((p) => p.id === insertAfterPageId);
+      const targetPageIndex = pages.findIndex(
+        (p) => p.id === insertAfterPageId,
+      );
 
       if (targetPageIndex === -1) continue;
 
@@ -352,14 +396,22 @@ export function usePageDocument(): PageDocumentHook {
       pageNumber: index + 1,
     }));
 
-    const currentPagesSet = currentPages ? new Set(currentPages.map((page) => page.id)) : null;
-    if (currentPagesSet && currentPages && currentPagesSet.size === pages.length) {
+    const currentPagesSet = currentPages
+      ? new Set(currentPages.map((page) => page.id))
+      : null;
+    if (
+      currentPagesSet &&
+      currentPages &&
+      currentPagesSet.size === pages.length
+    ) {
       const sameIds = pages.every((page) => currentPagesSet.has(page.id));
       if (sameIds) {
         const mergedById = new Map(pages.map((page) => [page.id, page]));
         pages = currentPages.map((currentPage, index) => {
           const source = mergedById.get(currentPage.id);
-          const mergedPage = source ? { ...source, ...currentPage } : currentPage;
+          const mergedPage = source
+            ? { ...source, ...currentPage }
+            : currentPage;
           return {
             ...mergedPage,
             pageNumber: index + 1,

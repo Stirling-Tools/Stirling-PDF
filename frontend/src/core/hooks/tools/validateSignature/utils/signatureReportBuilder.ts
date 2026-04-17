@@ -1,4 +1,7 @@
-import { SignatureValidationFileResult, SignatureValidationReportEntry } from "@app/types/validateSignature";
+import {
+  SignatureValidationFileResult,
+  SignatureValidationReportEntry,
+} from "@app/types/validateSignature";
 import { FileContextSelectors } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import type { TFunction } from "i18next";
@@ -29,7 +32,8 @@ export const buildReportEntries = ({
     }
 
     const fileSize = file?.size ?? stub?.size ?? entry.fileSize ?? null;
-    const lastModified = file?.lastModified ?? stub?.lastModified ?? entry.lastModified ?? null;
+    const lastModified =
+      file?.lastModified ?? stub?.lastModified ?? entry.lastModified ?? null;
 
     const statusMeta = t ? deriveEntryStatus(entry, t) : null;
 

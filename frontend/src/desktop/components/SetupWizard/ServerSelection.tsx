@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Stack, Button, TextInput, Alert, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ServerConfig, SSOProviderConfig } from "@app/services/connectionModeService";
+import {
+  ServerConfig,
+  SSOProviderConfig,
+} from "@app/services/connectionModeService";
 import { connectionModeService } from "@app/services/connectionModeService";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
@@ -10,7 +13,10 @@ interface ServerSelectionProps {
   loading: boolean;
 }
 
-export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, loading }) => {
+export const ServerSelection: React.FC<ServerSelectionProps> = ({
+  onSelect,
+  loading,
+}) => {
   const { t } = useTranslation();
   const [customUrl, setCustomUrl] = useState("");
   const [testing, setTesting] = useState(false);
@@ -25,7 +31,9 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
     let url = customUrl.trim().replace(/\/+$/, "") || serverUrl;
 
     if (!url) {
-      setTestError(t("setup.server.error.emptyUrl", "Please enter a server URL"));
+      setTestError(
+        t("setup.server.error.emptyUrl", "Please enter a server URL"),
+      );
       return;
     }
 
@@ -47,7 +55,10 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
     } catch (err) {
       console.error("[ServerSelection] Invalid URL format:", err);
       setTestError(
-        t("setup.server.error.invalidUrl", "Invalid URL format. Please enter a valid URL like https://your-server.com"),
+        t(
+          "setup.server.error.invalidUrl",
+          "Invalid URL format. Please enter a valid URL like https://your-server.com",
+        ),
       );
       return;
     }
@@ -64,7 +75,10 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
       if (!testResult.success) {
         console.error("[ServerSelection] Connection test failed:", testResult);
-        setTestError(testResult.error || t("setup.server.error.unreachable", "Could not connect to server"));
+        setTestError(
+          testResult.error ||
+            t("setup.server.error.unreachable", "Could not connect to server"),
+        );
         setTesting(false);
         return;
       }
@@ -80,19 +94,31 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
         // Check if security is disabled (status 403, 401, or 404 - endpoint doesn't exist)
         if (!response.ok) {
-          console.warn(`[ServerSelection] Login config request failed with status ${response.status}`);
+          console.warn(
+            `[ServerSelection] Login config request failed with status ${response.status}`,
+          );
 
-          if (response.status === 403 || response.status === 401 || response.status === 404) {
-            console.log("[ServerSelection] Security/SSO not configured on this server (or endpoint does not exist)");
+          if (
+            response.status === 403 ||
+            response.status === 401 ||
+            response.status === 404
+          ) {
+            console.log(
+              "[ServerSelection] Security/SSO not configured on this server (or endpoint does not exist)",
+            );
             setSecurityDisabled(true);
             setTesting(false);
             return;
           }
           // Other error statuses - show generic error
           setTestError(
-            t("setup.server.error.configFetch", "Failed to fetch server configuration (status {{status}})", {
-              status: response.status,
-            }),
+            t(
+              "setup.server.error.configFetch",
+              "Failed to fetch server configuration (status {{status}})",
+              {
+                status: response.status,
+              },
+            ),
           );
           setTesting(false);
           return;
@@ -103,7 +129,9 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
         // Check if the response indicates security is disabled
         if (data.enableLogin === false || data.securityEnabled === false) {
-          console.log("[ServerSelection] Security is explicitly disabled in config");
+          console.log(
+            "[ServerSelection] Security is explicitly disabled in config",
+          );
           setSecurityDisabled(true);
           setTesting(false);
           return;
@@ -116,12 +144,23 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         // Extract provider IDs from authorization URLs
         // Example: "/oauth2/authorization/google" → "google"
         const providerEntries = Object.entries(data.providerList || {});
-        console.log("[ServerSelection] providerList from API:", data.providerList);
+        console.log(
+          "[ServerSelection] providerList from API:",
+          data.providerList,
+        );
         providerEntries.forEach(([path, label]) => {
           const id = path.split("/").pop();
-          console.log("[ServerSelection] Processing provider path:", path, "→ id:", id);
+          console.log(
+            "[ServerSelection] Processing provider path:",
+            path,
+            "→ id:",
+            id,
+          );
           if (!id) {
-            console.warn("[ServerSelection] Skipping provider with empty id:", path);
+            console.warn(
+              "[ServerSelection] Skipping provider with empty id:",
+              path,
+            );
             return;
           }
 
@@ -132,27 +171,46 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
           });
         });
 
-        console.log("[ServerSelection] ✅ Detected OAuth providers:", enabledProviders);
+        console.log(
+          "[ServerSelection] ✅ Detected OAuth providers:",
+          enabledProviders,
+        );
         console.log("[ServerSelection] Login method:", loginMethod);
       } catch (err) {
-        console.error("[ServerSelection] ❌ Failed to fetch login configuration:", err);
+        console.error(
+          "[ServerSelection] ❌ Failed to fetch login configuration:",
+          err,
+        );
 
         // Check if it's a security disabled error
-        if (err instanceof Error && (err.message.includes("403") || err.message.includes("401"))) {
-          console.log("[ServerSelection] Security is disabled (error-based detection)");
+        if (
+          err instanceof Error &&
+          (err.message.includes("403") || err.message.includes("401"))
+        ) {
+          console.log(
+            "[ServerSelection] Security is disabled (error-based detection)",
+          );
           setSecurityDisabled(true);
           setTesting(false);
           return;
         }
 
         // For any other error (network, CORS, invalid JSON, etc.), show error and don't proceed
-        const errorMessage = err instanceof Error ? err.message : "Unknown error";
-        console.error("[ServerSelection] Configuration fetch error details:", errorMessage);
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
+        console.error(
+          "[ServerSelection] Configuration fetch error details:",
+          errorMessage,
+        );
 
         setTestError(
-          t("setup.server.error.configFetchError", "Failed to fetch server configuration: {{error}}", {
-            error: errorMessage,
-          }),
+          t(
+            "setup.server.error.configFetchError",
+            "Failed to fetch server configuration: {{error}}",
+            {
+              error: errorMessage,
+            },
+          ),
         );
         setTesting(false);
         return;
@@ -160,15 +218,25 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
 
       // Connection successful — persist URL so it pre-fills on next sign-in
       localStorage.setItem("server_url", url);
-      console.log("[ServerSelection] ✅ Server selection complete, proceeding to login");
+      console.log(
+        "[ServerSelection] ✅ Server selection complete, proceeding to login",
+      );
       onSelect({
         url,
-        enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+        enabledOAuthProviders:
+          enabledProviders.length > 0 ? enabledProviders : undefined,
         loginMethod,
       });
     } catch (error) {
-      console.error("[ServerSelection] ❌ Unexpected error during connection test:", error);
-      setTestError(error instanceof Error ? error.message : t("setup.server.error.testFailed", "Connection test failed"));
+      console.error(
+        "[ServerSelection] ❌ Unexpected error during connection test:",
+        error,
+      );
+      setTestError(
+        error instanceof Error
+          ? error.message
+          : t("setup.server.error.testFailed", "Connection test failed"),
+      );
     } finally {
       setTesting(false);
     }
@@ -188,15 +256,27 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
           }}
           disabled={loading || testing}
           error={testError}
-          description={t("setup.server.url.description", "Enter the full URL of your self-hosted Stirling PDF server")}
+          description={t(
+            "setup.server.url.description",
+            "Enter the full URL of your self-hosted Stirling PDF server",
+          )}
         />
 
         {securityDisabled && (
           <Alert
             variant="light"
             color="orange"
-            icon={<LocalIcon icon="warning-rounded" width="1.25rem" height="1.25rem" />}
-            title={t("setup.server.error.securityDisabled.title", "Login Not Enabled")}
+            icon={
+              <LocalIcon
+                icon="warning-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
+            }
+            title={t(
+              "setup.server.error.securityDisabled.title",
+              "Login Not Enabled",
+            )}
           >
             <Stack gap="sm">
               <Text size="sm">
@@ -208,10 +288,23 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
               <Text size="sm" component="div">
                 <ol style={{ margin: 0, paddingLeft: "1.5rem" }}>
                   <li>
-                    {t("setup.server.error.securityDisabled.step1", "Set DOCKER_ENABLE_SECURITY=true in your environment")}
+                    {t(
+                      "setup.server.error.securityDisabled.step1",
+                      "Set DOCKER_ENABLE_SECURITY=true in your environment",
+                    )}
                   </li>
-                  <li>{t("setup.server.error.securityDisabled.step2", "Or set security.enableLogin=true in settings.yml")}</li>
-                  <li>{t("setup.server.error.securityDisabled.step3", "Restart the server")}</li>
+                  <li>
+                    {t(
+                      "setup.server.error.securityDisabled.step2",
+                      "Or set security.enableLogin=true in settings.yml",
+                    )}
+                  </li>
+                  <li>
+                    {t(
+                      "setup.server.error.securityDisabled.step3",
+                      "Restart the server",
+                    )}
+                  </li>
                 </ol>
               </Text>
             </Stack>
@@ -232,13 +325,24 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
                 }, 0);
               }}
             >
-              {t("setup.server.useLast", "Last used server: {{serverUrl}}", { serverUrl: serverUrl })}
+              {t("setup.server.useLast", "Last used server: {{serverUrl}}", {
+                serverUrl: serverUrl,
+              })}
             </button>
           </div>
         )}
 
-        <Button type="submit" loading={testing || loading} disabled={loading} mt="md" fullWidth color="#AF3434">
-          {testing ? t("setup.server.testing", "Testing connection...") : t("common.continue", "Continue")}
+        <Button
+          type="submit"
+          loading={testing || loading}
+          disabled={loading}
+          mt="md"
+          fullWidth
+          color="#AF3434"
+        >
+          {testing
+            ? t("setup.server.testing", "Testing connection...")
+            : t("common.continue", "Continue")}
         </Button>
       </Stack>
     </form>

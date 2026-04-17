@@ -25,7 +25,9 @@ export interface FileSignatureStatus {
 /**
  * Detect signatures in a single PDF file using PDF.js
  */
-const detectSignaturesInFile = async (file: File): Promise<SignatureDetectionResult> => {
+const detectSignaturesInFile = async (
+  file: File,
+): Promise<SignatureDetectionResult> => {
   try {
     // Ensure PDF.js is available
     if (!window.pdfjsLib) {
@@ -39,7 +41,8 @@ const detectSignaturesInFile = async (file: File): Promise<SignatureDetectionRes
     const arrayBuffer = await file.arrayBuffer();
 
     // Load the PDF document
-    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer })
+      .promise;
 
     let totalSignatures = 0;
 
@@ -50,7 +53,8 @@ const detectSignaturesInFile = async (file: File): Promise<SignatureDetectionRes
 
       // Count signature annotations (Type: /Sig)
       const signatureAnnotations = annotations.filter(
-        (annotation: any) => annotation.subtype === "Widget" && annotation.fieldType === "Sig",
+        (annotation: any) =>
+          annotation.subtype === "Widget" && annotation.fieldType === "Sig",
       );
 
       totalSignatures += signatureAnnotations.length;
@@ -82,7 +86,9 @@ const detectSignaturesInFile = async (file: File): Promise<SignatureDetectionRes
 /**
  * Detect if PDF files contain signatures using PDF.js client-side processing
  */
-export const detectSignaturesInFiles = async (files: File[]): Promise<FileSignatureStatus[]> => {
+export const detectSignaturesInFiles = async (
+  files: File[],
+): Promise<FileSignatureStatus[]> => {
   const results: FileSignatureStatus[] = [];
 
   for (const file of files) {
@@ -97,7 +103,9 @@ export const detectSignaturesInFiles = async (files: File[]): Promise<FileSignat
  * Hook for managing signature detection state
  */
 export const useSignatureDetection = () => {
-  const [detectionResults, setDetectionResults] = React.useState<FileSignatureStatus[]>([]);
+  const [detectionResults, setDetectionResults] = React.useState<
+    FileSignatureStatus[]
+  >([]);
   const [isDetecting, setIsDetecting] = React.useState(false);
 
   const detectSignatures = async (files: File[]) => {
@@ -115,13 +123,18 @@ export const useSignatureDetection = () => {
     }
   };
 
-  const getFileSignatureStatus = (file: File): SignatureDetectionResult | null => {
+  const getFileSignatureStatus = (
+    file: File,
+  ): SignatureDetectionResult | null => {
     const result = detectionResults.find((r) => r.file === file);
     return result ? result.result : null;
   };
 
   const hasAnySignatures = detectionResults.some((r) => r.result.hasSignatures);
-  const totalSignatures = detectionResults.reduce((sum, r) => sum + (r.result.signatureCount || 0), 0);
+  const totalSignatures = detectionResults.reduce(
+    (sum, r) => sum + (r.result.signatureCount || 0),
+    0,
+  );
 
   return {
     detectionResults,

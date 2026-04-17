@@ -15,7 +15,14 @@ export function CloudBadge({ className }: CloudBadgeProps) {
   const { t } = useTranslation();
 
   return (
-    <Tooltip label={t("cloudBadge.tooltip", "This operation will use your cloud credits")} position="top" withArrow>
+    <Tooltip
+      label={t(
+        "cloudBadge.tooltip",
+        "This operation will use your cloud credits",
+      )}
+      position="top"
+      withArrow
+    >
       <Badge
         className={className}
         leftSection={<CloudOutlinedIcon sx={{ fontSize: 12 }} />}

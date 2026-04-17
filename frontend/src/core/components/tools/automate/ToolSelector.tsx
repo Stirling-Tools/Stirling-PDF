@@ -1,7 +1,11 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text, ScrollArea } from "@mantine/core";
-import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate } from "@app/data/toolsTaxonomy";
+import {
+  ToolRegistryEntry,
+  ToolRegistry,
+  getToolSupportsAutomate,
+} from "@app/data/toolsTaxonomy";
 import { useToolSections } from "@app/hooks/useToolSections";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -32,8 +36,11 @@ export default function ToolSelector({
 
   // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
   const baseFilteredTools = useMemo(() => {
-    return (Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]).filter(
-      ([key, tool]) => !excludeTools.includes(key) && getToolSupportsAutomate(tool),
+    return (
+      Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]
+    ).filter(
+      ([key, tool]) =>
+        !excludeTools.includes(key) && getToolSupportsAutomate(tool),
     );
   }, [toolRegistry, excludeTools]);
 
@@ -64,11 +71,15 @@ export default function ToolSelector({
 
   // Transform filteredTools to the expected format for useToolSections
   const transformedFilteredTools = useMemo(() => {
-    return filteredTools.map(([id, tool]) => ({ item: [id as ToolId, tool] as [ToolId, ToolRegistryEntry] }));
+    return filteredTools.map(([id, tool]) => ({
+      item: [id as ToolId, tool] as [ToolId, ToolRegistryEntry],
+    }));
   }, [filteredTools]);
 
   // Use the same tool sections logic as the main ToolPicker
-  const { sections, searchGroups } = useToolSections(transformedFilteredTools as any /* FIX ME */);
+  const { sections, searchGroups } = useToolSections(
+    transformedFilteredTools as any /* FIX ME */,
+  );
 
   // Determine what to display: search results or organized sections
   const isSearching = searchTerm.trim().length > 0;
@@ -107,7 +118,16 @@ export default function ToolSelector({
 
   const renderedTools = useMemo(
     () =>
-      displayGroups.map((subcategory) => renderToolButtons(t, subcategory as any, null, handleToolSelect, !isSearching, true)),
+      displayGroups.map((subcategory) =>
+        renderToolButtons(
+          t,
+          subcategory as any,
+          null,
+          handleToolSelect,
+          !isSearching,
+          true,
+        ),
+      ),
     [displayGroups, handleToolSelect, isSearching, t],
   );
 
@@ -119,7 +139,10 @@ export default function ToolSelector({
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setOpened(false);
         setSearchTerm("");
       }
@@ -127,7 +150,8 @@ export default function ToolSelector({
 
     if (opened) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [opened]);
 
@@ -147,7 +171,9 @@ export default function ToolSelector({
   };
 
   // Get display value for selected tool
-  const selectedTool = selectedValue ? toolRegistry[selectedValue as ToolId] : undefined;
+  const selectedTool = selectedValue
+    ? toolRegistry[selectedValue as ToolId]
+    : undefined;
 
   const getDisplayValue = () => {
     if (selectedTool) return selectedTool.name;
@@ -160,7 +186,13 @@ export default function ToolSelector({
 
       {selectedTool && !opened ? (
         // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
-        <div onClick={handleSearchFocus} style={{ cursor: "pointer", borderRadius: "var(--mantine-radius-lg)" }}>
+        <div
+          onClick={handleSearchFocus}
+          style={{
+            cursor: "pointer",
+            borderRadius: "var(--mantine-radius-lg)",
+          }}
+        >
           <ToolButton
             id={"tool" as ToolId}
             tool={selectedTool}
@@ -205,7 +237,9 @@ export default function ToolSelector({
             <Stack gap="sm" p="sm">
               {displayGroups.length === 0 ? (
                 <Text size="sm" c="dimmed" ta="center" p="md">
-                  {isSearching ? t("tools.noSearchResults", "No tools found") : t("tools.noTools", "No tools available")}
+                  {isSearching
+                    ? t("tools.noSearchResults", "No tools found")
+                    : t("tools.noTools", "No tools available")}
                 </Text>
               ) : (
                 renderedTools

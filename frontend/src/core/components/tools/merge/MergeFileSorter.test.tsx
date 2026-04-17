@@ -10,7 +10,9 @@ vi.mock("react-i18next", () => ({
 }));
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("MergeFileSorter", () => {
   const mockOnSortFiles = vi.fn();
@@ -44,7 +46,9 @@ describe("MergeFileSorter", () => {
       </TestWrapper>,
     );
 
-    expect(screen.getByText("mock-merge.sortBy.description")).toBeInTheDocument();
+    expect(
+      screen.getByText("mock-merge.sortBy.description"),
+    ).toBeInTheDocument();
   });
 
   test("should have filename selected by default", () => {
@@ -67,7 +71,10 @@ describe("MergeFileSorter", () => {
 
     // Should show ascending arrow icon
     const directionButton = screen.getAllByRole("button")[0];
-    expect(directionButton).toHaveAttribute("title", "mock-merge.sortBy.ascending");
+    expect(directionButton).toHaveAttribute(
+      "title",
+      "mock-merge.sortBy.ascending",
+    );
   });
 
   test("should toggle direction when direction button is clicked", () => {
@@ -80,15 +87,24 @@ describe("MergeFileSorter", () => {
     const directionButton = screen.getAllByRole("button")[0];
 
     // Initially ascending
-    expect(directionButton).toHaveAttribute("title", "mock-merge.sortBy.ascending");
+    expect(directionButton).toHaveAttribute(
+      "title",
+      "mock-merge.sortBy.ascending",
+    );
 
     // Click to toggle to descending
     fireEvent.click(directionButton);
-    expect(directionButton).toHaveAttribute("title", "mock-merge.sortBy.descending");
+    expect(directionButton).toHaveAttribute(
+      "title",
+      "mock-merge.sortBy.descending",
+    );
 
     // Click again to toggle back to ascending
     fireEvent.click(directionButton);
-    expect(directionButton).toHaveAttribute("title", "mock-merge.sortBy.ascending");
+    expect(directionButton).toHaveAttribute(
+      "title",
+      "mock-merge.sortBy.ascending",
+    );
   });
 
   test("should call onSortFiles with correct parameters when sort button is clicked", () => {
@@ -117,7 +133,9 @@ describe("MergeFileSorter", () => {
     fireEvent.mouseDown(currentSelection);
 
     // Click on the dateModified option
-    const dateModifiedOption = screen.getByText("mock-merge.sortBy.dateModified");
+    const dateModifiedOption = screen.getByText(
+      "mock-merge.sortBy.dateModified",
+    );
     fireEvent.click(dateModifiedOption);
 
     const sortButton = screen.getByText("mock-merge.sortBy.sort");
@@ -158,7 +176,9 @@ describe("MergeFileSorter", () => {
     // 1. Change to dateModified
     const currentSelection = screen.getByText("mock-merge.sortBy.filename");
     fireEvent.mouseDown(currentSelection);
-    const dateModifiedOption = screen.getByText("mock-merge.sortBy.dateModified");
+    const dateModifiedOption = screen.getByText(
+      "mock-merge.sortBy.dateModified",
+    );
     fireEvent.click(dateModifiedOption);
 
     // 2. Toggle to descending

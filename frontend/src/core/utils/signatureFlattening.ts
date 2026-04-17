@@ -7,10 +7,23 @@ import {
   decodeImageDataUrl,
 } from "@app/utils/pdfiumBitmapUtils";
 import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
-import { createChildStub, createProcessedFile } from "@app/contexts/file/fileActions";
-import { createStirlingFile, FileId, StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import {
+  createChildStub,
+  createProcessedFile,
+} from "@app/contexts/file/fileActions";
+import {
+  createStirlingFile,
+  FileId,
+  StirlingFile,
+  StirlingFileStub,
+} from "@app/types/fileContext";
 import type { SignatureAPI } from "@app/components/viewer/viewerTypes";
-import { getPdfiumModule, openRawDocumentSafe, closeDocAndFreeBuffer, saveRawDocument } from "@app/services/pdfiumService";
+import {
+  getPdfiumModule,
+  openRawDocumentSafe,
+  closeDocAndFreeBuffer,
+  saveRawDocument,
+} from "@app/services/pdfiumService";
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -36,8 +49,18 @@ export interface SignatureFlatteningResult {
   outputStub: StirlingFileStub;
 }
 
-export async function flattenSignatures(options: SignatureFlatteningOptions): Promise<SignatureFlatteningResult | null> {
-  const { signatureApiRef, getImageData, exportActions, selectors, originalFile, getScrollState, activeFileIndex } = options;
+export async function flattenSignatures(
+  options: SignatureFlatteningOptions,
+): Promise<SignatureFlatteningResult | null> {
+  const {
+    signatureApiRef,
+    getImageData,
+    exportActions,
+    selectors,
+    originalFile,
+    getScrollState,
+    activeFileIndex,
+  } = options;
 
   try {
     // Step 1: Extract all annotations from EmbedPDF before export
@@ -49,10 +72,12 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
       for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
         try {
-          const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
+          const pageAnnotations =
+            await signatureApiRef.current.getPageAnnotations(pageIndex);
           if (pageAnnotations && pageAnnotations.length > 0) {
             const sessionAnnotations = pageAnnotations.filter((annotation) => {
-              const hasStoredImageData = annotation.id && getImageData(annotation.id);
+              const hasStoredImageData =
+                annotation.id && getImageData(annotation.id);
               const hasDirectImageData =
                 annotation.imageData ||
                 annotation.appearance ||
@@ -62,16 +87,24 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                 annotation.data;
               return (
                 hasStoredImageData ||
-                (hasDirectImageData && typeof hasDirectImageData === "string" && hasDirectImageData.startsWith("data:image"))
+                (hasDirectImageData &&
+                  typeof hasDirectImageData === "string" &&
+                  hasDirectImageData.startsWith("data:image"))
               );
             });
 
             if (sessionAnnotations.length > 0) {
-              allAnnotations.push({ pageIndex, annotations: sessionAnnotations });
+              allAnnotations.push({
+                pageIndex,
+                annotations: sessionAnnotations,
+              });
             }
           }
         } catch (pageError) {
-          console.warn(`Error extracting annotations from page ${pageIndex + 1}:`, pageError);
+          console.warn(
+            `Error extracting annotations from page ${pageIndex + 1}:`,
+            pageError,
+          );
         }
       }
     }
@@ -81,9 +114,15 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       for (const pageData of allAnnotations) {
         for (const annotation of pageData.annotations) {
           try {
-            signatureApiRef.current.deleteAnnotation(annotation.id, pageData.pageIndex);
+            signatureApiRef.current.deleteAnnotation(
+              annotation.id,
+              pageData.pageIndex,
+            );
           } catch (deleteError) {
-            console.warn(`Failed to delete annotation ${annotation.id}:`, deleteError);
+            console.warn(
+              `Failed to delete annotation ${annotation.id}:`,
+              deleteError,
+            );
           }
         }
       }
@@ -103,11 +142,17 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       if (!currentFile) {
         const allFileIds = selectors.getAllFileIds();
         if (allFileIds.length > 0) {
-          const fileIndex = activeFileIndex !== undefined && activeFileIndex < allFileIds.length ? activeFileIndex : 0;
+          const fileIndex =
+            activeFileIndex !== undefined && activeFileIndex < allFileIds.length
+              ? activeFileIndex
+              : 0;
           const fileStub = selectors.getStirlingFileStub(allFileIds[fileIndex]);
           const fileObject = selectors.getFile(allFileIds[fileIndex]);
           if (fileStub && fileObject) {
-            currentFile = createStirlingFile(fileObject, allFileIds[fileIndex] as FileId);
+            currentFile = createStirlingFile(
+              fileObject,
+              allFileIds[fileIndex] as FileId,
+            );
           }
         }
       }
@@ -117,7 +162,9 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
         return null;
       }
 
-      let signedFile = new File([blob], currentFile.name, { type: "application/pdf" });
+      let signedFile = new File([blob], currentFile.name, {
+        type: "application/pdf",
+      });
 
       // Step 4: Manually render extracted annotations onto the PDF using PDFium WASM
       if (allAnnotations.length > 0) {
@@ -140,11 +187,17 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
                 for (const annotation of annotations) {
                   try {
-                    const rect = annotation.rect || annotation.bounds || annotation.rectangle || annotation.position;
+                    const rect =
+                      annotation.rect ||
+                      annotation.bounds ||
+                      annotation.rectangle ||
+                      annotation.position;
 
                     if (rect) {
-                      const originalX = rect.origin?.x || rect.x || rect.left || 0;
-                      const originalY = rect.origin?.y || rect.y || rect.top || 0;
+                      const originalX =
+                        rect.origin?.x || rect.x || rect.left || 0;
+                      const originalY =
+                        rect.origin?.y || rect.y || rect.top || 0;
                       const width = rect.size?.width || rect.width || 100;
                       const height = rect.size?.height || rect.height || 50;
 
@@ -168,28 +221,70 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       }
 
                       // Convert SVG to PNG first if needed
-                      if (imageDataUrl && typeof imageDataUrl === "string" && imageDataUrl.startsWith("data:image/svg+xml")) {
-                        const pngBytes = await rasteriseSvgToPng(imageDataUrl, width * 2, height * 2);
+                      if (
+                        imageDataUrl &&
+                        typeof imageDataUrl === "string" &&
+                        imageDataUrl.startsWith("data:image/svg+xml")
+                      ) {
+                        const pngBytes = await rasteriseSvgToPng(
+                          imageDataUrl,
+                          width * 2,
+                          height * 2,
+                        );
                         if (pngBytes) {
                           imageDataUrl = await uint8ArrayToPngDataUrl(pngBytes);
                         } else {
-                          drawPlaceholderRect(m, pagePtr, pdfX, pdfY, width, height);
+                          drawPlaceholderRect(
+                            m,
+                            pagePtr,
+                            pdfX,
+                            pdfY,
+                            width,
+                            height,
+                          );
                           continue;
                         }
                       }
 
-                      if (imageDataUrl && typeof imageDataUrl === "string" && imageDataUrl.startsWith("data:image")) {
+                      if (
+                        imageDataUrl &&
+                        typeof imageDataUrl === "string" &&
+                        imageDataUrl.startsWith("data:image")
+                      ) {
                         // Decode the image data URL to raw pixels via canvas
-                        const imageResult = await decodeImageDataUrl(imageDataUrl);
+                        const imageResult =
+                          await decodeImageDataUrl(imageDataUrl);
                         if (imageResult) {
-                          embedBitmapImageOnPage(m, docPtr, pagePtr, imageResult, pdfX, pdfY, width, height);
+                          embedBitmapImageOnPage(
+                            m,
+                            docPtr,
+                            pagePtr,
+                            imageResult,
+                            pdfX,
+                            pdfY,
+                            width,
+                            height,
+                          );
                         }
-                      } else if (annotation.type === FPDF_ANNOT_INK || annotation.type === FPDF_ANNOT_LINE) {
-                        drawPlaceholderRect(m, pagePtr, pdfX, pdfY, width, height);
+                      } else if (
+                        annotation.type === FPDF_ANNOT_INK ||
+                        annotation.type === FPDF_ANNOT_LINE
+                      ) {
+                        drawPlaceholderRect(
+                          m,
+                          pagePtr,
+                          pdfX,
+                          pdfY,
+                          width,
+                          height,
+                        );
                       }
                     }
                   } catch (annotationError) {
-                    console.warn("Failed to render annotation:", annotationError);
+                    console.warn(
+                      "Failed to render annotation:",
+                      annotationError,
+                    );
                   }
                 }
 
@@ -199,7 +294,9 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
             }
 
             const resultBuf = await saveRawDocument(docPtr);
-            signedFile = new File([resultBuf], currentFile.name, { type: "application/pdf" });
+            signedFile = new File([resultBuf], currentFile.name, {
+              type: "application/pdf",
+            });
           } finally {
             closeDocAndFreeBuffer(m, docPtr);
           }
@@ -210,7 +307,10 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       }
 
       const thumbnailResult = await generateThumbnailWithMetadata(signedFile);
-      const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
+      const processedFileMetadata = createProcessedFile(
+        thumbnailResult.pageCount,
+        thumbnailResult.thumbnail,
+      );
 
       const inputFileIds: FileId[] = [currentFile.fileId];
 
@@ -258,7 +358,11 @@ function uint8ArrayToPngDataUrl(pngBytes: Uint8Array): Promise<string> {
 /**
  * Rasterise an SVG data URL to PNG bytes via an offscreen canvas.
  */
-function rasteriseSvgToPng(svgDataUrl: string, width: number, height: number): Promise<Uint8Array | null> {
+function rasteriseSvgToPng(
+  svgDataUrl: string,
+  width: number,
+  height: number,
+): Promise<Uint8Array | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {

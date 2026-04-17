@@ -10,7 +10,9 @@ interface DismissAllErrorsButtonProps {
   className?: string;
 }
 
-const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({ className }) => {
+const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({
+  className,
+}) => {
   const { t } = useTranslation();
   const { state } = useFileState();
   const { actions } = useFileActions();
@@ -43,7 +45,8 @@ const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({ classNa
           pointerEvents: "auto",
         }}
       >
-        {t("error.dismissAllErrors", "Dismiss All Errors")} ({state.ui.errorFileIds.length})
+        {t("error.dismissAllErrors", "Dismiss All Errors")} (
+        {state.ui.errorFileIds.length})
       </Button>
     </Group>
   );

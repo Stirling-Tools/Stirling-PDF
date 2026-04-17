@@ -4,6 +4,7 @@ public/vendor/
 public/pdfjs*/
 public/js/thirdParty/
 public/css/cookieconsent.css
+src-tauri/target/
 *.min.*
 *.md
 *.wxs

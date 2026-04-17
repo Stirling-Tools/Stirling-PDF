@@ -9,7 +9,10 @@ export type { GroupEnabledResult };
  * Returns { enabled: null } while loading, then true/false with an optional reason.
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
-  const [result, setResult] = useState<GroupEnabledResult>({ enabled: null, unavailableReason: null });
+  const [result, setResult] = useState<GroupEnabledResult>({
+    enabled: null,
+    unavailableReason: null,
+  });
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -21,12 +24,16 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
 
   useEffect(() => {
     apiClient
-      .get<boolean>(`/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`)
+      .get<boolean>(
+        `/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`,
+      )
       .then((res) => {
-        if (isMountedRef.current) setResult({ enabled: res.data, unavailableReason: null });
+        if (isMountedRef.current)
+          setResult({ enabled: res.data, unavailableReason: null });
       })
       .catch(() => {
-        if (isMountedRef.current) setResult({ enabled: false, unavailableReason: null });
+        if (isMountedRef.current)
+          setResult({ enabled: false, unavailableReason: null });
       });
   }, [group]);
 

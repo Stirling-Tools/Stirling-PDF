@@ -11,7 +11,12 @@ const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const compressTips = useCompressTips();
 
-  const base = useBaseTool("compress", useCompressParameters, useCompressOperation, props);
+  const base = useBaseTool(
+    "compress",
+    useCompressParameters,
+    useCompressOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -22,7 +27,9 @@ const Compress = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: compressTips,
         content: (
           <CompressSettings

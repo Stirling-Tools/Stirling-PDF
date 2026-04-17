@@ -16,13 +16,23 @@ describe("useConvertParameters", () => {
       expect(result.current.parameters.toExtension).toBe("");
       expect(result.current.parameters.imageOptions.colorType).toBe("color");
       expect(result.current.parameters.imageOptions.dpi).toBe(300);
-      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe("multiple");
+      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe(
+        "multiple",
+      );
       expect(result.current.parameters.htmlOptions.zoomLevel).toBe(1.0);
-      expect(result.current.parameters.emailOptions.includeAttachments).toBe(true);
-      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(10);
+      expect(result.current.parameters.emailOptions.includeAttachments).toBe(
+        true,
+      );
+      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(
+        10,
+      );
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(false);
-      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(false);
-      expect(result.current.parameters.pdfaOptions.outputFormat).toBe("pdfa-2b");
+      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(
+        false,
+      );
+      expect(result.current.parameters.pdfaOptions.outputFormat).toBe(
+        "pdfa-2b",
+      );
     });
 
     test("should update individual parameters", () => {
@@ -50,10 +60,16 @@ describe("useConvertParameters", () => {
         });
       });
 
-      expect(result.current.parameters.imageOptions.colorType).toBe("grayscale");
+      expect(result.current.parameters.imageOptions.colorType).toBe(
+        "grayscale",
+      );
       expect(result.current.parameters.imageOptions.dpi).toBe(150);
-      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe("single");
-      expect(result.current.parameters.imageOptions.fitOption).toBe(FIT_OPTIONS.FILL_PAGE);
+      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe(
+        "single",
+      );
+      expect(result.current.parameters.imageOptions.fitOption).toBe(
+        FIT_OPTIONS.FILL_PAGE,
+      );
       expect(result.current.parameters.imageOptions.autoRotate).toBe(false);
       expect(result.current.parameters.imageOptions.combineImages).toBe(false);
     });
@@ -82,10 +98,16 @@ describe("useConvertParameters", () => {
         });
       });
 
-      expect(result.current.parameters.emailOptions.includeAttachments).toBe(false);
-      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(20);
+      expect(result.current.parameters.emailOptions.includeAttachments).toBe(
+        false,
+      );
+      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(
+        20,
+      );
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(true);
-      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(true);
+      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(
+        true,
+      );
     });
 
     test("should update nested PDF/A options", () => {
@@ -194,7 +216,8 @@ describe("useConvertParameters", () => {
     test("should return available extensions for valid source format", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const availableExtensions = result.current.getAvailableToExtensions("pdf");
+      const availableExtensions =
+        result.current.getAvailableToExtensions("pdf");
 
       expect(availableExtensions.length).toBeGreaterThan(0);
       expect(availableExtensions.some((ext) => ext.value === "png")).toBe(true);
@@ -204,7 +227,8 @@ describe("useConvertParameters", () => {
     test("should return empty array for invalid source format", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const availableExtensions = result.current.getAvailableToExtensions("invalid");
+      const availableExtensions =
+        result.current.getAvailableToExtensions("invalid");
 
       expect(availableExtensions).toEqual([
         {

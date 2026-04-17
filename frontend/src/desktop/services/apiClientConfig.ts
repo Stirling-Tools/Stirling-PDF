@@ -15,7 +15,10 @@ import { isTauri } from "@tauri-apps/api/core";
 export function getApiBaseUrl(): string {
   if (!isTauri()) {
     // Runtime override to fix hardcoded localhost in builds
-    if (typeof window !== "undefined" && (window as any).STIRLING_PDF_API_BASE_URL) {
+    if (
+      typeof window !== "undefined" &&
+      (window as any).STIRLING_PDF_API_BASE_URL
+    ) {
       return (window as any).STIRLING_PDF_API_BASE_URL;
     }
 

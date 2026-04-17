@@ -51,8 +51,12 @@ async function mockParticipantApis(page: Page) {
     }),
   );
 
-  await page.route("**/api/v1/workflow/participant/session**", (route) => route.fulfill({ json: MOCK_SESSION }));
-  await page.route("**/api/v1/workflow/participant/details**", (route) => route.fulfill({ json: MOCK_PARTICIPANT }));
+  await page.route("**/api/v1/workflow/participant/session**", (route) =>
+    route.fulfill({ json: MOCK_SESSION }),
+  );
+  await page.route("**/api/v1/workflow/participant/details**", (route) =>
+    route.fulfill({ json: MOCK_PARTICIPANT }),
+  );
   // Minimal stub so the download-document call doesn't throw
   await page.route("**/api/v1/workflow/participant/document**", (route) =>
     route.fulfill({
@@ -95,18 +99,22 @@ test.describe("Certificate Validation — ParticipantView", () => {
   });
 
   // 1. Happy path — valid P12
-  test('valid P12 cert shows green "Certificate valid until" feedback', async ({ page }) => {
-    await page.route("**/api/v1/workflow/participant/validate-certificate", (route) =>
-      route.fulfill({
-        json: {
-          valid: true,
-          subjectName: "Test Signer",
-          notAfter: "2027-01-01T00:00:00Z",
-          notBefore: "2025-01-01T00:00:00Z",
-          selfSigned: true,
-          error: null,
-        },
-      }),
+  test('valid P12 cert shows green "Certificate valid until" feedback', async ({
+    page,
+  }) => {
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      (route) =>
+        route.fulfill({
+          json: {
+            valid: true,
+            subjectName: "Test Signer",
+            notAfter: "2027-01-01T00:00:00Z",
+            notBefore: "2025-01-01T00:00:00Z",
+            selfSigned: true,
+            error: null,
+          },
+        }),
     );
 
     await page.goto("/workflow/sign/test-token");
@@ -117,23 +125,27 @@ test.describe("Certificate Validation — ParticipantView", () => {
 
     // Wait for debounce (600 ms) + network round-trip
     const feedback = page.getByTestId("cert-validation-feedback");
-    await expect(feedback).toContainText("Certificate valid until", { timeout: 5000 });
+    await expect(feedback).toContainText("Certificate valid until", {
+      timeout: 5000,
+    });
     await expect(feedback).toContainText("Test Signer");
   });
 
   // 2. Wrong password — red error
   test("wrong password shows red error message", async ({ page }) => {
-    await page.route("**/api/v1/workflow/participant/validate-certificate", (route) =>
-      route.fulfill({
-        json: {
-          valid: false,
-          subjectName: null,
-          notAfter: null,
-          notBefore: null,
-          selfSigned: false,
-          error: "Invalid certificate password or corrupt keystore file",
-        },
-      }),
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      (route) =>
+        route.fulfill({
+          json: {
+            valid: false,
+            subjectName: null,
+            notAfter: null,
+            notBefore: null,
+            selfSigned: false,
+            error: "Invalid certificate password or corrupt keystore file",
+          },
+        }),
     );
 
     await page.goto("/workflow/sign/test-token");
@@ -143,22 +155,28 @@ test.describe("Certificate Validation — ParticipantView", () => {
     await page.getByTestId("cert-password-input").fill("wrongpass");
 
     const feedback = page.getByTestId("cert-validation-feedback");
-    await expect(feedback).toContainText("Invalid certificate password", { timeout: 5000 });
+    await expect(feedback).toContainText("Invalid certificate password", {
+      timeout: 5000,
+    });
   });
 
   // 3. Expired certificate
-  test('expired cert shows "Certificate has expired" error', async ({ page }) => {
-    await page.route("**/api/v1/workflow/participant/validate-certificate", (route) =>
-      route.fulfill({
-        json: {
-          valid: false,
-          subjectName: null,
-          notAfter: null,
-          notBefore: null,
-          selfSigned: false,
-          error: "Certificate has expired (expired: 2023-01-02 00:00:00 UTC)",
-        },
-      }),
+  test('expired cert shows "Certificate has expired" error', async ({
+    page,
+  }) => {
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      (route) =>
+        route.fulfill({
+          json: {
+            valid: false,
+            subjectName: null,
+            notAfter: null,
+            notBefore: null,
+            selfSigned: false,
+            error: "Certificate has expired (expired: 2023-01-02 00:00:00 UTC)",
+          },
+        }),
     );
 
     await page.goto("/workflow/sign/test-token");
@@ -168,22 +186,27 @@ test.describe("Certificate Validation — ParticipantView", () => {
     await page.getByTestId("cert-password-input").fill("testpass");
 
     const feedback = page.getByTestId("cert-validation-feedback");
-    await expect(feedback).toContainText("Certificate has expired", { timeout: 5000 });
+    await expect(feedback).toContainText("Certificate has expired", {
+      timeout: 5000,
+    });
   });
 
   // 4. Not-yet-valid certificate
   test('not-yet-valid cert shows "not yet valid" error', async ({ page }) => {
-    await page.route("**/api/v1/workflow/participant/validate-certificate", (route) =>
-      route.fulfill({
-        json: {
-          valid: false,
-          subjectName: null,
-          notAfter: null,
-          notBefore: null,
-          selfSigned: false,
-          error: "Certificate is not yet valid (valid from: 2027-01-01 00:00:00 UTC)",
-        },
-      }),
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      (route) =>
+        route.fulfill({
+          json: {
+            valid: false,
+            subjectName: null,
+            notAfter: null,
+            notBefore: null,
+            selfSigned: false,
+            error:
+              "Certificate is not yet valid (valid from: 2027-01-01 00:00:00 UTC)",
+          },
+        }),
     );
 
     await page.goto("/workflow/sign/test-token");
@@ -197,21 +220,26 @@ test.describe("Certificate Validation — ParticipantView", () => {
   });
 
   // 5. Submit button disabled while validating
-  test("submit button is disabled while validation is in flight", async ({ page }) => {
+  test("submit button is disabled while validation is in flight", async ({
+    page,
+  }) => {
     // Slow response so we can assert the disabled state mid-flight
-    await page.route("**/api/v1/workflow/participant/validate-certificate", async (route) => {
-      await new Promise((r) => setTimeout(r, 1500));
-      await route.fulfill({
-        json: {
-          valid: true,
-          subjectName: "Test Signer",
-          notAfter: "2027-01-01T00:00:00Z",
-          notBefore: "2025-01-01T00:00:00Z",
-          selfSigned: true,
-          error: null,
-        },
-      });
-    });
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      async (route) => {
+        await new Promise((r) => setTimeout(r, 1500));
+        await route.fulfill({
+          json: {
+            valid: true,
+            subjectName: "Test Signer",
+            notAfter: "2027-01-01T00:00:00Z",
+            notBefore: "2025-01-01T00:00:00Z",
+            selfSigned: true,
+            error: null,
+          },
+        });
+      },
+    );
 
     await page.goto("/workflow/sign/test-token");
     await page.waitForSelector('[data-testid="submit-signature-button"]');
@@ -228,12 +256,17 @@ test.describe("Certificate Validation — ParticipantView", () => {
   });
 
   // 6. SERVER type — no validation call made, button stays enabled
-  test("SERVER cert type skips validation and keeps submit enabled", async ({ page }) => {
+  test("SERVER cert type skips validation and keeps submit enabled", async ({
+    page,
+  }) => {
     let validateCalled = false;
-    await page.route("**/api/v1/workflow/participant/validate-certificate", (route) => {
-      validateCalled = true;
-      return route.fulfill({ json: { valid: true } });
-    });
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      (route) => {
+        validateCalled = true;
+        return route.fulfill({ json: { valid: true } });
+      },
+    );
 
     await page.goto("/workflow/sign/test-token");
     await page.waitForSelector('[data-testid="submit-signature-button"]');
@@ -249,17 +282,19 @@ test.describe("Certificate Validation — ParticipantView", () => {
 
   // 7. Bonus — valid JKS keystore
   test("valid JKS keystore shows green feedback", async ({ page }) => {
-    await page.route("**/api/v1/workflow/participant/validate-certificate", (route) =>
-      route.fulfill({
-        json: {
-          valid: true,
-          subjectName: "JKS Signer",
-          notAfter: "2027-01-01T00:00:00Z",
-          notBefore: "2025-01-01T00:00:00Z",
-          selfSigned: true,
-          error: null,
-        },
-      }),
+    await page.route(
+      "**/api/v1/workflow/participant/validate-certificate",
+      (route) =>
+        route.fulfill({
+          json: {
+            valid: true,
+            subjectName: "JKS Signer",
+            notAfter: "2027-01-01T00:00:00Z",
+            notBefore: "2025-01-01T00:00:00Z",
+            selfSigned: true,
+            error: null,
+          },
+        }),
     );
 
     await page.goto("/workflow/sign/test-token");
@@ -270,7 +305,9 @@ test.describe("Certificate Validation — ParticipantView", () => {
     await page.getByTestId("cert-password-input").fill("jkspass");
 
     const feedback = page.getByTestId("cert-validation-feedback");
-    await expect(feedback).toContainText("Certificate valid until", { timeout: 5000 });
+    await expect(feedback).toContainText("Certificate valid until", {
+      timeout: 5000,
+    });
     await expect(feedback).toContainText("JKS Signer");
   });
 });

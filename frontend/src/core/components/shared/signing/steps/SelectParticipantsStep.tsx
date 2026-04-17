@@ -26,12 +26,18 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
     <Stack gap="md">
       <div>
         <Text size="sm" c="dimmed" mb="xs">
-          {t("groupSigning.steps.selectParticipants.label", "Select participants")}
+          {t(
+            "groupSigning.steps.selectParticipants.label",
+            "Select participants",
+          )}
         </Text>
         <UserSelector
           value={selectedUserIds}
           onChange={onSelectedUserIdsChange}
-          placeholder={t("groupSigning.steps.selectParticipants.placeholder", "Choose participants to sign...")}
+          placeholder={t(
+            "groupSigning.steps.selectParticipants.placeholder",
+            "Choose participants to sign...",
+          )}
           disabled={disabled}
         />
       </div>
@@ -46,11 +52,22 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
       )}
 
       <Group gap="sm">
-        <Button variant="default" onClick={onBack} leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}>
+        <Button
+          variant="default"
+          onClick={onBack}
+          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+        >
           {t("groupSigning.steps.back", "Back")}
         </Button>
-        <Button onClick={onNext} disabled={!hasParticipants || disabled} style={{ flex: 1 }}>
-          {t("groupSigning.steps.selectParticipants.continue", "Continue to Signature Settings")}
+        <Button
+          onClick={onNext}
+          disabled={!hasParticipants || disabled}
+          style={{ flex: 1 }}
+        >
+          {t(
+            "groupSigning.steps.selectParticipants.continue",
+            "Continue to Signature Settings",
+          )}
         </Button>
       </Group>
     </Stack>

@@ -10,7 +10,10 @@ export interface ZoomViewport {
   height?: number;
 }
 
-export type AutoZoomDecision = { type: "fallback"; zoom: number } | { type: "fitWidth" } | { type: "adjust"; zoom: number };
+export type AutoZoomDecision =
+  | { type: "fallback"; zoom: number }
+  | { type: "fitWidth" }
+  | { type: "adjust"; zoom: number };
 
 export interface AutoZoomParams {
   viewportWidth: number;
@@ -36,7 +39,8 @@ export function determineAutoZoom({
   // Get aspect ratio from pageRect or metadata
   const rectWidth = pageRect?.width ?? 0;
   const rectHeight = pageRect?.height ?? 0;
-  const aspectRatio: number | null = rectWidth > 0 ? rectHeight / rectWidth : (metadataAspectRatio ?? null);
+  const aspectRatio: number | null =
+    rectWidth > 0 ? rectHeight / rectWidth : (metadataAspectRatio ?? null);
 
   // Need aspect ratio to proceed
   if (!aspectRatio || aspectRatio <= 0) {
@@ -49,7 +53,9 @@ export function determineAutoZoom({
 
   // Calculate zoom level that shows targetVisibility% of page height
   const pageHeightAtFitWidth = (viewportWidth / pagesPerSpread) * aspectRatio;
-  const heightBasedZoom = (fitWidthZoom * (viewportHeight / pageHeightAtFitWidth)) / (targetVisibility / 100);
+  const heightBasedZoom =
+    (fitWidthZoom * (viewportHeight / pageHeightAtFitWidth)) /
+    (targetVisibility / 100);
 
   // Use whichever zoom is smaller (more zoomed out) to satisfy both width and height constraints
   if (heightBasedZoom < fitWidthZoom) {

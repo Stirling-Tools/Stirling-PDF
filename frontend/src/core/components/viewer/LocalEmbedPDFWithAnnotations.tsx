@@ -1,11 +1,21 @@
-import { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useRef } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+  useRef,
+} from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 
 // Import the essential plugins
-import { Viewport, ViewportPluginPackage } from "@embedpdf/plugin-viewport/react";
+import {
+  Viewport,
+  ViewportPluginPackage,
+} from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
@@ -16,8 +26,14 @@ import {
   GlobalPointerProvider,
   useInteractionManagerCapability,
 } from "@embedpdf/plugin-interaction-manager/react";
-import { SelectionLayer, SelectionPluginPackage } from "@embedpdf/plugin-selection/react";
-import { TilingLayer, TilingPluginPackage } from "@embedpdf/plugin-tiling/react";
+import {
+  SelectionLayer,
+  SelectionPluginPackage,
+} from "@embedpdf/plugin-selection/react";
+import {
+  TilingLayer,
+  TilingPluginPackage,
+} from "@embedpdf/plugin-tiling/react";
 import { PanPluginPackage } from "@embedpdf/plugin-pan/react";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
@@ -27,7 +43,10 @@ import { Rotation, PdfAnnotationSubtype } from "@embedpdf/models";
 
 // Import annotation plugins
 import { HistoryPluginPackage } from "@embedpdf/plugin-history/react";
-import { AnnotationLayer, AnnotationPluginPackage } from "@embedpdf/plugin-annotation/react";
+import {
+  AnnotationLayer,
+  AnnotationPluginPackage,
+} from "@embedpdf/plugin-annotation/react";
 
 import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
@@ -51,12 +70,18 @@ import {
 function InteractionPauseBridge({
   bridgeRef,
 }: {
-  bridgeRef: React.MutableRefObject<{ pause: () => void; resume: () => void } | null>;
+  bridgeRef: React.MutableRefObject<{
+    pause: () => void;
+    resume: () => void;
+  } | null>;
 }) {
   const { provides } = useInteractionManagerCapability();
   useEffect(() => {
     if (provides) {
-      bridgeRef.current = { pause: () => provides.pause(), resume: () => provides.resume() };
+      bridgeRef.current = {
+        pause: () => provides.pause(),
+        resume: () => provides.resume(),
+      };
     }
     return () => {
       bridgeRef.current = null;
@@ -87,7 +112,14 @@ interface LocalEmbedPDFWithAnnotationsProps {
   placementMode?: boolean;
   signatureData?: string;
   signatureType?: "canvas" | "image" | "text";
-  onPlaceSignature?: (id: string, pageIndex: number, x: number, y: number, width: number, height: number) => void;
+  onPlaceSignature?: (
+    id: string,
+    pageIndex: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => void;
   onPreviewCountChange?: (count: number) => void;
   initialSignatures?: SignaturePreview[]; // Initial signatures to display (read-only preview)
   readOnly?: boolean; // If true, signature previews cannot be moved or deleted
@@ -106,7 +138,10 @@ export interface AnnotationAPI {
   resetZoom: () => void;
 }
 
-export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, LocalEmbedPDFWithAnnotationsProps>(
+export const LocalEmbedPDFWithAnnotations = forwardRef<
+  AnnotationAPI | null,
+  LocalEmbedPDFWithAnnotationsProps
+>(
   (
     {
       file,
@@ -128,14 +163,22 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
     const containerRef = useRef<HTMLDivElement>(null);
 
     // State for signature preview overlays (support multiple)
-    const [signaturePreviews, setSignaturePreviews] = useState<SignaturePreview[]>(initialSignatures);
+    const [signaturePreviews, setSignaturePreviews] =
+      useState<SignaturePreview[]>(initialSignatures);
 
     // Track if a drag operation just occurred to prevent click from firing
     const isDraggingRef = useRef(false);
-    const interactionPauseRef = useRef<{ pause: () => void; resume: () => void } | null>(null);
+    const interactionPauseRef = useRef<{
+      pause: () => void;
+      resume: () => void;
+    } | null>(null);
 
     // Track cursor position over a specific page for hover preview
-    const [cursorOnPage, setCursorOnPage] = useState<{ pageIndex: number; x: number; y: number } | null>(null);
+    const [cursorOnPage, setCursorOnPage] = useState<{
+      pageIndex: number;
+      x: number;
+      y: number;
+    } | null>(null);
 
     // Expose annotation API to parent
     useImperativeHandle(
@@ -152,7 +195,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
         },
         getPageAnnotations: async (pageIndex: number) => {
           if (!annotationApiRef.current?.getPageAnnotations) return [];
-          const task = annotationApiRef.current.getPageAnnotations({ pageIndex });
+          const task = annotationApiRef.current.getPageAnnotations({
+            pageIndex,
+          });
           if (task?.toPromise) {
             return await task.toPromise();
           }
@@ -213,7 +258,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
       if (!pdfUrl) return [];
 
       // Calculate 3.5rem in pixels dynamically based on root font size
-      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const rootFontSize = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
       const viewportGap = rootFontSize * 3.5;
 
       return [
@@ -386,7 +433,8 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
               zoomApiRef.current = {
                 zoomIn: () => zoomApi.zoomIn?.(),
                 zoomOut: () => zoomApi.zoomOut?.(),
-                resetZoom: () => zoomApi.requestZoom?.(ZoomMode.FitWidth, { vx: 0.5, vy: 0 }),
+                resetZoom: () =>
+                  zoomApi.requestZoom?.(ZoomMode.FitWidth, { vx: 0.5, vy: 0 }),
               };
             }
           }}
@@ -427,8 +475,15 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                   <Scroller
                     documentId={documentId}
                     renderPage={({ width, height, pageIndex }) => (
-                      <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
-                        <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+                      <Rotate
+                        key={`${documentId}-${pageIndex}`}
+                        documentId={documentId}
+                        pageIndex={pageIndex}
+                      >
+                        <PagePointerProvider
+                          documentId={documentId}
+                          pageIndex={pageIndex}
+                        >
                           <div
                             style={{
                               width,
@@ -447,25 +502,39 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                             onDragOver={(e) => e.preventDefault()}
                             onMouseMove={(e) => {
                               if (!placementMode || !signatureData) return;
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setCursorOnPage({ pageIndex, x: e.clientX - rect.left, y: e.clientY - rect.top });
+                              const rect =
+                                e.currentTarget.getBoundingClientRect();
+                              setCursorOnPage({
+                                pageIndex,
+                                x: e.clientX - rect.left,
+                                y: e.clientY - rect.top,
+                              });
                             }}
                             onMouseLeave={() => {
-                              setCursorOnPage((prev) => (prev?.pageIndex === pageIndex ? null : prev));
+                              setCursorOnPage((prev) =>
+                                prev?.pageIndex === pageIndex ? null : prev,
+                              );
                             }}
                             onClick={(e) => {
                               if (isDraggingRef.current) return;
 
                               if (placementMode && onPlaceSignature) {
-                                const rect = e.currentTarget.getBoundingClientRect();
+                                const rect =
+                                  e.currentTarget.getBoundingClientRect();
                                 // Store as fractions (0–1) of the rendered page so overlays
                                 // remain correct at any zoom level (scale not in new API)
                                 const sigWidth = 150 / width;
                                 const sigHeight = 75 / height;
                                 const rawX = (e.clientX - rect.left) / width;
                                 const rawY = (e.clientY - rect.top) / height;
-                                const x = Math.max(0, Math.min(rawX - sigWidth / 2, 1 - sigWidth));
-                                const y = Math.max(0, Math.min(rawY - sigHeight / 2, 1 - sigHeight));
+                                const x = Math.max(
+                                  0,
+                                  Math.min(rawX - sigWidth / 2, 1 - sigWidth),
+                                );
+                                const y = Math.max(
+                                  0,
+                                  Math.min(rawY - sigHeight / 2, 1 - sigHeight),
+                                );
 
                                 const newPreview = {
                                   id: `sig-preview-${Date.now()}-${Math.random()}`,
@@ -477,7 +546,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                   signatureData: signatureData || "",
                                   signatureType: signatureType || "image",
                                 };
-                                setSignaturePreviews((prev) => [...prev, newPreview]);
+                                setSignaturePreviews((prev) => [
+                                  ...prev,
+                                  newPreview,
+                                ]);
                                 onPlaceSignature(
                                   newPreview.id,
                                   pageIndex,
@@ -489,11 +561,20 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                               }
                             }}
                           >
-                            <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+                            <TilingLayer
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                            />
 
-                            <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
+                            <CustomSearchLayer
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                            />
 
-                            <SelectionLayer documentId={documentId} pageIndex={pageIndex} />
+                            <SelectionLayer
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                            />
 
                             {/* Annotation layer for signatures */}
                             <AnnotationLayer
@@ -504,13 +585,18 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
                             {/* Signature preview overlays (support multiple) */}
                             {signaturePreviews
-                              .filter((preview) => preview.pageIndex === pageIndex)
+                              .filter(
+                                (preview) => preview.pageIndex === pageIndex,
+                              )
                               .map((preview) => {
                                 if (!preview.signatureData) return null;
-                                const color = preview.color ?? "rgb(0, 122, 204)";
+                                const color =
+                                  preview.color ?? "rgb(0, 122, 204)";
                                 const colorOpacity = (opacity: number) =>
                                   color.startsWith("rgb(")
-                                    ? color.replace("rgb(", "rgba(").replace(")", `, ${opacity})`)
+                                    ? color
+                                        .replace("rgb(", "rgba(")
+                                        .replace(")", `, ${opacity})`)
                                     : color;
                                 return (
                                   <Tooltip
@@ -527,11 +613,17 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                         top: preview.y * height,
                                         width: preview.width * width,
                                         height: preview.height * height,
-                                        border: readOnly ? `1px dashed ${colorOpacity(0.4)}` : `2px solid ${color}`,
-                                        boxShadow: readOnly ? "none" : `0 0 10px ${colorOpacity(0.5)}`,
+                                        border: readOnly
+                                          ? `1px dashed ${colorOpacity(0.4)}`
+                                          : `2px solid ${color}`,
+                                        boxShadow: readOnly
+                                          ? "none"
+                                          : `0 0 10px ${colorOpacity(0.5)}`,
                                         cursor: readOnly ? "default" : "move",
                                         zIndex: Z_INDEX_SIGNATURE_OVERLAY,
-                                        backgroundColor: readOnly ? "transparent" : "rgba(255, 255, 255, 0.1)",
+                                        backgroundColor: readOnly
+                                          ? "transparent"
+                                          : "rgba(255, 255, 255, 0.1)",
                                         pointerEvents: "auto",
                                       }}
                                     >
@@ -546,18 +638,26 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                             position: "absolute",
                                             top: -10,
                                             right: -10,
-                                            zIndex: Z_INDEX_SIGNATURE_OVERLAY_DELETE,
+                                            zIndex:
+                                              Z_INDEX_SIGNATURE_OVERLAY_DELETE,
                                             pointerEvents: "auto",
-                                            boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+                                            boxShadow:
+                                              "0 1px 4px rgba(0,0,0,0.25)",
                                             border: "2px solid white",
                                           }}
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            setSignaturePreviews((prev) => prev.filter((p) => p.id !== preview.id));
+                                            setSignaturePreviews((prev) =>
+                                              prev.filter(
+                                                (p) => p.id !== preview.id,
+                                              ),
+                                            );
                                           }}
                                           aria-label="Delete signature"
                                         >
-                                          <CloseIcon style={{ fontSize: "0.8rem" }} />
+                                          <CloseIcon
+                                            style={{ fontSize: "0.8rem" }}
+                                          />
                                         </ActionIcon>
                                       )}
 
@@ -565,17 +665,25 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                         style={{
                                           width: "100%",
                                           height: "100%",
-                                          pointerEvents: readOnly ? "none" : "auto",
+                                          pointerEvents: readOnly
+                                            ? "none"
+                                            : "auto",
                                         }}
                                         onPointerDown={
                                           readOnly
                                             ? undefined
                                             : (e) => {
-                                                if ((e.target as HTMLElement).dataset.resizeHandle) return;
+                                                if (
+                                                  (e.target as HTMLElement)
+                                                    .dataset.resizeHandle
+                                                )
+                                                  return;
                                                 e.stopPropagation();
                                                 e.preventDefault();
                                                 const el = e.currentTarget;
-                                                el.setPointerCapture(e.pointerId);
+                                                el.setPointerCapture(
+                                                  e.pointerId,
+                                                );
                                                 interactionPauseRef.current?.pause();
 
                                                 const startX = e.clientX;
@@ -583,32 +691,65 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                                 const startLeft = preview.x;
                                                 const startTop = preview.y;
 
-                                                const handlePointerMove = (moveEvent: PointerEvent) => {
+                                                const handlePointerMove = (
+                                                  moveEvent: PointerEvent,
+                                                ) => {
                                                   isDraggingRef.current = true;
-                                                  const deltaX = (moveEvent.clientX - startX) / width;
-                                                  const deltaY = (moveEvent.clientY - startY) / height;
+                                                  const deltaX =
+                                                    (moveEvent.clientX -
+                                                      startX) /
+                                                    width;
+                                                  const deltaY =
+                                                    (moveEvent.clientY -
+                                                      startY) /
+                                                    height;
                                                   setSignaturePreviews((prev) =>
                                                     prev.map((p) =>
                                                       p.id === preview.id
-                                                        ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
+                                                        ? {
+                                                            ...p,
+                                                            x:
+                                                              startLeft +
+                                                              deltaX,
+                                                            y:
+                                                              startTop + deltaY,
+                                                          }
                                                         : p,
                                                     ),
                                                   );
                                                 };
 
-                                                const handlePointerUp = (upEvent: PointerEvent) => {
-                                                  el.removeEventListener("pointermove", handlePointerMove);
-                                                  el.removeEventListener("pointerup", handlePointerUp);
-                                                  el.releasePointerCapture(upEvent.pointerId);
+                                                const handlePointerUp = (
+                                                  upEvent: PointerEvent,
+                                                ) => {
+                                                  el.removeEventListener(
+                                                    "pointermove",
+                                                    handlePointerMove,
+                                                  );
+                                                  el.removeEventListener(
+                                                    "pointerup",
+                                                    handlePointerUp,
+                                                  );
+                                                  el.releasePointerCapture(
+                                                    upEvent.pointerId,
+                                                  );
                                                   interactionPauseRef.current?.resume();
-                                                  window.getSelection()?.removeAllRanges();
+                                                  window
+                                                    .getSelection()
+                                                    ?.removeAllRanges();
                                                   setTimeout(() => {
                                                     isDraggingRef.current = false;
                                                   }, 10);
                                                 };
 
-                                                el.addEventListener("pointermove", handlePointerMove);
-                                                el.addEventListener("pointerup", handlePointerUp);
+                                                el.addEventListener(
+                                                  "pointermove",
+                                                  handlePointerMove,
+                                                );
+                                                el.addEventListener(
+                                                  "pointerup",
+                                                  handlePointerUp,
+                                                );
                                               }
                                         }
                                       >
@@ -625,10 +766,30 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
                                         {/* Resize handles */}
                                         {[
-                                          { position: "nw", cursor: "nw-resize", top: -4, left: -4 },
-                                          { position: "ne", cursor: "ne-resize", top: -4, right: -4 },
-                                          { position: "sw", cursor: "sw-resize", bottom: -4, left: -4 },
-                                          { position: "se", cursor: "se-resize", bottom: -4, right: -4 },
+                                          {
+                                            position: "nw",
+                                            cursor: "nw-resize",
+                                            top: -4,
+                                            left: -4,
+                                          },
+                                          {
+                                            position: "ne",
+                                            cursor: "ne-resize",
+                                            top: -4,
+                                            right: -4,
+                                          },
+                                          {
+                                            position: "sw",
+                                            cursor: "sw-resize",
+                                            bottom: -4,
+                                            left: -4,
+                                          },
+                                          {
+                                            position: "se",
+                                            cursor: "se-resize",
+                                            bottom: -4,
+                                            right: -4,
+                                          },
                                         ].map((handle) => (
                                           <div
                                             key={handle.position}
@@ -640,11 +801,22 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                               backgroundColor: color,
                                               border: "1px solid white",
                                               cursor: handle.cursor,
-                                              zIndex: Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
-                                              ...(handle.top !== undefined && { top: handle.top }),
-                                              ...(handle.bottom !== undefined && { bottom: handle.bottom }),
-                                              ...(handle.left !== undefined && { left: handle.left }),
-                                              ...(handle.right !== undefined && { right: handle.right }),
+                                              zIndex:
+                                                Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
+                                              ...(handle.top !== undefined && {
+                                                top: handle.top,
+                                              }),
+                                              ...(handle.bottom !==
+                                                undefined && {
+                                                bottom: handle.bottom,
+                                              }),
+                                              ...(handle.left !== undefined && {
+                                                left: handle.left,
+                                              }),
+                                              ...(handle.right !==
+                                                undefined && {
+                                                right: handle.right,
+                                              }),
                                             }}
                                             onPointerDown={(e) => {
                                               e.stopPropagation();
@@ -656,14 +828,21 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                               const startX = e.clientX;
                                               const startY = e.clientY;
                                               const startWidth = preview.width;
-                                              const startHeight = preview.height;
+                                              const startHeight =
+                                                preview.height;
                                               const startLeft = preview.x;
                                               const startTop = preview.y;
 
-                                              const handlePointerMove = (moveEvent: PointerEvent) => {
+                                              const handlePointerMove = (
+                                                moveEvent: PointerEvent,
+                                              ) => {
                                                 isDraggingRef.current = true;
-                                                const deltaX = (moveEvent.clientX - startX) / width;
-                                                const deltaY = (moveEvent.clientY - startY) / height;
+                                                const deltaX =
+                                                  (moveEvent.clientX - startX) /
+                                                  width;
+                                                const deltaY =
+                                                  (moveEvent.clientY - startY) /
+                                                  height;
 
                                                 let newWidth = startWidth;
                                                 let newHeight = startHeight;
@@ -674,43 +853,91 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                                 const minW = 50 / width;
                                                 const minH = 25 / height;
 
-                                                if (handle.position.includes("e")) {
-                                                  newWidth = Math.max(minW, startWidth + deltaX);
+                                                if (
+                                                  handle.position.includes("e")
+                                                ) {
+                                                  newWidth = Math.max(
+                                                    minW,
+                                                    startWidth + deltaX,
+                                                  );
                                                 }
-                                                if (handle.position.includes("w")) {
-                                                  newWidth = Math.max(minW, startWidth - deltaX);
-                                                  newX = startLeft + (startWidth - newWidth);
+                                                if (
+                                                  handle.position.includes("w")
+                                                ) {
+                                                  newWidth = Math.max(
+                                                    minW,
+                                                    startWidth - deltaX,
+                                                  );
+                                                  newX =
+                                                    startLeft +
+                                                    (startWidth - newWidth);
                                                 }
-                                                if (handle.position.includes("s")) {
-                                                  newHeight = Math.max(minH, startHeight + deltaY);
+                                                if (
+                                                  handle.position.includes("s")
+                                                ) {
+                                                  newHeight = Math.max(
+                                                    minH,
+                                                    startHeight + deltaY,
+                                                  );
                                                 }
-                                                if (handle.position.includes("n")) {
-                                                  newHeight = Math.max(minH, startHeight - deltaY);
-                                                  newY = startTop + (startHeight - newHeight);
+                                                if (
+                                                  handle.position.includes("n")
+                                                ) {
+                                                  newHeight = Math.max(
+                                                    minH,
+                                                    startHeight - deltaY,
+                                                  );
+                                                  newY =
+                                                    startTop +
+                                                    (startHeight - newHeight);
                                                 }
 
                                                 setSignaturePreviews((prev) =>
                                                   prev.map((p) =>
                                                     p.id === preview.id
-                                                      ? { ...p, x: newX, y: newY, width: newWidth, height: newHeight }
+                                                      ? {
+                                                          ...p,
+                                                          x: newX,
+                                                          y: newY,
+                                                          width: newWidth,
+                                                          height: newHeight,
+                                                        }
                                                       : p,
                                                   ),
                                                 );
                                               };
 
-                                              const handlePointerUp = (upEvent: PointerEvent) => {
-                                                el.removeEventListener("pointermove", handlePointerMove);
-                                                el.removeEventListener("pointerup", handlePointerUp);
-                                                el.releasePointerCapture(upEvent.pointerId);
+                                              const handlePointerUp = (
+                                                upEvent: PointerEvent,
+                                              ) => {
+                                                el.removeEventListener(
+                                                  "pointermove",
+                                                  handlePointerMove,
+                                                );
+                                                el.removeEventListener(
+                                                  "pointerup",
+                                                  handlePointerUp,
+                                                );
+                                                el.releasePointerCapture(
+                                                  upEvent.pointerId,
+                                                );
                                                 interactionPauseRef.current?.resume();
-                                                window.getSelection()?.removeAllRanges();
+                                                window
+                                                  .getSelection()
+                                                  ?.removeAllRanges();
                                                 setTimeout(() => {
                                                   isDraggingRef.current = false;
                                                 }, 10);
                                               };
 
-                                              el.addEventListener("pointermove", handlePointerMove);
-                                              el.addEventListener("pointerup", handlePointerUp);
+                                              el.addEventListener(
+                                                "pointermove",
+                                                handlePointerMove,
+                                              );
+                                              el.addEventListener(
+                                                "pointerup",
+                                                handlePointerUp,
+                                              );
                                             }}
                                           />
                                         ))}
@@ -721,25 +948,40 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                               })}
 
                             {/* Hover preview: ghost signature following cursor in placement mode */}
-                            {placementMode && signatureData && cursorOnPage?.pageIndex === pageIndex && (
-                              <img
-                                src={signatureData}
-                                alt=""
-                                style={{
-                                  position: "absolute",
-                                  left: Math.max(0, Math.min(cursorOnPage.x - 75, width - 150)),
-                                  top: Math.max(0, Math.min(cursorOnPage.y - 37.5, height - 75)),
-                                  width: 150,
-                                  height: 75,
-                                  opacity: 0.6,
-                                  pointerEvents: "none",
-                                  objectFit: "contain",
-                                  boxShadow: "0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)",
-                                  borderRadius: "4px",
-                                  zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
-                                }}
-                              />
-                            )}
+                            {placementMode &&
+                              signatureData &&
+                              cursorOnPage?.pageIndex === pageIndex && (
+                                <img
+                                  src={signatureData}
+                                  alt=""
+                                  style={{
+                                    position: "absolute",
+                                    left: Math.max(
+                                      0,
+                                      Math.min(
+                                        cursorOnPage.x - 75,
+                                        width - 150,
+                                      ),
+                                    ),
+                                    top: Math.max(
+                                      0,
+                                      Math.min(
+                                        cursorOnPage.y - 37.5,
+                                        height - 75,
+                                      ),
+                                    ),
+                                    width: 150,
+                                    height: 75,
+                                    opacity: 0.6,
+                                    pointerEvents: "none",
+                                    objectFit: "contain",
+                                    boxShadow:
+                                      "0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)",
+                                    borderRadius: "4px",
+                                    zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
+                                  }}
+                                />
+                              )}
                           </div>
                         </PagePointerProvider>
                       </Rotate>

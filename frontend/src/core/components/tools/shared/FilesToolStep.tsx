@@ -11,7 +11,11 @@ export interface FilesToolStepProps {
 }
 
 export function createFilesToolStep(
-  createStep: (title: string, props: any, children?: React.ReactNode) => React.ReactElement,
+  createStep: (
+    title: string,
+    props: any,
+    children?: React.ReactNode,
+  ) => React.ReactElement,
   props: FilesToolStepProps,
 ): React.ReactElement {
   return createStep(
@@ -21,6 +25,9 @@ export function createFilesToolStep(
       isCollapsed: props.isCollapsed,
       onCollapsedClick: props.onCollapsedClick,
     },
-    <FileStatusIndicator selectedFiles={props.selectedFiles} minFiles={props.minFiles} />,
+    <FileStatusIndicator
+      selectedFiles={props.selectedFiles}
+      minFiles={props.minFiles}
+    />,
   );
 }

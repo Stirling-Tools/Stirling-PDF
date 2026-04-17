@@ -25,7 +25,10 @@ export function useLogoAssets() {
         black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
         grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
       },
-      manifestHref: logoVariant === "classic" ? `${BASE_PATH}/manifest-classic.json` : `${BASE_PATH}/manifest.json`,
+      manifestHref:
+        logoVariant === "classic"
+          ? `${BASE_PATH}/manifest-classic.json`
+          : `${BASE_PATH}/manifest.json`,
     };
   }, [logoVariant]);
 }

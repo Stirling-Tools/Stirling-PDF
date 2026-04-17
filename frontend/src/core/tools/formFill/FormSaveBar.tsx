@@ -10,7 +10,16 @@
  * save UX that users expect from browser PDF viewers.
  */
 import React, { useCallback, useState } from "react";
-import { Stack, Group, Text, Button, Transition, CloseButton, Paper, Badge } from "@mantine/core";
+import {
+  Stack,
+  Group,
+  Text,
+  Button,
+  Transition,
+  CloseButton,
+  Paper,
+  Badge,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
@@ -26,7 +35,11 @@ interface FormSaveBarProps {
   onApply?: (filledBlob: Blob) => Promise<void>;
 }
 
-export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBarProps) {
+export function FormSaveBar({
+  file,
+  isFormFillToolActive,
+  onApply,
+}: FormSaveBarProps) {
   const { t } = useTranslation();
   const { state, submitForm } = useFormFill();
   const { fields, isDirty, loading } = state;
@@ -85,7 +98,9 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
   // - no form fields found
   // - still loading
   // - user dismissed the bar
-  const hasFields = fields.some((f) => f.type !== "signature" && f.type !== "button");
+  const hasFields = fields.some(
+    (f) => f.type !== "signature" && f.type !== "button",
+  );
   const visible = !isFormFillToolActive && hasFields && !loading && !dismissed;
 
   return (
@@ -118,7 +133,9 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
                   <EditNoteIcon
                     sx={{
                       fontSize: 24,
-                      color: isDirty ? "var(--mantine-color-blue-6)" : "var(--mantine-color-gray-6)",
+                      color: isDirty
+                        ? "var(--mantine-color-blue-6)"
+                        : "var(--mantine-color-gray-6)",
                     }}
                   />
                   <div>
@@ -134,8 +151,14 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
                     </Group>
                     <Text size="xs" c="dimmed" mt={2}>
                       {isDirty
-                        ? t("viewer.formBar.unsavedDesc", "You have unsaved changes")
-                        : t("viewer.formBar.hasFieldsDesc", "This PDF contains fillable fields")}
+                        ? t(
+                            "viewer.formBar.unsavedDesc",
+                            "You have unsaved changes",
+                          )
+                        : t(
+                            "viewer.formBar.hasFieldsDesc",
+                            "This PDF contains fillable fields",
+                          )}
                     </Text>
                   </div>
                 </Group>

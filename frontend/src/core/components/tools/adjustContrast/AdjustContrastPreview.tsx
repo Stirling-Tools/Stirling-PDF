@@ -75,10 +75,23 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        <div style={{ flex: 1, height: 1, background: "var(--border-color)" }} />
-        <div style={{ fontSize: 12, color: "var(--text-color-muted)" }}>{t("common.preview", "Preview")}</div>
-        <div style={{ flex: 1, height: 1, background: "var(--border-color)" }} />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 6,
+        }}
+      >
+        <div
+          style={{ flex: 1, height: 1, background: "var(--border-color)" }}
+        />
+        <div style={{ fontSize: 12, color: "var(--text-color-muted)" }}>
+          {t("common.preview", "Preview")}
+        </div>
+        <div
+          style={{ flex: 1, height: 1, background: "var(--border-color)" }}
+        />
       </div>
       <ObscuredOverlay
         obscured={!thumb}
@@ -99,7 +112,9 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
             overflow: "hidden",
           }}
         >
-          {thumb && <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />}
+          {thumb && (
+            <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
+          )}
         </div>
       </ObscuredOverlay>
     </div>

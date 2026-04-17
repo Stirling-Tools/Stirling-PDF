@@ -44,7 +44,12 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
             disabled={undoDisabled}
             color={undoDisabled ? "gray" : "blue"}
           >
-            <LocalIcon icon="undo" width={20} height={20} style={{ color: "currentColor" }} />
+            <LocalIcon
+              icon="undo"
+              width={20}
+              height={20}
+              style={{ color: "currentColor" }}
+            />
           </ActionIcon>
         </Tooltip>
       )}
@@ -58,7 +63,12 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
             disabled={redoDisabled}
             color={redoDisabled ? "gray" : "blue"}
           >
-            <LocalIcon icon="redo" width={20} height={20} style={{ color: "currentColor" }} />
+            <LocalIcon
+              icon="redo"
+              width={20}
+              height={20}
+              style={{ color: "currentColor" }}
+            />
           </ActionIcon>
         </Tooltip>
       )}
@@ -67,7 +77,13 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
 
       {/* Place Signature Button */}
       {showPlaceButton && onPlaceSignature && (
-        <Button variant="filled" color="blue" onClick={onPlaceSignature} disabled={disabled || !hasSignatureData} ml="auto">
+        <Button
+          variant="filled"
+          color="blue"
+          onClick={onPlaceSignature}
+          disabled={disabled || !hasSignatureData}
+          ml="auto"
+        >
           {placeButtonText}
         </Button>
       )}

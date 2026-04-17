@@ -27,25 +27,56 @@ const BADGE_COLORS = {
   textColor: "var(--mantine-color-gray-9)",
 };
 
-export function getFileTypeMeta(type: NonPdfFileType, fileName?: string): FileTypeMeta {
+export function getFileTypeMeta(
+  type: NonPdfFileType,
+  fileName?: string,
+): FileTypeMeta {
   switch (type) {
     case "image":
-      return { label: "Image", icon: React.createElement(ImageIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label: "Image",
+        icon: React.createElement(ImageIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     case "csv":
-      return { label: "Spreadsheet", icon: React.createElement(TableChartIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label: "Spreadsheet",
+        icon: React.createElement(TableChartIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     case "json":
-      return { label: "JSON", icon: React.createElement(DataObjectIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label: "JSON",
+        icon: React.createElement(DataObjectIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     case "markdown":
-      return { label: "Markdown", icon: React.createElement(CodeIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label: "Markdown",
+        icon: React.createElement(CodeIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     case "html":
-      return { label: "HTML", icon: React.createElement(HtmlIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label: "HTML",
+        icon: React.createElement(HtmlIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     case "text":
-      return { label: "Text", icon: React.createElement(ArticleIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label: "Text",
+        icon: React.createElement(ArticleIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     default: {
       // For unknown types, derive label from the file extension (e.g. ".docx" → "DOCX")
       const ext = fileName?.split(".").pop()?.toUpperCase();
       const label = ext || "File";
-      return { label, icon: React.createElement(ArticleIcon, { fontSize: "small" }), ...BADGE_COLORS };
+      return {
+        label,
+        icon: React.createElement(ArticleIcon, { fontSize: "small" }),
+        ...BADGE_COLORS,
+      };
     }
   }
 }

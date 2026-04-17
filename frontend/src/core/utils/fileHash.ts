@@ -58,7 +58,8 @@ export class FileHasher {
 
     // Middle chunk (if file is large enough)
     if (file.size > this.CHUNK_SIZE * 2) {
-      const middleStart = Math.floor(file.size / 2) - Math.floor(this.CHUNK_SIZE / 2);
+      const middleStart =
+        Math.floor(file.size / 2) - Math.floor(this.CHUNK_SIZE / 2);
       const middleEnd = middleStart + this.CHUNK_SIZE;
       const middleChunk = file.slice(middleStart, middleEnd);
       chunks.push(await middleChunk.arrayBuffer());
@@ -74,8 +75,13 @@ export class FileHasher {
     return chunks;
   }
 
-  private static async combineChunks(chunks: ArrayBuffer[]): Promise<ArrayBuffer> {
-    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+  private static async combineChunks(
+    chunks: ArrayBuffer[],
+  ): Promise<ArrayBuffer> {
+    const totalLength = chunks.reduce(
+      (sum, chunk) => sum + chunk.byteLength,
+      0,
+    );
     const combined = new Uint8Array(totalLength);
 
     let offset = 0;
@@ -116,7 +122,10 @@ export class FileHasher {
    * Validate that a file matches its expected hash
    * Useful for detecting file corruption or changes
    */
-  static async validateFileHash(file: File, expectedHash: string): Promise<boolean> {
+  static async validateFileHash(
+    file: File,
+    expectedHash: string,
+  ): Promise<boolean> {
     try {
       const actualHash = await this.generateHybridHash(file);
       return actualHash === expectedHash;

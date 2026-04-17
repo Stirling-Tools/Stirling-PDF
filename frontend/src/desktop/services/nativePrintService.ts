@@ -25,7 +25,11 @@ async function resolvePdfSource(file?: File | Blob, url?: string | null) {
   return response.blob();
 }
 
-export async function printPdfNatively(file?: File | Blob, url?: string | null, fileName = "document.pdf") {
+export async function printPdfNatively(
+  file?: File | Blob,
+  url?: string | null,
+  fileName = "document.pdf",
+) {
   const source = await resolvePdfSource(file, url);
   if (!source) {
     throw new Error("No PDF source available for native print");
@@ -34,7 +38,10 @@ export async function printPdfNatively(file?: File | Blob, url?: string | null, 
   const { tempDir, join } = await import("@tauri-apps/api/path");
   const { remove, writeFile } = await import("@tauri-apps/plugin-fs");
 
-  const tempPath = await join(await tempDir(), `stirling-print-${crypto.randomUUID()}-${sanitizeFileName(fileName)}`);
+  const tempPath = await join(
+    await tempDir(),
+    `stirling-print-${crypto.randomUUID()}-${sanitizeFileName(fileName)}`,
+  );
 
   await writeFile(tempPath, new Uint8Array(await source.arrayBuffer()));
 

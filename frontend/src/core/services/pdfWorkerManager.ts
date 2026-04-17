@@ -5,7 +5,11 @@
  * and ensuring proper cleanup when operations complete.
  */
 
-import { GlobalWorkerOptions, getDocument, PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+import {
+  GlobalWorkerOptions,
+  getDocument,
+  PDFDocumentProxy,
+} from "pdfjs-dist/legacy/build/pdf.mjs";
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -30,7 +34,10 @@ class PDFWorkerManager {
    */
   private initializeWorker(): void {
     if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
+      GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+        import.meta.url,
+      ).toString();
       (GlobalWorkerOptions as any).docBaseUrl = undefined;
       this.isInitialized = true;
     }

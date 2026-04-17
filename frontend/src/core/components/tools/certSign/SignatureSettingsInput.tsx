@@ -1,4 +1,11 @@
-import { Stack, Text, Button, TextInput, NumberInput, Switch } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Button,
+  TextInput,
+  NumberInput,
+  Switch,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 export interface SignatureSettings {
@@ -16,7 +23,11 @@ interface SignatureSettingsInputProps {
   disabled?: boolean;
 }
 
-const SignatureSettingsInput = ({ value, onChange, disabled = false }: SignatureSettingsInputProps) => {
+const SignatureSettingsInput = ({
+  value,
+  onChange,
+  disabled = false,
+}: SignatureSettingsInputProps) => {
   const { t } = useTranslation();
 
   const handleChange = (key: keyof SignatureSettings, val: any) => {
@@ -29,7 +40,10 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
         {t("certSign.collab.signatureSettings.title", "Signature Appearance")}
       </Text>
       <Text size="xs" c="dimmed">
-        {t("certSign.collab.signatureSettings.description", "Configure how signatures will appear for all participants")}
+        {t(
+          "certSign.collab.signatureSettings.description",
+          "Configure how signatures will appear for all participants",
+        )}
       </Text>
 
       {/* Signature Visibility */}
@@ -39,9 +53,16 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
           color={!value.showSignature ? "blue" : "var(--text-muted)"}
           onClick={() => handleChange("showSignature", false)}
           disabled={disabled}
-          style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+          style={{
+            flex: 1,
+            height: "auto",
+            minHeight: "40px",
+            fontSize: "11px",
+          }}
         >
-          <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>
+          <div
+            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
+          >
             {t("certSign.appearance.invisible", "Invisible")}
           </div>
         </Button>
@@ -50,9 +71,16 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
           color={value.showSignature ? "blue" : "var(--text-muted)"}
           onClick={() => handleChange("showSignature", true)}
           disabled={disabled}
-          style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+          style={{
+            flex: 1,
+            height: "auto",
+            minHeight: "40px",
+            fontSize: "11px",
+          }}
         >
-          <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>
+          <div
+            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
+          >
             {t("certSign.appearance.visible", "Visible")}
           </div>
         </Button>
@@ -64,14 +92,18 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
           <TextInput
             label={t("certSign.reason", "Reason")}
             value={value.reason || ""}
-            onChange={(event) => handleChange("reason", event.currentTarget.value)}
+            onChange={(event) =>
+              handleChange("reason", event.currentTarget.value)
+            }
             disabled={disabled}
             size="xs"
           />
           <TextInput
             label={t("certSign.location", "Location")}
             value={value.location || ""}
-            onChange={(event) => handleChange("location", event.currentTarget.value)}
+            onChange={(event) =>
+              handleChange("location", event.currentTarget.value)
+            }
             disabled={disabled}
             size="xs"
           />
@@ -86,7 +118,9 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
           <Switch
             label={t("certSign.showLogo", "Show Stirling PDF Logo")}
             checked={value.showLogo || false}
-            onChange={(event) => handleChange("showLogo", event.currentTarget.checked)}
+            onChange={(event) =>
+              handleChange("showLogo", event.currentTarget.checked)
+            }
             disabled={disabled}
             size="sm"
           />
@@ -95,13 +129,18 @@ const SignatureSettingsInput = ({ value, onChange, disabled = false }: Signature
 
       {/* Summary Page Toggle */}
       <Switch
-        label={t("certSign.collab.sessionCreation.includeSummaryPage", "Include Signature Summary Page")}
+        label={t(
+          "certSign.collab.sessionCreation.includeSummaryPage",
+          "Include Signature Summary Page",
+        )}
         description={t(
           "certSign.collab.sessionCreation.includeSummaryPageHelp",
           "A summary page will be added at the end with all signature metadata. The digital certificate signature boxes on individual pages will be suppressed (wet signatures are unaffected).",
         )}
         checked={value.includeSummaryPage || false}
-        onChange={(event) => handleChange("includeSummaryPage", event.currentTarget.checked)}
+        onChange={(event) =>
+          handleChange("includeSummaryPage", event.currentTarget.checked)
+        }
         disabled={disabled}
         size="sm"
       />

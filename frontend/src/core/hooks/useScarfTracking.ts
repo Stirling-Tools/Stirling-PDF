@@ -15,7 +15,9 @@ import { setScarfConfig, firePixel } from "@app/utils/scarfTracking";
  */
 export function useScarfTracking() {
   const { config } = useAppConfig();
-  const { isServiceAccepted } = useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
+  const { isServiceAccepted } = useCookieConsent({
+    analyticsEnabled: config?.enableAnalytics === true,
+  });
 
   // Update scarf config whenever config or consent changes
   useEffect(() => {
@@ -27,7 +29,9 @@ export function useScarfTracking() {
   // Listen to cookie consent changes and auto-fire pixel when consent is granted
   useEffect(() => {
     const handleConsentChange = () => {
-      console.warn("[useScarfTracking] Consent changed, checking scarf service acceptance");
+      console.warn(
+        "[useScarfTracking] Consent changed, checking scarf service acceptance",
+      );
       if (isServiceAccepted("scarf", "analytics")) {
         firePixel(window.location.pathname);
       }

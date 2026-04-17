@@ -31,7 +31,10 @@ function isTextItem(value: unknown): value is {
   );
 }
 
-function createHighlightElement(item: TextItemWithGeometry, pageEl: HTMLElement): HTMLElement | null {
+function createHighlightElement(
+  item: TextItemWithGeometry,
+  pageEl: HTMLElement,
+): HTMLElement | null {
   const highlightRect = computeReadAloudHighlightRect({
     viewportTransform: item.viewportTransform,
     textTransform: item.transform,
@@ -61,9 +64,15 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
   const [isReadingAloud, setIsReadingAloud] = useState(false);
   const [speechRate, setSpeechRate] = useState(1);
-  const [speechLanguage, setSpeechLanguage] = useState(defaultLanguage || "en-US");
-  const [speechVoice, setSpeechVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [supportedLanguageCodes, setSupportedLanguageCodes] = useState<Set<string>>(new Set());
+  const [speechLanguage, setSpeechLanguage] = useState(
+    defaultLanguage || "en-US",
+  );
+  const [speechVoice, setSpeechVoice] = useState<SpeechSynthesisVoice | null>(
+    null,
+  );
+  const [supportedLanguageCodes, setSupportedLanguageCodes] = useState<
+    Set<string>
+  >(new Set());
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const highlightedElementsRef = useRef<HTMLElement[]>([]);
@@ -82,37 +91,42 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const speechLanguageRef = useRef(defaultLanguage || "en-US");
 
   // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
-  const cachedPdfDocRef = useRef<Awaited<ReturnType<typeof pdfWorkerManager.createDocument>> | null>(null);
+  const cachedPdfDocRef = useRef<Awaited<
+    ReturnType<typeof pdfWorkerManager.createDocument>
+  > | null>(null);
   const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
 
   // Helper to find best voice for language
-  const findVoiceForLanguage = useCallback((languageCode: string): SpeechSynthesisVoice | null => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const findVoiceForLanguage = useCallback(
+    (languageCode: string): SpeechSynthesisVoice | null => {
+      if (typeof window === "undefined" || !window.speechSynthesis) return null;
 
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return null;
 
-    // Try exact match first
-    const exactMatch = voices.find((v) => v.lang === languageCode);
-    if (exactMatch) return exactMatch;
+      // Try exact match first
+      const exactMatch = voices.find((v) => v.lang === languageCode);
+      if (exactMatch) return exactMatch;
 
-    // Try matching just the language part (e.g., 'es' from 'es-ES')
-    const baseLang = languageCode.split("-")[0];
-    const baseMatch = voices.find((v) => v.lang.startsWith(baseLang));
-    if (baseMatch) {
-      return baseMatch;
-    }
+      // Try matching just the language part (e.g., 'es' from 'es-ES')
+      const baseLang = languageCode.split("-")[0];
+      const baseMatch = voices.find((v) => v.lang.startsWith(baseLang));
+      if (baseMatch) {
+        return baseMatch;
+      }
 
-    // Fallback to any English voice if requested language not found
-    const englishMatch = voices.find((v) => v.lang.startsWith("en"));
-    if (englishMatch) {
-      return englishMatch;
-    }
+      // Fallback to any English voice if requested language not found
+      const englishMatch = voices.find((v) => v.lang.startsWith("en"));
+      if (englishMatch) {
+        return englishMatch;
+      }
 
-    // Last resort: use any available voice
-    return voices[0] || null;
-  }, []);
+      // Last resort: use any available voice
+      return voices[0] || null;
+    },
+    [],
+  );
 
   // Sync speechRate state to ref so page advance callbacks always have current rate
   useEffect(() => {
@@ -126,7 +140,8 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
   // Helper to get supported language codes from available voices
   const getSupportedLanguageCodes = useCallback((): Set<string> => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return new Set();
+    if (typeof window === "undefined" || !window.speechSynthesis)
+      return new Set();
 
     const voices = window.speechSynthesis.getVoices();
     const supportedCodes = new Set<string>();
@@ -166,9 +181,15 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       setSpeechVoice(voice);
     } else {
       // Voices not loaded yet, listen for voiceschanged event
-      window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
+      window.speechSynthesis.addEventListener(
+        "voiceschanged",
+        handleVoicesChanged,
+      );
       return () => {
-        window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
+        window.speechSynthesis.removeEventListener(
+          "voiceschanged",
+          handleVoicesChanged,
+        );
       };
     }
   }, [speechLanguage, findVoiceForLanguage, getSupportedLanguageCodes]);
@@ -217,7 +238,9 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       try {
         let currentWordCount = 0;
         const currentPageIndex = pageNumber - 1;
-        const pageEl = document.querySelector(`[data-page-index="${currentPageIndex}"]`) as HTMLElement | null;
+        const pageEl = document.querySelector(
+          `[data-page-index="${currentPageIndex}"]`,
+        ) as HTMLElement | null;
         if (!pageEl) return;
 
         for (const item of textItemsRef.current) {
@@ -226,7 +249,10 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
           const subWords = itemText.split(/\s+/);
           for (let i = 0; i < subWords.length; i++) {
-            if (currentWordCount === wordIndex && subWords[i].toLowerCase() === wordToFind.toLowerCase()) {
+            if (
+              currentWordCount === wordIndex &&
+              subWords[i].toLowerCase() === wordToFind.toLowerCase()
+            ) {
               const highlight = createHighlightElement(item, pageEl);
               if (highlight) {
                 highlightedElementsRef.current.push(highlight);
@@ -252,7 +278,9 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         highlightWordIndex?: number;
       },
     ) => {
-      let pdfDoc: Awaited<ReturnType<typeof pdfWorkerManager.createDocument>> | null = null;
+      let pdfDoc: Awaited<
+        ReturnType<typeof pdfWorkerManager.createDocument>
+      > | null = null;
 
       try {
         const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
@@ -261,7 +289,9 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         if (cachedPdfDocRef.current) {
           pdfDoc = cachedPdfDocRef.current;
         } else {
-          pdfDoc = await pdfWorkerManager.createDocument(await currentFile.arrayBuffer());
+          pdfDoc = await pdfWorkerManager.createDocument(
+            await currentFile.arrayBuffer(),
+          );
           cachedPdfDocRef.current = pdfDoc;
         }
 
@@ -316,14 +346,19 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
           // Only merge if last item exists, is not a space, and items are on same line
           if (lastItem && lastItem.str.trim()) {
-            const yDiff = Math.abs((lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0));
-            const xGap = (item.transform[4] ?? 0) - ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
+            const yDiff = Math.abs(
+              (lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0),
+            );
+            const xGap =
+              (item.transform[4] ?? 0) -
+              ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
 
             // Same line and very close horizontally?
             if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
               lastItem.str += itemText;
               // Update width: add the new item's width plus any gap between them
-              lastItem.width = (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
+              lastItem.width =
+                (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
               continue;
             }
           }
@@ -355,7 +390,13 @@ export function useViewerReadAloud(defaultLanguage?: string) {
           currentWordIndexRef.current = 0;
         }
 
-        const highlightIndex = Math.max(0, Math.min(options?.highlightWordIndex ?? 0, Math.max(words.length - 1, 0)));
+        const highlightIndex = Math.max(
+          0,
+          Math.min(
+            options?.highlightWordIndex ?? 0,
+            Math.max(words.length - 1, 0),
+          ),
+        );
         highlightWord(highlightIndex, words, pageNumber);
         return { spokenText, words };
       } catch (error) {
@@ -382,9 +423,13 @@ export function useViewerReadAloud(defaultLanguage?: string) {
         return;
       }
 
-      const clampedStart = Math.max(0, Math.min(startCharIndex, spokenText.length));
+      const clampedStart = Math.max(
+        0,
+        Math.min(startCharIndex, spokenText.length),
+      );
       const remainingText = spokenText.slice(clampedStart).trimStart();
-      const trimmedDelta = spokenText.slice(clampedStart).length - remainingText.length;
+      const trimmedDelta =
+        spokenText.slice(clampedStart).length - remainingText.length;
       const baseCharIndex = clampedStart + trimmedDelta;
 
       if (!remainingText) {
@@ -432,7 +477,10 @@ export function useViewerReadAloud(defaultLanguage?: string) {
                 cleanupReadingSession();
                 return;
               }
-              const nextPageData = await readPage(currentFileRef.current, pageNumber + 1);
+              const nextPageData = await readPage(
+                currentFileRef.current,
+                pageNumber + 1,
+              );
               if (!nextPageData) {
                 currentFileRef.current = null;
                 setIsReadingAloud(false);
@@ -503,7 +551,11 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   );
 
   const refreshActiveHighlight = useCallback(() => {
-    if (!isReadingAloud || !currentFileRef.current || !cachedTextItemsRef.current) {
+    if (
+      !isReadingAloud ||
+      !currentFileRef.current ||
+      !cachedTextItemsRef.current
+    ) {
       return;
     }
 
@@ -538,7 +590,8 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
     try {
       const selectedFiles = selectors.getSelectedFiles();
-      const currentFile = selectedFiles[viewer.activeFileIndex] ?? selectedFiles[0];
+      const currentFile =
+        selectedFiles[viewer.activeFileIndex] ?? selectedFiles[0];
       if (!currentFile) return;
       currentFileRef.current = currentFile;
       totalPagesRef.current = viewer.getScrollState().totalPages || 0;
@@ -574,7 +627,15 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       setIsReadingAloud(false);
       cleanupReadingSession();
     }
-  }, [clearHighlights, cleanupReadingSession, highlightWord, isReadingAloud, selectors, speakFromCharIndex, viewer]);
+  }, [
+    clearHighlights,
+    cleanupReadingSession,
+    highlightWord,
+    isReadingAloud,
+    selectors,
+    speakFromCharIndex,
+    viewer,
+  ]);
 
   const handleSpeechRateChange = useCallback(
     (nextRate: number) => {

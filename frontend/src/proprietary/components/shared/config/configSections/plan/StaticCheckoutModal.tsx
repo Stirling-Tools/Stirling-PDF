@@ -1,11 +1,25 @@
 import React, { useState } from "react";
-import { Modal, Text, Group, ActionIcon, Stack, Paper, Grid, TextInput, Button, Alert } from "@mantine/core";
+import {
+  Modal,
+  Text,
+  Group,
+  ActionIcon,
+  Stack,
+  Paper,
+  Grid,
+  TextInput,
+  Button,
+  Alert,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { validateEmail } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
 import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
-import { STATIC_STRIPE_LINKS, buildStripeUrlWithEmail } from "@app/constants/staticStripeLinks";
+import {
+  STATIC_STRIPE_LINKS,
+  buildStripeUrlWithEmail,
+} from "@app/constants/staticStripeLinks";
 import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useIsMobile } from "@app/hooks/useIsMobile";
@@ -21,7 +35,12 @@ interface StaticCheckoutModalProps {
 
 type Stage = "email" | "period-selection" | "license-activation";
 
-const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClose, planName, isUpgrade = false }) => {
+const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
+  opened,
+  onClose,
+  planName,
+  isUpgrade = false,
+}) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { refetchLicense } = useLicense();
@@ -64,7 +83,10 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
       alert({
         alertType: "error",
         title: t("admin.error", "Error"),
-        body: t("admin.settings.premium.noInput", "Please provide a license key"),
+        body: t(
+          "admin.settings.premium.noInput",
+          "Please provide a license key",
+        ),
       });
       return;
     }
@@ -82,13 +104,18 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
         alert({
           alertType: "success",
           title: t("success", "Success"),
-          body: t("admin.settings.premium.key.successMessage", "License key activated successfully"),
+          body: t(
+            "admin.settings.premium.key.successMessage",
+            "License key activated successfully",
+          ),
         });
       } else {
         alert({
           alertType: "error",
           title: t("admin.error", "Error"),
-          body: response.error || t("admin.settings.saveError", "Failed to save license"),
+          body:
+            response.error ||
+            t("admin.settings.saveError", "Failed to save license"),
         });
       }
     } catch (error) {
@@ -147,7 +174,14 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
   const renderContent = () => {
     switch (stage) {
       case "email":
-        return <EmailStage emailInput={email} setEmailInput={setEmail} emailError={emailError} onSubmit={handleEmailSubmit} />;
+        return (
+          <EmailStage
+            emailInput={email}
+            setEmailInput={setEmail}
+            emailError={emailError}
+            onSubmit={handleEmailSubmit}
+          />
+        );
 
       case "period-selection":
         return (
@@ -162,7 +196,11 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
                   style={getClickablePaperStyle()}
                   onClick={() => handlePeriodSelect("monthly")}
                 >
-                  <Stack gap="md" style={{ height: "100%", minHeight: "120px" }} justify="space-between">
+                  <Stack
+                    gap="md"
+                    style={{ height: "100%", minHeight: "120px" }}
+                    justify="space-between"
+                  >
                     <Text size="lg" fw={600}>
                       {t("payment.monthly", "Monthly")}
                     </Text>
@@ -182,7 +220,11 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
                   style={getClickablePaperStyle()}
                   onClick={() => handlePeriodSelect("yearly")}
                 >
-                  <Stack gap="md" style={{ height: "100%", minHeight: "120px" }} justify="space-between">
+                  <Stack
+                    gap="md"
+                    style={{ height: "100%", minHeight: "120px" }}
+                    justify="space-between"
+                  >
                     <Text size="lg" fw={600}>
                       {t("payment.yearly", "Yearly")}
                     </Text>
@@ -198,11 +240,23 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
 
       case "license-activation":
         return (
-          <Stack gap="lg" style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
-            <Alert variant="light" color="blue" icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}>
+          <Stack
+            gap="lg"
+            style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}
+          >
+            <Alert
+              variant="light"
+              color="blue"
+              icon={
+                <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
+              }
+            >
               <Stack gap="sm">
                 <Text size="sm" fw={600}>
-                  {t("plan.static.licenseActivation.checkoutOpened", "Checkout Opened in New Tab")}
+                  {t(
+                    "plan.static.licenseActivation.checkoutOpened",
+                    "Checkout Opened in New Tab",
+                  )}
                 </Text>
                 <Text size="sm">
                   {t(
@@ -217,8 +271,17 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
               <Alert
                 variant="light"
                 color="green"
-                icon={<LocalIcon icon="check-circle-rounded" width="1rem" height="1rem" />}
-                title={t("plan.static.licenseActivation.success", "License Activated!")}
+                icon={
+                  <LocalIcon
+                    icon="check-circle-rounded"
+                    width="1rem"
+                    height="1rem"
+                  />
+                }
+                title={t(
+                  "plan.static.licenseActivation.success",
+                  "License Activated!",
+                )}
               >
                 <Text size="sm">
                   {t(
@@ -230,12 +293,18 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
             ) : (
               <Stack gap="md">
                 <Text size="sm" fw={500}>
-                  {t("plan.static.licenseActivation.enterKey", "Enter your license key below to activate your plan:")}
+                  {t(
+                    "plan.static.licenseActivation.enterKey",
+                    "Enter your license key below to activate your plan:",
+                  )}
                 </Text>
 
                 <TextInput
                   label={t("admin.settings.premium.key.label", "License Key")}
-                  description={t("plan.static.licenseActivation.keyDescription", "Paste the license key from your email")}
+                  description={t(
+                    "plan.static.licenseActivation.keyDescription",
+                    "Paste the license key from your email",
+                  )}
                   value={licenseKey}
                   onChange={(e) => setLicenseKey(e.target.value)}
                   placeholder="00000000-0000-0000-0000-000000000000"
@@ -244,11 +313,25 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
                 />
 
                 <Group justify="space-between">
-                  <Button variant="subtle" onClick={handleClose} disabled={savingLicense}>
-                    {t("plan.static.licenseActivation.doLater", "I'll do this later")}
+                  <Button
+                    variant="subtle"
+                    onClick={handleClose}
+                    disabled={savingLicense}
+                  >
+                    {t(
+                      "plan.static.licenseActivation.doLater",
+                      "I'll do this later",
+                    )}
                   </Button>
-                  <Button onClick={handleActivateLicense} loading={savingLicense} disabled={!licenseKey.trim()}>
-                    {t("plan.static.licenseActivation.activate", "Activate License")}
+                  <Button
+                    onClick={handleActivateLicense}
+                    loading={savingLicense}
+                    disabled={!licenseKey.trim()}
+                  >
+                    {t(
+                      "plan.static.licenseActivation.activate",
+                      "Activate License",
+                    )}
                   </Button>
                 </Group>
               </Stack>
@@ -256,7 +339,9 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
 
             {licenseActivated && (
               <Group justify="flex-end">
-                <Button onClick={handleClose}>{t("common.close", "Close")}</Button>
+                <Button onClick={handleClose}>
+                  {t("common.close", "Close")}
+                </Button>
               </Group>
             )}
           </Stack>
@@ -276,7 +361,12 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({ opened, onClo
       title={
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
-            <ActionIcon variant="subtle" size="lg" onClick={handleGoBack} aria-label={t("common.back", "Back")}>
+            <ActionIcon
+              variant="subtle"
+              size="lg"
+              onClick={handleGoBack}
+              aria-label={t("common.back", "Back")}
+            >
               <LocalIcon icon="arrow-back" width={20} height={20} />
             </ActionIcon>
           )}

@@ -1,6 +1,14 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { TextInput, Stack, Paper, Text, Loader, Group, Alert } from "@mantine/core";
+import {
+  TextInput,
+  Stack,
+  Paper,
+  Text,
+  Loader,
+  Group,
+  Alert,
+} from "@mantine/core";
 import WarningIcon from "@mui/icons-material/Warning";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -23,12 +31,24 @@ interface LegalSettingsData {
 export default function AdminLegalSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<LegalSettingsData>({
-      sectionName: "legal",
-    });
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<LegalSettingsData>({
+    sectionName: "legal",
+  });
 
   useEffect(() => {
     if (loginEnabled) {
@@ -36,7 +56,10 @@ export default function AdminLegalSection() {
     }
   }, [loginEnabled]);
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
@@ -78,14 +101,20 @@ export default function AdminLegalSection() {
             {t("admin.settings.legal.title", "Legal Documents")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.legal.description", "Configure links to legal documents and policies.")}
+            {t(
+              "admin.settings.legal.description",
+              "Configure links to legal documents and policies.",
+            )}
           </Text>
         </div>
 
         {/* Legal Disclaimer */}
         <Alert
           icon={<WarningIcon style={{ fontSize: 18 }} />}
-          title={t("admin.settings.legal.disclaimer.title", "Legal Responsibility Warning")}
+          title={t(
+            "admin.settings.legal.disclaimer.title",
+            "Legal Responsibility Warning",
+          )}
           color="yellow"
           variant="light"
         >
@@ -103,7 +132,12 @@ export default function AdminLegalSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.legal.termsAndConditions.label", "Terms and Conditions")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.legal.termsAndConditions.label",
+                        "Terms and Conditions",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("termsAndConditions")} />
                   </Group>
                 }
@@ -112,7 +146,12 @@ export default function AdminLegalSection() {
                   "URL or filename to terms and conditions",
                 )}
                 value={settings.termsAndConditions || ""}
-                onChange={(e) => setSettings({ ...settings, termsAndConditions: e.target.value })}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    termsAndConditions: e.target.value,
+                  })
+                }
                 placeholder="https://example.com/terms"
                 disabled={!loginEnabled}
               />
@@ -122,13 +161,23 @@ export default function AdminLegalSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.legal.privacyPolicy.label", "Privacy Policy")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.legal.privacyPolicy.label",
+                        "Privacy Policy",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("privacyPolicy")} />
                   </Group>
                 }
-                description={t("admin.settings.legal.privacyPolicy.description", "URL or filename to privacy policy")}
+                description={t(
+                  "admin.settings.legal.privacyPolicy.description",
+                  "URL or filename to privacy policy",
+                )}
                 value={settings.privacyPolicy || ""}
-                onChange={(e) => setSettings({ ...settings, privacyPolicy: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, privacyPolicy: e.target.value })
+                }
                 placeholder="https://example.com/privacy"
                 disabled={!loginEnabled}
               />
@@ -138,8 +187,15 @@ export default function AdminLegalSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.legal.accessibilityStatement.label", "Accessibility Statement")}</span>
-                    <PendingBadge show={isFieldPending("accessibilityStatement")} />
+                    <span>
+                      {t(
+                        "admin.settings.legal.accessibilityStatement.label",
+                        "Accessibility Statement",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("accessibilityStatement")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -147,7 +203,12 @@ export default function AdminLegalSection() {
                   "URL or filename to accessibility statement",
                 )}
                 value={settings.accessibilityStatement || ""}
-                onChange={(e) => setSettings({ ...settings, accessibilityStatement: e.target.value })}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    accessibilityStatement: e.target.value,
+                  })
+                }
                 placeholder="https://example.com/accessibility"
                 disabled={!loginEnabled}
               />
@@ -157,13 +218,23 @@ export default function AdminLegalSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.legal.cookiePolicy.label", "Cookie Policy")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.legal.cookiePolicy.label",
+                        "Cookie Policy",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("cookiePolicy")} />
                   </Group>
                 }
-                description={t("admin.settings.legal.cookiePolicy.description", "URL or filename to cookie policy")}
+                description={t(
+                  "admin.settings.legal.cookiePolicy.description",
+                  "URL or filename to cookie policy",
+                )}
                 value={settings.cookiePolicy || ""}
-                onChange={(e) => setSettings({ ...settings, cookiePolicy: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, cookiePolicy: e.target.value })
+                }
                 placeholder="https://example.com/cookies"
                 disabled={!loginEnabled}
               />
@@ -173,7 +244,9 @@ export default function AdminLegalSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.legal.impressum.label", "Impressum")}</span>
+                    <span>
+                      {t("admin.settings.legal.impressum.label", "Impressum")}
+                    </span>
                     <PendingBadge show={isFieldPending("impressum")} />
                   </Group>
                 }
@@ -182,7 +255,9 @@ export default function AdminLegalSection() {
                   "URL or filename to impressum (required in some jurisdictions)",
                 )}
                 value={settings.impressum || ""}
-                onChange={(e) => setSettings({ ...settings, impressum: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, impressum: e.target.value })
+                }
                 placeholder="https://example.com/impressum"
                 disabled={!loginEnabled}
               />
@@ -200,7 +275,11 @@ export default function AdminLegalSection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

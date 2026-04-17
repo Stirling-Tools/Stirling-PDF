@@ -29,7 +29,9 @@ export default function ResetPassword() {
 
     // Also parse hash params (Supabase puts tokens & type in the hash)
     const hash = url.hash || "";
-    const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.substring(1) : hash);
+    const hashParams = new URLSearchParams(
+      hash.startsWith("#") ? hash.substring(1) : hash,
+    );
     const hashType = hashParams.get("type");
     const hashError = hashParams.get("error");
     const hashErrorDescription = hashParams.get("error_description");
@@ -48,7 +50,8 @@ export default function ResetPassword() {
     const tryExchange = async () => {
       if (code) {
         try {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error } =
+            await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             setError(error.message);
             setIsRecovery(false);
@@ -71,7 +74,11 @@ export default function ResetPassword() {
 
     // Clear sensitive tokens from the URL hash
     if (hash.includes("access_token") || hashError) {
-      window.history.replaceState({}, document.title, window.location.pathname + (inRecovery ? "?type=recovery" : ""));
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + (inRecovery ? "?type=recovery" : ""),
+      );
     }
 
     // Listen for Supabase auth state changes to confirm recovery state
@@ -95,9 +102,12 @@ export default function ResetPassword() {
       setIsSubmitting(true);
       setError(null);
       const redirectTo = absoluteWithBasePath("/auth/reset?type=recovery");
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo,
+        },
+      );
       if (error) {
         setError(error.message);
       } else {
@@ -130,7 +140,12 @@ export default function ResetPassword() {
         return;
       }
       if (data.user) {
-        setSuccess(t("login.passwordUpdatedSuccess", "Your password has been updated successfully."));
+        setSuccess(
+          t(
+            "login.passwordUpdatedSuccess",
+            "Your password has been updated successfully.",
+          ),
+        );
         // Clear the form fields
         setPassword("");
         setConfirmPassword("");
@@ -143,7 +158,9 @@ export default function ResetPassword() {
           if (sessionData.session) {
             navigate("/");
           } else {
-            const query = derivedEmail ? `?email=${encodeURIComponent(derivedEmail)}` : "";
+            const query = derivedEmail
+              ? `?email=${encodeURIComponent(derivedEmail)}`
+              : "";
             navigate(`/login${query}`);
           }
         }, 2000);
@@ -157,7 +174,9 @@ export default function ResetPassword() {
     <AuthLayout>
       <LoginHeader
         title={
-          isRecovery ? t("login.resetYourPassword", "Reset your password") : t("login.forgotPassword", "Forgot your password?")
+          isRecovery
+            ? t("login.resetYourPassword", "Reset your password")
+            : t("login.forgotPassword", "Forgot your password?")
         }
       />
       {!didUpdate && <SuccessMessage success={success} />}
@@ -166,7 +185,13 @@ export default function ResetPassword() {
       {didUpdate ? (
         <>
           <SuccessMessage
-            success={success || t("login.passwordUpdatedSuccess", "Your password has been updated successfully.")}
+            success={
+              success ||
+              t(
+                "login.passwordUpdatedSuccess",
+                "Your password has been updated successfully.",
+              )
+            }
           />
           <NavigationLink
             onClick={() => navigate("/login")}
@@ -213,7 +238,9 @@ export default function ResetPassword() {
             disabled={isSubmitting || !password || !confirmPassword}
             className="auth-button"
           >
-            {isSubmitting ? t("login.sending", "Sending…") : t("login.updatePassword", "Update password")}
+            {isSubmitting
+              ? t("login.sending", "Sending…")
+              : t("login.updatePassword", "Update password")}
           </button>
           <NavigationLink
             onClick={() => navigate("/login")}

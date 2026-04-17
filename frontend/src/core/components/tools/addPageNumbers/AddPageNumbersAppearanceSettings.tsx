@@ -10,7 +10,10 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AddPageNumbersAppearanceSettingsProps {
   parameters: AddPageNumbersParameters;
-  onParameterChange: <K extends keyof AddPageNumbersParameters>(key: K, value: AddPageNumbersParameters[K]) => void;
+  onParameterChange: <K extends keyof AddPageNumbersParameters>(
+    key: K,
+    value: AddPageNumbersParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -23,11 +26,18 @@ const AddPageNumbersAppearanceSettings = ({
 
   return (
     <Stack gap="md">
-      <Tooltip content={t("marginTooltip", "Distance between the page number and the edge of the page.")}>
+      <Tooltip
+        content={t(
+          "marginTooltip",
+          "Distance between the page number and the edge of the page.",
+        )}
+      >
         <Select
           label={t("addPageNumbers.selectText.2", "Margin")}
           value={parameters.customMargin}
-          onChange={(v) => onParameterChange("customMargin", (v as any) || "medium")}
+          onChange={(v) =>
+            onParameterChange("customMargin", (v as any) || "medium")
+          }
           data={[
             { value: "small", label: t("sizes.small", "Small") },
             { value: "medium", label: t("sizes.medium", "Medium") },
@@ -35,15 +45,25 @@ const AddPageNumbersAppearanceSettings = ({
             { value: "x-large", label: t("sizes.x-large", "Extra Large") },
           ]}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Tooltip>
 
-      <Tooltip content={t("fontSizeTooltip", "Size of the page number text in points. Larger numbers create bigger text.")}>
+      <Tooltip
+        content={t(
+          "fontSizeTooltip",
+          "Size of the page number text in points. Larger numbers create bigger text.",
+        )}
+      >
         <NumberInput
           label={t("addPageNumbers.fontSize", "Font Size")}
           value={parameters.fontSize}
-          onChange={(v) => onParameterChange("fontSize", typeof v === "number" ? v : 12)}
+          onChange={(v) =>
+            onParameterChange("fontSize", typeof v === "number" ? v : 12)
+          }
           min={1}
           disabled={disabled}
         />
@@ -58,13 +78,20 @@ const AddPageNumbersAppearanceSettings = ({
         <NumberInput
           label={t("addPageNumbers.zeroPad", "Zero-pad Width (Bates Stamping)")}
           value={parameters.zeroPad}
-          onChange={(v) => onParameterChange("zeroPad", typeof v === "number" ? v : 0)}
+          onChange={(v) =>
+            onParameterChange("zeroPad", typeof v === "number" ? v : 0)
+          }
           min={0}
           disabled={disabled}
         />
       </Tooltip>
 
-      <Tooltip content={t("fontTypeTooltip", "Font family for the page numbers. Choose based on your document style.")}>
+      <Tooltip
+        content={t(
+          "fontTypeTooltip",
+          "Font family for the page numbers. Choose based on your document style.",
+        )}
+      >
         <Select
           label={t("addPageNumbers.fontName", "Font Type")}
           value={parameters.fontType}
@@ -75,7 +102,10 @@ const AddPageNumbersAppearanceSettings = ({
             { value: "Courier", label: "Courier New" },
           ]}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Tooltip>
 
@@ -88,8 +118,13 @@ const AddPageNumbersAppearanceSettings = ({
         <TextInput
           label={t("addPageNumbers.selectText.6", "Custom Text Format")}
           value={parameters.customText || ""}
-          onChange={(e) => onParameterChange("customText", e.currentTarget.value)}
-          placeholder={t("addPageNumbers.customNumberDesc", 'e.g., "Page {n}" or leave blank for just numbers')}
+          onChange={(e) =>
+            onParameterChange("customText", e.currentTarget.value)
+          }
+          placeholder={t(
+            "addPageNumbers.customNumberDesc",
+            'e.g., "Page {n}" or leave blank for just numbers',
+          )}
           disabled={disabled}
         />
       </Tooltip>
