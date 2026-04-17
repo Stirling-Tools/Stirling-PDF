@@ -1,7 +1,10 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.Executor;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +23,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
@@ -34,7 +37,6 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/ai")
-@RequiredArgsConstructor
 @Hidden
 @Tag(name = "AI Engine", description = "Endpoints for AI-powered PDF workflows")
 public class AiEngineController {
@@ -42,6 +44,18 @@ public class AiEngineController {
     private final AiEngineClient aiEngineClient;
     private final AiWorkflowService aiWorkflowService;
     private final ObjectMapper objectMapper;
+    private final Executor aiStreamExecutor;
+
+    public AiEngineController(
+            AiEngineClient aiEngineClient,
+            AiWorkflowService aiWorkflowService,
+            ObjectMapper objectMapper,
+            @Qualifier("aiStreamExecutor") Executor aiStreamExecutor) {
+        this.aiEngineClient = aiEngineClient;
+        this.aiWorkflowService = aiWorkflowService;
+        this.objectMapper = objectMapper;
+        this.aiStreamExecutor = aiStreamExecutor;
+    }
 
     @GetMapping("/health")
     @Operation(
@@ -60,6 +74,49 @@ public class AiEngineController {
     public ResponseEntity<AiWorkflowResponse> orchestrate(
             @Valid @ModelAttribute AiWorkflowRequest request) throws IOException {
         return ResponseEntity.ok(aiWorkflowService.orchestrate(request));
+    }
+
+    @PostMapping(value = "/orchestrate/stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Run an AI workflow with streaming progress",
+            description =
+                    "Accepts a PDF upload and a user message, returns SSE events with progress"
+                            + " updates followed by the final AI workflow result")
+    public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
+        SseEmitter emitter = new SseEmitter(180_000L);
+
+        emitter.onTimeout(
+                () -> {
+                    log.warn("SSE emitter timed out for AI orchestration stream");
+                    emitter.complete();
+                });
+        emitter.onError(e -> log.warn("SSE emitter error for AI orchestration stream", e));
+
+        aiStreamExecutor.execute(() -> runOrchestrationStream(request, emitter));
+
+        return emitter;
+    }
+
+    private void runOrchestrationStream(AiWorkflowRequest request, SseEmitter emitter) {
+        try {
+            AiWorkflowResponse result =
+                    aiWorkflowService.orchestrate(
+                            request, progress -> sendEvent(emitter, "progress", progress));
+            sendEvent(emitter, "result", result);
+            emitter.complete();
+        } catch (Exception e) {
+            log.error("AI orchestration stream failed", e);
+            sendEvent(emitter, "error", Map.of("message", e.getMessage()));
+            emitter.completeWithError(e);
+        }
+    }
+
+    private void sendEvent(SseEmitter emitter, String name, Object data) {
+        try {
+            emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
+        } catch (IOException e) {
+            log.debug("Failed to send SSE event (client may have disconnected)", e);
+        }
     }
 
     @PostMapping(value = "/pdf/edit", consumes = MediaType.APPLICATION_JSON_VALUE)

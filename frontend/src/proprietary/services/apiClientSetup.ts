@@ -95,20 +95,29 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
   }
 }
 
+/** Auth headers for raw fetch() calls (SSE streams, etc.). */
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const jwt = getJwtTokenFromStorage();
+  if (jwt) {
+    headers["Authorization"] = `Bearer ${jwt}`;
+  }
+  const xsrf = getXsrfToken();
+  if (xsrf) {
+    headers["X-XSRF-TOKEN"] = xsrf;
+  }
+  return headers;
+}
+
 export function setupApiInterceptors(client: AxiosInstance): void {
   // Install request interceptor to add JWT token
   client.interceptors.request.use(
     (config) => {
-      const jwtToken = getJwtTokenFromStorage();
-      const xsrfToken = getXsrfToken();
-
-      if (jwtToken && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${jwtToken}`;
-        console.debug("[API Client] Added JWT token from localStorage to Authorization header");
-      }
-
-      if (xsrfToken && !config.headers["X-XSRF-TOKEN"]) {
-        config.headers["X-XSRF-TOKEN"] = xsrfToken;
+      const authHeaders = getAuthHeaders();
+      for (const [key, value] of Object.entries(authHeaders)) {
+        if (!config.headers[key]) {
+          config.headers[key] = value;
+        }
       }
 
       return config;
