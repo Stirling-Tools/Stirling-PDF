@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import logging.handlers
 from functools import lru_cache
 from pathlib import Path
 
@@ -19,12 +21,44 @@ class AppSettings(BaseSettings):
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
 
+    log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
+    log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
+
     posthog_enabled: bool = Field(validation_alias="STIRLING_POSTHOG_ENABLED")
     posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
     posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
 
 
+def _configure_logging(level_name: str, log_file: str) -> None:
+    """Configure the ``stirling`` logger hierarchy."""
+    level = logging.getLevelNamesMapping().get(level_name.upper())
+    if level is None:
+        logging.getLogger("stirling").warning(
+            "Unknown STIRLING_LOG_LEVEL %r, defaulting to INFO",
+            level_name,
+        )
+        level = logging.INFO
+
+    root = logging.getLogger("stirling")
+    root.setLevel(level)
+
+    if log_file:
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        fh = logging.handlers.TimedRotatingFileHandler(
+            log_path,
+            when="midnight",
+            backupCount=1,
+            encoding="utf-8",
+        )
+        fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s"))
+        fh.setLevel(level)
+        root.addHandler(fh)
+
+
 @lru_cache(maxsize=1)
 def load_settings() -> AppSettings:
     load_dotenv(ENV_FILE)
-    return AppSettings.model_validate({})
+    settings = AppSettings.model_validate({})
+    _configure_logging(settings.log_level, settings.log_file)
+    return settings
