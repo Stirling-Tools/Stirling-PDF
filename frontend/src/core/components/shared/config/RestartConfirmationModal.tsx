@@ -10,7 +10,11 @@ interface RestartConfirmationModalProps {
   onRestart: () => void;
 }
 
-export default function RestartConfirmationModal({ opened, onClose, onRestart }: RestartConfirmationModalProps) {
+export default function RestartConfirmationModal({
+  opened,
+  onClose,
+  onRestart,
+}: RestartConfirmationModalProps) {
   const { t } = useTranslation();
 
   return (
@@ -36,14 +40,25 @@ export default function RestartConfirmationModal({ opened, onClose, onRestart }:
         </Text>
 
         <Text size="sm" c="dimmed">
-          {t("admin.settings.restart.question", "Would you like to restart the server now or later?")}
+          {t(
+            "admin.settings.restart.question",
+            "Would you like to restart the server now or later?",
+          )}
         </Text>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" leftSection={<ScheduleIcon style={{ fontSize: 16 }} />} onClick={onClose}>
+          <Button
+            variant="default"
+            leftSection={<ScheduleIcon style={{ fontSize: 16 }} />}
+            onClick={onClose}
+          >
             {t("admin.settings.restart.later", "Restart Later")}
           </Button>
-          <Button color="blue" leftSection={<RefreshIcon style={{ fontSize: 16 }} />} onClick={onRestart}>
+          <Button
+            color="blue"
+            leftSection={<RefreshIcon style={{ fontSize: 16 }} />}
+            onClick={onRestart}
+          >
             {t("admin.settings.restart.now", "Restart Now")}
           </Button>
         </Group>

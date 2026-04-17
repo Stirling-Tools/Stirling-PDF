@@ -6,7 +6,10 @@ export const useRemoveAnnotationsTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("removeAnnotations.tooltip.header.title", "About Remove Annotations"),
+      title: t(
+        "removeAnnotations.tooltip.header.title",
+        "About Remove Annotations",
+      ),
     },
     tips: [
       {

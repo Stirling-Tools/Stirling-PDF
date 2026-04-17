@@ -63,14 +63,16 @@ function generateEncryptedPDFThumbnail(file: File): string {
   drawLargeLockIcon(ctx, canvas.width / 2, canvas.height / 2 - 10, colorScheme);
 
   // "PDF" text under the lock
-  ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font =
+    'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = colorScheme.icon;
   ctx.textAlign = "center";
   ctx.fillText("PDF", canvas.width / 2, canvas.height / 2 + 35);
 
   // File size with subtle styling
   const sizeText = formatFileSize(file.size);
-  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font =
+    '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = colorScheme.textSecondary;
   ctx.textAlign = "center";
   ctx.fillText(sizeText, canvas.width / 2, canvas.height - 15);
@@ -110,11 +112,18 @@ function generatePlaceholderThumbnail(file: File): string {
   drawModernDocumentIcon(ctx, canvas.width / 2, 45, colorScheme.icon);
 
   // Extension badge
-  drawExtensionBadge(ctx, canvas.width / 2, canvas.height / 2 + 15, extension, colorScheme);
+  drawExtensionBadge(
+    ctx,
+    canvas.width / 2,
+    canvas.height / 2 + 15,
+    extension,
+    colorScheme,
+  );
 
   // File size with subtle styling
   const sizeText = formatFileSize(file.size);
-  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font =
+    '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = colorScheme.textSecondary;
   ctx.textAlign = "center";
   ctx.fillText(sizeText, canvas.width / 2, canvas.height - 15);
@@ -413,7 +422,14 @@ function getFileTypeColorScheme(extension: string): ColorScheme {
 /**
  * Draw rounded rectangle
  */
-function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
@@ -430,14 +446,26 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
 /**
  * Draw modern document icon
  */
-function drawModernDocumentIcon(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, color: string) {
+function drawModernDocumentIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  color: string,
+) {
   const size = 24;
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
 
   // Document body
-  drawRoundedRect(ctx, centerX - size / 2, centerY - size / 2, size, size * 1.2, 3);
+  drawRoundedRect(
+    ctx,
+    centerX - size / 2,
+    centerY - size / 2,
+    size,
+    size * 1.2,
+    3,
+  );
   ctx.fill();
 
   // Folded corner
@@ -453,7 +481,12 @@ function drawModernDocumentIcon(ctx: CanvasRenderingContext2D, centerX: number, 
 /**
  * Draw large lock icon for encrypted PDFs
  */
-function drawLargeLockIcon(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, colorScheme: ColorScheme) {
+function drawLargeLockIcon(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  colorScheme: ColorScheme,
+) {
   const size = 48;
   ctx.fillStyle = colorScheme.icon;
   ctx.strokeStyle = colorScheme.icon;
@@ -489,7 +522,10 @@ function drawLargeLockIcon(ctx: CanvasRenderingContext2D, centerX: number, cente
 /**
  * Generate standard PDF thumbnail by rendering first page
  */
-async function generateStandardPDFThumbnail(pdf: any, scale: number): Promise<string> {
+async function generateStandardPDFThumbnail(
+  pdf: any,
+  scale: number,
+): Promise<string> {
   const page = await pdf.getPage(1);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
@@ -519,12 +555,20 @@ function drawExtensionBadge(
   const badgeHeight = 22;
 
   // Badge background
-  drawRoundedRect(ctx, centerX - badgeWidth / 2, centerY - badgeHeight / 2, badgeWidth, badgeHeight, 11);
+  drawRoundedRect(
+    ctx,
+    centerX - badgeWidth / 2,
+    centerY - badgeHeight / 2,
+    badgeWidth,
+    badgeHeight,
+    11,
+  );
   ctx.fillStyle = colorScheme.badge;
   ctx.fill();
 
   // Badge text
-  ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font =
+    'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = colorScheme.textPrimary;
   ctx.textAlign = "center";
   ctx.fillText(extension, centerX, centerY + 4);
@@ -541,7 +585,11 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale: number): Promise<string> {
+async function generatePDFThumbnail(
+  arrayBuffer: ArrayBuffer,
+  file: File,
+  scale: number,
+): Promise<string> {
   try {
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
       disableAutoFetch: true,
@@ -554,7 +602,11 @@ async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale:
     pdfWorkerManager.destroyDocument(pdf);
     return thumbnail;
   } catch (error) {
-    if (error && typeof error === "object" && (error as any).name === "PasswordException") {
+    if (
+      error &&
+      typeof error === "object" &&
+      (error as any).name === "PasswordException"
+    ) {
       return generateEncryptedPDFThumbnail(file);
     }
     throw error; // Not an encryption issue, re-throw
@@ -593,17 +645,24 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
       return await generatePDFThumbnail(arrayBuffer, file, scale);
     } catch (error) {
       if (error instanceof Error && error.name === "InvalidPDFException") {
-        console.warn(`PDF structure issue for ${file.name} - trying with full file`);
+        console.warn(
+          `PDF structure issue for ${file.name} - trying with full file`,
+        );
         try {
           // Try with full file instead of chunk
           const fullArrayBuffer = await file.arrayBuffer();
           return await generatePDFThumbnail(fullArrayBuffer, file, scale);
         } catch {
-          console.warn(`Full file PDF processing also failed for ${file.name} - using placeholder`);
+          console.warn(
+            `Full file PDF processing also failed for ${file.name} - using placeholder`,
+          );
           return generatePlaceholderThumbnail(file);
         }
       }
-      console.warn(`PDF processing failed for ${file.name} - using placeholder:`, error);
+      console.warn(
+        `PDF processing failed for ${file.name} - using placeholder:`,
+        error,
+      );
       return generatePlaceholderThumbnail(file);
     }
   }
@@ -640,7 +699,9 @@ export async function generateThumbnailWithMetadata(
 
     // If applyRotation is false, render without rotation (for CSS-based rotation)
     // If applyRotation is true, let PDF.js apply rotation (for static display)
-    const viewport = applyRotation ? page.getViewport({ scale }) : page.getViewport({ scale, rotation: 0 });
+    const viewport = applyRotation
+      ? page.getViewport({ scale })
+      : page.getViewport({ scale, rotation: 0 });
     const baseViewport = page.getViewport({ scale: 1, rotation: 0 });
     pageDimensions[0] = {
       width: baseViewport.width,
@@ -690,7 +751,11 @@ export async function generateThumbnailWithMetadata(
     pdfWorkerManager.destroyDocument(pdf);
     return { thumbnail, pageCount, pageRotations, pageDimensions };
   } catch (error) {
-    if (error && typeof error === "object" && (error as any).name === "PasswordException") {
+    if (
+      error &&
+      typeof error === "object" &&
+      (error as any).name === "PasswordException"
+    ) {
       // Handle encrypted PDFs
       const thumbnail = generateEncryptedPDFThumbnail(file);
       return { thumbnail, pageCount: 1, isEncrypted: true };

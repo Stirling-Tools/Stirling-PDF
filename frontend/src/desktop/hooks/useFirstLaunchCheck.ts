@@ -7,7 +7,10 @@ import { authService } from "@app/services/authService";
  * Checks if this is the first time the app is being launched
  * Does not require FileContext - can be used early in the provider hierarchy
  */
-export function useFirstLaunchCheck(): { isFirstLaunch: boolean; setupComplete: boolean } {
+export function useFirstLaunchCheck(): {
+  isFirstLaunch: boolean;
+  setupComplete: boolean;
+} {
   const [isFirstLaunch, setIsFirstLaunch] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
   const setupCheckCompleteRef = useRef(false);

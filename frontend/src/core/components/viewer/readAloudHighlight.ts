@@ -32,7 +32,12 @@ export function computeReadAloudHighlightRect({
   itemWidth,
   itemHeight,
 }: ReadAloudHighlightParams): ReadAloudHighlightRect | null {
-  if (viewportTransform.length < 6 || textTransform.length < 6 || itemWidth <= 0 || itemHeight <= 0) {
+  if (
+    viewportTransform.length < 6 ||
+    textTransform.length < 6 ||
+    itemWidth <= 0 ||
+    itemHeight <= 0
+  ) {
     return null;
   }
 

@@ -13,7 +13,8 @@ const ONBOARDING_SESSION_BLOCK_KEY = "stirling-onboarding-session-active";
  */
 export default function OnboardingBootstrap() {
   const { preferences, updatePreference } = usePreferences();
-  const { clearPendingTourRequest, setStartAfterToolModeSelection } = useOnboarding();
+  const { clearPendingTourRequest, setStartAfterToolModeSelection } =
+    useOnboarding();
   const { user, loading, trialStatus, isPro, refreshTrialStatus } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
@@ -38,7 +39,10 @@ export default function OnboardingBootstrap() {
 
     const timer = setTimeout(async () => {
       const newAttempts = pollAttempts + 1;
-      console.debug("[Onboarding] Polling for trial data, attempt:", newAttempts);
+      console.debug(
+        "[Onboarding] Polling for trial data, attempt:",
+        newAttempts,
+      );
 
       await refreshTrialStatus();
       setPollAttempts(newAttempts);
@@ -78,7 +82,10 @@ export default function OnboardingBootstrap() {
   // Keep existing logic to disable core onboarding flags
   useEffect(() => {
     // Ensure tool panel preference is set so tours are never deferred.
-    if (!preferences.toolPanelModePromptSeen || !preferences.hasSelectedToolPanelMode) {
+    if (
+      !preferences.toolPanelModePromptSeen ||
+      !preferences.hasSelectedToolPanelMode
+    ) {
       updatePreference("toolPanelModePromptSeen", true);
       updatePreference("hasSelectedToolPanelMode", true);
     }
@@ -111,5 +118,7 @@ export default function OnboardingBootstrap() {
   ]);
 
   // Only render modal when it should be shown to avoid running hooks unnecessarily
-  return showModal ? <SaasOnboardingModal opened={showModal} onClose={handleClose} /> : null;
+  return showModal ? (
+    <SaasOnboardingModal opened={showModal} onClose={handleClose} />
+  ) : null;
 }

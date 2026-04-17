@@ -40,7 +40,15 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
   }
 
   // Enterprise mode
-  const { basePrice, seatPrice, totalPrice, currency, period, seatCount, size = "md" } = props;
+  const {
+    basePrice,
+    seatPrice,
+    totalPrice,
+    currency,
+    period,
+    seatCount,
+    size = "md",
+  } = props;
   const fontSize = size === "lg" ? "2rem" : size === "sm" ? "md" : "xl";
   const totalFontSize = size === "lg" ? "2rem" : "2rem";
 
@@ -75,7 +83,11 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
           <Text size="sm" c="dimmed" mb="xs">
             Total ({seatCount} seats)
           </Text>
-          <Text size={totalFontSize} fw={PRICE_FONT_WEIGHT} style={{ lineHeight: 1 }}>
+          <Text
+            size={totalFontSize}
+            fw={PRICE_FONT_WEIGHT}
+            style={{ lineHeight: 1 }}
+          >
             {formatPrice(totalPrice, currency)}
             <Text component="span" size="sm" c="dimmed" fw={400}>
               {" "}

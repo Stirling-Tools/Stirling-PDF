@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { defaultParameters, useSanitizeParameters } from "@app/hooks/tools/sanitize/useSanitizeParameters";
+import {
+  defaultParameters,
+  useSanitizeParameters,
+} from "@app/hooks/tools/sanitize/useSanitizeParameters";
 
 describe("useSanitizeParameters", () => {
   test("should initialize with default parameters", () => {
@@ -73,7 +76,9 @@ describe("useSanitizeParameters", () => {
   test("should handle all parameter types correctly", () => {
     const { result } = renderHook(() => useSanitizeParameters());
 
-    const allParameters = Object.keys(defaultParameters) as (keyof typeof defaultParameters)[];
+    const allParameters = Object.keys(
+      defaultParameters,
+    ) as (keyof typeof defaultParameters)[];
 
     allParameters.forEach((param) => {
       act(() => {

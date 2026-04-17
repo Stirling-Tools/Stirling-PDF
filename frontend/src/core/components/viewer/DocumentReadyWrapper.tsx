@@ -6,7 +6,10 @@ interface DocumentReadyWrapperProps {
   fallback?: React.ReactNode;
 }
 
-export function DocumentReadyWrapper({ children, fallback = null }: DocumentReadyWrapperProps) {
+export function DocumentReadyWrapper({
+  children,
+  fallback = null,
+}: DocumentReadyWrapperProps) {
   const { plugin, isLoading, ready } = useDocumentManagerPlugin();
   const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
 

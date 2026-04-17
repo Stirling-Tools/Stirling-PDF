@@ -1,4 +1,11 @@
-import { Stack, TextInput, Select, ColorPicker, Slider, Text } from "@mantine/core";
+import {
+  Stack,
+  TextInput,
+  Select,
+  ColorPicker,
+  Slider,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef } from "react";
 
@@ -73,12 +80,18 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        {t("certSign.collab.signRequest.typeSignature", "Type your name to create a signature")}
+        {t(
+          "certSign.collab.signRequest.typeSignature",
+          "Type your name to create a signature",
+        )}
       </Text>
 
       <TextInput
         label={t("certSign.collab.signRequest.signatureText", "Signature Text")}
-        placeholder={t("certSign.collab.signRequest.signatureTextPlaceholder", "Enter your name...")}
+        placeholder={t(
+          "certSign.collab.signRequest.signatureTextPlaceholder",
+          "Enter your name...",
+        )}
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         disabled={disabled}
@@ -94,7 +107,9 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
 
       <div>
         <Text size="sm" mb={4}>
-          {t("certSign.collab.signRequest.fontSize", "Font Size: {{size}}px", { size: fontSize })}
+          {t("certSign.collab.signRequest.fontSize", "Font Size: {{size}}px", {
+            size: fontSize,
+          })}
         </Text>
         <Slider
           value={fontSize}
@@ -145,7 +160,12 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
       )}
 
       {/* Hidden canvas for image generation */}
-      <canvas ref={canvasRef} width={400} height={150} style={{ display: "none" }} />
+      <canvas
+        ref={canvasRef}
+        width={400}
+        height={150}
+        style={{ display: "none" }}
+      />
     </Stack>
   );
 };

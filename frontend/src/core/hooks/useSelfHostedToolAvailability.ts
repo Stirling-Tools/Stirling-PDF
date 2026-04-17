@@ -4,6 +4,8 @@
  * returns the set of tool IDs that are unavailable when the self-hosted server
  * is offline (i.e. tools whose endpoints the local bundled backend does not support).
  */
-export function useSelfHostedToolAvailability(_tools: Array<{ id: string; endpoints?: string[] }>): Set<string> {
+export function useSelfHostedToolAvailability(
+  _tools: Array<{ id: string; endpoints?: string[] }>,
+): Set<string> {
   return new Set<string>();
 }

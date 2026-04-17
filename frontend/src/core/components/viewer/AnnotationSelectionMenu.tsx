@@ -3,7 +3,10 @@ import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
-import { PdfAnnotationSubtype, type PdfAnnotationObject } from "@embedpdf/models";
+import {
+  PdfAnnotationSubtype,
+  type PdfAnnotationObject,
+} from "@embedpdf/models";
 import type { AnnotationObject } from "@app/components/viewer/viewerTypes";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -31,7 +34,9 @@ export interface AnnotationSelectionMenuProps {
 export function AnnotationSelectionMenu(props: AnnotationSelectionMenuProps) {
   const activeDocumentId = useActiveDocumentId();
   if (!activeDocumentId) return null;
-  return <AnnotationSelectionMenuInner documentId={activeDocumentId} {...props} />;
+  return (
+    <AnnotationSelectionMenuInner documentId={activeDocumentId} {...props} />
+  );
 }
 
 function AnnotationSelectionMenuInner({
@@ -45,7 +50,10 @@ function AnnotationSelectionMenuInner({
   const { provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   const handlers = useAnnotationMenuHandlers({
     annotation,
@@ -66,9 +74,15 @@ function AnnotationSelectionMenuInner({
     const annType = annObj?.type;
     const isComment =
       (annType === PdfAnnotationSubtype.TEXT && toolId === "textComment") ||
-      (annType === PdfAnnotationSubtype.CARET && (toolId === "insertText" || toolId === "replaceText"));
+      (annType === PdfAnnotationSubtype.CARET &&
+        (toolId === "insertText" || toolId === "replaceText"));
     if (!isComment) return;
-    requestCommentFocus(documentId, pageIndex, annId, (annObj?.contents ?? "").trim().length > 0);
+    requestCommentFocus(
+      documentId,
+      pageIndex,
+      annId,
+      (annObj?.contents ?? "").trim().length > 0,
+    );
   }, [selected, annotation?.object]);
 
   // Click outside to deselect
@@ -108,13 +122,19 @@ function AnnotationSelectionMenuInner({
         return;
       }
       const rect = wrapper.getBoundingClientRect();
-      setMenuPosition({ top: rect.bottom + 8, left: rect.left + rect.width / 2 });
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
+      });
     };
 
     updatePosition();
 
     const observer = new MutationObserver(updatePosition);
-    observer.observe(wrapperRef.current, { attributes: true, attributeFilter: ["style"] });
+    observer.observe(wrapperRef.current, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
     window.addEventListener("scroll", updatePosition, true);
     window.addEventListener("resize", updatePosition);
 
@@ -162,8 +182,17 @@ function AnnotationSelectionMenuInner({
   return (
     <>
       {/* Invisible wrapper for EmbedPDF positioning — pointer-events:none so drag still works */}
-      <div ref={setRef} style={{ ...menuWrapperProps?.style, opacity: 0, pointerEvents: "none" }} />
-      {typeof document !== "undefined" && menuContent ? createPortal(menuContent, document.body) : null}
+      <div
+        ref={setRef}
+        style={{
+          ...menuWrapperProps?.style,
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
+      {typeof document !== "undefined" && menuContent
+        ? createPortal(menuContent, document.body)
+        : null}
     </>
   );
 }

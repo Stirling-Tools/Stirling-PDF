@@ -7,7 +7,9 @@ export class PDFProcessingService {
   private static instance: PDFProcessingService;
   private cache = new ProcessingCache();
   private processing = new Map<string, ProcessingState>();
-  private processingListeners = new Set<(states: Map<string, ProcessingState>) => void>();
+  private processingListeners = new Set<
+    (states: Map<string, ProcessingState>) => void
+  >();
 
   private constructor() {}
 
@@ -55,10 +57,13 @@ export class PDFProcessingService {
 
     try {
       // Process the file with progress updates
-      const processedFile = await this.processFileWithProgress(file, (progress) => {
-        state.progress = progress;
-        this.notifyListeners();
-      });
+      const processedFile = await this.processFileWithProgress(
+        file,
+        (progress) => {
+          state.progress = progress;
+          this.notifyListeners();
+        },
+      );
 
       // Cache the result
       this.cache.set(fileKey, processedFile);
@@ -77,7 +82,9 @@ export class PDFProcessingService {
     } catch (error) {
       console.error("Processing failed for", file.name, ":", error);
       state.status = "error";
-      state.error = (error instanceof Error ? error.message : "Unknown error") as any;
+      state.error = (
+        error instanceof Error ? error.message : "Unknown error"
+      ) as any;
       this.notifyListeners();
 
       // Remove failed processing after delay
@@ -88,7 +95,10 @@ export class PDFProcessingService {
     }
   }
 
-  private async processFileWithProgress(file: File, onProgress: (progress: number) => void): Promise<ProcessedFile> {
+  private async processFileWithProgress(
+    file: File,
+    onProgress: (progress: number) => void,
+  ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
@@ -139,7 +149,9 @@ export class PDFProcessingService {
   }
 
   // State subscription for components
-  onProcessingChange(callback: (states: Map<string, ProcessingState>) => void): () => void {
+  onProcessingChange(
+    callback: (states: Map<string, ProcessingState>) => void,
+  ): () => void {
     this.processingListeners.add(callback);
     return () => this.processingListeners.delete(callback);
   }

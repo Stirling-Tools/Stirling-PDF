@@ -22,7 +22,13 @@ interface ToolConfigurationModalProps {
   toolRegistry: Partial<ToolRegistry>;
 }
 
-export default function ToolConfigurationModal({ opened, tool, onSave, onCancel, toolRegistry }: ToolConfigurationModalProps) {
+export default function ToolConfigurationModal({
+  opened,
+  tool,
+  onSave,
+  onCancel,
+  toolRegistry,
+}: ToolConfigurationModalProps) {
   const { t } = useTranslation();
 
   const [parameters, setParameters] = useState<any>({});
@@ -49,7 +55,12 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
     if (!SettingsComponent) {
       return (
         <Alert icon={<WarningIcon />} color="orange">
-          <Text size="sm">{t("automate.config.noSettings", "This tool does not have configurable settings.")}</Text>
+          <Text size="sm">
+            {t(
+              "automate.config.noSettings",
+              "This tool does not have configurable settings.",
+            )}
+          </Text>
         </Alert>
       );
     }
@@ -91,7 +102,11 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
       title={
         <Group gap="xs">
           <SettingsIcon />
-          <Title order={3}>{t("automate.config.title", "Configure {{toolName}}", { toolName: tool.name })}</Title>
+          <Title order={3}>
+            {t("automate.config.title", "Configure {{toolName}}", {
+              toolName: tool.name,
+            })}
+          </Title>
         </Group>
       }
       size="lg"
@@ -106,10 +121,18 @@ export default function ToolConfigurationModal({ opened, tool, onSave, onCancel,
           )}
         </Text>
 
-        <div style={{ maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}>{renderToolSettings()}</div>
+        <div
+          style={{ maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}
+        >
+          {renderToolSettings()}
+        </div>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="light" leftSection={<CloseIcon />} onClick={onCancel}>
+          <Button
+            variant="light"
+            leftSection={<CloseIcon />}
+            onClick={onCancel}
+          >
             {t("automate.config.cancel", "Cancel")}
           </Button>
           <Button leftSection={<CheckIcon />} onClick={handleSave}>

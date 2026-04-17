@@ -61,7 +61,11 @@ export function useAccordionSteps<T extends string | number | symbol>(
       return false;
     }
 
-    return stateConditions.hasFiles === false || stateConditions.hasResults === true || stateConditions.disabled === true;
+    return (
+      stateConditions.hasFiles === false ||
+      stateConditions.hasResults === true ||
+      stateConditions.disabled === true
+    );
   }, [stateConditions]);
 
   // Get collapsed state for a specific step
@@ -99,7 +103,12 @@ export function useAccordionSteps<T extends string | number | symbol>(
         }
       });
     },
-    [shouldCollapseAll, noneValue, stateConditions?.hasResults, config.afterResults],
+    [
+      shouldCollapseAll,
+      noneValue,
+      stateConditions?.hasResults,
+      config.afterResults,
+    ],
   );
 
   // Close all steps

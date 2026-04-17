@@ -10,7 +10,12 @@ export interface NavigationArrowsProps {
   children: React.ReactNode;
 }
 
-const NavigationArrows: React.FC<NavigationArrowsProps> = ({ onPrevious, onNext, disabled = false, children }) => {
+const NavigationArrows: React.FC<NavigationArrowsProps> = ({
+  onPrevious,
+  onNext,
+  disabled = false,
+  children,
+}) => {
   const navigationArrowStyle = {
     position: "absolute" as const,
     top: "50%",
@@ -36,7 +41,15 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({ onPrevious, onNext,
       </ActionIcon>
 
       {/* Content */}
-      <Box style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {children}
       </Box>
 

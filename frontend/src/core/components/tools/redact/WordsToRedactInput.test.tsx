@@ -10,7 +10,9 @@ vi.mock("react-i18next", () => ({
 }));
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("WordsToRedactInput", () => {
   const mockOnWordsChange = vi.fn();
@@ -22,7 +24,10 @@ describe("WordsToRedactInput", () => {
   test("should render with title and input field", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={[]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={[]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -32,12 +37,23 @@ describe("WordsToRedactInput", () => {
   });
 
   test.each([
-    { trigger: "Add button click", action: (_input: HTMLElement, addButton: HTMLElement) => fireEvent.click(addButton) },
-    { trigger: "Enter key press", action: (input: HTMLElement) => fireEvent.keyDown(input, { key: "Enter", code: "Enter" }) },
+    {
+      trigger: "Add button click",
+      action: (_input: HTMLElement, addButton: HTMLElement) =>
+        fireEvent.click(addButton),
+    },
+    {
+      trigger: "Enter key press",
+      action: (input: HTMLElement) =>
+        fireEvent.keyDown(input, { key: "Enter", code: "Enter" }),
+    },
   ])("should add word when $trigger", ({ action }) => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={[]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={[]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -53,7 +69,10 @@ describe("WordsToRedactInput", () => {
   test("should not add empty word", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={[]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={[]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -67,7 +86,10 @@ describe("WordsToRedactInput", () => {
   test("should not add duplicate word", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={["Existing"]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={["Existing"]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -83,7 +105,10 @@ describe("WordsToRedactInput", () => {
   test("should trim whitespace when adding word", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={[]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={[]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -99,7 +124,10 @@ describe("WordsToRedactInput", () => {
   test("should remove word when x button is clicked", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={["Word1", "Word2"]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={["Word1", "Word2"]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -112,11 +140,16 @@ describe("WordsToRedactInput", () => {
   test("should clear input after adding word", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={[]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={[]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
-    const input = screen.getByPlaceholderText("Enter a word") as HTMLInputElement;
+    const input = screen.getByPlaceholderText(
+      "Enter a word",
+    ) as HTMLInputElement;
     const addButton = screen.getByRole("button", { name: "+ Add" });
 
     fireEvent.change(input, { target: { value: "TestWord" } });
@@ -126,12 +159,23 @@ describe("WordsToRedactInput", () => {
   });
 
   test.each([
-    { description: "disable Add button when input is empty", inputValue: "", expectedDisabled: true },
-    { description: "enable Add button when input has text", inputValue: "TestWord", expectedDisabled: false },
+    {
+      description: "disable Add button when input is empty",
+      inputValue: "",
+      expectedDisabled: true,
+    },
+    {
+      description: "enable Add button when input has text",
+      inputValue: "TestWord",
+      expectedDisabled: false,
+    },
   ])("should $description", ({ inputValue, expectedDisabled }) => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={[]} onWordsChange={mockOnWordsChange} />
+        <WordsToRedactInput
+          wordsToRedact={[]}
+          onWordsChange={mockOnWordsChange}
+        />
       </TestWrapper>,
     );
 
@@ -146,7 +190,11 @@ describe("WordsToRedactInput", () => {
   test("should disable all controls when disabled prop is true", () => {
     render(
       <TestWrapper>
-        <WordsToRedactInput wordsToRedact={["Word1"]} onWordsChange={mockOnWordsChange} disabled={true} />
+        <WordsToRedactInput
+          wordsToRedact={["Word1"]}
+          onWordsChange={mockOnWordsChange}
+          disabled={true}
+        />
       </TestWrapper>,
     );
 

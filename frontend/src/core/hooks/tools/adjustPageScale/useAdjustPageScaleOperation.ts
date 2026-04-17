@@ -1,9 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { AdjustPageScaleParameters, defaultParameters } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import {
+  AdjustPageScaleParameters,
+  defaultParameters,
+} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
-export const buildAdjustPageScaleFormData = (parameters: AdjustPageScaleParameters, file: File): FormData => {
+export const buildAdjustPageScaleFormData = (
+  parameters: AdjustPageScaleParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("scaleFactor", parameters.scaleFactor.toString());
@@ -25,7 +34,10 @@ export const useAdjustPageScaleOperation = () => {
   return useToolOperation<AdjustPageScaleParameters>({
     ...adjustPageScaleOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("adjustPageScale.error.failed", "An error occurred while adjusting the page scale."),
+      t(
+        "adjustPageScale.error.failed",
+        "An error occurred while adjusting the page scale.",
+      ),
     ),
   });
 };

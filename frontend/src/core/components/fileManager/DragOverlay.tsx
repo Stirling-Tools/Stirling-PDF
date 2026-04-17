@@ -32,7 +32,9 @@ const DragOverlay: React.FC<DragOverlayProps> = ({ isVisible }) => {
       }}
     >
       <Stack align="center" gap="md">
-        <UploadFileIcon style={{ fontSize: "4rem", color: theme.colors.blue[6] }} />
+        <UploadFileIcon
+          style={{ fontSize: "4rem", color: theme.colors.blue[6] }}
+        />
         <Text size="xl" fw={500} c="blue.6">
           {t("fileManager.dropFilesHere", "Drop files here to upload")}
         </Text>

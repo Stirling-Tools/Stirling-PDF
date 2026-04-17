@@ -15,7 +15,12 @@ export enum ToolType {
  * Reason the execute button is disabled. Resolved to a translated tooltip by OperationButton.
  * null means the button is enabled.
  */
-export type ExecuteDisabledReason = "endpointUnavailable" | "noFiles" | "invalidParams" | "viewerMode" | null;
+export type ExecuteDisabledReason =
+  | "endpointUnavailable"
+  | "noFiles"
+  | "invalidParams"
+  | "viewerMode"
+  | null;
 
 /**
  * Result from custom processor with optional metadata about input consumption.
@@ -73,7 +78,9 @@ interface BaseToolOperationConfig<TParams> {
   consumesAllInputs?: boolean;
 }
 
-export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+export interface SingleFileToolOperationConfig<
+  TParams,
+> extends BaseToolOperationConfig<TParams> {
   /** This tool processes one file at a time. */
   toolType: ToolType.singleFile;
 
@@ -86,7 +93,9 @@ export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperatio
   customProcessor?: undefined;
 }
 
-export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+export interface MultiFileToolOperationConfig<
+  TParams,
+> extends BaseToolOperationConfig<TParams> {
   /** This tool processes multiple files at once. */
   toolType: ToolType.multiFile;
 
@@ -102,7 +111,9 @@ export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperation
   customProcessor?: undefined;
 }
 
-export interface CustomToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+export interface CustomToolOperationConfig<
+  TParams,
+> extends BaseToolOperationConfig<TParams> {
   /** This tool has custom behaviour. */
   toolType: ToolType.custom;
 
@@ -124,7 +135,10 @@ export interface CustomToolOperationConfig<TParams> extends BaseToolOperationCon
    * - files: Processed output files
    * - consumedAllInputs: true if operation combines N inputs → fewer outputs
    */
-  customProcessor: (params: TParams, files: File[]) => Promise<CustomProcessorResult>;
+  customProcessor: (
+    params: TParams,
+    files: File[],
+  ) => Promise<CustomProcessorResult>;
 }
 
 export type ToolOperationConfig<TParams = void> =
@@ -151,7 +165,10 @@ export interface ToolOperationHook<TParams = void> {
   willUseCloud?: boolean;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
+  executeOperation: (
+    params: TParams,
+    selectedFiles: StirlingFile[],
+  ) => Promise<void>;
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;

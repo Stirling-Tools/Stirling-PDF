@@ -1,4 +1,8 @@
-import { ToastApi, ToastInstance, ToastOptions } from "@app/components/toast/types";
+import {
+  ToastApi,
+  ToastInstance,
+  ToastOptions,
+} from "@app/components/toast/types";
 import { useToast, ToastProvider } from "@app/components/toast/ToastContext";
 import ToastRenderer from "@app/components/toast/ToastRenderer";
 

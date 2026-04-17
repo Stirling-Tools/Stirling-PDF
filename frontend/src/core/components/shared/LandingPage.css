@@ -128,7 +128,10 @@
   color: var(--landing-button-color, var(--text-primary)) !important;
 }
 .landing-btn-secondary:hover {
-  background-color: var(--landing-button-hover-bg, var(--landing-button-bg, var(--bg-surface))) !important;
+  background-color: var(
+    --landing-button-hover-bg,
+    var(--landing-button-bg, var(--bg-surface))
+  ) !important;
 }
 
 /* Icon-only variant: accent colour instead of button text colour */

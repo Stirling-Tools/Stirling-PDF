@@ -62,11 +62,18 @@ const ResultsPreview = ({
   return (
     <Box
       p="sm"
-      style={{ backgroundColor: "var(--mantine-color-gray-1)", borderRadius: "0.5rem", maxWidth: "100%" }}
+      style={{
+        backgroundColor: "var(--mantine-color-gray-1)",
+        borderRadius: "0.5rem",
+        maxWidth: "100%",
+      }}
       data-testid="review-panel-container"
     >
       {/* File name at the top */}
-      <Box mb="sm" style={{ minHeight: "3rem", display: "flex", alignItems: "flex-start" }}>
+      <Box
+        mb="sm"
+        style={{ minHeight: "3rem", display: "flex", alignItems: "flex-start" }}
+      >
         <Text
           size="sm"
           fw={500}
@@ -91,7 +98,11 @@ const ResultsPreview = ({
             file={currentFile.file}
             thumbnail={currentFile.thumbnail}
             showHoverOverlay={true}
-            onFileClick={onFileClick ? (file) => file && onFileClick(file as File) : undefined}
+            onFileClick={
+              onFileClick
+                ? (file) => file && onFileClick(file as File)
+                : undefined
+            }
           />
         </Box>
         <FileMetadata file={currentFile.file} />

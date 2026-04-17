@@ -1,6 +1,13 @@
-import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from "@app/constants/splitConstants";
+import {
+  SPLIT_METHODS,
+  ENDPOINTS,
+  type SplitMethod,
+} from "@app/constants/splitConstants";
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface SplitParameters extends BaseParameters {
   method: SplitMethod | null;
@@ -45,7 +52,10 @@ export const defaultParameters: SplitParameters = {
 export const useSplitParameters = (): SplitParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: (params) => (params.method ? ENDPOINTS[params.method] : ENDPOINTS[SPLIT_METHODS.BY_PAGES]),
+    endpointName: (params) =>
+      params.method
+        ? ENDPOINTS[params.method]
+        : ENDPOINTS[SPLIT_METHODS.BY_PAGES],
     validateFn: (params) => {
       switch (params.method) {
         case SPLIT_METHODS.BY_PAGES:
@@ -65,7 +75,11 @@ export const useSplitParameters = (): SplitParametersHook => {
         case SPLIT_METHODS.BY_PAGE_DIVIDER:
           return true; // No required parameters
         case SPLIT_METHODS.BY_POSTER:
-          return params.pageSize !== "" && params.xFactor !== "" && params.yFactor !== "";
+          return (
+            params.pageSize !== "" &&
+            params.xFactor !== "" &&
+            params.yFactor !== ""
+          );
         default:
           return false;
       }

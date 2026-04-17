@@ -9,13 +9,24 @@ interface EmailStageProps {
   onSubmit: () => void;
 }
 
-export const EmailStage: React.FC<EmailStageProps> = ({ emailInput, setEmailInput, emailError, onSubmit }) => {
+export const EmailStage: React.FC<EmailStageProps> = ({
+  emailInput,
+  setEmailInput,
+  emailError,
+  onSubmit,
+}) => {
   const { t } = useTranslation();
 
   return (
-    <Stack gap="lg" style={{ maxWidth: "500px", margin: "0 auto", padding: "2rem 0" }}>
+    <Stack
+      gap="lg"
+      style={{ maxWidth: "500px", margin: "0 auto", padding: "2rem 0" }}
+    >
       <Text size="sm" c="dimmed">
-        {t("payment.emailStage.description", "We'll use this to send your license key and receipts.")}
+        {t(
+          "payment.emailStage.description",
+          "We'll use this to send your license key and receipts.",
+        )}
       </Text>
 
       <TextInput

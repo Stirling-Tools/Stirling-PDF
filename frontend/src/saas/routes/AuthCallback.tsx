@@ -38,7 +38,10 @@ export default function AuthCallback() {
         // Handle OAuth errors
         if (error) {
           const errorMsg = errorDescription || error;
-          console.error("[Auth Callback Debug] OAuth error:", { error, errorDescription });
+          console.error("[Auth Callback Debug] OAuth error:", {
+            error,
+            errorDescription,
+          });
 
           setState({
             status: "error",
@@ -60,10 +63,14 @@ export default function AuthCallback() {
             message: "Exchanging authorization code...",
           });
 
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
-            console.error("[Auth Callback Debug] Code exchange error:", exchangeError);
+            console.error(
+              "[Auth Callback Debug] Code exchange error:",
+              exchangeError,
+            );
 
             setState({
               status: "error",
@@ -92,7 +99,9 @@ export default function AuthCallback() {
           });
         } else {
           // No code present - might already be authenticated
-          console.log("[Auth Callback Debug] No code present, checking existing session...");
+          console.log(
+            "[Auth Callback Debug] No code present, checking existing session...",
+          );
 
           const { data: sessionData } = await supabase.auth.getSession();
 
@@ -167,7 +176,9 @@ export default function AuthCallback() {
         <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl"></div>
       </div>
 
-      <div className={`w-full max-w-md rounded-2xl bg-white/80 backdrop-blur shadow-xl p-8`}>
+      <div
+        className={`w-full max-w-md rounded-2xl bg-white/80 backdrop-blur shadow-xl p-8`}
+      >
         <div className="text-center">
           <img
             src={withBasePath("/branding/StirlingPDFLogoNoTextDark.svg")}
@@ -175,7 +186,9 @@ export default function AuthCallback() {
             className="mx-auto mb-5 h-8 opacity-80"
           />
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{getTitle()}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {getTitle()}
+          </h1>
           <p className={`text-base ${getStatusColor()}`}>{state.message}</p>
 
           {state.status === "processing" && (
@@ -205,7 +218,9 @@ export default function AuthCallback() {
 
           {import.meta.env.DEV && state.details && (
             <details className="mt-6 text-left">
-              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">Debug Information</summary>
+              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                Debug Information
+              </summary>
               <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
                 {JSON.stringify(state.details, null, 2)}
               </pre>

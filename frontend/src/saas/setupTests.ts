@@ -27,9 +27,15 @@ Object.defineProperty(global, "localStorage", { value: localStorageMock });
 vi.mock("@app/auth/supabase", () => ({
   supabase: {
     auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      refreshSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      getSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: null }, error: null }),
+      refreshSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
     },
   },
   debugAuthEvents: vi.fn(),
@@ -97,19 +103,27 @@ for (let i = 0; i < 32; i++) {
 Object.defineProperty(globalThis, "crypto", {
   value: {
     subtle: {
-      digest: vi.fn().mockImplementation(async (_algorithm: string, _data: BufferSource) => {
-        // Always return the mock hash buffer regardless of input
-        return mockHashBuffer.slice();
-      }),
+      digest: vi
+        .fn()
+        .mockImplementation(async (_algorithm: string, _data: BufferSource) => {
+          // Always return the mock hash buffer regardless of input
+          return mockHashBuffer.slice();
+        }),
     },
-    getRandomValues: vi.fn().mockImplementation(<T extends ArrayBufferView>(array: T): T => {
-      // Mock getRandomValues if needed
-      const view = new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
-      for (let i = 0; i < view.length; i++) {
-        view[i] = Math.floor(Math.random() * 256);
-      }
-      return array;
-    }),
+    getRandomValues: vi
+      .fn()
+      .mockImplementation(<T extends ArrayBufferView>(array: T): T => {
+        // Mock getRandomValues if needed
+        const view = new Uint8Array(
+          array.buffer,
+          array.byteOffset,
+          array.byteLength,
+        );
+        for (let i = 0; i < view.length; i++) {
+          view[i] = Math.floor(Math.random() * 256);
+        }
+        return array;
+      }),
   } as unknown as Crypto,
   writable: true,
   configurable: true,

@@ -10,7 +10,11 @@ import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import AddAttachmentsSettings from "@app/components/tools/addAttachments/AddAttachmentsSettings";
 import { useAddAttachmentsTips } from "@app/components/tooltips/useAddAttachmentsTips";
 
-const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const AddAttachments = ({
+  onPreviewFile,
+  onComplete,
+  onError,
+}: BaseToolProps) => {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
   const addAttachmentsTips = useAddAttachmentsTips();
@@ -18,7 +22,8 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const params = useAddAttachmentsParameters();
   const operation = useAddAttachmentsOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-attachments");
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("add-attachments");
 
   useEffect(() => {
     operation.resetResults();
@@ -32,12 +37,19 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
         onComplete(operation.files);
       }
     } catch (error: any) {
-      onError?.(error?.message || t("AddAttachmentsRequest.error.failed", "Add attachments operation failed"));
+      onError?.(
+        error?.message ||
+          t(
+            "AddAttachmentsRequest.error.failed",
+            "Add attachments operation failed",
+          ),
+      );
     }
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const hasResults =
+    operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum AddAttachmentsStep {
     NONE = "none",
@@ -64,7 +76,8 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     steps.push({
       title: t("AddAttachmentsRequest.attachments", "Select Attachments"),
       isCollapsed: accordion.getCollapsedState(AddAttachmentsStep.ATTACHMENTS),
-      onCollapsedClick: () => accordion.handleStepToggle(AddAttachmentsStep.ATTACHMENTS),
+      onCollapsedClick: () =>
+        accordion.handleStepToggle(AddAttachmentsStep.ATTACHMENTS),
       isVisible: true,
       tooltip: addAttachmentsTips,
       content: (

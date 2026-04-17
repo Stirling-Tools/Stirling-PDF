@@ -7,10 +7,49 @@ export function usePDFProcessor() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generatePageThumbnail = useCallback(async (file: File, pageNumber: number, scale: number = 0.5): Promise<string> => {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+  const generatePageThumbnail = useCallback(
+    async (
+      file: File,
+      pageNumber: number,
+      scale: number = 0.5,
+    ): Promise<string> => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+        const page = await pdf.getPage(pageNumber);
+
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const context = canvas.getContext("2d");
+        if (!context) {
+          throw new Error("Could not get canvas context");
+        }
+
+        await page.render({ canvasContext: context, viewport, canvas }).promise;
+        const thumbnail = canvas.toDataURL();
+
+        // Clean up using worker manager
+        pdfWorkerManager.destroyDocument(pdf);
+
+        return thumbnail;
+      } catch (error) {
+        console.error("Failed to generate thumbnail:", error);
+        throw error;
+      }
+    },
+    [],
+  );
+
+  // Internal function to generate thumbnail from already-opened PDF
+  const generateThumbnailFromPDF = useCallback(
+    async (
+      pdf: any,
+      pageNumber: number,
+      scale: number = 0.5,
+    ): Promise<string> => {
       const page = await pdf.getPage(pageNumber);
 
       const viewport = page.getViewport({ scale });
@@ -23,36 +62,11 @@ export function usePDFProcessor() {
         throw new Error("Could not get canvas context");
       }
 
-      await page.render({ canvasContext: context, viewport, canvas }).promise;
-      const thumbnail = canvas.toDataURL();
-
-      // Clean up using worker manager
-      pdfWorkerManager.destroyDocument(pdf);
-
-      return thumbnail;
-    } catch (error) {
-      console.error("Failed to generate thumbnail:", error);
-      throw error;
-    }
-  }, []);
-
-  // Internal function to generate thumbnail from already-opened PDF
-  const generateThumbnailFromPDF = useCallback(async (pdf: any, pageNumber: number, scale: number = 0.5): Promise<string> => {
-    const page = await pdf.getPage(pageNumber);
-
-    const viewport = page.getViewport({ scale });
-    const canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    const context = canvas.getContext("2d");
-    if (!context) {
-      throw new Error("Could not get canvas context");
-    }
-
-    await page.render({ canvasContext: context, viewport }).promise;
-    return canvas.toDataURL();
-  }, []);
+      await page.render({ canvasContext: context, viewport }).promise;
+      return canvas.toDataURL();
+    },
+    [],
+  );
 
   const processPDFFile = useCallback(
     async (file: File): Promise<PDFDocument> => {
@@ -102,7 +116,8 @@ export function usePDFProcessor() {
 
         return document;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to process PDF";
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to process PDF";
         setError(errorMessage);
         throw error;
       } finally {

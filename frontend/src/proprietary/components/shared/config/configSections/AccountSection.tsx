@@ -1,5 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Button, Box, Group, Modal, Paper, PasswordInput, Stack, Text, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Box,
+  Group,
+  Modal,
+  Paper,
+  PasswordInput,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert as showToast } from "@app/components/toast";
@@ -24,34 +35,49 @@ const AccountSection: React.FC = () => {
   const [passwordError, setPasswordError] = useState("");
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
-  const [currentPasswordForUsername, setCurrentPasswordForUsername] = useState("");
+  const [currentPasswordForUsername, setCurrentPasswordForUsername] =
+    useState("");
   const [newUsername, setNewUsername] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [usernameSubmitting, setUsernameSubmitting] = useState(false);
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [mfaSetupModalOpen, setMfaSetupModalOpen] = useState(false);
   const [mfaDisableModalOpen, setMfaDisableModalOpen] = useState(false);
-  const [mfaSetupData, setMfaSetupData] = useState<MfaSetupResponse | null>(null);
+  const [mfaSetupData, setMfaSetupData] = useState<MfaSetupResponse | null>(
+    null,
+  );
   const [mfaSetupCode, setMfaSetupCode] = useState("");
   const [mfaDisableCode, setMfaDisableCode] = useState("");
   const [mfaError, setMfaError] = useState("");
   const [mfaLoading, setMfaLoading] = useState(false);
   const [changeButtonDisabled, setChangeButtonDisabled] = useState(false);
-  const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, "").slice(0, 6), []);
+  const normalizeMfaCode = useCallback(
+    (value: string) => value.replace(/\D/g, "").slice(0, 6),
+    [],
+  );
   const qrLogoSrc = `${BASE_PATH}/modern-logo/StirlingPDFLogoNoTextDark.svg`;
 
   const authTypeFromMetadata = useMemo(() => {
-    const metadata = user?.app_metadata as { authType?: string; authenticationType?: string } | undefined;
+    const metadata = user?.app_metadata as
+      | { authType?: string; authenticationType?: string }
+      | undefined;
     return metadata?.authenticationType ?? metadata?.authType;
   }, [user?.app_metadata]);
 
   const normalizedAuthType = useMemo(
-    () => (user?.authenticationType ?? authTypeFromMetadata ?? "").toLowerCase(),
+    () =>
+      (user?.authenticationType ?? authTypeFromMetadata ?? "").toLowerCase(),
     [authTypeFromMetadata, user?.authenticationType],
   );
-  const isSsoUser = useMemo(() => ["sso", "oauth2", "saml2"].includes(normalizedAuthType), [normalizedAuthType]);
+  const isSsoUser = useMemo(
+    () => ["sso", "oauth2", "saml2"].includes(normalizedAuthType),
+    [normalizedAuthType],
+  );
 
-  const userIdentifier = useMemo(() => user?.email || user?.username || "", [user?.email, user?.username]);
+  const userIdentifier = useMemo(
+    () => user?.email || user?.username || "",
+    [user?.email, user?.username],
+  );
 
   const redirectToLogin = useCallback(() => {
     window.location.assign("/login");
@@ -65,17 +91,26 @@ const AccountSection: React.FC = () => {
     event.preventDefault();
 
     if (isSsoUser) {
-      setPasswordError(t("settings.security.password.ssoDisabled", "Password changes are managed by your identity provider."));
+      setPasswordError(
+        t(
+          "settings.security.password.ssoDisabled",
+          "Password changes are managed by your identity provider.",
+        ),
+      );
       return;
     }
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError(t("settings.security.password.required", "All fields are required."));
+      setPasswordError(
+        t("settings.security.password.required", "All fields are required."),
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError(t("settings.security.password.mismatch", "New passwords do not match."));
+      setPasswordError(
+        t("settings.security.password.mismatch", "New passwords do not match."),
+      );
       return;
     }
 
@@ -87,7 +122,10 @@ const AccountSection: React.FC = () => {
 
       showToast({
         alertType: "success",
-        title: t("settings.security.password.success", "Password updated successfully. Please sign in again."),
+        title: t(
+          "settings.security.password.success",
+          "Password updated successfully. Please sign in again.",
+        ),
       });
 
       setCurrentPassword("");
@@ -142,7 +180,10 @@ const AccountSection: React.FC = () => {
       const axiosError = err as { response?: { data?: { error?: string } } };
       setMfaError(
         axiosError.response?.data?.error ||
-          t("account.mfa.setupFailed", "Unable to start two-factor setup. Please try again."),
+          t(
+            "account.mfa.setupFailed",
+            "Unable to start two-factor setup. Please try again.",
+          ),
       );
     } finally {
       setMfaLoading(false);
@@ -153,7 +194,12 @@ const AccountSection: React.FC = () => {
     async (event: React.FormEvent) => {
       event.preventDefault();
       if (!mfaSetupCode.trim()) {
-        setMfaError(t("account.mfa.codeRequired", "Enter the authentication code to continue."));
+        setMfaError(
+          t(
+            "account.mfa.codeRequired",
+            "Enter the authentication code to continue.",
+          ),
+        );
         return;
       }
       try {
@@ -172,7 +218,10 @@ const AccountSection: React.FC = () => {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setMfaError(
           axiosError.response?.data?.error ||
-            t("account.mfa.enableFailed", "Unable to enable two-factor authentication. Check the code and try again."),
+            t(
+              "account.mfa.enableFailed",
+              "Unable to enable two-factor authentication. Check the code and try again.",
+            ),
         );
       } finally {
         setMfaLoading(false);
@@ -185,7 +234,12 @@ const AccountSection: React.FC = () => {
     async (event: React.FormEvent) => {
       event.preventDefault();
       if (!mfaDisableCode.trim()) {
-        setMfaError(t("account.mfa.codeRequired", "Enter the authentication code to continue."));
+        setMfaError(
+          t(
+            "account.mfa.codeRequired",
+            "Enter the authentication code to continue.",
+          ),
+        );
         return;
       }
       try {
@@ -197,13 +251,19 @@ const AccountSection: React.FC = () => {
         setMfaDisableCode("");
         showToast({
           alertType: "success",
-          title: t("account.mfa.disabled", "Two-factor authentication disabled."),
+          title: t(
+            "account.mfa.disabled",
+            "Two-factor authentication disabled.",
+          ),
         });
       } catch (err) {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setMfaError(
           axiosError.response?.data?.error ||
-            t("account.mfa.disableFailed", "Unable to disable two-factor authentication. Check the code and try again."),
+            t(
+              "account.mfa.disableFailed",
+              "Unable to disable two-factor authentication. Check the code and try again.",
+            ),
         );
       } finally {
         setMfaLoading(false);
@@ -234,12 +294,19 @@ const AccountSection: React.FC = () => {
     event.preventDefault();
 
     if (isSsoUser) {
-      setUsernameError(t("changeCreds.ssoManaged", "Your account is managed by your identity provider."));
+      setUsernameError(
+        t(
+          "changeCreds.ssoManaged",
+          "Your account is managed by your identity provider.",
+        ),
+      );
       return;
     }
 
     if (!currentPasswordForUsername || !newUsername) {
-      setUsernameError(t("settings.security.password.required", "All fields are required."));
+      setUsernameError(
+        t("settings.security.password.required", "All fields are required."),
+      );
       return;
     }
 
@@ -247,12 +314,18 @@ const AccountSection: React.FC = () => {
       setUsernameSubmitting(true);
       setUsernameError("");
 
-      await accountService.changeUsername(newUsername, currentPasswordForUsername);
+      await accountService.changeUsername(
+        newUsername,
+        currentPasswordForUsername,
+      );
 
       showToast({
         alertType: "success",
         title: t("changeCreds.credsUpdated", "Account updated"),
-        body: t("changeCreds.description", "Changes saved. Please log in again."),
+        body: t(
+          "changeCreds.description",
+          "Changes saved. Please log in again.",
+        ),
       });
 
       setNewUsername("");
@@ -263,7 +336,10 @@ const AccountSection: React.FC = () => {
       const axiosError = err as { response?: { data?: { message?: string } } };
       setUsernameError(
         axiosError.response?.data?.message ||
-          t("changeCreds.error", "Unable to update username. Please verify your password and try again."),
+          t(
+            "changeCreds.error",
+            "Unable to update username. Please verify your password and try again.",
+          ),
       );
     } finally {
       setUsernameSubmitting(false);
@@ -291,14 +367,24 @@ const AccountSection: React.FC = () => {
 
           <Stack gap="xs">
             {isSsoUser && (
-              <Alert icon={<LocalIcon icon="info" width="1rem" height="1rem" />} color="blue" variant="light">
-                {t("changeCreds.ssoManaged", "Your account is managed by your identity provider.")}
+              <Alert
+                icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+                color="blue"
+                variant="light"
+              >
+                {t(
+                  "changeCreds.ssoManaged",
+                  "Your account is managed by your identity provider.",
+                )}
               </Alert>
             )}
 
             <Group gap="sm" wrap="wrap">
               {!isSsoUser && (
-                <Button leftSection={<LocalIcon icon="key-rounded" />} onClick={() => setPasswordModalOpen(true)}>
+                <Button
+                  leftSection={<LocalIcon icon="key-rounded" />}
+                  onClick={() => setPasswordModalOpen(true)}
+                >
                   {t("settings.security.password.update", "Update password")}
                 </Button>
               )}
@@ -313,7 +399,12 @@ const AccountSection: React.FC = () => {
                 </Button>
               )}
 
-              <Button variant="outline" color="red" leftSection={<LocalIcon icon="logout-rounded" />} onClick={handleLogout}>
+              <Button
+                variant="outline"
+                color="red"
+                leftSection={<LocalIcon icon="logout-rounded" />}
+                onClick={handleLogout}
+              >
                 {t("settings.general.logout", "Log out")}
               </Button>
             </Group>
@@ -323,24 +414,41 @@ const AccountSection: React.FC = () => {
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="sm">
-          <Text fw={600}>{t("account.mfa.title", "Two-factor authentication")}</Text>
+          <Text fw={600}>
+            {t("account.mfa.title", "Two-factor authentication")}
+          </Text>
           <Text size="sm" c="dimmed">
-            {t("account.mfa.description", "Add an extra layer of security to your account.")}
+            {t(
+              "account.mfa.description",
+              "Add an extra layer of security to your account.",
+            )}
           </Text>
           {isSsoUser ? (
-            <Alert icon={<LocalIcon icon="info" width="1rem" height="1rem" />} color="blue" variant="light">
-              {t("account.mfa.ssoManaged", "Two-factor authentication for this account is managed by your identity provider.")}
+            <Alert
+              icon={<LocalIcon icon="info" width="1rem" height="1rem" />}
+              color="blue"
+              variant="light"
+            >
+              {t(
+                "account.mfa.ssoManaged",
+                "Two-factor authentication for this account is managed by your identity provider.",
+              )}
             </Alert>
           ) : (
             <Group gap="sm" wrap="wrap">
               {!mfaEnabled ? (
                 <Button
-                  leftSection={<LocalIcon icon="check-circle-outline-rounded" />}
+                  leftSection={
+                    <LocalIcon icon="check-circle-outline-rounded" />
+                  }
                   onClick={handleStartMfaSetup}
                   loading={mfaLoading}
                   disabled={changeButtonDisabled}
                 >
-                  {t("account.mfa.enableButton", "Enable two-factor authentication")}
+                  {t(
+                    "account.mfa.enableButton",
+                    "Enable two-factor authentication",
+                  )}
                 </Button>
               ) : (
                 <Button
@@ -354,7 +462,10 @@ const AccountSection: React.FC = () => {
                   }}
                   disabled={changeButtonDisabled}
                 >
-                  {t("account.mfa.disableButton", "Disable two-factor authentication")}
+                  {t(
+                    "account.mfa.disableButton",
+                    "Disable two-factor authentication",
+                  )}
                 </Button>
               )}
             </Group>
@@ -372,44 +483,79 @@ const AccountSection: React.FC = () => {
         <form onSubmit={handlePasswordSubmit}>
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              {t("settings.security.password.subtitle", "Change your password. You will be logged out after updating.")}
+              {t(
+                "settings.security.password.subtitle",
+                "Change your password. You will be logged out after updating.",
+              )}
             </Text>
 
             {passwordError && (
-              <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
+              <Alert
+                icon={
+                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
+                }
+                color="red"
+                variant="light"
+              >
                 {passwordError}
               </Alert>
             )}
 
             <PasswordInput
-              label={t("settings.security.password.current", "Current password")}
-              placeholder={t("settings.security.password.currentPlaceholder", "Enter your current password")}
+              label={t(
+                "settings.security.password.current",
+                "Current password",
+              )}
+              placeholder={t(
+                "settings.security.password.currentPlaceholder",
+                "Enter your current password",
+              )}
               value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.currentTarget.value)}
+              onChange={(event) =>
+                setCurrentPassword(event.currentTarget.value)
+              }
               required
             />
 
             <PasswordInput
               label={t("settings.security.password.new", "New password")}
-              placeholder={t("settings.security.password.newPlaceholder", "Enter a new password")}
+              placeholder={t(
+                "settings.security.password.newPlaceholder",
+                "Enter a new password",
+              )}
               value={newPassword}
               onChange={(event) => setNewPassword(event.currentTarget.value)}
               required
             />
 
             <PasswordInput
-              label={t("settings.security.password.confirm", "Confirm new password")}
-              placeholder={t("settings.security.password.confirmPlaceholder", "Re-enter your new password")}
+              label={t(
+                "settings.security.password.confirm",
+                "Confirm new password",
+              )}
+              placeholder={t(
+                "settings.security.password.confirmPlaceholder",
+                "Re-enter your new password",
+              )}
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.currentTarget.value)}
+              onChange={(event) =>
+                setConfirmPassword(event.currentTarget.value)
+              }
               required
             />
 
             <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={() => setPasswordModalOpen(false)}>
+              <Button
+                variant="default"
+                onClick={() => setPasswordModalOpen(false)}
+              >
                 {t("common.cancel", "Cancel")}
               </Button>
-              <Button type="submit" loading={passwordSubmitting} leftSection={<LocalIcon icon="save-rounded" />}>
+              <Button
+                type="submit"
+                loading={passwordSubmitting}
+                leftSection={<LocalIcon icon="save-rounded" />}
+              >
                 {t("settings.security.password.update", "Update password")}
               </Button>
             </Group>
@@ -455,7 +601,8 @@ const AccountSection: React.FC = () => {
                   />
                 </Box>
                 <Text size="sm" c="dimmed">
-                  {t("account.mfa.manualKey", "Manual setup key")}: <strong>{mfaSetupData.secret}</strong>
+                  {t("account.mfa.manualKey", "Manual setup key")}:{" "}
+                  <strong>{mfaSetupData.secret}</strong>
                 </Text>
                 <Text size="xs" c="orange">
                   {t(
@@ -466,13 +613,22 @@ const AccountSection: React.FC = () => {
               </Stack>
             )}
             {mfaError && (
-              <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
+              <Alert
+                icon={
+                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
+                }
+                color="red"
+                variant="light"
+              >
                 {mfaError}
               </Alert>
             )}
             <TextInput
               label={t("account.mfa.codeLabel", "Authentication code")}
-              placeholder={t("account.mfa.codePlaceholder", "Enter 6-digit code")}
+              placeholder={t(
+                "account.mfa.codePlaceholder",
+                "Enter 6-digit code",
+              )}
               value={mfaSetupCode}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))
@@ -499,23 +655,38 @@ const AccountSection: React.FC = () => {
       <Modal
         opened={mfaDisableModalOpen}
         onClose={handleCloseMfaDisableModal}
-        title={t("account.mfa.disableTitle", "Disable two-factor authentication")}
+        title={t(
+          "account.mfa.disableTitle",
+          "Disable two-factor authentication",
+        )}
         withinPortal
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       >
         <form onSubmit={handleDisableMfa}>
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              {t("account.mfa.disableDescription", "Enter a valid authentication code to disable two-factor authentication.")}
+              {t(
+                "account.mfa.disableDescription",
+                "Enter a valid authentication code to disable two-factor authentication.",
+              )}
             </Text>
             {mfaError && (
-              <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
+              <Alert
+                icon={
+                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
+                }
+                color="red"
+                variant="light"
+              >
                 {mfaError}
               </Alert>
             )}
             <TextInput
               label={t("account.mfa.codeLabel", "Authentication code")}
-              placeholder={t("account.mfa.codePlaceholder", "Enter 6-digit code")}
+              placeholder={t(
+                "account.mfa.codePlaceholder",
+                "Enter 6-digit code",
+              )}
               value={mfaDisableCode}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setMfaDisableCode(normalizeMfaCode(event.currentTarget.value))
@@ -549,11 +720,20 @@ const AccountSection: React.FC = () => {
         <form onSubmit={handleUsernameSubmit}>
           <Stack gap="md">
             <Text size="sm" c="dimmed">
-              {t("changeCreds.changeUsername", "Update your username. You will be logged out after updating.")}
+              {t(
+                "changeCreds.changeUsername",
+                "Update your username. You will be logged out after updating.",
+              )}
             </Text>
 
             {usernameError && (
-              <Alert icon={<LocalIcon icon="error-rounded" width="1rem" height="1rem" />} color="red" variant="light">
+              <Alert
+                icon={
+                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
+                }
+                color="red"
+                variant="light"
+              >
                 {usernameError}
               </Alert>
             )}
@@ -562,7 +742,9 @@ const AccountSection: React.FC = () => {
               label={t("changeCreds.newUsername", "New Username")}
               placeholder={t("changeCreds.newUsername", "New Username")}
               value={newUsername}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNewUsername(event.currentTarget.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                setNewUsername(event.currentTarget.value)
+              }
               required
             />
 
@@ -577,10 +759,17 @@ const AccountSection: React.FC = () => {
             />
 
             <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={() => setUsernameModalOpen(false)}>
+              <Button
+                variant="default"
+                onClick={() => setUsernameModalOpen(false)}
+              >
                 {t("common.cancel", "Cancel")}
               </Button>
-              <Button type="submit" loading={usernameSubmitting} leftSection={<LocalIcon icon="save-rounded" />}>
+              <Button
+                type="submit"
+                loading={usernameSubmitting}
+                leftSection={<LocalIcon icon="save-rounded" />}
+              >
                 {t("common.save", "Save")}
               </Button>
             </Group>

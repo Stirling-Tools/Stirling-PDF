@@ -47,7 +47,11 @@ export default function MagicLinkForm({
         onKeyPress={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
         className="auth-input"
       />
-      <button onClick={onSubmit} disabled={isSubmitting || !magicLinkEmail} className="auth-magic-button">
+      <button
+        onClick={onSubmit}
+        disabled={isSubmitting || !magicLinkEmail}
+        className="auth-magic-button"
+      >
         {isSubmitting ? t("login.sending") : t("login.sendMagicLink")}
       </button>
     </div>

@@ -37,7 +37,8 @@ export function CustomSearchLayer({
 }: SearchLayerProps) {
   const { provides: searchProvides } = useSearch(documentId);
   const documentState = useDocumentState(documentId);
-  const [searchResultState, setSearchResultState] = useState<SearchResultState | null>(null);
+  const [searchResultState, setSearchResultState] =
+    useState<SearchResultState | null>(null);
 
   // Use document scale from EmbedPDF state, fallback to prop, then to 1
   const scale = documentState?.scale ?? scaleProp ?? 1;
@@ -48,12 +49,14 @@ export function CustomSearchLayer({
       return;
     }
 
-    const unsubscribe = searchProvides.onSearchResultStateChange?.((state: SearchResultState) => {
-      if (!state) return;
-      // Only update state - do NOT auto-scroll here
-      // Scrolling should only happen when user explicitly navigates via next/previous
-      setSearchResultState(state);
-    });
+    const unsubscribe = searchProvides.onSearchResultStateChange?.(
+      (state: SearchResultState) => {
+        if (!state) return;
+        // Only update state - do NOT auto-scroll here
+        // Scrolling should only happen when user explicitly navigates via next/previous
+        setSearchResultState(state);
+      },
+    );
 
     return unsubscribe;
   }, [searchProvides, pageIndex]);
@@ -99,12 +102,15 @@ export function CustomSearchLayer({
                 width: `${rect.size.width * scale + padding * 2}px`,
                 height: `${rect.size.height * scale + padding * 2}px`,
                 backgroundColor:
-                  originalIndex === searchResultState?.activeResultIndex ? activeHighlightColor : highlightColor,
+                  originalIndex === searchResultState?.activeResultIndex
+                    ? activeHighlightColor
+                    : highlightColor,
                 opacity: opacity,
                 borderRadius: `${borderRadius}px`,
                 transform: "scale(1.02)",
                 transformOrigin: "center",
-                transition: "opacity 0.2s ease-in-out, background-color 0.2s ease-in-out",
+                transition:
+                  "opacity 0.2s ease-in-out, background-color 0.2s ease-in-out",
                 pointerEvents: "none",
                 boxShadow:
                   originalIndex === searchResultState?.activeResultIndex

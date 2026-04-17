@@ -4,7 +4,9 @@ import { MantineProvider } from "@mantine/core";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("ButtonSelector", () => {
   const mockOnChange = vi.fn();
@@ -21,7 +23,12 @@ describe("ButtonSelector", () => {
 
     render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} label="Test Label" />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+          label="Test Label"
+        />
       </TestWrapper>,
     );
 
@@ -38,7 +45,12 @@ describe("ButtonSelector", () => {
 
     render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} label="Selection Label" />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+          label="Selection Label"
+        />
       </TestWrapper>,
     );
 
@@ -59,7 +71,11 @@ describe("ButtonSelector", () => {
 
     render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+        />
       </TestWrapper>,
     );
 
@@ -76,7 +92,11 @@ describe("ButtonSelector", () => {
 
     render(
       <TestWrapper>
-        <ButtonSelector value={undefined} onChange={mockOnChange} options={options} />
+        <ButtonSelector
+          value={undefined}
+          onChange={mockOnChange}
+          options={options}
+        />
       </TestWrapper>,
     );
 
@@ -110,7 +130,12 @@ describe("ButtonSelector", () => {
   ])("should $description", ({ options, globalDisabled, expectedStates }) => {
     render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} disabled={globalDisabled} />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+          disabled={globalDisabled}
+        />
       </TestWrapper>,
     );
 
@@ -128,7 +153,11 @@ describe("ButtonSelector", () => {
 
     render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+        />
       </TestWrapper>,
     );
 
@@ -145,7 +174,13 @@ describe("ButtonSelector", () => {
 
     render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} fullWidth={false} label="Layout Label" />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+          fullWidth={false}
+          label="Layout Label"
+        />
       </TestWrapper>,
     );
 
@@ -162,7 +197,11 @@ describe("ButtonSelector", () => {
 
     const { container } = render(
       <TestWrapper>
-        <ButtonSelector value="option1" onChange={mockOnChange} options={options} />
+        <ButtonSelector
+          value="option1"
+          onChange={mockOnChange}
+          options={options}
+        />
       </TestWrapper>,
     );
 
@@ -171,7 +210,9 @@ describe("ButtonSelector", () => {
     expect(screen.getByText("Option 2")).toBeInTheDocument();
 
     // Stack should only contain the Group (buttons), no Text element for label
-    const stackElement = container.querySelector('[class*="mantine-Stack-root"]');
+    const stackElement = container.querySelector(
+      '[class*="mantine-Stack-root"]',
+    );
     expect(stackElement?.children).toHaveLength(1); // Only the Group, no label Text
   });
 });

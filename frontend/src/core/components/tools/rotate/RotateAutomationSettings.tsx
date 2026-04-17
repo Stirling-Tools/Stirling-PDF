@@ -12,11 +12,18 @@ import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface RotateAutomationSettingsProps {
   parameters: RotateParameters;
-  onParameterChange: <K extends keyof RotateParameters>(key: K, value: RotateParameters[K]) => void;
+  onParameterChange: <K extends keyof RotateParameters>(
+    key: K,
+    value: RotateParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const RotateAutomationSettings = ({ parameters, onParameterChange, disabled = false }: RotateAutomationSettingsProps) => {
+const RotateAutomationSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: RotateAutomationSettingsProps) => {
   const { t } = useTranslation();
 
   return (

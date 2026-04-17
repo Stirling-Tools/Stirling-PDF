@@ -14,10 +14,25 @@
   --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
 
   /* File Manager active file colors */
-  --file-active-bg: rgba(59, 130, 246, 0.1); /* Transparent blue for active file background */
-  --file-active-badge-bg: rgba(34, 197, 94, 0.15); /* Transparent green for active badge */
+  --file-active-bg: rgba(
+    59,
+    130,
+    246,
+    0.1
+  ); /* Transparent blue for active file background */
+  --file-active-badge-bg: rgba(
+    34,
+    197,
+    94,
+    0.15
+  ); /* Transparent green for active badge */
   --file-active-badge-fg: #15803d; /* Green text for active badge */
-  --file-active-badge-border: rgba(34, 197, 94, 0.3); /* Green border for active badge */
+  --file-active-badge-border: rgba(
+    34,
+    197,
+    94,
+    0.3
+  ); /* Green border for active badge */
 }
 
 /* CSS variables for Tailwind + Mantine integration */
@@ -259,22 +274,36 @@
   --landing-hero-gradient: linear-gradient(135deg, #4c8bf5 0%, #3a7be8 100%);
   --landing-stack-w: 224px;
   --landing-stack-h: 176px;
-  --landing-stack-glow-bg: radial-gradient(circle, rgba(74, 144, 226, 0.18) 0%, transparent 70%);
+  --landing-stack-glow-bg: radial-gradient(
+    circle,
+    rgba(74, 144, 226, 0.18) 0%,
+    transparent 70%
+  );
 
   /* landing doc stack shadows */
-  --landing-doc-shadow-back-idle: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --landing-doc-shadow-back-hover: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --landing-doc-shadow-back-idle:
+    0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --landing-doc-shadow-back-hover:
+    0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
   --landing-doc-shadow-front-idle:
-    0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
   --landing-doc-shadow-front-hover:
-    0 18px 48px rgba(0, 0, 0, 0.18), 0 8px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    0 18px 48px rgba(0, 0, 0, 0.18), 0 8px 20px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
 
   /* landing action button shadows */
-  --landing-action-transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  --landing-action-shadow-idle: 0 6px 18px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
-  --landing-action-shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
-  --landing-action-primary-shadow-idle: 0 10px 26px rgba(58, 123, 232, 0), 0 4px 12px rgba(0, 0, 0, 0);
-  --landing-action-primary-shadow-hover: 0 10px 26px rgba(58, 123, 232, 0.42), 0 4px 12px rgba(0, 0, 0, 0.1);
+  --landing-action-transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  --landing-action-shadow-idle:
+    0 6px 18px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
+  --landing-action-shadow-hover:
+    0 6px 18px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --landing-action-primary-shadow-idle:
+    0 10px 26px rgba(58, 123, 232, 0), 0 4px 12px rgba(0, 0, 0, 0);
+  --landing-action-primary-shadow-hover:
+    0 10px 26px rgba(58, 123, 232, 0.42), 0 4px 12px rgba(0, 0, 0, 0.1);
 
   /* selected file header colors */
   --header-selected-bg: #1e88e5; /* light mode selected header matches dark */
@@ -285,7 +314,8 @@
   /* shadows */
   --drop-shadow-color: rgba(0, 0, 0, 0.08);
   --drop-shadow-color-strong: rgba(0, 0, 0, 0.04);
-  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06))
+  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08))
+    drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06))
     drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.04));
 
   /* Light mode card hover and selection */
@@ -551,13 +581,21 @@
   --landing-inner-paper-border: #2d3237;
 
   /* landing dark overrides */
-  --landing-stack-glow-bg: radial-gradient(circle, rgba(30, 136, 229, 0.22) 0%, transparent 70%);
-  --landing-doc-shadow-back-idle: 0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
-  --landing-doc-shadow-back-hover: 0 14px 44px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.35);
+  --landing-stack-glow-bg: radial-gradient(
+    circle,
+    rgba(30, 136, 229, 0.22) 0%,
+    transparent 70%
+  );
+  --landing-doc-shadow-back-idle:
+    0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --landing-doc-shadow-back-hover:
+    0 14px 44px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.35);
   --landing-doc-shadow-front-idle:
-    0 8px 30px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    0 8px 30px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
   --landing-doc-shadow-front-hover:
-    0 20px 52px rgba(0, 0, 0, 0.6), 0 10px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 20px 52px rgba(0, 0, 0, 0.6), 0 10px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
   --landing-button-color: #ffffff;
   --landing-button-hover-bg: var(--bg-raised);
 
@@ -572,7 +610,8 @@
   --drop-shadow-color: rgba(255, 255, 255, 0.08);
   --drop-shadow-color-strong: rgba(255, 255, 255, 0.04);
   --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(200, 200, 200, 0.08))
-    drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06)) drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
+    drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06))
+    drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
 
   /* Adjust shadows for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -611,7 +650,9 @@
   /* Bulk selection panel specific colors (dark mode) */
   --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */
   --bulk-card-bg: var(--bg-raised); /* dark background for cards */
-  --bulk-card-border: var(--border-default); /* default border for cards and buttons */
+  --bulk-card-border: var(
+    --border-default
+  ); /* default border for cards and buttons */
   --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
   --unsupported-bar-bg: #1f2329;
   --unsupported-bar-border: #4b525a;
@@ -705,7 +746,8 @@
   background-color: #0a8bff !important;
 }
 
-[data-mantine-color-scheme="dark"] .plan-button:not(:disabled):not([data-disabled]) {
+[data-mantine-color-scheme="dark"]
+  .plan-button:not(:disabled):not([data-disabled]) {
   background-color: #1c598e !important;
 }
 
@@ -768,22 +810,27 @@
 :root {
   --link-hover-bg: rgba(10, 139, 255, 0.04);
   --link-hover-border: rgba(10, 139, 255, 0.15);
-  --link-hover-shadow: 0 0 0 0.5px rgba(10, 139, 255, 0.05), 0 1px 3px rgba(10, 139, 255, 0.04);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(10, 139, 255, 0.05), 0 1px 3px rgba(10, 139, 255, 0.04);
   --link-focus-ring: rgba(10, 139, 255, 0.25);
   --link-toolbar-bg: rgba(15, 23, 42, 0.88);
   --link-toolbar-border: rgba(255, 255, 255, 0.1);
-  --link-toolbar-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
 
 [data-mantine-color-scheme="dark"] {
   --link-hover-bg: rgba(10, 139, 255, 0.06);
   --link-hover-border: rgba(59, 170, 255, 0.2);
-  --link-hover-shadow: 0 0 0 0.5px rgba(59, 170, 255, 0.1), 0 1px 3px rgba(10, 139, 255, 0.08);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(59, 170, 255, 0.1), 0 1px 3px rgba(10, 139, 255, 0.08);
   --link-focus-ring: rgba(59, 170, 255, 0.3);
   --link-toolbar-bg: rgba(15, 23, 42, 0.92);
   --link-toolbar-border: rgba(255, 255, 255, 0.08);
   --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+    0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04);
 }
 
 /* ── Link hit-area ── */

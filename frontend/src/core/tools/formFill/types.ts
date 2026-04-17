@@ -38,9 +38,22 @@ export interface FormField {
   appearanceDataUrl?: string;
 }
 
-export type FormFieldType = "text" | "checkbox" | "combobox" | "listbox" | "radio" | "button" | "signature";
+export type FormFieldType =
+  | "text"
+  | "checkbox"
+  | "combobox"
+  | "listbox"
+  | "radio"
+  | "button"
+  | "signature";
 
-export type ButtonActionType = "named" | "javascript" | "submitForm" | "resetForm" | "uri" | "none";
+export type ButtonActionType =
+  | "named"
+  | "javascript"
+  | "submitForm"
+  | "resetForm"
+  | "uri"
+  | "none";
 
 export interface ButtonAction {
   type: ButtonActionType;

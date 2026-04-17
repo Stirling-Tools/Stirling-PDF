@@ -6,7 +6,10 @@ import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
 import { StirlingFile } from "@app/types/fileContext";
 
-interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams>> {
+interface BaseToolReturn<
+  TParams,
+  TParamsHook extends BaseParametersHook<TParams>,
+> {
   // File management
   selectedFiles: StirlingFile[];
 
@@ -33,7 +36,10 @@ interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams
 /**
  * Base tool hook for tool components. Manages standard behaviour for tools.
  */
-export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TParams>>(
+export function useBaseTool<
+  TParams,
+  TParamsHook extends BaseParametersHook<TParams>,
+>(
   toolName: string,
   useParams: () => TParamsHook,
   useOperation: () => ToolOperationHook<TParams>,
@@ -66,11 +72,13 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const operation = useOperation();
 
   // Endpoint validation using parameters hook
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(params.getEndpointName());
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled(params.getEndpointName());
 
   // Standard computed state - defined early so it's available in useEffects
   const hasFiles = effectiveFiles.length >= minFiles;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const hasResults =
+    operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
   // Reset results when parameters change
@@ -131,11 +139,21 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
       }
     } catch (error) {
       if (onError) {
-        const message = error instanceof Error ? error.message : `${toolName} operation failed`;
+        const message =
+          error instanceof Error
+            ? error.message
+            : `${toolName} operation failed`;
         onError(message);
       }
     }
-  }, [operation, params.parameters, effectiveFiles, onComplete, onError, toolName]);
+  }, [
+    operation,
+    params.parameters,
+    effectiveFiles,
+    onComplete,
+    onError,
+    toolName,
+  ]);
 
   const handleThumbnailClick = useCallback(
     (file: File) => {

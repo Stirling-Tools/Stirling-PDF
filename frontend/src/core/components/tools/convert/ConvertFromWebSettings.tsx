@@ -4,11 +4,18 @@ import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters
 
 interface ConvertFromWebSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertFromWebSettings = ({ parameters, onParameterChange, disabled = false }: ConvertFromWebSettingsProps) => {
+const ConvertFromWebSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertFromWebSettingsProps) => {
   const { t } = useTranslation();
 
   return (

@@ -1,7 +1,11 @@
 import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
 import { computeBoxes } from "@app/components/tools/pageLayout/utils/computeBoxes";
 
-export default function LayoutPreview({ parameters }: { parameters: PageLayoutParameters }) {
+export default function LayoutPreview({
+  parameters,
+}: {
+  parameters: PageLayoutParameters;
+}) {
   const sheet = {
     x: 0,
     y: 0,
@@ -17,7 +21,10 @@ export default function LayoutPreview({ parameters }: { parameters: PageLayoutPa
       viewBox={`${sheet.x} ${sheet.y} ${sheet.width} ${sheet.height}`}
       preserveAspectRatio="xMidYMid meet"
       style={{
-        width: parameters.orientation === "PORTRAIT" ? "50%" : `${50 * aspectRatio}%`,
+        width:
+          parameters.orientation === "PORTRAIT"
+            ? "50%"
+            : `${50 * aspectRatio}%`,
         aspectRatio: `${aspectRatio}`,
         display: "block",
         margin: "0 auto",

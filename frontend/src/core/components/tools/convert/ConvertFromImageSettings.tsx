@@ -6,11 +6,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertFromImageSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertFromImageSettings = ({ parameters, onParameterChange, disabled = false }: ConvertFromImageSettingsProps) => {
+const ConvertFromImageSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertFromImageSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -31,11 +38,20 @@ const ConvertFromImageSettings = ({ parameters, onParameterChange, disabled = fa
         }
         data={[
           { value: COLOR_TYPES.COLOR, label: t("convert.color", "Color") },
-          { value: COLOR_TYPES.GRAYSCALE, label: t("convert.grayscale", "Grayscale") },
-          { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
+          {
+            value: COLOR_TYPES.GRAYSCALE,
+            label: t("convert.grayscale", "Grayscale"),
+          },
+          {
+            value: COLOR_TYPES.BLACK_WHITE,
+            label: t("convert.blackwhite", "Black & White"),
+          },
         ]}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       <Select
@@ -50,18 +66,33 @@ const ConvertFromImageSettings = ({ parameters, onParameterChange, disabled = fa
           })
         }
         data={[
-          { value: FIT_OPTIONS.MAINTAIN_ASPECT, label: t("convert.maintainAspectRatio", "Maintain Aspect Ratio") },
-          { value: FIT_OPTIONS.FIT_PAGE, label: t("convert.fitDocumentToPage", "Fit Document to Page") },
-          { value: FIT_OPTIONS.FILL_PAGE, label: t("convert.fillPage", "Fill Page") },
+          {
+            value: FIT_OPTIONS.MAINTAIN_ASPECT,
+            label: t("convert.maintainAspectRatio", "Maintain Aspect Ratio"),
+          },
+          {
+            value: FIT_OPTIONS.FIT_PAGE,
+            label: t("convert.fitDocumentToPage", "Fit Document to Page"),
+          },
+          {
+            value: FIT_OPTIONS.FILL_PAGE,
+            label: t("convert.fillPage", "Fill Page"),
+          },
         ]}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       <Switch
         data-testid="auto-rotate-switch"
         label={t("convert.autoRotate", "Auto Rotate")}
-        description={t("convert.autoRotateDescription", "Automatically rotate images to better fit the PDF page")}
+        description={t(
+          "convert.autoRotateDescription",
+          "Automatically rotate images to better fit the PDF page",
+        )}
         checked={parameters.imageOptions.autoRotate}
         onChange={(event) =>
           onParameterChange("imageOptions", {

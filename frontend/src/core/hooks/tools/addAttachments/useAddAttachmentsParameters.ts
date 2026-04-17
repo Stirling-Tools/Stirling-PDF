@@ -11,9 +11,13 @@ const defaultParameters: AddAttachmentsParameters = {
 };
 
 export const useAddAttachmentsParameters = () => {
-  const [parameters, setParameters] = useState<AddAttachmentsParameters>(defaultParameters);
+  const [parameters, setParameters] =
+    useState<AddAttachmentsParameters>(defaultParameters);
 
-  const updateParameter = <K extends keyof AddAttachmentsParameters>(key: K, value: AddAttachmentsParameters[K]) => {
+  const updateParameter = <K extends keyof AddAttachmentsParameters>(
+    key: K,
+    value: AddAttachmentsParameters[K],
+  ) => {
     setParameters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -33,4 +37,5 @@ export const useAddAttachmentsParameters = () => {
   };
 };
 
-export const DEFAULT_ADD_ATTACHMENTS_PARAMETERS: AddAttachmentsParameters = defaultParameters;
+export const DEFAULT_ADD_ATTACHMENTS_PARAMETERS: AddAttachmentsParameters =
+  defaultParameters;

@@ -16,7 +16,11 @@ interface AddFileCardProps {
   multiple?: boolean;
 }
 
-const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps) => {
+const AddFileCard = ({
+  onFileSelect,
+  accept,
+  multiple = true,
+}: AddFileCardProps) => {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openFilesModal } = useFilesModalContext();
@@ -82,7 +86,9 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
           <div className={styles.logoMark}>
             <AddIcon sx={{ color: "inherit", fontSize: "1.5rem" }} />
           </div>
-          <div className={styles.headerIndex}>{t("fileEditor.addFiles", "Add Files")}</div>
+          <div className={styles.headerIndex}>
+            {t("fileEditor.addFiles", "Add Files")}
+          </div>
           <div className={styles.kebab} />
         </div>
 
@@ -125,8 +131,15 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
               onClick={handleOpenFilesModal}
               onMouseEnter={() => setIsUploadHover(false)}
             >
-              <LocalIcon icon="add" width="1.5rem" height="1.5rem" className="text-[var(--accent-interactive)]" />
-              {!isUploadHover && <span>{t("landing.addFiles", "Add Files")}</span>}
+              <LocalIcon
+                icon="add"
+                width="1.5rem"
+                height="1.5rem"
+                className="text-[var(--accent-interactive)]"
+              />
+              {!isUploadHover && (
+                <span>{t("landing.addFiles", "Add Files")}</span>
+              )}
             </Button>
             <Button
               aria-label="Upload"
@@ -154,14 +167,22 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
                 height="1.25rem"
                 style={{ color: "var(--accent-interactive)" }}
               />
-              {isUploadHover && <span style={{ marginLeft: ".5rem" }}>{terminology.uploadFromComputer}</span>}
+              {isUploadHover && (
+                <span style={{ marginLeft: ".5rem" }}>
+                  {terminology.uploadFromComputer}
+                </span>
+              )}
             </Button>
           </div>
 
           {/* Instruction Text */}
           <span
             className="text-[var(--accent-interactive)]"
-            style={{ fontSize: ".8rem", textAlign: "center", marginTop: "0.5rem" }}
+            style={{
+              fontSize: ".8rem",
+              textAlign: "center",
+              marginTop: "0.5rem",
+            }}
           >
             {terminology.dropFilesHere}
           </span>

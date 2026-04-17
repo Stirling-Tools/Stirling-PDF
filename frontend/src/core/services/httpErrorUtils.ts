@@ -25,7 +25,10 @@ function titleForStatus(status?: number): string {
   return "Request failed";
 }
 
-export function extractAxiosErrorMessage(error: any): { title: string; body: string } {
+export function extractAxiosErrorMessage(error: any): {
+  title: string;
+  body: string;
+} {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const _statusText = error.response?.statusText || "";
@@ -41,10 +44,15 @@ export function extractAxiosErrorMessage(error: any): { title: string; body: str
       parsed = raw;
     }
     const extractIds = (): string[] | undefined => {
-      if (Array.isArray(parsed?.errorFileIds)) return parsed.errorFileIds as string[];
+      if (Array.isArray(parsed?.errorFileIds))
+        return parsed.errorFileIds as string[];
       const rawText = typeof raw === "string" ? raw : "";
-      const uuidMatches = rawText.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
-      return uuidMatches && uuidMatches.length > 0 ? Array.from(new Set(uuidMatches)) : undefined;
+      const uuidMatches = rawText.match(
+        /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g,
+      );
+      return uuidMatches && uuidMatches.length > 0
+        ? Array.from(new Set(uuidMatches))
+        : undefined;
     };
 
     const body = ((): string => {
@@ -75,7 +83,10 @@ export function extractAxiosErrorMessage(error: any): { title: string; body: str
   }
   try {
     const msg = (error?.message || String(error)) as string;
-    return { title: "Network error", body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
+    return {
+      title: "Network error",
+      body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg,
+    };
   } catch (e) {
     // ignore extraction errors
     console.debug("extractAxiosErrorMessage", e);

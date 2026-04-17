@@ -1,6 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Card, Text, Group, Stack, SegmentedControl, Loader, Alert, Box, SimpleGrid } from "@mantine/core";
-import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  Card,
+  Text,
+  Group,
+  Stack,
+  SegmentedControl,
+  Loader,
+  Alert,
+  Box,
+  SimpleGrid,
+} from "@mantine/core";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { useTranslation } from "react-i18next";
 import auditService, { AuditChartsData } from "@app/services/auditService";
 
@@ -45,7 +66,11 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
         const data = await auditService.getChartsData(timePeriod);
         setChartsData(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : t("audit.charts.error", "Failed to load charts"));
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("audit.charts.error", "Failed to load charts"),
+        );
       } finally {
         setLoading(false);
       }
@@ -57,7 +82,13 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
       // Demo data when login disabled
       setChartsData({
         eventsByType: {
-          labels: ["LOGIN", "LOGOUT", "SETTINGS_CHANGE", "FILE_UPLOAD", "FILE_DOWNLOAD"],
+          labels: [
+            "LOGIN",
+            "LOGOUT",
+            "SETTINGS_CHANGE",
+            "FILE_UPLOAD",
+            "FILE_DOWNLOAD",
+          ],
           values: [342, 289, 145, 678, 523],
         },
         eventsByUser: {
@@ -85,7 +116,10 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
 
   if (error) {
     return (
-      <Alert color="red" title={t("audit.charts.error", "Error loading charts")}>
+      <Alert
+        color="red"
+        title={t("audit.charts.error", "Error loading charts")}
+      >
         {error}
       </Alert>
     );
@@ -96,20 +130,26 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
   }
 
   // Transform data for Recharts
-  const eventsOverTimeData = chartsData.eventsOverTime.labels.map((label, index) => ({
-    name: label,
-    value: chartsData.eventsOverTime.values[index],
-  }));
+  const eventsOverTimeData = chartsData.eventsOverTime.labels.map(
+    (label, index) => ({
+      name: label,
+      value: chartsData.eventsOverTime.values[index],
+    }),
+  );
 
-  const eventsByTypeData = chartsData.eventsByType.labels.map((label, index) => ({
-    type: label,
-    value: chartsData.eventsByType.values[index],
-  }));
+  const eventsByTypeData = chartsData.eventsByType.labels.map(
+    (label, index) => ({
+      type: label,
+      value: chartsData.eventsByType.values[index],
+    }),
+  );
 
-  const eventsByUserData = chartsData.eventsByUser.labels.map((label, index) => ({
-    user: label,
-    value: chartsData.eventsByUser.values[index],
-  }));
+  const eventsByUserData = chartsData.eventsByUser.labels.map(
+    (label, index) => ({
+      user: label,
+      value: chartsData.eventsByUser.values[index],
+    }),
+  );
 
   return (
     <Stack gap="lg">
@@ -144,11 +184,22 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
                 <AreaChart data={eventsOverTimeData}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--mantine-color-blue-6)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--mantine-color-blue-6)" stopOpacity={0} />
+                      <stop
+                        offset="5%"
+                        stopColor="var(--mantine-color-blue-6)"
+                        stopOpacity={0.3}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--mantine-color-blue-6)"
+                        stopOpacity={0}
+                      />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-2)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--mantine-color-gray-2)"
+                  />
                   <XAxis dataKey="name" stroke="var(--mantine-color-gray-6)" />
                   <YAxis stroke="var(--mantine-color-gray-6)" />
                   <Tooltip
@@ -170,7 +221,9 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
               </ResponsiveContainer>
             ) : (
               <Group justify="center">
-                <Text c="dimmed">{t("audit.charts.noData", "No data for this period")}</Text>
+                <Text c="dimmed">
+                  {t("audit.charts.noData", "No data for this period")}
+                </Text>
               </Group>
             )}
           </Box>
@@ -189,8 +242,17 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
               {eventsByTypeData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={eventsByTypeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-2)" />
-                    <XAxis dataKey="type" stroke="var(--mantine-color-gray-6)" angle={-45} textAnchor="end" height={80} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--mantine-color-gray-2)"
+                    />
+                    <XAxis
+                      dataKey="type"
+                      stroke="var(--mantine-color-gray-6)"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
                     <YAxis stroke="var(--mantine-color-gray-6)" />
                     <Tooltip
                       contentStyle={{
@@ -202,7 +264,10 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
                     />
                     <Bar dataKey="value" fill="var(--mantine-color-blue-6)">
                       {eventsByTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={getEventTypeColor(entry.type)} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={getEventTypeColor(entry.type)}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -226,9 +291,17 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
               {eventsByUserData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={eventsByUserData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-2)" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--mantine-color-gray-2)"
+                    />
                     <XAxis type="number" stroke="var(--mantine-color-gray-6)" />
-                    <YAxis type="category" dataKey="user" stroke="var(--mantine-color-gray-6)" width={100} />
+                    <YAxis
+                      type="category"
+                      dataKey="user"
+                      stroke="var(--mantine-color-gray-6)"
+                      width={100}
+                    />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "var(--mantine-color-gray-8)",

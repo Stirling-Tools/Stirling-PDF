@@ -42,12 +42,16 @@ export function useCurrentFile(): { file?: File; record?: StirlingFileStub } {
   const { state, selectors } = useFileState();
 
   const primaryFileId = state.files.ids[0];
-  const primaryFileRecord = primaryFileId ? state.files.byId[primaryFileId] : undefined;
+  const primaryFileRecord = primaryFileId
+    ? state.files.byId[primaryFileId]
+    : undefined;
 
   return useMemo(
     () => ({
       file: primaryFileId ? selectors.getFile(primaryFileId) : undefined,
-      record: primaryFileId ? selectors.getStirlingFileStub(primaryFileId) : undefined,
+      record: primaryFileId
+        ? selectors.getStirlingFileStub(primaryFileId)
+        : undefined,
     }),
     [primaryFileId, primaryFileRecord, selectors],
   );
@@ -125,7 +129,10 @@ export function useFileUI() {
 /**
  * Hook for specific file by ID (optimized for individual file access)
  */
-export function useStirlingFileStub(fileId: FileId): { file?: File; record?: StirlingFileStub } {
+export function useStirlingFileStub(fileId: FileId): {
+  file?: File;
+  record?: StirlingFileStub;
+} {
   const { state, selectors } = useFileState();
   const fileRecord = state.files.byId[fileId];
 
@@ -141,7 +148,11 @@ export function useStirlingFileStub(fileId: FileId): { file?: File; record?: Sti
 /**
  * Hook for all files (use sparingly - causes re-renders on file list changes)
  */
-export function useAllFiles(): { files: StirlingFile[]; fileStubs: StirlingFileStub[]; fileIds: FileId[] } {
+export function useAllFiles(): {
+  files: StirlingFile[];
+  fileStubs: StirlingFileStub[];
+  fileIds: FileId[];
+} {
   const { state, selectors } = useFileState();
 
   return useMemo(
@@ -197,12 +208,21 @@ export function useFileContext() {
       undoConsumeFiles: actions.undoConsumeFiles,
       recordOperation: (_fileId: FileId, _operation: any) => {}, // Operation tracking not implemented
       markOperationApplied: (_fileId: FileId, _operationId: string) => {}, // Operation tracking not implemented
-      markOperationFailed: (_fileId: FileId, _operationId: string, _error: string) => {}, // Operation tracking not implemented
+      markOperationFailed: (
+        _fileId: FileId,
+        _operationId: string,
+        _error: string,
+      ) => {}, // Operation tracking not implemented
       // File ID lookup
       findFileId: (file: File) => {
         return state.files.ids.find((id) => {
           const record = state.files.byId[id];
-          return record && record.name === file.name && record.size === file.size && record.lastModified === file.lastModified;
+          return (
+            record &&
+            record.name === file.name &&
+            record.size === file.size &&
+            record.lastModified === file.lastModified
+          );
         });
       },
 

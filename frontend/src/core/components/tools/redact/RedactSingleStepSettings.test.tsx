@@ -6,11 +6,15 @@ import { defaultParameters } from "@app/hooks/tools/redact/useRedactParameters";
 
 // Mock useTranslation
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: vi.fn((_key: string, fallback: string) => fallback) }),
+  useTranslation: () => ({
+    t: vi.fn((_key: string, fallback: string) => fallback),
+  }),
 }));
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("RedactSingleStepSettings", () => {
   const mockOnParameterChange = vi.fn();
@@ -22,19 +26,27 @@ describe("RedactSingleStepSettings", () => {
   test("should render mode selector", () => {
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
     expect(screen.getByText("Mode")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Automatic" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Automatic" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Manual" })).toBeInTheDocument();
   });
 
   test("should render automatic mode settings when mode is automatic", () => {
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -53,12 +65,19 @@ describe("RedactSingleStepSettings", () => {
 
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={manualParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={manualParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
     // Manual mode should show placeholder text
-    expect(screen.getByText("Manual redaction interface will be available here when implemented.")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Manual redaction interface will be available here when implemented.",
+      ),
+    ).toBeInTheDocument();
 
     // Automatic mode settings should not be visible
     expect(screen.queryByText("Words to Redact")).not.toBeInTheDocument();
@@ -67,7 +86,10 @@ describe("RedactSingleStepSettings", () => {
   test("should pass through parameter changes from automatic settings", () => {
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -78,13 +100,18 @@ describe("RedactSingleStepSettings", () => {
     fireEvent.change(input, { target: { value: "TestWord" } });
     fireEvent.click(addButton);
 
-    expect(mockOnParameterChange).toHaveBeenCalledWith("wordsToRedact", ["TestWord"]);
+    expect(mockOnParameterChange).toHaveBeenCalledWith("wordsToRedact", [
+      "TestWord",
+    ]);
   });
 
   test("should pass through parameter changes from advanced settings", () => {
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -92,13 +119,20 @@ describe("RedactSingleStepSettings", () => {
     const colorInput = screen.getByDisplayValue("#000000");
     fireEvent.change(colorInput, { target: { value: "#FF0000" } });
 
-    expect(mockOnParameterChange).toHaveBeenCalledWith("redactColor", "#FF0000");
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "redactColor",
+      "#FF0000",
+    );
   });
 
   test("should disable all controls when disabled prop is true", () => {
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={true} />
+        <RedactSingleStepSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+          disabled={true}
+        />
       </TestWrapper>,
     );
 
@@ -123,7 +157,10 @@ describe("RedactSingleStepSettings", () => {
 
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={customParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={customParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -145,7 +182,10 @@ describe("RedactSingleStepSettings", () => {
   test("should maintain consistent spacing and layout", () => {
     render(
       <TestWrapper>
-        <RedactSingleStepSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactSingleStepSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 

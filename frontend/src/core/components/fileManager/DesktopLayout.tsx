@@ -12,7 +12,12 @@ const DesktopLayout: React.FC = () => {
   const { activeSource, recentFiles, modalHeight } = useFileManagerContext();
 
   return (
-    <Grid gutter="xs" h="100%" grow={false} style={{ flexWrap: "nowrap", minWidth: 0 }}>
+    <Grid
+      gutter="xs"
+      h="100%"
+      grow={false}
+      style={{ flexWrap: "nowrap", minWidth: 0 }}
+    >
       {/* Column 1: File Sources */}
       <Grid.Col
         span="content"
@@ -74,9 +79,16 @@ const DesktopLayout: React.FC = () => {
 
           <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
             <FileListArea
-              scrollAreaHeight={activeSource === "recent" && recentFiles.length > 0 ? `calc(${modalHeight} - 7rem)` : "100%"}
+              scrollAreaHeight={
+                activeSource === "recent" && recentFiles.length > 0
+                  ? `calc(${modalHeight} - 7rem)`
+                  : "100%"
+              }
               scrollAreaStyle={{
-                height: activeSource === "recent" && recentFiles.length > 0 ? `calc(${modalHeight} - 7rem)` : "100%",
+                height:
+                  activeSource === "recent" && recentFiles.length > 0
+                    ? `calc(${modalHeight} - 7rem)`
+                    : "100%",
                 backgroundColor: "transparent",
                 border: "none",
                 borderRadius: 0,

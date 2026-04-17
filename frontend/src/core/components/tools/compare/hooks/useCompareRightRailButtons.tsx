@@ -59,7 +59,11 @@ export const useCompareRightRailButtons = ({
         id: "compare-toggle-layout",
         icon: (
           <LocalIcon
-            icon={layout === "side-by-side" ? "vertical-split-rounded" : "horizontal-split-rounded"}
+            icon={
+              layout === "side-by-side"
+                ? "vertical-split-rounded"
+                : "horizontal-split-rounded"
+            }
             width="1.5rem"
             height="1.5rem"
           />
@@ -86,7 +90,10 @@ export const useCompareRightRailButtons = ({
         onClick: () => {
           const { min, step } = zoomLimits;
           const nextBase = Math.max(min, +(baseZoom - step).toFixed(2));
-          const nextComparison = Math.max(min, +(comparisonZoom - step).toFixed(2));
+          const nextComparison = Math.max(
+            min,
+            +(comparisonZoom - step).toFixed(2),
+          );
           setBaseZoom(nextBase);
           setComparisonZoom(nextComparison);
           centerPanForZoom("base", nextBase);
@@ -103,7 +110,10 @@ export const useCompareRightRailButtons = ({
         onClick: () => {
           const { max, step } = zoomLimits;
           const nextBase = Math.min(max, +(baseZoom + step).toFixed(2));
-          const nextComparison = Math.min(max, +(comparisonZoom + step).toFixed(2));
+          const nextComparison = Math.min(
+            max,
+            +(comparisonZoom + step).toFixed(2),
+          );
           setBaseZoom(nextBase);
           setComparisonZoom(nextComparison);
           clampPanForZoom("base", nextBase);
@@ -112,7 +122,9 @@ export const useCompareRightRailButtons = ({
       },
       {
         id: "compare-reset-view",
-        icon: <LocalIcon icon="refresh-rounded" width="1.5rem" height="1.5rem" />,
+        icon: (
+          <LocalIcon icon="refresh-rounded" width="1.5rem" height="1.5rem" />
+        ),
         tooltip: t("compare.actions.resetView", "Reset zoom and pan"),
         ariaLabel: t("compare.actions.resetView", "Reset zoom and pan"),
         section: "top",
@@ -135,7 +147,13 @@ export const useCompareRightRailButtons = ({
       },
       {
         id: "compare-toggle-scroll-link",
-        icon: <LocalIcon icon={isScrollLinked ? "link-rounded" : "link-off-rounded"} width="1.5rem" height="1.5rem" />,
+        icon: (
+          <LocalIcon
+            icon={isScrollLinked ? "link-rounded" : "link-off-rounded"}
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
         tooltip: isScrollLinked
           ? t("compare.actions.unlinkScroll", "Unlink scroll")
           : t("compare.actions.linkScroll", "Link scroll"),
@@ -152,8 +170,14 @@ export const useCompareRightRailButtons = ({
             if (!isMobile) {
               alert({
                 alertType: "neutral",
-                title: t("compare.toasts.unlinkedTitle", "Independent scroll enabled"),
-                body: t("compare.toasts.unlinkedBody", "Tip: Arrow Up/Down scroll both panes when unlinked is off."),
+                title: t(
+                  "compare.toasts.unlinkedTitle",
+                  "Independent scroll enabled",
+                ),
+                body: t(
+                  "compare.toasts.unlinkedBody",
+                  "Tip: Arrow Up/Down scroll both panes when unlinked is off.",
+                ),
                 durationMs: 5000,
                 location: "bottom-center" as ToastLocation,
                 expandable: false,
@@ -188,4 +212,6 @@ export const useCompareRightRailButtons = ({
   );
 };
 
-export type UseCompareRightRailButtonsReturn = ReturnType<typeof useCompareRightRailButtons>;
+export type UseCompareRightRailButtonsReturn = ReturnType<
+  typeof useCompareRightRailButtons
+>;

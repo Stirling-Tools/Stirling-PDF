@@ -42,6 +42,7 @@ export function isToolRoute(pathname: string): boolean {
   if (URL_TO_TOOL_MAP[p] !== undefined) return true;
   // Fallback: try adding/removing trailing slash
   if (URL_TO_TOOL_MAP[`${p}/`] !== undefined) return true;
-  if (p.endsWith("/") && URL_TO_TOOL_MAP[p.slice(0, -1)] !== undefined) return true;
+  if (p.endsWith("/") && URL_TO_TOOL_MAP[p.slice(0, -1)] !== undefined)
+    return true;
   return false;
 }

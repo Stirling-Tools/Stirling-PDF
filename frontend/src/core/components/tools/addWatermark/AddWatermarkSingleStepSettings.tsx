@@ -16,7 +16,10 @@ import WatermarkFormatting from "@app/components/tools/addWatermark/WatermarkFor
 
 interface AddWatermarkSingleStepSettingsProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(
+    key: K,
+    value: AddWatermarkParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -30,25 +33,43 @@ const AddWatermarkSingleStepSettings = ({
       {/* Watermark Type Selection */}
       <WatermarkTypeSettings
         watermarkType={parameters.watermarkType}
-        onWatermarkTypeChange={(type) => onParameterChange("watermarkType", type)}
+        onWatermarkTypeChange={(type) =>
+          onParameterChange("watermarkType", type)
+        }
         disabled={disabled}
       />
 
       {/* Conditional settings based on watermark type */}
       {parameters.watermarkType === "text" && (
         <>
-          <WatermarkWording parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-          <WatermarkTextStyle parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+          <WatermarkWording
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+          <WatermarkTextStyle
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
 
       {parameters.watermarkType === "image" && (
-        <WatermarkImageFile parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+        <WatermarkImageFile
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
       )}
 
       {/* Formatting settings for both text and image */}
       {parameters.watermarkType && (
-        <WatermarkFormatting parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+        <WatermarkFormatting
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
       )}
     </Stack>
   );

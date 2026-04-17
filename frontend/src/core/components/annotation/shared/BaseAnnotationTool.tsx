@@ -34,7 +34,10 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
+  const [historyAvailability, setHistoryAvailability] = useState({
+    canUndo: false,
+    canRedo: false,
+  });
   const historyApiInstance = historyApiRef.current;
 
   useEffect(() => {
@@ -77,7 +80,9 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
         onRedo={redo}
         canUndo={historyAvailability.canUndo}
         canRedo={historyAvailability.canRedo}
-        onPlaceSignature={config.showPlaceButton ? handlePlaceSignature : undefined}
+        onPlaceSignature={
+          config.showPlaceButton ? handlePlaceSignature : undefined
+        }
         hasSignatureData={!!signatureData}
         disabled={disabled}
         showPlaceButton={config.showPlaceButton}
@@ -94,8 +99,13 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
       })}
 
       {/* Instructions for placing signature */}
-      <Alert color="blue" title={t("sign.instructions.title", "How to add signature")}>
-        <Text size="sm">Click anywhere on the PDF to place your annotation.</Text>
+      <Alert
+        color="blue"
+        title={t("sign.instructions.title", "How to add signature")}
+      >
+        <Text size="sm">
+          Click anywhere on the PDF to place your annotation.
+        </Text>
       </Alert>
 
       {/* Color Picker Modal */}

@@ -9,17 +9,24 @@ interface DesktopAuthLayoutProps {
   children: React.ReactNode;
 }
 
-export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({ children }) => {
+export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({
+  children,
+}) => {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [hideRightPanel, setHideRightPanel] = useState(false);
   const logoVariant = useLogoVariant();
-  const imageSlides = useMemo(() => buildLoginSlides(logoVariant, t), [logoVariant, t]);
+  const imageSlides = useMemo(
+    () => buildLoginSlides(logoVariant, t),
+    [logoVariant, t],
+  );
 
   // Force light mode on auth pages
   useEffect(() => {
     const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute("data-mantine-color-scheme");
+    const previousColorScheme = htmlElement.getAttribute(
+      "data-mantine-color-scheme",
+    );
 
     // Set light mode
     htmlElement.setAttribute("data-mantine-color-scheme", "light");
@@ -27,7 +34,10 @@ export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({ children }
     // Cleanup: restore previous theme when leaving auth pages
     return () => {
       if (previousColorScheme) {
-        htmlElement.setAttribute("data-mantine-color-scheme", previousColorScheme);
+        htmlElement.setAttribute(
+          "data-mantine-color-scheme",
+          previousColorScheme,
+        );
       }
     };
   }, []);
@@ -54,11 +64,20 @@ export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({ children }
 
   return (
     <div className={styles.authContainer}>
-      <div ref={cardRef} className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}>
+      <div
+        ref={cardRef}
+        className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}
+      >
         <div className={styles.authLeftPanel}>
           <div className={styles.authContent}>{children}</div>
         </div>
-        {!hideRightPanel && <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />}
+        {!hideRightPanel && (
+          <LoginRightCarousel
+            imageSlides={imageSlides}
+            initialSeconds={5}
+            slideSeconds={8}
+          />
+        )}
       </div>
     </div>
   );

@@ -10,7 +10,11 @@ const BannerContext = createContext<BannerContextType | undefined>(undefined);
 export function BannerProvider({ children }: { children: ReactNode }) {
   const [banner, setBanner] = useState<ReactNode>(null);
 
-  return <BannerContext.Provider value={{ banner, setBanner }}>{children}</BannerContext.Provider>;
+  return (
+    <BannerContext.Provider value={{ banner, setBanner }}>
+      {children}
+    </BannerContext.Provider>
+  );
 }
 
 export function useBanner() {

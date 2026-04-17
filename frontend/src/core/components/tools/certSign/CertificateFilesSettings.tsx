@@ -9,7 +9,11 @@ interface CertificateFilesSettingsProps {
   disabled?: boolean;
 }
 
-const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = false }: CertificateFilesSettingsProps) => {
+const CertificateFilesSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: CertificateFilesSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -19,18 +23,28 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
         <Stack gap="sm">
           <FileUploadButton
             file={parameters.privateKeyFile}
-            onChange={(file) => onParameterChange("privateKeyFile", file || undefined)}
+            onChange={(file) =>
+              onParameterChange("privateKeyFile", file || undefined)
+            }
             accept=".pem,.der,.key"
             disabled={disabled}
-            placeholder={t("certSign.choosePrivateKey", "Choose Private Key File")}
+            placeholder={t(
+              "certSign.choosePrivateKey",
+              "Choose Private Key File",
+            )}
           />
           {parameters.privateKeyFile && (
             <FileUploadButton
               file={parameters.certFile}
-              onChange={(file) => onParameterChange("certFile", file || undefined)}
+              onChange={(file) =>
+                onParameterChange("certFile", file || undefined)
+              }
               accept=".pem,.der,.crt,.cer"
               disabled={disabled}
-              placeholder={t("certSign.chooseCertificate", "Choose Certificate File")}
+              placeholder={t(
+                "certSign.chooseCertificate",
+                "Choose Certificate File",
+              )}
             />
           )}
         </Stack>
@@ -62,22 +76,32 @@ const CertificateFilesSettings = ({ parameters, onParameterChange, disabled = fa
 
       {parameters.signMode === "AUTO" && (
         <Text c="dimmed" size="sm">
-          {t("certSign.serverCertMessage", "Using server certificate - no files or password required")}
+          {t(
+            "certSign.serverCertMessage",
+            "Using server certificate - no files or password required",
+          )}
         </Text>
       )}
 
       {/* Password - only show when files are uploaded */}
       {parameters.certType &&
-        ((parameters.certType === "PEM" && parameters.privateKeyFile && parameters.certFile) ||
+        ((parameters.certType === "PEM" &&
+          parameters.privateKeyFile &&
+          parameters.certFile) ||
           (parameters.certType === "PKCS12" && parameters.p12File) ||
           (parameters.certType === "PFX" && parameters.p12File) ||
           (parameters.certType === "JKS" && parameters.jksFile)) && (
           <TextInput
             label={t("certSign.password", "Certificate Password")}
-            placeholder={t("certSign.passwordOptional", "Leave empty if no password")}
+            placeholder={t(
+              "certSign.passwordOptional",
+              "Leave empty if no password",
+            )}
             type="password"
             value={parameters.password}
-            onChange={(event) => onParameterChange("password", event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("password", event.currentTarget.value)
+            }
             disabled={disabled}
           />
         )}

@@ -7,7 +7,11 @@ interface SelectedPagesDisplayProps {
   syntaxError: string | null;
 }
 
-const SelectedPagesDisplay = ({ selectedPageIds, displayDocument, syntaxError }: SelectedPagesDisplayProps) => {
+const SelectedPagesDisplay = ({
+  selectedPageIds,
+  displayDocument,
+  syntaxError,
+}: SelectedPagesDisplayProps) => {
   if (selectedPageIds.length === 0 && !syntaxError) {
     return null;
   }

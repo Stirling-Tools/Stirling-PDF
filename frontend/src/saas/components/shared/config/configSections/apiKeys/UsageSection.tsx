@@ -16,15 +16,23 @@ interface UsageSectionProps {
   loading?: boolean;
 }
 
-export default function UsageSection({ apiUsage, obscured, overlayMessage, loading }: UsageSectionProps) {
+export default function UsageSection({
+  apiUsage,
+  obscured,
+  overlayMessage,
+  loading,
+}: UsageSectionProps) {
   const { t } = useTranslation();
-  const weeklyUsed = apiUsage.weeklyCreditsAllocated - apiUsage.weeklyCreditsRemaining;
-  const boughtUsed = apiUsage.totalBoughtCredits - apiUsage.boughtCreditsRemaining;
+  const weeklyUsed =
+    apiUsage.weeklyCreditsAllocated - apiUsage.weeklyCreditsRemaining;
+  const boughtUsed =
+    apiUsage.totalBoughtCredits - apiUsage.boughtCreditsRemaining;
 
   // Totals for overall usage visualization
   const totalRemaining = Math.max(apiUsage.totalAvailableCredits, 0);
 
-  const formatDate = (iso: string, withTime: boolean) => formatUTC(iso, withTime);
+  const formatDate = (iso: string, withTime: boolean) =>
+    formatUTC(iso, withTime);
 
   // Prepare data for the stacked bar chart
   const fractions: FractionData[] = [
@@ -67,7 +75,11 @@ export default function UsageSection({ apiUsage, obscured, overlayMessage, loadi
           <Group justify="space-between">
             <Text fw={500}>
               {t("config.apiKeys.creditsRemaining", "Credits Remaining")}:{" "}
-              {loading ? <SkeletonLoader type="block" width={40} height={14} /> : totalRemaining}
+              {loading ? (
+                <SkeletonLoader type="block" width={40} height={14} />
+              ) : (
+                totalRemaining
+              )}
             </Text>
           </Group>
 
@@ -104,7 +116,11 @@ export default function UsageSection({ apiUsage, obscured, overlayMessage, loadi
               </Text>
               <Text size="sm" c="dimmed">
                 {t("config.apiKeys.lastApiUse", "Last API Use")}:{" "}
-                {loading ? <SkeletonLoader type="block" width={160} height={12} /> : formatDate(apiUsage.lastApiUsage, true)}
+                {loading ? (
+                  <SkeletonLoader type="block" width={160} height={12} />
+                ) : (
+                  formatDate(apiUsage.lastApiUsage, true)
+                )}
               </Text>
             </Group>
           </Group>
@@ -130,7 +146,11 @@ export default function UsageSection({ apiUsage, obscured, overlayMessage, loadi
           }}
         >
           <Text size="sm" c="dimmed">
-            {overlayMessage || t("config.apiKeys.overlayMessage", "Generate a key to see credits and available credits")}
+            {overlayMessage ||
+              t(
+                "config.apiKeys.overlayMessage",
+                "Generate a key to see credits and available credits",
+              )}
           </Text>
         </div>
       )}

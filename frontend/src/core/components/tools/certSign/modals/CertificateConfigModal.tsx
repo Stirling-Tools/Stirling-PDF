@@ -1,9 +1,22 @@
-import { Modal, Stack, Group, Button, Text, Collapse, TextInput, Loader } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Group,
+  Button,
+  Text,
+  Collapse,
+  TextInput,
+  Loader,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
-import { CertificateSelector, CertificateType, UploadFormat } from "@app/components/tools/certSign/CertificateSelector";
+import {
+  CertificateSelector,
+  CertificateType,
+  UploadFormat,
+} from "@app/components/tools/certSign/CertificateSelector";
 import apiClient from "@app/services/apiClient";
 
 export interface CertificateSubmitData {
@@ -25,7 +38,11 @@ type CertValidationState =
 interface CertificateConfigModalProps {
   opened: boolean;
   onClose: () => void;
-  onSign: (certData: CertificateSubmitData, reason?: string, location?: string) => Promise<void>;
+  onSign: (
+    certData: CertificateSubmitData,
+    reason?: string,
+    location?: string,
+  ) => Promise<void>;
   signatureCount: number;
   disabled?: boolean;
   defaultReason?: string;
@@ -54,7 +71,9 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const [jksFile, setJksFile] = useState<File | null>(null);
   const [password, setPassword] = useState("");
   const [signing, setSigning] = useState(false);
-  const [certValidation, setCertValidation] = useState<CertValidationState>({ status: "idle" });
+  const [certValidation, setCertValidation] = useState<CertValidationState>({
+    status: "idle",
+  });
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced certificate pre-validation: fires 600ms after cert file or password changes
@@ -93,7 +112,9 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           subjectName: string | null;
           notAfter: string | null;
           error: string | null;
-        }>(endpoint, formData, { headers: { "Content-Type": "multipart/form-data" } });
+        }>(endpoint, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
         if (response.data.valid) {
           setCertValidation({
@@ -105,13 +126,20 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           setCertValidation({
             status: "error",
             message:
-              response.data.error ?? t("certSign.collab.signRequest.certModal.certInvalidFallback", "Invalid certificate"),
+              response.data.error ??
+              t(
+                "certSign.collab.signRequest.certModal.certInvalidFallback",
+                "Invalid certificate",
+              ),
           });
         }
       } catch {
         setCertValidation({
           status: "error",
-          message: t("certSign.collab.signRequest.certModal.certNetworkError", "Could not validate certificate"),
+          message: t(
+            "certSign.collab.signRequest.certModal.certNetworkError",
+            "Could not validate certificate",
+          ),
         });
       }
     }, 600);
@@ -139,14 +167,27 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
     }
   };
 
-  const isValid = certType === "USER_CERT" || certType === "SERVER" || isUploadValid();
+  const isValid =
+    certType === "USER_CERT" || certType === "SERVER" || isUploadValid();
 
   const handleSign = async () => {
     if (!isValid) return;
 
     setSigning(true);
     try {
-      await onSign({ certType, uploadFormat, p12File, privateKeyFile, certFile, jksFile, password }, reason, location);
+      await onSign(
+        {
+          certType,
+          uploadFormat,
+          p12File,
+          privateKeyFile,
+          certFile,
+          jksFile,
+          password,
+        },
+        reason,
+        location,
+      );
     } catch (error) {
       console.error("Failed to sign document:", error);
     } finally {
@@ -158,7 +199,10 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("certSign.collab.signRequest.certModal.title", "Configure Certificate")}
+      title={t(
+        "certSign.collab.signRequest.certModal.title",
+        "Configure Certificate",
+      )}
       centered
       size="lg"
     >
@@ -194,28 +238,49 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           <Group gap="xs">
             <Loader size="xs" />
             <Text size="sm" c="dimmed">
-              {t("certSign.collab.signRequest.certModal.certValidating", "Validating certificate...")}
+              {t(
+                "certSign.collab.signRequest.certModal.certValidating",
+                "Validating certificate...",
+              )}
             </Text>
           </Group>
         )}
         {certValidation.status === "valid" && (
           <Group gap="xs">
-            <CheckCircleIcon fontSize="small" style={{ color: "var(--mantine-color-green-6)" }} />
+            <CheckCircleIcon
+              fontSize="small"
+              style={{ color: "var(--mantine-color-green-6)" }}
+            />
             <Text size="sm" c="green">
-              {t("certSign.collab.signRequest.certModal.certValidUntil", "Certificate valid until {{date}}", {
-                date: certValidation.notAfter ? new Date(certValidation.notAfter).toLocaleDateString() : "—",
-              })}
-              {certValidation.subjectName ? ` · ${certValidation.subjectName}` : ""}
+              {t(
+                "certSign.collab.signRequest.certModal.certValidUntil",
+                "Certificate valid until {{date}}",
+                {
+                  date: certValidation.notAfter
+                    ? new Date(certValidation.notAfter).toLocaleDateString()
+                    : "—",
+                },
+              )}
+              {certValidation.subjectName
+                ? ` · ${certValidation.subjectName}`
+                : ""}
             </Text>
           </Group>
         )}
         {certValidation.status === "error" && (
           <Group gap="xs">
-            <ErrorIcon fontSize="small" style={{ color: "var(--mantine-color-red-6)" }} />
+            <ErrorIcon
+              fontSize="small"
+              style={{ color: "var(--mantine-color-red-6)" }}
+            />
             <Text size="sm" c="red">
-              {t("certSign.collab.signRequest.certModal.certInvalid", "Certificate invalid: {{error}}", {
-                error: certValidation.message,
-              })}
+              {t(
+                "certSign.collab.signRequest.certModal.certInvalid",
+                "Certificate invalid: {{error}}",
+                {
+                  error: certValidation.message,
+                },
+              )}
             </Text>
           </Group>
         )}
@@ -229,21 +294,36 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
             disabled={disabled || signing}
             style={{ marginBottom: "8px" }}
           >
-            {t("certSign.collab.signRequest.advancedSettings", "Advanced Settings")}
+            {t(
+              "certSign.collab.signRequest.advancedSettings",
+              "Advanced Settings",
+            )}
           </Button>
 
           <Collapse in={showAdvanced}>
             <Stack gap="sm">
               <TextInput
-                label={t("certSign.collab.signRequest.reason", "Reason (Optional)")}
-                placeholder={t("certSign.collab.signRequest.reasonPlaceholder", "Why are you signing?")}
+                label={t(
+                  "certSign.collab.signRequest.reason",
+                  "Reason (Optional)",
+                )}
+                placeholder={t(
+                  "certSign.collab.signRequest.reasonPlaceholder",
+                  "Why are you signing?",
+                )}
                 value={reason}
                 onChange={(e) => setReason(e.currentTarget.value)}
                 disabled={disabled || signing}
               />
               <TextInput
-                label={t("certSign.collab.signRequest.location", "Location (Optional)")}
-                placeholder={t("certSign.collab.signRequest.locationPlaceholder", "Where are you signing from?")}
+                label={t(
+                  "certSign.collab.signRequest.location",
+                  "Location (Optional)",
+                )}
+                placeholder={t(
+                  "certSign.collab.signRequest.locationPlaceholder",
+                  "Where are you signing from?",
+                )}
                 value={location}
                 onChange={(e) => setLocation(e.currentTarget.value)}
                 disabled={disabled || signing}
@@ -258,7 +338,12 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Button>
           <Button
             onClick={handleSign}
-            disabled={!isValid || disabled || signing || certValidation.status === "validating"}
+            disabled={
+              !isValid ||
+              disabled ||
+              signing ||
+              certValidation.status === "validating"
+            }
             loading={signing}
           >
             {t("certSign.collab.signRequest.certModal.sign", "Sign Document")}

@@ -19,9 +19,16 @@
  */
 import React, { useCallback, useMemo, memo } from "react";
 import { useDocumentState } from "@embedpdf/core/react";
-import { useFormFill, useFieldValue } from "@app/tools/formFill/FormFillContext";
+import {
+  useFormFill,
+  useFieldValue,
+} from "@app/tools/formFill/FormFillContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import type { FormField, WidgetCoordinates, ButtonAction } from "@app/tools/formFill/types";
+import type {
+  FormField,
+  WidgetCoordinates,
+  ButtonAction,
+} from "@app/tools/formFill/types";
 
 /**
  * Execute PDF JavaScript in a minimally sandboxed context.
@@ -66,7 +73,11 @@ function executePdfJs(
   const lowerJs = js.toLowerCase();
   for (const word of forbidden) {
     if (lowerJs.includes(word)) {
-      console.warn(`[PDF JS] Execution blocked: Script contains suspicious keyword "${word}".`, "Script:", js);
+      console.warn(
+        `[PDF JS] Execution blocked: Script contains suspicious keyword "${word}".`,
+        "Script:",
+        js,
+      );
       return;
     }
   }
@@ -114,7 +125,9 @@ function executePdfJs(
     saveAs: (_params?: unknown) => handlers.save(),
     submitForm: (urlOrParams: unknown) => {
       const url =
-        typeof urlOrParams === "string" ? urlOrParams : (((urlOrParams as Record<string, unknown>)?.cURL as string) ?? "");
+        typeof urlOrParams === "string"
+          ? urlOrParams
+          : (((urlOrParams as Record<string, unknown>)?.cURL as string) ?? "");
       if (url) doOpenUrl(url);
       else handlers.submitForm(url);
     },
@@ -143,7 +156,12 @@ function executePdfJs(
     fn.call(doc, app, doc, event);
   } catch (err) {
     // Swallow errors from missing PDF APIs; log in debug mode for tracing
-    console.debug("[PDF JS] Script execution error (expected for unsupported APIs):", err, "\nScript:", js.slice(0, 200));
+    console.debug(
+      "[PDF JS] Script execution error (expected for unsupported APIs):",
+      err,
+      "\nScript:",
+      js.slice(0, 200),
+    );
   }
 }
 
@@ -185,7 +203,11 @@ function WidgetInputInner({
   const width = widget.width * scaleX;
   const height = widget.height * scaleY;
 
-  const borderColor = error ? "#f44336" : isActive ? "#2196F3" : "rgba(33, 150, 243, 0.4)";
+  const borderColor = error
+    ? "#f44336"
+    : isActive
+      ? "#2196F3"
+      : "rgba(33, 150, 243, 0.4)";
   const bgColor = error
     ? "#FFEBEE" // Red 50 (Opaque)
     : isActive
@@ -322,7 +344,9 @@ function WidgetInputInner({
           {...commonProps}
           style={{
             ...commonStyle,
-            border: isActive ? commonStyle.border : "1px solid rgba(0,0,0,0.15)",
+            border: isActive
+              ? commonStyle.border
+              : "1px solid rgba(0,0,0,0.15)",
             background: isActive ? bgColor : "transparent",
             display: "flex",
             alignItems: "center",
@@ -347,14 +371,19 @@ function WidgetInputInner({
               lineHeight: 1,
               color: isChecked ? "#2196F3" : "transparent",
               background: "#FFF",
-              border: isChecked || isActive ? "1px solid #2196F3" : "1.5px solid #666",
+              border:
+                isChecked || isActive
+                  ? "1px solid #2196F3"
+                  : "1.5px solid #666",
               borderRadius: 2,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 700,
               userSelect: "none",
-              boxShadow: isActive ? "0 0 0 2px rgba(33, 150, 243, 0.2)" : "none",
+              boxShadow: isActive
+                ? "0 0 0 2px rgba(33, 150, 243, 0.2)"
+                : "none",
             }}
           >
             ✓
@@ -369,12 +398,19 @@ function WidgetInputInner({
 
       // For multi-select, value should be an array
       // We store as comma-separated string, so parse it
-      const selectValue = field.multiSelect ? (value ? value.split(",").map((v) => v.trim()) : []) : value;
+      const selectValue = field.multiSelect
+        ? value
+          ? value.split(",").map((v) => v.trim())
+          : []
+        : value;
 
       const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (field.multiSelect) {
           // For multi-select, join selected options with comma
-          const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
+          const selected = Array.from(
+            e.target.selectedOptions,
+            (opt) => opt.value,
+          );
           onChange(field.name, selected.join(","));
         } else {
           onChange(field.name, e.target.value);
@@ -395,7 +431,8 @@ function WidgetInputInner({
               padding: 0,
               paddingLeft: 2,
               appearance: "auto",
-              WebkitAppearance: "auto" as React.CSSProperties["WebkitAppearance"],
+              WebkitAppearance:
+                "auto" as React.CSSProperties["WebkitAppearance"],
             }}
             aria-label={field.label || field.name}
             aria-required={field.required}
@@ -430,10 +467,17 @@ function WidgetInputInner({
             display: "flex",
             alignItems: "center",
             justifyContent: "flex-start", // Align to start (left) instead of center for radio buttons
-            paddingLeft: Math.max(1, (height - Math.min(width, height) * 0.8) / 2), // Slight offset
+            paddingLeft: Math.max(
+              1,
+              (height - Math.min(width, height) * 0.8) / 2,
+            ), // Slight offset
             cursor: field.readOnly ? "default" : "pointer",
           }}
-          title={error || field.tooltip || `${field.label}: ${widget.exportValue || widgetIndexStr}`}
+          title={
+            error ||
+            field.tooltip ||
+            `${field.label}: ${widget.exportValue || widgetIndexStr}`
+          }
           onClick={(e) => {
             if (field.readOnly || value === widgetIndexStr) return; // Don't deselect radio buttons
             handleFocus();
@@ -468,7 +512,8 @@ function WidgetInputInner({
     case "button": {
       // Transparent hit-target only — visual appearance is rendered by ButtonAppearanceOverlay
       // (which paints the PDF's native /AP bitmap onto a canvas behind this div).
-      const buttonLabel = field.buttonLabel || field.value || field.label || "Button";
+      const buttonLabel =
+        field.buttonLabel || field.value || field.label || "Button";
       const isClickable = !field.readOnly;
 
       let actionHint = "";
@@ -491,7 +536,9 @@ function WidgetInputInner({
             break;
         }
       }
-      const titleText = field.tooltip || (actionHint ? `${buttonLabel} (${actionHint})` : buttonLabel);
+      const titleText =
+        field.tooltip ||
+        (actionHint ? `${buttonLabel} (${actionHint})` : buttonLabel);
 
       return (
         <div
@@ -551,8 +598,15 @@ interface FormFieldOverlayProps {
   fileId?: string | null;
 }
 
-export function FormFieldOverlay({ documentId, pageIndex, pageWidth, pageHeight, fileId }: FormFieldOverlayProps) {
-  const { setValue, setActiveField, fieldsByPage, state, forFileId } = useFormFill();
+export function FormFieldOverlay({
+  documentId,
+  pageIndex,
+  pageWidth,
+  pageHeight,
+  fileId,
+}: FormFieldOverlayProps) {
+  const { setValue, setActiveField, fieldsByPage, state, forFileId } =
+    useFormFill();
   const { activeFieldName, validationErrors } = state;
   const { printActions, scrollActions, exportActions } = useViewer();
 
@@ -565,7 +619,10 @@ export function FormFieldOverlay({ documentId, pageIndex, pageWidth, pageHeight,
     if (!pdfPage || !pdfPage.size || !pageWidth || !pageHeight) {
       const s = documentState?.scale ?? 1;
       if (pageIndex === 0) {
-        console.debug("[FormFieldOverlay] page 0 using fallback scale=%f (missing pdfPage.size)", s);
+        console.debug(
+          "[FormFieldOverlay] page 0 using fallback scale=%f (missing pdfPage.size)",
+          s,
+        );
       }
       return { scaleX: s, scaleY: s };
     }
@@ -589,11 +646,20 @@ export function FormFieldOverlay({ documentId, pageIndex, pageWidth, pageHeight,
     return { scaleX: sx, scaleY: sy };
   }, [documentState, pageIndex, pageWidth, pageHeight]);
 
-  const pageFields = useMemo(() => fieldsByPage.get(pageIndex) || [], [fieldsByPage, pageIndex]);
+  const pageFields = useMemo(
+    () => fieldsByPage.get(pageIndex) || [],
+    [fieldsByPage, pageIndex],
+  );
 
-  const handleFocus = useCallback((fieldName: string) => setActiveField(fieldName), [setActiveField]);
+  const handleFocus = useCallback(
+    (fieldName: string) => setActiveField(fieldName),
+    [setActiveField],
+  );
 
-  const handleChange = useCallback((fieldName: string, value: string) => setValue(fieldName, value), [setValue]);
+  const handleChange = useCallback(
+    (fieldName: string, value: string) => setValue(fieldName, value),
+    [setValue],
+  );
 
   const handleButtonClick = useCallback(
     (field: FormField, action?: ButtonAction | null) => {

@@ -8,7 +8,10 @@ interface DrawingToolProps {
   disabled?: boolean;
 }
 
-export const DrawingTool: React.FC<DrawingToolProps> = ({ onDrawingChange, disabled = false }) => {
+export const DrawingTool: React.FC<DrawingToolProps> = ({
+  onDrawingChange,
+  disabled = false,
+}) => {
   const [selectedColor] = useState("#000000");
   const [penSize, setPenSize] = useState(2);
   const [penSizeInput, setPenSizeInput] = useState("2");
@@ -20,7 +23,11 @@ export const DrawingTool: React.FC<DrawingToolProps> = ({ onDrawingChange, disab
   };
 
   return (
-    <BaseAnnotationTool config={toolConfig} onSignatureDataChange={onDrawingChange} disabled={disabled}>
+    <BaseAnnotationTool
+      config={toolConfig}
+      onSignatureDataChange={onDrawingChange}
+      disabled={disabled}
+    >
       <Stack gap="sm">
         <DrawingCanvas
           selectedColor={selectedColor}

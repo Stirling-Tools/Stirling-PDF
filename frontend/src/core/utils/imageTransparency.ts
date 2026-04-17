@@ -8,7 +8,10 @@ export interface TransparencyOptions {
 const DEFAULT_LOWER_BOUND = { r: 200, g: 200, b: 200 };
 const DEFAULT_UPPER_BOUND = { r: 255, g: 255, b: 255 }; // #FFFFFF
 
-export async function removeWhiteBackground(imageFile: File | string, options: TransparencyOptions = {}): Promise<string> {
+export async function removeWhiteBackground(
+  imageFile: File | string,
+  options: TransparencyOptions = {},
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
 
@@ -40,7 +43,10 @@ export async function removeWhiteBackground(imageFile: File | string, options: T
   });
 }
 
-function processImageTransparency(img: HTMLImageElement, options: TransparencyOptions): string {
+function processImageTransparency(
+  img: HTMLImageElement,
+  options: TransparencyOptions,
+): string {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
@@ -96,7 +102,11 @@ function processImageTransparency(img: HTMLImageElement, options: TransparencyOp
   return canvas.toDataURL("image/png");
 }
 
-function detectCornerColor(imageData: ImageData): { r: number; g: number; b: number } {
+function detectCornerColor(imageData: ImageData): {
+  r: number;
+  g: number;
+  b: number;
+} {
   const { width, height, data } = imageData;
 
   const sampleSize = 5;

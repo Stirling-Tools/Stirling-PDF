@@ -282,8 +282,9 @@ public class ProcessExecutor {
             boolean finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
 
             if (!finished) {
-                // Terminate the process
-                process.destroy();
+                // Kill the entire process tree (descendants first, then the process itself)
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
+                process.destroyForcibly();
                 // Interrupt the reader threads
                 errorReaderThread.interrupt();
                 outputReaderThread.interrupt();

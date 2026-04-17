@@ -21,7 +21,13 @@ export function CreditModalBootstrap() {
   }>({});
 
   const isSaaSMode = useSaaSMode();
-  const { creditBalance, isManagedTeamMember, lastFetchTime, plansLastFetchTime, refreshPlans } = useSaaSBilling();
+  const {
+    creditBalance,
+    isManagedTeamMember,
+    lastFetchTime,
+    plansLastFetchTime,
+    refreshPlans,
+  } = useSaaSBilling();
 
   // Preload plan pricing when billing confirms credits are low.
   // Fires once: only when in SaaS mode, billing has loaded (lastFetchTime set) and plans haven't been
@@ -36,7 +42,14 @@ export function CreditModalBootstrap() {
     ) {
       refreshPlans();
     }
-  }, [isSaaSMode, lastFetchTime, plansLastFetchTime, creditBalance, isManagedTeamMember, refreshPlans]);
+  }, [
+    isSaaSMode,
+    lastFetchTime,
+    plansLastFetchTime,
+    creditBalance,
+    isManagedTeamMember,
+    refreshPlans,
+  ]);
 
   // Monitor credit balance and dispatch events
   useCreditEvents();
@@ -70,13 +83,19 @@ export function CreditModalBootstrap() {
 
     return () => {
       window.removeEventListener(CREDIT_EVENTS.EXHAUSTED, handleExhausted);
-      window.removeEventListener(CREDIT_EVENTS.INSUFFICIENT, handleInsufficient);
+      window.removeEventListener(
+        CREDIT_EVENTS.INSUFFICIENT,
+        handleInsufficient,
+      );
     };
   }, [isManagedTeamMember, creditBalance]);
 
   return (
     <>
-      <CreditExhaustedModal opened={exhaustedOpen && !insufficientOpen} onClose={() => setExhaustedOpen(false)} />
+      <CreditExhaustedModal
+        opened={exhaustedOpen && !insufficientOpen}
+        onClose={() => setExhaustedOpen(false)}
+      />
       <InsufficientCreditsModal
         opened={insufficientOpen}
         onClose={() => setInsufficientOpen(false)}

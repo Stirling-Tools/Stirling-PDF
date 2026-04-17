@@ -9,9 +9,19 @@ export default function StackedBarTooltip({ data }: StackedBarTooltipProps) {
   const { fractions } = data;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", whiteSpace: "nowrap" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+        whiteSpace: "nowrap",
+      }}
+    >
       {fractions.map((f, index) => (
-        <div key={index} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div
+          key={index}
+          style={{ display: "flex", gap: "8px", alignItems: "center" }}
+        >
           <span
             style={{
               display: "inline-block",
@@ -22,7 +32,8 @@ export default function StackedBarTooltip({ data }: StackedBarTooltipProps) {
             }}
           ></span>
           <span>
-            <strong>{f.name}</strong> — {f.numeratorLabel}: {f.numerator} · {f.denominatorLabel}: {f.denominator - f.numerator}
+            <strong>{f.name}</strong> — {f.numeratorLabel}: {f.numerator} ·{" "}
+            {f.denominatorLabel}: {f.denominator - f.numerator}
           </span>
         </div>
       ))}

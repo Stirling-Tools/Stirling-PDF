@@ -89,7 +89,9 @@ class IndexedDBManager {
         const oldVersion = event.oldVersion;
         const transaction = request.transaction;
 
-        console.log(`Upgrading ${config.name} from v${oldVersion} to v${config.version}`);
+        console.log(
+          `Upgrading ${config.name} from v${oldVersion} to v${config.version}`,
+        );
 
         // Create or update object stores
         config.stores.forEach((storeConfig) => {
@@ -104,8 +106,12 @@ class IndexedDBManager {
             if (storeConfig.indexes && store) {
               storeConfig.indexes.forEach((indexConfig) => {
                 if (!store?.indexNames.contains(indexConfig.name)) {
-                  store?.createIndex(indexConfig.name, indexConfig.keyPath, { unique: indexConfig.unique });
-                  console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
+                  store?.createIndex(indexConfig.name, indexConfig.keyPath, {
+                    unique: indexConfig.unique,
+                  });
+                  console.log(
+                    `Created index '${indexConfig.name}' on '${storeConfig.name}'`,
+                  );
                 }
               });
             }
@@ -125,14 +131,22 @@ class IndexedDBManager {
             // Create indexes
             if (storeConfig.indexes) {
               storeConfig.indexes.forEach((indexConfig) => {
-                store?.createIndex(indexConfig.name, indexConfig.keyPath, { unique: indexConfig.unique });
-                console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
+                store?.createIndex(indexConfig.name, indexConfig.keyPath, {
+                  unique: indexConfig.unique,
+                });
+                console.log(
+                  `Created index '${indexConfig.name}' on '${storeConfig.name}'`,
+                );
               });
             }
           }
 
           // Perform data migration for files database
-          if (config.name === "stirling-pdf-files" && storeConfig.name === "files" && store) {
+          if (
+            config.name === "stirling-pdf-files" &&
+            storeConfig.name === "files" &&
+            store
+          ) {
             this.migrateFileHistoryFields(store, oldVersion);
           }
         });
@@ -143,7 +157,10 @@ class IndexedDBManager {
   /**
    * Migrate existing file records to include new file history fields
    */
-  private migrateFileHistoryFields(store: IDBObjectStore, oldVersion: number): void {
+  private migrateFileHistoryFields(
+    store: IDBObjectStore,
+    oldVersion: number,
+  ): void {
     // Only migrate if upgrading from a version before file history was added (version < 3)
     if (oldVersion >= 3) {
       return;
@@ -199,12 +216,17 @@ class IndexedDBManager {
         cursor.continue();
       } else {
         // Migration complete
-        console.log(`File history migration completed. Migrated ${migratedCount} records.`);
+        console.log(
+          `File history migration completed. Migrated ${migratedCount} records.`,
+        );
       }
     };
 
     cursor.onerror = (event) => {
-      console.error("File history migration failed:", (event.target as IDBRequest).error);
+      console.error(
+        "File history migration failed:",
+        (event.target as IDBRequest).error,
+      );
     };
   }
 

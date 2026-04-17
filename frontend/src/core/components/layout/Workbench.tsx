@@ -4,7 +4,11 @@ import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvi
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { useNavigationState, useNavigationActions, useNavigationGuard } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+  useNavigationGuard,
+} from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -102,7 +106,9 @@ export default function Workbench() {
     // Check if we're showing a custom workbench first
     // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {
-      const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+      const customView = customWorkbenchViews.find(
+        (view) => view.workbenchId === currentView && view.data != null,
+      );
       if (customView) {
         const CustomComponent = customView.component;
         return <CustomComponent data={customView.data} />;
@@ -148,7 +154,15 @@ export default function Workbench() {
           <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
             <PageEditor onFunctionsReady={setPageEditorFunctions} />
             {pageEditorFunctions && (
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 100 }}>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                }}
+              >
                 <PageEditorControls
                   onClosePdf={pageEditorFunctions.closePdf}
                   onUndo={pageEditorFunctions.handleUndo}
@@ -190,20 +204,26 @@ export default function Workbench() {
       }
     >
       {/* Top Controls */}
-      {activeFiles.length > 0 && !customWorkbenchViews.find((v) => v.workbenchId === currentView)?.hideTopControls && (
-        <TopControls
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map((f) => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
-          onFileSelect={handleFileSelect}
-          onFileRemove={handleFileRemove}
-        />
-      )}
+      {activeFiles.length > 0 &&
+        !customWorkbenchViews.find((v) => v.workbenchId === currentView)
+          ?.hideTopControls && (
+          <TopControls
+            currentView={currentView}
+            setCurrentView={setCurrentView}
+            customViews={customWorkbenchViews}
+            activeFiles={activeFiles.map((f) => {
+              const stub = selectors.getStirlingFileStub(f.fileId);
+              return {
+                fileId: f.fileId,
+                name: f.name,
+                versionNumber: stub?.versionNumber,
+              };
+            })}
+            currentFileIndex={activeFileIndex}
+            onFileSelect={handleFileSelect}
+            onFileRemove={handleFileRemove}
+          />
+        )}
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />

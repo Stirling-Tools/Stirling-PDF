@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box, SegmentedControl } from "@mantine/core";
+import {
+  Stack,
+  TextInput,
+  Select,
+  Combobox,
+  useCombobox,
+  Group,
+  Box,
+  SegmentedControl,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 

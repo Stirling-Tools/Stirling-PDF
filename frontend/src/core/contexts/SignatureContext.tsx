@@ -1,6 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+} from "react";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import type { SignatureAPI, HistoryAPI, AnnotationAPI } from "@app/components/viewer/viewerTypes";
+import type {
+  SignatureAPI,
+  HistoryAPI,
+  AnnotationAPI,
+} from "@app/components/viewer/viewerTypes";
 
 // Signature state interface
 interface SignatureState {
@@ -28,7 +39,9 @@ interface SignatureActions {
   storeImageData: (id: string, data: string) => void;
   getImageData: (id: string) => string | undefined;
   setSignaturesApplied: (applied: boolean) => void;
-  setPlacementPreviewSize: (size: { width: number; height: number } | null) => void;
+  setPlacementPreviewSize: (
+    size: { width: number; height: number } | null,
+  ) => void;
 }
 
 // Combined context interface
@@ -39,7 +52,9 @@ interface SignatureContextValue extends SignatureState, SignatureActions {
 }
 
 // Create context
-const SignatureContext = createContext<SignatureContextValue | undefined>(undefined);
+const SignatureContext = createContext<SignatureContextValue | undefined>(
+  undefined,
+);
 
 // Initial state
 const initialState: SignatureState = {
@@ -50,7 +65,9 @@ const initialState: SignatureState = {
 };
 
 // Provider component
-export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, setState] = useState<SignatureState>(initialState);
   const signatureApiRef = useRef<SignatureAPI>(null);
   const annotationApiRef = useRef<AnnotationAPI>(null);
@@ -133,26 +150,29 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
-  const setPlacementPreviewSize = useCallback((size: { width: number; height: number } | null) => {
-    setState((prev) => {
-      const prevSize = prev.placementPreviewSize;
-      const same =
-        (prevSize === null && size === null) ||
-        (prevSize !== null &&
-          size !== null &&
-          Math.abs(prevSize.width - size.width) < 0.5 &&
-          Math.abs(prevSize.height - size.height) < 0.5);
+  const setPlacementPreviewSize = useCallback(
+    (size: { width: number; height: number } | null) => {
+      setState((prev) => {
+        const prevSize = prev.placementPreviewSize;
+        const same =
+          (prevSize === null && size === null) ||
+          (prevSize !== null &&
+            size !== null &&
+            Math.abs(prevSize.width - size.width) < 0.5 &&
+            Math.abs(prevSize.height - size.height) < 0.5);
 
-      if (same) {
-        return prev;
-      }
+        if (same) {
+          return prev;
+        }
 
-      return {
-        ...prev,
-        placementPreviewSize: size,
-      };
-    });
-  }, []);
+        return {
+          ...prev,
+          placementPreviewSize: size,
+        };
+      });
+    },
+    [],
+  );
 
   // No auto-activation - all modes use manual buttons
 
@@ -176,7 +196,11 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     setPlacementPreviewSize,
   };
 
-  return <SignatureContext.Provider value={contextValue}>{children}</SignatureContext.Provider>;
+  return (
+    <SignatureContext.Provider value={contextValue}>
+      {children}
+    </SignatureContext.Provider>
+  );
 };
 
 // Hook to use signature context
