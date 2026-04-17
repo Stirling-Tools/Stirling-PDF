@@ -2086,6 +2086,8 @@ calling_engine = "AI is thinking..."
 extracting_content = "Extracting content from your documents..."
 executing_tool_single = "Running {{tool}}..."
 executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
+executing_tool_generic = "Running tool..."
+executing_tool_generic_step = "Running tool (step {{step}} of {{total}})..."
 processing = "Processing extracted content..."
 
 [certSign]

@@ -1,4 +1,10 @@
-import { useRef, useEffect, useState, type KeyboardEvent } from "react";
+import {
+  useMemo,
+  useRef,
+  useEffect,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -20,30 +26,64 @@ import {
   AiWorkflowPhase,
   type AiWorkflowProgress,
 } from "@app/components/chat/ChatContext";
+import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
 
-/** Turn a tool endpoint path (e.g. /api/v1/general/rotate-pdf) into a human label (e.g. Rotate Pdf). */
-function toolLabel(endpoint: string): string {
-  const segment = endpoint.split("/").filter(Boolean).pop() ?? endpoint;
-  return segment
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+/** Resolver mapping a tool endpoint path to its translated display name. */
+type ToolNameResolver = (endpoint: string) => string | null;
+
+/**
+ * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
+ * exposes the full API endpoint path for each tool, so we key the lookup on the exact path that
+ * arrives in SSE progress events — no string parsing.
+ */
+function useToolNameResolver(): ToolNameResolver {
+  const { allTools } = useTranslatedToolCatalog();
+  return useMemo(() => {
+    const nameByEndpoint = new Map<string, string>();
+    Object.values(allTools).forEach((tool) => {
+      const endpoint = tool.operationConfig?.endpoint;
+      // Only register tools with a static endpoint. Tools whose endpoint is a function
+      // (dynamic routing, e.g. Convert / Split) need runtime params to resolve, so they fall
+      // through to the generic progress message rather than mis-matching.
+      if (typeof endpoint === "string") {
+        nameByEndpoint.set(endpoint, tool.name);
+      }
+    });
+    return (endpoint: string) => nameByEndpoint.get(endpoint) ?? null;
+  }, [allTools]);
 }
 
-function formatProgress(progress: AiWorkflowProgress, t: TranslateFn): string {
+function formatProgress(
+  progress: AiWorkflowProgress,
+  t: TranslateFn,
+  resolveToolName: ToolNameResolver,
+): string {
   if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL && progress.tool) {
-    const tool = toolLabel(progress.tool);
-    if (progress.stepIndex && progress.stepCount && progress.stepCount > 1) {
-      return t("chat.progress.executing_tool_step", {
-        tool,
-        step: progress.stepIndex,
-        total: progress.stepCount,
-      });
+    const tool = resolveToolName(progress.tool);
+    const hasSteps =
+      progress.stepIndex != null &&
+      progress.stepCount != null &&
+      progress.stepCount > 1;
+    if (tool) {
+      return hasSteps
+        ? t("chat.progress.executing_tool_step", {
+            tool,
+            step: progress.stepIndex,
+            total: progress.stepCount,
+          })
+        : t("chat.progress.executing_tool_single", { tool });
     }
-    return t("chat.progress.executing_tool_single", { tool });
+    // Unknown tool — fall back to a generic translated message rather than
+    // prettifying the endpoint path by hand.
+    return hasSteps
+      ? t("chat.progress.executing_tool_generic_step", {
+          step: progress.stepIndex,
+          total: progress.stepCount,
+        })
+      : t("chat.progress.executing_tool_generic");
   }
   return t(`chat.progress.${progress.phase}`);
 }
@@ -70,6 +110,7 @@ export function ChatPanel() {
   const { t } = useTranslation();
   const { messages, isOpen, isLoading, progress, toggleOpen, sendMessage } =
     useChat();
+  const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -166,7 +207,7 @@ export function ChatPanel() {
                         <Loader size="xs" type="dots" />
                         <Text size="sm" c="dimmed">
                           {progress
-                            ? formatProgress(progress, t)
+                            ? formatProgress(progress, t, resolveToolName)
                             : t("chat.progress.thinking")}
                         </Text>
                       </Group>
