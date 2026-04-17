@@ -12,6 +12,7 @@ from stirling.contracts import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    format_conversation_history,
 )
 from stirling.services import AppRuntime
 
@@ -67,7 +68,13 @@ class PdfQuestionAgent:
             for selection in file_text.pages
         ]
         pages = "\n\n".join(sections)
-        return f"Files: {file_names}\nQuestion: {request.question}\nExtracted page text:\n{pages}"
+        history = format_conversation_history(request.conversation_history)
+        return (
+            f"Conversation history:\n{history}\n"
+            f"Files: {file_names}\n"
+            f"Question: {request.question}\n"
+            f"Extracted page text:\n{pages}"
+        )
 
     def _has_page_text(self, page_text: list[ExtractedFileText]) -> bool:
         return any(selection.text.strip() for file_text in page_text for selection in file_text.pages)
