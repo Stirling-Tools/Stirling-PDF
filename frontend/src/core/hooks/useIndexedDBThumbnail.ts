@@ -29,32 +29,14 @@ export function useIndexedDBThumbnail(
         return;
       }
 
-      const tag = `[Thumb:${file.name}]`;
-      const summary = {
-        id: file.id,
-        size: file.size,
-        sizeMB: +(file.size / (1024 * 1024)).toFixed(1),
-        type: (file as any).type ?? "",
-        hasStoredThumb: Boolean(file.thumbnailUrl),
-        remoteStorageId: (file as any).remoteStorageId ?? null,
-        remoteOwnedByCurrentUser:
-          (file as any).remoteOwnedByCurrentUser ?? null,
-        remoteSharedViaLink: (file as any).remoteSharedViaLink ?? null,
-      };
-
       // Tier 1: stored thumbnail on the stub.
       if (file.thumbnailUrl) {
-        console.info(`${tag} tier=stored (using file.thumbnailUrl)`, summary);
         setThumb(file.thumbnailUrl);
         return;
       }
 
-      // Tier 3 reason: >=100MB files are skipped entirely.
+      // >=100MB files are skipped entirely — no thumbnail.
       if (file.size >= 100 * 1024 * 1024) {
-        console.info(
-          `${tag} tier=placeholder reason=fileTooLarge (>=100MB)`,
-          summary,
-        );
         setThumb(null);
         return;
       }
@@ -64,7 +46,6 @@ export function useIndexedDBThumbnail(
       // `generating` is NOT in the deps, so setGenerating() does not trigger
       // the effect to re-run and cancel itself mid-flight.
       setGenerating(true);
-      const startedAt = performance.now();
       try {
         if (!file.id || !indexedDB) {
           throw new Error(
@@ -72,25 +53,15 @@ export function useIndexedDBThumbnail(
           );
         }
 
-        console.info(`${tag} tier=generate step=loadFromIndexedDB`, summary);
         const loadedFile = await indexedDB.loadFile(file.id as FileId);
         if (!loadedFile) {
           throw new Error("not in IndexedDB (likely remote-only stub)");
         }
 
-        console.info(
-          `${tag} tier=generate step=render (bytes loaded in ${Math.round(
-            performance.now() - startedAt,
-          )}ms)`,
-        );
         const thumbnail = await generateThumbnailForFile(loadedFile);
         if (cancelled) return;
 
-        const elapsed = Math.round(performance.now() - startedAt);
         setThumb(thumbnail);
-        console.info(
-          `${tag} tier=generate step=done in ${elapsed}ms (thumbBytes=${thumbnail?.length ?? 0})`,
-        );
 
         if (file.id && indexedDB && thumbnail) {
           try {
@@ -102,19 +73,12 @@ export function useIndexedDBThumbnail(
             updateStirlingFileStub(file.id as FileId, {
               thumbnailUrl: thumbnail,
             });
-            console.info(
-              `${tag} tier=generate step=persisted (IndexedDB + FileContext stub)`,
-            );
           } catch (error) {
-            console.warn(`${tag} persist failed:`, error);
+            console.warn("Failed to persist thumbnail:", error);
           }
         }
       } catch (error) {
-        const elapsed = Math.round(performance.now() - startedAt);
-        console.warn(
-          `${tag} tier=placeholder reason=generationFailed after ${elapsed}ms`,
-          { ...summary, error },
-        );
+        console.warn("Failed to generate thumbnail for file", file.name, error);
         if (!cancelled) setThumb(null);
       } finally {
         if (!cancelled) setGenerating(false);
@@ -129,7 +93,7 @@ export function useIndexedDBThumbnail(
     // set by this effect, and including it caused the effect to cancel
     // itself mid-flight (orphaning the render and leaving generating=true
     // stuck forever).
-  }, [file, file?.thumbnailUrl, file?.id, indexedDB]);
+  }, [file, file?.thumbnailUrl, file?.id, indexedDB, updateStirlingFileStub]);
 
   return { thumbnail: thumb, isGenerating: generating };
 }
