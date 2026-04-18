@@ -382,9 +382,15 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (actions.addStirlingFileStubs) {
         await actions.addStirlingFileStubs(localStubs, { selectFiles: false });
+        // Union newly picked files with the current selection so tools like
+        // Compare that depend on multi-file selection don't lose existing
+        // selections when the user picks an additional file from the modal.
         const requestedIds = localStubs.map((s) => s.id);
+        const currentSelected = fileCtx.selectors
+          .getSelectedStirlingFileStubs()
+          .map((s) => s.id);
         const nextSelection = Array.from(
-          new Set([...requestedIds, ...selectedFromServer]),
+          new Set([...currentSelected, ...requestedIds, ...selectedFromServer]),
         );
         actions.setSelectedFiles(nextSelection);
       } else {

@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import {
@@ -306,8 +307,23 @@ const FileEditor = ({
       // Insert files at the calculated position
       newOrder.splice(insertIndex, 0, ...filesToMove);
 
-      // Update file order
-      reorderFiles(newOrder);
+      // Animate the reorder using the View Transitions API where available.
+      // Each FileEditorThumbnail carries a stable `view-transition-name`, so
+      // the browser snapshots each card before and after the DOM reorder and
+      // interpolates the positions automatically. `flushSync` forces React to
+      // apply the reorderFiles dispatch synchronously inside the transition
+      // callback so the BEFORE/AFTER snapshots capture the correct frames.
+      const applyReorder = () => reorderFiles(newOrder);
+      const docWithViewTransition = document as Document & {
+        startViewTransition?: (cb: () => void) => unknown;
+      };
+      if (typeof docWithViewTransition.startViewTransition === "function") {
+        docWithViewTransition.startViewTransition(() => {
+          flushSync(applyReorder);
+        });
+      } else {
+        applyReorder();
+      }
 
       // Update status
       const moveCount = filesToMove.length;

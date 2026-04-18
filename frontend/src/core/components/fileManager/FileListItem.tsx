@@ -270,7 +270,12 @@ const FileListItem: React.FC<FileListItemProps> = ({
                     : t("storageShare.roleViewer", "Viewer")}
                 </Badge>
               ) : isLocalOnly ? (
-                <Badge size="xs" variant="light" color="gray">
+                <Badge
+                  size="xs"
+                  variant="default"
+                  c="dimmed"
+                  style={{ opacity: 0.75 }}
+                >
                   {t("fileManager.localOnly", "Local only")}
                 </Badge>
               ) : uploadEnabled && isOutOfSync ? (
