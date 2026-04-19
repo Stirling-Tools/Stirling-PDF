@@ -1,9 +1,9 @@
 package stirling.software.SPDF.model.api.converters;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -70,14 +71,15 @@ class ConvertPDFToMarkdownTest {
                             "application/pdf",
                             new byte[] {1, 2, 3});
 
-            mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(file))
+            MvcResult asyncResult =
+                    mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(file))
+                            .andExpect(request().asyncStarted())
+                            .andReturn();
+
+            mvc.perform(asyncDispatch(asyncResult))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", "text/markdown"))
-                    .andExpect(
-                            result -> {
-                                byte[] actual = result.getResponse().getContentAsByteArray();
-                                assertArrayEquals(md, actual);
-                            });
+                    .andExpect(content().bytes(md));
 
             // Verify that exactly one instance was created
             assert construction.constructed().size() == 1;
