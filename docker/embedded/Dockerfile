@@ -39,9 +39,11 @@ RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
+ARG PROTOTYPES_BUILD=false
 RUN DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \
+      -PprototypesMode=${PROTOTYPES_BUILD} \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
