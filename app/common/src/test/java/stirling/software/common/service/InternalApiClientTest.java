@@ -18,6 +18,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RequestCallback;
@@ -41,7 +42,8 @@ class InternalApiClientTest {
     @BeforeEach
     void setUp() {
         lenient().when(servletContext.getContextPath()).thenReturn("");
-        client = new InternalApiClient(servletContext, userService, tempFileManager, "8080");
+        MockEnvironment environment = new MockEnvironment().withProperty("server.port", "8080");
+        client = new InternalApiClient(servletContext, userService, tempFileManager, environment);
     }
 
     @Test

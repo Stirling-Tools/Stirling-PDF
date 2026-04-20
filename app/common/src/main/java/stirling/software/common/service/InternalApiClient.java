@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -42,18 +43,17 @@ public class InternalApiClient {
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
     private final TempFileManager tempFileManager;
-    private final String serverPort;
+    private final Environment environment;
 
     public InternalApiClient(
             ServletContext servletContext,
             @Autowired(required = false) UserServiceInterface userService,
             TempFileManager tempFileManager,
-            @org.springframework.beans.factory.annotation.Value("${server.port:8080}")
-                    String serverPort) {
+            Environment environment) {
         this.servletContext = servletContext;
         this.userService = userService;
         this.tempFileManager = tempFileManager;
-        this.serverPort = serverPort;
+        this.environment = environment;
     }
 
     /**
@@ -124,8 +124,14 @@ public class InternalApiClient {
     }
 
     private String getBaseUrl() {
-        String contextPath = servletContext.getContextPath();
-        return "http://localhost:" + serverPort + contextPath;
+        // Resolve the port lazily so desktop mode (server.port=0, OS-assigned) dispatches to the
+        // actual bound port. Spring publishes local.server.port once the web server is up; fall
+        // back to the configured server.port for early calls (tests, non-web contexts).
+        String port = environment.getProperty("local.server.port");
+        if (port == null) {
+            port = environment.getProperty("server.port", "8080");
+        }
+        return "http://localhost:" + port + servletContext.getContextPath();
     }
 
     private String getApiKeyForUser() {
