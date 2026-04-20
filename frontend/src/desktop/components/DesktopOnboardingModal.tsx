@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Modal, Stack, Group, Button, ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,20 +26,13 @@ export function DesktopOnboardingModal() {
     () => !localStorage.getItem(ONBOARDING_KEY),
   );
   const [step, setStep] = useState(0);
-  // null = still checking, true = locked (suppress modal), false = not locked (show modal)
-  const [isLocked, setIsLocked] = useState<boolean | null>(null);
-
-  // Provisioned (locked) deployments skip the onboarding entirely — the non-dismissible
-  // SignInModal handles authentication and shows the correct self-hosted login flow.
-  useEffect(() => {
-    connectionModeService.getCurrentConfig().then((cfg) => {
-      setIsLocked(cfg.lock_connection_mode && !!cfg.server_config?.url);
-    });
-  }, []);
 
   const dismissFinal = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setVisible(false);
+    // If the user dismissed the sign-in slide without authenticating, fall back to local mode
+    // so the app is usable without a server connection.
+    connectionModeService.switchToLocal().catch(console.error);
   };
 
   // X on slide 0 advances to sign-in slide rather than dismissing entirely
@@ -64,7 +57,7 @@ export function DesktopOnboardingModal() {
   const welcomeSlide = useMemo(() => WelcomeSlide(), []);
   const totalSteps = 2;
 
-  if (!visible || isLocked === null || isLocked) return null;
+  if (!visible) return null;
 
   return (
     <Modal

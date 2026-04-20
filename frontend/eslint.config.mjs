@@ -81,6 +81,7 @@ export default defineConfig(
       "src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
       "src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
       "src/saas/**/*.{js,mjs,jsx,ts,tsx}",
+      "src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
     ],
     languageOptions: {
       parserOptions: {
