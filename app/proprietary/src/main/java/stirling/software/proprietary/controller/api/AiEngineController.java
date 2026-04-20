@@ -28,6 +28,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
@@ -51,6 +52,7 @@ public class AiEngineController {
     private final ObjectMapper objectMapper;
     private final Executor aiStreamExecutor;
     private final TaskManager taskManager;
+    private final JobOwnershipService jobOwnershipService;
 
     /**
      * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
@@ -65,12 +67,14 @@ public class AiEngineController {
             AiWorkflowService aiWorkflowService,
             ObjectMapper objectMapper,
             @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
-            TaskManager taskManager) {
+            TaskManager taskManager,
+            JobOwnershipService jobOwnershipService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
         this.objectMapper = objectMapper;
         this.aiStreamExecutor = aiStreamExecutor;
         this.taskManager = taskManager;
+        this.jobOwnershipService = jobOwnershipService;
     }
 
     @GetMapping("/health")
@@ -158,8 +162,12 @@ public class AiEngineController {
         if (files == null || files.isEmpty()) {
             return;
         }
-        String jobId = java.util.UUID.randomUUID().toString();
-        taskManager.createTask(jobId);
+        // Scope the job key to the current user so the download endpoint's ownership check
+        // passes when security is enabled. NoOpJobOwnershipService returns the UUID unchanged
+        // when security is off.
+        String jobKey =
+                jobOwnershipService.createScopedJobKey(java.util.UUID.randomUUID().toString());
+        taskManager.createTask(jobKey);
         List<ResultFile> jobFiles =
                 files.stream()
                         .map(
@@ -170,8 +178,8 @@ public class AiEngineController {
                                                 .contentType(f.getContentType())
                                                 .build())
                         .toList();
-        taskManager.setMultipleFileResults(jobId, jobFiles);
-        taskManager.setComplete(jobId);
+        taskManager.setMultipleFileResults(jobKey, jobFiles);
+        taskManager.setComplete(jobKey);
     }
 
     private void sendEvent(SseEmitter emitter, String name, Object data) {
