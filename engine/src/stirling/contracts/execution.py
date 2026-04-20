@@ -4,7 +4,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
-from stirling.models import ApiModel, OperationId, ParamToolModel
+from stirling.models import ApiModel, ParamToolModel, ToolEndpoint
 
 from .agent_specs import AgentSpec
 from .common import WorkflowOutcome
@@ -12,7 +12,7 @@ from .common import WorkflowOutcome
 
 class ExecutionStepResult(ApiModel):
     step_index: int
-    tool: OperationId | None = None
+    tool: ToolEndpoint | None = None
     success: bool
     output_summary: str | None = None
     output_data: dict[str, Any] = Field(default_factory=dict)
@@ -33,7 +33,7 @@ class AgentExecutionRequest(ApiModel):
 
 class ToolCallExecutionAction(ApiModel):
     outcome: Literal[WorkflowOutcome.TOOL_CALL] = WorkflowOutcome.TOOL_CALL
-    tool: OperationId
+    tool: ToolEndpoint
     parameters: ParamToolModel
     rationale: str | None = None
 

@@ -124,7 +124,9 @@ public class SplitPdfByChaptersController {
     @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",
-            description = "Splits a PDF into chapters and returns a ZIP file.")
+            description =
+                    "Splits a PDF into chapters and returns a ZIP file. Input:PDF Output:ZIP-PDF"
+                            + " Type:SISO")
     public ResponseEntity<StreamingResponseBody> splitPdf(
             @ModelAttribute SplitPdfByChaptersRequest request) throws Exception {
         MultipartFile file = request.getFileInput();

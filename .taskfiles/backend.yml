@@ -66,10 +66,16 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - cmd: cmd /c gradlew.bat :stirling-pdf:generateOpenApiDocs
+      - cmd: cmd /c gradlew.bat :stirling-pdf:copySwaggerDoc
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:generateOpenApiDocs
+      - cmd: ./gradlew :stirling-pdf:copySwaggerDoc
         platforms: [linux, darwin]
+    sources:
+      - app/core/src/main/java/**/*.java
+      - app/proprietary/src/main/java/**/*.java
+      - app/common/src/main/java/**/*.java
+    generates:
+      - SwaggerDoc.json
 
   check:
     desc: "Backend quality gate"

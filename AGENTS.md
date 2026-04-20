@@ -29,6 +29,8 @@ This project uses [Task](https://taskfile.dev/) as a unified command runner. All
 - **Code formatting**: `task format` (or `task backend:format` for Java only)
 - **Full quality gate**: `task check` (runs lint + typecheck + test across all components)
 
+After modifying any files in the project, you must run the relevant `task check` command that covers that area of the code. For example, when editing frontend files run `task frontend:check`; for Python engine files run `task engine:check`; for Java backend files run `task backend:check`.
+
 ### Docker Development
 - **Build standard**: `task docker:build` (or `docker build -t stirling-pdf -f docker/embedded/Dockerfile .`)
 - **Build fat version**: `task docker:build:fat`
@@ -68,8 +70,8 @@ Development for the AI engine happens in the `engine/` folder. The frontend call
   - `frontend/config/.env.saas.example` — SaaS-only vars
   - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
-- `task frontend:prep` / `prep:saas` / `prep:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
-- Prep runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
+- `task frontend:prepare` / `prepare:saas` / `prepare:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
+- Prepare runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL
