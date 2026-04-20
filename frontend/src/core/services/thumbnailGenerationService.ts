@@ -3,8 +3,11 @@
  */
 
 import { FileId } from "@app/types/file";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { PDFDocumentProxy } from "pdfjs-dist";
+import {
+  openRawDocumentSafe,
+  closeRawDocument,
+} from "@app/services/pdfiumService";
+import { renderPdfiumPageDataUrl } from "@app/utils/pdfiumPageRender";
 
 interface ThumbnailResult {
   pageNumber: number;
@@ -27,7 +30,7 @@ interface CachedThumbnail {
 }
 
 interface CachedPDFDocument {
-  pdf: PDFDocumentProxy;
+  docPtr: number;
   lastUsed: number;
   refCount: number;
 }
@@ -50,38 +53,32 @@ export class ThumbnailGenerationService {
   }
 
   /**
-   * Get or create a cached PDF document
+   * Get or create a cached PDFium document pointer.
    */
   private async getCachedPDFDocument(
     fileId: FileId,
     pdfArrayBuffer: ArrayBuffer,
-  ): Promise<any> {
+  ): Promise<number> {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       cached.lastUsed = Date.now();
       cached.refCount++;
-      return cached.pdf;
+      return cached.docPtr;
     }
 
-    // Evict old PDFs if cache is full
     while (this.pdfDocumentCache.size >= this.maxPdfCacheSize) {
       this.evictLeastRecentlyUsedPDF();
     }
 
-    // Use centralized worker manager instead of direct getDocument
-    const pdf = await pdfWorkerManager.createDocument(pdfArrayBuffer, {
-      disableAutoFetch: true,
-      disableStream: true,
-      stopAtErrors: false,
-    });
+    const docPtr = await openRawDocumentSafe(pdfArrayBuffer);
 
     this.pdfDocumentCache.set(fileId, {
-      pdf,
+      docPtr,
       lastUsed: Date.now(),
       refCount: 1,
     });
 
-    return pdf;
+    return docPtr;
   }
 
   /**
@@ -110,7 +107,7 @@ export class ThumbnailGenerationService {
     }
 
     if (oldestEntry) {
-      pdfWorkerManager.destroyDocument(oldestEntry[1].pdf); // Use worker manager for cleanup
+      void closeRawDocument(oldestEntry[1].docPtr);
       this.pdfDocumentCache.delete(oldestEntry[0]);
     }
   }
@@ -169,7 +166,7 @@ export class ThumbnailGenerationService {
       thumbnails: ThumbnailResult[];
     }) => void,
   ): Promise<ThumbnailResult[]> {
-    const pdf = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
+    const docPtr = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
 
     const allResults: ThumbnailResult[] = [];
     let completed = 0;
@@ -182,21 +179,15 @@ export class ThumbnailGenerationService {
       // Process batch sequentially (to avoid canvas conflicts)
       for (const pageNumber of batch) {
         try {
-          const page = await pdf.getPage(pageNumber);
-          const viewport = page.getViewport({ scale, rotation: 0 });
-
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-
-          const context = canvas.getContext("2d");
-          if (!context) {
-            throw new Error("Could not get canvas context");
+          const thumbnail = await renderPdfiumPageDataUrl(
+            docPtr,
+            pageNumber - 1,
+            scale,
+            { applyRotation: false, format: "jpeg", quality },
+          );
+          if (!thumbnail) {
+            throw new Error(`Could not render page ${pageNumber}`);
           }
-
-          await page.render({ canvasContext: context, viewport }).promise;
-          const thumbnail = canvas.toDataURL("image/jpeg", quality);
-
           allResults.push({ pageNumber, thumbnail, success: true });
         } catch (error) {
           console.error(
@@ -304,7 +295,7 @@ export class ThumbnailGenerationService {
   clearPDFCache(): void {
     // Destroy all cached PDF documents using worker manager
     for (const [, cached] of this.pdfDocumentCache) {
-      pdfWorkerManager.destroyDocument(cached.pdf);
+      void closeRawDocument(cached.docPtr);
     }
     this.pdfDocumentCache.clear();
   }
@@ -312,7 +303,7 @@ export class ThumbnailGenerationService {
   clearPDFCacheForFile(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
-      pdfWorkerManager.destroyDocument(cached.pdf);
+      void closeRawDocument(cached.docPtr);
       this.pdfDocumentCache.delete(fileId);
     }
   }
@@ -324,7 +315,7 @@ export class ThumbnailGenerationService {
   cleanupCompletedDocument(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached && cached.refCount <= 0) {
-      pdfWorkerManager.destroyDocument(cached.pdf);
+      void closeRawDocument(cached.docPtr);
       this.pdfDocumentCache.delete(fileId);
     }
   }
