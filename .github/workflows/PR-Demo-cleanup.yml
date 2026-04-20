@@ -121,8 +121,9 @@ jobs:
               # Remove PR-specific directories
               rm -rf /stirling/PR-${{ github.event.pull_request.number }}
 
-              # Remove the Docker image
+              # Remove the Docker images
               docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ github.event.pull_request.number }} || true
 
               echo "PERFORMED_CLEANUP"
             else

@@ -178,6 +178,7 @@ springBoot {
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
+def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
 def frontendDir = file('../../frontend')
 def frontendDistDir = file('../../frontend/dist')
 def resourcesStaticDir = file('src/main/resources/static')
@@ -246,7 +247,7 @@ tasks.register('npmBuild', Exec) {
     group = 'frontend'
     description = 'Build frontend application'
     workingDir file('../..')
-    commandLine = ['task', 'frontend:build']
+    commandLine = buildPrototypes ? ['task', 'frontend:build:prototypes'] : ['task', 'frontend:build']
     inputs.dir(new File(frontendDir, 'src'))
     inputs.dir(new File(frontendDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
