@@ -48,10 +48,19 @@ export function useBaseTool<
     minFiles?: number;
     /** When true, uses the full file selection rather than the viewer-scoped single file. */
     ignoreViewerScope?: boolean;
+    /**
+     * When true, skips the "reset params on 0→N files" effect. Tools that
+     * manage their own parameter lifecycle (e.g. Compare, which auto-fills slots
+     * from the loaded files) opt out so useBaseTool's reset doesn't race and
+     * clobber the tool's own setParameters.
+     */
+    skipResetParamsOnFirstFiles?: boolean;
   },
 ): BaseToolReturn<TParams, TParamsHook> {
   const minFiles = options?.minFiles ?? 1;
   const ignoreViewerScope = options?.ignoreViewerScope ?? false;
+  const skipResetParamsOnFirstFiles =
+    options?.skipResetParamsOnFirstFiles ?? false;
   const { onPreviewFile, onComplete, onError } = props;
 
   const viewerScopedFiles = useViewScopedFiles(ignoreViewerScope);
@@ -123,12 +132,16 @@ export function useBaseTool<
     const currentFileCount = effectiveFiles.length;
     const prevFileCount = previousFileCount.current;
 
-    if (prevFileCount === 0 && currentFileCount > 0) {
+    if (
+      prevFileCount === 0 &&
+      currentFileCount > 0 &&
+      !skipResetParamsOnFirstFiles
+    ) {
       params.resetParameters();
     }
 
     previousFileCount.current = currentFileCount;
-  }, [effectiveFiles.length]);
+  }, [effectiveFiles.length, skipResetParamsOnFirstFiles]);
 
   // Standard handlers
   const handleExecute = useCallback(async () => {
