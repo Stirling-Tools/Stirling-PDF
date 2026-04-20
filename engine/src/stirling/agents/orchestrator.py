@@ -74,7 +74,7 @@ class OrchestratorAgent:
             system_prompt=(
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
-                "Use delegate_pdf_edit for requested PDF modifications. "
+                "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
                 "Use delegate_pdf_question for questions about PDF contents. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
@@ -116,7 +116,9 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        return await PdfEditAgent(self.runtime).handle(PdfEditRequest(user_message=request.user_message))
+        return await PdfEditAgent(self.runtime).handle(
+            PdfEditRequest(user_message=request.user_message, file_names=request.file_names)
+        )
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
         return await self._run_pdf_question(ctx.deps.request)
