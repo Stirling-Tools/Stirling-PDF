@@ -114,9 +114,15 @@ class InternalApiClientTest {
     }
 
     @Test
-    void postRejectsSubPath() {
+    void postRejectsEmptySegment() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/foo/bar", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc//foo", body));
+    }
+
+    @Test
+    void postRejectsTrailingSlash() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/foo/", body));
     }
 
     @Test

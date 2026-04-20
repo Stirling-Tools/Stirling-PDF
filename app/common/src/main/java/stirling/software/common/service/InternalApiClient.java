@@ -33,11 +33,11 @@ import stirling.software.common.util.TempFileManager;
 @Slf4j
 public class InternalApiClient {
 
-    // Allowlist for internal dispatch. Matches a fixed namespace prefix followed by a single
-    // tool-name segment. Rejects traversal (..), URL-encoding (%), query/fragment, backslashes,
-    // and any other character that could alter the resolved endpoint on the local Spring server.
+    // Allowlist for internal dispatch. Matches a fixed namespace prefix,
+    // but rejects traversal (..), URL-encoding (%), query/fragment, backslashes, and any other
+    // character that could alter the resolved endpoint on the local Spring server.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
-            Pattern.compile("^/api/v1/(general|misc|security|convert|filter)/[A-Za-z0-9_-]+$");
+            Pattern.compile("^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$");
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
