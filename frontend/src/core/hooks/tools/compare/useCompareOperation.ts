@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ADDITION_HIGHLIGHT,
+  CompareAnyResult,
   CompareDiffToken,
   CompareFilteredTokenInfo,
   CompareResultData,
@@ -10,6 +11,10 @@ import {
   CompareWorkerWarnings,
   REMOVAL_HIGHLIGHT,
 } from "@app/types/compare";
+import {
+  runPixelCompare,
+  revokePixelResult,
+} from "@app/services/pixelCompareService";
 import { CompareParameters } from "@app/hooks/tools/compare/useCompareParameters";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@app/types/fileContext";
@@ -28,8 +33,9 @@ import CompareWorkerCtor from "@app/workers/compareWorker?worker";
 const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
-  result: CompareResultData | null;
+  result: CompareAnyResult | null;
   warnings: string[];
+  pixelProgress: { current: number; total: number } | null;
 }
 
 // extractContentFromPdf moved to utils
@@ -56,8 +62,23 @@ export const useCompareOperation = (): CompareOperationHook => {
   const [files, setFiles] = useState<File[]>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFilename, setDownloadFilename] = useState("");
-  const [result, setResult] = useState<CompareResultData | null>(null);
+  const [result, setResult] = useState<CompareAnyResult | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [pixelProgress, setPixelProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const pixelSignalRef = useRef<{ cancelled: boolean }>({ cancelled: false });
+  const pixelResultRef = useRef<
+    import("@app/types/compare").CompareResultPixelData | null
+  >(null);
+
+  const revokePixelUrls = useCallback(() => {
+    if (pixelResultRef.current) {
+      revokePixelResult(pixelResultRef.current);
+      pixelResultRef.current = null;
+    }
+  }, []);
   const longRunningToastIdRef = useRef<string | null>(null);
   const dissimilarityToastIdRef = useRef<string | null>(null);
   const dissimilarityToastShownRef = useRef<boolean>(false);
@@ -77,16 +98,18 @@ export const useCompareOperation = (): CompareOperationHook => {
   }, []);
 
   const resetResults = useCallback(() => {
+    revokePixelUrls();
     setResult(null);
     setWarnings([]);
     setFiles([]);
+    setPixelProgress(null);
     cleanupDownloadUrl();
     setDownloadUrl(null);
     setDownloadFilename("");
     setStatusState("idle");
     setStatusDetailMs(null);
     setErrorMessage(null);
-  }, [cleanupDownloadUrl]);
+  }, [cleanupDownloadUrl, revokePixelUrls]);
 
   const clearError = useCallback(() => {
     setErrorMessage(null);
@@ -248,11 +271,78 @@ export const useCompareOperation = (): CompareOperationHook => {
       setStatusDetailMs(null);
       setErrorMessage(null);
       setWarnings([]);
+      revokePixelUrls();
       setResult(null);
       setFiles([]);
+      setPixelProgress(null);
       cleanupDownloadUrl();
       setDownloadUrl(null);
       setDownloadFilename("");
+
+      if (params.mode === "pixel") {
+        const operationStartPx = performance.now();
+        pixelSignalRef.current = { cancelled: false };
+        try {
+          setStatusState("processing");
+          const pixelResult = await runPixelCompare({
+            baseFile,
+            comparisonFile,
+            baseFileId: baseFile.fileId,
+            comparisonFileId: comparisonFile.fileId,
+            dpi: params.pixelDpi,
+            threshold: params.pixelThreshold,
+            onProgress: (current, total) => {
+              if (activeRunIdRef.current === runId)
+                setPixelProgress({ current, total });
+            },
+            signal: pixelSignalRef.current,
+            warnings: {
+              pageCountMismatch: t(
+                "compare.pixel.warnings.pageCountMismatch",
+                "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added.",
+              ),
+              noPages: t(
+                "compare.pixel.warnings.noPages",
+                "One or both documents have no pages.",
+              ),
+            },
+            errors: {
+              canvasContextUnavailable: t(
+                "compare.pixel.errors.canvasContextUnavailable",
+                "Unable to acquire 2D canvas context for pixel comparison.",
+              ),
+            },
+          });
+          if (cancelledRef.current || activeRunIdRef.current !== runId) {
+            revokePixelResult(pixelResult);
+            return;
+          }
+          pixelResultRef.current = pixelResult;
+          setResult(pixelResult);
+          setWarnings(pixelResult.warnings);
+          setStatusState("complete");
+        } catch (error: unknown) {
+          if (error instanceof Error && error.message === "CANCELLED") {
+            setStatusState("cancelled");
+          } else {
+            console.error("[compare] pixel operation failed", error);
+            const fallback = t(
+              "compare.error.generic",
+              "Unable to compare these files.",
+            );
+            setErrorMessage(
+              error instanceof Error && error.message
+                ? error.message
+                : fallback,
+            );
+          }
+        } finally {
+          setStatusDetailMs(Math.round(performance.now() - operationStartPx));
+          setIsLoading(false);
+          setPixelProgress(null);
+        }
+        return;
+      }
 
       const warningMessages: CompareWorkerWarnings = {
         // No accuracy warning any more
@@ -456,6 +546,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         const changes = buildChanges(tokens, baseMetadata, comparisonMetadata);
 
         const comparisonResult: CompareResultData = {
+          mode: "text",
           base: {
             fileId: baseFile.fileId,
             fileName: baseFile.name,
@@ -557,8 +648,10 @@ export const useCompareOperation = (): CompareOperationHook => {
   const cancelOperation = useCallback(() => {
     if (!isLoading) return;
     cancelledRef.current = true;
+    pixelSignalRef.current.cancelled = true;
     setIsLoading(false);
     setStatusState("cancelled");
+    setPixelProgress(null);
     if (workerRef.current) {
       try {
         workerRef.current.terminate();
@@ -579,6 +672,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   useEffect(() => {
     return () => {
       cleanupDownloadUrl();
+      revokePixelUrls();
       if (workerRef.current) {
         workerRef.current.terminate();
         workerRef.current = null;
@@ -588,7 +682,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         longRunningToastIdRef.current = null;
       }
     };
-  }, [cleanupDownloadUrl]);
+  }, [cleanupDownloadUrl, revokePixelUrls]);
 
   const status = useMemo(() => {
     const label =
@@ -626,6 +720,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       undoOperation,
       result,
       warnings,
+      pixelProgress,
     }),
     [
       cancelOperation,
@@ -636,6 +731,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       executeOperation,
       files,
       isLoading,
+      pixelProgress,
       resetResults,
       result,
       status,
