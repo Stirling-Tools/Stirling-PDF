@@ -16,7 +16,7 @@ All engine commands can be run from the repository root using Task:
 - `task engine:lint` — run ruff linting
 - `task engine:typecheck` — run pyright
 - `task engine:format` — format code with ruff
-- `task engine:tool-models` — generate tool_models.py from frontend TypeScript defs
+- `task engine:tool-models` — generate tool_models.py from Java OpenAPI spec
 
 ## Code Style
 

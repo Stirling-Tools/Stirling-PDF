@@ -12,7 +12,7 @@ from stirling.contracts import (
     PdfTextSelection,
     ToolOperationStep,
 )
-from stirling.models.tool_models import OperationId, RotateParams
+from stirling.models.tool_models import Angle, RotatePdfParams, ToolEndpoint
 
 
 def test_orchestrator_request_accepts_user_message() -> None:
@@ -38,8 +38,8 @@ def test_orchestrator_request_accepts_user_message() -> None:
 def test_agent_execution_request_uses_typed_agent_spec() -> None:
     steps: list[AgentSpecStep] = [
         ToolOperationStep(
-            tool=OperationId.ROTATE,
-            parameters=RotateParams(angle=90),
+            tool=ToolEndpoint.ROTATE_PDF,
+            parameters=RotatePdfParams(angle=Angle(90)),
         )
     ]
     request = AgentExecutionRequest(
@@ -57,13 +57,13 @@ def test_agent_execution_request_uses_typed_agent_spec() -> None:
 
 
 def test_edit_plan_response_has_typed_steps() -> None:
-    steps = [ToolOperationStep(tool=OperationId.ROTATE, parameters=RotateParams(angle=90))]
+    steps = [ToolOperationStep(tool=ToolEndpoint.ROTATE_PDF, parameters=RotatePdfParams(angle=Angle(90)))]
     response = EditPlanResponse(
         summary="Rotate the input PDF by 90 degrees.",
         steps=steps,
     )
 
-    assert response.steps[0].tool == OperationId.ROTATE
+    assert response.steps[0].tool == ToolEndpoint.ROTATE_PDF
 
 
 def test_pdf_question_answer_defaults_evidence_list() -> None:

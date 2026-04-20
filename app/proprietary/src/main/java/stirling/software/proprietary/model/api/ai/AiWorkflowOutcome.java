@@ -15,6 +15,7 @@ public enum AiWorkflowOutcome {
     PLAN("plan"),
     NEED_CLARIFICATION("need_clarification"),
     CANNOT_DO("cannot_do"),
+    DRAFT("draft"),
     TOOL_CALL("tool_call"),
     COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),

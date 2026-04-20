@@ -6,21 +6,47 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
+import { createChildStub } from "@app/contexts/file/fileActions";
+import {
+  createNewStirlingFileStub,
+  createStirlingFile,
+  type StirlingFileStub,
+} from "@app/types/fileContext";
+import type { ToolOperation } from "@app/types/file";
 
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: number;
+  /**
+   * Tool endpoint paths executed during this assistant turn (e.g.
+   * {@code /api/v1/general/rotate-pdf}). Populated for assistant messages when the workflow
+   * ran one or more tools, in execution order. Undefined for user messages and for assistant
+   * turns that answered without running any tool.
+   */
+  toolsUsed?: string[];
 }
 
 export enum AiWorkflowPhase {
   ANALYZING = "analyzing",
   CALLING_ENGINE = "calling_engine",
   EXTRACTING_CONTENT = "extracting_content",
+  EXECUTING_TOOL = "executing_tool",
   PROCESSING = "processing",
+}
+
+export interface AiWorkflowProgress {
+  phase: AiWorkflowPhase;
+  /** Tool endpoint path currently executing, for EXECUTING_TOOL events. */
+  tool?: string;
+  /** 1-based step index, for EXECUTING_TOOL events. */
+  stepIndex?: number;
+  /** Total number of plan steps, for EXECUTING_TOOL events. */
+  stepCount?: number;
 }
 
 type AiWorkflowOutcome =
@@ -35,6 +61,13 @@ type AiWorkflowOutcome =
   | "unsupported_capability"
   | "cannot_continue";
 
+interface AiWorkflowResultFile {
+  /** Stirling file ID — download with /api/v1/general/files/{fileId}. */
+  fileId: string;
+  fileName: string;
+  contentType: string;
+}
+
 interface AiWorkflowResponse {
   outcome: AiWorkflowOutcome;
   answer?: string;
@@ -46,19 +79,25 @@ interface AiWorkflowResponse {
   message?: string;
   evidence?: Array<{ pageNumber: number; text: string }>;
   steps?: Array<Record<string, unknown>>;
+  /** Every file produced by the workflow (empty if the outcome has no files). */
+  resultFiles?: AiWorkflowResultFile[];
+  // Legacy single-file fields — mirror the first entry of resultFiles.
+  fileId?: string;
+  fileName?: string;
+  contentType?: string;
 }
 
 interface ChatState {
   messages: ChatMessage[];
   isOpen: boolean;
   isLoading: boolean;
-  progressPhase: AiWorkflowPhase | null;
+  progress: AiWorkflowProgress | null;
 }
 
 type ChatAction =
   | { type: "ADD_MESSAGE"; message: ChatMessage }
   | { type: "SET_LOADING"; loading: boolean }
-  | { type: "SET_PROGRESS"; phase: AiWorkflowPhase | null }
+  | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
   | { type: "TOGGLE_OPEN" }
   | { type: "SET_OPEN"; open: boolean };
 
@@ -69,7 +108,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "SET_LOADING":
       return { ...state, isLoading: action.loading };
     case "SET_PROGRESS":
-      return { ...state, progressPhase: action.phase };
+      return { ...state, progress: action.progress };
     case "TOGGLE_OPEN":
       return { ...state, isOpen: !state.isOpen };
     case "SET_OPEN":
@@ -114,10 +153,18 @@ function formatWorkflowResponse(data: AiWorkflowResponse): string {
 /**
  * Parses an SSE text stream and invokes callbacks for each named event.
  */
+interface ProgressEvent {
+  phase: string;
+  timestamp: number;
+  tool?: string;
+  stepIndex?: number;
+  stepCount?: number;
+}
+
 async function consumeSSEStream(
   response: Response,
   handlers: {
-    onProgress: (data: { phase: string; timestamp: number }) => void;
+    onProgress: (data: ProgressEvent) => void;
     onResult: (data: AiWorkflowResponse) => void;
     onError: (data: { message: string }) => void;
   },
@@ -171,7 +218,7 @@ interface ChatContextValue {
   messages: ChatMessage[];
   isOpen: boolean;
   isLoading: boolean;
-  progressPhase: AiWorkflowPhase | null;
+  progress: AiWorkflowProgress | null;
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
@@ -183,13 +230,85 @@ const initialState: ChatState = {
   messages: [],
   isOpen: false,
   isLoading: false,
-  progressPhase: null,
+  progress: null,
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
-  const { files: activeFiles } = useAllFiles();
+  const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
+  const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
+
+  // Download a File from the Stirling files endpoint.
+  const downloadFile = useCallback(
+    async (descriptor: AiWorkflowResultFile): Promise<File> => {
+      const response = await apiClient.get<Blob>(
+        `/api/v1/general/files/${descriptor.fileId}`,
+        { responseType: "blob" },
+      );
+      return new File([response.data], descriptor.fileName, {
+        type: descriptor.contentType ?? response.data.type,
+      });
+    },
+    [],
+  );
+
+  // Import the files produced by an AI workflow result into FileContext.
+  //
+  // If the workflow produced the same number of outputs as inputs, map each output to its
+  // corresponding input as a new version in the same chain. Otherwise (merge, split, etc.)
+  // add the outputs as new root files.
+  const importResultFile = useCallback(
+    async (
+      result: AiWorkflowResponse,
+      sourceStubs: StirlingFileStub[],
+    ): Promise<void> => {
+      const descriptors = result.resultFiles?.length
+        ? result.resultFiles
+        : result.fileId && result.fileName && result.contentType
+          ? [
+              {
+                fileId: result.fileId,
+                fileName: result.fileName,
+                contentType: result.contentType,
+              } satisfies AiWorkflowResultFile,
+            ]
+          : [];
+      if (descriptors.length === 0) return;
+
+      const files = await Promise.all(descriptors.map(downloadFile));
+
+      const operation: ToolOperation = {
+        toolId: "ai-workflow",
+        timestamp: Date.now(),
+      };
+      const isVersionMapping =
+        sourceStubs.length > 0 && files.length === sourceStubs.length;
+      const stubs = files.map((file, i) =>
+        isVersionMapping
+          ? createChildStub(sourceStubs[i], operation, file)
+          : createNewStirlingFileStub(file),
+      );
+      const stirlingFiles = files.map((file, i) =>
+        createStirlingFile(file, stubs[i].id),
+      );
+
+      if (sourceStubs.length > 0) {
+        // Always consume the inputs so merge/split inputs are removed from the workbench.
+        // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
+        // merge/split they're fresh roots.
+        await fileActions.consumeFiles(
+          sourceStubs.map((s) => s.id),
+          stirlingFiles,
+          stubs,
+        );
+      } else {
+        // No inputs were provided (unlikely for completed workflows, but handle it safely).
+        await fileActions.addFiles(files, { selectFiles: true });
+      }
+    },
+    [fileActions, downloadFile],
+  );
 
   const toggleOpen = useCallback(() => dispatch({ type: "TOGGLE_OPEN" }), []);
   const setOpen = useCallback(
@@ -212,7 +331,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       };
       dispatch({ type: "ADD_MESSAGE", message: userMessage });
       dispatch({ type: "SET_LOADING", loading: true });
-      dispatch({ type: "SET_PROGRESS", phase: null });
+      dispatch({ type: "SET_PROGRESS", progress: null });
 
       try {
         const formData = new FormData();
@@ -234,17 +353,29 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
 
         let receivedResult = false;
+        const toolsUsed: string[] = [];
 
         await consumeSSEStream(response, {
           onProgress: (data) => {
+            if (
+              data.phase === AiWorkflowPhase.EXECUTING_TOOL &&
+              typeof data.tool === "string"
+            ) {
+              toolsUsed.push(data.tool);
+            }
             dispatch({
               type: "SET_PROGRESS",
-              phase: data.phase as AiWorkflowPhase,
+              progress: {
+                phase: data.phase as AiWorkflowPhase,
+                tool: data.tool,
+                stepIndex: data.stepIndex,
+                stepCount: data.stepCount,
+              },
             });
           },
           onResult: (data) => {
             receivedResult = true;
-            dispatch({ type: "SET_PROGRESS", phase: null });
+            dispatch({ type: "SET_PROGRESS", progress: null });
             const replyContent = formatWorkflowResponse(data);
             dispatch({
               type: "ADD_MESSAGE",
@@ -253,12 +384,28 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 role: "assistant",
                 content: replyContent,
                 timestamp: Date.now(),
+                toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
               },
             });
+            if (data.fileId || data.resultFiles?.length) {
+              importResultFile(data, activeFileStubs).catch((err) => {
+                console.error("Failed to import AI result file", err);
+                dispatch({
+                  type: "ADD_MESSAGE",
+                  message: {
+                    id: crypto.randomUUID(),
+                    role: "assistant",
+                    content:
+                      "The file was processed but I couldn't download it.",
+                    timestamp: Date.now(),
+                  },
+                });
+              });
+            }
           },
           onError: (data) => {
             receivedResult = true;
-            dispatch({ type: "SET_PROGRESS", phase: null });
+            dispatch({ type: "SET_PROGRESS", progress: null });
             dispatch({
               type: "ADD_MESSAGE",
               message: {
@@ -276,7 +423,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
-        dispatch({ type: "SET_PROGRESS", phase: null });
+        dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
           message: {
@@ -294,7 +441,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [activeFiles],
+    [activeFiles, activeFileStubs, importResultFile],
   );
 
   return (
@@ -303,7 +450,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         messages: state.messages,
         isOpen: state.isOpen,
         isLoading: state.isLoading,
-        progressPhase: state.progressPhase,
+        progress: state.progress,
         toggleOpen,
         setOpen,
         sendMessage,

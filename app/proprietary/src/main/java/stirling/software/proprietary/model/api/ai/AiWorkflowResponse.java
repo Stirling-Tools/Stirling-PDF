@@ -44,6 +44,30 @@ public class AiWorkflowResponse {
     @Schema(description = "Structured tool steps when the workflow returns a plan")
     private List<Map<String, Object>> steps = new ArrayList<>();
 
+    @Schema(
+            description =
+                    "Tool endpoint path for tool_call outcomes (e.g. /api/v1/misc/compress-pdf)")
+    private String tool;
+
+    @Schema(description = "Tool parameters for tool_call outcomes")
+    private Map<String, Object> parameters;
+
+    @Schema(description = "Result file ID after tool execution completes (single-file result)")
+    private String fileId;
+
+    @Schema(description = "Result filename after tool execution completes (single-file result)")
+    private String fileName;
+
+    @Schema(description = "Result MIME type after tool execution completes (single-file result)")
+    private String contentType;
+
+    @Schema(
+            description =
+                    "Result files produced by the workflow. Always populated on completed outcomes"
+                            + " with at least one entry; for single-file results this mirrors"
+                            + " fileId/fileName/contentType.")
+    private List<AiWorkflowResultFile> resultFiles = new ArrayList<>();
+
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
 
