@@ -117,6 +117,7 @@ public class AiWorkflowService {
                     NOT_FOUND,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
+                    DRAFT,
                     COMPLETED,
                     UNSUPPORTED_CAPABILITY,
                     CANNOT_CONTINUE ->
