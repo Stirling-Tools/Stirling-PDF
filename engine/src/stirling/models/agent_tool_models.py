@@ -1,6 +1,6 @@
 """Agent tool IDs, parameter models, and registry.
 
-tool_models.py is auto-generated from the frontend. This file is its
+tool_models.py is auto-generated from the Java OpenAPI spec. This file is its
 manually-maintained counterpart for tools backed by AI agent pipelines.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 from stirling.models.base import ApiModel
-from stirling.models.tool_models import OperationId, ParamToolModel
+from stirling.models.tool_models import ParamToolModel, ToolEndpoint
 
 
 class AgentToolId(StrEnum):
@@ -22,7 +22,7 @@ class MathAuditorAgentParams(ApiModel):
 
 type AgentParamModel = MathAuditorAgentParams
 
-type AnyToolId = OperationId | AgentToolId
+type AnyToolId = ToolEndpoint | AgentToolId
 type AnyParamModel = ParamToolModel | AgentParamModel
 
 AGENT_OPERATIONS: dict[AgentToolId, type[AgentParamModel]] = {
