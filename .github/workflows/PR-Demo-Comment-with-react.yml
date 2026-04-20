@@ -38,6 +38,7 @@ jobs:
       disable_security: ${{ steps.check-security-flag.outputs.disable_security }}
       enable_pro: ${{ steps.check-pro-flag.outputs.enable_pro }}
       enable_enterprise: ${{ steps.check-pro-flag.outputs.enable_enterprise }}
+      enable_prototypes: ${{ steps.check-prototypes-flag.outputs.enable_prototypes }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -95,6 +96,19 @@ jobs:
             echo "No pro or enterprise flags detected in comment"
             echo "enable_pro=false" >> $GITHUB_OUTPUT
             echo "enable_enterprise=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for prototypes flag
+        id: check-prototypes-flag
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          if [[ "$COMMENT_BODY" == *"prototypes"* ]]; then
+            echo "Prototypes flag detected in comment"
+            echo "enable_prototypes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No prototypes flag detected in comment"
+            echo "enable_prototypes=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Add 'in_progress' reaction to comment
@@ -195,7 +209,9 @@ jobs:
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
-          build-args: VERSION_TAG=alpha
+          build-args: |
+            VERSION_TAG=alpha
+            PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
           platforms: linux/amd64
 
       - name: Set up SSH
