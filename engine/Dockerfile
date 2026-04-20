@@ -26,4 +26,4 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5001
 
-CMD ["task", "run"]
+CMD ["task", "engine:run"]
