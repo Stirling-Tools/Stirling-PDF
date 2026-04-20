@@ -4,10 +4,15 @@ tasks:
   dev:
     desc: "Start backend dev server"
     ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
+      AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+    env:
+      SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: cmd /c gradlew.bat :stirling-pdf:bootRun
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL="{{.AIENGINE_URL}}" AIENGINE_ENABLED=true {{end}}cmd /c gradlew.bat :stirling-pdf:bootRun'
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL="{{.AIENGINE_URL}}" AIENGINE_ENABLED=true {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   build:

@@ -39,6 +39,21 @@ export default defineConfig(({ mode }) => {
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
+  // Dev server port: default 5173 (matches tauri.conf.json devUrl).
+  // Override via VITE_DEV_PORT env var; 0 lets the OS pick a free port.
+  const devPort = process.env.VITE_DEV_PORT
+    ? parseInt(process.env.VITE_DEV_PORT, 10)
+    : 5173;
+  // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
+  // so the top-level dev launcher can wire a dynamically-assigned backend port.
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  const backendProxy = {
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    xfwd: true,
+  };
+
   return {
     plugins: [
       react(),
@@ -75,10 +90,10 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       host: true,
-      // make sure this port matches the devUrl port in tauri.conf.json file
-      port: 5173,
-      // Tauri expects a fixed port, fail if that port is not available
-      strictPort: true,
+      port: devPort,
+      // Tauri expects a fixed port, and we generally want strict behaviour,
+      // except when the caller requested an OS-assigned port (0).
+      strictPort: devPort !== 0,
       watch: {
         // tell vite to ignore watching `src-tauri`
         ignored: ["**/src-tauri/**"],
@@ -88,48 +103,13 @@ export default defineConfig(({ mode }) => {
         effectiveMode === "desktop"
           ? undefined
           : {
-              "/api": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/oauth2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/saml2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/login/oauth2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/login/saml2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/swagger-ui": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/v1/api-docs": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
+              "/api": backendProxy,
+              "/oauth2": backendProxy,
+              "/saml2": backendProxy,
+              "/login/oauth2": backendProxy,
+              "/login/saml2": backendProxy,
+              "/swagger-ui": backendProxy,
+              "/v1/api-docs": backendProxy,
             },
     },
     base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
