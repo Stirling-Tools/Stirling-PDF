@@ -1,4 +1,4 @@
-import { isTauri } from '@tauri-apps/api/core';
+import { isTauri } from "@tauri-apps/api/core";
 
 /**
  * Desktop override: Determine base URL depending on Tauri environment
@@ -15,7 +15,7 @@ import { isTauri } from '@tauri-apps/api/core';
 export function getApiBaseUrl(): string {
   if (!isTauri()) {
     // Runtime override to fix hardcoded localhost in builds
-    if (typeof window !== 'undefined' && window.STIRLING_PDF_API_BASE_URL) {
+    if (typeof window !== "undefined" && window.STIRLING_PDF_API_BASE_URL) {
       return window.STIRLING_PDF_API_BASE_URL;
     }
 
@@ -26,5 +26,5 @@ export function getApiBaseUrl(): string {
   // The actual URL will be set dynamically by operationRouter based on:
   // - Offline mode: dynamic port from tauriBackendService
   // - Server mode: configured server URL from connectionModeService
-  return '';
+  return "";
 }

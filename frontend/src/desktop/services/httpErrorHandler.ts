@@ -1,5 +1,5 @@
-import { isAxiosError } from 'axios';
-import { handleHttpError as coreHandleHttpError } from '@core/services/httpErrorHandler';
+import { isAxiosError } from "axios";
+import { handleHttpError as coreHandleHttpError } from "@core/services/httpErrorHandler";
 
 /**
  * Desktop override of handleHttpError.
