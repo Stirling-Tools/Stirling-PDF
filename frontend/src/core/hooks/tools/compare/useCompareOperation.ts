@@ -11,7 +11,10 @@ import {
   CompareWorkerWarnings,
   REMOVAL_HIGHLIGHT,
 } from "@app/types/compare";
-import { runPixelCompare, revokePixelResult } from "@app/services/pixelCompareService";
+import {
+  runPixelCompare,
+  revokePixelResult,
+} from "@app/services/pixelCompareService";
 import { CompareParameters } from "@app/hooks/tools/compare/useCompareParameters";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@app/types/fileContext";
@@ -61,9 +64,14 @@ export const useCompareOperation = (): CompareOperationHook => {
   const [downloadFilename, setDownloadFilename] = useState("");
   const [result, setResult] = useState<CompareAnyResult | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [pixelProgress, setPixelProgress] = useState<{ current: number; total: number } | null>(null);
+  const [pixelProgress, setPixelProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const pixelSignalRef = useRef<{ cancelled: boolean }>({ cancelled: false });
-  const pixelResultRef = useRef<import("@app/types/compare").CompareResultPixelData | null>(null);
+  const pixelResultRef = useRef<
+    import("@app/types/compare").CompareResultPixelData | null
+  >(null);
 
   const revokePixelUrls = useCallback(() => {
     if (pixelResultRef.current) {
@@ -284,7 +292,8 @@ export const useCompareOperation = (): CompareOperationHook => {
             dpi: params.pixelDpi,
             threshold: params.pixelThreshold,
             onProgress: (current, total) => {
-              if (activeRunIdRef.current === runId) setPixelProgress({ current, total });
+              if (activeRunIdRef.current === runId)
+                setPixelProgress({ current, total });
             },
             signal: pixelSignalRef.current,
             warnings: {
@@ -292,7 +301,10 @@ export const useCompareOperation = (): CompareOperationHook => {
                 "compare.pixel.warnings.pageCountMismatch",
                 "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added.",
               ),
-              noPages: t("compare.pixel.warnings.noPages", "One or both documents have no pages."),
+              noPages: t(
+                "compare.pixel.warnings.noPages",
+                "One or both documents have no pages.",
+              ),
             },
             errors: {
               canvasContextUnavailable: t(
@@ -314,8 +326,15 @@ export const useCompareOperation = (): CompareOperationHook => {
             setStatusState("cancelled");
           } else {
             console.error("[compare] pixel operation failed", error);
-            const fallback = t("compare.error.generic", "Unable to compare these files.");
-            setErrorMessage(error instanceof Error && error.message ? error.message : fallback);
+            const fallback = t(
+              "compare.error.generic",
+              "Unable to compare these files.",
+            );
+            setErrorMessage(
+              error instanceof Error && error.message
+                ? error.message
+                : fallback,
+            );
           }
         } finally {
           setStatusDetailMs(Math.round(performance.now() - operationStartPx));

@@ -31,7 +31,9 @@ const hexToRgb = (hex: string): PixelRgb => {
 const DEFAULT_DIFF_COLOR: PixelRgb = hexToRgb(REMOVAL_HIGHLIGHT);
 const DEFAULT_DIFF_COLOR_ALT: PixelRgb = hexToRgb(ADDITION_HIGHLIGHT);
 
-export const revokePixelResult = (result: CompareResultPixelData | null | undefined): void => {
+export const revokePixelResult = (
+  result: CompareResultPixelData | null | undefined,
+): void => {
   if (!result) return;
   for (const page of result.pages) {
     URL.revokeObjectURL(page.baseImageUrl);
@@ -132,7 +134,10 @@ export const runPixelCompare = async ({
           resolve({
             mode: "pixel",
             base: { fileId: baseFileId, fileName: baseFile.name },
-            comparison: { fileId: comparisonFileId, fileName: comparisonFile.name },
+            comparison: {
+              fileId: comparisonFileId,
+              fileName: comparisonFile.name,
+            },
             pages,
             totals: {
               ...message.totals,
@@ -155,7 +160,9 @@ export const runPixelCompare = async ({
     const handleError = (event: ErrorEvent) => {
       terminateWorker();
       cleanupOnFailure();
-      reject(event.error ?? new Error(event.message || "Pixel compare worker error"));
+      reject(
+        event.error ?? new Error(event.message || "Pixel compare worker error"),
+      );
     };
 
     const terminateWorker = () => {

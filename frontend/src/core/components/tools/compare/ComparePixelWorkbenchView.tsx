@@ -3,7 +3,10 @@ import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
-import type { CompareResultPixelData, ComparePixelPageResult } from "@app/types/compare";
+import type {
+  CompareResultPixelData,
+  ComparePixelPageResult,
+} from "@app/types/compare";
 import "@app/components/tools/compare/compareView.css";
 
 interface ComparePixelWorkbenchViewProps {
@@ -18,7 +21,15 @@ const formatPercent = (ratio: number): string => {
   return `${(ratio * 100).toFixed(2)}%`;
 };
 
-const PixelPageCard = ({ page, viewMode, t }: { page: ComparePixelPageResult; viewMode: PixelViewMode; t: TFunction }) => {
+const PixelPageCard = ({
+  page,
+  viewMode,
+  t,
+}: {
+  page: ComparePixelPageResult;
+  viewMode: PixelViewMode;
+  t: TFunction;
+}) => {
   const aspectRatio = `${page.width} / ${page.height}`;
 
   return (
@@ -43,8 +54,13 @@ const PixelPageCard = ({ page, viewMode, t }: { page: ComparePixelPageResult; vi
               {t("compare.pixel.sizeMismatch", "Size mismatch")}
             </Badge>
           )}
-          <Badge size="xs" color={page.diffPixels > 0 ? "red" : "green"} variant="light">
-            {formatPercent(page.diffRatio)} {t("compare.pixel.changed", "changed")}
+          <Badge
+            size="xs"
+            color={page.diffPixels > 0 ? "red" : "green"}
+            variant="light"
+          >
+            {formatPercent(page.diffRatio)}{" "}
+            {t("compare.pixel.changed", "changed")}
           </Badge>
         </Group>
       </Group>
@@ -118,22 +134,33 @@ const PixelPageCard = ({ page, viewMode, t }: { page: ComparePixelPageResult; vi
   );
 };
 
-const ComparePixelWorkbenchView = ({ result }: ComparePixelWorkbenchViewProps) => {
+const ComparePixelWorkbenchView = ({
+  result,
+}: ComparePixelWorkbenchViewProps) => {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<PixelViewMode>("side-by-side");
 
-  const totalPercent = useMemo(() => formatPercent(result.totals.diffRatio), [result.totals.diffRatio]);
+  const totalPercent = useMemo(
+    () => formatPercent(result.totals.diffRatio),
+    [result.totals.diffRatio],
+  );
 
   return (
     <Stack className="compare-workbench compare-pixel-workbench" gap="md">
       <Group justify="space-between" align="center" wrap="wrap">
         <Group gap="md">
-          <Text fw={600}>{t("compare.pixel.summaryTitle", "Pixel comparison")}</Text>
-          <Badge color={result.totals.diffPixels > 0 ? "red" : "green"} variant="light">
+          <Text fw={600}>
+            {t("compare.pixel.summaryTitle", "Pixel comparison")}
+          </Text>
+          <Badge
+            color={result.totals.diffPixels > 0 ? "red" : "green"}
+            variant="light"
+          >
             {totalPercent} {t("compare.pixel.overall", "overall")}
           </Badge>
           <Badge color="blue" variant="light">
-            {result.totals.pagesWithChanges}/{result.pages.length} {t("compare.pixel.pagesChanged", "pages changed")}
+            {result.totals.pagesWithChanges}/{result.pages.length}{" "}
+            {t("compare.pixel.pagesChanged", "pages changed")}
           </Badge>
           <Badge color="gray" variant="light">
             {result.settings.dpi} DPI
@@ -144,8 +171,14 @@ const ComparePixelWorkbenchView = ({ result }: ComparePixelWorkbenchViewProps) =
           value={viewMode}
           onChange={(value) => setViewMode(value as PixelViewMode)}
           data={[
-            { value: "side-by-side", label: t("compare.pixel.sideBySide", "Side-by-side") },
-            { value: "diff-only", label: t("compare.pixel.diffOnly", "Diff only") },
+            {
+              value: "side-by-side",
+              label: t("compare.pixel.sideBySide", "Side-by-side"),
+            },
+            {
+              value: "diff-only",
+              label: t("compare.pixel.diffOnly", "Diff only"),
+            },
             { value: "overlay", label: t("compare.pixel.overlay", "Overlay") },
           ]}
         />
@@ -163,7 +196,12 @@ const ComparePixelWorkbenchView = ({ result }: ComparePixelWorkbenchViewProps) =
 
       <Stack gap="lg" className="compare-pixel-list">
         {result.pages.map((page) => (
-          <PixelPageCard key={page.pageNumber} page={page} viewMode={viewMode} t={t} />
+          <PixelPageCard
+            key={page.pageNumber}
+            page={page}
+            viewMode={viewMode}
+            t={t}
+          />
         ))}
       </Stack>
     </Stack>

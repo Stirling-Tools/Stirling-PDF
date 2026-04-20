@@ -54,7 +54,8 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
   const { selectors } = useFileContext();
 
   const rawResult = data?.result ?? null;
-  const result: CompareResultData | null = rawResult && rawResult.mode === "text" ? rawResult : null;
+  const result: CompareResultData | null =
+    rawResult && rawResult.mode === "text" ? rawResult : null;
   const baseFileId = data?.baseFileId ?? null;
   const comparisonFileId = data?.comparisonFileId ?? null;
   const isOperationLoading = data?.isLoading ?? false;
