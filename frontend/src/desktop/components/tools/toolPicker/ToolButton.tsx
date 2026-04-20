@@ -3,12 +3,10 @@ import CoreToolButton from "@core/components/tools/toolPicker/ToolButton";
 import { getToolDisabledReason } from "@app/components/tools/fullscreen/shared";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
   connectionModeService,
   type ConnectionMode,
 } from "@app/services/connectionModeService";
-import type { ToolId } from "@app/types/toolId";
 
 type CoreToolButtonProps = React.ComponentProps<typeof CoreToolButton>;
 
@@ -35,8 +33,8 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   }, []);
 
   const disabledReason = getToolDisabledReason(
-    props.id as string,
-    props.tool as ToolRegistryEntry,
+    props.id,
+    props.tool,
     toolAvailability,
     premiumEnabled,
   );
@@ -49,7 +47,7 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
     connectionMode === "local" &&
     disabledReason !== "comingSoon" &&
     disabledReason !== "selfHostedOffline"
-      ? () => handleToolSelectForced(props.id as ToolId)
+      ? () => handleToolSelectForced(props.id)
       : undefined;
 
   return (
