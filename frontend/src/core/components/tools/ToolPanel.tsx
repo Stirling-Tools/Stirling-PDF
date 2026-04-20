@@ -109,7 +109,7 @@ export default function ToolPanel() {
     }
 
     if (!isPanelVisible) {
-      return "2.75rem";
+      return "3.5rem";
     }
 
     return "18.5rem";

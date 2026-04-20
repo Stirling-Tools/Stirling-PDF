@@ -15,7 +15,6 @@ import { downloadFile } from "@app/services/downloadService";
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from "@app/types/rightRail";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
-import ShareIcon from "@mui/icons-material/Share";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import "@app/components/shared/WorkbenchBar.css";
@@ -158,39 +157,6 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
     }
   }, [currentView, fileActions, activeFiles, activeFileIndex, pageEditorFunctions, setCurrentView]);
 
-  const handleShare = useCallback(async () => {
-    const fileToShare = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
-
-    if (currentView === "viewer") {
-      const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-      const filename = fileToShare?.name ?? "document.pdf";
-      if (buffer && navigator.canShare) {
-        const pdfFile = new File([buffer], filename, { type: "application/pdf" });
-        if (navigator.canShare({ files: [pdfFile] })) {
-          try {
-            await navigator.share({ files: [pdfFile], title: filename });
-          } catch {
-            // user cancelled or API unavailable
-          }
-        }
-      }
-      return;
-    }
-
-    if (fileToShare && navigator.canShare) {
-      const shareFile = isStirlingFile(fileToShare)
-        ? new File([fileToShare], fileToShare.name, { type: "application/pdf" })
-        : fileToShare;
-      if (navigator.canShare({ files: [shareFile] })) {
-        try {
-          await navigator.share({ files: [shareFile], title: fileToShare.name });
-        } catch {
-          // cancelled or not supported
-        }
-      }
-    }
-  }, [currentView, selectedFiles, activeFiles, viewerContext]);
-
   const downloadTooltip = useMemo(() => {
     if (currentView === "pageEditor") return t("rightRail.exportAll", "Export PDF");
     if (currentView === "viewer") return terminology.download;
@@ -331,21 +297,6 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             </ActionIcon>,
             t("rightRail.print", "Print PDF"),
           )}
-
-        {/* Share (Web Share API) */}
-        {renderWithTooltip(
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="workbench-bar-action-icon"
-            onClick={handleShare}
-            disabled={totalItems === 0 || allButtonsDisabled || disableForFullscreen}
-            aria-label={t("rightRail.share", "Share")}
-          >
-            <ShareIcon sx={{ fontSize: "1rem" }} />
-          </ActionIcon>,
-          t("rightRail.share", "Share"),
-        )}
 
         {/* Close (context-aware: close all / close viewer file / close page editor) */}
         {renderWithTooltip(

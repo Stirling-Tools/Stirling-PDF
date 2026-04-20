@@ -23,8 +23,8 @@ import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import "@app/components/shared/FileSidebar.css";
 
-const COLLAPSED_WIDTH = 56;
-const EXPANDED_WIDTH = 260;
+const COLLAPSED_WIDTH = "3.5rem";
+const EXPANDED_WIDTH = "16.25rem"; // ~260px
 
 export interface FileSidebarProps {
   collapsed?: boolean;
