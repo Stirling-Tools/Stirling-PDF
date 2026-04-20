@@ -90,6 +90,41 @@ class InternalApiClientTest {
         assertThrows(SecurityException.class, () -> client.post("/api/v1/admin/settings", body));
     }
 
+    @Test
+    void postRejectsPathTraversal() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(
+                SecurityException.class,
+                () -> client.post("/api/v1/misc/../../actuator/env", body));
+    }
+
+    @Test
+    void postRejectsUrlEncodedCharacters() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(
+                SecurityException.class, () -> client.post("/api/v1/misc/%2e%2e/actuator", body));
+    }
+
+    @Test
+    void postRejectsQueryString() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(
+                SecurityException.class,
+                () -> client.post("/api/v1/misc/compress-pdf?redirect=evil", body));
+    }
+
+    @Test
+    void postRejectsSubPath() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/foo/bar", body));
+    }
+
+    @Test
+    void postRejectsNullPath() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(SecurityException.class, () -> client.post(null, body));
+    }
+
     /** Create a ByteArrayResource with a filename (required for multipart). */
     private static Resource namedResource(String filename, String content) {
         return new ByteArrayResource(content.getBytes(StandardCharsets.UTF_8)) {

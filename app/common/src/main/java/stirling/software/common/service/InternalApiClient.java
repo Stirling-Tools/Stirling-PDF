@@ -5,7 +5,7 @@ import java.io.UncheckedIOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -33,14 +33,11 @@ import stirling.software.common.util.TempFileManager;
 @Slf4j
 public class InternalApiClient {
 
-    // Allowlist of URL path prefixes permitted for internal dispatch.
-    private static final List<String> ALLOWED_PATH_PREFIXES =
-            List.of(
-                    "/api/v1/general/",
-                    "/api/v1/misc/",
-                    "/api/v1/security/",
-                    "/api/v1/convert/",
-                    "/api/v1/filter/");
+    // Allowlist for internal dispatch. Matches a fixed namespace prefix followed by a single
+    // tool-name segment. Rejects traversal (..), URL-encoding (%), query/fragment, backslashes,
+    // and any other character that could alter the resolved endpoint on the local Spring server.
+    private static final Pattern ALLOWED_ENDPOINT_PATH =
+            Pattern.compile("^/api/v1/(general|misc|security|convert|filter)/[A-Za-z0-9_-]+$");
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
@@ -141,8 +138,7 @@ public class InternalApiClient {
     }
 
     private void validateUrl(String endpointPath) {
-        boolean allowed = ALLOWED_PATH_PREFIXES.stream().anyMatch(endpointPath::startsWith);
-        if (!allowed) {
+        if (endpointPath == null || !ALLOWED_ENDPOINT_PATH.matcher(endpointPath).matches()) {
             log.warn("Blocked internal API request to disallowed path: {}", endpointPath);
             throw new SecurityException(
                     "Internal API dispatch not permitted for endpoint: " + endpointPath);

@@ -387,7 +387,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
               },
             });
-            if (data.fileId) {
+            if (data.fileId || data.resultFiles?.length) {
               importResultFile(data, activeFileStubs).catch((err) => {
                 console.error("Failed to import AI result file", err);
                 dispatch({
