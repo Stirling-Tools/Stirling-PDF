@@ -24,9 +24,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
   const [securityDisabled, setSecurityDisabled] = useState(false);
   const serverUrl = localStorage.getItem("server_url") || "";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const submitServerUrl = async () => {
     // Normalize and validate URL
     let url = customUrl.trim().replace(/\/+$/, "") || serverUrl;
 
@@ -243,7 +241,12 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submitServerUrl();
+      }}
+    >
       <Stack gap="md">
         <TextInput
           label={t("setup.server.url.label", "Server URL")}
@@ -321,7 +324,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
                 setCustomUrl(serverUrl);
                 // Auto-submit the form after setting the URL
                 setTimeout(() => {
-                  handleSubmit(new Event("submit") as any);
+                  void submitServerUrl();
                 }, 0);
               }}
             >

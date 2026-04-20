@@ -98,7 +98,7 @@ export async function saveMultipleFilesWithPrompt(
       try {
         const fileName =
           file instanceof File ? file.name : `output_${savedCount + 1}.pdf`;
-        const filePath = await join(selectedFolder as string, fileName);
+        const filePath = await join(selectedFolder, fileName);
         const arrayBuffer = await file.arrayBuffer();
         await writeFile(filePath, new Uint8Array(arrayBuffer));
         savedCount++;
