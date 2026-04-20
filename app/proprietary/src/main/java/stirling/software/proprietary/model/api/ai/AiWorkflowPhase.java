@@ -8,6 +8,7 @@ public enum AiWorkflowPhase {
     ANALYZING("analyzing"),
     CALLING_ENGINE("calling_engine"),
     EXTRACTING_CONTENT("extracting_content"),
+    EXECUTING_TOOL("executing_tool"),
     PROCESSING("processing");
 
     private final String value;

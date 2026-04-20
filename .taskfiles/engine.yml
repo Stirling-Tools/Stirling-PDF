@@ -13,7 +13,7 @@ tasks:
     status:
       - test -d .venv
 
-  prep:
+  prepare:
     desc: "Set up engine .env from template"
     deps: [install]
     cmds:
@@ -26,7 +26,7 @@ tasks:
 
   run:
     desc: "Run engine server"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     dir: src
     env:
@@ -36,7 +36,7 @@ tasks:
 
   dev:
     desc: "Start engine dev server with hot reload"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     dir: src
     env:
@@ -76,7 +76,7 @@ tasks:
 
   test:
     desc: "Run tests"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - uv run pytest tests
 
@@ -95,11 +95,15 @@ tasks:
       - task: test
 
   tool-models:
-    desc: "Generate tool_models.py from frontend TypeScript defs"
-    deps: [install]
+    desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
+    deps: [install, ":backend:swagger"]
     cmds:
-      - uv run python scripts/generate_tool_models.py --output src/stirling/models/tool_models.py
-      - task: fix
+      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py
+    sources:
+      - ../SwaggerDoc.json
+      - scripts/generate_tool_models.py
+    generates:
+      - src/stirling/models/tool_models.py
 
   clean:
     desc: "Clean build artifacts"
