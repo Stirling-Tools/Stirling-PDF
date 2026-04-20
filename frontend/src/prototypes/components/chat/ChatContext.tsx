@@ -265,12 +265,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     ): Promise<void> => {
       const descriptors = result.resultFiles?.length
         ? result.resultFiles
-        : result.fileId
+        : result.fileId && result.fileName && result.contentType
           ? [
               {
                 fileId: result.fileId,
-                fileName: result.fileName ?? "result.pdf",
-                contentType: result.contentType ?? "application/pdf",
+                fileName: result.fileName,
+                contentType: result.contentType,
               } satisfies AiWorkflowResultFile,
             ]
           : [];

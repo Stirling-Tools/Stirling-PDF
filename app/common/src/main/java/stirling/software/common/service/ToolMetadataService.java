@@ -7,9 +7,12 @@ public interface ToolMetadataService {
     boolean isMultiInput(String operationPath);
 
     /**
-     * Returns true if the given operation produces a ZIP archive response. This is the case for
-     * multi-output endpoints (Type:SIMO / Type:MIMO) or endpoints whose declared output type begins
-     * with {@code ZIP} (e.g. {@code Output:ZIP-PDF}).
+     * Returns true when the endpoint's ZIP response is a transport for multiple typed results and
+     * should be unpacked: multi-output endpoints (Type:SIMO / Type:MIMO) and wrapper declarations
+     * such as {@code Output:ZIP-PDF} or {@code Output:IMAGE/ZIP}.
+     *
+     * <p>Returns false for a bare {@code Output:ZIP} (e.g. {@code get-attachments}), where the
+     * archive itself is the deliverable and should be kept packed.
      */
-    boolean isZipOutput(String operationPath);
+    boolean shouldUnpackZipResponse(String operationPath);
 }

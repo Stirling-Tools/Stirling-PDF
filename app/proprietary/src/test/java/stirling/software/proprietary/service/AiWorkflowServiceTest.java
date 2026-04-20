@@ -108,7 +108,7 @@ class AiWorkflowServiceTest {
                 """
                         .formatted(ROTATE_ENDPOINT));
         when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
-        when(toolMetadataService.isZipOutput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated-bytes", "rotated.pdf"));
         AtomicInteger ids = stubFileStorage();
 
@@ -132,7 +132,7 @@ class AiWorkflowServiceTest {
                 """
                         .formatted(SPLIT_ENDPOINT));
         when(toolMetadataService.isMultiInput(SPLIT_ENDPOINT)).thenReturn(false);
-        when(toolMetadataService.isZipOutput(SPLIT_ENDPOINT)).thenReturn(true);
+        when(toolMetadataService.shouldUnpackZipResponse(SPLIT_ENDPOINT)).thenReturn(true);
         stubEndpoint(
                 SPLIT_ENDPOINT,
                 zipResource(
@@ -163,7 +163,7 @@ class AiWorkflowServiceTest {
                 """
                         .formatted(MERGE_ENDPOINT));
         when(toolMetadataService.isMultiInput(MERGE_ENDPOINT)).thenReturn(true);
-        when(toolMetadataService.isZipOutput(MERGE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(MERGE_ENDPOINT)).thenReturn(false);
         stubEndpoint(MERGE_ENDPOINT, pdfResource("merged-bytes", "merged.pdf"));
         stubFileStorage();
 
@@ -187,7 +187,7 @@ class AiWorkflowServiceTest {
                 """
                         .formatted(ROTATE_ENDPOINT));
         when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
-        when(toolMetadataService.isZipOutput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
         stubFileStorage();
 
@@ -219,7 +219,7 @@ class AiWorkflowServiceTest {
                 """
                         .formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
-        when(toolMetadataService.isZipOutput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
         stubEndpoint(COMPRESS_ENDPOINT, pdfResource("compressed", "compressed.pdf"));
         stubFileStorage();

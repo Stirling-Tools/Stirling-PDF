@@ -7,10 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -314,7 +317,7 @@ public class AiWorkflowService {
                     "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
         }
         Resource resource = response.getBody();
-        if (toolMetadataService.isZipOutput(endpointPath)) {
+        if (toolMetadataService.shouldUnpackZipResponse(endpointPath)) {
             return ZipExtractionUtils.extractZip(resource, tempFileManager);
         }
         return List.of(resource);
@@ -346,17 +349,30 @@ public class AiWorkflowService {
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
-            String name =
-                    preserveInputNames && inputFileNames.get(i) != null
-                            ? inputFileNames.get(i)
-                            : resource.getFilename() != null
-                                    ? resource.getFilename()
-                                    : "result-" + (i + 1) + ".pdf";
+            String responseName = resource.getFilename();
+            String inputName = preserveInputNames ? inputFileNames.get(i) : null;
+            // Prefer the input name only for 1:1 operations where the output keeps the same
+            // extension (rotate, compress, etc.). For converters and other extension-changing
+            // tools, the response filename from Content-Disposition is authoritative.
+            String name;
+            if (inputName != null
+                    && FilenameUtils.getExtension(inputName)
+                            .equalsIgnoreCase(FilenameUtils.getExtension(responseName))) {
+                name = inputName;
+            } else if (responseName != null) {
+                name = responseName;
+            } else {
+                name = "result-" + (i + 1);
+            }
+            String contentType =
+                    MediaTypeFactory.getMediaType(name)
+                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                            .toString();
             String fileId;
             try (java.io.InputStream is = resource.getInputStream()) {
                 fileId = fileStorage.storeInputStream(is, name).fileId();
             }
-            descriptors.add(new AiWorkflowResultFile(fileId, name, "application/pdf"));
+            descriptors.add(new AiWorkflowResultFile(fileId, name, contentType));
         }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();
