@@ -5,7 +5,7 @@ ARG BASE_VERSION=1.0.2
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.3.1-jdk25 AS app-build
+FROM gradle:9.4.1-jdk25 AS app-build
 
 ARG TASK_VERSION=3.49.1
 RUN apt-get update \
