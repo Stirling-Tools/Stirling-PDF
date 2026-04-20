@@ -60,6 +60,9 @@ const Compare = (props: BaseToolProps) => {
     {
       minFiles: 2,
       ignoreViewerScope: true,
+      // Compare auto-fills slots from loaded files via its own effect; the
+      // shared reset races and clobbers those writes.
+      skipResetParamsOnFirstFiles: true,
     },
   );
 
@@ -93,6 +96,17 @@ const Compare = (props: BaseToolProps) => {
     } catch {
       console.error("Failed to clear selections");
     }
+    // Also remove the loaded files from the workbench so the selection
+    // indicator resets to zero. Files stay in IndexedDB so users can re-pick
+    // them from "Recent" later.
+    try {
+      const loadedIds = fileState.files.ids as FileId[];
+      if (loadedIds.length > 0) {
+        void fileActions.removeFiles(loadedIds, false);
+      }
+    } catch {
+      console.error("Failed to remove workbench files");
+    }
     clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
     navigationActions.setWorkbench(getDefaultWorkbench());
   }, [
@@ -100,6 +114,7 @@ const Compare = (props: BaseToolProps) => {
     base.params,
     clearCustomWorkbenchViewData,
     fileActions,
+    fileState.files.ids,
     navigationActions,
   ]);
 
@@ -169,9 +184,33 @@ const Compare = (props: BaseToolProps) => {
       return;
     }
 
-    const nextBase = (selectedIds[0] ?? null) as FileId | null;
-    const nextComp = (selectedIds[1] ?? null) as FileId | null;
+    // Sticky slot mapping: preserve the current slot if its file is still selected,
+    // otherwise fill empty slots from the selection in order. This lets users add/remove
+    // files from the selection without the other slot being clobbered.
+    //
+    // Fallback: when there's no selection yet but files are loaded in the workbench,
+    // draw from `allIds`. This covers the brief window between ADD_FILES and
+    // SET_SELECTED_FILES during an upload (the selection dispatch can lag the file
+    // dispatch by several renders), which would otherwise leave the slot showing
+    // the "Select the original PDF" placeholder until the selection catches up.
+    const sourceIds = selectedIds.length > 0 ? selectedIds : allIds;
     base.params.setParameters((prev) => {
+      const prevBase = prev.baseFileId as FileId | null;
+      const prevComp = prev.comparisonFileId as FileId | null;
+
+      const keepBase =
+        prevBase && sourceIds.includes(prevBase) ? prevBase : null;
+      const nextBase: FileId | null =
+        keepBase ?? ((sourceIds[0] ?? null) as FileId | null);
+
+      const keepComp =
+        prevComp && sourceIds.includes(prevComp) && prevComp !== nextBase
+          ? prevComp
+          : null;
+      const nextComp: FileId | null =
+        keepComp ??
+        ((sourceIds.find((id) => id !== nextBase) ?? null) as FileId | null);
+
       if (prev.baseFileId === nextBase && prev.comparisonFileId === nextComp)
         return prev;
       return { ...prev, baseFileId: nextBase, comparisonFileId: nextComp };
@@ -444,6 +483,8 @@ const Compare = (props: BaseToolProps) => {
         return (
           <Stack gap={6}>
             <Box
+              data-testid={`compare-slot-${role}`}
+              data-slot-state="empty"
               style={{
                 border: "1px solid var(--border-default)",
                 borderRadius: "var(--radius-md)",
@@ -471,6 +512,7 @@ const Compare = (props: BaseToolProps) => {
               </Text>
               {shouldShowAddButton && (
                 <ActionIcon
+                  data-testid={`compare-slot-${role}-add`}
                   variant="filled"
                   color="blue"
                   size="sm"
@@ -501,6 +543,9 @@ const Compare = (props: BaseToolProps) => {
       return (
         <Stack gap={6}>
           <Box
+            data-testid={`compare-slot-${role}`}
+            data-slot-state="filled"
+            data-slot-filename={stub?.name}
             style={{
               border: "1px solid var(--border-default)",
               borderRadius: "var(--radius-md)",
