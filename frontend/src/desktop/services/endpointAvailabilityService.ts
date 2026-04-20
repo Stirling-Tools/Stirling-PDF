@@ -200,11 +200,14 @@ export class EndpointAvailabilityService {
         const data = await response.json();
         const now = Date.now();
 
-        Object.entries(data).forEach(([endpoint, details]: [string, any]) => {
-          const available = details?.enabled ?? false;
-          this.localCache.set(endpoint, available);
-          this.localCacheExpiry.set(endpoint, now + this.CACHE_DURATION);
-        });
+        Object.entries(data).forEach(
+          ([endpoint, details]: [string, unknown]) => {
+            const available =
+              (details as { enabled?: boolean })?.enabled ?? false;
+            this.localCache.set(endpoint, available);
+            this.localCacheExpiry.set(endpoint, now + this.CACHE_DURATION);
+          },
+        );
       } else {
         console.warn(
           `[endpointAvailabilityService] Failed to preload endpoints: ${response.status}`,
@@ -313,5 +316,5 @@ export const endpointAvailabilityService = new EndpointAvailabilityService();
 
 // Expose to window for debugging
 if (typeof window !== "undefined") {
-  (window as any).endpointAvailabilityService = endpointAvailabilityService;
+  window.endpointAvailabilityService = endpointAvailabilityService;
 }

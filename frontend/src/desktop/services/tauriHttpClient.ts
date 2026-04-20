@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
 
 /**
@@ -231,7 +232,12 @@ class TauriHttpClient {
 
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       // Enable certificate bypass for HTTPS to handle missing intermediate certs and self-signed certs
-      const fetchOptions: any = {
+      const fetchOptions: RequestInit & {
+        danger?: {
+          acceptInvalidCerts: boolean;
+          acceptInvalidHostnames: boolean;
+        };
+      } = {
         method,
         headers,
         body,
