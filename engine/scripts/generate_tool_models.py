@@ -48,6 +48,9 @@ class DiscoveryResult:
 class ToolDiscovery:
     """Discovers tool endpoints from an OpenAPI spec and builds a combined JSON Schema."""
 
+    # Namespaces exposed to the LLM as callable tools. Largely matches ``InternalApiClient.java``.
+    # Note: ``/api/v1/filter/`` is intentionally excluded because those APIs are for pipeline processing,
+    #  not tool execution.
     ALLOWED_PATH_PREFIXES = (
         "/api/v1/general/",
         "/api/v1/misc/",
