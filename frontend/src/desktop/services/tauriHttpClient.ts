@@ -19,7 +19,7 @@ export interface TauriHttpRequestConfig {
   method?: string;
   baseURL?: string;
   headers?: Record<string, string>;
-  params?: Record<string, string | number | boolean>;
+  params?: Record<string, string | number | boolean> | any;
   data?: any;
   timeout?: number;
   responseType?: "json" | "text" | "blob" | "arraybuffer";
