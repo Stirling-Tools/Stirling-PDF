@@ -7,15 +7,21 @@ dependencies = [
     "fastapi>=0.116.0",
     "pydantic>=2.0.0",
     "pydantic-ai>=1.67.0",
+    "pydantic-ai-slim[voyageai]>=1.67.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
     "uvicorn>=0.35.0",
+    "sqlite-vec>=0.1.6",
     "opentelemetry-sdk>=1.39.0",
     "posthog>=3.0.0",
 ]
 
+[project.optional-dependencies]
+pgvector = ["psycopg[binary]>=3.2", "pgvector>=0.3.6"]
+
 [dependency-groups]
 dev = [
+    "anyio>=4.0.0",
     "datamodel-code-generator[ruff]>=0.26.0",
     "pytest>=8.0.0",
     "pyright>=1.1.408",

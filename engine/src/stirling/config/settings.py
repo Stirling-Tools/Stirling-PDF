@@ -21,6 +21,16 @@ class AppSettings(BaseSettings):
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
 
+    # RAG settings
+    rag_enabled: bool = Field(default=False, validation_alias="STIRLING_RAG_ENABLED")
+    rag_backend: str = Field(default="sqlite", validation_alias="STIRLING_RAG_BACKEND")
+    rag_embedding_model: str = Field(default="voyageai:voyage-4", validation_alias="STIRLING_RAG_EMBEDDING_MODEL")
+    rag_store_path: str = Field(default="data/rag.db", validation_alias="STIRLING_RAG_STORE_PATH")
+    rag_pgvector_dsn: str = Field(default="", validation_alias="STIRLING_RAG_PGVECTOR_DSN")
+    rag_chunk_size: int = Field(default=512, validation_alias="STIRLING_RAG_CHUNK_SIZE")
+    rag_chunk_overlap: int = Field(default=64, validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
+    rag_default_top_k: int = Field(default=5, validation_alias="STIRLING_RAG_TOP_K")
+
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
 
