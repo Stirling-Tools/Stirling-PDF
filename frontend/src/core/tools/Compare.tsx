@@ -9,6 +9,7 @@ import {
   Button,
   Modal,
   ActionIcon,
+  SegmentedControl,
 } from "@mantine/core";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import AddIcon from "@mui/icons-material/Add";
@@ -638,6 +639,35 @@ const Compare = (props: BaseToolProps) => {
               width: "100%",
             }}
           >
+            {/* Mode toggle */}
+            <Box
+              style={{
+                gridColumn: hasBothSelected ? "1 / span 2" : "1",
+                marginTop: "0.25rem",
+              }}
+            >
+              <SegmentedControl
+                fullWidth
+                size="xs"
+                value={params.mode}
+                onChange={(value) =>
+                  base.params.setParameters((prev) => ({
+                    ...prev,
+                    mode: value as "text" | "pixel",
+                  }))
+                }
+                data={[
+                  {
+                    value: "text",
+                    label: t("compare.mode.text", "Text Comparison"),
+                  },
+                  {
+                    value: "pixel",
+                    label: t("compare.mode.pixel", "Pixel Comparison"),
+                  },
+                ]}
+              />
+            </Box>
             {/* Header row: Original PDF + Clear selected aligned to swap column */}
             <Box
               style={{
