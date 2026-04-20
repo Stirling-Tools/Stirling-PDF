@@ -140,7 +140,7 @@ export function SelfHostedOfflineBanner() {
           toolAvailability[id]?.reason === "selfHostedOffline",
       )
       .map((id) => toolRegistry[id]?.name ?? id)
-      .filter(Boolean) as string[];
+      .filter(Boolean);
 
     // Use translated tool names from the registry as prefixes
     const convertPrefix = toolRegistry["convert" as ToolId]?.name ?? "Convert";
