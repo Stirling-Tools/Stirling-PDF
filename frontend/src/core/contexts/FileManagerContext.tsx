@@ -119,7 +119,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (isOpen) {
       setSelectedFileIds(activeFileIds);
     }
-  }, [isOpen]);
+  }, [isOpen, activeFileIds]);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
@@ -568,8 +568,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   );
 
   const handleOpenFiles = useCallback(() => {
-    // Remove active files that were unchecked
-    const uncheckedActiveIds = activeFileIds.filter((id) => !selectedFilesSet.has(id));
+    // Remove active files that were unchecked, skipping files with unsaved changes
+    const uncheckedActiveIds = activeFileIds.filter((id) => {
+      if (selectedFilesSet.has(id)) return false;
+      const stub = filteredFiles.find((f) => f.id === id);
+      return !stub?.isDirty;
+    });
     if (uncheckedActiveIds.length > 0) {
       removeFiles(uncheckedActiveIds, false);
     }
@@ -581,7 +585,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
 
     onClose();
-  }, [selectedFiles, selectedFilesSet, activeFileIds, removeFiles, onRecentFilesSelected, onClose]);
+  }, [selectedFiles, selectedFilesSet, activeFileIds, filteredFiles, removeFiles, onRecentFilesSelected, onClose]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -634,10 +638,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
     // Server files — sequential, each may need a modal prompt.
     for (const file of serverFiles) {
-      const fileIndex = filteredFiles.findIndex((f) => f.id === file.id);
-      if (fileIndex !== -1) {
-        await performFileDelete(file);
-      }
+      await performFileDelete(file);
     }
 
     // Local files — single IDB transaction, one UI update.

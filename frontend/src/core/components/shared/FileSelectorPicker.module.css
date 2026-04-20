@@ -177,6 +177,40 @@
   vertical-align: middle;
 }
 
+/* ── Search / filter row ─────────────────────────── */
+.searchRow {
+  padding: 0.3rem 0.45rem;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+
+.searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  height: 1.625rem;
+  padding: 0 0.5rem;
+  font-size: 0.7rem;
+  border: 1px solid var(--border-subtle, var(--border-default));
+  border-radius: var(--radius-sm);
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--mantine-color-dimmed);
+}
+
+.searchInput:focus {
+  border-color: var(--mantine-color-blue-5);
+}
+
+/* hide browser clear button in Safari */
+.searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
 /* ── Scrollable file list ────────────────────────── */
 .list {
   padding: 0;

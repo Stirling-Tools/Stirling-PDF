@@ -146,10 +146,11 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
       const file = activeFiles[activeFileIndex] ?? activeFiles[0];
+      const countBeforeRemove = activeFiles.length;
       if (file && isStirlingFile(file)) {
         await fileActions.removeFiles([file.fileId], false);
       }
-      if (activeFiles.length <= 1) {
+      if (countBeforeRemove <= 1) {
         setCurrentView("fileEditor");
       }
     } else if (currentView === "pageEditor") {
@@ -322,7 +323,7 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             radius="md"
             className="workbench-bar-action-icon"
             onClick={() => handleExportAll()}
-            disabled={disableForFullscreen || (currentView !== "viewer" && (totalItems === 0 || allButtonsDisabled))}
+            disabled={disableForFullscreen || totalItems === 0 || allButtonsDisabled}
           >
             <LocalIcon icon={icons.downloadIconName} width="1rem" height="1rem" />
           </ActionIcon>,
@@ -337,7 +338,7 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
               radius="md"
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
-              disabled={disableForFullscreen || (currentView !== "viewer" && (totalItems === 0 || allButtonsDisabled))}
+              disabled={disableForFullscreen || totalItems === 0 || allButtonsDisabled}
             >
               <LocalIcon icon={icons.saveAsIconName} width="1rem" height="1rem" />
             </ActionIcon>,

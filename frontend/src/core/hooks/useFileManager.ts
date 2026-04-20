@@ -345,8 +345,13 @@ export const useFileManager = () => {
       onRemovedFromWorkbench?.(file.id);
       indexedDB.deleteFile(file.id).catch((error) => {
         console.error("Failed to remove file from IndexedDB:", error);
-        // Restore consistency — file is still in IDB so refresh will bring it back
-        onDeleteFailed?.();
+        // Restore consistency — file is still in IDB so refresh brings it back
+        if (onDeleteFailed) {
+          onDeleteFailed();
+        } else {
+          // No failure handler provided — refresh to restore consistent state
+          setFiles([...files]);
+        }
       });
     },
     [indexedDB],

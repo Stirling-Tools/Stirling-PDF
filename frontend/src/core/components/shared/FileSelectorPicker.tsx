@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader, FileButton } from "@mantine/core";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
@@ -6,6 +7,7 @@ import { createStirlingFile, createFileId, createNewStirlingFileStub } from "@ap
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { useAllFiles } from "@app/contexts/FileContext";
+import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { fileStorage } from "@app/services/fileStorage";
@@ -14,6 +16,7 @@ import { parseContentDispositionFilename, extractLatestFilesFromBundle } from "@
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import styles from "@app/components/shared/FileSelectorPicker.module.css";
+import "@app/components/shared/FileSidebarFileItem.css";
 
 const LS_TAB = "filePicker.tab";
 const LS_SORT = "filePicker.sort";
@@ -88,10 +91,44 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
   const [savedLoading, setSavedLoading] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredStub, setHoveredStub] = useState<{ rect: DOMRect; stub: StirlingFileStub } | null>(null);
+  const [hoveredThumbnail, setHoveredThumbnail] = useState<string | null>(null);
+  const thumbCancelRef = useRef<boolean>(false);
 
   const { fileStubs: workbenchStubs } = useAllFiles();
+  const indexedDB = useIndexedDB();
   const { selectors } = useFileContext();
   const { loadRecentFiles } = useFileManager();
+
+  // Load thumbnail lazily when hovering over a file row
+  useEffect(() => {
+    if (!hoveredStub) {
+      setHoveredThumbnail(null);
+      return;
+    }
+    if (hoveredStub.stub.thumbnailUrl) {
+      setHoveredThumbnail(hoveredStub.stub.thumbnailUrl);
+      return;
+    }
+    thumbCancelRef.current = false;
+    setHoveredThumbnail(null);
+    (async () => {
+      try {
+        const file = await indexedDB.loadFile(hoveredStub.stub.id as FileId);
+        if (!file || thumbCancelRef.current) return;
+        const thumbnail = await generateThumbnailForFile(file);
+        if (thumbCancelRef.current || !thumbnail) return;
+        setHoveredThumbnail(thumbnail);
+        void indexedDB.updateThumbnail(hoveredStub.stub.id as FileId, thumbnail);
+      } catch {
+        // non-critical
+      }
+    })();
+    return () => {
+      thumbCancelRef.current = true;
+    };
+  }, [hoveredStub, indexedDB]);
 
   const handleTabChange = useCallback((tab: "workbench" | "saved") => {
     lsSet(LS_TAB, tab);
@@ -139,14 +176,15 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
 
   const displayStubs = useMemo(() => {
     const base = activeTab === "workbench" ? workbenchStubs : savedStubs;
-    const filtered = base.filter((s) => !excludeIds.includes(s.id));
+    const q = searchQuery.trim().toLowerCase();
+    const filtered = base.filter((s) => !excludeIds.includes(s.id) && (!q || s.name.toLowerCase().includes(q)));
     const dir = sortDir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) =>
       sortBy === "name"
         ? dir * a.name.localeCompare(b.name)
         : dir * ((a.lastModified || a.createdAt || 0) - (b.lastModified || b.createdAt || 0)),
     );
-  }, [activeTab, workbenchStubs, savedStubs, excludeIds, sortBy, sortDir]);
+  }, [activeTab, workbenchStubs, savedStubs, excludeIds, sortBy, sortDir, searchQuery]);
 
   const loadAndSelect = useCallback(
     async (stub: StirlingFileStub) => {
@@ -269,7 +307,7 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
     <Popover
       opened={isOpen}
       onChange={setIsOpen}
-      onClose={() => setIsOpen(false)}
+      onClose={() => { setIsOpen(false); setSearchQuery(""); }}
       position="bottom-start"
       withinPortal
       shadow="md"
@@ -369,6 +407,18 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
           </div>
         </div>
 
+        <div className={styles.searchRow}>
+          <input
+            className={styles.searchInput}
+            type="search"
+            placeholder={t("fileSelectorPicker.search", "Filter files…")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+
         <ScrollArea h={260} className={styles.list}>
           {savedLoading ? (
             <div className={styles.emptyState}>
@@ -389,6 +439,8 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
                   className={styles.fileItem}
                   onClick={() => void loadAndSelect(stub)}
                   disabled={!!loadingId}
+                  onMouseEnter={(e) => setHoveredStub({ rect: e.currentTarget.getBoundingClientRect(), stub })}
+                  onMouseLeave={() => setHoveredStub(null)}
                 >
                   <div className={styles.fileItemContent}>
                     <span className={styles.fileName} title={stub.name}>
@@ -402,6 +454,21 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
             })
           )}
         </ScrollArea>
+
+        {hoveredStub &&
+          hoveredThumbnail &&
+          createPortal(
+            <div
+              className="file-sidebar-thumb-tooltip"
+              style={{
+                top: hoveredStub.rect.top + hoveredStub.rect.height / 2,
+                left: hoveredStub.rect.left - 170,
+              }}
+            >
+              <img src={hoveredThumbnail} alt="" className="file-sidebar-thumb-img" />
+            </div>,
+            document.body,
+          )}
       </Popover.Dropdown>
     </Popover>
   );

@@ -5,7 +5,7 @@ import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
-import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import { useNavigationState, useNavigationActions, useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
@@ -51,6 +51,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
   const { actions: fileActions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
   const { workbench: currentWorkbench } = useNavigationState();
+  const { requestNavigation } = useNavigationGuard();
   const { activeFileIndex, setActiveFileIndex } = useViewer();
   const { addFiles } = useFileHandler();
   const indexedDB = useIndexedDB();
@@ -90,7 +91,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
   // Refresh on mount, workbench changes, or external IndexedDB writes
   useEffect(() => {
     refreshStubs();
-  }, [refreshStubs, state.files.ids.length, indexedDB.revision]);
+  }, [refreshStubs, indexedDB.revision]);
 
   // Once a pending file lands in state, open it in the viewer.
   useEffect(() => {
@@ -145,7 +146,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
       const workbenchFileId = state.files.ids.find((id) => (id as string) === (stub.id as string));
 
       if (workbenchFileId) {
-        // Remove from workbench, keep in IndexedDB
+        // If this is the file currently open in the viewer, route through the
+        // navigation guard so the save modal fires when there are unsaved changes.
+        const isCurrentlyViewed = workbenchFileId === viewedWorkbenchId;
+        if (isCurrentlyViewed) {
+          requestNavigation(() => {
+            void fileActions.removeFiles([workbenchFileId], false);
+          });
+          return;
+        }
         await fileActions.removeFiles([workbenchFileId], false);
       } else {
         // Re-add by stub to preserve its ID — addFiles() would create a new UUID + IDB entry.
@@ -178,25 +187,34 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
       const isCurrentlyViewed = !!(viewedWorkbenchId && (viewedWorkbenchId as string) === (stub.id as string));
 
       if (isCurrentlyViewed) {
-        // Close viewer: switch to file editor
+        // Closing the currently-viewed file — guard against unsaved changes.
         navActions.setWorkbench("fileEditor");
         return;
       }
 
-      const alreadyInWorkbench = state.files.ids.some((id) => (id as string) === (stub.id as string));
+      // Switching to a different file while viewer is open — guard against unsaved changes.
+      const performSwitch = async () => {
+        const alreadyInWorkbench = state.files.ids.some((id) => (id as string) === (stub.id as string));
 
-      if (!alreadyInWorkbench) {
-        // Leave viewer before mutating workbench (prevents PSPDFKit crash).
-        if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
-          navActions.setWorkbench("fileEditor");
+        if (!alreadyInWorkbench) {
+          // Leave viewer before mutating workbench (prevents PSPDFKit crash).
+          if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
+            navActions.setWorkbench("fileEditor");
+          }
+          await fileActions.addStirlingFileStubs([stub]);
         }
-        await fileActions.addStirlingFileStubs([stub]);
-      }
 
-      // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
-      setPendingViewFileId(stub.id as string);
+        // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
+        setPendingViewFileId(stub.id as string);
+      };
+
+      if (currentWorkbench === "viewer" && viewedWorkbenchId) {
+        requestNavigation(() => { void performSwitch(); });
+      } else {
+        await performSwitch();
+      }
     },
-    [allFileStubs, viewedWorkbenchId, state.files.ids, fileActions, navActions, currentWorkbench, setPendingViewFileId],
+    [allFileStubs, viewedWorkbenchId, state.files.ids, fileActions, navActions, currentWorkbench, setPendingViewFileId, requestNavigation],
   );
 
   const handleNativeFilePick = useCallback(

@@ -2707,7 +2707,7 @@ label = "Original document"
 placeholder = "Select the original PDF"
 
 [compare.clear]
-confirm = "Clear and return"
+confirm = "Clear Selected"
 confirmBody = "This will close the current comparison and take you back to Active Files."
 confirmTitle = "Clear selected PDFs?"
 

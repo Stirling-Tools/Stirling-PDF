@@ -52,21 +52,30 @@ class FileStorageService {
   private async bumpThumbnailTTL(ids: FileId[], clear = false): Promise<void> {
     if (ids.length === 0) return;
     const db = await this.getDatabase();
-    const transaction = db.transaction([this.storeName], "readwrite");
-    const store = transaction.objectStore(this.storeName);
-    ids.forEach((id) => {
-      const req = store.get(id);
-      req.onsuccess = () => {
-        const record = req.result as StoredStirlingFileRecord | undefined;
-        if (!record) return;
-        if (clear) {
-          record.thumbnail = undefined;
-          record.thumbnailStoredAt = undefined;
-        } else {
-          record.thumbnailStoredAt = Date.now();
-        }
-        store.put(record);
-      };
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+
+      // Issue all gets up front — each onsuccess creates a put before the
+      // transaction can auto-commit, keeping it alive until all puts settle.
+      ids.forEach((id) => {
+        const req = store.get(id);
+        req.onsuccess = () => {
+          const record = req.result as StoredStirlingFileRecord | undefined;
+          if (!record) return;
+          if (clear) {
+            record.thumbnail = undefined;
+            record.thumbnailStoredAt = undefined;
+          } else {
+            record.thumbnailStoredAt = Date.now();
+          }
+          store.put(record);
+        };
+        req.onerror = () => reject(req.error);
+      });
     });
   }
 

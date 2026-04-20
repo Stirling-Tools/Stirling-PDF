@@ -579,6 +579,7 @@ export async function undoConsumeFiles(
   indexedDB?: {
     saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>;
     deleteFile: (fileId: FileId) => Promise<void>;
+    bumpRevision?: () => void;
   } | null,
 ): Promise<void> {
   if (DEBUG)
@@ -623,6 +624,8 @@ export async function undoConsumeFiles(
       outputFileIds.forEach((fileId) => {
         indexedDB.deleteFile(fileId).catch((error) => {
           console.error("📄 undoConsumeFiles: Failed to delete output file from IDB:", fileId, error);
+          // Bump revision so the sidebar re-reads IDB and orphaned files reappear.
+          indexedDB.bumpRevision?.();
         });
       });
     }

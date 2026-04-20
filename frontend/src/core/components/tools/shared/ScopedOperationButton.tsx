@@ -1,4 +1,4 @@
-import { Text, Progress, Box, Button } from "@mantine/core";
+import { Text, Box, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import OperationButton, { OperationButtonProps } from "@app/components/tools/shared/OperationButton";
 import { StirlingFile } from "@app/types/fileContext";

@@ -31,6 +31,7 @@ interface IndexedDBContextValue {
 
   // Incremented after any write or delete — subscribe to trigger re-reads
   revision: number;
+  bumpRevision: () => void;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
@@ -218,6 +219,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     updateThumbnail,
     markFileAsProcessed,
     revision,
+    bumpRevision,
   };
 
   return <IndexedDBContext.Provider value={value}>{children}</IndexedDBContext.Provider>;
