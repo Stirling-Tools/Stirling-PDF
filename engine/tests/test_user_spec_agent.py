@@ -13,7 +13,7 @@ from stirling.contracts import (
     EditPlanResponse,
     ToolOperationStep,
 )
-from stirling.models.tool_models import CompressParams, OperationId, RotateParams
+from stirling.models.tool_models import Angle, FlattenParams, RotatePdfParams, ToolEndpoint
 from stirling.services.runtime import AppRuntime
 
 
@@ -26,8 +26,8 @@ class StubUserSpecAgent(UserSpecAgent):
             summary="Rotate the document.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
+                    tool=ToolEndpoint.ROTATE_PDF,
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 )
             ],
         )
@@ -63,8 +63,8 @@ async def test_user_spec_agent_drafts_agent_spec(runtime: AppRuntime) -> None:
             objective="Normalize invoices before accounting review.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
+                    tool=ToolEndpoint.ROTATE_PDF,
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 )
             ],
         ),
@@ -98,8 +98,8 @@ async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> No
         objective="Normalize invoices before accounting review.",
         steps=[
             ToolOperationStep(
-                tool=OperationId.ROTATE,
-                parameters=RotateParams(angle=90),
+                tool=ToolEndpoint.ROTATE_PDF,
+                parameters=RotatePdfParams(angle=Angle(90)),
             )
         ],
     )
@@ -112,12 +112,12 @@ async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> No
             objective="Normalize invoices before accounting review.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
+                    tool=ToolEndpoint.ROTATE_PDF,
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 ),
                 ToolOperationStep(
-                    tool=OperationId.COMPRESS,
-                    parameters=CompressParams(compression_level=5),
+                    tool=ToolEndpoint.FLATTEN,
+                    parameters=FlattenParams(flatten_only_forms=False, render_dpi=None),
                 ),
             ],
         ),
@@ -138,8 +138,8 @@ async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> No
 def test_tool_operation_step_rejects_mismatched_parameters() -> None:
     with pytest.raises(ValidationError):
         ToolOperationStep(
-            tool=OperationId.ROTATE,
-            parameters=CompressParams(compression_level=5),
+            tool=ToolEndpoint.ROTATE_PDF,
+            parameters=FlattenParams(flatten_only_forms=False, render_dpi=None),
         )
 
 

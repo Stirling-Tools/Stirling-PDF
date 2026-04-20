@@ -5,7 +5,7 @@ from typing import Literal, assert_never
 
 from pydantic import Field, model_validator
 
-from stirling.models import OPERATIONS, ApiModel, OperationId
+from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
 from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
 
@@ -110,7 +110,7 @@ class ToolOperationStep(ApiModel):
     def validate_tool_parameter_pairing(self) -> ToolOperationStep:
         if isinstance(self.tool, AgentToolId):
             expected_type = AGENT_OPERATIONS[self.tool]
-        elif isinstance(self.tool, OperationId):
+        elif isinstance(self.tool, ToolEndpoint):
             expected_type = OPERATIONS[self.tool]
         else:
             assert_never(self.tool)
