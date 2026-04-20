@@ -214,6 +214,18 @@ jobs:
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
           platforms: linux/amd64
 
+      - name: Build and push engine image
+        if: needs.check-comment.outputs.enable_prototypes == 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: ./engine
+          file: ./engine/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-engine
+          cache-to: type=gha,mode=max,scope=stirling-pdf-engine
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
+          platforms: linux/amd64
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
@@ -249,33 +261,64 @@ jobs:
             PREMIUM_PROFEATURES_AUDIT_ENABLED="false"
           fi
 
+          ENABLE_PROTOTYPES="${{ needs.check-comment.outputs.enable_prototypes }}"
+          PR_NUMBER="${{ needs.check-comment.outputs.pr_number }}"
+          DOCKER_USER="${{ secrets.DOCKER_HUB_USERNAME }}"
+
+          # Build engine env vars for backend (only set when prototypes enabled)
+          if [ "$ENABLE_PROTOTYPES" == "true" ]; then
+            AI_ENGINE_VARS="
+                SYSTEM_AIENGINE_ENABLED: \"true\"
+                SYSTEM_AIENGINE_URL: \"http://stirling-pdf-engine-pr-${PR_NUMBER}:5001\""
+            ENGINE_SERVICE="
+            stirling-pdf-engine:
+              container_name: stirling-pdf-engine-pr-${PR_NUMBER}
+              image: ${DOCKER_USER}/test:engine-pr-${PR_NUMBER}
+              environment:
+                ANTHROPIC_API_KEY: \"${{ secrets.ANTHROPIC_API_KEY }}\"
+              networks:
+                - pr-network
+              restart: on-failure:5"
+            NETWORK_SECTION="
+          networks:
+            pr-network:"
+            BACKEND_NETWORK="
+              networks:
+                - pr-network"
+          else
+            AI_ENGINE_VARS=""
+            ENGINE_SERVICE=""
+            NETWORK_SECTION=""
+            BACKEND_NETWORK=""
+          fi
+
           # First create the docker-compose content locally
           cat > docker-compose.yml << EOF
           version: '3.3'
           services:
             stirling-pdf:
-              container_name: stirling-pdf-pr-${{ needs.check-comment.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+              container_name: stirling-pdf-pr-${PR_NUMBER}
+              image: ${DOCKER_USER}/test:pr-${PR_NUMBER}
               ports:
-                - "${{ needs.check-comment.outputs.pr_number }}:8080"
+                - "${PR_NUMBER}:8080"
               volumes:
-                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/data:/usr/share/tessdata:rw
-                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
-                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
+                - /stirling/PR-${PR_NUMBER}/data:/usr/share/tessdata:rw
+                - /stirling/PR-${PR_NUMBER}/config:/configs:rw
+                - /stirling/PR-${PR_NUMBER}/logs:/logs:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
-                UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
-                UI_HOMEDESCRIPTION: "PR#${{ needs.check-comment.outputs.pr_number }} for Stirling-PDF Latest"
-                UI_APPNAMENAVBAR: "PR#${{ needs.check-comment.outputs.pr_number }}"
+                UI_APPNAME: "Stirling-PDF PR#${PR_NUMBER}"
+                UI_HOMEDESCRIPTION: "PR#${PR_NUMBER} for Stirling-PDF Latest"
+                UI_APPNAMENAVBAR: "PR#${PR_NUMBER}"
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
                 PREMIUM_KEY:                         "${PREMIUM_KEY}"
                 PREMIUM_ENABLED:                     "${PREMIUM_ENABLED}"
-                PREMIUM_PROFEATURES_AUDIT_ENABLED:   "${PREMIUM_PROFEATURES_AUDIT_ENABLED}"
-              restart: on-failure:5
+                PREMIUM_PROFEATURES_AUDIT_ENABLED:   "${PREMIUM_PROFEATURES_AUDIT_ENABLED}"${AI_ENGINE_VARS}
+              restart: on-failure:5${BACKEND_NETWORK}${ENGINE_SERVICE}${NETWORK_SECTION}
           EOF
 
           # Then copy the file and execute commands
@@ -283,13 +326,13 @@ jobs:
 
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             # Create PR-specific directories
-            mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
+            mkdir -p /stirling/PR-${PR_NUMBER}/{data,config,logs}
 
             # Move docker-compose file to correct location
-            mv /tmp/docker-compose.yml /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/docker-compose.yml
+            mv /tmp/docker-compose.yml /stirling/PR-${PR_NUMBER}/docker-compose.yml
 
             # Start or restart the container
-            cd /stirling/PR-${{ needs.check-comment.outputs.pr_number }}
+            cd /stirling/PR-${PR_NUMBER}
             docker-compose pull
             docker-compose up -d
           ENDSSH
