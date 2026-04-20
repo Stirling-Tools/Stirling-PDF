@@ -1,4 +1,4 @@
-// Shared text diff and normalization utilities for compare tool
+// Shared text Comparison and normalization utilities for compare tool
 
 export const shouldConcatWithoutSpace = (word: string) => {
   return /^[.,!?;:)\]}]/.test(word) || word.startsWith("'") || word === "'s";
