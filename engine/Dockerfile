@@ -12,9 +12,8 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock Taskfile.yml ./
+COPY pyproject.toml uv.lock Taskfile.yml .env ./
 COPY .taskfiles/ ./.taskfiles/
-COPY config/ ./config/
 COPY scripts/ ./scripts/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev

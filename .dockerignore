@@ -65,6 +65,7 @@ README*
 .env
 .env.*
 !.env.example
+!engine/.env
 
 # Misc
 *.swp
