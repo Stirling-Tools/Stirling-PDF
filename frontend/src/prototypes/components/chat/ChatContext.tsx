@@ -238,6 +238,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
+  const messagesRef = useRef<ChatMessage[]>(state.messages);
+  messagesRef.current = state.messages;
 
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
@@ -323,6 +325,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const controller = new AbortController();
       abortRef.current = controller;
 
+      const priorMessages = messagesRef.current;
+
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "user",
@@ -338,6 +342,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         formData.append("userMessage", content);
         activeFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
+        });
+        priorMessages.forEach((message, i) => {
+          formData.append(`conversationHistory[${i}].role`, message.role);
+          formData.append(`conversationHistory[${i}].content`, message.content);
         });
 
         const response = await fetch("/api/v1/ai/orchestrate/stream", {

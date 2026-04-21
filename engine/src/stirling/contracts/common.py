@@ -91,6 +91,12 @@ class ConversationMessage(ApiModel):
     content: str
 
 
+def format_conversation_history(conversation_history: list[ConversationMessage]) -> str:
+    if not conversation_history:
+        return "None"
+    return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
+
+
 class PdfTextSelection(ApiModel):
     page_number: int | None = None
     text: str

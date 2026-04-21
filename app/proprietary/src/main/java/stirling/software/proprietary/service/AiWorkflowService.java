@@ -34,6 +34,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
+import stirling.software.proprietary.model.api.ai.AiConversationMessage;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -92,6 +93,10 @@ public class AiWorkflowService {
         WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
         initialRequest.setUserMessage(request.getUserMessage().trim());
         initialRequest.setFileNames(new ArrayList<>(filesByName.keySet()));
+        initialRequest.setConversationHistory(
+                request.getConversationHistory() == null
+                        ? new ArrayList<>()
+                        : new ArrayList<>(request.getConversationHistory()));
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -183,6 +188,7 @@ public class AiWorkflowService {
             WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
             nextRequest.setUserMessage(request.getUserMessage());
             nextRequest.setFileNames(request.getFileNames());
+            nextRequest.setConversationHistory(request.getConversationHistory());
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
             return new WorkflowState.Pending(nextRequest);
@@ -415,6 +421,7 @@ public class AiWorkflowService {
     private static class WorkflowTurnRequest {
         private String userMessage;
         private List<String> fileNames = new ArrayList<>();
+        private List<AiConversationMessage> conversationHistory = new ArrayList<>();
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
     }

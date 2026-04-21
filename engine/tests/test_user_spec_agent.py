@@ -32,7 +32,9 @@ class StubUserSpecAgent(UserSpecAgent):
             ],
         )
 
-    async def _build_edit_plan(self, user_message: str) -> EditPlanResponse:
+    async def _build_edit_plan(
+        self, user_message: str, conversation_history: list[ConversationMessage]
+    ) -> EditPlanResponse:
         return self.edit_plan
 
     async def _run_draft_agent(self, request: AgentDraftRequest, edit_plan: EditPlanResponse) -> AgentDraft:
@@ -46,7 +48,9 @@ class ClarifyingUserSpecAgent(UserSpecAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         super().__init__(runtime)
 
-    async def _build_edit_plan(self, user_message: str) -> EditClarificationRequest:
+    async def _build_edit_plan(
+        self, user_message: str, conversation_history: list[ConversationMessage]
+    ) -> EditClarificationRequest:
         return EditClarificationRequest(
             question="Which pages should be changed?",
             reason="The request does not specify the target pages.",
