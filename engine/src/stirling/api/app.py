@@ -17,6 +17,7 @@ from stirling.api.routes import (
     orchestrator_router,
     pdf_edit_router,
     pdf_question_router,
+    rag_router,
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
@@ -58,6 +59,7 @@ app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
 app.include_router(agent_draft_router)
 app.include_router(execution_router)
+app.include_router(rag_router)
 app.include_router(ledger_router)
 
 
