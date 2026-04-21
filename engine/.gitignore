@@ -19,7 +19,6 @@ yarn-error.log*
 .vite/
 
 # Environment
-.env
 .env.local
 
 # LaTeX outputs
