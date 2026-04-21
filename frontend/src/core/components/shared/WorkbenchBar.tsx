@@ -61,7 +61,7 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const activeFiles = selectors.getFiles();
-  const { activeFileId } = useViewer();
+  const { activeFileId, setActiveFileId } = useViewer();
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
 
@@ -149,15 +149,22 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
         (activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null) ?? activeFiles[0];
       const countBeforeRemove = activeFiles.length;
       if (file && isStirlingFile(file)) {
+        // Pick the next file to show before removing, so the sidebar stays in sync.
+        const remaining = activeFiles.filter((f) => isStirlingFile(f) && f.fileId !== file.fileId);
+        const nextFile = remaining.find(isStirlingFile) ?? null;
         await fileActions.removeFiles([file.fileId], false);
-      }
-      if (countBeforeRemove <= 1) {
+        if (countBeforeRemove <= 1) {
+          setCurrentView("fileEditor");
+        } else if (nextFile) {
+          setActiveFileId(nextFile.fileId);
+        }
+      } else if (countBeforeRemove <= 1) {
         setCurrentView("fileEditor");
       }
     } else if (currentView === "pageEditor") {
       pageEditorFunctions?.closePdf?.();
     }
-  }, [currentView, fileActions, activeFiles, activeFileId, pageEditorFunctions, setCurrentView]);
+  }, [currentView, fileActions, activeFiles, activeFileId, setActiveFileId, pageEditorFunctions, setCurrentView]);
 
   const downloadTooltip = useMemo(() => {
     if (currentView === "pageEditor") return t("rightRail.exportAll", "Export PDF");
