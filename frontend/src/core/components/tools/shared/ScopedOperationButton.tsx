@@ -37,6 +37,7 @@ export function ScopedOperationButton({
     isFilesHydrating && props.disabledReason !== "endpointUnavailable" ? "filesLoading" : props.disabledReason;
 
   const isViewerMode = workbench === "viewer";
+  const isFileEditorMode = workbench === "fileEditor";
   const hasMultipleFilesLoaded = allFiles.length > 1;
   const baseText = props.submitText ?? t("submit", "Submit");
 
