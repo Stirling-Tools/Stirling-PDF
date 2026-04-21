@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum, StrEnum
-from typing import Any
 
 from pydantic import Field, RootModel, SecretStr
 
@@ -756,6 +755,15 @@ class RearrangePagesParams(ApiModel):
     )
 
 
+class RedactionArea(ApiModel):
+    color: str | None = Field(None, description="The color used to redact the specified area.")
+    height: float | None = Field(None, description="The height of the area to be redacted.")
+    page: int | None = Field(None, description="The page on which the area should be redacted.")
+    width: float | None = Field(None, description="The width of the area to be redacted.")
+    x: float | None = Field(None, description="The left edge point of the area to be redacted.")
+    y: float | None = Field(None, description="The top edge point of the area to be redacted.")
+
+
 class RemoveBlanksParams(ApiModel):
     threshold: int | None = Field(10, description="The threshold value to determine blank pages", ge=0, le=255)
     white_percent: float | None = Field(
@@ -1039,10 +1047,6 @@ class OutputFormat6(StrEnum):
 class VectorToPdfParams(ApiModel):
     output_format: OutputFormat6 | None = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class RedactionArea(RootModel[Any]):
-    root: Any
 
 
 class RedactParams(ApiModel):

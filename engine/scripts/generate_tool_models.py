@@ -85,11 +85,38 @@ class ToolDiscovery:
             defs[class_name] = {"type": "object", "properties": clean_props}
             tools.append(ToolSpec(path, enum_name, class_name))
 
+        self._inline_component_refs(defs)
+
         combined_schema: dict[str, Any] = {
             "$defs": defs,
             "anyOf": [{"$ref": f"#/$defs/{t.class_name}"} for t in tools],
         }
         return DiscoveryResult(tools=tools, combined_schema=combined_schema)
+
+    def _inline_component_refs(self, defs: dict[str, Any]) -> None:
+        """Pull every component transitively referenced from tool param schemas into ``defs``
+        and rewrite the refs from ``#/components/schemas/X`` to ``#/$defs/X``.
+
+        Without this, nested refs (e.g. ``list[RedactionArea]``) are unresolvable when the
+        combined schema is handed to datamodel-code-generator, producing ``RootModel[Any]``
+        shells that downstream JSON-schema strict-mode transformers reject.
+        """
+        pending = self._collect_component_refs(defs)
+        while pending:
+            name = pending.pop()
+            if name in defs:
+                continue
+            component = self.spec.get("components", {}).get("schemas", {}).get(name)
+            if component is None:
+                continue
+            defs[name] = component
+            pending.update(self._collect_component_refs(component))
+        _rewrite_component_refs(defs)
+
+    def _collect_component_refs(self, obj: Any) -> set[str]:
+        found: set[str] = set()
+        _walk_refs(obj, found)
+        return found
 
     def _resolve_ref(self, schema: dict[str, Any]) -> dict[str, Any]:
         if "$ref" in schema:
@@ -119,6 +146,33 @@ class ToolDiscovery:
                 continue
             clean[name] = prop
         return clean
+
+
+_COMPONENT_REF_PREFIX = "#/components/schemas/"
+
+
+def _walk_refs(obj: Any, found: set[str]) -> None:
+    if isinstance(obj, dict):
+        ref = obj.get("$ref")
+        if isinstance(ref, str) and ref.startswith(_COMPONENT_REF_PREFIX):
+            found.add(ref.removeprefix(_COMPONENT_REF_PREFIX))
+        for value in obj.values():
+            _walk_refs(value, found)
+    elif isinstance(obj, list):
+        for value in obj:
+            _walk_refs(value, found)
+
+
+def _rewrite_component_refs(obj: Any) -> None:
+    if isinstance(obj, dict):
+        ref = obj.get("$ref")
+        if isinstance(ref, str) and ref.startswith(_COMPONENT_REF_PREFIX):
+            obj["$ref"] = "#/$defs/" + ref.removeprefix(_COMPONENT_REF_PREFIX)
+        for value in obj.values():
+            _rewrite_component_refs(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            _rewrite_component_refs(value)
 
 
 def _tool_name_segments(path: str) -> str:
