@@ -1,5 +1,6 @@
 package stirling.software.proprietary.model.api.ai;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,4 +21,10 @@ public class AiWorkflowRequest {
     @NotBlank
     @Schema(description = "The user message to orchestrate", example = "Summarise these documents")
     private String userMessage;
+
+    @Schema(
+            description =
+                    "Prior chat messages exchanged between the user and the assistant, ordered"
+                            + " oldest-first. Excludes the current userMessage.")
+    private List<AiConversationMessage> conversationHistory = new ArrayList<>();
 }
