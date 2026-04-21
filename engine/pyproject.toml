@@ -5,19 +5,18 @@ description = "AI Document Engine"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.116.0",
+    "pgvector>=0.3.6",
+    "psycopg[binary]>=3.2",
     "pydantic>=2.0.0",
     "pydantic-ai>=1.67.0",
     "pydantic-ai-slim[voyageai]>=1.67.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
-    "uvicorn>=0.35.0",
     "sqlite-vec>=0.1.6",
+    "uvicorn>=0.35.0",
     "opentelemetry-sdk>=1.39.0",
     "posthog>=3.0.0",
 ]
-
-[project.optional-dependencies]
-pgvector = ["psycopg[binary]>=3.2", "pgvector>=0.3.6"]
 
 [dependency-groups]
 dev = [

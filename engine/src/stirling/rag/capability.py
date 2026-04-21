@@ -16,8 +16,8 @@ class RagCapability:
         rag = runtime.rag_capability
         Agent(
             ...,
-            instructions=rag.instructions if rag else None,
-            toolsets=[rag.toolset] if rag else [],
+            instructions=rag.instructions,
+            toolsets=[rag.toolset],
         )
 
     When no collections are pinned, the instructions are generated dynamically at
@@ -33,79 +33,77 @@ class RagCapability:
         self._rag_service = rag_service
         self._collections = collections
         self._top_k = top_k
+        toolset: FunctionToolset[None] = FunctionToolset()
+        toolset.add_function(self._search_knowledge, name="search_knowledge")
+        self._toolset = toolset
 
     @property
     def instructions(self) -> str | Callable[[], Awaitable[str]]:
         if self._collections:
-            collection_desc = f"collections: {', '.join(self._collections)}"
-            return (
-                "You have access to a knowledge base search tool called 'search_knowledge'. "
-                f"It searches {collection_desc} for relevant information. "
-                "Use it when the provided context is insufficient to answer the user's question, "
-                "or when you think additional background information would improve your answer. "
-                "You do not have to use it if the answer is already clear from the provided text."
-            )
-
-        rag_service = self._rag_service
-
-        async def _dynamic_instructions() -> str:
-            collections = await rag_service.list_collections()
-            if collections:
-                names = ", ".join(collections)
-                collection_desc = f"the following knowledge base collections: {names}"
-            else:
-                collection_desc = "the knowledge base (currently empty — no collections indexed yet)"
-            return (
-                "You have access to a knowledge base search tool called 'search_knowledge'. "
-                f"It searches {collection_desc} for relevant information. "
-                "Use it when the provided context is insufficient to answer the user's question, "
-                "or when you think additional background information would improve your answer. "
-                "You do not have to use it if the answer is already clear from the provided text."
-            )
-
-        return _dynamic_instructions
+            return self._static_instructions_text(self._collections)
+        return self._dynamic_instructions
 
     @property
     def toolset(self) -> AbstractToolset[None]:
-        toolset: FunctionToolset[None] = FunctionToolset()
+        return self._toolset
 
-        rag_service = self._rag_service
-        collections = self._collections
-        top_k = self._top_k
+    @staticmethod
+    def _static_instructions_text(collections: list[str]) -> str:
+        collection_desc = f"collections: {', '.join(collections)}"
+        return (
+            "You have access to a knowledge base search tool called 'search_knowledge'. "
+            f"It searches {collection_desc} for relevant information. "
+            "Use it when the provided context is insufficient to answer the user's question, "
+            "or when you think additional background information would improve your answer. "
+            "You do not have to use it if the answer is already clear from the provided text."
+        )
 
-        @toolset.tool_plain
-        async def search_knowledge(query: str, max_results: int = top_k) -> str:
-            """Search the knowledge base for information relevant to the query.
+    async def _dynamic_instructions(self) -> str:
+        collections = await self._rag_service.list_collections()
+        if collections:
+            names = ", ".join(collections)
+            collection_desc = f"the following knowledge base collections: {names}"
+        else:
+            collection_desc = "the knowledge base (currently empty — no collections indexed yet)"
+        return (
+            "You have access to a knowledge base search tool called 'search_knowledge'. "
+            f"It searches {collection_desc} for relevant information. "
+            "Use it when the provided context is insufficient to answer the user's question, "
+            "or when you think additional background information would improve your answer. "
+            "You do not have to use it if the answer is already clear from the provided text."
+        )
 
-            Args:
-                query: The search query describing what information you need.
-                max_results: Maximum number of results to return (default 5).
+    async def _search_knowledge(self, query: str, max_results: int | None = None) -> str:
+        """Search the knowledge base for information relevant to the query.
 
-            Returns:
-                Formatted text with the most relevant knowledge base excerpts.
-            """
-            if collections:
-                all_results = []
-                for col in collections:
-                    results = await rag_service.search(query, collection=col, top_k=max_results)
-                    all_results.extend(results)
-                all_results.sort(key=lambda r: r.score, reverse=True)
-                results = all_results[:max_results]
-            else:
-                results = await rag_service.search(query, top_k=max_results)
+        Args:
+            query: The search query describing what information you need.
+            max_results: Maximum number of results to return.
 
-            if not results:
-                return "No relevant results found in the knowledge base."
+        Returns:
+            Formatted text with the most relevant knowledge base excerpts.
+        """
+        k = max_results if max_results is not None else self._top_k
+        if self._collections:
+            all_results = []
+            for col in self._collections:
+                col_results = await self._rag_service.search(query, collection=col, top_k=k)
+                all_results.extend(col_results)
+            all_results.sort(key=lambda r: r.score, reverse=True)
+            results = all_results[:k]
+        else:
+            results = await self._rag_service.search(query, top_k=k)
 
-            sections = []
-            for i, result in enumerate(results, 1):
-                source = result.document.metadata.get("source", "unknown")
-                chunk_idx = result.document.metadata.get("chunk_index", "?")
-                score = f"{result.score:.3f}"
-                sections.append(
-                    f"[Result {i} | source: {source}, chunk: {chunk_idx}, relevance: {score}]\n"
-                    f"{result.document.text}"
-                )
-            return "\n\n---\n\n".join(sections)
+        if not results:
+            return "No relevant results found in the knowledge base."
 
-        return toolset
+        sections = []
+        for i, result in enumerate(results, 1):
+            source = result.document.metadata.get("source", "unknown")
+            chunk_idx = result.document.metadata.get("chunk_index", "?")
+            score = f"{result.score:.3f}"
+            sections.append(
+                f"[Result {i} | source: {source}, chunk: {chunk_idx}, relevance: {score}]\n"
+                f"{result.document.text}"
+            )
+        return "\n\n---\n\n".join(sections)

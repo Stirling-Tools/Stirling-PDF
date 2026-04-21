@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from pathlib import Path
+from typing import assert_never
 
 from pydantic_ai.models import Model, infer_model
 from pydantic_ai.settings import ModelSettings
 
-from stirling.config import ENGINE_ROOT, AppSettings
-from stirling.rag.capability import RagCapability
-from stirling.rag.embedder import EmbeddingService
-from stirling.rag.pgvector_store import PgVectorStore
-from stirling.rag.service import RagService
-from stirling.rag.sqlite_vec_store import SqliteVecStore
-from stirling.rag.store import VectorStore
+from stirling.config import ENGINE_ROOT, AppSettings, RagBackend
+from stirling.rag import (
+    EmbeddingService,
+    PgVectorStore,
+    RagCapability,
+    RagService,
+    SqliteVecStore,
+    VectorStore,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +25,8 @@ class AppRuntime:
     settings: AppSettings
     fast_model: Model
     smart_model: Model
-    rag_service: RagService | None
-    rag_capability: RagCapability | None
+    rag_service: RagService
+    rag_capability: RagCapability
 
     @property
     def fast_model_settings(self) -> ModelSettings:
@@ -53,27 +55,22 @@ def validate_structured_output_support(model: Model, model_name: str) -> None:
 
 def _build_vector_store(settings: AppSettings) -> VectorStore:
     """Build the configured vector store backend."""
-    backend = settings.rag_backend.lower()
-    if backend == "sqlite":
-        store_path = Path(settings.rag_store_path)
-        if not store_path.is_absolute():
+    if settings.rag_backend == RagBackend.SQLITE:
+        store_path = settings.rag_store_path
+        # Treat ":memory:" as a special in-process token; otherwise resolve against the engine root.
+        if str(store_path) != ":memory:" and not store_path.is_absolute():
             store_path = ENGINE_ROOT / store_path
         logger.info("RAG backend=sqlite, db_path=%s", store_path)
         return SqliteVecStore(db_path=store_path)
-    if backend == "pgvector":
+    if settings.rag_backend == RagBackend.PGVECTOR:
         logger.info("RAG backend=pgvector, dsn=<configured>")
         return PgVectorStore(dsn=settings.rag_pgvector_dsn)
-    raise ValueError(f"Unknown rag_backend {settings.rag_backend!r}. Expected 'sqlite' or 'pgvector'.")
+    assert_never(settings.rag_backend)
 
 
-def _build_rag(settings: AppSettings) -> tuple[RagService | None, RagCapability | None]:
-    """Build the RAG service and capability if RAG is enabled."""
-    if not settings.rag_enabled:
-        logger.info("RAG is disabled")
-        return None, None
-
-    logger.info("RAG enabled: embedding_model=%s", settings.rag_embedding_model)
-
+def _build_rag(settings: AppSettings) -> tuple[RagService, RagCapability]:
+    """Build the RAG service and capability."""
+    logger.info("RAG: embedding_model=%s", settings.rag_embedding_model)
     embedder = EmbeddingService(
         model_name=settings.rag_embedding_model,
         chunk_size=settings.rag_chunk_size,

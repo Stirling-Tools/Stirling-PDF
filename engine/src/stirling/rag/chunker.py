@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import re
 
+# TODO: replace with pydantic-ai's built-in chunking once
+# https://github.com/pydantic/pydantic-ai/issues/3962 lands.
+
 
 def chunk_text(text: str, chunk_size: int = 512, overlap: int = 64) -> list[str]:
     """Split text into chunks of approximately chunk_size characters with overlap.

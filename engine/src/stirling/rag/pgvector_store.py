@@ -1,21 +1,11 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+
+import psycopg
+from pgvector.psycopg import register_vector_async
 
 from stirling.rag.store import Document, SearchResult, VectorStore
-
-if TYPE_CHECKING:
-    import psycopg
-    from pgvector.psycopg import register_vector_async
-
-try:
-    import psycopg
-    from pgvector.psycopg import register_vector_async
-
-    _PGVECTOR_AVAILABLE = True
-except ImportError:
-    _PGVECTOR_AVAILABLE = False
 
 
 class PgVectorStore(VectorStore):
@@ -26,11 +16,6 @@ class PgVectorStore(VectorStore):
     """
 
     def __init__(self, dsn: str) -> None:
-        if not _PGVECTOR_AVAILABLE:
-            raise RuntimeError(
-                "pgvector backend requires 'psycopg[binary]' and 'pgvector'. "
-                "Install with: pip install -e \".[pgvector]\""
-            )
         if not dsn:
             raise ValueError("pgvector backend requires a non-empty DSN (STIRLING_RAG_PGVECTOR_DSN)")
         self._dsn = dsn

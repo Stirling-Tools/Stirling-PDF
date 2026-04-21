@@ -605,7 +605,9 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "opentelemetry-sdk" },
+    { name = "pgvector" },
     { name = "posthog" },
+    { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "pydantic-ai" },
     { name = "pydantic-ai-slim", extra = ["voyageai"] },
@@ -613,12 +615,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "sqlite-vec" },
     { name = "uvicorn" },
-]
-
-[package.optional-dependencies]
-pgvector = [
-    { name = "pgvector" },
-    { name = "psycopg", extra = ["binary"] },
 ]
 
 [package.dev-dependencies]
@@ -635,9 +631,9 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.0" },
     { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
-    { name = "pgvector", marker = "extra == 'pgvector'", specifier = ">=0.3.6" },
+    { name = "pgvector", specifier = ">=0.3.6" },
     { name = "posthog", specifier = ">=3.0.0" },
-    { name = "psycopg", extras = ["binary"], marker = "extra == 'pgvector'", specifier = ">=3.2" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-ai", specifier = ">=1.67.0" },
     { name = "pydantic-ai-slim", extras = ["voyageai"], specifier = ">=1.67.0" },
@@ -646,7 +642,6 @@ requires-dist = [
     { name = "sqlite-vec", specifier = ">=0.1.6" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]
-provides-extras = ["pgvector"]
 
 [package.metadata.requires-dev]
 dev = [

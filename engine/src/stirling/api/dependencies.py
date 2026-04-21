@@ -4,7 +4,7 @@ from fastapi import Request
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
 from stirling.agents.ledger import MathAuditorAgent
-from stirling.rag.service import RagService
+from stirling.rag import RagService
 from stirling.services import AppRuntime
 
 
@@ -32,7 +32,7 @@ def get_execution_planning_agent(request: Request) -> ExecutionPlanningAgent:
     return request.app.state.execution_planning_agent
 
 
-def get_rag_service(request: Request) -> RagService | None:
+def get_rag_service(request: Request) -> RagService:
     return request.app.state.runtime.rag_service
 
 
