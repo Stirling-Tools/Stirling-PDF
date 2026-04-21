@@ -20,9 +20,8 @@ tasks:
       - uv run scripts/setup_env.py
     sources:
       - scripts/setup_env.py
-      - config/.env.example
     generates:
-      - .env
+      - .env.local
 
   run:
     desc: "Run engine server"
