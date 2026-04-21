@@ -121,6 +121,7 @@ const CertSign = (props: BaseToolProps) => {
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}
+            pdfFile={base.selectedFiles[0]?.file ?? null}
           />
         ),
       },
