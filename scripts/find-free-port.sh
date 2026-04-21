@@ -1,25 +1,42 @@
 #!/usr/bin/env bash
-# Prints N distinct free TCP ports on stdout, one per line.
+# Prints one free TCP port per preferred port given as an argument.
 #
-# Picks random ports in 20000-49999, probes via bash's /dev/tcp pseudo-device
-# (connect failure = nobody listening), and tracks picks within this run so
-# consecutive ports are guaranteed distinct from each other.
+# For each argument, emits that port if it's free; otherwise emits a random
+# free port in 20000-49999. Probes via bash's /dev/tcp pseudo-device (connect
+# failure = nobody listening). Tracks picks within this run so outputs are
+# guaranteed distinct from each other.
 set -euo pipefail
 
-count="${1:-1}"
 declare -a picked=()
 
-while [ "${#picked[@]}" -lt "$count" ]; do
-  port=$((RANDOM % 30000 + 20000))
-  dup=0
+is_free() {
+  local port=$1
   for p in ${picked[@]+"${picked[@]}"}; do
-    if [ "$p" = "$port" ]; then dup=1; break; fi
+    if [ "$p" = "$port" ]; then return 1; fi
   done
-  if [ "$dup" = 1 ]; then continue; fi
-  if ! (exec 3<>"/dev/tcp/127.0.0.1/$port") >/dev/null 2>&1; then
-    picked+=("$port")
+  if (exec 3<>"/dev/tcp/127.0.0.1/$port") >/dev/null 2>&1; then
+    exec 3<&- 2>/dev/null || true
+    return 1
   fi
-  exec 3<&- 2>/dev/null || true
+  return 0
+}
+
+random_free_port() {
+  while true; do
+    local port=$((RANDOM % 30000 + 20000))
+    if is_free "$port"; then
+      echo "$port"
+      return
+    fi
+  done
+}
+
+for preferred in "$@"; do
+  if is_free "$preferred"; then
+    picked+=("$preferred")
+  else
+    picked+=("$(random_free_port)")
+  fi
 done
 
 for p in "${picked[@]}"; do

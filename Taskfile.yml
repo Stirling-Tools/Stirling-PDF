@@ -38,7 +38,7 @@ tasks:
     desc: "Start backend + frontend concurrently on free ports"
     vars:
       PORTS:
-        sh: '{{if eq OS "windows"}}powershell -NoProfile -File scripts\find-free-port.ps1 -Count 2{{else}}bash scripts/find-free-port.sh 2{{end}}'
+        sh: '{{if eq OS "windows"}}powershell -NoProfile -File scripts\find-free-port.ps1 -Preferred 8080,5173{{else}}bash scripts/find-free-port.sh 8080 5173{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
       FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
     deps:
@@ -55,7 +55,7 @@ tasks:
     desc: "Start backend + frontend + engine concurrently on free ports"
     vars:
       PORTS:
-        sh: '{{if eq OS "windows"}}powershell -NoProfile -File scripts\find-free-port.ps1 -Count 3{{else}}bash scripts/find-free-port.sh 3{{end}}'
+        sh: '{{if eq OS "windows"}}powershell -NoProfile -File scripts\find-free-port.ps1 -Preferred 8080,5173,5001{{else}}bash scripts/find-free-port.sh 8080 5173 5001{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
       FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
       ENGINE_PORT: '{{index (splitList "\n" .PORTS) 2}}'
