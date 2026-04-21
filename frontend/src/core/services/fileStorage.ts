@@ -340,7 +340,12 @@ class FileStorageService {
         if (cursor) {
           const record = cursor.value as StoredStirlingFileRecord;
           // Only include leaf files (default to true if undefined)
-          if (record && record.name && typeof record.size === "number" && record.isLeaf !== false) {
+          if (
+            record &&
+            record.name &&
+            typeof record.size === "number" &&
+            record.isLeaf !== false
+          ) {
             const fresh = this.isThumbnailFresh(record);
             if (record.thumbnail) {
               if (fresh) tobump.push(record.id);
@@ -408,7 +413,8 @@ class FileStorageService {
       const store = transaction.objectStore(this.storeName);
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
-      transaction.onabort = () => reject(transaction.error ?? new Error("Transaction aborted"));
+      transaction.onabort = () =>
+        reject(transaction.error ?? new Error("Transaction aborted"));
       ids.forEach((id) => store.delete(id));
     });
   }

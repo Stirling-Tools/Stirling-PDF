@@ -10,7 +10,11 @@ import "@app/components/shared/FileSidebarFileItem.css";
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
 /** Generate + persist a thumbnail for a sidebar file that doesn't have one yet. */
-function useLazyThumbnail(fileId: FileId, size: number, thumbnailUrl?: string): string | undefined {
+function useLazyThumbnail(
+  fileId: FileId,
+  size: number,
+  thumbnailUrl?: string,
+): string | undefined {
   const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
   const attempted = useRef(false);
   const indexedDB = useIndexedDB();
@@ -21,7 +25,8 @@ function useLazyThumbnail(fileId: FileId, size: number, thumbnailUrl?: string): 
   }, [thumbnailUrl]);
 
   useEffect(() => {
-    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT) return;
+    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT)
+      return;
     attempted.current = true;
     let cancelled = false;
 
@@ -57,10 +62,20 @@ export function formatFileDate(lastModifiedTs: number): string {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const fileDay = new Date(lastModified.getFullYear(), lastModified.getMonth(), lastModified.getDate());
+  const fileDay = new Date(
+    lastModified.getFullYear(),
+    lastModified.getMonth(),
+    lastModified.getDate(),
+  );
 
   if (fileDay.getTime() === today.getTime()) {
-    return lastModified.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).toLowerCase();
+    return lastModified
+      .toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toLowerCase();
   }
   if (fileDay.getTime() === yesterday.getTime()) {
     return "Yesterday";
@@ -70,10 +85,19 @@ export function formatFileDate(lastModifiedTs: number): string {
   if (fileDay >= weekAgo) {
     return lastModified.toLocaleDateString("en-US", { weekday: "long" });
   }
-  return lastModified.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return lastModified.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
-function FilePdfIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+function FilePdfIcon({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <svg
       className={className}
@@ -97,7 +121,13 @@ function FilePdfIcon({ className, style }: { className?: string; style?: React.C
   );
 }
 
-function FileGenericIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+function FileGenericIcon({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <svg
       className={className}
@@ -117,7 +147,13 @@ function FileGenericIcon({ className, style }: { className?: string; style?: Rea
   );
 }
 
-function CheckIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+function CheckIcon({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <svg
       className={className}
@@ -179,7 +215,12 @@ export function FileItem({
 
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
-    hoverRect && resolvedThumbnail ? { top: hoverRect.top + hoverRect.height / 2, left: hoverRect.right + 10 } : null;
+    hoverRect && resolvedThumbnail
+      ? {
+          top: hoverRect.top + hoverRect.height / 2,
+          left: hoverRect.right + 10,
+        }
+      : null;
 
   return (
     <>
@@ -216,7 +257,11 @@ export function FileItem({
           )}
         </div>
         <div className="file-sidebar-file-info">
-          <span className={`file-sidebar-file-name${isSelected ? " selected" : ""}`}>{name}</span>
+          <span
+            className={`file-sidebar-file-name${isSelected ? " selected" : ""}`}
+          >
+            {name}
+          </span>
           <span className="file-sidebar-file-meta">
             {dateLabel}
             {dateLabel && typeLabel ? " · " : ""}
@@ -233,16 +278,29 @@ export function FileItem({
           type="button"
           aria-label={isViewedInViewer ? "Close viewer" : "Open in viewer"}
         >
-          <VisibilityOutlinedIcon className="file-sidebar-eye-open" sx={{ fontSize: "1.1rem" }} />
-          <VisibilityOffOutlinedIcon className="file-sidebar-eye-closed" sx={{ fontSize: "1.1rem" }} />
+          <VisibilityOutlinedIcon
+            className="file-sidebar-eye-open"
+            sx={{ fontSize: "1.1rem" }}
+          />
+          <VisibilityOffOutlinedIcon
+            className="file-sidebar-eye-closed"
+            sx={{ fontSize: "1.1rem" }}
+          />
         </button>
       </div>
 
       {thumbPos &&
         resolvedThumbnail &&
         createPortal(
-          <div className="file-sidebar-thumb-tooltip" style={{ top: thumbPos.top, left: thumbPos.left }}>
-            <img src={resolvedThumbnail} alt="" className="file-sidebar-thumb-img" />
+          <div
+            className="file-sidebar-thumb-tooltip"
+            style={{ top: thumbPos.top, left: thumbPos.left }}
+          >
+            <img
+              src={resolvedThumbnail}
+              alt=""
+              className="file-sidebar-thumb-img"
+            />
           </div>,
           document.body,
         )}

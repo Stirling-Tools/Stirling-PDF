@@ -484,7 +484,11 @@ export async function addFiles(
         // Persist the thumbnail to IndexedDB so it's available in future sessions.
         // The file was stored before hydration ran, so it had no thumbnail yet.
         // Skip blob URLs — they're session-only and won't be valid after reload.
-        if (primaryThumbnail && enablePersistence && !primaryThumbnail.startsWith("blob:")) {
+        if (
+          primaryThumbnail &&
+          enablePersistence &&
+          !primaryThumbnail.startsWith("blob:")
+        ) {
           try {
             await fileStorage.updateThumbnail(fileId, primaryThumbnail);
           } catch {
@@ -715,7 +719,11 @@ export async function undoConsumeFiles(
     if (indexedDB) {
       outputFileIds.forEach((fileId) => {
         indexedDB.deleteFile(fileId).catch((error) => {
-          console.error("📄 undoConsumeFiles: Failed to delete output file from IDB:", fileId, error);
+          console.error(
+            "📄 undoConsumeFiles: Failed to delete output file from IDB:",
+            fileId,
+            error,
+          );
           // Bump revision so the sidebar re-reads IDB and orphaned files reappear.
           indexedDB.bumpRevision?.();
         });
@@ -726,7 +734,10 @@ export async function undoConsumeFiles(
     await Promise.all(
       inputStirlingFileStubs.map((stub) =>
         fileStorage.markFileAsLeaf(stub.id).catch((error) => {
-          console.warn(`📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`, error);
+          console.warn(
+            `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
+            error,
+          );
         }),
       ),
     );

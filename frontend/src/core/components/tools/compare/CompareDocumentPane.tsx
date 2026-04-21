@@ -111,7 +111,12 @@ const CompareDocumentPane = ({
     <div className="compare-pane">
       <div className="compare-header">
         <Group justify="space-between" align="center" wrap="nowrap">
-          <Text fw={600} size="lg" style={{ minWidth: 0, flex: 1 }} title={title || undefined}>
+          <Text
+            fw={600}
+            size="lg"
+            style={{ minWidth: 0, flex: 1 }}
+            title={title || undefined}
+          >
             {title ? truncateCenter(title, COMPARE_PANE_TITLE_MAX_LEN) : title}
           </Text>
           <Group justify="flex-end" align="center" gap="sm" wrap="nowrap">

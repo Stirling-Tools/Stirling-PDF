@@ -3,7 +3,13 @@
  * Integrates with FileContext to provide transparent file persistence
  */
 
-import React, { createContext, useContext, useCallback, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId } from "@app/types/file";
 import {

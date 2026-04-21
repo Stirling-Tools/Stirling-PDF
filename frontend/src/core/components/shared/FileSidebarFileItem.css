@@ -158,7 +158,10 @@
   z-index: 2;
   /* solid base + green tint overlay so content behind doesn't bleed through */
   background-color: var(--bg-toolbar);
-  background-image: linear-gradient(rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.1));
+  background-image: linear-gradient(
+    rgba(34, 197, 94, 0.1),
+    rgba(34, 197, 94, 0.1)
+  );
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-name {
@@ -172,7 +175,10 @@
 /* viewed takes precedence over selected */
 .file-sidebar-file-item.viewed.selected {
   background-color: var(--bg-toolbar);
-  background-image: linear-gradient(rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.1));
+  background-image: linear-gradient(
+    rgba(34, 197, 94, 0.1),
+    rgba(34, 197, 94, 0.1)
+  );
 }
 
 /* Always show eye for the currently viewed file */

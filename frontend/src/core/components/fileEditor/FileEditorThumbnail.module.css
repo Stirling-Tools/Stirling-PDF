@@ -11,7 +11,9 @@
   --file-text-height: 58px;
   --file-text-bottom: 12px;
   --thumb-text-gap: 6px;
-  padding-bottom: calc(var(--file-text-bottom) + var(--file-text-height) + var(--thumb-text-gap));
+  padding-bottom: calc(
+    var(--file-text-bottom) + var(--file-text-height) + var(--thumb-text-gap)
+  );
   user-select: none;
   cursor: pointer;
 }
@@ -156,8 +158,10 @@
   pointer-events: none;
 }
 
-.card:hover [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
-.card:focus-within [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+.card:hover
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.card:focus-within
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 1;
   pointer-events: auto;
 }

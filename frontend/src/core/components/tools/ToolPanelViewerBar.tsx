@@ -3,7 +3,10 @@ import { ActionIcon } from "@mantine/core";
 import { useRightRail } from "@app/contexts/RightRailContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import type { RightRailButtonConfig, RightRailRenderContext } from "@app/types/rightRail";
+import type {
+  RightRailButtonConfig,
+  RightRailRenderContext,
+} from "@app/types/rightRail";
 
 /**
  * Mini toolbar rendered at the top of the ToolPanel when in viewer mode.
@@ -41,7 +44,9 @@ export function ToolPanelViewerBar() {
 
       if (!btn.icon) return null;
 
-      const ariaLabel = btn.ariaLabel || (typeof btn.tooltip === "string" ? btn.tooltip : undefined);
+      const ariaLabel =
+        btn.ariaLabel ||
+        (typeof btn.tooltip === "string" ? btn.tooltip : undefined);
       const buttonNode = (
         <ActionIcon
           variant={isActive ? "filled" : "subtle"}
@@ -59,7 +64,13 @@ export function ToolPanelViewerBar() {
 
       if (!btn.tooltip) return buttonNode;
       return (
-        <Tooltip content={btn.tooltip} position="bottom" offset={6} arrow portalTarget={document.body}>
+        <Tooltip
+          content={btn.tooltip}
+          position="bottom"
+          offset={6}
+          arrow
+          portalTarget={document.body}
+        >
           <div style={{ display: "inline-flex" }}>{buttonNode}</div>
         </Tooltip>
       );
@@ -75,7 +86,10 @@ export function ToolPanelViewerBar() {
         const content = renderButton(btn);
         if (!content) return null;
         return (
-          <div key={btn.id} style={{ display: "inline-flex", alignItems: "center" }}>
+          <div
+            key={btn.id}
+            style={{ display: "inline-flex", alignItems: "center" }}
+          >
             {content}
           </div>
         );

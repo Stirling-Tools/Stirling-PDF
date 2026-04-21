@@ -201,7 +201,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
-  const selectedStyles = isSelected ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" } : {};
+  const selectedStyles = isSelected
+    ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" }
+    : {};
 
   const buttonElement = navProps ? (
     // For internal tools with URLs, render Button as an anchor for proper link behavior
@@ -295,7 +297,12 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   return (
     <div className="tool-button-container">
       {star}
-      <Tooltip content={tooltipContent} position="left" arrow={true} delay={500}>
+      <Tooltip
+        content={tooltipContent}
+        position="left"
+        arrow={true}
+        delay={500}
+      >
         {buttonElement}
       </Tooltip>
     </div>

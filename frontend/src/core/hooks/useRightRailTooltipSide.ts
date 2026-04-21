@@ -5,7 +5,9 @@ export function useRightRailTooltipSide(
   sidebarRefs?: SidebarRefs,
   defaultOffset: number = 16,
 ): { position: "left" | "right" | "bottom"; offset: number } {
-  const [position, setPosition] = useState<"left" | "right" | "bottom">("bottom");
+  const [position, setPosition] = useState<"left" | "right" | "bottom">(
+    "bottom",
+  );
 
   useEffect(() => {
     const computePosition = () => {

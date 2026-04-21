@@ -12,7 +12,8 @@ interface FileDetailsProps {
 }
 
 const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
-  const { selectedFiles, onOpenFiles, modalHeight, activeFileIds } = useFileManagerContext();
+  const { selectedFiles, onOpenFiles, modalHeight, activeFileIds } =
+    useFileManagerContext();
   const { t } = useTranslation();
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -111,7 +112,10 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
         disabled={!hasSelection && !canCloseAll}
         fullWidth
         style={{
-          backgroundColor: hasSelection || canCloseAll ? "var(--btn-open-file)" : "var(--mantine-color-gray-4)",
+          backgroundColor:
+            hasSelection || canCloseAll
+              ? "var(--btn-open-file)"
+              : "var(--mantine-color-gray-4)",
           color: "white",
         }}
       >

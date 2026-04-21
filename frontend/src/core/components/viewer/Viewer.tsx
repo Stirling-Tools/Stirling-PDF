@@ -19,7 +19,9 @@ const Viewer = (props: ViewerProps) => {
   // Determine the active file — previewFile takes priority, then look up by stable ID
   const activeFile = useMemo(() => {
     if (props.previewFile) return props.previewFile;
-    const byId = activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null;
+    const byId = activeFileId
+      ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId)
+      : null;
     return byId ?? activeFiles[0] ?? null;
   }, [props.previewFile, activeFiles, activeFileId]);
 

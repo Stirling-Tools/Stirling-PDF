@@ -9,7 +9,11 @@ interface ThumbnailSidebarProps {
   activeFileId?: string | null;
 }
 
-export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileId }: ThumbnailSidebarProps) {
+export function ThumbnailSidebar({
+  visible,
+  onToggle: _onToggle,
+  activeFileId,
+}: ThumbnailSidebarProps) {
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
 

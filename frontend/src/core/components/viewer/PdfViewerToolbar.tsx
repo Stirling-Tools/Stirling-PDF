@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { ActionIcon, Button, Paper, Group, NumberInput, Slider } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Paper,
+  Group,
+  NumberInput,
+  Slider,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -325,7 +332,14 @@ export function PdfViewerToolbar({
         >
           <ZoomInIcon fontSize="small" />
         </ActionIcon>
-        <span style={{ minWidth: "2.5rem", textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>
+        <span
+          style={{
+            minWidth: "2.5rem",
+            textAlign: "center",
+            fontSize: 12,
+            color: "var(--text-muted)",
+          }}
+        >
           {displayZoomPercent}%
         </span>
       </Group>

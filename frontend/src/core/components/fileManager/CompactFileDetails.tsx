@@ -95,7 +95,9 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* File info */}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text size="sm" fw={500} truncate>
-            <PrivateContent>{currentFile ? currentFile.name : "No file loaded"}</PrivateContent>
+            <PrivateContent>
+              {currentFile ? currentFile.name : "No file loaded"}
+            </PrivateContent>
           </Text>
           <Text size="xs" c="dimmed">
             {currentFile ? getFileSize(currentFile) : ""}
@@ -152,7 +154,10 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         disabled={!hasSelection && !canCloseAll}
         fullWidth
         style={{
-          backgroundColor: hasSelection || canCloseAll ? "var(--btn-open-file)" : "var(--mantine-color-gray-4)",
+          backgroundColor:
+            hasSelection || canCloseAll
+              ? "var(--btn-open-file)"
+              : "var(--mantine-color-gray-4)",
           color: "white",
         }}
       >

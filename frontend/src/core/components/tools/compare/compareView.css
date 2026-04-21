@@ -564,8 +564,13 @@
   justify-content: center;
   gap: 0.35rem;
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--mantine-color-blue-4) 28%, var(--border-default));
-  background: color-mix(in srgb, var(--mantine-color-blue-0) 92%, var(--mantine-color-body));
+  border: 1px solid
+    color-mix(in srgb, var(--mantine-color-blue-4) 28%, var(--border-default));
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-0) 92%,
+    var(--mantine-color-body)
+  );
   color: var(--mantine-color-blue-filled);
   cursor: pointer;
   font: inherit;
@@ -575,8 +580,16 @@
 }
 
 .compare-step-selection__swap:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--mantine-color-blue-1) 75%, var(--mantine-color-body));
-  border-color: color-mix(in srgb, var(--mantine-color-blue-5) 35%, var(--border-default));
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-1) 75%,
+    var(--mantine-color-body)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-5) 35%,
+    var(--border-default)
+  );
 }
 
 .compare-step-selection__swap:disabled {
@@ -598,18 +611,31 @@
   writing-mode: horizontal-tb;
 }
 
-[data-mantine-color-scheme=”dark”] .compare-step-selection__swap {
-  background: color-mix(in srgb, var(--mantine-color-blue-9) 22%, var(--mantine-color-dark-6));
-  border-color: color-mix(in srgb, var(--mantine-color-blue-4) 40%, var(--border-default));
+[data-mantine-color-scheme="”dark”"] .compare-step-selection__swap {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-9) 22%,
+    var(--mantine-color-dark-6)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-4) 40%,
+    var(--border-default)
+  );
   color: var(--mantine-color-blue-3);
 }
 
-[data-mantine-color-scheme=”dark”] .compare-step-selection__swap:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--mantine-color-blue-9) 32%, var(--mantine-color-dark-6));
+[data-mantine-color-scheme="”dark”"]
+  .compare-step-selection__swap:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-9) 32%,
+    var(--mantine-color-dark-6)
+  );
 }
 
-[data-mantine-color-scheme=”dark”] .compare-step-selection__swap-icon,
-[data-mantine-color-scheme=”dark”] .compare-step-selection__swap-label {
+[data-mantine-color-scheme="”dark”"] .compare-step-selection__swap-icon,
+[data-mantine-color-scheme="”dark”"] .compare-step-selection__swap-label {
   color: var(--mantine-color-blue-3);
 }
 

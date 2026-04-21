@@ -108,7 +108,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           {...props}
         />
         {shouldShowClearButton && (
-          <button type="button" className={styles.clearButton} onClick={handleClear} aria-label="Clear input">
+          <button
+            type="button"
+            className={styles.clearButton}
+            onClick={handleClear}
+            aria-label="Clear input"
+          >
             <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
           </button>
         )}

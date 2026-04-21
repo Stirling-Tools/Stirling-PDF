@@ -73,7 +73,9 @@ export function ViewerInlineControls() {
         <ZoomInIcon sx={{ fontSize: "1rem" }} />
       </ActionIcon>
 
-      <span className="viewer-inline-controls__zoom-pct">{Math.round(zoomPercent)}%</span>
+      <span className="viewer-inline-controls__zoom-pct">
+        {Math.round(zoomPercent)}%
+      </span>
     </div>
   );
 }

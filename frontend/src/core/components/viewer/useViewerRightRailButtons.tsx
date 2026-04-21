@@ -201,9 +201,17 @@ export function useViewerRightRailButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: <LocalIcon icon="pan-tool-rounded" width="1.25rem" height="1.25rem" />,
-        tooltip: !isPanning && pendingCount > 0 && redactionActiveType !== null ? applyRedactionsLabel : panLabel,
-        ariaLabel: !isPanning && pendingCount > 0 && redactionActiveType !== null ? applyRedactionsLabel : panLabel,
+        icon: (
+          <LocalIcon icon="pan-tool-rounded" width="1.25rem" height="1.25rem" />
+        ),
+        tooltip:
+          !isPanning && pendingCount > 0 && redactionActiveType !== null
+            ? applyRedactionsLabel
+            : panLabel,
+        ariaLabel:
+          !isPanning && pendingCount > 0 && redactionActiveType !== null
+            ? applyRedactionsLabel
+            : panLabel,
         section: "top" as const,
         order: 20,
         active: isPanning,
@@ -248,7 +256,9 @@ export function useViewerRightRailButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: <LocalIcon icon="rotate-right" width="1.25rem" height="1.25rem" />,
+        icon: (
+          <LocalIcon icon="rotate-right" width="1.25rem" height="1.25rem" />
+        ),
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -271,7 +281,13 @@ export function useViewerRightRailButtons(
       },
       {
         id: "viewer-toggle-bookmarks",
-        icon: <LocalIcon icon="bookmark-add-rounded" width="1.25rem" height="1.25rem" />,
+        icon: (
+          <LocalIcon
+            icon="bookmark-add-rounded"
+            width="1.25rem"
+            height="1.25rem"
+          />
+        ),
         tooltip: bookmarkLabel,
         ariaLabel: bookmarkLabel,
         section: "top" as const,
@@ -283,7 +299,13 @@ export function useViewerRightRailButtons(
       },
       {
         id: "viewer-toggle-attachments",
-        icon: <LocalIcon icon="attachment-rounded" width="1.25rem" height="1.25rem" />,
+        icon: (
+          <LocalIcon
+            icon="attachment-rounded"
+            width="1.25rem"
+            height="1.25rem"
+          />
+        ),
         tooltip: attachmentLabel,
         ariaLabel: attachmentLabel,
         section: "top" as const,
@@ -351,7 +373,11 @@ export function useViewerRightRailButtons(
                     variant={isReadingAloud ? "filled" : "subtle"}
                     radius="md"
                     className="workbench-bar-action-icon"
-                    disabled={disabled || typeof window === "undefined" || !window.speechSynthesis}
+                    disabled={
+                      disabled ||
+                      typeof window === "undefined" ||
+                      !window.speechSynthesis
+                    }
                     aria-label={readAloudLabel}
                     onClick={handleReadAloud}
                     color={isReadingAloud ? "blue" : undefined}

@@ -268,7 +268,15 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       closeFilesModal();
     },
-    [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx, navActions],
+    [
+      addFiles,
+      closeFilesModal,
+      insertAfterPage,
+      customHandler,
+      actions,
+      fileCtx,
+      navActions,
+    ],
   );
 
   const handleRecentFileSelect = useCallback(

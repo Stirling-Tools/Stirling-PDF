@@ -28,7 +28,8 @@
 
 .triggerOpen {
   border-color: var(--mantine-color-blue-5);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mantine-color-blue-5) 20%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--mantine-color-blue-5) 20%, transparent);
 }
 
 /* ── Popover dropdown ────────────────────────────── */
@@ -67,7 +68,11 @@
   max-height: 26px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--mantine-color-default-hover) 85%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-default-hover) 85%,
+    transparent
+  );
   padding: 1px;
   gap: 1px;
   box-sizing: border-box;

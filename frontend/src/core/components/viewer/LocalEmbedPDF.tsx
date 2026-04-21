@@ -164,7 +164,8 @@ export function LocalEmbedPDF({
 
   // Stable key — avoids recreating the blob URL (and crashing ViewportPlugin) when
   // FileContext produces new File object references for the same file content.
-  const fileStableKey = fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
+  const fileStableKey =
+    fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
     if (file) {
       const objectUrl = URL.createObjectURL(file);

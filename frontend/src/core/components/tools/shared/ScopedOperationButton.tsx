@@ -34,7 +34,9 @@ export function ScopedOperationButton({
   // Disable until all files are hydrated — running early would silently skip unloaded files.
   const isFilesHydrating = fileIds.length > allFiles.length;
   const effectiveDisabledReason =
-    isFilesHydrating && props.disabledReason !== "endpointUnavailable" ? "filesLoading" : props.disabledReason;
+    isFilesHydrating && props.disabledReason !== "endpointUnavailable"
+      ? "filesLoading"
+      : props.disabledReason;
 
   const isViewerMode = workbench === "viewer";
   const isFileEditorMode = workbench === "fileEditor";
@@ -62,7 +64,9 @@ export function ScopedOperationButton({
 
   const pendingCount = fileIds.length - allFiles.length;
   const isBulkLoading = pendingCount > 1;
-  const loadProgress = isBulkLoading ? (allFiles.length / fileIds.length) * 100 : 0;
+  const loadProgress = isBulkLoading
+    ? (allFiles.length / fileIds.length) * 100
+    : 0;
   const showSelectFilesHint =
     !disableScopeHints &&
     isFileEditorMode &&
@@ -79,7 +83,12 @@ export function ScopedOperationButton({
             loading={!isBulkLoading}
             variant={props.variant ?? "filled"}
             color={props.color ?? "blue"}
-            style={{ position: "relative", overflow: "hidden", minHeight: "2.5rem", pointerEvents: "none" }}
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              minHeight: "2.5rem",
+              pointerEvents: "none",
+            }}
           >
             {isBulkLoading && (
               <>
@@ -94,17 +103,25 @@ export function ScopedOperationButton({
                   }}
                 />
                 <Text size="sm" style={{ position: "relative" }}>
-                  {t("tool.filesLoadingProgress", "{{loaded}} / {{total}} files loading...", {
-                    loaded: allFiles.length,
-                    total: fileIds.length,
-                  })}
+                  {t(
+                    "tool.filesLoadingProgress",
+                    "{{loaded}} / {{total}} files loading...",
+                    {
+                      loaded: allFiles.length,
+                      total: fileIds.length,
+                    },
+                  )}
                 </Text>
               </>
             )}
           </Button>
         </Box>
       ) : (
-        <OperationButton {...props} submitText={scopedText} disabledReason={effectiveDisabledReason} />
+        <OperationButton
+          {...props}
+          submitText={scopedText}
+          disabledReason={effectiveDisabledReason}
+        />
       )}
       {viewerFileName && (
         <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>

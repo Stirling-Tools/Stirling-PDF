@@ -246,7 +246,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // Dep on state.files.ids so the effect re-runs on every add/remove.
   useEffect(() => {
     if (!activeFileId) return;
-    const stillInWorkbench = state.files.ids.some((id) => (id as string) === activeFileId);
+    const stillInWorkbench = state.files.ids.some(
+      (id) => (id as string) === activeFileId,
+    );
     if (!stillInWorkbench) setActiveFileId(null);
   }, [activeFileId, state.files.ids]);
 

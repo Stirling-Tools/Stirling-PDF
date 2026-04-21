@@ -333,14 +333,19 @@ const EmbedPdfViewerContent = ({
     if (previewFile) {
       return previewFile;
     } else if (activeFiles.length > 0) {
-      const byId = activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null;
+      const byId = activeFileId
+        ? activeFiles.find(
+            (f) => isStirlingFile(f) && f.fileId === activeFileId,
+          )
+        : null;
       return byId || activeFiles[0];
     }
     return null;
   }, [previewFile, activeFiles, activeFileId]);
 
   // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
-  const currentFileStableId = currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const currentFileStableId =
+    currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
   const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
 
   // Determine the effective file to display
@@ -765,7 +770,14 @@ const EmbedPdfViewerContent = ({
         formApplyInProgressRef.current = false;
       }
     },
-    [currentFile, activeFiles, actions, selectors, activeFileIds.length, rotationState.rotation],
+    [
+      currentFile,
+      activeFiles,
+      actions,
+      selectors,
+      activeFileIds.length,
+      rotationState.rotation,
+    ],
   );
 
   useEffect(() => {
@@ -823,7 +835,14 @@ const EmbedPdfViewerContent = ({
         layerApplyInProgressRef.current = false;
       }
     },
-    [currentFile, activeFiles, actions, selectors, activeFileIds.length, rotationState.rotation],
+    [
+      currentFile,
+      activeFiles,
+      actions,
+      selectors,
+      activeFileIds.length,
+      rotationState.rotation,
+    ],
   );
 
   // Discard pending redactions but save already-applied ones
@@ -1097,7 +1116,11 @@ const EmbedPdfViewerContent = ({
       // the effect re-fires before the async fetch completes.
     }
 
-    if (currentFile && !isCurrentFileEncrypted && (fileChanged || providerChanged)) {
+    if (
+      currentFile &&
+      !isCurrentFileEncrypted &&
+      (fileChanged || providerChanged)
+    ) {
       console.log("[FormFill] Fetching form fields for:", currentFileId);
       fetchFormFields(currentFile, currentFileId ?? undefined);
     }
@@ -1159,7 +1182,12 @@ const EmbedPdfViewerContent = ({
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
             <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
-            <Text fw={500}>{t("encryptedPdfUnlock.viewerLocked", "This PDF is password-protected")}</Text>
+            <Text fw={500}>
+              {t(
+                "encryptedPdfUnlock.viewerLocked",
+                "This PDF is password-protected",
+              )}
+            </Text>
             <Button
               variant="filled"
               onClick={() => {
@@ -1266,7 +1294,11 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Thumbnail Sidebar */}
-      <ThumbnailSidebar visible={isThumbnailSidebarVisible} onToggle={toggleThumbnailSidebar} activeFileId={activeFileId} />
+      <ThumbnailSidebar
+        visible={isThumbnailSidebarVisible}
+        onToggle={toggleThumbnailSidebar}
+        activeFileId={activeFileId}
+      />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}

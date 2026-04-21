@@ -376,7 +376,10 @@ export default function HomePage() {
           <Workbench />
           {!hideToolPanel && <ToolPanel />}
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-          <AppConfigModal opened={configModalOpen} onClose={() => setConfigModalOpen(false)} />
+          <AppConfigModal
+            opened={configModalOpen}
+            onClose={() => setConfigModalOpen(false)}
+          />
         </Group>
       )}
     </div>

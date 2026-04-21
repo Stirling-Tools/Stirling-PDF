@@ -94,8 +94,15 @@ const ToolSearch = ({
       ref={searchRef}
       value={value}
       onChange={handleSearchChange}
-      placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-      icon={iconOverride ?? (hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.25rem" height="1.25rem" />)}
+      placeholder={
+        placeholder || t("toolPicker.searchPlaceholder", "Search tools...")
+      }
+      icon={
+        iconOverride ??
+        (hideIcon ? undefined : (
+          <LocalIcon icon="search-rounded" width="1.25rem" height="1.25rem" />
+        ))
+      }
       iconClickable={!!iconOverride}
       autoComplete="off"
       onFocus={onFocus}

@@ -169,8 +169,13 @@ export default function Workbench() {
       }
     >
       {/* Workbench Bar - replaces TopControls and includes RightRail action buttons */}
-      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)?.hideTopControls && (
-        <WorkbenchBar currentView={currentView} setCurrentView={setCurrentView} hasFiles={activeFiles.length > 0} />
+      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)
+        ?.hideTopControls && (
+        <WorkbenchBar
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          hasFiles={activeFiles.length > 0}
+        />
       )}
 
       {/* Dismiss All Errors Button */}

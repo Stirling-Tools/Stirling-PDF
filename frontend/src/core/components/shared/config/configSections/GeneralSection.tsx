@@ -361,13 +361,22 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
       {/* Appearance */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
               <Text fw={500} size="sm">
                 {t("settings.general.theme", "Theme")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
-                {t("settings.general.themeDescription", "Switch between light and dark mode")}
+                {t(
+                  "settings.general.themeDescription",
+                  "Switch between light and dark mode",
+                )}
               </Text>
             </div>
             <SegmentedControl
@@ -376,18 +385,33 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 if ((themeMode === "dark") !== (val === "dark")) toggleTheme();
               }}
               data={[
-                { label: t("settings.general.themeLight", "Light"), value: "light" },
-                { label: t("settings.general.themeDark", "Dark"), value: "dark" },
+                {
+                  label: t("settings.general.themeLight", "Light"),
+                  value: "light",
+                },
+                {
+                  label: t("settings.general.themeDark", "Dark"),
+                  value: "dark",
+                },
               ]}
             />
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
               <Text fw={500} size="sm">
                 {t("settings.general.language", "Language")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
-                {t("settings.general.languageDescription", "Choose the display language")}
+                {t(
+                  "settings.general.languageDescription",
+                  "Choose the display language",
+                )}
               </Text>
             </div>
             <LanguageSelector position="bottom-end" offset={6} />

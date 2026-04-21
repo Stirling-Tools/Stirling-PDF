@@ -506,7 +506,9 @@ function FileContextInner({
     }
 
     if (failedIds.length > 0) {
-      const failedNames = failedIds.map((id) => stateRef.current.files.byId[id]?.name ?? id);
+      const failedNames = failedIds.map(
+        (id) => stateRef.current.files.byId[id]?.name ?? id,
+      );
       setUnlockError(
         t("encryptedPdfUnlock.unlockAllPartialFail", {
           defaultValue: "Wrong password for: {{names}}",

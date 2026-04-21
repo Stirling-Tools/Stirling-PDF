@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useRightRail } from "@app/contexts/RightRailContext";
-import { useFileState, useFileSelection, useFileActions } from "@app/contexts/FileContext";
+import {
+  useFileState,
+  useFileSelection,
+  useFileActions,
+} from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
@@ -12,7 +16,11 @@ import { WorkbenchType } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { downloadFile } from "@app/services/downloadService";
-import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from "@app/types/rightRail";
+import {
+  RightRailButtonConfig,
+  RightRailRenderContext,
+  RightRailSection,
+} from "@app/types/rightRail";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
 import CloseIcon from "@mui/icons-material/Close";
@@ -33,7 +41,10 @@ interface WorkbenchBarProps {
   hasFiles: boolean;
 }
 
-function renderWithTooltip(node: React.ReactNode, tooltip: React.ReactNode | undefined) {
+function renderWithTooltip(
+  node: React.ReactNode,
+  tooltip: React.ReactNode | undefined,
+) {
   if (!tooltip) return node;
   return (
     <Tooltip
@@ -48,11 +59,17 @@ function renderWithTooltip(node: React.ReactNode, tooltip: React.ReactNode | und
   );
 }
 
-export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: WorkbenchBarProps) {
+export default function WorkbenchBar({
+  currentView,
+  setCurrentView,
+  hasFiles,
+}: WorkbenchBarProps) {
   const { t } = useTranslation();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
-  const { pageEditorFunctions, toolPanelMode, leftPanelView } = useToolWorkflow();
-  const disableForFullscreen = toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
+  const { pageEditorFunctions, toolPanelMode, leftPanelView } =
+    useToolWorkflow();
+  const disableForFullscreen =
+    toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const viewerContext = React.useContext(ViewerContext);
@@ -63,7 +80,8 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
   const activeFiles = selectors.getFiles();
   const { activeFileId, setActiveFileId } = useViewer();
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
-  const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
+  const pageEditorSelectedCount =
+    pageEditorFunctions?.selectedPageIds?.length ?? 0;
 
   const totalItems = useMemo(() => {
     if (currentView === "pageEditor") return pageEditorTotalPages;
@@ -77,7 +95,9 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
 
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
-      const sectionButtons = buttons.filter((btn) => (btn.section ?? "top") === section && (btn.visible ?? true));
+      const sectionButtons = buttons.filter(
+        (btn) => (btn.section ?? "top") === section && (btn.visible ?? true),
+      );
       return { section, buttons: sectionButtons };
     }).filter((entry) => entry.buttons.length > 0);
   }, [buttons]);
@@ -87,9 +107,12 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
       if (currentView === "viewer") {
         const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
         if (!buffer) return;
-        const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+        const fileToExport =
+          selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
         if (!fileToExport) return;
-        const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
+        const stub = isStirlingFile(fileToExport)
+          ? selectors.getStirlingFileStub(fileToExport.fileId)
+          : undefined;
         try {
           const result = await downloadFile({
             data: new Blob([buffer], { type: "application/pdf" }),
@@ -113,9 +136,12 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
         return;
       }
 
-      const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+      const filesToExport =
+        selectedFiles.length > 0 ? selectedFiles : activeFiles;
       for (const file of filesToExport) {
-        const stub = isStirlingFile(file) ? selectors.getStirlingFileStub(file.fileId) : undefined;
+        const stub = isStirlingFile(file)
+          ? selectors.getStirlingFileStub(file.fileId)
+          : undefined;
         try {
           const result = await downloadFile({
             data: file,
@@ -130,11 +156,23 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             });
           }
         } catch (error) {
-          console.error("[WorkbenchBar] Failed to export file:", file.name, error);
+          console.error(
+            "[WorkbenchBar] Failed to export file:",
+            file.name,
+            error,
+          );
         }
       }
     },
-    [currentView, selectedFiles, activeFiles, pageEditorFunctions, viewerContext, selectors, fileActions],
+    [
+      currentView,
+      selectedFiles,
+      activeFiles,
+      pageEditorFunctions,
+      viewerContext,
+      selectors,
+      fileActions,
+    ],
   );
 
   const handlePrint = useCallback(() => {
@@ -146,11 +184,17 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
       const file =
-        (activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null) ?? activeFiles[0];
+        (activeFileId
+          ? activeFiles.find(
+              (f) => isStirlingFile(f) && f.fileId === activeFileId,
+            )
+          : null) ?? activeFiles[0];
       const countBeforeRemove = activeFiles.length;
       if (file && isStirlingFile(file)) {
         // Pick the next file to show before removing, so the sidebar stays in sync.
-        const remaining = activeFiles.filter((f) => isStirlingFile(f) && f.fileId !== file.fileId);
+        const remaining = activeFiles.filter(
+          (f) => isStirlingFile(f) && f.fileId !== file.fileId,
+        );
         const nextFile = remaining.find(isStirlingFile) ?? null;
         await fileActions.removeFiles([file.fileId], false);
         if (countBeforeRemove <= 1) {
@@ -164,10 +208,19 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
     } else if (currentView === "pageEditor") {
       pageEditorFunctions?.closePdf?.();
     }
-  }, [currentView, fileActions, activeFiles, activeFileId, setActiveFileId, pageEditorFunctions, setCurrentView]);
+  }, [
+    currentView,
+    fileActions,
+    activeFiles,
+    activeFileId,
+    setActiveFileId,
+    pageEditorFunctions,
+    setCurrentView,
+  ]);
 
   const downloadTooltip = useMemo(() => {
-    if (currentView === "pageEditor") return t("rightRail.exportAll", "Export PDF");
+    if (currentView === "pageEditor")
+      return t("rightRail.exportAll", "Export PDF");
     if (currentView === "viewer") return terminology.download;
     if (selectedCount > 0) return terminology.downloadSelected;
     return terminology.downloadAll;
@@ -176,7 +229,9 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
   const renderButton = useCallback(
     (btn: RightRailButtonConfig) => {
       const action = actions[btn.id];
-      const disabled = Boolean(btn.disabled || allButtonsDisabled || disableForFullscreen);
+      const disabled = Boolean(
+        btn.disabled || allButtonsDisabled || disableForFullscreen,
+      );
       const isActive = Boolean(btn.active);
 
       const triggerAction = () => {
@@ -197,7 +252,9 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
 
       if (!btn.icon) return null;
 
-      const ariaLabel = btn.ariaLabel || (typeof btn.tooltip === "string" ? (btn.tooltip as string) : undefined);
+      const ariaLabel =
+        btn.ariaLabel ||
+        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : undefined);
       const buttonNode = (
         <ActionIcon
           variant={isActive ? "filled" : "subtle"}
@@ -219,8 +276,16 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
 
   // View options
   const viewOptions: ViewOption[] = [
-    { value: "viewer", label: t("workbenchBar.viewer", "Viewer"), icon: <InsertDriveFileIcon fontSize="small" /> },
-    { value: "fileEditor", label: t("workbenchBar.activeFiles", "Active Files"), icon: <FolderIcon fontSize="small" /> },
+    {
+      value: "viewer",
+      label: t("workbenchBar.viewer", "Viewer"),
+      icon: <InsertDriveFileIcon fontSize="small" />,
+    },
+    {
+      value: "fileEditor",
+      label: t("workbenchBar.activeFiles", "Active Files"),
+      icon: <FolderIcon fontSize="small" />,
+    },
   ];
 
   const barRef = useRef<HTMLDivElement>(null);
@@ -231,14 +296,19 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
 
     const measure = () => {
       const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
-      const globalsEl = bar.querySelector<HTMLElement>(".workbench-bar-globals");
+      const globalsEl = bar.querySelector<HTMLElement>(
+        ".workbench-bar-globals",
+      );
       const centerEl = bar.querySelector<HTMLElement>(".workbench-bar-center");
 
       const viewsWidth = viewsEl?.offsetWidth ?? 0;
       const globalsWidth = globalsEl?.offsetWidth ?? 0;
-      const centerChildren = centerEl ? (Array.from(centerEl.children) as HTMLElement[]) : [];
+      const centerChildren = centerEl
+        ? (Array.from(centerEl.children) as HTMLElement[])
+        : [];
       const centerWidth =
-        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) + Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
+        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
+        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
 
       const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
       bar.dataset.wrapped = String(needed > bar.clientWidth);
@@ -251,7 +321,12 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
   }, []);
 
   return (
-    <div ref={barRef} className="workbench-bar" data-wrapped="true" data-tour="workbench-bar">
+    <div
+      ref={barRef}
+      className="workbench-bar"
+      data-wrapped="true"
+      data-tour="workbench-bar"
+    >
       {/* Left: View switcher */}
       <div className="workbench-bar-views">
         {hasFiles &&
@@ -272,20 +347,22 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
       {/* Tool buttons — second row, only rendered when buttons exist */}
       {sectionsWithButtons.length > 0 && (
         <div className="workbench-bar-center">
-          {sectionsWithButtons.map(({ section, buttons: sectionButtons }, idx) => (
-            <React.Fragment key={section}>
-              {idx > 0 && <div className="workbench-bar-divider" />}
-              {sectionButtons.map((btn) => {
-                const content = renderButton(btn);
-                if (!content) return null;
-                return (
-                  <div key={btn.id} className="workbench-bar-action-wrapper">
-                    {content}
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
+          {sectionsWithButtons.map(
+            ({ section, buttons: sectionButtons }, idx) => (
+              <React.Fragment key={section}>
+                {idx > 0 && <div className="workbench-bar-divider" />}
+                {sectionButtons.map((btn) => {
+                  const content = renderButton(btn);
+                  if (!content) return null;
+                  return (
+                    <div key={btn.id} className="workbench-bar-action-wrapper">
+                      {content}
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ),
+          )}
         </div>
       )}
 
@@ -299,7 +376,9 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
               radius="md"
               className="workbench-bar-action-icon"
               onClick={handlePrint}
-              disabled={totalItems === 0 || allButtonsDisabled || disableForFullscreen}
+              disabled={
+                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+              }
               aria-label={t("rightRail.print", "Print PDF")}
             >
               <PrintIcon sx={{ fontSize: "1rem" }} />
@@ -314,14 +393,20 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             radius="md"
             className="workbench-bar-action-icon"
             onClick={handleClose}
-            disabled={totalItems === 0 || allButtonsDisabled || disableForFullscreen}
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
             aria-label={
-              currentView === "fileEditor" ? t("rightRail.closeAll", "Close All") : t("rightRail.closePdf", "Close PDF")
+              currentView === "fileEditor"
+                ? t("rightRail.closeAll", "Close All")
+                : t("rightRail.closePdf", "Close PDF")
             }
           >
             <CloseIcon sx={{ fontSize: "1rem" }} />
           </ActionIcon>,
-          currentView === "fileEditor" ? t("rightRail.closeAll", "Close All") : t("rightRail.closePdf", "Close PDF"),
+          currentView === "fileEditor"
+            ? t("rightRail.closeAll", "Close All")
+            : t("rightRail.closePdf", "Close PDF"),
         )}
 
         {/* Download */}
@@ -331,9 +416,15 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             radius="md"
             className="workbench-bar-action-icon"
             onClick={() => handleExportAll()}
-            disabled={disableForFullscreen || totalItems === 0 || allButtonsDisabled}
+            disabled={
+              disableForFullscreen || totalItems === 0 || allButtonsDisabled
+            }
           >
-            <LocalIcon icon={icons.downloadIconName} width="1rem" height="1rem" />
+            <LocalIcon
+              icon={icons.downloadIconName}
+              width="1rem"
+              height="1rem"
+            />
           </ActionIcon>,
           downloadTooltip,
         )}
@@ -346,9 +437,15 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
               radius="md"
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
-              disabled={disableForFullscreen || totalItems === 0 || allButtonsDisabled}
+              disabled={
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+              }
             >
-              <LocalIcon icon={icons.saveAsIconName} width="1rem" height="1rem" />
+              <LocalIcon
+                icon={icons.saveAsIconName}
+                width="1rem"
+                height="1rem"
+              />
             </ActionIcon>,
             t("rightRail.saveAs", "Save As"),
           )}

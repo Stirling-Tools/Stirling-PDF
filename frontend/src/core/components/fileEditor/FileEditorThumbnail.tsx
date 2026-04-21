@@ -86,7 +86,10 @@ const FileEditorThumbnail = ({
   const { state, selectors } = useFileState();
   const isMobile = useIsMobile();
 
-  const actualFile = useMemo(() => activeFiles.find((f) => f.fileId === file.id), [activeFiles, file.id]);
+  const actualFile = useMemo(
+    () => activeFiles.find((f) => f.fileId === file.id),
+    [activeFiles, file.id],
+  );
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -212,7 +215,10 @@ const FileEditorThumbnail = ({
     [file.id, file.name, onReorderFiles],
   );
 
-  const handleCloseWithConfirmation = useCallback(() => setShowCloseModal(true), []);
+  const handleCloseWithConfirmation = useCallback(
+    () => setShowCloseModal(true),
+    [],
+  );
   const handleCancelClose = useCallback(() => setShowCloseModal(false), []);
 
   const handleConfirmClose = useCallback(() => {
@@ -295,10 +301,20 @@ const FileEditorThumbnail = ({
           if (actualFile) {
             if (isPinned) {
               unpinFile(actualFile);
-              alert({ alertType: "neutral", title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
+              alert({
+                alertType: "neutral",
+                title: `Unpinned ${file.name}`,
+                expandable: false,
+                durationMs: 3000,
+              });
             } else {
               pinFile(actualFile);
-              alert({ alertType: "success", title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
+              alert({
+                alertType: "success",
+                title: `Pinned ${file.name}`,
+                expandable: false,
+                durationMs: 3000,
+              });
             }
           }
         },
@@ -412,7 +428,9 @@ const FileEditorThumbnail = ({
     onViewFile(file.id);
   };
 
-  const metaLine = [dateLabel, extUpper ? `${extUpper} file` : "", pageLabel].filter(Boolean).join(" - ");
+  const metaLine = [dateLabel, extUpper ? `${extUpper} file` : "", pageLabel]
+    .filter(Boolean)
+    .join(" - ");
 
   return (
     <div
@@ -454,7 +472,9 @@ const FileEditorThumbnail = ({
               {/* Error overlay */}
               {hasError && (
                 <div className={styles.errorOverlay}>
-                  <span className={styles.errorPill}>{t("error._value", "Error")}</span>
+                  <span className={styles.errorPill}>
+                    {t("error._value", "Error")}
+                  </span>
                 </div>
               )}
 
@@ -474,7 +494,12 @@ const FileEditorThumbnail = ({
                   />
                 </PrivateContent>
               ) : file.type?.startsWith("application/pdf") ? (
-                <Stack align="center" justify="center" gap="xs" style={{ height: "100%" }}>
+                <Stack
+                  align="center"
+                  justify="center"
+                  gap="xs"
+                  style={{ height: "100%" }}
+                >
                   <Loader size="sm" />
                   <Text size="xs" c="dimmed">
                     Loading thumbnail...
@@ -484,17 +509,26 @@ const FileEditorThumbnail = ({
 
               {/* Badges — visible on hover via CSS */}
               <div className={styles.thumbBadges}>
-                <span className={styles.versionBadgeThumb}>v{file.versionNumber}</span>
+                <span className={styles.versionBadgeThumb}>
+                  v{file.versionNumber}
+                </span>
                 {isPinned && (
                   <span className={styles.pinnedBadge}>
                     <PushPinIcon style={{ fontSize: 12 }} />
                   </span>
                 )}
                 {isSharedFile && !isOwnedOrLocal && (
-                  <span className={styles.ownershipBadge}>{t("fileManager.sharedWithYou", "Shared")}</span>
+                  <span className={styles.ownershipBadge}>
+                    {t("fileManager.sharedWithYou", "Shared")}
+                  </span>
                 )}
                 {isEncrypted && (
-                  <Tooltip label={t("encryptedPdfUnlock.unlockPrompt", "Unlock PDF to continue")}>
+                  <Tooltip
+                    label={t(
+                      "encryptedPdfUnlock.unlockPrompt",
+                      "Unlock PDF to continue",
+                    )}
+                  >
                     <ActionIcon
                       size="xs"
                       variant="filled"
@@ -521,7 +555,12 @@ const FileEditorThumbnail = ({
         </div>
 
         {/* Hover action menu — visibility driven by CSS on desktop, always shown on mobile */}
-        <HoverActionMenu show={isMobile} actions={hoverActions} position="outside" visibility="cssHover" />
+        <HoverActionMenu
+          show={isMobile}
+          actions={hoverActions}
+          position="outside"
+          visibility="cssHover"
+        />
       </div>
 
       {/* File name + meta */}

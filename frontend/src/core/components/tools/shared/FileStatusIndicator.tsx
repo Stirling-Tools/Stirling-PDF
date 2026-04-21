@@ -165,7 +165,11 @@ const FileStatusIndicator = ({
     >
       ✓{" "}
       {selectedFiles.length === 1 ? (
-        <PrivateContent>{t("fileSelected", "{{filename}}", { filename: selectedFiles[0]?.name })}</PrivateContent>
+        <PrivateContent>
+          {t("fileSelected", "{{filename}}", {
+            filename: selectedFiles[0]?.name,
+          })}
+        </PrivateContent>
       ) : (
         t("filesSelected", "{{count}} files", { count: selectedFiles.length })
       )}

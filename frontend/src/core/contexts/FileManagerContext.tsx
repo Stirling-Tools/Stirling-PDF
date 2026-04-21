@@ -117,9 +117,15 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   activeFileIds,
   maxSelectable = null,
 }) => {
-  const [activeSource, setActiveSource] = useState<"recent" | "local" | "drive">("recent");
-  const [storageFilter, setStorageFilter] = useState<"all" | "local" | "sharedWithMe" | "sharedByMe">("all");
-  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>(() => activeFileIds);
+  const [activeSource, setActiveSource] = useState<
+    "recent" | "local" | "drive"
+  >("recent");
+  const [storageFilter, setStorageFilter] = useState<
+    "all" | "local" | "sharedWithMe" | "sharedByMe"
+  >("all");
+  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>(
+    () => activeFileIds,
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<FileId>>(
@@ -670,13 +676,23 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
 
     // Add newly checked files (not already active)
-    const newlySelected = selectedFiles.filter((f) => !activeFileIds.includes(f.id));
+    const newlySelected = selectedFiles.filter(
+      (f) => !activeFileIds.includes(f.id),
+    );
     if (newlySelected.length > 0) {
       onRecentFilesSelected(newlySelected);
     }
 
     onClose();
-  }, [selectedFiles, selectedFilesSet, activeFileIds, filteredFiles, removeFiles, onRecentFilesSelected, onClose]);
+  }, [
+    selectedFiles,
+    selectedFilesSet,
+    activeFileIds,
+    filteredFiles,
+    removeFiles,
+    onRecentFilesSelected,
+    onClose,
+  ]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -710,8 +726,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setLastClickedIndex(null);
     } else {
       // Select all filtered files, capped at maxSelectable
-      const allIds = filteredFiles.map((file) => file.id).filter(Boolean) as FileId[];
-      setSelectedFileIds(maxSelectable != null ? allIds.slice(0, maxSelectable) : allIds);
+      const allIds = filteredFiles
+        .map((file) => file.id)
+        .filter(Boolean) as FileId[];
+      setSelectedFileIds(
+        maxSelectable != null ? allIds.slice(0, maxSelectable) : allIds,
+      );
       setLastClickedIndex(null);
     }
   }, [filteredFiles, selectedFileIds, maxSelectable]);
@@ -738,7 +758,10 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (localIds.length > 0) {
       try {
         const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
-        const safeIds = getSafeFilesToDelete(localIds, allStoredStubs) as FileId[];
+        const safeIds = getSafeFilesToDelete(
+          localIds,
+          allStoredStubs,
+        ) as FileId[];
         const safeIdSet = new Set(safeIds);
 
         // Clear UI state in one pass.
@@ -753,7 +776,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           safeIds.forEach((id) => next.delete(id));
           for (const [mainId, histFiles] of next.entries()) {
             const filtered = histFiles.filter((h) => !safeIdSet.has(h.id));
-            if (filtered.length !== histFiles.length) next.set(mainId, filtered);
+            if (filtered.length !== histFiles.length)
+              next.set(mainId, filtered);
           }
           return next;
         });
@@ -777,7 +801,15 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         await refreshRecentFiles();
       }
     }
-  }, [selectedFileIds, filteredFiles, performFileDelete, getSafeFilesToDelete, removeFiles, refreshRecentFiles, onBulkRemove]);
+  }, [
+    selectedFileIds,
+    filteredFiles,
+    performFileDelete,
+    getSafeFilesToDelete,
+    removeFiles,
+    refreshRecentFiles,
+    onBulkRemove,
+  ]);
 
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;

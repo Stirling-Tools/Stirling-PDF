@@ -207,7 +207,11 @@ export default function ViewerAnnotationControls({
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== "viewer"}
         >
-          <LocalIcon icon="scan-delete-rounded" width="1.25rem" height="1.25rem" />
+          <LocalIcon
+            icon="scan-delete-rounded"
+            width="1.25rem"
+            height="1.25rem"
+          />
         </ActionIcon>
       </Tooltip>
 
@@ -238,7 +242,11 @@ export default function ViewerAnnotationControls({
           aria-pressed={annotationsHidden}
         >
           <LocalIcon
-            icon={viewerContext?.isAnnotationsVisible ? "visibility" : "preview-off-rounded"}
+            icon={
+              viewerContext?.isAnnotationsVisible
+                ? "visibility"
+                : "preview-off-rounded"
+            }
             width="1.25rem"
             height="1.25rem"
           />
