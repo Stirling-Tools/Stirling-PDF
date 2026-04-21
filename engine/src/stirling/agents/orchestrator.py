@@ -6,7 +6,7 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
-from stirling.agents.form_fill import FormFillAgent
+from stirling.agents.document_extractor import DocumentExtractorAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.user_spec import UserSpecAgent
@@ -21,7 +21,7 @@ from stirling.contracts import (
     PdfQuestionResponse,
     UnsupportedCapabilityResponse,
 )
-from stirling.contracts.form_fill import FormFillRequest, FormFillResponse
+from stirling.contracts.form_fill import KnowledgeUpdateResponse
 from stirling.services import AppRuntime
 
 
@@ -50,7 +50,7 @@ class OrchestratorAgent:
                 ToolOutput(
                     self.delegate_form_fill,
                     name="delegate_form_fill",
-                    description="Delegate requests to fill PDF forms or extract personal information from documents for form filling.",
+                    description="Delegate requests to extract personal information from documents for form filling.",
                 ),
                 ToolOutput(
                     self.delegate_user_spec,
@@ -69,7 +69,7 @@ class OrchestratorAgent:
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested PDF modifications. "
                 "Use delegate_pdf_question for questions about the contents of a PDF. "
-                "Use delegate_form_fill for requests to fill PDF forms or extract personal information for form filling. "
+                "Use delegate_form_fill for requests to extract personal information for form filling. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
@@ -83,9 +83,12 @@ class OrchestratorAgent:
         )
         return result.output
 
-    async def delegate_form_fill(self, ctx: RunContext[OrchestratorDeps]) -> FormFillResponse:
+    async def delegate_form_fill(self, ctx: RunContext[OrchestratorDeps]) -> KnowledgeUpdateResponse:
         request = ctx.deps.request
-        return await FormFillAgent(ctx.deps.runtime).handle(FormFillRequest(user_message=request.user_message))
+        return await DocumentExtractorAgent(ctx.deps.runtime).extract_single(
+            document_text=request.user_message,
+            user_message=request.user_message,
+        )
 
     async def delegate_pdf_edit(self, ctx: RunContext[OrchestratorDeps]) -> PdfEditResponse:
         request = ctx.deps.request

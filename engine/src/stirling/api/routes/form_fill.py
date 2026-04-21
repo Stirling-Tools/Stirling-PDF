@@ -4,8 +4,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.agents import FormAnalyserAgent, FormFillAgent, FormFillerAgent
-from stirling.api.dependencies import get_form_analyser_agent, get_form_fill_agent, get_form_filler_agent
+from stirling.agents import DocumentExtractorAgent, FormAnalyserAgent, FormFillerAgent
+from stirling.api.dependencies import (
+    get_document_extractor_agent,
+    get_form_analyser_agent,
+    get_form_filler_agent,
+)
 from stirling.contracts.form_fill import (
     DocumentExtractionRequest,
     DocumentExtractionResponse,
@@ -13,27 +17,9 @@ from stirling.contracts.form_fill import (
     FormAnalysisResponse,
     FormFillBatchRequest,
     FormFillBatchResponse,
-    FormFillRequest,
-    FormFillResponse,
 )
 
 router = APIRouter(prefix="/api/v1/form/ai", tags=["form-fill"])
-
-
-@router.post("", response_model=FormFillResponse)
-async def form_fill(
-    request: FormFillRequest,
-    agent: Annotated[FormFillAgent, Depends(get_form_fill_agent)],
-) -> FormFillResponse:
-    return await agent.handle(request)
-
-
-@router.post("/extract", response_model=DocumentExtractionResponse)
-async def extract_from_documents(
-    request: DocumentExtractionRequest,
-    agent: Annotated[FormFillAgent, Depends(get_form_fill_agent)],
-) -> DocumentExtractionResponse:
-    return await agent.extract_documents(request)
 
 
 @router.post("/analyse", response_model=FormAnalysisResponse)
@@ -50,3 +36,11 @@ async def fill_forms_batch(
     agent: Annotated[FormFillerAgent, Depends(get_form_filler_agent)],
 ) -> FormFillBatchResponse:
     return await agent.fill_batch(request)
+
+
+@router.post("/extract", response_model=DocumentExtractionResponse)
+async def extract_from_documents(
+    request: DocumentExtractionRequest,
+    agent: Annotated[DocumentExtractorAgent, Depends(get_document_extractor_agent)],
+) -> DocumentExtractionResponse:
+    return await agent.extract_multiple(request)

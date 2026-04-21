@@ -4,8 +4,6 @@
  */
 import axios from 'axios';
 import type {
-  AiFormFillRequest,
-  AiFormFillResponse,
   DocumentExtractionRequest,
   DocumentExtractionResponse,
   FormAnalysisRequest,
@@ -18,16 +16,6 @@ const aiEngineClient = axios.create({
   baseURL: '/engine-api',
   headers: { 'Content-Type': 'application/json' },
 });
-
-export async function aiFormFill(
-  request: AiFormFillRequest
-): Promise<AiFormFillResponse> {
-  const response = await aiEngineClient.post<AiFormFillResponse>(
-    '/api/v1/form/ai',
-    request
-  );
-  return response.data;
-}
 
 export async function extractFromDocuments(
   request: DocumentExtractionRequest

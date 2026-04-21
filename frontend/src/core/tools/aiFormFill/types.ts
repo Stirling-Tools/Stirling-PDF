@@ -6,20 +6,6 @@ import type { FormField } from '@app/tools/formFill/types';
 
 export type { FormField };
 
-export interface ConversationMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-export interface AiFormFillRequest {
-  userMessage: string;
-  conversationHistory: ConversationMessage[];
-  formFields: FormField[];
-  knowledge: Record<string, string>;
-  extractedDocumentText?: string;
-  roleOverride?: string;
-}
-
 export interface FieldMapping {
   fieldName: string;
   knowledgeKey: string;
@@ -43,49 +29,11 @@ export interface DetectedRole {
   isPrimaryPerson: boolean;
 }
 
-export interface RoleDetectionResult {
-  detectedRoles: DetectedRole[];
-  primaryRoleLabel: string | null;
-  primaryConfidence: number;
-  confidenceReasoning: string;
-}
-
-export interface FillResultResponse {
-  outcome: 'fill_result';
-  filledFields: FieldMapping[];
-  cleanedLabels: CleanedLabel[];
-  skippedFieldNames: string[];
-  roleDetection: RoleDetectionResult | null;
-  message: string;
-}
-
-export interface RoleConfirmationResponse {
-  outcome: 'role_confirmation_needed';
-  roleDetection: RoleDetectionResult;
-  suggestedPrimary: string;
-  question: string;
-  provisionalFills: FieldMapping[];
-  cleanedLabels: CleanedLabel[];
-  skippedFieldNames: string[];
-}
-
 export interface KnowledgeUpdateResponse {
   outcome: 'knowledge_update';
   proposedEntries: KnowledgeEntry[];
   message: string;
 }
-
-export interface FormFillClarificationResponse {
-  outcome: 'form_fill_clarification';
-  question: string;
-  reason: string;
-}
-
-export type AiFormFillResponse =
-  | FillResultResponse
-  | RoleConfirmationResponse
-  | KnowledgeUpdateResponse
-  | FormFillClarificationResponse;
 
 export interface DocumentText {
   fileName: string;
@@ -169,13 +117,3 @@ export interface FormFillBatchResponse {
   perFile: FileFillResult[];
   message: string;
 }
-
-export type AiFormFillPhase =
-  | 'idle'
-  | 'fetching_fields'
-  | 'analysing'
-  | 'analysis_review'
-  | 'filling'
-  | 'role_confirm'
-  | 'results'
-  | 'applying';

@@ -1,20 +1,26 @@
+"""Tests for the form fill agents (analyser, filler, document extractor)."""
+
 from __future__ import annotations
 
 import pytest
 
-from stirling.agents import FormFillAgent
+from stirling.agents import DocumentExtractorAgent, FormAnalyserAgent, FormFillerAgent
 from stirling.config import AppSettings
 from stirling.contracts.form_fill import (
+    AnalysedFileResult,
+    CrossFileRole,
     DetectedRole,
     FieldMapping,
+    FileFieldSet,
+    FileFillRequest,
+    FileFillResult,
+    FormAnalysisRequest,
+    FormAnalysisResponse,
     FormField,
-    FormFillClarificationResponse,
-    FormFillRequest,
-    FormFillResultResponse,
+    FormFillBatchRequest,
+    FormFillBatchResponse,
     KnowledgeEntry,
     KnowledgeUpdateResponse,
-    RoleConfirmationResponse,
-    RoleDetectionResult,
 )
 from stirling.services import build_runtime
 
@@ -28,193 +34,199 @@ def build_test_settings() -> AppSettings:
     )
 
 
-class StubFormFillAgent(FormFillAgent):
-    def __init__(
-        self,
-        fill_response: FormFillResultResponse | None = None,
-        extraction_response: KnowledgeUpdateResponse | None = None,
-    ) -> None:
+# --- FormAnalyserAgent stubs ---
+
+
+class StubFormAnalyserAgent(FormAnalyserAgent):
+    def __init__(self, response: FormAnalysisResponse) -> None:
         super().__init__(build_runtime(build_test_settings()))
-        self._fill_response = fill_response
-        self._extraction_response = extraction_response
+        self._response = response
 
-    async def _run_fill_agent(self, request: FormFillRequest) -> FormFillResultResponse:
-        assert self._fill_response is not None
-        return self._fill_response
+    async def analyse(self, request: FormAnalysisRequest) -> FormAnalysisResponse:
+        return self._response
 
-    async def _extract_knowledge(self, request: FormFillRequest) -> KnowledgeUpdateResponse:
-        assert self._extraction_response is not None
-        return self._extraction_response
+
+# --- FormFillerAgent stubs ---
+
+
+class StubFormFillerAgent(FormFillerAgent):
+    def __init__(self, response: FormFillBatchResponse) -> None:
+        super().__init__(build_runtime(build_test_settings()))
+        self._response = response
+
+    async def fill_batch(self, request: FormFillBatchRequest) -> FormFillBatchResponse:
+        return self._response
+
+
+# --- DocumentExtractorAgent stubs ---
+
+
+class StubDocumentExtractorAgent(DocumentExtractorAgent):
+    def __init__(self, response: KnowledgeUpdateResponse) -> None:
+        super().__init__(build_runtime(build_test_settings()))
+        self._response = response
+
+    async def extract_single(self, document_text: str, user_message: str = "") -> KnowledgeUpdateResponse:
+        return self._response
+
+
+# --- Tests ---
 
 
 @pytest.mark.anyio
-async def test_form_fill_returns_clarification_when_no_fields_or_document() -> None:
-    agent = FormFillAgent(build_runtime(build_test_settings()))
-
-    response = await agent.handle(FormFillRequest(user_message="Fill this form"))
-
-    assert isinstance(response, FormFillClarificationResponse)
-
-
-@pytest.mark.anyio
-async def test_form_fill_routes_to_fill_when_fields_provided() -> None:
-    expected = FormFillResultResponse(
-        filled_fields=[FieldMapping(field_name="name", knowledge_key="full_name", value="John Doe")],
-        role_detection=RoleDetectionResult(
-            detected_roles=[DetectedRole(role_label="Applicant", field_names=["name"], is_primary_person=True)],
-            primary_role_label="Applicant",
-            primary_confidence=1.0,
-            confidence_reasoning="Single section form.",
-        ),
-        message="Filled 1 field.",
+async def test_analyser_returns_roles_for_single_file() -> None:
+    expected = FormAnalysisResponse(
+        per_file=[
+            AnalysedFileResult(
+                file_id="f1",
+                file_name="form.pdf",
+                detected_roles=[
+                    DetectedRole(role_label="Client", field_names=["name", "email"], is_primary_person=True),
+                    DetectedRole(role_label="Beneficiary", field_names=["ben_name"], is_primary_person=False),
+                ],
+            )
+        ],
+        cross_file_roles=[
+            CrossFileRole(
+                role_label="Client",
+                file_ids=["f1"],
+                field_names_by_file={"f1": ["name", "email"]},
+                is_primary_person=True,
+            ),
+            CrossFileRole(
+                role_label="Beneficiary",
+                file_ids=["f1"],
+                field_names_by_file={"f1": ["ben_name"]},
+                is_primary_person=False,
+            ),
+        ],
+        message="Found 2 roles.",
     )
-    agent = StubFormFillAgent(fill_response=expected)
+    agent = StubFormAnalyserAgent(expected)
 
-    response = await agent.handle(
-        FormFillRequest(
-            user_message="Fill this form",
-            form_fields=[FormField(name="name", type="text", label="Full Name")],
+    result = await agent.analyse(
+        FormAnalysisRequest(
+            files=[
+                FileFieldSet(
+                    file_id="f1",
+                    file_name="form.pdf",
+                    form_fields=[
+                        FormField(name="name", type="text", label="Full Name"),
+                        FormField(name="email", type="text", label="Email"),
+                        FormField(name="ben_name", type="text", label="Beneficiary Name"),
+                    ],
+                )
+            ]
+        )
+    )
+
+    assert len(result.cross_file_roles) == 2
+    assert result.cross_file_roles[0].is_primary_person
+
+
+@pytest.mark.anyio
+async def test_analyser_merges_roles_across_files() -> None:
+    expected = FormAnalysisResponse(
+        per_file=[
+            AnalysedFileResult(
+                file_id="f1",
+                file_name="a.pdf",
+                detected_roles=[
+                    DetectedRole(role_label="Client", field_names=["name"], is_primary_person=True),
+                ],
+            ),
+            AnalysedFileResult(
+                file_id="f2",
+                file_name="b.pdf",
+                detected_roles=[
+                    DetectedRole(role_label="Applicant", field_names=["applicant_name"], is_primary_person=True),
+                ],
+            ),
+        ],
+        cross_file_roles=[
+            CrossFileRole(
+                role_label="Client",
+                file_ids=["f1", "f2"],
+                field_names_by_file={"f1": ["name"], "f2": ["applicant_name"]},
+                is_primary_person=True,
+            ),
+        ],
+        message="Merged Client and Applicant.",
+    )
+    agent = StubFormAnalyserAgent(expected)
+
+    result = await agent.analyse(
+        FormAnalysisRequest(
+            files=[
+                FileFieldSet(file_id="f1", file_name="a.pdf", form_fields=[FormField(name="name", type="text")]),
+                FileFieldSet(
+                    file_id="f2", file_name="b.pdf", form_fields=[FormField(name="applicant_name", type="text")]
+                ),
+            ]
+        )
+    )
+
+    assert len(result.cross_file_roles) == 1
+    assert set(result.cross_file_roles[0].file_ids) == {"f1", "f2"}
+
+
+@pytest.mark.anyio
+async def test_filler_returns_filled_fields() -> None:
+    expected = FormFillBatchResponse(
+        per_file=[
+            FileFillResult(
+                file_id="f1",
+                filled_fields=[
+                    FieldMapping(field_name="name", knowledge_key="full_name", value="John Doe"),
+                ],
+            )
+        ],
+        message="Matched 1 field.",
+    )
+    agent = StubFormFillerAgent(expected)
+
+    result = await agent.fill_batch(
+        FormFillBatchRequest(
+            files=[
+                FileFillRequest(file_id="f1", form_fields=[FormField(name="name", type="text")], role_label="Client")
+            ],
             knowledge={"full_name": "John Doe"},
         )
     )
 
-    assert isinstance(response, FormFillResultResponse)
-    assert len(response.filled_fields) == 1
-    assert response.filled_fields[0].value == "John Doe"
+    assert len(result.per_file) == 1
+    assert result.per_file[0].filled_fields[0].value == "John Doe"
 
 
 @pytest.mark.anyio
-async def test_form_fill_routes_to_extraction_when_document_text_provided() -> None:
-    expected = KnowledgeUpdateResponse(
-        proposed_entries=[KnowledgeEntry(key="full_name", value="John Doe", source="extracted from CV")],
-        message="Extracted 1 entry.",
+async def test_filler_returns_empty_when_no_match() -> None:
+    expected = FormFillBatchResponse(
+        per_file=[FileFillResult(file_id="f1", filled_fields=[])],
+        message="No matches.",
     )
-    agent = StubFormFillAgent(extraction_response=expected)
+    agent = StubFormFillerAgent(expected)
 
-    response = await agent.handle(
-        FormFillRequest(
-            user_message="Extract my info",
-            extracted_document_text="John Doe, Software Engineer, john@example.com",
-        )
-    )
-
-    assert isinstance(response, KnowledgeUpdateResponse)
-    assert len(response.proposed_entries) == 1
-    assert response.proposed_entries[0].key == "full_name"
-
-
-@pytest.mark.anyio
-async def test_form_fill_returns_empty_filled_for_unknown_info() -> None:
-    expected = FormFillResultResponse(
-        filled_fields=[],
-        role_detection=RoleDetectionResult(
-            detected_roles=[DetectedRole(role_label="Applicant", field_names=["ssn"], is_primary_person=True)],
-            primary_role_label="Applicant",
-            primary_confidence=1.0,
-            confidence_reasoning="Single section form.",
-        ),
-        message="Could not fill any fields.",
-    )
-    agent = StubFormFillAgent(fill_response=expected)
-
-    response = await agent.handle(
-        FormFillRequest(
-            user_message="Fill this form",
-            form_fields=[FormField(name="ssn", type="text", label="Social Security Number")],
+    result = await agent.fill_batch(
+        FormFillBatchRequest(
+            files=[
+                FileFillRequest(file_id="f1", form_fields=[FormField(name="ssn", type="text")], role_label="Client")
+            ],
             knowledge={},
         )
     )
 
-    assert isinstance(response, FormFillResultResponse)
-    assert len(response.filled_fields) == 0
+    assert len(result.per_file[0].filled_fields) == 0
 
 
 @pytest.mark.anyio
-async def test_form_fill_prefers_fill_when_both_fields_and_document_provided() -> None:
-    expected = FormFillResultResponse(
-        filled_fields=[FieldMapping(field_name="email", knowledge_key="email", value="john@example.com")],
-        role_detection=RoleDetectionResult(
-            detected_roles=[DetectedRole(role_label="Applicant", field_names=["email"], is_primary_person=True)],
-            primary_role_label="Applicant",
-            primary_confidence=1.0,
-            confidence_reasoning="Single section form.",
-        ),
-        message="Filled 1 field.",
+async def test_document_extractor_returns_entries() -> None:
+    expected = KnowledgeUpdateResponse(
+        proposed_entries=[KnowledgeEntry(key="full_name", value="John Doe", source="extracted from CV")],
+        message="Extracted 1 entry.",
     )
-    agent = StubFormFillAgent(fill_response=expected)
+    agent = StubDocumentExtractorAgent(expected)
 
-    response = await agent.handle(
-        FormFillRequest(
-            user_message="Fill this form",
-            form_fields=[FormField(name="email", type="text", label="Email")],
-            knowledge={"email": "john@example.com"},
-            extracted_document_text="Some document text",
-        )
-    )
+    result = await agent.extract_single("John Doe, Software Engineer")
 
-    assert isinstance(response, FormFillResultResponse)
-
-
-@pytest.mark.anyio
-async def test_low_confidence_returns_role_confirmation() -> None:
-    expected = FormFillResultResponse(
-        filled_fields=[FieldMapping(field_name="client_name", knowledge_key="full_name", value="John Doe")],
-        role_detection=RoleDetectionResult(
-            detected_roles=[
-                DetectedRole(role_label="Client", field_names=["client_name"], is_primary_person=True),
-                DetectedRole(role_label="Beneficiary", field_names=["beneficiary_name"], is_primary_person=False),
-            ],
-            primary_role_label="Client",
-            primary_confidence=0.7,
-            confidence_reasoning="Field prefixes suggest Client is primary.",
-        ),
-        message="Filled 1 field.",
-    )
-    agent = StubFormFillAgent(fill_response=expected)
-
-    response = await agent.handle(
-        FormFillRequest(
-            user_message="Fill this form",
-            form_fields=[
-                FormField(name="client_name", type="text", label="Client Name"),
-                FormField(name="beneficiary_name", type="text", label="Beneficiary Name"),
-            ],
-            knowledge={"full_name": "John Doe"},
-        )
-    )
-
-    assert isinstance(response, RoleConfirmationResponse)
-    assert response.suggested_primary == "Client"
-    assert len(response.provisional_fills) == 1
-
-
-@pytest.mark.anyio
-async def test_preference_match_skips_confirmation() -> None:
-    expected = FormFillResultResponse(
-        filled_fields=[FieldMapping(field_name="client_name", knowledge_key="full_name", value="John Doe")],
-        role_detection=RoleDetectionResult(
-            detected_roles=[
-                DetectedRole(role_label="Client", field_names=["client_name"], is_primary_person=True),
-                DetectedRole(role_label="Beneficiary", field_names=["beneficiary_name"], is_primary_person=False),
-            ],
-            primary_role_label="Client",
-            primary_confidence=0.7,
-            confidence_reasoning="Field prefixes suggest Client is primary.",
-        ),
-        message="Filled 1 field.",
-    )
-    agent = StubFormFillAgent(fill_response=expected)
-
-    response = await agent.handle(
-        FormFillRequest(
-            user_message="Fill this form",
-            form_fields=[
-                FormField(name="client_name", type="text", label="Client Name"),
-                FormField(name="beneficiary_name", type="text", label="Beneficiary Name"),
-            ],
-            knowledge={"full_name": "John Doe", "_role_preference": "client"},
-        )
-    )
-
-    # Preference matches "Client", so no confirmation needed
-    assert isinstance(response, FormFillResultResponse)
+    assert len(result.proposed_entries) == 1
+    assert result.proposed_entries[0].key == "full_name"

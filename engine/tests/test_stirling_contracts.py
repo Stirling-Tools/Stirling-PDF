@@ -14,15 +14,8 @@ from stirling.contracts import (
     ToolOperationStep,
 )
 from stirling.contracts.form_fill import (
-    DetectedRole,
-    FieldMapping,
-    FormFillClarificationResponse,
-    FormFillRequest,
-    FormFillResultResponse,
     KnowledgeEntry,
     KnowledgeUpdateResponse,
-    RoleConfirmationResponse,
-    RoleDetectionResult,
 )
 from stirling.models.tool_models import OperationId, RotateParams
 
@@ -77,50 +70,12 @@ def clear_settings_cache() -> Iterator[None]:
     load_settings.cache_clear()
 
 
-def test_form_fill_request_serializes_to_camel_case() -> None:
-    request = FormFillRequest(user_message="Fill this", knowledge={"name": "John"})
-    data = request.model_dump(by_alias=True)
-
-    assert "userMessage" in data
-    assert "formFields" in data
-    assert "extractedDocumentText" in data
-
-
-def test_form_fill_result_response_discriminator() -> None:
-    fill = FormFillResultResponse(
-        filled_fields=[FieldMapping(field_name="name", knowledge_key="full_name", value="John")],
-        message="Done.",
-    )
-    assert fill.outcome == "fill_result"
-
+def test_knowledge_update_response_discriminator() -> None:
     update = KnowledgeUpdateResponse(
         proposed_entries=[KnowledgeEntry(key="name", value="John", source="CV")],
         message="Extracted.",
     )
     assert update.outcome == "knowledge_update"
-
-    clarification = FormFillClarificationResponse(question="What?", reason="Missing info.")
-    assert clarification.outcome == "form_fill_clarification"
-
-
-def test_role_confirmation_response() -> None:
-    confirmation = RoleConfirmationResponse(
-        role_detection=RoleDetectionResult(
-            detected_roles=[
-                DetectedRole(role_label="Client", field_names=["name"], is_primary_person=True),
-                DetectedRole(role_label="Beneficiary", field_names=["ben_name"], is_primary_person=False),
-            ],
-            primary_role_label="Client",
-            primary_confidence=0.75,
-            confidence_reasoning="Field prefixes.",
-        ),
-        suggested_primary="Client",
-        question="Are you the Client?",
-        provisional_fills=[FieldMapping(field_name="name", knowledge_key="full_name", value="John")],
-    )
-    assert confirmation.outcome == "role_confirmation_needed"
-    assert confirmation.suggested_primary == "Client"
-    assert len(confirmation.provisional_fills) == 1
 
 
 def test_app_settings_accepts_model_configuration() -> None:

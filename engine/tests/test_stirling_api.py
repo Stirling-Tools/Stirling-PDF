@@ -2,8 +2,10 @@ from fastapi.testclient import TestClient
 
 from stirling.api import app
 from stirling.api.dependencies import (
+    get_document_extractor_agent,
     get_execution_planning_agent,
-    get_form_fill_agent,
+    get_form_analyser_agent,
+    get_form_filler_agent,
     get_orchestrator_agent,
     get_pdf_edit_agent,
     get_pdf_question_agent,
@@ -26,8 +28,16 @@ from stirling.contracts import (
     UnsupportedCapabilityResponse,
 )
 from stirling.contracts.form_fill import (
-    FormFillClarificationResponse,
-    FormFillRequest,
+    AnalysedFileResult,
+    CrossFileRole,
+    DetectedRole,
+    DocumentExtractionRequest,
+    FileFillResult,
+    FormAnalysisRequest,
+    FormAnalysisResponse,
+    FormFillBatchRequest,
+    FormFillBatchResponse,
+    KnowledgeUpdateResponse,
 )
 from stirling.models.tool_models import RotateParams
 
@@ -72,12 +82,44 @@ class StubUserSpecAgent:
         return AgentRevisionResponse(draft=request.current_draft)
 
 
-class StubFormFillAgent:
-    async def handle(self, request: FormFillRequest) -> FormFillClarificationResponse:
-        return FormFillClarificationResponse(
-            question="Please upload a PDF form.",
-            reason=request.user_message,
+class StubFormAnalyserAgent:
+    async def analyse(self, request: FormAnalysisRequest) -> FormAnalysisResponse:
+        return FormAnalysisResponse(
+            per_file=[
+                AnalysedFileResult(
+                    file_id=f.file_id,
+                    file_name=f.file_name,
+                    detected_roles=[
+                        DetectedRole(
+                            role_label="Primary", field_names=[ff.name for ff in f.form_fields], is_primary_person=True
+                        )
+                    ],
+                )
+                for f in request.files
+            ],
+            cross_file_roles=[
+                CrossFileRole(
+                    role_label="Primary",
+                    file_ids=[f.file_id for f in request.files],
+                    field_names_by_file={f.file_id: [ff.name for ff in f.form_fields] for f in request.files},
+                    is_primary_person=True,
+                )
+            ],
+            message="Stub analysis.",
         )
+
+
+class StubFormFillerAgent:
+    async def fill_batch(self, request: FormFillBatchRequest) -> FormFillBatchResponse:
+        return FormFillBatchResponse(
+            per_file=[FileFillResult(file_id=f.file_id, filled_fields=[]) for f in request.files],
+            message="Stub fill.",
+        )
+
+
+class StubDocumentExtractorAgent:
+    async def extract_multiple(self, request: DocumentExtractionRequest) -> KnowledgeUpdateResponse:
+        return KnowledgeUpdateResponse(proposed_entries=[], message="Stub extraction.")
 
 
 class StubExecutionPlanningAgent:
@@ -92,37 +134,15 @@ def override_settings() -> AppSettings:
     return StubSettingsProvider()()
 
 
-def override_orchestrator_agent() -> StubOrchestratorAgent:
-    return StubOrchestratorAgent()
-
-
-def override_pdf_edit_agent() -> StubPdfEditAgent:
-    return StubPdfEditAgent()
-
-
-def override_pdf_question_agent() -> StubPdfQuestionAgent:
-    return StubPdfQuestionAgent()
-
-
-def override_user_spec_agent() -> StubUserSpecAgent:
-    return StubUserSpecAgent()
-
-
-def override_form_fill_agent() -> StubFormFillAgent:
-    return StubFormFillAgent()
-
-
-def override_execution_agent() -> StubExecutionPlanningAgent:
-    return StubExecutionPlanningAgent()
-
-
 app.dependency_overrides[load_settings] = override_settings
-app.dependency_overrides[get_orchestrator_agent] = override_orchestrator_agent
-app.dependency_overrides[get_pdf_edit_agent] = override_pdf_edit_agent
-app.dependency_overrides[get_pdf_question_agent] = override_pdf_question_agent
-app.dependency_overrides[get_user_spec_agent] = override_user_spec_agent
-app.dependency_overrides[get_execution_planning_agent] = override_execution_agent
-app.dependency_overrides[get_form_fill_agent] = override_form_fill_agent
+app.dependency_overrides[get_orchestrator_agent] = lambda: StubOrchestratorAgent()
+app.dependency_overrides[get_pdf_edit_agent] = lambda: StubPdfEditAgent()
+app.dependency_overrides[get_pdf_question_agent] = lambda: StubPdfQuestionAgent()
+app.dependency_overrides[get_user_spec_agent] = lambda: StubUserSpecAgent()
+app.dependency_overrides[get_execution_planning_agent] = lambda: StubExecutionPlanningAgent()
+app.dependency_overrides[get_form_analyser_agent] = lambda: StubFormAnalyserAgent()
+app.dependency_overrides[get_form_filler_agent] = lambda: StubFormFillerAgent()
+app.dependency_overrides[get_document_extractor_agent] = lambda: StubDocumentExtractorAgent()
 
 
 def test_health_route() -> None:
@@ -184,11 +204,41 @@ def test_agent_revise_route() -> None:
     assert response.json()["outcome"] == "draft"
 
 
-def test_form_fill_route() -> None:
-    response = client.post("/api/v1/form/ai", json={"userMessage": "fill my form"})
+def test_form_analyse_route() -> None:
+    response = client.post(
+        "/api/v1/form/ai/analyse",
+        json={
+            "files": [
+                {
+                    "fileId": "f1",
+                    "fileName": "test.pdf",
+                    "formFields": [{"name": "name", "type": "text"}],
+                }
+            ]
+        },
+    )
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == "form_fill_clarification"
+    assert len(response.json()["crossFileRoles"]) > 0
+
+
+def test_form_fill_batch_route() -> None:
+    response = client.post(
+        "/api/v1/form/ai/fill-batch",
+        json={
+            "files": [
+                {
+                    "fileId": "f1",
+                    "formFields": [{"name": "name", "type": "text"}],
+                    "roleLabel": "Primary",
+                }
+            ],
+            "knowledge": {"first_name": "John"},
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["outcome"] == "batch_fill_result"
 
 
 def test_next_action_route() -> None:

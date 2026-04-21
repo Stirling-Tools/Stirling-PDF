@@ -36,6 +36,13 @@ clear readable text.
 tracking codes, barcodes, buttons, submit buttons). Return their field names in \
 skipped_field_names per file.
 
+5. CONFIDENCE SCORING: For each cross_file_role where is_primary_person is true, the caller \
+uses the role structure to determine confidence. Set is_primary_person accurately based on:
+   - Clear primary-person keywords (Client, Applicant, Employee, Patient, Account Holder, \
+Policyholder, Tenant, Borrower) → mark as primary.
+   - If ambiguous (Party A/B, Person 1/2), mark the first/most prominent section as primary.
+   - If only one section exists, mark it as primary.
+
 STRICT RULES:
 - Do NOT return any fill values. This is analysis only.
 - Every file must have at least one detected role.

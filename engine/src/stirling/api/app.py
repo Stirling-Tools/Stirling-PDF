@@ -6,9 +6,9 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 
 from stirling.agents import (
+    DocumentExtractorAgent,
     ExecutionPlanningAgent,
     FormAnalyserAgent,
-    FormFillAgent,
     FormFillerAgent,
     OrchestratorAgent,
     PdfEditAgent,
@@ -37,7 +37,6 @@ def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
 
 @asynccontextmanager
 async def lifespan(fast_api: FastAPI):
-    # Load env vars on startup so we can immediately crash if required env vars aren't set
     settings = _load_startup_settings(fast_api)
     runtime = build_runtime(settings)
     fast_api.state.settings = settings
@@ -47,9 +46,9 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
-    fast_api.state.form_fill_agent = FormFillAgent(runtime)
     fast_api.state.form_analyser_agent = FormAnalyserAgent(runtime)
     fast_api.state.form_filler_agent = FormFillerAgent(runtime)
+    fast_api.state.document_extractor_agent = DocumentExtractorAgent(runtime)
     yield
 
 

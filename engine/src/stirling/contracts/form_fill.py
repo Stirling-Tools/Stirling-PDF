@@ -6,8 +6,6 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ConversationMessage
-
 
 class FormField(ApiModel):
     """PDF form field metadata for AI reasoning. Mirrors Java FormFieldWithCoordinates without widget coordinates."""
@@ -24,15 +22,6 @@ class FormField(ApiModel):
     multiline: bool = False
     tooltip: str | None = None
     nearby_page_text: str | None = None
-
-
-class FormFillRequest(ApiModel):
-    user_message: str
-    conversation_history: list[ConversationMessage] = Field(default_factory=list)
-    form_fields: list[FormField] = Field(default_factory=list)
-    knowledge: dict[str, str] = Field(default_factory=dict)
-    extracted_document_text: str | None = None
-    role_override: str | None = None
 
 
 class FieldMapping(ApiModel):
@@ -80,42 +69,10 @@ class DetectedRole(ApiModel):
     is_primary_person: bool
 
 
-class RoleDetectionResult(ApiModel):
-    detected_roles: list[DetectedRole]
-    primary_role_label: str | None = None
-    primary_confidence: float = Field(ge=0.0, le=1.0)
-    confidence_reasoning: str
-
-
-class FormFillResultResponse(ApiModel):
-    outcome: Literal["fill_result"] = "fill_result"
-    filled_fields: list[FieldMapping]
-    cleaned_labels: list[CleanedLabel] = Field(default_factory=list)
-    skipped_field_names: list[str] = Field(default_factory=list)
-    role_detection: RoleDetectionResult | None = None
-    message: str
-
-
-class RoleConfirmationResponse(ApiModel):
-    outcome: Literal["role_confirmation_needed"] = "role_confirmation_needed"
-    role_detection: RoleDetectionResult
-    suggested_primary: str
-    question: str
-    provisional_fills: list[FieldMapping]
-    cleaned_labels: list[CleanedLabel] = Field(default_factory=list)
-    skipped_field_names: list[str] = Field(default_factory=list)
-
-
 class KnowledgeUpdateResponse(ApiModel):
     outcome: Literal["knowledge_update"] = "knowledge_update"
     proposed_entries: list[KnowledgeEntry]
     message: str
-
-
-class FormFillClarificationResponse(ApiModel):
-    outcome: Literal["form_fill_clarification"] = "form_fill_clarification"
-    question: str
-    reason: str
 
 
 # --- Form Analysis (multi-file) ---
@@ -179,11 +136,5 @@ class FormFillBatchResponse(ApiModel):
 
 DocumentExtractionResponse = Annotated[
     KnowledgeUpdateResponse | MultiProfileExtractionResponse,
-    Field(discriminator="outcome"),
-]
-
-
-FormFillResponse = Annotated[
-    FormFillResultResponse | RoleConfirmationResponse | KnowledgeUpdateResponse | FormFillClarificationResponse,
     Field(discriminator="outcome"),
 ]

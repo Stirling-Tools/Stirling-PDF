@@ -9,7 +9,7 @@ from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
 from .execution import NextExecutionAction
-from .form_fill import FormFillResponse
+from .form_fill import KnowledgeUpdateResponse
 from .pdf_edit import PdfEditResponse
 from .pdf_questions import PdfQuestionResponse
 
@@ -38,7 +38,7 @@ class UnsupportedCapabilityResponse(ApiModel):
 OrchestratorResponse = Annotated[
     PdfEditResponse
     | PdfQuestionResponse
-    | FormFillResponse
+    | KnowledgeUpdateResponse
     | AgentDraftResponse
     | NextExecutionAction
     | UnsupportedCapabilityResponse,
