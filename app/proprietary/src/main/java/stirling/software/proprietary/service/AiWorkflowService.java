@@ -1,7 +1,11 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,8 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
+import stirling.software.proprietary.service.PdfContentExtractor.ExtractedFileText;
+import stirling.software.proprietary.service.PdfContentExtractor.ExtractedTextArtifact;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
@@ -62,6 +68,7 @@ public class AiWorkflowService {
     private final FileStorage fileStorage;
     private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
+    private final AiContentCache contentCache;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -89,6 +96,7 @@ public class AiWorkflowService {
             filesByName.put(
                     fileInput.getFileInput().getOriginalFilename(), fileInput.getFileInput());
         }
+        Map<String, String> hashesByName = hashFiles(filesByName);
 
         WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
         initialRequest.setUserMessage(request.getUserMessage().trim());
@@ -97,25 +105,83 @@ public class AiWorkflowService {
                 request.getConversationHistory() == null
                         ? new ArrayList<>()
                         : new ArrayList<>(request.getConversationHistory()));
+        initialRequest.setArtifacts(loadCachedArtifacts(hashesByName));
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
+        int[] extractionsThisTurn = {0};
         WorkflowState state = new WorkflowState.Pending(initialRequest);
         while (state instanceof WorkflowState.Pending pending) {
-            state = advance(pending.request(), filesByName, listener);
+            state =
+                    advance(
+                            pending.request(),
+                            filesByName,
+                            hashesByName,
+                            listener,
+                            extractionsThisTurn);
         }
         return ((WorkflowState.Terminal) state).response();
+    }
+
+    private Map<String, String> hashFiles(Map<String, MultipartFile> filesByName)
+            throws IOException {
+        Map<String, String> hashes = new LinkedHashMap<>();
+        for (var entry : filesByName.entrySet()) {
+            hashes.put(entry.getKey(), sha256(entry.getValue()));
+        }
+        return hashes;
+    }
+
+    private String sha256(MultipartFile file) throws IOException {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+        try (InputStream in = file.getInputStream()) {
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                md.update(buf, 0, n);
+            }
+        }
+        return HexFormat.of().formatHex(md.digest());
+    }
+
+    private List<WorkflowArtifact> loadCachedArtifacts(Map<String, String> hashesByName) {
+        List<ExtractedFileText> cachedTexts = new ArrayList<>();
+        for (var entry : hashesByName.entrySet()) {
+            contentCache.get(entry.getValue()).ifPresent(cachedTexts::add);
+        }
+        if (cachedTexts.isEmpty()) {
+            return new ArrayList<>();
+        }
+        ExtractedTextArtifact artifact = new ExtractedTextArtifact();
+        artifact.setFiles(cachedTexts);
+        List<WorkflowArtifact> artifacts = new ArrayList<>();
+        artifacts.add(artifact);
+        return artifacts;
     }
 
     private WorkflowState advance(
             WorkflowTurnRequest request,
             Map<String, MultipartFile> filesByName,
-            ProgressListener listener)
+            Map<String, String> hashesByName,
+            ProgressListener listener,
+            int[] extractionsThisTurn)
             throws IOException {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
-            case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener);
+            case NEED_CONTENT ->
+                    onNeedContent(
+                            response,
+                            filesByName,
+                            hashesByName,
+                            request,
+                            listener,
+                            extractionsThisTurn);
             case TOOL_CALL -> onToolCall(response, filesByName, listener);
             case PLAN -> onPlan(response, filesByName, listener);
             case ANSWER,
@@ -133,10 +199,12 @@ public class AiWorkflowService {
     private WorkflowState onNeedContent(
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesByName,
+            Map<String, String> hashesByName,
             WorkflowTurnRequest request,
-            ProgressListener listener)
+            ProgressListener listener,
+            int[] extractionsThisTurn)
             throws IOException {
-        if (!request.getArtifacts().isEmpty()) {
+        if (extractionsThisTurn[0] > 0) {
             return new WorkflowState.Terminal(
                     cannotContinue("AI engine requested content extraction more than once."));
         }
@@ -183,6 +251,9 @@ public class AiWorkflowService {
                             response.getMaxPages(),
                             response.getMaxCharacters());
 
+            cacheExtractedTexts(contentResults, hashesByName);
+            extractionsThisTurn[0]++;
+
             listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
 
             WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
@@ -198,6 +269,18 @@ public class AiWorkflowService {
                     lf.document().close();
                 } catch (IOException e) {
                     log.warn("Failed to close PDF document: {}", lf.fileName(), e);
+                }
+            }
+        }
+    }
+
+    private void cacheExtractedTexts(
+            List<PdfContentResult> results, Map<String, String> hashesByName) {
+        for (PdfContentResult result : results) {
+            if (result instanceof ExtractedFileText eft) {
+                String hash = hashesByName.get(eft.getFileName());
+                if (hash != null) {
+                    contentCache.put(hash, eft);
                 }
             }
         }

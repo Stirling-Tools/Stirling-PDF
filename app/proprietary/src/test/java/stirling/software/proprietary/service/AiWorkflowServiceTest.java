@@ -96,7 +96,8 @@ class AiWorkflowServiceTest {
                         internalApiClient,
                         fileStorage,
                         toolMetadataService,
-                        tempFileManager);
+                        tempFileManager,
+                        new AiContentCache());
     }
 
     @Test
