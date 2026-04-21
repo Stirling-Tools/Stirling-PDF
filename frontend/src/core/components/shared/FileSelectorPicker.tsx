@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import {
-  Box,
-  Popover,
-  ScrollArea,
-  Text,
-  Loader
-} from "@mantine/core";
+import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 import {
