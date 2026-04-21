@@ -63,6 +63,7 @@ from .pdf_questions import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    PdfQuestionTerminalResponse,
 )
 from .rag import (
     MAX_INDEX_TEXT_LENGTH,
@@ -121,6 +122,7 @@ __all__ = [
     "PdfQuestionNotFoundResponse",
     "PdfQuestionRequest",
     "PdfQuestionResponse",
+    "PdfQuestionTerminalResponse",
     "PdfTextSelection",
     "RagCollectionsResponse",
     "RagDeleteCollectionResponse",

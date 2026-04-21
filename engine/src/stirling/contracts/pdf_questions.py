@@ -32,7 +32,8 @@ class PdfQuestionNotFoundResponse(ApiModel):
     reason: str
 
 
-PdfQuestionResponse = Annotated[
-    PdfQuestionAnswerResponse | NeedContentResponse | PdfQuestionNotFoundResponse,
+type PdfQuestionTerminalResponse = PdfQuestionAnswerResponse | PdfQuestionNotFoundResponse
+type PdfQuestionResponse = Annotated[
+    PdfQuestionTerminalResponse | NeedContentResponse,
     Field(discriminator="outcome"),
 ]
