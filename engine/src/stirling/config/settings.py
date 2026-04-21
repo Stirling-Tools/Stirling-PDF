@@ -60,6 +60,14 @@ def _configure_logging(level_name: str, log_file: str) -> None:
 
     root = logging.getLogger("stirling")
     root.setLevel(level)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s")
+
+    if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        sh.setLevel(level)
+        root.addHandler(sh)
+        root.propagate = False
 
     if log_file:
         log_path = Path(log_file)
@@ -70,7 +78,7 @@ def _configure_logging(level_name: str, log_file: str) -> None:
             backupCount=1,
             encoding="utf-8",
         )
-        fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s"))
+        fh.setFormatter(formatter)
         fh.setLevel(level)
         root.addHandler(fh)
 

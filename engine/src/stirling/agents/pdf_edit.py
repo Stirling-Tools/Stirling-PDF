@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Literal, overload
 
 from pydantic import Field
@@ -23,6 +24,8 @@ from stirling.contracts import (
 )
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
+
+logger = logging.getLogger(__name__)
 
 
 class PdfEditPlanSelection(ApiModel):
@@ -59,7 +62,9 @@ class PdfEditSelectionAgent:
         )
 
     async def select(self, prompt: str) -> PdfEditPlanOutput:
+        logger.debug("[pdf-edit selection] prompt:\n%s", prompt)
         result = await self.agent.run(prompt)
+        logger.debug("[pdf-edit selection] output: %s", result.output.model_dump_json())
         return result.output
 
 
@@ -87,14 +92,17 @@ class PdfEditParameterSelector:
     ) -> ParamToolModel:
         operation_id = operation_plan[operation_index]
         parameter_model = OPERATIONS[operation_id]
+        prompt = self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps)
+        logger.debug("[pdf-edit params %s] prompt:\n%s", operation_id.name, prompt)
         parameter_result = await self.agent.run(
-            self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps),
+            prompt,
             output_type=NativeOutput(parameter_model),
             instructions=(
                 f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
                 "Do not include fields from any other operation."
             ),
         )
+        logger.debug("[pdf-edit params %s] output: %s", operation_id.name, parameter_result.output.model_dump_json())
         return parameter_result.output
 
     def _build_parameter_prompt(
@@ -115,6 +123,7 @@ class PdfEditParameterSelector:
             else "None"
         )
         return (
+            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {file_names}\n"
             f"Operation plan: {operation_list}\n"
@@ -137,11 +146,21 @@ class PdfEditAgent:
     @overload
     async def handle(self, request: PdfEditRequest, allow_need_content: bool = True) -> PdfEditResponse: ...
     async def handle(self, request: PdfEditRequest, allow_need_content: bool = True) -> PdfEditResponse:
+        logger.info(
+            "[pdf-edit] handle: files=%s has_text=%s allow_need_content=%s msg=%r",
+            request.file_names,
+            has_page_text(request.page_text),
+            allow_need_content,
+            request.user_message,
+        )
         selection = await self._select_plan(request, allow_need_content=allow_need_content)
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
+            logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, selection.model_dump_json())
             return selection
         if isinstance(selection, NeedContentResponse):
+            logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
             return self._fill_need_content_defaults(selection, request)
+        logger.info("[pdf-edit] plan: %s", [op.name for op in selection.operations])
         steps: list[ToolOperationStep] = []
         for operation_index, operation_id in enumerate(selection.operations):
             parameters = await self.parameter_selector.select(

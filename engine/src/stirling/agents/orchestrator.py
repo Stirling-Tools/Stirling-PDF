@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import assert_never
 
@@ -28,6 +29,8 @@ from stirling.contracts import (
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -86,12 +89,20 @@ class OrchestratorAgent:
         )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        logger.info(
+            "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
+            request.file_names,
+            request.resume_with,
+            [type(a).__name__ for a in request.artifacts],
+            request.user_message,
+        )
         if request.resume_with is not None:
             return await self._resume(request, request.resume_with)
         result = await self.agent.run(
             self._build_prompt(request),
             deps=OrchestratorDeps(runtime=self.runtime, request=request),
         )
+        logger.info("[orchestrator] routed -> %s", type(result.output).__name__)
         return result.output
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:

@@ -103,7 +103,6 @@ class UserSpecAgent:
         conversation_history: list[ConversationMessage],
     ) -> PdfEditTerminalResponse:
         return await self.pdf_edit_agent.handle(
-            PdfEditRequest(user_message=user_message),
-            conversation_history=conversation_history,
+            PdfEditRequest(user_message=user_message, conversation_history=conversation_history),
             allow_need_content=False,
         )
