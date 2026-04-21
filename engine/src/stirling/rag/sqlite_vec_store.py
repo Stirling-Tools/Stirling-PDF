@@ -102,14 +102,10 @@ class SqliteVecStore(VectorStore):
         embeddings: list[list[float]],
     ) -> None:
         dim = len(embeddings[0])
-        row = self._conn.execute(
-            "SELECT dim, table_name FROM collections WHERE name = ?", (collection,)
-        ).fetchone()
+        row = self._conn.execute("SELECT dim, table_name FROM collections WHERE name = ?", (collection,)).fetchone()
         if row is None:
             table_name = self._sanitize_table_name(collection)
-            self._conn.execute(
-                f"CREATE VIRTUAL TABLE IF NOT EXISTS {table_name} USING vec0(embedding float[{dim}])"
-            )
+            self._conn.execute(f"CREATE VIRTUAL TABLE IF NOT EXISTS {table_name} USING vec0(embedding float[{dim}])")
             self._conn.execute(
                 "INSERT INTO collections(name, dim, table_name) VALUES (?, ?, ?)",
                 (collection, dim, table_name),
@@ -117,9 +113,7 @@ class SqliteVecStore(VectorStore):
         else:
             existing_dim, table_name = row
             if existing_dim != dim:
-                raise ValueError(
-                    f"Collection {collection} has dim {existing_dim}, got embedding of dim {dim}"
-                )
+                raise ValueError(f"Collection {collection} has dim {existing_dim}, got embedding of dim {dim}")
 
         # Upsert: delete existing docs with matching IDs first
         ids = [doc.id for doc in documents]
@@ -168,16 +162,12 @@ class SqliteVecStore(VectorStore):
         query_embedding: list[float],
         top_k: int,
     ) -> list[SearchResult]:
-        row = self._conn.execute(
-            "SELECT table_name, dim FROM collections WHERE name = ?", (collection,)
-        ).fetchone()
+        row = self._conn.execute("SELECT table_name, dim FROM collections WHERE name = ?", (collection,)).fetchone()
         if row is None:
             return []
         table_name, dim = row
         if len(query_embedding) != dim:
-            raise ValueError(
-                f"Query embedding dim {len(query_embedding)} does not match collection dim {dim}"
-            )
+            raise ValueError(f"Query embedding dim {len(query_embedding)} does not match collection dim {dim}")
 
         normalized = self._normalize(list(query_embedding))
         query_blob = sqlite_vec.serialize_float32(normalized)
@@ -211,9 +201,7 @@ class SqliteVecStore(VectorStore):
             await asyncio.to_thread(self._sync_delete_collection, collection)
 
     def _sync_delete_collection(self, collection: str) -> None:
-        row = self._conn.execute(
-            "SELECT table_name FROM collections WHERE name = ?", (collection,)
-        ).fetchone()
+        row = self._conn.execute("SELECT table_name FROM collections WHERE name = ?", (collection,)).fetchone()
         if row is None:
             return
         table_name = row[0]

@@ -245,17 +245,13 @@ class TestRagCapability:
         assert "empty" in text.lower()
 
     @pytest.mark.anyio
-    async def test_search_knowledge_returns_no_results_message_when_empty(
-        self, rag_service: RagService
-    ) -> None:
+    async def test_search_knowledge_returns_no_results_message_when_empty(self, rag_service: RagService) -> None:
         cap = RagCapability(rag_service)
         output = await _invoke_search_knowledge(cap, "anything")
         assert output == "No relevant results found in the knowledge base."
 
     @pytest.mark.anyio
-    async def test_search_knowledge_formats_results_with_source_and_score(
-        self, rag_service: RagService
-    ) -> None:
+    async def test_search_knowledge_formats_results_with_source_and_score(self, rag_service: RagService) -> None:
         await rag_service.index_text("docs", "Python is a programming language.", source="guide.pdf")
         cap = RagCapability(rag_service)
         output = await _invoke_search_knowledge(cap, "Python")

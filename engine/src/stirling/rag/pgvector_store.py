@@ -44,9 +44,7 @@ class PgVectorStore(VectorStore):
                     )
                     """
                 )
-                await cur.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_rag_collection ON rag_documents(collection)"
-                )
+                await cur.execute("CREATE INDEX IF NOT EXISTS idx_rag_collection ON rag_documents(collection)")
                 await conn.commit()
         self._initialized = True
 
@@ -119,9 +117,7 @@ class PgVectorStore(VectorStore):
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(
-                    "SELECT DISTINCT collection FROM rag_documents ORDER BY collection"
-                )
+                await cur.execute("SELECT DISTINCT collection FROM rag_documents ORDER BY collection")
                 rows = await cur.fetchall()
         return [r[0] for r in rows]
 
