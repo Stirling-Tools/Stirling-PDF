@@ -37,7 +37,9 @@ multi = RagCapability(runtime.rag_service, collections=["company-docs", "product
 everything = RagCapability(runtime.rag_service)
 ```
 
-## Config (.env)
+## Config
+
+Non-secret defaults live in the committed `engine/.env`:
 
 ```
 STIRLING_RAG_BACKEND=sqlite              # or "pgvector"
@@ -47,6 +49,11 @@ STIRLING_RAG_PGVECTOR_DSN=               # used when backend=pgvector
 STIRLING_RAG_CHUNK_SIZE=512
 STIRLING_RAG_CHUNK_OVERLAP=64
 STIRLING_RAG_TOP_K=5
+```
+
+Provider credentials (and any local overrides) go in the uncommitted `engine/.env.local`:
+
+```
 VOYAGE_API_KEY=your-key
 ```
 
