@@ -9,7 +9,10 @@ from stirling.models import ApiModel
 from .agent_drafts import AgentDraftResponse
 from .common import (
     ArtifactKind,
-    ConversationMessage, ExtractedFileText, NeedContentResponse, SupportedCapability,
+    ConversationMessage,
+    ExtractedFileText,
+    NeedContentResponse,
+    SupportedCapability,
     WorkflowOutcome,
 )
 from .execution import NextExecutionAction
