@@ -242,7 +242,7 @@ function FolderCard({
               {/* Right: file count + hover actions */}
               <Group gap="sm" wrap="nowrap" align="center" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                 <Box style={{ textAlign: 'right', marginRight: '0.25rem' }}>
-                  <Text fw={700} size="sm" style={{ color: '#fff', lineHeight: 1.2 }}>
+                  <Text fw={700} size="sm" style={{ lineHeight: 1.2 }}>
                     {fileCount} {fileCount === 1
                       ? t('smartFolders.home.file', 'file')
                       : t('smartFolders.home.files', 'files')}

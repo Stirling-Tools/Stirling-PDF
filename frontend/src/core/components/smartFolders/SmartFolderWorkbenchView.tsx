@@ -246,7 +246,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         }
       }
     },
-    [folder, addFile, runPipeline]
+    [folder, folderRecord, addFile, updateFileMetadata, runPipeline]
   );
 
   useEffect(() => {

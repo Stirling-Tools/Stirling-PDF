@@ -2,7 +2,7 @@
  * Hook for reading and managing files within a Smart Folder
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { FolderFileMetadata, FolderRecord } from '@app/types/smartFolders';
 import { folderStorage } from '@app/services/folderStorage';
 
@@ -48,10 +48,10 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
   }, [folderId, refresh]);
 
   const files = folderRecord?.files ?? {};
-  const fileIds = Object.keys(files);
-  const processingFileIds = fileIds.filter(id => files[id]?.status === 'processing');
-  const processedFileIds = fileIds.filter(id => files[id]?.status === 'processed');
-  const pendingFileIds = fileIds.filter(id => files[id]?.status === 'pending');
+  const fileIds = useMemo(() => Object.keys(files), [files]);
+  const processingFileIds = useMemo(() => fileIds.filter(id => files[id]?.status === 'processing'), [fileIds, files]);
+  const processedFileIds = useMemo(() => fileIds.filter(id => files[id]?.status === 'processed'), [fileIds, files]);
+  const pendingFileIds = useMemo(() => fileIds.filter(id => files[id]?.status === 'pending'), [fileIds, files]);
 
   const addFile = useCallback(
     async (fileId: string, metadata?: Partial<FolderFileMetadata>) => {

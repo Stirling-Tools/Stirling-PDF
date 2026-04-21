@@ -9,6 +9,9 @@ import { folderStorage } from '@app/services/folderStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { fileStorage } from '@app/services/fileStorage';
 import { deleteServerFolder } from '@app/services/serverFolderApiService';
+import { folderRetryScheduleStorage } from '@app/services/folderRetryScheduleStorage';
+import { folderSeenFilesStorage } from '@app/services/folderSeenFilesStorage';
+import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
 import { FileId } from '@app/types/fileContext';
 
 interface UseSmartFoldersReturn {
@@ -80,6 +83,10 @@ export function useSmartFolders(): UseSmartFoldersReturn {
     }
     await folderStorage.clearFolder(id);
     await folderRunStateStorage.clearFolderRunState(id);
+    await folderRetryScheduleStorage.clearFolder(id).catch(() => {});
+    await folderSeenFilesStorage.clearFolder(id).catch(() => {});
+    await folderDirectoryHandleStorage.remove(id).catch(() => {});
+    await folderDirectoryHandleStorage.removeInput(id).catch(() => {});
     await smartFolderStorage.deleteFolder(id);
     // Notify the sidebar file list that files have been removed.
     window.dispatchEvent(new CustomEvent('stirling:files-changed'));

@@ -24,6 +24,7 @@ class FolderRetryScheduleStorage {
   private dbVersion = 1;
   private storeName = 'retries';
   private db: IDBDatabase | null = null;
+  private initPromise: Promise<void> | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -31,6 +32,7 @@ class FolderRetryScheduleStorage {
       request.onerror = () => reject(new Error('Failed to open retry schedule database'));
       request.onsuccess = () => {
         this.db = request.result;
+        this.db.onclose = () => { this.db = null; this.initPromise = null; };
         resolve();
       };
       request.onupgradeneeded = (event) => {
@@ -45,7 +47,10 @@ class FolderRetryScheduleStorage {
   }
 
   private async ensureDB(): Promise<IDBDatabase> {
-    if (!this.db) await this.init();
+    if (!this.db) {
+      this.initPromise ??= this.init();
+      await this.initPromise;
+    }
     if (!this.db) throw new Error('Retry schedule database not initialized');
     return this.db;
   }
@@ -109,6 +114,25 @@ class FolderRetryScheduleStorage {
       };
       tx.oncomplete = () => resolve(claimed);
       tx.onerror = () => reject(new Error('Failed to claim due retries'));
+    });
+  }
+
+  /** Remove all scheduled retries for a folder (called when the folder is deleted). */
+  async clearFolder(folderId: string): Promise<void> {
+    const db = await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([this.storeName], 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const cursorRequest = store.openCursor();
+      cursorRequest.onsuccess = () => {
+        const cursor = cursorRequest.result;
+        if (!cursor) return;
+        const entry = cursor.value as RetryEntry;
+        if (entry.folderId === folderId) cursor.delete();
+        cursor.continue();
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(new Error('Failed to clear folder retries'));
     });
   }
 

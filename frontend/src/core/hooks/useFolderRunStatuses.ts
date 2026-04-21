@@ -28,14 +28,19 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
     if (folders.length === 0) return;
 
     const load = async () => {
+      const results = await Promise.all(
+        folders.map(async (folder) => {
+          try {
+            const runs = await folderRunStateStorage.getFolderRunState(folder.id);
+            return [folder.id, deriveStatus(runs)] as const;
+          } catch {
+            return [folder.id, 'idle' as FolderRunStatus] as const;
+          }
+        })
+      );
       const newStatuses: Record<string, FolderRunStatus> = {};
-      for (const folder of folders) {
-        try {
-          const runs = await folderRunStateStorage.getFolderRunState(folder.id);
-          newStatuses[folder.id] = deriveStatus(runs);
-        } catch {
-          newStatuses[folder.id] = 'idle';
-        }
+      for (const [id, status] of results) {
+        newStatuses[id] = status;
       }
       setStatuses(newStatuses);
     };

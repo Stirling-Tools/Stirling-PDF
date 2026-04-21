@@ -87,7 +87,7 @@ const PRESETS: PresetDefinition[] = [
       description: 'Rotate pages and compress PDF',
       icon: 'RotateRightIcon',
       operations: [
-        { operation: 'rotate', parameters: { angle: 0 } },
+        { operation: 'rotate', parameters: { angle: 90 } },
         { operation: 'compress', parameters: {} },
       ],
     },

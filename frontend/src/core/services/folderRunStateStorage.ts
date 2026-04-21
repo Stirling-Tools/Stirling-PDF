@@ -17,6 +17,7 @@ class FolderRunStateStorage {
   private dbVersion = 1;
   private storeName = 'runStates';
   private db: IDBDatabase | null = null;
+  private initPromise: Promise<void> | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -24,6 +25,7 @@ class FolderRunStateStorage {
       request.onerror = () => reject(new Error('Failed to open folder run state database'));
       request.onsuccess = () => {
         this.db = request.result;
+        this.db.onclose = () => { this.db = null; this.initPromise = null; };
         resolve();
       };
       request.onupgradeneeded = (event) => {
@@ -37,7 +39,8 @@ class FolderRunStateStorage {
 
   private async ensureDB(): Promise<IDBDatabase> {
     if (!this.db) {
-      await this.init();
+      this.initPromise ??= this.init();
+      await this.initPromise;
     }
     if (!this.db) {
       throw new Error('Folder run state database not initialized');
@@ -91,9 +94,11 @@ class FolderRunStateStorage {
       const getRequest = store.get(folderId);
       getRequest.onsuccess = () => {
         const existing: RunStateRecord | undefined = getRequest.result;
+        const MAX_RUN_ENTRIES = 500;
+        const combined = [...(existing?.runs ?? []), ...entries];
         const record: RunStateRecord = {
           folderId,
-          runs: [...(existing?.runs ?? []), ...entries],
+          runs: combined.length > MAX_RUN_ENTRIES ? combined.slice(-MAX_RUN_ENTRIES) : combined,
           lastUpdated: Date.now(),
         };
         const putRequest = store.put(record);

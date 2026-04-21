@@ -11,6 +11,7 @@ class SmartFolderStorage {
   private dbVersion = 1;
   private storeName = 'smartFolders';
   private db: IDBDatabase | null = null;
+  private initPromise: Promise<void> | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -22,6 +23,7 @@ class SmartFolderStorage {
 
       request.onsuccess = () => {
         this.db = request.result;
+        this.db.onclose = () => { this.db = null; this.initPromise = null; };
         resolve();
       };
 
@@ -39,7 +41,8 @@ class SmartFolderStorage {
 
   private async ensureDB(): Promise<IDBDatabase> {
     if (!this.db) {
-      await this.init();
+      this.initPromise ??= this.init();
+      await this.initPromise;
     }
     if (!this.db) {
       throw new Error('Smart folder database not initialized');

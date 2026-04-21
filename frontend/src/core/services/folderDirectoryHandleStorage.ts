@@ -8,13 +8,24 @@ const DB_NAME = 'stirling-pdf-folder-directory-handles';
 const DB_VERSION = 1;
 const STORE = 'handles';
 
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+/** Cached singleton DB connection — avoids opening a new connection per call. */
+let cachedDB: IDBDatabase | null = null;
+let initPromise: Promise<IDBDatabase> | null = null;
+
+function getDB(): Promise<IDBDatabase> {
+  if (cachedDB) return Promise.resolve(cachedDB);
+  if (initPromise) return initPromise;
+  initPromise = new Promise<IDBDatabase>((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      cachedDB = req.result;
+      cachedDB.onclose = () => { cachedDB = null; initPromise = null; };
+      resolve(cachedDB);
+    };
+    req.onerror = () => { initPromise = null; reject(req.error); };
   });
+  return initPromise;
 }
 
 type ExtendedDirHandle = FileSystemDirectoryHandle & {
@@ -26,7 +37,7 @@ export const folderDirectoryHandleStorage = {
   // ── Output directory handles (readwrite) ─────────────────────────────────
 
   async get(folderId: string): Promise<FileSystemDirectoryHandle | null> {
-    const db = await openDB();
+    const db = await getDB();
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE).objectStore(STORE).get(folderId);
       req.onsuccess = () => resolve(req.result ?? null);
@@ -35,7 +46,7 @@ export const folderDirectoryHandleStorage = {
   },
 
   async set(folderId: string, handle: FileSystemDirectoryHandle): Promise<void> {
-    const db = await openDB();
+    const db = await getDB();
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(handle, folderId);
       req.onsuccess = () => resolve();
@@ -44,7 +55,7 @@ export const folderDirectoryHandleStorage = {
   },
 
   async remove(folderId: string): Promise<void> {
-    const db = await openDB();
+    const db = await getDB();
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(folderId);
       req.onsuccess = () => resolve();
@@ -67,7 +78,7 @@ export const folderDirectoryHandleStorage = {
   // Stored under key "input:{folderId}" to avoid collisions with output handles.
 
   async getInput(folderId: string): Promise<FileSystemDirectoryHandle | null> {
-    const db = await openDB();
+    const db = await getDB();
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE).objectStore(STORE).get(`input:${folderId}`);
       req.onsuccess = () => resolve(req.result ?? null);
@@ -76,7 +87,7 @@ export const folderDirectoryHandleStorage = {
   },
 
   async setInput(folderId: string, handle: FileSystemDirectoryHandle): Promise<void> {
-    const db = await openDB();
+    const db = await getDB();
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(handle, `input:${folderId}`);
       req.onsuccess = () => resolve();
@@ -85,7 +96,7 @@ export const folderDirectoryHandleStorage = {
   },
 
   async removeInput(folderId: string): Promise<void> {
-    const db = await openDB();
+    const db = await getDB();
     return new Promise((resolve, reject) => {
       const req = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(`input:${folderId}`);
       req.onsuccess = () => resolve();
