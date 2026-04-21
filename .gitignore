@@ -165,6 +165,7 @@ __pycache__/
 # Virtual environments
 .env*
 !.env*.example
+!engine/.env
 .venv*
 env*/
 venv*/

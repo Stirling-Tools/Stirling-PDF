@@ -18,6 +18,7 @@ from .common import (
     SupportedCapability,
     ToolOperationStep,
     WorkflowOutcome,
+    format_conversation_history,
 )
 from .execution import (
     AgentExecutionRequest,
@@ -104,6 +105,7 @@ __all__ = [
     "Folio",
     "FolioManifest",
     "FolioType",
+    "format_conversation_history",
     "HealthResponse",
     "NeedContentFileRequest",
     "NextExecutionAction",

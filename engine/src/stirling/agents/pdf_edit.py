@@ -13,6 +13,7 @@ from stirling.contracts import (
     PdfEditRequest,
     PdfEditResponse,
     ToolOperationStep,
+    format_conversation_history,
 )
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
@@ -146,6 +147,7 @@ class PdfEditAgent:
     def _build_selection_prompt(self, request: PdfEditRequest) -> str:
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         return (
+            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {file_names}\n"
             f"Supported operations: {self._supported_operations_prompt()}\n"
