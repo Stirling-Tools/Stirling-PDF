@@ -307,7 +307,10 @@ export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = fa
     <Popover
       opened={isOpen}
       onChange={setIsOpen}
-      onClose={() => { setIsOpen(false); setSearchQuery(""); }}
+      onClose={() => {
+        setIsOpen(false);
+        setSearchQuery("");
+      }}
       position="bottom-start"
       withinPortal
       shadow="md"

@@ -61,7 +61,7 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const activeFiles = selectors.getFiles();
-  const { activeFileIndex } = useViewer();
+  const { activeFileId } = useViewer();
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
 
@@ -145,7 +145,8 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
     if (currentView === "fileEditor") {
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
-      const file = activeFiles[activeFileIndex] ?? activeFiles[0];
+      const file =
+        (activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null) ?? activeFiles[0];
       const countBeforeRemove = activeFiles.length;
       if (file && isStirlingFile(file)) {
         await fileActions.removeFiles([file.fileId], false);
@@ -156,7 +157,7 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
     } else if (currentView === "pageEditor") {
       pageEditorFunctions?.closePdf?.();
     }
-  }, [currentView, fileActions, activeFiles, activeFileIndex, pageEditorFunctions, setCurrentView]);
+  }, [currentView, fileActions, activeFiles, activeFileId, pageEditorFunctions, setCurrentView]);
 
   const downloadTooltip = useMemo(() => {
     if (currentView === "pageEditor") return t("rightRail.exportAll", "Export PDF");

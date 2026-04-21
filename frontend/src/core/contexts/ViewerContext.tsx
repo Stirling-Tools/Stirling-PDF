@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, ReactNode, useRef, useCallback } from "react";
+import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode, useRef, useCallback } from "react";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFileState } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
@@ -202,7 +202,16 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // activeFileIndex is derived from activeFileId so they can never desync.
   // ViewerProvider sits inside FileContextProvider so useFileState is valid here.
-  const { selectors } = useFileState();
+  const { selectors, state } = useFileState();
+
+  // Clear activeFileId when its file is removed from the workbench.
+  // Dep on state.files.ids so the effect re-runs on every add/remove.
+  useEffect(() => {
+    if (!activeFileId) return;
+    const stillInWorkbench = state.files.ids.some((id) => (id as string) === activeFileId);
+    if (!stillInWorkbench) setActiveFileId(null);
+  }, [activeFileId, state.files.ids]);
+
   const activeFileIndex = useMemo(() => {
     if (!activeFileId) return 0;
     const files = selectors.getFiles();

@@ -6,10 +6,10 @@ import { PrivateContent } from "@app/components/shared/PrivateContent";
 interface ThumbnailSidebarProps {
   visible: boolean;
   onToggle: () => void;
-  activeFileIndex?: number;
+  activeFileId?: string | null;
 }
 
-export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex }: ThumbnailSidebarProps) {
+export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileId }: ThumbnailSidebarProps) {
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
 
@@ -25,7 +25,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
       }
     });
     setThumbnails({});
-  }, [activeFileIndex]);
+  }, [activeFileId]);
 
   // Keep a ref to thumbnails for cleanup on unmount
   const thumbnailsRef = useRef(thumbnails);

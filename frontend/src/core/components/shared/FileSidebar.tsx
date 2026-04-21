@@ -52,7 +52,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
   const { actions: navActions } = useNavigationActions();
   const { workbench: currentWorkbench } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
-  const { activeFileIndex, setActiveFileIndex } = useViewer();
+  const { activeFileId, setActiveFileId } = useViewer();
   const { addFiles } = useFileHandler();
   const indexedDB = useIndexedDB();
   const [displayName, setDisplayName] = useState<string>("Guest");
@@ -96,13 +96,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
   // Once a pending file lands in state, open it in the viewer.
   useEffect(() => {
     if (!pendingViewFileId) return;
-    const idx = state.files.ids.findIndex((id) => (id as string) === pendingViewFileId);
-    if (idx >= 0) {
+    const isInWorkbench = state.files.ids.some((id) => (id as string) === pendingViewFileId);
+    if (isInWorkbench) {
       setPendingViewFileId(null);
-      setActiveFileIndex(idx);
+      setActiveFileId(pendingViewFileId);
       navActions.setWorkbench("viewer");
     }
-  }, [pendingViewFileId, state.files.ids, setActiveFileIndex, navActions]);
+  }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
   const filteredFileStubs = searchQuery.trim()
     ? allFileStubs.filter((stub) => stub.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -173,11 +173,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
         }
       }
     },
-    [allFileStubs, state.files.ids, fileActions, navActions, currentWorkbench],
+    [allFileStubs, state.files.ids, fileActions, navActions, currentWorkbench, activeFileId, requestNavigation],
   );
 
-  // Which stub is currently open in the viewer.
-  const viewedWorkbenchId = currentWorkbench === "viewer" ? state.files.ids[activeFileIndex] : undefined;
+  // Which file is currently open in the viewer — stable ID, never index-derived.
+  const viewedWorkbenchId = currentWorkbench === "viewer" ? activeFileId : null;
 
   const handleEyeClick = useCallback(
     async (fileId: FileId, _e: React.MouseEvent) => {
@@ -209,12 +209,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
       };
 
       if (currentWorkbench === "viewer" && viewedWorkbenchId) {
-        requestNavigation(() => { void performSwitch(); });
+        requestNavigation(() => {
+          void performSwitch();
+        });
       } else {
         await performSwitch();
       }
     },
-    [allFileStubs, viewedWorkbenchId, state.files.ids, fileActions, navActions, currentWorkbench, setPendingViewFileId, requestNavigation],
+    [
+      allFileStubs,
+      viewedWorkbenchId,
+      state.files.ids,
+      fileActions,
+      navActions,
+      currentWorkbench,
+      setPendingViewFileId,
+      requestNavigation,
+    ],
   );
 
   const handleNativeFilePick = useCallback(
@@ -381,10 +392,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
                   {filteredFileStubs.map((stub) => {
                     const workbenchFileId = state.files.ids.find((id) => (id as string) === (stub.id as string));
                     const isInWorkbench = !!workbenchFileId;
-                    const workbenchIdx = workbenchFileId ? state.files.ids.indexOf(workbenchFileId) : -1;
-                    const isActive = isInWorkbench && workbenchIdx === activeFileIndex;
-                    // Viewed state by ID only — quickKey could match multiple stubs.
-                    const isViewedInViewer = !!(viewedWorkbenchId && (viewedWorkbenchId as string) === (stub.id as string));
+                    // Both active and viewed-in-viewer are ID-based — never index-based.
+                    const isViewedInViewer = !!(viewedWorkbenchId && viewedWorkbenchId === (stub.id as string));
+                    const isActive = isViewedInViewer;
                     // In-memory thumbnail may be fresher than the IndexedDB stub.
                     const thumbnailUrl =
                       (workbenchFileId ? state.files.byId[workbenchFileId]?.thumbnailUrl : undefined) || stub.thumbnailUrl;

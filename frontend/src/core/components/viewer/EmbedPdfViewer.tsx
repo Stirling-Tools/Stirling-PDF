@@ -147,9 +147,8 @@ const EmbedPdfViewerContent = ({
     applyChanges: viewerApplyChanges,
     pdfRenderMode,
     cyclePdfRenderMode,
-    activeFileIndex,
     setActiveFileIndex: _setActiveFileIndex,
-    activeFileId: _activeFileId,
+    activeFileId,
     setActiveFileId,
   } = useViewer();
 
@@ -283,15 +282,16 @@ const EmbedPdfViewerContent = ({
   }, [isInAnnotationTool, setAnnotationMode]);
   const isPlacementOverlayActive = Boolean(isInAnnotationTool && isPlacementMode && signatureConfig);
 
-  // Determine which file to display
+  // Determine which file to display — use activeFileId (stable) not activeFileIndex (shifts on removal)
   const currentFile = React.useMemo(() => {
     if (previewFile) {
       return previewFile;
     } else if (activeFiles.length > 0) {
-      return activeFiles[activeFileIndex] || activeFiles[0];
+      const byId = activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null;
+      return byId || activeFiles[0];
     }
     return null;
-  }, [previewFile, activeFiles, activeFileIndex]);
+  }, [previewFile, activeFiles, activeFileId]);
 
   // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
   const currentFileStableId = currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
@@ -607,7 +607,7 @@ const EmbedPdfViewerContent = ({
 
       // Step 3: Create StirlingFiles and stubs for version history
       // Only consume the current file, not all active files
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      const currentFileId = currentFileStableId;
       if (!currentFileId) throw new Error("Current file ID not found");
 
       const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -639,7 +639,6 @@ const EmbedPdfViewerContent = ({
   }, [
     currentFile,
     activeFiles,
-    activeFileIndex,
     exportActions,
     actions,
     selectors,
@@ -669,7 +668,7 @@ const EmbedPdfViewerContent = ({
         const file = new File([filledBlob], filename, { type: "application/pdf" });
 
         // Get current file info for creating the updated version
-        const currentFileId = activeFiles[activeFileIndex]?.fileId;
+        const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
 
         const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -700,7 +699,7 @@ const EmbedPdfViewerContent = ({
         formApplyInProgressRef.current = false;
       }
     },
-    [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation],
+    [currentFile, activeFiles, actions, selectors, activeFileIds.length, rotationState.rotation],
   );
 
   useEffect(() => {
@@ -729,7 +728,7 @@ const EmbedPdfViewerContent = ({
         const filename = currentFile.name || "document.pdf";
         const file = new File([modifiedBlob], filename, { type: "application/pdf" });
 
-        const currentFileId = activeFiles[activeFileIndex]?.fileId;
+        const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
 
         const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -752,7 +751,7 @@ const EmbedPdfViewerContent = ({
         layerApplyInProgressRef.current = false;
       }
     },
-    [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation],
+    [currentFile, activeFiles, actions, selectors, activeFileIds.length, rotationState.rotation],
   );
 
   // Discard pending redactions but save already-applied ones
@@ -784,7 +783,7 @@ const EmbedPdfViewerContent = ({
       const file = new File([blob], filename, { type: "application/pdf" });
 
       // Create StirlingFiles and stubs for version history
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      const currentFileId = currentFileStableId;
       if (!currentFileId) throw new Error("Current file ID not found");
 
       const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -813,7 +812,6 @@ const EmbedPdfViewerContent = ({
     redactionsApplied,
     currentFile,
     activeFiles,
-    activeFileIndex,
     activeFileIds.length,
     exportActions,
     actions,
@@ -1152,11 +1150,7 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Thumbnail Sidebar */}
-      <ThumbnailSidebar
-        visible={isThumbnailSidebarVisible}
-        onToggle={toggleThumbnailSidebar}
-        activeFileIndex={activeFileIndex}
-      />
+      <ThumbnailSidebar visible={isThumbnailSidebarVisible} onToggle={toggleThumbnailSidebar} activeFileId={activeFileId} />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}
