@@ -49,6 +49,7 @@ tasks:
         vars:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
 
   dev:all:
     desc: "Start backend + frontend + engine concurrently on free ports"
@@ -70,6 +71,7 @@ tasks:
         vars:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
 
   # ============================================================
   # Build

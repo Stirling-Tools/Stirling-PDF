@@ -82,11 +82,12 @@ tasks:
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
     env:
       VITE_DEV_PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite
+      - npx vite{{if .OPEN}} --open{{end}}
 
   dev:core:
     desc: "Start frontend dev server in core mode"
@@ -95,11 +96,12 @@ tasks:
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
     env:
       VITE_DEV_PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite --mode core
+      - npx vite --mode core{{if .OPEN}} --open{{end}}
 
   dev:proprietary:
     desc: "Start frontend dev server in proprietary mode"
@@ -108,11 +110,12 @@ tasks:
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
     env:
       VITE_DEV_PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite --mode proprietary
+      - npx vite --mode proprietary{{if .OPEN}} --open{{end}}
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode"
@@ -121,11 +124,12 @@ tasks:
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
     env:
       VITE_DEV_PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite --mode saas
+      - npx vite --mode saas{{if .OPEN}} --open{{end}}
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
@@ -141,11 +145,12 @@ tasks:
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
     env:
       VITE_DEV_PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite --mode prototypes
+      - npx vite --mode prototypes{{if .OPEN}} --open{{end}}
 
   # ============================================================
   # Build
