@@ -45,14 +45,15 @@ export function useToolPanelGeometry({ enabled, toolPanelRef, quickAccessRef, ri
       let left: number;
 
       if (isRTL) {
-        // In RTL, QuickAccessBar is on the right, so start after it (using rect.right as the right edge)
-        const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
-        const quickAccessWidth = quickAccessRect ? quickAccessRect.width : 0;
-        width = Math.max(360, window.innerWidth - quickAccessWidth - rightOffset);
-        left = quickAccessWidth;
+        // RTL: panel is on the left, expands rightward
+        width = Math.max(360, window.innerWidth - rect.right - rightOffset);
+        left = rect.right;
       } else {
-        width = Math.max(360, window.innerWidth - rect.left - rightOffset);
-        left = rect.left;
+        // LTR: panel is on the right, expands leftward to the file sidebar
+        const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
+        const leftOffset = quickAccessRect ? quickAccessRect.right : 0;
+        width = Math.max(360, rect.right - leftOffset);
+        left = leftOffset;
       }
       const height = Math.max(rect.height, window.innerHeight - rect.top);
       setGeometry({

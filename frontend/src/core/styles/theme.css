@@ -213,7 +213,7 @@
   --icon-inactive-color: #ffffff;
 
   /* New theme colors for text and icons */
-  --tools-text-and-icon-color: #374151;
+  --tools-text-and-icon-color: #6b7280;
 
   /* Tool picker sticky header variables (light mode) */
   --tool-header-bg: #dbefff;
@@ -236,6 +236,7 @@
 
   /* Placeholder text colors */
   --search-text-and-icon-color: #6b7382;
+  --input-bg: #ffffff;
 
   /* Tool panel search bar background colors */
   --tool-panel-search-bg: #eff1f4;
@@ -562,7 +563,7 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
 
-  --tools-text-and-icon-color: #d0d6dc;
+  --tools-text-and-icon-color: #9ca3af;
 
   /* Tool picker sticky header variables (dark mode) */
   --tool-header-bg: #2a2f36;
@@ -581,6 +582,7 @@
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #ffffff !important;
+  --input-bg: #4b525a;
 
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1f2329;
@@ -921,4 +923,15 @@
 
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
+}
+
+/* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */
+.wordmark-dark-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .wordmark-light-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .wordmark-dark-only {
+  display: block;
 }

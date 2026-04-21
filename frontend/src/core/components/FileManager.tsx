@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Modal } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { StirlingFileStub } from "@app/types/fileContext";
+import type { FileId } from "@app/types/file";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -14,6 +15,7 @@ import { Z_INDEX_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import { isGoogleDriveConfigured, extractGoogleDriveBackendConfig } from "@app/services/googleDrivePickerService";
 import { loadScript } from "@app/utils/scriptLoader";
 import { useAllFiles } from "@app/contexts/FileContext";
+import { useFileActions } from "@app/contexts/file/fileHooks";
 
 interface FileManagerProps {
   selectedTool?: Tool | null;
@@ -27,6 +29,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   const { loadRecentFiles, handleRemoveFile, loading } = useFileManager();
+  const { actions: fileActions } = useFileActions();
 
   // Get active file IDs from FileContext to show which files are already loaded
   const { fileIds: activeFileIds } = useAllFiles();
@@ -75,10 +78,23 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
 
   const handleRemoveFileByIndex = useCallback(
     async (index: number) => {
-      await handleRemoveFile(index, recentFiles, setRecentFiles);
+      await handleRemoveFile(
+        index,
+        recentFiles,
+        setRecentFiles,
+        (fileId) => {
+          fileActions.removeFiles([fileId], false);
+        },
+        refreshRecentFiles,
+      );
     },
-    [handleRemoveFile, recentFiles],
+    [handleRemoveFile, recentFiles, fileActions, refreshRecentFiles],
   );
+
+  const handleBulkRemove = useCallback((fileIds: FileId[]) => {
+    const idSet = new Set(fileIds as string[]);
+    setRecentFiles((prev) => prev.filter((f) => !idSet.has(f.id as string)));
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1030);
@@ -198,6 +214,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             isOpen={isFilesModalOpen}
             maxSelectable={maxSelectable}
             onFileRemove={handleRemoveFileByIndex}
+            onBulkRemove={handleBulkRemove}
             modalHeight={modalHeight}
             refreshRecentFiles={refreshRecentFiles}
             isLoading={loading}

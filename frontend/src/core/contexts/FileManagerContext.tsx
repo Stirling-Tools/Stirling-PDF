@@ -74,6 +74,7 @@ interface FileManagerProviderProps {
   isFileSupported: (fileName: string) => boolean;
   isOpen: boolean;
   onFileRemove: (index: number) => void;
+  onBulkRemove?: (fileIds: FileId[]) => void;
   modalHeight: string;
   refreshRecentFiles: () => Promise<void>;
   isLoading: boolean;
@@ -92,6 +93,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   isFileSupported,
   isOpen,
   onFileRemove,
+  onBulkRemove,
   modalHeight,
   refreshRecentFiles,
   isLoading,
@@ -117,7 +119,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (isOpen) {
       setSelectedFileIds(activeFileIds);
     }
-  }, [isOpen]);
+  }, [isOpen, activeFileIds]);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
@@ -343,7 +345,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 
   // Shared internal delete logic
   const performFileDelete = useCallback(
-    async (fileToRemove: StirlingFileStub, fileIndex: number) => {
+    async (fileToRemove: StirlingFileStub) => {
       let deleteChoice: RemoteDeleteChoice = "local";
       if (fileToRemove.remoteStorageId) {
         deleteChoice = await requestDeleteChoice(fileToRemove);
@@ -470,8 +472,8 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         console.error("Failed to delete files from chain:", error);
       }
 
-      // Call the parent's deletion logic for the main file only
-      onFileRemove(fileIndex);
+      // ID-based removal avoids stale index issues when multiple server files are deleted sequentially.
+      onBulkRemove?.(filesToDelete as FileId[]);
 
       // Refresh to ensure consistent state
       await refreshRecentFiles();
@@ -481,7 +483,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setSelectedFileIds,
       setExpandedFileIds,
       setLoadedHistoryFiles,
-      onFileRemove,
+      onBulkRemove,
       refreshRecentFiles,
       requestDeleteChoice,
       t,
@@ -492,7 +494,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     async (index: number) => {
       const fileToRemove = filteredFiles[index];
       if (fileToRemove) {
-        await performFileDelete(fileToRemove, index);
+        await performFileDelete(fileToRemove);
       }
     },
     [filteredFiles, performFileDelete],
@@ -506,7 +508,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       const fileToRemove = filteredFiles[fileIndex];
 
       if (fileToRemove && fileIndex !== -1) {
-        await performFileDelete(fileToRemove, fileIndex);
+        await performFileDelete(fileToRemove);
       }
     },
     [filteredFiles, performFileDelete],
@@ -566,8 +568,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   );
 
   const handleOpenFiles = useCallback(() => {
-    // Remove active files that were unchecked
-    const uncheckedActiveIds = activeFileIds.filter((id) => !selectedFilesSet.has(id));
+    // Remove active files that were unchecked, skipping files with unsaved changes
+    const uncheckedActiveIds = activeFileIds.filter((id) => {
+      if (selectedFilesSet.has(id)) return false;
+      const stub = filteredFiles.find((f) => f.id === id);
+      return !stub?.isDirty;
+    });
     if (uncheckedActiveIds.length > 0) {
       removeFiles(uncheckedActiveIds, false);
     }
@@ -579,7 +585,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     }
 
     onClose();
-  }, [selectedFiles, selectedFilesSet, activeFileIds, removeFiles, onRecentFilesSelected, onClose]);
+  }, [selectedFiles, selectedFilesSet, activeFileIds, filteredFiles, removeFiles, onRecentFilesSelected, onClose]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -620,15 +626,65 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const handleDeleteSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;
 
-    try {
-      // Delete each selected file using the proven single delete logic
-      for (const fileId of selectedFileIds) {
-        await handleFileRemoveById(fileId);
-      }
-    } catch (error) {
-      console.error("Failed to delete selected files:", error);
+    // Split into server files (need modal prompts) and local files (bulk path).
+    const serverFiles = selectedFileIds
+      .map((id) => filteredFiles.find((f) => f.id === id))
+      .filter((f): f is StirlingFileStub => !!f && !!f.remoteStorageId);
+
+    const localIds = selectedFileIds.filter((id) => {
+      const f = filteredFiles.find((ff) => ff.id === id);
+      return f && !f.remoteStorageId;
+    }) as FileId[];
+
+    // Server files — sequential, each may need a modal prompt.
+    for (const file of serverFiles) {
+      await performFileDelete(file);
     }
-  }, [selectedFileIds, handleFileRemoveById]);
+
+    // Local files — single IDB transaction, one UI update.
+    if (localIds.length > 0) {
+      try {
+        const allStoredStubs = await fileStorage.getAllStirlingFileStubs();
+        const safeIds = getSafeFilesToDelete(localIds, allStoredStubs) as FileId[];
+        const safeIdSet = new Set(safeIds);
+
+        // Clear UI state in one pass.
+        setSelectedFileIds((prev) => prev.filter((id) => !safeIdSet.has(id)));
+        setExpandedFileIds((prev) => {
+          const next = new Set(prev);
+          safeIds.forEach((id) => next.delete(id));
+          return next;
+        });
+        setLoadedHistoryFiles((prev) => {
+          const next = new Map(prev);
+          safeIds.forEach((id) => next.delete(id));
+          for (const [mainId, histFiles] of next.entries()) {
+            const filtered = histFiles.filter((h) => !safeIdSet.has(h.id));
+            if (filtered.length !== histFiles.length) next.set(mainId, filtered);
+          }
+          return next;
+        });
+
+        // Optimistic UI update.
+        onBulkRemove?.(safeIds);
+
+        // Remove from workbench.
+        removeFiles(safeIds, false);
+
+        // Single-transaction IDB delete, then refresh.
+        fileStorage
+          .deleteMultipleStirlingFiles(safeIds)
+          .then(() => refreshRecentFiles())
+          .catch((error) => {
+            console.error("Failed to bulk delete files from IndexedDB:", error);
+            refreshRecentFiles();
+          });
+      } catch (error) {
+        console.error("Failed to bulk delete local files:", error);
+        await refreshRecentFiles();
+      }
+    }
+  }, [selectedFileIds, filteredFiles, performFileDelete, getSafeFilesToDelete, removeFiles, refreshRecentFiles, onBulkRemove]);
 
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;

@@ -19,6 +19,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import LanguageSelector from "@app/components/shared/LanguageSelector";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import type { StartupView, ViewerZoomSetting } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -44,6 +46,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
+  const { toggleTheme, themeMode } = useRainbowThemeContext();
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(preferences.autoUnzipFileLimit);
   const [bannerDismissed, setBannerDismissed] = useState(() => {
     // Check localStorage on mount
@@ -276,6 +279,43 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           </Stack>
         </Paper>
       )}
+
+      {/* Appearance */}
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.theme", "Theme")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("settings.general.themeDescription", "Switch between light and dark mode")}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={themeMode === "rainbow" ? "dark" : themeMode}
+              onChange={(val) => {
+                if ((themeMode === "dark") !== (val === "dark")) toggleTheme();
+              }}
+              data={[
+                { label: t("settings.general.themeLight", "Light"), value: "light" },
+                { label: t("settings.general.themeDark", "Dark"), value: "dark" },
+              ]}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.language", "Language")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("settings.general.languageDescription", "Choose the display language")}
+              </Text>
+            </div>
+            <LanguageSelector position="bottom-end" offset={6} />
+          </div>
+        </Stack>
+      </Paper>
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">

@@ -10,27 +10,11 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
+import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
-
-/**
- * Google Drive icon component - displays the branded SVG icon
- * Shows grayscale when disabled
- */
-const GoogleDriveIcon: React.FC<{ disabled?: boolean }> = ({ disabled }) => (
-  <img
-    src="/images/google-drive.svg"
-    alt="Google Drive"
-    style={{
-      width: "20px",
-      height: "20px",
-      opacity: disabled ? 0.5 : 1,
-      filter: disabled ? "grayscale(100%)" : "none",
-    }}
-  />
-);
 
 const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = false }) => {
   const { activeSource, onSourceChange, onLocalFileClick, onGoogleDriveSelect, onNewFilesSelect } = useFileManagerContext();
@@ -125,7 +109,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = fals
         <Button
           variant="subtle"
           color="var(--mantine-color-gray-6)"
-          leftSection={<GoogleDriveIcon disabled={!isGoogleDriveEnabled} />}
+          leftSection={<GoogleDriveIcon colored={isGoogleDriveEnabled} />}
           justify={horizontal ? "center" : "flex-start"}
           onClick={handleGoogleDriveClick}
           fullWidth={!horizontal}

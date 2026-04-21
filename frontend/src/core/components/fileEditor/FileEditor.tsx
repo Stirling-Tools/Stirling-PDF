@@ -12,7 +12,6 @@ import FilePickerModal from "@app/components/shared/FilePickerModal";
 import { FileId, StirlingFile } from "@app/types/fileContext";
 import { alert } from "@app/components/toast";
 import { downloadFile } from "@app/services/downloadService";
-import { useFileEditorRightRailButtons } from "@app/components/fileEditor/fileEditorRightRailButtons";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
 interface FileEditorProps {
@@ -68,20 +67,7 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   }, [selectedTool?.maxFiles, toolMode]);
 
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
-
-  const handleCloseAllFiles = useCallback(() => {
-    void removeFiles(
-      activeStirlingFileStubs.map((r) => r.id),
-      false,
-    );
-  }, [activeStirlingFileStubs, removeFiles]);
-
-  useFileEditorRightRailButtons({
-    totalItems: activeStirlingFileStubs.length,
-    onCloseAll: handleCloseAllFiles,
-  });
-
-  // Process uploaded files using context
+// Process uploaded files using context
   // ZIP extraction is now handled automatically in FileContext based on user preferences
   const handleFileUpload = useCallback(
     async (uploadedFiles: File[]) => {

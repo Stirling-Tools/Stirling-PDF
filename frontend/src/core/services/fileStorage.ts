@@ -12,11 +12,14 @@ import { indexedDBManager, DATABASE_CONFIGS } from "@app/services/indexedDBManag
  * Storage record - single source of truth
  * Contains all data needed for both StirlingFile and StirlingFileStub
  */
+const THUMBNAIL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export interface StoredStirlingFileRecord extends BaseFileMetadata {
   data: ArrayBuffer;
   fileId: FileId; // Matches runtime StirlingFile.fileId exactly
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
+  thumbnailStoredAt?: number; // Epoch ms — sliding 30-day TTL
   url?: string; // For compatibility with existing components
 }
 
@@ -38,6 +41,44 @@ class FileStorageService {
     return indexedDBManager.openDatabase(this.dbConfig);
   }
 
+  /** Returns thumbnail if within TTL, otherwise undefined. */
+  private isThumbnailFresh(record: StoredStirlingFileRecord): boolean {
+    if (!record.thumbnail) return false;
+    if (!record.thumbnailStoredAt) return false;
+    return Date.now() - record.thumbnailStoredAt < THUMBNAIL_TTL_MS;
+  }
+
+  /** Fire-and-forget: bump thumbnailStoredAt (or clear expired thumbnail) for a set of ids. */
+  private async bumpThumbnailTTL(ids: FileId[], clear = false): Promise<void> {
+    if (ids.length === 0) return;
+    const db = await this.getDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+
+      // Issue all gets up front — each onsuccess creates a put before the
+      // transaction can auto-commit, keeping it alive until all puts settle.
+      ids.forEach((id) => {
+        const req = store.get(id);
+        req.onsuccess = () => {
+          const record = req.result as StoredStirlingFileRecord | undefined;
+          if (!record) return;
+          if (clear) {
+            record.thumbnail = undefined;
+            record.thumbnailStoredAt = undefined;
+          } else {
+            record.thumbnailStoredAt = Date.now();
+          }
+          store.put(record);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    });
+  }
+
   /**
    * Store a StirlingFile with its metadata from StirlingFileStub
    */
@@ -56,6 +97,7 @@ class FileStorageService {
       createdAt: stub.createdAt,
       data: arrayBuffer,
       thumbnail: stub.thumbnailUrl,
+      thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
       isLeaf: stub.isLeaf ?? true,
       remoteStorageId: stub.remoteStorageId,
       remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
@@ -162,6 +204,9 @@ class FileStorageService {
         }
 
         // Create StirlingFileStub from metadata (no file data)
+        const fresh = this.isThumbnailFresh(record);
+        void this.bumpThumbnailTTL([record.id], !fresh);
+
         const stub: StirlingFileStub = {
           id: record.id,
           name: record.name,
@@ -169,7 +214,7 @@ class FileStorageService {
           size: record.size,
           lastModified: record.lastModified,
           quickKey: record.quickKey,
-          thumbnailUrl: record.thumbnail,
+          thumbnailUrl: fresh ? record.thumbnail : undefined,
           isLeaf: record.isLeaf,
           remoteStorageId: record.remoteStorageId,
           remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -203,13 +248,20 @@ class FileStorageService {
       const request = store.openCursor();
       const stubs: StirlingFileStub[] = [];
 
+      const tobump: FileId[] = [];
+      const toexpire: FileId[] = [];
+
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
           const record = cursor.value as StoredStirlingFileRecord;
           if (record && record.name && typeof record.size === "number") {
-            // Extract metadata only - no file data
+            const fresh = this.isThumbnailFresh(record);
+            if (record.thumbnail) {
+              if (fresh) tobump.push(record.id);
+              else toexpire.push(record.id);
+            }
             stubs.push({
               id: record.id,
               name: record.name,
@@ -217,7 +269,7 @@ class FileStorageService {
               size: record.size,
               lastModified: record.lastModified,
               quickKey: record.quickKey,
-              thumbnailUrl: record.thumbnail,
+              thumbnailUrl: fresh ? record.thumbnail : undefined,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -236,6 +288,8 @@ class FileStorageService {
           }
           cursor.continue();
         } else {
+          void this.bumpThumbnailTTL(tobump);
+          void this.bumpThumbnailTTL(toexpire, true);
           resolve(stubs);
         }
       };
@@ -263,6 +317,8 @@ class FileStorageService {
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
       const leafStubs: StirlingFileStub[] = [];
+      const tobump: FileId[] = [];
+      const toexpire: FileId[] = [];
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
@@ -271,6 +327,11 @@ class FileStorageService {
           const record = cursor.value as StoredStirlingFileRecord;
           // Only include leaf files (default to true if undefined)
           if (record && record.name && typeof record.size === "number" && record.isLeaf !== false) {
+            const fresh = this.isThumbnailFresh(record);
+            if (record.thumbnail) {
+              if (fresh) tobump.push(record.id);
+              else toexpire.push(record.id);
+            }
             leafStubs.push({
               id: record.id,
               name: record.name,
@@ -278,7 +339,7 @@ class FileStorageService {
               size: record.size,
               lastModified: record.lastModified,
               quickKey: record.quickKey,
-              thumbnailUrl: record.thumbnail,
+              thumbnailUrl: fresh ? record.thumbnail : undefined,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -297,6 +358,8 @@ class FileStorageService {
           }
           cursor.continue();
         } else {
+          void this.bumpThumbnailTTL(tobump);
+          void this.bumpThumbnailTTL(toexpire, true);
           resolve(leafStubs);
         }
       };
@@ -320,6 +383,23 @@ class FileStorageService {
   }
 
   /**
+   * Delete multiple StirlingFiles in a single transaction
+   */
+  async deleteMultipleStirlingFiles(ids: FileId[]): Promise<void> {
+    if (ids.length === 0) return;
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error ?? new Error("Transaction aborted"));
+      ids.forEach((id) => store.delete(id));
+    });
+  }
+
+  /**
    * Update thumbnail for existing file
    */
   async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
@@ -335,6 +415,7 @@ class FileStorageService {
           const record = getRequest.result as StoredStirlingFileRecord;
           if (record) {
             record.thumbnail = thumbnail;
+            record.thumbnailStoredAt = Date.now();
             const updateRequest = store.put(record);
 
             updateRequest.onsuccess = () => {

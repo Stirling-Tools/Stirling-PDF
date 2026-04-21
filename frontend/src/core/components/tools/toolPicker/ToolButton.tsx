@@ -146,13 +146,15 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
 
+  const selectedStyles = isSelected ? { backgroundColor: "#EAEAEA", color: "var(--tools-text-and-icon-color)" } : {};
+
   const buttonElement = navProps ? (
     // For internal tools with URLs, render Button as an anchor for proper link behavior
     <Button
       component="a"
       href={navProps.href}
       onClick={navProps.onClick}
-      variant={isSelected ? "filled" : "subtle"}
+      variant="subtle"
       size="sm"
       radius="md"
       fullWidth
@@ -164,6 +166,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
+          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}
@@ -178,7 +181,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleExternalClick}
-      variant={isSelected ? "filled" : "subtle"}
+      variant="subtle"
       size="sm"
       radius="md"
       fullWidth
@@ -190,6 +193,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
           overflow: "visible",
+          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}
@@ -199,7 +203,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   ) : (
     // For unavailable tools, use regular button
     <Button
-      variant={isSelected ? "filled" : "subtle"}
+      variant="subtle"
       onClick={() => handleClick(id)}
       size="sm"
       radius="md"
@@ -214,6 +218,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
           color: "var(--tools-text-and-icon-color)",
           cursor: visuallyUnavailable ? "not-allowed" : undefined,
           overflow: "visible",
+          ...selectedStyles,
         },
         label: { overflow: "visible" },
       }}
@@ -230,7 +235,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   return (
     <div className="tool-button-container">
       {star}
-      <Tooltip content={tooltipContent} position="right" arrow={true} delay={500}>
+      <Tooltip content={tooltipContent} position="left" arrow={true} delay={500}>
         {buttonElement}
       </Tooltip>
     </div>

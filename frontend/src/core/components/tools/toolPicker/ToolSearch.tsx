@@ -17,6 +17,7 @@ interface ToolSearchProps {
   selectedToolKey?: string | null;
   placeholder?: string;
   hideIcon?: boolean;
+  iconOverride?: React.ReactNode;
   onFocus?: () => void;
   autoFocus?: boolean;
 }
@@ -30,6 +31,7 @@ const ToolSearch = ({
   selectedToolKey,
   placeholder,
   hideIcon = false,
+  iconOverride,
   onFocus,
   autoFocus = false,
 }: ToolSearchProps) => {
@@ -89,7 +91,8 @@ const ToolSearch = ({
       value={value}
       onChange={handleSearchChange}
       placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-      icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
+      icon={iconOverride ?? (hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.25rem" height="1.25rem" />)}
+      iconClickable={!!iconOverride}
       autoComplete="off"
       onFocus={onFocus}
     />

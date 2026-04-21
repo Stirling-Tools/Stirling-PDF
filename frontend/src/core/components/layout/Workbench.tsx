@@ -1,24 +1,21 @@
-import { useCallback } from "react";
 import { Box } from "@mantine/core";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { useNavigationState, useNavigationActions, useNavigationGuard } from "@app/contexts/NavigationContext";
+import { useFileState } from "@app/contexts/FileContext";
+import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
-import { useViewer } from "@app/contexts/ViewerContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { FileId } from "@app/types/file";
 import styles from "@app/components/layout/Workbench.module.css";
 
-import TopControls from "@app/components/shared/TopControls";
+import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import FileEditor from "@app/components/fileEditor/FileEditor";
 import PageEditor from "@app/components/pageEditor/PageEditor";
 import PageEditorControls from "@app/components/pageEditor/PageEditorControls";
 import Viewer from "@app/components/viewer/Viewer";
-import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import LandingPage from "@app/components/shared/LandingPage";
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -27,7 +24,6 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
-  const { actions: fileActions } = useFileActions();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -51,34 +47,6 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
-
-  // Get active file index from ViewerContext
-  const { activeFileIndex, setActiveFileIndex } = useViewer();
-
-  // Get navigation guard for unsaved changes check when switching files
-  const { requestNavigation } = useNavigationGuard();
-
-  // Wrap file selection to check for unsaved changes before switching
-  // requestNavigation will show the modal if there are unsaved changes, otherwise navigate immediately
-  const handleFileSelect = useCallback(
-    (index: number) => {
-      // Don't do anything if selecting the same file
-      if (index === activeFileIndex) return;
-
-      // requestNavigation handles the unsaved changes check internally
-      requestNavigation(() => {
-        setActiveFileIndex(index);
-      });
-    },
-    [activeFileIndex, requestNavigation, setActiveFileIndex],
-  );
-
-  const handleFileRemove = useCallback(
-    async (fileId: FileId) => {
-      await fileActions.removeFiles([fileId], false); // false = don't delete from IndexedDB, just remove from context
-    },
-    [fileActions],
-  );
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -138,8 +106,6 @@ export default function Workbench() {
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
             onClose={handlePreviewClose}
-            activeFileIndex={activeFileIndex}
-            setActiveFileIndex={setActiveFileIndex}
           />
         );
 
@@ -175,7 +141,7 @@ export default function Workbench() {
         );
 
       default:
-        return <LandingPage />;
+        return null;
     }
   };
 
@@ -189,20 +155,9 @@ export default function Workbench() {
           : { backgroundColor: "var(--bg-background)" }
       }
     >
-      {/* Top Controls */}
-      {activeFiles.length > 0 && !customWorkbenchViews.find((v) => v.workbenchId === currentView)?.hideTopControls && (
-        <TopControls
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map((f) => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
-          onFileSelect={handleFileSelect}
-          onFileRemove={handleFileRemove}
-        />
+      {/* Workbench Bar - replaces TopControls and includes RightRail action buttons */}
+      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)?.hideTopControls && (
+        <WorkbenchBar currentView={currentView} setCurrentView={setCurrentView} hasFiles={activeFiles.length > 0} />
       )}
 
       {/* Dismiss All Errors Button */}

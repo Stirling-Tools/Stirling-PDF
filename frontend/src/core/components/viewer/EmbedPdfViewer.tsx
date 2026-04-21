@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Center, Text, ActionIcon, Button, Stack } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
@@ -109,8 +110,6 @@ export interface EmbedPdfViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
-  activeFileIndex?: number;
-  setActiveFileIndex?: (index: number) => void;
 }
 
 const EmbedPdfViewerContent = ({
@@ -118,9 +117,8 @@ const EmbedPdfViewerContent = ({
   setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
-  activeFileIndex: externalActiveFileIndex,
-  setActiveFileIndex: externalSetActiveFileIndex,
 }: EmbedPdfViewerProps) => {
+  const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -149,6 +147,9 @@ const EmbedPdfViewerContent = ({
     applyChanges: viewerApplyChanges,
     pdfRenderMode,
     cyclePdfRenderMode,
+    setActiveFileIndex: _setActiveFileIndex,
+    activeFileId,
+    setActiveFileId,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -281,62 +282,20 @@ const EmbedPdfViewerContent = ({
   }, [isInAnnotationTool, setAnnotationMode]);
   const isPlacementOverlayActive = Boolean(isInAnnotationTool && isPlacementMode && signatureConfig);
 
-  // Track which file tab is active
-  const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
-  const activeFileIndex = externalActiveFileIndex ?? internalActiveFileIndex;
-  const setActiveFileIndex = externalSetActiveFileIndex ?? setInternalActiveFileIndex;
-
-  // activeFileId (from ViewerContext) is the stable source of truth.
-  // We derive activeFileIndex from it so reorders after tool operations don't lose the viewed file.
-  const { activeFileId, setActiveFileId } = useViewer();
-
-  // Stable string key representing the current file list order.
-  // Using a joined ID string avoids depending on the activeFiles array reference,
-  // which is a new object every render and would cause an infinite effect loop.
-  const fileIdsKey = activeFiles.map((f) => f.fileId).join(",");
-
-  // When the file list actually changes, re-derive activeFileIndex from the stable activeFileId.
-  useEffect(() => {
-    if (!activeFileId || activeFiles.length === 0) return;
-    const newIndex = activeFiles.findIndex((f) => f.fileId === activeFileId);
-    if (newIndex !== -1 && newIndex !== activeFileIndex) {
-      setActiveFileIndex(newIndex);
-    }
-  }, [fileIdsKey, activeFileId]); // stable primitives — no infinite loop
-
-  // When the user manually switches file tabs, keep activeFileId in sync.
-  // Skips the initial mount to avoid overwriting an activeFileId set by handleViewFile.
-  const activeFileIndexMountedRef = useRef(false);
-  useEffect(() => {
-    if (!activeFileIndexMountedRef.current) {
-      activeFileIndexMountedRef.current = true;
-      return;
-    }
-    const fileId = activeFilesRef.current[activeFileIndex]?.fileId;
-    if (fileId && fileId !== activeFileId) {
-      setActiveFileId(fileId);
-    }
-  }, [activeFileIndex]);
-
-  // Reset active tab if it's out of bounds (safety net)
-  useEffect(() => {
-    if (activeFileIndex >= activeFiles.length && activeFiles.length > 0) {
-      setActiveFileIndex(0);
-    }
-  }, [activeFiles.length, activeFileIndex]);
-
-  // Determine which file to display
+  // Determine which file to display — use activeFileId (stable) not activeFileIndex (shifts on removal)
   const currentFile = React.useMemo(() => {
     if (previewFile) {
       return previewFile;
     } else if (activeFiles.length > 0) {
-      return activeFiles[activeFileIndex] || activeFiles[0];
+      const byId = activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null;
+      return byId || activeFiles[0];
     }
     return null;
-  }, [previewFile, activeFiles, activeFileIndex]);
+  }, [previewFile, activeFiles, activeFileId]);
 
-  // Get file with URL for rendering
-  const fileWithUrl = useFileWithUrl(currentFile);
+  // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
+  const currentFileStableId = currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
@@ -648,7 +607,7 @@ const EmbedPdfViewerContent = ({
 
       // Step 3: Create StirlingFiles and stubs for version history
       // Only consume the current file, not all active files
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      const currentFileId = currentFileStableId;
       if (!currentFileId) throw new Error("Current file ID not found");
 
       const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -680,7 +639,6 @@ const EmbedPdfViewerContent = ({
   }, [
     currentFile,
     activeFiles,
-    activeFileIndex,
     exportActions,
     actions,
     selectors,
@@ -710,7 +668,7 @@ const EmbedPdfViewerContent = ({
         const file = new File([filledBlob], filename, { type: "application/pdf" });
 
         // Get current file info for creating the updated version
-        const currentFileId = activeFiles[activeFileIndex]?.fileId;
+        const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
 
         const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -741,7 +699,7 @@ const EmbedPdfViewerContent = ({
         formApplyInProgressRef.current = false;
       }
     },
-    [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation],
+    [currentFile, activeFiles, actions, selectors, activeFileIds.length, rotationState.rotation],
   );
 
   useEffect(() => {
@@ -770,7 +728,7 @@ const EmbedPdfViewerContent = ({
         const filename = currentFile.name || "document.pdf";
         const file = new File([modifiedBlob], filename, { type: "application/pdf" });
 
-        const currentFileId = activeFiles[activeFileIndex]?.fileId;
+        const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
 
         const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -793,7 +751,7 @@ const EmbedPdfViewerContent = ({
         layerApplyInProgressRef.current = false;
       }
     },
-    [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation],
+    [currentFile, activeFiles, actions, selectors, activeFileIds.length, rotationState.rotation],
   );
 
   // Discard pending redactions but save already-applied ones
@@ -825,7 +783,7 @@ const EmbedPdfViewerContent = ({
       const file = new File([blob], filename, { type: "application/pdf" });
 
       // Create StirlingFiles and stubs for version history
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      const currentFileId = currentFileStableId;
       if (!currentFileId) throw new Error("Current file ID not found");
 
       const parentStub = selectors.getStirlingFileStub(currentFileId);
@@ -854,7 +812,6 @@ const EmbedPdfViewerContent = ({
     redactionsApplied,
     currentFile,
     activeFiles,
-    activeFileIndex,
     activeFileIds.length,
     exportActions,
     actions,
@@ -1049,7 +1006,7 @@ const EmbedPdfViewerContent = ({
       // the effect re-fires before the async fetch completes.
     }
 
-    if (currentFile && (fileChanged || providerChanged)) {
+    if (currentFile && !isCurrentFileEncrypted && (fileChanged || providerChanged)) {
       console.log("[FormFill] Fetching form fields for:", currentFileId);
       fetchFormFields(currentFile, currentFileId ?? undefined);
     }
@@ -1099,7 +1056,7 @@ const EmbedPdfViewerContent = ({
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
             <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
-            <Text fw={500}>This PDF is password-protected</Text>
+            <Text fw={500}>{t("encryptedPdfUnlock.viewerLocked", "This PDF is password-protected")}</Text>
             <Button
               variant="filled"
               onClick={() => {
@@ -1108,7 +1065,7 @@ const EmbedPdfViewerContent = ({
                 }
               }}
             >
-              Unlock
+              {t("encryptedPdfUnlock.viewerUnlock", "Unlock")}
             </Button>
           </Stack>
         </Center>
@@ -1193,11 +1150,7 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Thumbnail Sidebar */}
-      <ThumbnailSidebar
-        visible={isThumbnailSidebarVisible}
-        onToggle={toggleThumbnailSidebar}
-        activeFileIndex={activeFileIndex}
-      />
+      <ThumbnailSidebar visible={isThumbnailSidebarVisible} onToggle={toggleThumbnailSidebar} activeFileId={activeFileId} />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}

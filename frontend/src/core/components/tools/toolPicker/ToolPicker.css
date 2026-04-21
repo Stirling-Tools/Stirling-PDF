@@ -57,13 +57,16 @@
 
 /* Compact tool buttons */
 .tool-button {
-  font-size: 0.875rem; /* default 1rem - 0.125rem? We'll apply exact -0.25rem via calc below */
-  padding-top: 0.375rem;
-  padding-bottom: 0.375rem;
+  font-size: 0.875rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.5rem;
 }
 
 .tool-button .mantine-Button-label {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .tool-button-icon {

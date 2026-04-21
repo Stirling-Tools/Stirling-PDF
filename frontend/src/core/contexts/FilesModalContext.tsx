@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
@@ -36,6 +37,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { addFiles } = useFileHandler();
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
+  const { actions: navActions } = useNavigationActions();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
@@ -198,7 +200,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const handleFileUpload = useCallback(
     async (files: File[]) => {
       if (customHandler) {
-        // Use custom handler for special cases (like page insertion)
+        // Use custom handler for special cases (like page insertion) — no auto-navigation
         customHandler(files, insertAfterPage);
       } else {
         // 1) Add via standard flow (auto-selects new files)
@@ -210,10 +212,12 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const nextSelection = Array.from(new Set([...currentSelected, ...ids]));
           actions.setSelectedFiles(nextSelection);
         }
+        // Single file → viewer, multiple → active files
+        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
       closeFilesModal();
     },
-    [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx],
+    [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx, navActions],
   );
 
   const handleRecentFileSelect = useCallback(
@@ -315,6 +319,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         console.error("addStirlingFileStubs action not available");
       }
 
+      // Single file → viewer, multiple → active files
+      const totalAdded = stirlingFileStubs.length;
+      navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
+
       closeFilesModal();
     },
     [
@@ -328,6 +336,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       downloadShareLinkFile,
       extractLatestFilesFromBundle,
       importBundleToWorkbench,
+      navActions,
     ],
   );
 

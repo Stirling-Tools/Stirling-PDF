@@ -18,8 +18,6 @@ interface PageEditorRightRailButtonsParams {
   onExportSelected: () => void;
   onSaveChanges: () => void;
   exportLoading: boolean;
-  activeFileCount: number;
-  closePdf: () => void;
 }
 
 export function usePageEditorRightRailButtons(params: PageEditorRightRailButtonsParams) {
@@ -37,8 +35,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     onExportSelected,
     onSaveChanges,
     exportLoading,
-    activeFileCount,
-    closePdf,
   } = params;
 
   const { t, i18n } = useTranslation();
@@ -50,8 +46,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
   const deleteSelectedLabel = t("rightRail.deleteSelected", "Delete Selected Pages");
   const exportSelectedLabel = t("rightRail.exportSelected", "Export Selected Pages");
   const saveChangesLabel = t("rightRail.saveChanges", "Save Changes");
-  const closePdfLabel = t("rightRail.closePdf", "Close PDF");
-
   const buttons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
       {
@@ -130,17 +124,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
         visible: totalPages > 0,
         onClick: onSaveChanges,
       },
-      {
-        id: "page-close-pdf",
-        icon: <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />,
-        tooltip: closePdfLabel,
-        ariaLabel: closePdfLabel,
-        section: "top" as const,
-        order: 60,
-        disabled: activeFileCount === 0,
-        visible: activeFileCount > 0,
-        onClick: closePdf,
-      },
     ];
   }, [
     t,
@@ -151,7 +134,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     deleteSelectedLabel,
     exportSelectedLabel,
     saveChangesLabel,
-    closePdfLabel,
     totalPages,
     selectedPageCount,
     csvInput,
@@ -165,8 +147,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     onExportSelected,
     onSaveChanges,
     exportLoading,
-    activeFileCount,
-    closePdf,
   ]);
 
   useRightRailButtons(buttons);

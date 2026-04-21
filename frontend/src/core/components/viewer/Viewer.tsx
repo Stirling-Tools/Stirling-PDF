@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
 import { NonPdfViewerWrapper, type ViewerProps } from "@app/components/viewer/NonPdfViewer";
 import { useFileState } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { isStirlingFile } from "@app/types/fileContext";
 import { isPdfFile } from "@app/utils/fileUtils";
 
 export type { ViewerProps };
@@ -9,13 +11,14 @@ export type { ViewerProps };
 const Viewer = (props: ViewerProps) => {
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
-  const activeFileIndex = props.activeFileIndex ?? 0;
+  const { activeFileId } = useViewer();
 
-  // Determine the active file — previewFile takes priority
+  // Determine the active file — previewFile takes priority, then look up by stable ID
   const activeFile = useMemo(() => {
     if (props.previewFile) return props.previewFile;
-    return activeFiles[activeFileIndex] ?? activeFiles[0] ?? null;
-  }, [props.previewFile, activeFiles, activeFileIndex]);
+    const byId = activeFileId ? activeFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId) : null;
+    return byId ?? activeFiles[0] ?? null;
+  }, [props.previewFile, activeFiles, activeFileId]);
 
   // Route to the appropriate viewer based on file type
   if (activeFile && !isPdfFile(activeFile)) {

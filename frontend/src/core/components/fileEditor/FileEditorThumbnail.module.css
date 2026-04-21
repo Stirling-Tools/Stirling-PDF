@@ -1,6 +1,6 @@
 .card {
-  width: 220px;
-  max-width: 220px;
+  width: 260px;
+  max-width: 260px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -57,7 +57,7 @@
 .thumbWrap {
   width: 100%;
   position: relative;
-  height: 260px;
+  height: 310px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +91,7 @@
 .thumbImage {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;
   border-radius: 12px;
   background: var(--bg-surface);
   display: block;

@@ -1,0 +1,263 @@
+/* ---- File list ---- */
+.file-sidebar-file-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 8px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.file-sidebar-file-list::-webkit-scrollbar {
+  width: 4px;
+}
+.file-sidebar-file-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.file-sidebar-file-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ---- File item ---- */
+.file-sidebar-file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.file-sidebar-file-item:hover:not(.selected) {
+  background-color: rgba(59, 130, 246, 0.06);
+}
+
+.file-sidebar-file-item.selected {
+  background-color: rgba(59, 130, 246, 0.12);
+}
+
+.file-sidebar-file-item.active:not(.selected) {
+  background-color: rgba(59, 130, 246, 0.06);
+}
+
+/* Icon wrapper */
+.file-sidebar-file-icon-wrapper {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.file-sidebar-file-icon-hover-hide {
+  display: block;
+}
+
+.file-sidebar-file-item:hover .file-sidebar-file-icon-hover-hide {
+  display: none;
+}
+
+.file-sidebar-file-checkbox-hover {
+  display: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-hover, #52525b);
+}
+
+.file-sidebar-file-item:hover .file-sidebar-file-checkbox-hover {
+  display: block;
+}
+
+.file-sidebar-file-item.selected .file-sidebar-file-checkbox-hover {
+  display: none;
+}
+
+.file-sidebar-file-icon {
+  position: absolute;
+  inset: 0;
+}
+
+/* Checked state */
+.file-sidebar-file-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background-color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.file-sidebar-check-svg {
+  color: white;
+  flex-shrink: 0;
+}
+
+/* File info */
+.file-sidebar-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-sidebar-file-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-sidebar-file-item.selected .file-sidebar-file-name {
+  color: #3b82f6;
+}
+
+.file-sidebar-file-meta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ---- Eye button (open in viewer) ---- */
+.file-sidebar-eye-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Show eye on hover (for any non-viewed file) */
+.file-sidebar-file-item:hover .file-sidebar-eye-btn {
+  opacity: 1;
+}
+
+/* Pin the viewed item when scrolled out of view in either direction */
+.file-sidebar-file-item.viewed {
+  position: sticky;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  /* solid base + green tint overlay so content behind doesn't bleed through */
+  background-color: var(--bg-toolbar);
+  background-image: linear-gradient(rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.1));
+}
+
+.file-sidebar-file-item.viewed .file-sidebar-file-name {
+  color: #22c55e;
+}
+
+.file-sidebar-file-item.viewed .file-sidebar-file-check {
+  background-color: #22c55e;
+}
+
+/* viewed takes precedence over selected */
+.file-sidebar-file-item.viewed.selected {
+  background-color: var(--bg-toolbar);
+  background-image: linear-gradient(rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.1));
+}
+
+/* Always show eye for the currently viewed file */
+.file-sidebar-file-item.viewed .file-sidebar-eye-btn {
+  opacity: 1;
+  color: #22c55e;
+}
+
+.file-sidebar-eye-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Eye open: shown by default */
+.file-sidebar-eye-open {
+  display: block !important;
+}
+.file-sidebar-eye-closed {
+  display: none !important;
+}
+
+/* On hover over a viewed item: swap to eye-closed */
+.file-sidebar-file-item.viewed:hover .file-sidebar-eye-open {
+  display: none !important;
+}
+.file-sidebar-file-item.viewed:hover .file-sidebar-eye-closed {
+  display: block !important;
+}
+
+/* ---- Loading state ---- */
+.file-sidebar-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  opacity: 0.5;
+}
+
+/* ---- Empty state ---- */
+.file-sidebar-empty {
+  padding: 12px 16px 24px 16px;
+  text-align: center;
+}
+
+.file-sidebar-empty-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 2px 0;
+}
+
+.file-sidebar-empty-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin: 0;
+}
+
+/* ---- Thumbnail tooltip (hover preview) ---- */
+.file-sidebar-thumb-tooltip {
+  position: fixed;
+  z-index: 9999;
+  transform: translateY(-50%);
+  background: var(--bg-surface, #fff);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 4px;
+  width: 150px;
+  pointer-events: none;
+  animation: file-sidebar-thumb-in 0.12s ease;
+}
+
+.file-sidebar-thumb-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+
+@keyframes file-sidebar-thumb-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}

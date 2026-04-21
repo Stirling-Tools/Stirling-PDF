@@ -406,7 +406,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
-  const activeFileIds = selectedFileIds;
 
   usePageEditorRightRailButtons({
     totalPages,
@@ -422,8 +421,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     onExportSelected,
     onSaveChanges: applyChanges,
     exportLoading,
-    activeFileCount: activeFileIds.length,
-    closePdf,
   });
 
   // Export preview function - defined after export functions to avoid circular dependency

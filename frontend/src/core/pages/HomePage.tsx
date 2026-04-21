@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { Group, useMantineColorScheme } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
@@ -16,8 +16,8 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
-import QuickAccessBar from "@app/components/shared/QuickAccessBar";
 import RightRail from "@app/components/shared/RightRail";
+import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -47,13 +47,13 @@ export default function HomePage() {
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
-  const { colorScheme } = useMantineColorScheme();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(false);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -97,7 +97,6 @@ export default function HomePage() {
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
   const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -210,7 +209,8 @@ export default function HomePage() {
             <div className="mobile-header">
               <div className="mobile-brand">
                 <img src={brandIconSrc} alt="" aria-hidden="true" className="mobile-brand-icon" />
-                <img src={brandTextSrc} alt={brandAltText} className="mobile-brand-text" />
+                <img src={wordmark.black} alt={brandAltText} className="mobile-brand-text wordmark-light-only" />
+                <img src={wordmark.white} alt={brandAltText} className="mobile-brand-text wordmark-dark-only" />
               </div>
             </div>
             <div
@@ -305,11 +305,16 @@ export default function HomePage() {
         </div>
       ) : (
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
-          <QuickAccessBar ref={quickAccessRef} />
-          {!hideToolPanel && <ToolPanel />}
+          <FileSidebar
+            ref={quickAccessRef}
+            collapsed={fileSidebarCollapsed}
+            onToggleCollapse={() => setFileSidebarCollapsed((c) => !c)}
+            onOpenSettings={() => setConfigModalOpen(true)}
+          />
           <Workbench />
-          <RightRail />
+          {!hideToolPanel && <ToolPanel />}
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <AppConfigModal opened={configModalOpen} onClose={() => setConfigModalOpen(false)} />
         </Group>
       )}
     </div>

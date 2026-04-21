@@ -135,7 +135,9 @@ export function LocalEmbedPDF({
       });
   }, [config?.enableLogin]);
 
-  // Convert File to URL if needed
+  // Stable key — avoids recreating the blob URL (and crashing ViewportPlugin) when
+  // FileContext produces new File object references for the same file content.
+  const fileStableKey = fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
     if (file) {
       const objectUrl = URL.createObjectURL(file);
@@ -144,7 +146,17 @@ export function LocalEmbedPDF({
     } else if (url) {
       setPdfUrl(url);
     }
-  }, [file, url]);
+    // `url` omitted intentionally — file presence takes priority; URL changes trigger
+    // remount via fileStableKey anyway.
+  }, [fileStableKey]);
+
+  // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
+  const exportFileName = useMemo(() => {
+    if (fileName) return fileName;
+    if (file && "name" in file) return (file as File).name;
+    if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
+    return "document.pdf";
+  }, [fileStableKey, fileName, url]);
 
   // Create plugins configuration
   const plugins = useMemo(() => {
@@ -153,17 +165,6 @@ export function LocalEmbedPDF({
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const viewportGap = rootFontSize * 3.5;
-
-    // Determine export filename - use provided fileName, or extract from file/url
-    let exportFileName = "document.pdf";
-    if (fileName) {
-      exportFileName = fileName;
-    } else if (file && "name" in file) {
-      exportFileName = file.name;
-    } else if (url) {
-      const urlPath = url.split("/").pop() || "document.pdf";
-      exportFileName = urlPath.split("?")[0]; // Remove query params
-    }
 
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
@@ -261,7 +262,7 @@ export function LocalEmbedPDF({
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, fileName, file, url]);
+  }, [pdfUrl, enableAnnotations, exportFileName]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({

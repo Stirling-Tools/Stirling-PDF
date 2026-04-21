@@ -1,0 +1,387 @@
+/* ========== FILE SIDEBAR ========== */
+
+.file-sidebar {
+  background-color: var(--bg-toolbar);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 10;
+  transition:
+    width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.file-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---- Header ---- */
+.file-sidebar-header {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 14px;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 4px 4px 0 4px;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+/* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
+
+.file-sidebar-header:hover {
+  background-color: var(--bg-hover);
+}
+
+.file-sidebar-menu-icon {
+  color: var(--text-muted) !important;
+  font-size: 18px !important;
+  flex-shrink: 0;
+}
+
+.file-sidebar-brand-text {
+  font-family: "Alumni Sans", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ---- Search row ---- */
+.file-sidebar-search-row {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 14px;
+  gap: 0;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+.file-sidebar-search-row:not(.active):hover {
+  background-color: var(--bg-hover);
+}
+
+.file-sidebar-search-icon {
+  color: var(--text-muted) !important;
+  font-size: 18px !important;
+  flex-shrink: 0;
+}
+
+.file-sidebar-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-left: 12px;
+  min-width: 0;
+}
+
+.file-sidebar-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.file-sidebar-search-label {
+  margin-left: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ---- Scrollable content ---- */
+/* This is a flex column — action rows are fixed, only the file list scrolls */
+.file-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.file-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.file-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.file-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ---- Action rows (Open from Computer, etc.) ---- */
+.file-sidebar-action-row {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  gap: 0;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.file-sidebar-action-row:hover {
+  background-color: var(--bg-hover);
+}
+
+.file-sidebar-action-icon {
+  color: var(--text-muted) !important;
+  font-size: 18px !important;
+  flex-shrink: 0;
+}
+
+.file-sidebar-action-label {
+  margin-left: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ---- Cloud storage rows ---- */
+.file-sidebar-cloud-row {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  gap: 0;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.file-sidebar-cloud-row:not(.disabled):hover {
+  background-color: var(--bg-hover);
+}
+
+.file-sidebar-cloud-row.disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.file-sidebar-cloud-icon-wrapper {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.file-sidebar-cloud-icon-gray {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.2s ease;
+  opacity: 1;
+}
+
+.file-sidebar-cloud-icon-color {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+}
+
+.file-sidebar-cloud-row:not(.disabled):hover .file-sidebar-cloud-icon-gray {
+  opacity: 0;
+}
+
+.file-sidebar-cloud-row:not(.disabled):hover .file-sidebar-cloud-icon-color {
+  opacity: 1;
+}
+
+/* ---- Files section ---- */
+.file-sidebar-files-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+.file-sidebar-section-divider {
+  border-top: 1px solid var(--border-subtle);
+  margin: 10px 14px 6px 14px;
+}
+
+.file-sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 6px 14px;
+  margin: 4px 0 0 0;
+}
+
+.file-sidebar-section-header {
+  position: relative;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.file-sidebar-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.file-sidebar-section-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.file-sidebar-section-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  outline: none;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.file-sidebar-section-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+}
+
+.file-sidebar-section-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.file-sidebar-section-btn-external {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-sidebar-section-header:hover .file-sidebar-section-btn-external {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.file-sidebar-section-btn-add {
+  margin-left: auto;
+}
+
+/* ---- Sidebar content fade (for collapsed state) ---- */
+/* Elements are conditionally rendered so use animation (not transition) to fade in from 0.
+   Delay until the width animation is nearly done (0.18s of 0.22s) to avoid squashed-text effect. */
+@keyframes sidebar-content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sidebar-content-fade {
+  animation: sidebar-content-in 0.12s ease 0.18s both;
+}
+
+.file-sidebar[data-collapsed="true"] .sidebar-content-fade {
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+}
+
+/* ---- Bottom bar (user + settings) ---- */
+.file-sidebar-bottom-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+/* Bottom bar settings icon tracks the right edge during collapse animation */
+
+.file-sidebar-bottom-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--mantine-color-blue-6, #3b82f6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.file-sidebar-bottom-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.file-sidebar-bottom-bar[role="button"]:hover {
+  background-color: var(--bg-hover);
+}
+
+.file-sidebar-bottom-bar[role="button"]:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.file-sidebar-bottom-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.file-sidebar[data-collapsed="true"] .file-sidebar-bottom-settings {
+  width: 32px;
+  height: 32px;
+}
+
+.file-sidebar[data-collapsed="true"] .file-sidebar-bottom-bar {
+  justify-content: center;
+  padding: 8px 0;
+}
