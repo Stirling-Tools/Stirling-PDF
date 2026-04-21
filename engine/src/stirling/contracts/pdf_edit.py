@@ -6,12 +6,13 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ToolOperationStep, WorkflowOutcome
+from .common import ConversationMessage, ToolOperationStep, WorkflowOutcome
 
 
 class PdfEditRequest(ApiModel):
     user_message: str
     file_names: list[str] = Field(default_factory=list)
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
 
 class EditPlanResponse(ApiModel):
