@@ -64,6 +64,7 @@
     "license-report": "^6.8.0",
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
+    "pixelmatch": "^7.1.0",
     "posthog-js": "^1.268.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.1",

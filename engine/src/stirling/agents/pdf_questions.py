@@ -23,6 +23,7 @@ class PdfQuestionAgent:
 
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
+        rag = runtime.rag_capability
         self.agent = Agent(
             model=runtime.smart_model,
             output_type=NativeOutput(
@@ -37,6 +38,8 @@ class PdfQuestionAgent:
                 "If the answer is not supported by the provided text, return not_found. "
                 "When answering, include a short list of evidence snippets with their page numbers."
             ),
+            instructions=rag.instructions,
+            toolsets=[rag.toolset],
             model_settings=runtime.smart_model_settings,
         )
 
