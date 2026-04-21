@@ -399,28 +399,38 @@ const Compare = (props: BaseToolProps) => {
       const isDisabled = role === "comparison" && !baseSlot;
 
       return (
-        <FileSelectorPicker
-          placeholder={
-            isDisabled
-              ? t("compare.edited.selectBaseFirst", "Select original PDF first")
-              : t(
-                  role === "base"
-                    ? "compare.original.placeholder"
-                    : "compare.edited.placeholder",
-                  role === "base"
-                    ? "Select the original PDF"
-                    : "Select the edited PDF",
-                )
-          }
-          excludeIds={
-            otherSlot ? [otherSlot.stirlingFile.fileId as string] : []
-          }
-          disabled={isDisabled}
-          onSelect={(result: FileSelectorResult) => {
-            if (role === "base") setBaseSlot(result);
-            else setCompSlot(result);
-          }}
-        />
+        <div
+          data-testid={`compare-slot-${role}`}
+          data-slot-state="empty"
+          style={{ width: "100%" }}
+        >
+          <FileSelectorPicker
+            testId={`compare-slot-${role}-add`}
+            placeholder={
+              isDisabled
+                ? t(
+                    "compare.edited.selectBaseFirst",
+                    "Select original PDF first",
+                  )
+                : t(
+                    role === "base"
+                      ? "compare.original.placeholder"
+                      : "compare.edited.placeholder",
+                    role === "base"
+                      ? "Select the original PDF"
+                      : "Select the edited PDF",
+                  )
+            }
+            excludeIds={
+              otherSlot ? [otherSlot.stirlingFile.fileId as string] : []
+            }
+            disabled={isDisabled}
+            onSelect={(result: FileSelectorResult) => {
+              if (role === "base") setBaseSlot(result);
+              else setCompSlot(result);
+            }}
+          />
+        </div>
       );
     },
     [baseSlot, compSlot, clearSlot, t],

@@ -368,6 +368,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               <>
                 <div
                   className="file-sidebar-action-row"
+                  data-testid="files-button"
                   onClick={() => {
                     if (collapsed && onToggleCollapse) onToggleCollapse();
                     openFilesModal();

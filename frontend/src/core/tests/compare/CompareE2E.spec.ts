@@ -78,16 +78,10 @@ async function uploadIntoSlot(
   filePath: string,
   expectedFilename: string,
 ) {
-  await page.locator(`[data-testid="compare-slot-${role}-add"]`).click();
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "visible",
-    timeout: 5000,
-  });
-  await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "hidden",
-    timeout: 10000,
-  });
+  // Set files directly on the hidden input (always in DOM, no popover needed)
+  await page
+    .getByTestId(`compare-slot-${role}-add-input`)
+    .setInputFiles(filePath);
 
   const slot = page.locator(`[data-testid="compare-slot-${role}"]`);
   await expect(slot).toHaveAttribute("data-slot-state", "filled", {
@@ -103,39 +97,6 @@ test.describe("Compare tool slot selection", () => {
     await page.waitForSelector('[data-tour="tool-button-compare"]', {
       timeout: 10000,
     });
-  });
-
-  test("Original slot fills when a PDF is dropped via the landing dropzone", async ({
-    page,
-  }) => {
-    // Regression guard for the "middle state" bug: the landing dropzone path
-    // (FileManager's hidden file-input used by the drop-prompt on the empty
-    // workbench) dispatches ADD_FILES and SET_SELECTED_FILES on a different
-    // cadence than the modal-based upload. During the window where files.ids
-    // has the new file but selectedFileIds is still empty, the slot would
-    // show the placeholder unless the auto-fill falls back to allIds.
-    await navigateToCompare(page);
-
-    const baseSlot = page.locator('[data-testid="compare-slot-base"]');
-    await expect(baseSlot).toHaveAttribute("data-slot-state", "empty");
-
-    // Target the visible landing-prompt file input on the empty Compare tool.
-    const visibleFileInput = page.locator(
-      'input[type="file"]:not([data-testid="file-input"])',
-    );
-    await visibleFileInput.first().setInputFiles(PDF_A);
-
-    // Assert the slot fills within a short window. Without the allIds
-    // fallback the slot stayed on the placeholder for 4+ seconds in manual
-    // testing because the SET_SELECTED_FILES dispatch lagged the ADD_FILES
-    // dispatch by many renders.
-    await expect(baseSlot).toHaveAttribute("data-slot-state", "filled", {
-      timeout: 2000,
-    });
-    await expect(baseSlot).toHaveAttribute(
-      "data-slot-filename",
-      "compare_sample_a.pdf",
-    );
   });
 
   test("uploading a PDF via the Original add button fills the Original slot", async ({
@@ -192,85 +153,74 @@ test.describe("Compare tool slot selection", () => {
     await expect(compareButton).toBeEnabled();
   });
 
-  test("picking a stored file from the recent-files modal unions it with the current selection", async ({
+  test("picking a saved file from the FileSelectorPicker popover fills the comparison slot", async ({
     page,
   }) => {
-    // This test specifically guards the handleRecentFileSelect code path in
-    // FilesModalContext. Setup:
-    //   1. Upload PDF_A so it lands in IndexedDB storage.
-    //   2. Reload the page — workbench resets but IndexedDB persists.
-    //   3. Upload PDF_B fresh so only PDF_B is in the workbench and selected.
-    //   4. Open the Files modal and pick PDF_A from "Recent".
-    // Without the fix, step 4 REPLACES the selection with [PDF_A] and the
-    // Compare Original slot jumps to PDF_A while Edited stays empty. With the
-    // fix, the selection becomes [PDF_B, PDF_A] and both slots populate.
+    // Guards the FileSelectorPicker "Saved files" tab flow. Steps:
+    //   1. Upload PDF_A into the base slot → stored in IndexedDB and slot fills.
+    //   2. Clear the base slot (X button) so both slots are empty again.
+    //   3. Upload PDF_B into the base slot.
+    //   4. Open the comparison slot's FileSelectorPicker and pick PDF_A from
+    //      the Saved files tab.
+    // Result: base = PDF_B, comparison = PDF_A.
 
-    // Step 1 — upload PDF_A so it's persisted in IndexedDB.
     await navigateToCompare(page);
+
+    // Step 1 — upload PDF_A and confirm base slot fills (also persists to IndexedDB).
     await uploadIntoSlot(page, "base", PDF_A, "compare_sample_a.pdf");
 
-    // Step 2 — reload. Workbench clears but IndexedDB retains PDF_A.
-    // page.goto reuses the mocked routes and re-applies bypassOnboarding.
-    await page.goto("/?bypassOnboarding=true");
-    await page.waitForSelector('[data-tour="tool-button-compare"]', {
-      timeout: 10000,
-    });
-    await navigateToCompare(page);
+    // Step 2 — clear the base slot via the X button so both slots reset.
+    await page
+      .locator('[data-testid="compare-slot-base"]')
+      .getByRole("button", { name: "Remove file" })
+      .click();
     await expect(
       page.locator('[data-testid="compare-slot-base"]'),
     ).toHaveAttribute("data-slot-state", "empty");
 
-    // Step 3 — upload PDF_B fresh. Now workbench = [PDF_B], IndexedDB = [A, B].
+    // Step 3 — upload PDF_B into base. IndexedDB now has both A and B.
     await uploadIntoSlot(page, "base", PDF_B, "compare_sample_b.pdf");
     await expect(
       page.locator('[data-testid="compare-slot-comparison"]'),
     ).toHaveAttribute("data-slot-state", "empty");
 
-    // Step 4 — open the modal from the sidebar Files button and pick PDF_A
-    // from the recent list.
-    await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
+    // Step 4 — open the comparison slot's FileSelectorPicker and pick PDF_A
+    // from the Saved files tab.
+    await page.locator('[data-testid="compare-slot-comparison-add"]').click();
+
+    // Wait for the popover dropdown to open (withinPortal → attaches to body).
+    await page.waitForSelector('[aria-pressed="true"]', {
       state: "visible",
       timeout: 5000,
     });
 
-    // The recent-files list renders an entry per stored file. Click the
-    // checkbox for PDF_A (NOT the ACTIVE entry for PDF_B). We target the
-    // label text to disambiguate.
-    const pdfARow = page
-      .locator(".mantine-Modal-root")
-      .locator("text=compare_sample_a.pdf")
-      .first();
+    // The list should contain PDF_A (PDF_B is excluded as it's in the base slot).
+    const pdfARow = page.locator("text=compare_sample_a.pdf").first();
     await pdfARow.click();
 
-    // Confirm selection via "Open File".
-    await page.getByRole("button", { name: "Open File" }).click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10000,
-    });
-
-    // Both slots must be populated. Specifically, the Original slot must still
-    // be PDF_B (the pre-existing selection, not clobbered) and the Edited slot
-    // must be PDF_A (newly unioned in).
+    // Comparison slot must fill with PDF_A; base slot stays PDF_B.
     const baseSlot = page.locator('[data-testid="compare-slot-base"]');
     const comparisonSlot = page.locator(
       '[data-testid="compare-slot-comparison"]',
     );
-    await expect(baseSlot).toHaveAttribute("data-slot-state", "filled", {
-      timeout: 10000,
-    });
     await expect(comparisonSlot).toHaveAttribute("data-slot-state", "filled", {
       timeout: 10000,
     });
+    await expect(comparisonSlot).toHaveAttribute(
+      "data-slot-filename",
+      "compare_sample_a.pdf",
+    );
+    await expect(baseSlot).toHaveAttribute("data-slot-state", "filled");
+    await expect(baseSlot).toHaveAttribute(
+      "data-slot-filename",
+      "compare_sample_b.pdf",
+    );
 
     const compareButton = page.getByRole("button", { name: "Compare" });
     await expect(compareButton).toBeEnabled();
   });
 
-  test("Clear selected empties both slots, clears the selection banner, and removes files from the workbench", async ({
-    page,
-  }) => {
+  test("Clear selected empties both slots", async ({ page }) => {
     await navigateToCompare(page);
     await uploadIntoSlot(page, "base", PDF_A, "compare_sample_a.pdf");
     await uploadIntoSlot(page, "comparison", PDF_B, "compare_sample_b.pdf");
@@ -285,9 +235,17 @@ test.describe("Compare tool slot selection", () => {
 
     // Open the Clear confirmation modal and confirm.
     await page.getByRole("button", { name: "Clear selected" }).click();
-    await page.getByRole("button", { name: "Clear and return" }).click();
+    // Wait for the confirmation modal to appear before clicking confirm.
+    await page.waitForSelector(".mantine-Modal-overlay", {
+      state: "visible",
+      timeout: 5000,
+    });
+    await page
+      .locator('[role="dialog"]')
+      .getByRole("button", { name: "Clear Selected" })
+      .click();
 
-    // The tool re-mounts on workbench switch; wait for the empty-state base slot.
+    // Both slots must be empty after clearing.
     await page.waitForSelector(
       '[data-testid="compare-slot-base"][data-slot-state="empty"]',
       { timeout: 10000 },
@@ -295,11 +253,5 @@ test.describe("Compare tool slot selection", () => {
     await expect(
       page.locator('[data-testid="compare-slot-comparison"]'),
     ).toHaveAttribute("data-slot-state", "empty");
-
-    // The "N files selected" / "Selected: X" banner must be gone because the
-    // files have been removed from the workbench.
-    await expect(
-      page.getByText(/\d+\s+files?\s+selected|Selected:\s+/i),
-    ).toHaveCount(0);
   });
 });

@@ -5,8 +5,7 @@ import {
   Popover,
   ScrollArea,
   Text,
-  Loader,
-  FileButton,
+  Loader
 } from "@mantine/core";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
@@ -96,6 +95,8 @@ export interface FileSelectorPickerProps {
   /** FileIds to hide from both lists (e.g. the other slot's current selection) */
   excludeIds?: string[];
   disabled?: boolean;
+  /** Optional data-testid applied to the trigger box */
+  testId?: string;
   /**
    * Called with the stub (for display) and the ready-to-use StirlingFile (for processing).
    * Files are NOT added to the workbench — data is loaded inline.
@@ -107,6 +108,7 @@ export function FileSelectorPicker({
   placeholder,
   excludeIds = [],
   disabled = false,
+  testId,
   onSelect,
 }: FileSelectorPickerProps) {
   const { t } = useTranslation();
@@ -131,6 +133,7 @@ export function FileSelectorPicker({
   } | null>(null);
   const [hoveredThumbnail, setHoveredThumbnail] = useState<string | null>(null);
   const thumbCancelRef = useRef<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { fileStubs: workbenchStubs } = useAllFiles();
   const indexedDB = useIndexedDB();
@@ -387,239 +390,249 @@ export function FileSelectorPicker({
     .join(" ");
 
   return (
-    <Popover
-      opened={isOpen}
-      onChange={setIsOpen}
-      onClose={() => {
-        setIsOpen(false);
-        setSearchQuery("");
-      }}
-      position="bottom-start"
-      withinPortal
-      shadow="md"
-      closeOnClickOutside
-      clickOutsideEvents={["mousedown", "touchstart"]}
-    >
-      <Popover.Target>
-        <Box
-          className={triggerClass}
-          style={{ width: "100%" }}
-          onClick={() => {
-            if (!disabled) setIsOpen((o) => !o);
-          }}
-          role="button"
-          tabIndex={disabled ? -1 : 0}
-          onKeyDown={(e) => {
-            if (!disabled && (e.key === "Enter" || e.key === " "))
-              setIsOpen((o) => !o);
-          }}
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
-        >
-          <Text
-            size="sm"
-            c="dimmed"
-            style={{
-              flex: 1,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+    <>
+      <Popover
+        opened={isOpen}
+        onChange={setIsOpen}
+        onClose={() => {
+          setIsOpen(false);
+          setSearchQuery("");
+        }}
+        position="bottom-start"
+        withinPortal
+        shadow="md"
+        closeOnClickOutside
+        clickOutsideEvents={["mousedown", "touchstart"]}
+      >
+        <Popover.Target>
+          <Box
+            className={triggerClass}
+            style={{ width: "100%" }}
+            data-testid={testId}
+            onClick={() => {
+              if (!disabled) setIsOpen((o) => !o);
             }}
+            role="button"
+            tabIndex={disabled ? -1 : 0}
+            onKeyDown={(e) => {
+              if (!disabled && (e.key === "Enter" || e.key === " "))
+                setIsOpen((o) => !o);
+            }}
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
           >
-            {placeholder || t("fileSelectorPicker.placeholder", "Select file")}
-          </Text>
-          <AddIcon
-            style={{
-              fontSize: 18,
-              color: "var(--mantine-color-dimmed)",
-              flexShrink: 0,
-            }}
-          />
-        </Box>
-      </Popover.Target>
-
-      <Popover.Dropdown className={styles.dropdown}>
-        <div className={styles.header}>
-          <div className={styles.tabGroup}>
-            <div
-              className={styles.slimTabBar}
-              role="group"
-              aria-label={t(
-                "fileSelectorPicker.tabListLabel",
-                "Saved files, workbench, upload",
-              )}
-            >
-              <button
-                type="button"
-                aria-pressed={activeTab === "saved"}
-                className={
-                  activeTab === "saved" ? styles.slimTabActive : styles.slimTab
-                }
-                onClick={() => handleTabChange("saved")}
-              >
-                {t("fileSelectorPicker.tabs.saved", "Saved files")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={activeTab === "workbench"}
-                className={
-                  activeTab === "workbench"
-                    ? styles.slimTabActive
-                    : styles.slimTab
-                }
-                onClick={() => handleTabChange("workbench")}
-              >
-                {t("fileSelectorPicker.tabs.workbench", "Workbench")}
-              </button>
-              <FileButton
-                onChange={handleUpload}
-                accept=".pdf,application/pdf"
-                disabled={disabled || uploadBusy}
-              >
-                {(fbProps) => (
-                  <button
-                    {...fbProps}
-                    type="button"
-                    className={styles.slimTabUpload}
-                    aria-label={t(
-                      "fileSelectorPicker.upload",
-                      "Upload from computer",
-                    )}
-                    title={t(
-                      "fileSelectorPicker.upload",
-                      "Upload from computer",
-                    )}
-                    disabled={disabled || uploadBusy}
-                  >
-                    {uploadBusy ? (
-                      <Loader size={11} />
-                    ) : (
-                      t("fileSelectorPicker.tabs.upload", "Upload")
-                    )}
-                  </button>
-                )}
-              </FileButton>
-            </div>
-          </div>
-
-          <div className={styles.sortGroup}>
-            <button
-              type="button"
-              className={[
-                styles.sortBtn,
-                sortBy === "date" ? styles.sortBtnActive : "",
-              ].join(" ")}
-              onClick={() => handleSortChange("date")}
-              title={
-                sortDir === "desc"
-                  ? t("fileSelectorPicker.sort.dateDesc", "Newest first")
-                  : t("fileSelectorPicker.sort.dateAsc", "Oldest first")
-              }
-            >
-              {t("fileSelectorPicker.sort.dateLabel", "Latest")}
-              {sortBy === "date" && (
-                <span className={styles.sortArrow}>
-                  {sortDir === "desc" ? " ↓" : " ↑"}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              className={[
-                styles.sortBtn,
-                sortBy === "name" ? styles.sortBtnActive : "",
-              ].join(" ")}
-              onClick={() => handleSortChange("name")}
-              title={
-                sortDir === "asc"
-                  ? t("fileSelectorPicker.sort.nameAsc", "A to Z")
-                  : t("fileSelectorPicker.sort.nameDesc", "Z to A")
-              }
-            >
-              {t("fileSelectorPicker.sort.nameLabel", "A–Z")}
-              {sortBy === "name" && (
-                <span className={styles.sortArrow}>
-                  {sortDir === "asc" ? " ↑" : " ↓"}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.searchRow}>
-          <input
-            className={styles.searchInput}
-            type="search"
-            placeholder={t("fileSelectorPicker.search", "Filter files…")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </div>
-
-        <ScrollArea h={260} className={styles.list}>
-          {savedLoading ? (
-            <div className={styles.emptyState}>
-              <Loader size="sm" />
-            </div>
-          ) : displayStubs.length === 0 ? (
-            <div className={styles.emptyState}>
-              <Text size="sm">
-                {t("fileSelectorPicker.empty", "No files available")}
-              </Text>
-            </div>
-          ) : (
-            displayStubs.map((stub) => {
-              const meta = buildMeta(stub);
-              const isItemLoading = loadingId === stub.id;
-              return (
-                <button
-                  key={stub.id}
-                  type="button"
-                  className={styles.fileItem}
-                  onClick={() => void loadAndSelect(stub)}
-                  disabled={!!loadingId}
-                  onMouseEnter={(e) =>
-                    setHoveredStub({
-                      rect: e.currentTarget.getBoundingClientRect(),
-                      stub,
-                    })
-                  }
-                  onMouseLeave={() => setHoveredStub(null)}
-                >
-                  <div className={styles.fileItemContent}>
-                    <span className={styles.fileName} title={stub.name}>
-                      {truncateCenter(stub.name, 48)}
-                    </span>
-                    {meta && <span className={styles.fileMeta}>{meta}</span>}
-                  </div>
-                  {isItemLoading && <Loader size="xs" />}
-                </button>
-              );
-            })
-          )}
-        </ScrollArea>
-
-        {hoveredStub &&
-          hoveredThumbnail &&
-          createPortal(
-            <div
-              className="file-sidebar-thumb-tooltip"
+            <Text
+              size="sm"
+              c="dimmed"
               style={{
-                top: hoveredStub.rect.top + hoveredStub.rect.height / 2,
-                left: hoveredStub.rect.left - 170,
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
-              <img
-                src={hoveredThumbnail}
-                alt=""
-                className="file-sidebar-thumb-img"
-              />
-            </div>,
-            document.body,
-          )}
-      </Popover.Dropdown>
-    </Popover>
+              {placeholder ||
+                t("fileSelectorPicker.placeholder", "Select file")}
+            </Text>
+            <AddIcon
+              style={{
+                fontSize: 18,
+                color: "var(--mantine-color-dimmed)",
+                flexShrink: 0,
+              }}
+            />
+          </Box>
+        </Popover.Target>
+
+        <Popover.Dropdown className={styles.dropdown}>
+          <div className={styles.header}>
+            <div className={styles.tabGroup}>
+              <div
+                className={styles.slimTabBar}
+                role="group"
+                aria-label={t(
+                  "fileSelectorPicker.tabListLabel",
+                  "Saved files, workbench, upload",
+                )}
+              >
+                <button
+                  type="button"
+                  aria-pressed={activeTab === "saved"}
+                  className={
+                    activeTab === "saved"
+                      ? styles.slimTabActive
+                      : styles.slimTab
+                  }
+                  onClick={() => handleTabChange("saved")}
+                >
+                  {t("fileSelectorPicker.tabs.saved", "Saved files")}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={activeTab === "workbench"}
+                  className={
+                    activeTab === "workbench"
+                      ? styles.slimTabActive
+                      : styles.slimTab
+                  }
+                  onClick={() => handleTabChange("workbench")}
+                >
+                  {t("fileSelectorPicker.tabs.workbench", "Workbench")}
+                </button>
+                <button
+                  type="button"
+                  data-testid="file-selector-upload-btn"
+                  className={styles.slimTabUpload}
+                  aria-label={t(
+                    "fileSelectorPicker.upload",
+                    "Upload from computer",
+                  )}
+                  title={t("fileSelectorPicker.upload", "Upload from computer")}
+                  disabled={disabled || uploadBusy}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploadBusy ? (
+                    <Loader size={11} />
+                  ) : (
+                    t("fileSelectorPicker.tabs.upload", "Upload")
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.sortGroup}>
+              <button
+                type="button"
+                className={[
+                  styles.sortBtn,
+                  sortBy === "date" ? styles.sortBtnActive : "",
+                ].join(" ")}
+                onClick={() => handleSortChange("date")}
+                title={
+                  sortDir === "desc"
+                    ? t("fileSelectorPicker.sort.dateDesc", "Newest first")
+                    : t("fileSelectorPicker.sort.dateAsc", "Oldest first")
+                }
+              >
+                {t("fileSelectorPicker.sort.dateLabel", "Latest")}
+                {sortBy === "date" && (
+                  <span className={styles.sortArrow}>
+                    {sortDir === "desc" ? " ↓" : " ↑"}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                className={[
+                  styles.sortBtn,
+                  sortBy === "name" ? styles.sortBtnActive : "",
+                ].join(" ")}
+                onClick={() => handleSortChange("name")}
+                title={
+                  sortDir === "asc"
+                    ? t("fileSelectorPicker.sort.nameAsc", "A to Z")
+                    : t("fileSelectorPicker.sort.nameDesc", "Z to A")
+                }
+              >
+                {t("fileSelectorPicker.sort.nameLabel", "A–Z")}
+                {sortBy === "name" && (
+                  <span className={styles.sortArrow}>
+                    {sortDir === "asc" ? " ↑" : " ↓"}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.searchRow}>
+            <input
+              className={styles.searchInput}
+              type="search"
+              placeholder={t("fileSelectorPicker.search", "Filter files…")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+
+          <ScrollArea h={260} className={styles.list}>
+            {savedLoading ? (
+              <div className={styles.emptyState}>
+                <Loader size="sm" />
+              </div>
+            ) : displayStubs.length === 0 ? (
+              <div className={styles.emptyState}>
+                <Text size="sm">
+                  {t("fileSelectorPicker.empty", "No files available")}
+                </Text>
+              </div>
+            ) : (
+              displayStubs.map((stub) => {
+                const meta = buildMeta(stub);
+                const isItemLoading = loadingId === stub.id;
+                return (
+                  <button
+                    key={stub.id}
+                    type="button"
+                    className={styles.fileItem}
+                    onClick={() => void loadAndSelect(stub)}
+                    disabled={!!loadingId}
+                    onMouseEnter={(e) =>
+                      setHoveredStub({
+                        rect: e.currentTarget.getBoundingClientRect(),
+                        stub,
+                      })
+                    }
+                    onMouseLeave={() => setHoveredStub(null)}
+                  >
+                    <div className={styles.fileItemContent}>
+                      <span className={styles.fileName} title={stub.name}>
+                        {truncateCenter(stub.name, 48)}
+                      </span>
+                      {meta && <span className={styles.fileMeta}>{meta}</span>}
+                    </div>
+                    {isItemLoading && <Loader size="xs" />}
+                  </button>
+                );
+              })
+            )}
+          </ScrollArea>
+
+          {hoveredStub &&
+            hoveredThumbnail &&
+            createPortal(
+              <div
+                className="file-sidebar-thumb-tooltip"
+                style={{
+                  top: hoveredStub.rect.top + hoveredStub.rect.height / 2,
+                  left: hoveredStub.rect.left - 170,
+                }}
+              >
+                <img
+                  src={hoveredThumbnail}
+                  alt=""
+                  className="file-sidebar-thumb-img"
+                />
+              </div>,
+              document.body,
+            )}
+        </Popover.Dropdown>
+      </Popover>
+      {/* Hidden file input lives outside the Popover so it is always in the DOM.
+        Tests can target it directly with setInputFiles without opening the popover. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        data-testid={testId ? `${testId}-input` : "file-selector-upload-input"}
+        accept=".pdf,application/pdf"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files?.[0] ?? null;
+          void handleUpload(file);
+          e.target.value = "";
+        }}
+      />
+    </>
   );
 }
