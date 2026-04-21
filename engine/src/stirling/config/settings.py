@@ -37,6 +37,9 @@ class AppSettings(BaseSettings):
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
 
+    max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
+    max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
+
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
 

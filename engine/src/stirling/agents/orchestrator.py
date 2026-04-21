@@ -117,11 +117,13 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
+        extracted_text = self._get_extracted_text_artifact(request)
         return await PdfEditAgent(self.runtime).handle(
             PdfEditRequest(
                 user_message=request.user_message,
                 file_names=request.file_names,
                 conversation_history=request.conversation_history,
+                page_text=extracted_text.files if extracted_text is not None else [],
             )
         )
 
