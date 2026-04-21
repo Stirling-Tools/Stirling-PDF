@@ -4,7 +4,6 @@ import pytest
 from pydantic import ValidationError
 
 from stirling.agents import UserSpecAgent
-from stirling.config import AppSettings
 from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,
@@ -14,30 +13,21 @@ from stirling.contracts import (
     EditPlanResponse,
     ToolOperationStep,
 )
-from stirling.models.tool_models import CompressParams, OperationId, RotateParams
-from stirling.services import build_runtime
-
-
-def build_test_settings() -> AppSettings:
-    return AppSettings(
-        smart_model_name="test",
-        fast_model_name="test",
-        smart_model_max_tokens=8192,
-        fast_model_max_tokens=2048,
-    )
+from stirling.models.tool_models import Angle, FlattenParams, RotatePdfParams, ToolEndpoint
+from stirling.services.runtime import AppRuntime
 
 
 class StubUserSpecAgent(UserSpecAgent):
-    def __init__(self, draft_result: AgentDraft, revision_result: AgentDraft) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+    def __init__(self, runtime: AppRuntime, draft_result: AgentDraft, revision_result: AgentDraft) -> None:
+        super().__init__(runtime)
         self.draft_result = draft_result
         self.revision_result = revision_result
         self.edit_plan = EditPlanResponse(
             summary="Rotate the document.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
+                    tool=ToolEndpoint.ROTATE_PDF,
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 )
             ],
         )
@@ -53,8 +43,8 @@ class StubUserSpecAgent(UserSpecAgent):
 
 
 class ClarifyingUserSpecAgent(UserSpecAgent):
-    def __init__(self) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+    def __init__(self, runtime: AppRuntime) -> None:
+        super().__init__(runtime)
 
     async def _build_edit_plan(self, user_message: str) -> EditClarificationRequest:
         return EditClarificationRequest(
@@ -64,16 +54,17 @@ class ClarifyingUserSpecAgent(UserSpecAgent):
 
 
 @pytest.mark.anyio
-async def test_user_spec_agent_drafts_agent_spec() -> None:
+async def test_user_spec_agent_drafts_agent_spec(runtime: AppRuntime) -> None:
     agent = StubUserSpecAgent(
+        runtime,
         AgentDraft(
             name="Invoice Cleanup",
             description="Prepare invoices for review.",
             objective="Normalize invoices before accounting review.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
+                    tool=ToolEndpoint.ROTATE_PDF,
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 )
             ],
         ),
@@ -100,19 +91,20 @@ async def test_user_spec_agent_drafts_agent_spec() -> None:
 
 
 @pytest.mark.anyio
-async def test_user_spec_agent_revises_existing_draft() -> None:
+async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> None:
     current_draft = AgentDraft(
         name="Invoice Cleanup",
         description="Prepare invoices for review.",
         objective="Normalize invoices before accounting review.",
         steps=[
             ToolOperationStep(
-                tool=OperationId.ROTATE,
-                parameters=RotateParams(angle=90),
+                tool=ToolEndpoint.ROTATE_PDF,
+                parameters=RotatePdfParams(angle=Angle(90)),
             )
         ],
     )
     agent = StubUserSpecAgent(
+        runtime,
         draft_result=current_draft,
         revision_result=AgentDraft(
             name="Invoice Cleanup",
@@ -120,12 +112,12 @@ async def test_user_spec_agent_revises_existing_draft() -> None:
             objective="Normalize invoices before accounting review.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
+                    tool=ToolEndpoint.ROTATE_PDF,
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 ),
                 ToolOperationStep(
-                    tool=OperationId.COMPRESS,
-                    parameters=CompressParams(compression_level=5),
+                    tool=ToolEndpoint.FLATTEN,
+                    parameters=FlattenParams(flatten_only_forms=False, render_dpi=None),
                 ),
             ],
         ),
@@ -146,14 +138,14 @@ async def test_user_spec_agent_revises_existing_draft() -> None:
 def test_tool_operation_step_rejects_mismatched_parameters() -> None:
     with pytest.raises(ValidationError):
         ToolOperationStep(
-            tool=OperationId.ROTATE,
-            parameters=CompressParams(compression_level=5),
+            tool=ToolEndpoint.ROTATE_PDF,
+            parameters=FlattenParams(flatten_only_forms=False, render_dpi=None),
         )
 
 
 @pytest.mark.anyio
-async def test_user_spec_agent_propagates_edit_clarification() -> None:
-    agent = ClarifyingUserSpecAgent()
+async def test_user_spec_agent_propagates_edit_clarification(runtime: AppRuntime) -> None:
+    agent = ClarifyingUserSpecAgent(runtime)
 
     response = await agent.draft(AgentDraftRequest(user_message="Build an agent to rotate some pages."))
 

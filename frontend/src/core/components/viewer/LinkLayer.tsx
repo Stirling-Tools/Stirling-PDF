@@ -2,14 +2,24 @@ import React, { useCallback, useState, useMemo, useRef } from "react";
 import { useDocumentState } from "@embedpdf/core/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
-import { PdfAnnotationSubtype, PdfActionType, type PdfLinkAnnoObject } from "@embedpdf/models";
+import {
+  PdfAnnotationSubtype,
+  PdfActionType,
+  type PdfLinkAnnoObject,
+} from "@embedpdf/models";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
 // ---------------------------------------------------------------------------
 
 const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
-  <svg width={size} height={size} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 14 14"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M3 4h8M5.5 4v-1a0.5 0 0 1 0.5-0.5h2a0.5 0 0 1 0.5 0.5v1M4.5 4l0.4 7a0.8 0 0 0 0.8 0.7h2.6a0.8 0 0 0 0.8-0.7l0.4-7"
       stroke="currentColor"
@@ -21,7 +31,13 @@ const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
 );
 
 const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
-  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 12 12"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M8.5 3.5l-3.5 3.5m3.5-3.5v2.5m0-2.5h-2.5M3.5 3.5h-0.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-0.5"
       stroke="currentColor"
@@ -33,7 +49,13 @@ const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
 );
 
 const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
-  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 12 12"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M3 2.5h3l2 2v4.5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-6.5a1 1 0 0 1 1-1z"
       stroke="currentColor"
@@ -41,7 +63,13 @@ const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path d="M6 2.5v2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M6 2.5v2h2"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -53,7 +81,9 @@ function truncateUrl(url: string, maxLen = 32): string {
   try {
     const u = new URL(url);
     const display = u.hostname + (u.pathname !== "/" ? u.pathname : "");
-    return display.length > maxLen ? display.slice(0, maxLen) + "\u2026" : display;
+    return display.length > maxLen
+      ? display.slice(0, maxLen) + "\u2026"
+      : display;
   } catch {
     return url.length > maxLen ? url.slice(0, maxLen) + "\u2026" : url;
   }
@@ -65,8 +95,10 @@ function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
   if (annotationLink.target.type === "action") {
     const action = annotationLink.target.action;
     if (action.type === PdfActionType.URI) return truncateUrl(action.uri);
-    if (action.type === PdfActionType.Goto) return `Page ${action.destination.pageIndex + 1}`;
-    if (action.type === PdfActionType.RemoteGoto) return `Page ${action.destination.pageIndex + 1}`;
+    if (action.type === PdfActionType.Goto)
+      return `Page ${action.destination.pageIndex + 1}`;
+    if (action.type === PdfActionType.RemoteGoto)
+      return `Page ${action.destination.pageIndex + 1}`;
   } else if (annotationLink.target.type === "destination") {
     return `Page ${annotationLink.target.destination.pageIndex + 1}`;
   }
@@ -102,10 +134,22 @@ const TOOLBAR_HEIGHT = 32;
 const TOOLBAR_GAP = 8;
 
 const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
-  ({ annotationLink, scale, flipped, onNavigate, onDelete, onMouseEnter, onMouseLeave }) => {
-    const centerX = (annotationLink.rect.origin.x + annotationLink.rect.size.width / 2) * scale;
+  ({
+    annotationLink,
+    scale,
+    flipped,
+    onNavigate,
+    onDelete,
+    onMouseEnter,
+    onMouseLeave,
+  }) => {
+    const centerX =
+      (annotationLink.rect.origin.x + annotationLink.rect.size.width / 2) *
+      scale;
     const topY = flipped
-      ? (annotationLink.rect.origin.y + annotationLink.rect.size.height) * scale + TOOLBAR_GAP
+      ? (annotationLink.rect.origin.y + annotationLink.rect.size.height) *
+          scale +
+        TOOLBAR_GAP
       : annotationLink.rect.origin.y * scale - TOOLBAR_HEIGHT - TOOLBAR_GAP;
 
     const internal = isInternalLink(annotationLink);
@@ -168,7 +212,10 @@ interface LinkLayerProps {
   pageIndex: number;
 }
 
-export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) => {
+export const LinkLayer: React.FC<LinkLayerProps> = ({
+  documentId,
+  pageIndex,
+}) => {
   const { provides: scroll } = useScroll(documentId);
   const { state, provides: scope } = useAnnotation(documentId);
   const documentState = useDocumentState(documentId);
@@ -183,9 +230,16 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
     const result: PdfLinkAnnoObject[] = [];
     for (const uid of uids) {
       const ta = state.byUid[uid];
-      if (ta && ta.commitState !== "deleted" && ta.object.type === PdfAnnotationSubtype.LINK) {
+      if (
+        ta &&
+        ta.commitState !== "deleted" &&
+        ta.object.type === PdfAnnotationSubtype.LINK
+      ) {
         const annotationLink = ta.object as PdfLinkAnnoObject;
-        if (annotationLink.rect.size.width > 0 && annotationLink.rect.size.height > 0) {
+        if (
+          annotationLink.rect.size.width > 0 &&
+          annotationLink.rect.size.height > 0
+        ) {
           result.push(annotationLink);
         }
       }
@@ -261,7 +315,10 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
             if (["http:", "https:", "mailto:"].includes(url.protocol)) {
               window.open(uri, "_blank", "noopener,noreferrer");
             } else {
-              console.warn("[LinkLayer] Blocked unsafe URL protocol:", url.protocol);
+              console.warn(
+                "[LinkLayer] Blocked unsafe URL protocol:",
+                url.protocol,
+              );
             }
           } catch {
             window.open(uri, "_blank", "noopener,noreferrer");
@@ -286,7 +343,10 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
   if (linkAnnotations.length === 0) return null;
 
   return (
-    <div className="absolute inset-0" style={{ pointerEvents: "none", zIndex: 10 }}>
+    <div
+      className="absolute inset-0"
+      style={{ pointerEvents: "none", zIndex: 10 }}
+    >
       {linkAnnotations.map((annotationLink) => {
         const isHovered = hoveredLinkId === annotationLink.id;
         const left = annotationLink.rect.origin.x * scale;
@@ -295,7 +355,9 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
         const height = annotationLink.rect.size.height * scale;
 
         // Flip toolbar below if link is near the top of the page
-        const flipped = annotationLink.rect.origin.y * scale < TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
+        const flipped =
+          annotationLink.rect.origin.y * scale <
+          TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
 
         return (
           <React.Fragment key={annotationLink.id}>

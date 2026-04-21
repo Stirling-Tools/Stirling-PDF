@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, Stack, Text, Button, Group, Alert, TextInput, Paper, Select } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Text,
+  Button,
+  Group,
+  Alert,
+  TextInput,
+  Paper,
+  Select,
+} from "@mantine/core";
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { useTranslation } from "react-i18next";
@@ -22,7 +32,12 @@ interface BulkShareModalProps {
   onShared?: () => Promise<void> | void;
 }
 
-const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files, onShared }) => {
+const BulkShareModal: React.FC<BulkShareModalProps> = ({
+  opened,
+  onClose,
+  files,
+  onShared,
+}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { actions } = useFileActions();
@@ -30,7 +45,9 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
   const [isWorking, setIsWorking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shareToken, setShareToken] = useState<string | null>(null);
-  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">("editor");
+  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">(
+    "editor",
+  );
 
   useEffect(() => {
     if (!opened) {
@@ -50,7 +67,9 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
     if (!shareToken) return "";
     const frontendUrl = (config?.frontendUrl || "").trim();
     if (frontendUrl) {
-      const normalized = frontendUrl.endsWith("/") ? frontendUrl.slice(0, -1) : frontendUrl;
+      const normalized = frontendUrl.endsWith("/")
+        ? frontendUrl.slice(0, -1)
+        : frontendUrl;
       return `${normalized}/share/${shareToken}`;
     }
     return absoluteWithBasePath(`/share/${shareToken}`);
@@ -58,9 +77,12 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
 
   const createShareLink = useCallback(
     async (storedFileId: number) => {
-      const response = await apiClient.post(`/api/v1/storage/files/${storedFileId}/shares/links`, {
-        accessRole: shareRole,
-      });
+      const response = await apiClient.post(
+        `/api/v1/storage/files/${storedFileId}/shares/links`,
+        {
+          accessRole: shareRole,
+        },
+      );
       return response.data as { token?: string };
     },
     [shareRole],
@@ -81,11 +103,26 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
     setShareToken(null);
 
     try {
-      const rootIds = Array.from(new Set(files.map((file) => (file.originalFileId || file.id) as FileId)));
-      const remoteIds = Array.from(new Set(files.map((file) => file.remoteStorageId).filter(Boolean) as number[]));
-      const existingRemoteId = rootIds.length === 1 && remoteIds.length === 1 ? remoteIds[0] : undefined;
+      const rootIds = Array.from(
+        new Set(
+          files.map((file) => (file.originalFileId || file.id) as FileId),
+        ),
+      );
+      const remoteIds = Array.from(
+        new Set(
+          files.map((file) => file.remoteStorageId).filter(Boolean) as number[],
+        ),
+      );
+      const existingRemoteId =
+        rootIds.length === 1 && remoteIds.length === 1
+          ? remoteIds[0]
+          : undefined;
 
-      const { remoteId: storedId, updatedAt, chain } = await uploadHistoryChains(rootIds, existingRemoteId);
+      const {
+        remoteId: storedId,
+        updatedAt,
+        chain,
+      } = await uploadHistoryChains(rootIds, existingRemoteId);
 
       const shareResponse = await createShareLink(storedId);
       setShareToken(shareResponse.token ?? null);
@@ -118,7 +155,12 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
       }
     } catch (error: any) {
       console.error("Failed to generate share link:", error);
-      setErrorMessage(t("storageShare.failure", "Unable to generate a share link. Please try again."));
+      setErrorMessage(
+        t(
+          "storageShare.failure",
+          "Unable to generate a share link. Please try again.",
+        ),
+      );
     } finally {
       setIsWorking(false);
     }
@@ -159,7 +201,10 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
         <Paper withBorder radius="md" p="md">
           <Stack gap={4}>
             <Text size="sm">
-              {t("storageShare.bulkDescription", "Create one link to share all selected files with signed-in users.")}
+              {t(
+                "storageShare.bulkDescription",
+                "Create one link to share all selected files with signed-in users.",
+              )}
             </Text>
             <Text size="sm" c="dimmed">
               {t("storageShare.fileCount", "{{count}} files", {
@@ -170,13 +215,22 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
         </Paper>
 
         {errorMessage && (
-          <Alert color="red" title={t("storageShare.errorTitle", "Share failed")}>
+          <Alert
+            color="red"
+            title={t("storageShare.errorTitle", "Share failed")}
+          >
             {errorMessage}
           </Alert>
         )}
         {!shareLinksEnabled && (
-          <Alert color="yellow" title={t("storageShare.linksDisabled", "Share links are disabled.")}>
-            {t("storageShare.linksDisabledBody", "Share links are disabled by your server settings.")}
+          <Alert
+            color="yellow"
+            title={t("storageShare.linksDisabled", "Share links are disabled.")}
+          >
+            {t(
+              "storageShare.linksDisabledBody",
+              "Share links are disabled by your server settings.",
+            )}
           </Alert>
         )}
 
@@ -191,7 +245,9 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
                   <Button
                     variant="subtle"
                     size="xs"
-                    leftSection={<ContentCopyRoundedIcon style={{ fontSize: 16 }} />}
+                    leftSection={
+                      <ContentCopyRoundedIcon style={{ fontSize: 16 }} />
+                    }
                     onClick={handleCopyLink}
                   >
                     {t("storageShare.copy", "Copy")}
@@ -210,12 +266,26 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
             <Select
               label={t("storageShare.roleLabel", "Role")}
               value={shareRole}
-              onChange={(value) => setShareRole((value as typeof shareRole) || "editor")}
-              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+              onChange={(value) =>
+                setShareRole((value as typeof shareRole) || "editor")
+              }
+              comboboxProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
+              }}
               data={[
-                { value: "editor", label: t("storageShare.roleEditor", "Editor") },
-                { value: "commenter", label: t("storageShare.roleCommenter", "Commenter") },
-                { value: "viewer", label: t("storageShare.roleViewer", "Viewer") },
+                {
+                  value: "editor",
+                  label: t("storageShare.roleEditor", "Editor"),
+                },
+                {
+                  value: "commenter",
+                  label: t("storageShare.roleCommenter", "Commenter"),
+                },
+                {
+                  value: "viewer",
+                  label: t("storageShare.roleViewer", "Viewer"),
+                },
               ]}
             />
             {shareRole === "commenter" && (

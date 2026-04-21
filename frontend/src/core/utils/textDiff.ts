@@ -1,4 +1,4 @@
-// Shared text diff and normalization utilities for compare tool
+// Shared text Comparison and normalization utilities for compare tool
 
 export const shouldConcatWithoutSpace = (word: string) => {
   return /^[.,!?;:)\]}]/.test(word) || word.startsWith("'") || word === "'s";
@@ -9,7 +9,8 @@ export const appendWord = (existing: string, word: string) => {
   if (shouldConcatWithoutSpace(word)) return `${existing}${word}`;
   return `${existing} ${word}`;
 };
-export const tokenize = (text: string): string[] => text.split(/\s+/).filter(Boolean);
+export const tokenize = (text: string): string[] =>
+  text.split(/\s+/).filter(Boolean);
 
 type TokenType = "unchanged" | "removed" | "added";
 export interface LocalToken {
@@ -24,7 +25,10 @@ const buildLcsMatrix = (a: string[], b: string[]) => {
   for (let i = 0; i < rows; i += 1) m[i] = new Array(cols).fill(0);
   for (let i = 1; i < rows; i += 1) {
     for (let j = 1; j < cols; j += 1) {
-      m[i][j] = a[i - 1] === b[j - 1] ? m[i - 1][j - 1] + 1 : Math.max(m[i][j - 1], m[i - 1][j]);
+      m[i][j] =
+        a[i - 1] === b[j - 1]
+          ? m[i - 1][j - 1] + 1
+          : Math.max(m[i][j - 1], m[i - 1][j]);
     }
   }
   return m;

@@ -90,7 +90,9 @@ class GoogleDrivePickerService {
 
     return new Promise((resolve) => {
       window.gapi.load("client:picker", async () => {
-        await window.gapi.client.load("https://www.googleapis.com/discovery/v1/apis/drive/v3/rest");
+        await window.gapi.client.load(
+          "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+        );
         this.gapiLoaded = true;
         resolve();
       });
@@ -176,14 +178,18 @@ class GoogleDrivePickerService {
         return;
       }
 
-      const mimeTypes = fileInputToGooglePickerMimeTypes(options.mimeTypes || undefined);
+      const mimeTypes = fileInputToGooglePickerMimeTypes(
+        options.mimeTypes || undefined,
+      );
 
       const view1 = new window.google.picker.DocsView().setIncludeFolders(true);
       if (mimeTypes !== null) {
         view1.setMimeTypes(mimeTypes);
       }
 
-      const view2 = new window.google.picker.DocsView().setIncludeFolders(true).setEnableDrives(true);
+      const view2 = new window.google.picker.DocsView()
+        .setIncludeFolders(true)
+        .setEnableDrives(true);
       if (mimeTypes !== null) {
         view2.setMimeTypes(mimeTypes);
       }
@@ -208,33 +214,47 @@ class GoogleDrivePickerService {
   /**
    * Handle picker selection callback
    */
-  private async pickerCallback(data: any, resolve: (files: File[]) => void, reject: (error: Error) => void): Promise<void> {
+  private async pickerCallback(
+    data: any,
+    resolve: (files: File[]) => void,
+    reject: (error: Error) => void,
+  ): Promise<void> {
     if (data.action === window.google.picker.Action.PICKED) {
       try {
         const files = await Promise.all(
-          data[window.google.picker.Response.DOCUMENTS].map(async (pickedFile: any) => {
-            const fileId = pickedFile[window.google.picker.Document.ID];
-            const res = await window.gapi.client.drive.files.get({
-              fileId: fileId,
-              alt: "media",
-            });
+          data[window.google.picker.Response.DOCUMENTS].map(
+            async (pickedFile: any) => {
+              const fileId = pickedFile[window.google.picker.Document.ID];
+              const res = await window.gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: "media",
+              });
 
-            // Convert response body to File object
-            const file = new File(
-              [new Uint8Array(res.body.length).map((_: any, i: number) => res.body.charCodeAt(i))],
-              pickedFile.name,
-              {
-                type: pickedFile.mimeType,
-                lastModified: pickedFile.lastModified,
-              },
-            );
-            return file;
-          }),
+              // Convert response body to File object
+              const file = new File(
+                [
+                  new Uint8Array(res.body.length).map((_: any, i: number) =>
+                    res.body.charCodeAt(i),
+                  ),
+                ],
+                pickedFile.name,
+                {
+                  type: pickedFile.mimeType,
+                  lastModified: pickedFile.lastModified,
+                },
+              );
+              return file;
+            },
+          ),
         );
 
         resolve(files);
       } catch (error) {
-        reject(error instanceof Error ? error : new Error("Failed to download files"));
+        reject(
+          error instanceof Error
+            ? error
+            : new Error("Failed to download files"),
+        );
       }
     } else if (data.action === window.google.picker.Action.CANCEL) {
       resolve([]); // User cancelled, return empty array
@@ -270,14 +290,20 @@ export function getGoogleDrivePickerService(): GoogleDrivePickerService {
  * Check if Google Drive credentials are configured
  * Supports both backend settings and environment variables
  */
-export function isGoogleDriveConfigured(backendConfig?: BackendGoogleDriveConfig): boolean {
+export function isGoogleDriveConfigured(
+  backendConfig?: BackendGoogleDriveConfig,
+): boolean {
   // If backend config is provided, use it exclusively (don't fall back to env vars)
   if (backendConfig) {
     if (backendConfig.enabled === false) {
       return false; // Admin explicitly disabled it
     }
     if (backendConfig.enabled) {
-      return !!(backendConfig.clientId && backendConfig.apiKey && backendConfig.appId);
+      return !!(
+        backendConfig.clientId &&
+        backendConfig.apiKey &&
+        backendConfig.appId
+      );
     }
     return false; // No backend config provided
   }
@@ -294,13 +320,20 @@ export function isGoogleDriveConfigured(backendConfig?: BackendGoogleDriveConfig
  * Get Google Drive configuration from backend settings or environment variables
  * Backend settings take priority over environment variables
  */
-export function getGoogleDriveConfig(backendConfig?: BackendGoogleDriveConfig): GoogleDriveConfig | null {
+export function getGoogleDriveConfig(
+  backendConfig?: BackendGoogleDriveConfig,
+): GoogleDriveConfig | null {
   // If backend config is provided, use it exclusively (don't fall back to env vars)
   if (backendConfig) {
     if (backendConfig.enabled === false) {
       return null; // Admin explicitly disabled it
     }
-    if (backendConfig.enabled && backendConfig.clientId && backendConfig.apiKey && backendConfig.appId) {
+    if (
+      backendConfig.enabled &&
+      backendConfig.clientId &&
+      backendConfig.apiKey &&
+      backendConfig.appId
+    ) {
       return {
         clientId: backendConfig.clientId,
         apiKey: backendConfig.apiKey,
@@ -330,7 +363,9 @@ export function getGoogleDriveConfig(backendConfig?: BackendGoogleDriveConfig): 
  * Extract Google Drive backend config from AppConfig object
  * Eliminates duplicated config construction pattern
  */
-export function extractGoogleDriveBackendConfig(appConfig: any): BackendGoogleDriveConfig {
+export function extractGoogleDriveBackendConfig(
+  appConfig: any,
+): BackendGoogleDriveConfig {
   return {
     enabled: appConfig?.googleDriveEnabled,
     clientId: appConfig?.googleDriveClientId,

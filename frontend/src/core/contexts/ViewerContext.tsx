@@ -1,8 +1,20 @@
-import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode, useRef, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+  ReactNode,
+  useRef,
+  useCallback,
+} from "react";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFileState } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
-import { preferencesService, type PdfRenderMode } from "@app/services/preferencesService";
+import {
+  preferencesService,
+  type PdfRenderMode,
+} from "@app/services/preferencesService";
 import {
   createViewerActions,
   ScrollActions,
@@ -96,7 +108,12 @@ export interface ViewerContextType {
     annotationId: string;
     action: "focus" | "highlight";
   } | null;
-  requestCommentFocus: (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => void;
+  requestCommentFocus: (
+    documentId: string,
+    pageIndex: number,
+    annotationId: string,
+    hasContent: boolean,
+  ) => void;
   clearHighlightCommentRequest: () => void;
 
   // Search interface visibility
@@ -139,15 +156,29 @@ export interface ViewerContextType {
   hasPermission: (flag: PdfPermissionFlag) => boolean;
 
   // Immediate update callbacks
-  registerImmediateZoomUpdate: (callback: (percent: number) => void) => () => void;
-  registerImmediateScrollUpdate: (callback: (currentPage: number, totalPages: number) => void) => () => void;
-  registerImmediateSpreadUpdate: (callback: (mode: SpreadMode, isDualPage: boolean) => void) => () => void;
-  registerImmediatePanUpdate: (callback: (isPanning: boolean) => void) => () => void;
+  registerImmediateZoomUpdate: (
+    callback: (percent: number) => void,
+  ) => () => void;
+  registerImmediateScrollUpdate: (
+    callback: (currentPage: number, totalPages: number) => void,
+  ) => () => void;
+  registerImmediateSpreadUpdate: (
+    callback: (mode: SpreadMode, isDualPage: boolean) => void,
+  ) => () => void;
+  registerImmediatePanUpdate: (
+    callback: (isPanning: boolean) => void,
+  ) => () => void;
 
   // Internal - for bridges to trigger immediate updates
-  triggerImmediateScrollUpdate: (currentPage: number, totalPages: number) => void;
+  triggerImmediateScrollUpdate: (
+    currentPage: number,
+    totalPages: number,
+  ) => void;
   triggerImmediateZoomUpdate: (zoomPercent: number) => void;
-  triggerImmediateSpreadUpdate: (mode: SpreadMode, isDualPage?: boolean) => void;
+  triggerImmediateSpreadUpdate: (
+    mode: SpreadMode,
+    isDualPage?: boolean,
+  ) => void;
   triggerImmediatePanUpdate: (isPanning: boolean) => void;
 
   // Action handlers - call EmbedPDF APIs directly
@@ -164,7 +195,10 @@ export interface ViewerContextType {
   printActions: PrintActions;
 
   // Bridge registration - internal use by bridges
-  registerBridge: <K extends BridgeKey>(type: K, ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null) => void;
+  registerBridge: <K extends BridgeKey>(
+    type: K,
+    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null,
+  ) => void;
 
   // Save changes function - registered by EmbedPdfViewer
   applyChanges: (() => Promise<void>) | null;
@@ -183,12 +217,16 @@ interface ViewerProviderProps {
 
 export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // UI state - only state directly managed by this context
-  const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
-  const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
-  const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] = useState(false);
+  const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] =
+    useState(false);
+  const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] =
+    useState(false);
+  const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] =
+    useState(false);
   const [isLayerSidebarVisible, setIsLayerSidebarVisible] = useState(false);
   const [hasLayers, setHasLayers] = useState(false);
-  const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] = useState(false);
+  const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] =
+    useState(false);
   const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
     documentId: string;
     pageIndex: number;
@@ -249,12 +287,22 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const { register: registerImmediateZoomUpdate, trigger: triggerImmediateZoomInternal } = useImmediateNotifier<[number]>();
-  const { register: registerImmediateScrollUpdate, trigger: triggerImmediateScrollInternal } =
-    useImmediateNotifier<[number, number]>();
-  const { register: registerImmediateSpreadUpdate, trigger: triggerImmediateSpreadInternal } =
-    useImmediateNotifier<[SpreadMode, boolean]>();
-  const { register: registerImmediatePanUpdate, trigger: triggerImmediatePanInternal } = useImmediateNotifier<[boolean]>();
+  const {
+    register: registerImmediateZoomUpdate,
+    trigger: triggerImmediateZoomInternal,
+  } = useImmediateNotifier<[number]>();
+  const {
+    register: registerImmediateScrollUpdate,
+    trigger: triggerImmediateScrollInternal,
+  } = useImmediateNotifier<[number, number]>();
+  const {
+    register: registerImmediateSpreadUpdate,
+    trigger: triggerImmediateSpreadInternal,
+  } = useImmediateNotifier<[SpreadMode, boolean]>();
+  const {
+    register: registerImmediatePanUpdate,
+    trigger: triggerImmediatePanInternal,
+  } = useImmediateNotifier<[boolean]>();
 
   const triggerImmediateZoomUpdate = useCallback(
     (percent: number) => {
@@ -285,7 +333,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   );
 
   const registerBridge = useCallback(
-    <K extends BridgeKey>(type: K, ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null) => {
+    <K extends BridgeKey>(
+      type: K,
+      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null,
+    ) => {
       setBridgeRef(bridgeRefs.current, type, ref);
     },
     [],
@@ -316,7 +367,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const requestCommentFocus = useCallback(
-    (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => {
+    (
+      documentId: string,
+      pageIndex: number,
+      annotationId: string,
+      hasContent: boolean,
+    ) => {
       setIsCommentsSidebarVisible(true);
       setHighlightCommentRequest({
         documentId,
@@ -348,7 +404,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const cyclePdfRenderMode = useCallback(() => {
     setPdfRenderModeState((prev) => {
-      const next: PdfRenderMode = prev === "normal" ? "dark" : prev === "dark" ? "sepia" : "normal";
+      const next: PdfRenderMode =
+        prev === "normal" ? "dark" : prev === "dark" ? "sepia" : "normal";
       preferencesService.setPreference("pdfRenderMode", next);
       return next;
     });
@@ -356,11 +413,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // State getters - read from bridge refs
   const getScrollState = (): ScrollState => {
-    return bridgeRefs.current.scroll?.state || { currentPage: 1, totalPages: 0 };
+    return (
+      bridgeRefs.current.scroll?.state || { currentPage: 1, totalPages: 0 }
+    );
   };
 
   const getZoomState = (): ZoomState => {
-    return bridgeRefs.current.zoom?.state || { currentZoom: 1.4, zoomPercent: 140 };
+    return (
+      bridgeRefs.current.zoom?.state || { currentZoom: 1.4, zoomPercent: 140 }
+    );
   };
 
   const getPanState = (): PanState => {
@@ -372,7 +433,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const getSpreadState = (): SpreadState => {
-    return bridgeRefs.current.spread?.state || { spreadMode: SpreadMode.None, isDualPage: false };
+    return (
+      bridgeRefs.current.spread?.state || {
+        spreadMode: SpreadMode.None,
+        isDualPage: false,
+      }
+    );
   };
 
   const getRotationState = (): RotationState => {
@@ -380,7 +446,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const getSearchState = (): SearchState => {
-    return bridgeRefs.current.search?.state || { results: null, activeIndex: 0 };
+    return (
+      bridgeRefs.current.search?.state || { results: null, activeIndex: 0 }
+    );
   };
 
   const getThumbnailAPI = () => {
@@ -440,7 +508,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
     // Default: allow all permissions - warn in development
     if (process.env.NODE_ENV === "development") {
-      console.warn("[ViewerContext] Permissions API not available, defaulting to allow");
+      console.warn(
+        "[ViewerContext] Permissions API not available, defaulting to allow",
+      );
     }
     return true;
   };
@@ -552,7 +622,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     cyclePdfRenderMode,
   };
 
-  return <ViewerContext.Provider value={value}>{children}</ViewerContext.Provider>;
+  return (
+    <ViewerContext.Provider value={value}>{children}</ViewerContext.Provider>
+  );
 };
 
 export const useViewer = (): ViewerContextType => {

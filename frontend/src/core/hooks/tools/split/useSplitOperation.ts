@@ -1,13 +1,23 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation, ToolOperationConfig } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { SplitParameters, defaultParameters } from "@app/hooks/tools/split/useSplitParameters";
+import {
+  SplitParameters,
+  defaultParameters,
+} from "@app/hooks/tools/split/useSplitParameters";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
 // Static functions that can be used by both the hook and automation executor
-export const buildSplitFormData = (parameters: SplitParameters, file: File): FormData => {
+export const buildSplitFormData = (
+  parameters: SplitParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
 
   formData.append("fileInput", file);
@@ -42,17 +52,29 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       break;
     case SPLIT_METHODS.BY_CHAPTERS:
       formData.append("bookmarkLevel", parameters.bookmarkLevel);
-      formData.append("includeMetadata", (parameters.includeMetadata ?? false).toString());
-      formData.append("allowDuplicates", (parameters.allowDuplicates ?? false).toString());
+      formData.append(
+        "includeMetadata",
+        (parameters.includeMetadata ?? false).toString(),
+      );
+      formData.append(
+        "allowDuplicates",
+        (parameters.allowDuplicates ?? false).toString(),
+      );
       break;
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
-      formData.append("duplexMode", (parameters.duplexMode ?? false).toString());
+      formData.append(
+        "duplexMode",
+        (parameters.duplexMode ?? false).toString(),
+      );
       break;
     case SPLIT_METHODS.BY_POSTER:
       formData.append("pageSize", parameters.pageSize || "A4");
       formData.append("xFactor", parameters.xFactor || "2");
       formData.append("yFactor", parameters.yFactor || "2");
-      formData.append("rightToLeft", (parameters.rightToLeft ?? false).toString());
+      formData.append(
+        "rightToLeft",
+        (parameters.rightToLeft ?? false).toString(),
+      );
       break;
     default:
       throw new Error(`Unknown split method: ${method}`);
@@ -114,7 +136,9 @@ export const useSplitOperation = () => {
   const splitConfig: ToolOperationConfig<SplitParameters> = {
     ...splitOperationConfig,
     responseHandler,
-    getErrorMessage: createStandardErrorHandler(t("split.error.failed", "An error occurred while splitting the PDF.")),
+    getErrorMessage: createStandardErrorHandler(
+      t("split.error.failed", "An error occurred while splitting the PDF."),
+    ),
   };
 
   return useToolOperation(splitConfig);

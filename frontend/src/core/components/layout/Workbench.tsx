@@ -3,7 +3,10 @@ import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvi
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
-import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import styles from "@app/components/layout/Workbench.module.css";
@@ -70,7 +73,9 @@ export default function Workbench() {
     // Check if we're showing a custom workbench first
     // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {
-      const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+      const customView = customWorkbenchViews.find(
+        (view) => view.workbenchId === currentView && view.data != null,
+      );
       if (customView) {
         const CustomComponent = customView.component;
         return <CustomComponent data={customView.data} />;
@@ -114,7 +119,15 @@ export default function Workbench() {
           <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
             <PageEditor onFunctionsReady={setPageEditorFunctions} />
             {pageEditorFunctions && (
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 100 }}>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                }}
+              >
                 <PageEditorControls
                   onClosePdf={pageEditorFunctions.closePdf}
                   onUndo={pageEditorFunctions.handleUndo}

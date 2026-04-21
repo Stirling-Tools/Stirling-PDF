@@ -19,7 +19,10 @@ export function appendExpression(currentInput: string, expr: string): string {
 
 // Smartly inserts/normalizes a logical operator at the end of the current input.
 // Produces a trailing space to allow the next token to be typed naturally.
-export function insertOperatorSmart(currentInput: string, op: LogicalOperator): string {
+export function insertOperatorSmart(
+  currentInput: string,
+  op: LogicalOperator,
+): string {
   const text = (currentInput || "").trim();
   // Handle 'even' and 'odd' as page selection expressions, not logical operators
   if (op === "even" || op === "odd") {
@@ -43,7 +46,14 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
     const m = rest.match(/(?:\s*)(?:(&|\||,|!|\band\b|\bor\b|\bnot\b))\s*$/i);
     if (!m || m.index === undefined) break;
     const raw = m[1].toLowerCase();
-    const word = raw === "&" ? "and" : raw === "|" || raw === "," ? "or" : raw === "!" ? "not" : raw;
+    const word =
+      raw === "&"
+        ? "and"
+        : raw === "|" || raw === ","
+          ? "or"
+          : raw === "!"
+            ? "not"
+            : raw;
     tokens.unshift(word);
     rest = rest.slice(0, m.index).trimEnd();
   }
@@ -96,7 +106,8 @@ export function insertOperatorSmart(currentInput: string, op: LogicalOperator): 
   };
 
   const base = rest.trim();
-  const nextPhrase = tokens.length === 1 ? fromSingle(tokens[0]) : fromCombo(phrase);
+  const nextPhrase =
+    tokens.length === 1 ? fromSingle(tokens[0]) : fromCombo(phrase);
   if (!allowed.has(nextPhrase)) {
     return emit(base, click);
   }
@@ -123,7 +134,11 @@ export function everyNthExpression(n: number): string | null {
   return `${Math.max(1, Math.floor(n))}n`;
 }
 
-export function rangeExpression(start: number, end: number, maxPages: number): string | null {
+export function rangeExpression(
+  start: number,
+  end: number,
+  maxPages: number,
+): string | null {
   if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
   let s = Math.floor(start);
   let e = Math.floor(end);

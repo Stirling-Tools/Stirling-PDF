@@ -72,10 +72,21 @@ export function UsageDisplay({ tier, usage }: UsageDisplayProps) {
               </Group>
 
               {/* Progress bar for overage usage */}
-              <Progress value={100} color="orange" size="sm" radius="xl" striped animated />
+              <Progress
+                value={100}
+                color="orange"
+                size="sm"
+                radius="xl"
+                striped
+                animated
+              />
             </Stack>
 
-            <Alert color="blue" variant="light" icon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}>
+            <Alert
+              color="blue"
+              variant="light"
+              icon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}
+            >
               <Text size="xs">
                 {t("settings.planBilling.credits.overageInfo", {
                   price: getFormattedOveragePrice(),

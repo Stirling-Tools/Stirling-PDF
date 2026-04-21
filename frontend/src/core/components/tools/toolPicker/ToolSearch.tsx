@@ -42,7 +42,9 @@ const ToolSearch = ({
 
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
-    const entries = Object.entries(toolRegistry).filter(([id]) => !(mode === "dropdown" && id === selectedToolKey));
+    const entries = Object.entries(toolRegistry).filter(
+      ([id]) => !(mode === "dropdown" && id === selectedToolKey),
+    );
     const ranked = rankByFuzzy(entries, value, [
       ([key]) => idToWords(key),
       ([, v]) => v.name,
@@ -55,7 +57,9 @@ const ToolSearch = ({
   const handleSearchChange = (searchValue: string) => {
     onChange(searchValue);
     if (mode === "dropdown") {
-      setDropdownOpen(searchValue.trim().length > 0 && filteredTools.length > 0);
+      setDropdownOpen(
+        searchValue.trim().length > 0 && filteredTools.length > 0,
+      );
     }
   };
 
@@ -135,7 +139,11 @@ const ToolSearch = ({
                   onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
                 }}
-                leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
+                leftSection={
+                  <div style={{ color: "var(--tools-text-and-icon-color)" }}>
+                    {tool.icon}
+                  </div>
+                }
                 fullWidth
                 justify="flex-start"
                 style={{

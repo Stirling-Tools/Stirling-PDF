@@ -3,7 +3,10 @@ import { ActionIcon, Slider, Popover, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useRightRailButtons, RightRailButtonWithAction } from "@app/hooks/useRightRailButtons";
+import {
+  useRightRailButtons,
+  RightRailButtonWithAction,
+} from "@app/hooks/useRightRailButtons";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SearchInterface } from "@app/components/viewer/SearchInterface";
@@ -11,7 +14,10 @@ import ViewerAnnotationControls from "@app/components/shared/rightRail/ViewerAnn
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useRightRailTooltipSide } from "@app/hooks/useRightRailTooltipSide";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationState, useNavigationGuard } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationGuard,
+} from "@app/contexts/NavigationContext";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
@@ -21,7 +27,10 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 
-export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerActive?: (v: boolean) => void) {
+export function useViewerRightRailButtons(
+  isRulerActive?: boolean,
+  setIsRulerActive?: (v: boolean) => void,
+) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
   const {
@@ -37,8 +46,12 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
   } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const { sidebarRefs } = useSidebarContext();
-  const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
-  const { handleToolSelect, handleToolSelectForced, handleBackToTools } = useToolWorkflow();
+  const { position: tooltipPosition } = useRightRailTooltipSide(
+    sidebarRefs,
+    12,
+  );
+  const { handleToolSelect, handleToolSelectForced, handleBackToTools } =
+    useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
@@ -72,7 +85,9 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
     return cleanPath === "/annotations" || cleanPath.endsWith("/annotations");
   }, [stripBasePath]);
 
-  const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() => isAnnotationsPath());
+  const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() =>
+    isAnnotationsPath(),
+  );
 
   useEffect(() => {
     if (selectedTool === "annotate") {
@@ -92,12 +107,18 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
 
   const searchLabel = t("rightRail.search", "Search PDF");
   const panLabel = t("rightRail.panMode", "Pan Mode");
-  const applyRedactionsLabel = t("rightRail.applyRedactionsFirst", "Apply redactions first");
+  const applyRedactionsLabel = t(
+    "rightRail.applyRedactionsFirst",
+    "Apply redactions first",
+  );
   const rotateLeftLabel = t("rightRail.rotateLeft", "Rotate Left");
   const rotateRightLabel = t("rightRail.rotateRight", "Rotate Right");
   const sidebarLabel = t("rightRail.toggleSidebar", "Toggle Sidebar");
   const bookmarkLabel = t("rightRail.toggleBookmarks", "Toggle Bookmarks");
-  const attachmentLabel = t("rightRail.toggleAttachments", "Toggle Attachments");
+  const attachmentLabel = t(
+    "rightRail.toggleAttachments",
+    "Toggle Attachments",
+  );
   const layersLabel = t("rightRail.toggleLayers", "Toggle Layers");
   const commentsLabel = t("rightRail.toggleComments", "Comments");
   const annotationsLabel = t("rightRail.annotations", "Annotations");
@@ -125,7 +146,8 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
     [supportedLanguageCodes],
   );
 
-  const shouldShowLanguageSelector = supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
+  const shouldShowLanguageSelector =
+    supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -136,7 +158,13 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         section: "top" as const,
         order: 10,
         render: ({ disabled }) => (
-          <Tooltip content={searchLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+          <Tooltip
+            content={searchLabel}
+            position={tooltipPosition}
+            offset={12}
+            arrow
+            portalTarget={document.body}
+          >
             <Popover
               position={tooltipPosition}
               withArrow
@@ -161,7 +189,10 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
               </Popover.Target>
               <Popover.Dropdown>
                 <div style={{ minWidth: "20rem" }}>
-                  <SearchInterface visible={isSearchInterfaceVisible} onClose={viewer.searchInterfaceActions.close} />
+                  <SearchInterface
+                    visible={isSearchInterfaceVisible}
+                    onClose={viewer.searchInterfaceActions.close}
+                  />
                 </div>
               </Popover.Dropdown>
             </Popover>
@@ -176,7 +207,8 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         section: "top" as const,
         order: 20,
         active: isPanning,
-        disabled: !isPanning && pendingCount > 0 && redactionActiveType !== null,
+        disabled:
+          !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
           setIsPanning((prev) => {
@@ -308,7 +340,13 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
           >
             <Popover.Target>
               <div style={{ display: "inline-flex" }}>
-                <Tooltip content={readAloudLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+                <Tooltip
+                  content={readAloudLabel}
+                  position={tooltipPosition}
+                  offset={12}
+                  arrow
+                  portalTarget={document.body}
+                >
                   <ActionIcon
                     variant={isReadingAloud ? "filled" : "subtle"}
                     radius="md"
@@ -329,7 +367,13 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
             </Popover.Target>
             <Popover.Dropdown>
               <div style={{ width: "16rem", padding: "0.5rem" }}>
-                <div style={{ fontSize: "0.75rem", marginBottom: "0.5rem", textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    marginBottom: "0.5rem",
+                    textAlign: "center",
+                  }}
+                >
                   {readAloudSpeedLabel}: {speechRate.toFixed(1)}x
                 </div>
                 <Slider
@@ -351,7 +395,10 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
                 {shouldShowLanguageSelector && (
                   <Select
                     label={t("rightRail.readAloudLanguage", "Language")}
-                    placeholder={t("rightRail.selectLanguage", "Select language")}
+                    placeholder={t(
+                      "rightRail.selectLanguage",
+                      "Select language",
+                    )}
                     value={speechLanguage}
                     onChange={(value) => {
                       if (value) {
@@ -377,7 +424,13 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         order: 58,
         active: isAnnotationsActive,
         render: ({ disabled }) => (
-          <Tooltip content={annotationsLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+          <Tooltip
+            content={annotationsLabel}
+            position={tooltipPosition}
+            offset={12}
+            arrow
+            portalTarget={document.body}
+          >
             <ActionIcon
               variant={isAnnotationsActive ? "filled" : "subtle"}
               radius="md"
@@ -385,7 +438,8 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
 
-                const hasRedactionChanges = pendingCount > 0 || redactionsApplied;
+                const hasRedactionChanges =
+                  pendingCount > 0 || redactionsApplied;
 
                 const switchToAnnotations = () => {
                   const targetPath = withBasePath("/annotations");
@@ -417,7 +471,9 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         id: "viewer-annotation-controls",
         section: "top" as const,
         order: 60,
-        render: ({ disabled }) => <ViewerAnnotationControls currentView="viewer" disabled={disabled} />,
+        render: ({ disabled }) => (
+          <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
+        ),
       },
       {
         id: "viewer-form-fill",
@@ -426,7 +482,13 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         section: "top" as const,
         order: 62,
         render: ({ disabled }) => (
-          <Tooltip content={formFillLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+          <Tooltip
+            content={formFillLabel}
+            position={tooltipPosition}
+            offset={12}
+            arrow
+            portalTarget={document.body}
+          >
             <ActionIcon
               variant={isFormFillActive ? "filled" : "subtle"}
               radius="md"

@@ -11,7 +11,10 @@ interface SecurityCheckSlideProps {
   onRoleSelect: (role: "admin" | "user" | null) => void;
 }
 
-export default function SecurityCheckSlide({ selectedRole, onRoleSelect }: SecurityCheckSlideProps): SlideConfig {
+export default function SecurityCheckSlide({
+  selectedRole,
+  onRoleSelect,
+}: SecurityCheckSlideProps): SlideConfig {
   return {
     key: "security-check",
     title: "Security Check",
@@ -19,7 +22,12 @@ export default function SecurityCheckSlide({ selectedRole, onRoleSelect }: Secur
       <div className={styles.securitySlideContent}>
         <div className={styles.securityCard}>
           <div className={styles.securityAlertRow}>
-            <LocalIcon icon="error" width={20} height={20} style={{ color: "#F04438", flexShrink: 0 }} />
+            <LocalIcon
+              icon="error"
+              width={20}
+              height={20}
+              style={{ color: "#F04438", flexShrink: 0 }}
+            />
             <span>
               {i18n.t(
                 "onboarding.securityCheck.message",
@@ -35,7 +43,9 @@ export default function SecurityCheckSlide({ selectedRole, onRoleSelect }: Secur
               { value: "admin", label: "Admin" },
               { value: "user", label: "User" },
             ]}
-            onChange={(value) => onRoleSelect((value as "admin" | "user") ?? null)}
+            onChange={(value) =>
+              onRoleSelect((value as "admin" | "user") ?? null)
+            }
             comboboxProps={{ withinPortal: true, zIndex: 5000 }}
             styles={{
               input: {

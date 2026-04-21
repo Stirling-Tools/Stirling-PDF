@@ -44,7 +44,10 @@ function getXsrfToken(): string | null {
     }
     return null;
   } catch (error) {
-    console.error("[API Client] Failed to read XSRF token from cookies:", error);
+    console.error(
+      "[API Client] Failed to read XSRF token from cookies:",
+      error,
+    );
     return null;
   }
 }
@@ -95,20 +98,29 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
   }
 }
 
+/** Auth headers for raw fetch() calls (SSE streams, etc.). */
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const jwt = getJwtTokenFromStorage();
+  if (jwt) {
+    headers["Authorization"] = `Bearer ${jwt}`;
+  }
+  const xsrf = getXsrfToken();
+  if (xsrf) {
+    headers["X-XSRF-TOKEN"] = xsrf;
+  }
+  return headers;
+}
+
 export function setupApiInterceptors(client: AxiosInstance): void {
   // Install request interceptor to add JWT token
   client.interceptors.request.use(
     (config) => {
-      const jwtToken = getJwtTokenFromStorage();
-      const xsrfToken = getXsrfToken();
-
-      if (jwtToken && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${jwtToken}`;
-        console.debug("[API Client] Added JWT token from localStorage to Authorization header");
-      }
-
-      if (xsrfToken && !config.headers["X-XSRF-TOKEN"]) {
-        config.headers["X-XSRF-TOKEN"] = xsrfToken;
+      const authHeaders = getAuthHeaders();
+      for (const [key, value] of Object.entries(authHeaders)) {
+        if (!config.headers[key]) {
+          config.headers[key] = value;
+        }
       }
 
       return config;
@@ -122,13 +134,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+      const originalRequest = error.config as InternalAxiosRequestConfig & {
+        _retry?: boolean;
+      };
 
       // Skip refresh for auth endpoints or if explicitly disabled
       // Exception: /auth/me should trigger refresh (used by getSession)
       if (
         !originalRequest ||
-        (originalRequest.url?.includes("/api/v1/auth/") && !originalRequest.url?.includes("/api/v1/auth/me")) ||
+        (originalRequest.url?.includes("/api/v1/auth/") &&
+          !originalRequest.url?.includes("/api/v1/auth/me")) ||
         originalRequest.headers?.["X-Skip-Auth-Refresh"] ||
         originalRequest._retry
       ) {
@@ -137,7 +152,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Handle 401 errors by attempting token refresh
       if (error.response?.status === 401 && getJwtTokenFromStorage()) {
-        console.warn("[API Client] Received 401 error, attempting token refresh...");
+        console.warn(
+          "[API Client] Received 401 error, attempting token refresh...",
+        );
 
         if (isRefreshing) {
           // Already refreshing - queue this request

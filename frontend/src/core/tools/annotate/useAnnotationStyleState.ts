@@ -59,7 +59,10 @@ interface StyleActions {
   setShapeThickness: (value: number) => void;
 }
 
-export type BuildToolOptionsFn = (toolId: AnnotationToolId, extras?: BuildToolOptionsExtras) => Record<string, unknown>;
+export type BuildToolOptionsFn = (
+  toolId: AnnotationToolId,
+  extras?: BuildToolOptionsExtras,
+) => Record<string, unknown>;
 
 export interface AnnotationStyleStateReturn {
   styleState: StyleState;
@@ -68,7 +71,9 @@ export interface AnnotationStyleStateReturn {
   getActiveColor: (target: string | null) => string;
 }
 
-export const useAnnotationStyleState = (cssToPdfSize?: (size: Size) => Size): AnnotationStyleStateReturn => {
+export const useAnnotationStyleState = (
+  cssToPdfSize?: (size: Size) => Size,
+): AnnotationStyleStateReturn => {
   const [inkColor, setInkColor] = useState("#1f2933");
   const [inkWidth, setInkWidth] = useState(2);
   const [highlightColor, setHighlightColor] = useState("#ffd54f");
@@ -82,7 +87,9 @@ export const useAnnotationStyleState = (cssToPdfSize?: (size: Size) => Size): An
   const [squigglyOpacity, setSquigglyOpacity] = useState(100);
   const [textColor, setTextColor] = useState("#111111");
   const [textSize, setTextSize] = useState(14);
-  const [textAlignment, setTextAlignment] = useState<"left" | "center" | "right">("left");
+  const [textAlignment, setTextAlignment] = useState<
+    "left" | "center" | "right"
+  >("left");
   const [textBackgroundColor, setTextBackgroundColor] = useState<string>("");
   const [noteBackgroundColor, setNoteBackgroundColor] = useState("#ffd54f");
   const [shapeStrokeColor, setShapeStrokeColor] = useState("#cf5b5b");
@@ -119,15 +126,32 @@ export const useAnnotationStyleState = (cssToPdfSize?: (size: Size) => Size): An
             ...metadata,
           };
         case "highlight":
-          return { color: highlightColor, opacity: highlightOpacity / 100, ...metadata };
+          return {
+            color: highlightColor,
+            opacity: highlightOpacity / 100,
+            ...metadata,
+          };
         case "underline":
-          return { color: underlineColor, opacity: underlineOpacity / 100, ...metadata };
+          return {
+            color: underlineColor,
+            opacity: underlineOpacity / 100,
+            ...metadata,
+          };
         case "strikeout":
-          return { color: strikeoutColor, opacity: strikeoutOpacity / 100, ...metadata };
+          return {
+            color: strikeoutColor,
+            opacity: strikeoutOpacity / 100,
+            ...metadata,
+          };
         case "squiggly":
-          return { color: squigglyColor, opacity: squigglyOpacity / 100, ...metadata };
+          return {
+            color: squigglyColor,
+            opacity: squigglyOpacity / 100,
+            ...metadata,
+          };
         case "text": {
-          const textAlignNumber = textAlignment === "left" ? 0 : textAlignment === "center" ? 1 : 2;
+          const textAlignNumber =
+            textAlignment === "left" ? 0 : textAlignment === "center" ? 1 : 2;
           return {
             color: textColor,
             textColor: textColor,
@@ -169,7 +193,10 @@ export const useAnnotationStyleState = (cssToPdfSize?: (size: Size) => Size): An
             ...metadata,
           };
         case "stamp": {
-          const pdfSize = extras?.stampImageSize && cssToPdfSize ? cssToPdfSize(extras.stampImageSize) : undefined;
+          const pdfSize =
+            extras?.stampImageSize && cssToPdfSize
+              ? cssToPdfSize(extras.stampImageSize)
+              : undefined;
           return {
             imageSrc: extras?.stampImageData,
             ...(pdfSize ? { imageSize: pdfSize } : {}),
@@ -210,7 +237,8 @@ export const useAnnotationStyleState = (cssToPdfSize?: (size: Size) => Size): An
   const getActiveColor = useCallback(
     (target: string | null) => {
       if (target === "ink") return inkColor;
-      if (target === "highlight" || target === "inkHighlighter") return highlightColor;
+      if (target === "highlight" || target === "inkHighlighter")
+        return highlightColor;
       if (target === "underline") return underlineColor;
       if (target === "strikeout") return strikeoutColor;
       if (target === "squiggly") return squigglyColor;

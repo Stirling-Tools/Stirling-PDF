@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useAttachmentCapability } from "@embedpdf/plugin-attachment/react";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { AttachmentState, AttachmentAPIWrapper } from "@app/contexts/viewer/viewerBridges";
+import {
+  AttachmentState,
+  AttachmentAPIWrapper,
+} from "@app/contexts/viewer/viewerBridges";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
@@ -34,7 +37,10 @@ export function AttachmentAPIBridge() {
       const task = attachmentCapability.getAttachments();
 
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error("Attachment fetch timeout after 10 seconds")), 10000);
+        setTimeout(
+          () => reject(new Error("Attachment fetch timeout after 10 seconds")),
+          10000,
+        );
       });
 
       const result = await Promise.race([task.toPromise(), timeoutPromise]);
@@ -45,7 +51,8 @@ export function AttachmentAPIBridge() {
       });
       return result ?? [];
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to load attachments";
+      const message =
+        error instanceof Error ? error.message : "Failed to load attachments";
       setState({
         attachments: null,
         isLoading: false,

@@ -6,14 +6,22 @@
 import React, { createContext, useContext, useCallback, useRef, useState } from "react";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId } from "@app/types/file";
-import { StirlingFileStub, createStirlingFile, createQuickKey } from "@app/types/fileContext";
+import {
+  StirlingFileStub,
+  createStirlingFile,
+  createQuickKey,
+} from "@app/types/fileContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
 interface IndexedDBContextValue {
   // Core CRUD operations
-  saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<StirlingFileStub>;
+  saveFile: (
+    file: File,
+    fileId: FileId,
+    existingThumbnail?: string,
+  ) => Promise<StirlingFileStub>;
   loadFile: (fileId: FileId) => Promise<File | null>;
   loadMetadata: (fileId: FileId) => Promise<StirlingFileStub | null>;
   deleteFile: (fileId: FileId) => Promise<void>;
@@ -25,7 +33,11 @@ interface IndexedDBContextValue {
   clearAll: () => Promise<void>;
 
   // Utilities
-  getStorageStats: () => Promise<{ used: number; available: number; fileCount: number }>;
+  getStorageStats: () => Promise<{
+    used: number;
+    available: number;
+    fileCount: number;
+  }>;
   updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
   markFileAsProcessed: (fileId: FileId) => Promise<boolean>;
 
@@ -45,7 +57,9 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const bumpRevision = useCallback(() => setRevision((r) => r + 1), []);
 
   // LRU File cache to avoid repeated ArrayBuffer→File conversions
-  const fileCache = useRef(new Map<FileId, { file: File; lastAccessed: number }>());
+  const fileCache = useRef(
+    new Map<FileId, { file: File; lastAccessed: number }>(),
+  );
   const MAX_CACHE_SIZE = 50; // Maximum number of files to cache
 
   // LRU cache management
@@ -53,7 +67,9 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     if (fileCache.current.size <= MAX_CACHE_SIZE) return;
 
     // Convert to array and sort by last accessed time (oldest first)
-    const entries = Array.from(fileCache.current.entries()).sort(([, a], [, b]) => a.lastAccessed - b.lastAccessed);
+    const entries = Array.from(fileCache.current.entries()).sort(
+      ([, a], [, b]) => a.lastAccessed - b.lastAccessed,
+    );
 
     // Remove the least recently used entries
     const toRemove = entries.slice(0, fileCache.current.size - MAX_CACHE_SIZE);
@@ -65,9 +81,14 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   }, []);
 
   const saveFile = useCallback(
-    async (file: File, fileId: FileId, existingThumbnail?: string): Promise<StirlingFileStub> => {
+    async (
+      file: File,
+      fileId: FileId,
+      existingThumbnail?: string,
+    ): Promise<StirlingFileStub> => {
       // Use existing thumbnail or generate new one if none provided
-      const thumbnail = existingThumbnail || (await generateThumbnailForFile(file));
+      const thumbnail =
+        existingThumbnail || (await generateThumbnailForFile(file));
 
       // History is handled via direct fileStorage calls, not here
       const stirlingFile = createStirlingFile(file, fileId);
@@ -97,7 +118,9 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
       // Return StirlingFileStub from the stored file (no conversion needed)
       if (!storedFile) {
-        throw new Error(`Failed to retrieve stored file after saving: ${file.name}`);
+        throw new Error(
+          `Failed to retrieve stored file after saving: ${file.name}`,
+        );
       }
 
       bumpRevision();
@@ -132,10 +155,13 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [evictLRUEntries],
   );
 
-  const loadMetadata = useCallback(async (fileId: FileId): Promise<StirlingFileStub | null> => {
-    // Load stub directly from storage service
-    return await fileStorage.getStirlingFileStub(fileId);
-  }, []);
+  const loadMetadata = useCallback(
+    async (fileId: FileId): Promise<StirlingFileStub | null> => {
+      // Load stub directly from storage service
+      return await fileStorage.getStirlingFileStub(fileId);
+    },
+    [],
+  );
 
   const deleteFile = useCallback(
     async (fileId: FileId): Promise<void> => {
@@ -149,7 +175,9 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [bumpRevision],
   );
 
-  const loadLeafMetadata = useCallback(async (): Promise<StirlingFileStub[]> => {
+  const loadLeafMetadata = useCallback(async (): Promise<
+    StirlingFileStub[]
+  > => {
     const metadata = await fileStorage.getLeafStirlingFileStubs(); // Only get leaf files
 
     // All files are already StirlingFileStub objects, no processing needed
@@ -222,7 +250,11 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     bumpRevision,
   };
 
-  return <IndexedDBContext.Provider value={value}>{children}</IndexedDBContext.Provider>;
+  return (
+    <IndexedDBContext.Provider value={value}>
+      {children}
+    </IndexedDBContext.Provider>
+  );
 }
 
 export function useIndexedDB() {

@@ -1,7 +1,13 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { useFileSelection, useFileState, useFileManagement, useFileActions } from "@app/contexts/FileContext";
+import {
+  useFileSelection,
+  useFileState,
+  useFileManagement,
+  useFileActions,
+} from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { zipFileService } from "@app/services/zipFileService";
@@ -21,7 +27,10 @@ interface FileEditorProps {
   supportedExtensions?: string[];
 }
 
-const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEditorProps) => {
+const FileEditor = ({
+  toolMode = false,
+  supportedExtensions = ["pdf"],
+}: FileEditorProps) => {
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback(
     (fileName: string): boolean => {
@@ -38,7 +47,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const { selectedFileIds, setSelectedFiles } = useFileSelection();
 
   // Extract needed values from state (memoized to prevent infinite loops)
-  const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [state.files.byId, state.files.ids]);
+  const activeStirlingFileStubs = useMemo(
+    () => selectors.getStirlingFileStubs(),
+    [state.files.byId, state.files.ids],
+  );
 
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
@@ -50,11 +62,27 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const [_error, _setError] = useState<string | null>(null);
 
   // Toast helpers
-  const showStatus = useCallback((message: string, type: "neutral" | "success" | "warning" | "error" = "neutral") => {
-    alert({ alertType: type, title: message, expandable: false, durationMs: 4000 });
-  }, []);
+  const showStatus = useCallback(
+    (
+      message: string,
+      type: "neutral" | "success" | "warning" | "error" = "neutral",
+    ) => {
+      alert({
+        alertType: type,
+        title: message,
+        expandable: false,
+        durationMs: 4000,
+      });
+    },
+    [],
+  );
   const showError = useCallback((message: string) => {
-    alert({ alertType: "error", title: "Error", body: message, expandable: true });
+    alert({
+      alertType: "error",
+      title: "Error",
+      body: message,
+      expandable: true,
+    });
   }, []);
 
   // Current tool (for enforcing maxFiles limits)
@@ -67,7 +95,8 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   }, [selectedTool?.maxFiles, toolMode]);
 
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
-// Process uploaded files using context
+
+  // Process uploaded files using context
   // ZIP extraction is now handled automatically in FileContext based on user preferences
   const handleFileUpload = useCallback(
     async (uploadedFiles: File[]) => {
@@ -83,7 +112,9 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
           await addFiles(uploadedFiles, { selectFiles: true });
           // After auto-selection, enforce maxAllowed if needed
           if (Number.isFinite(maxAllowed)) {
-            const nowSelectedIds = selectors.getSelectedStirlingFileStubs().map((r) => r.id);
+            const nowSelectedIds = selectors
+              .getSelectedStirlingFileStubs()
+              .map((r) => r.id);
             if (nowSelectedIds.length > maxAllowed) {
               setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
             }
@@ -91,7 +122,8 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
           showStatus(`Added ${uploadedFiles.length} file(s)`, "success");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to process files";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to process files";
         showError(errorMessage);
         console.error("File processing error:", err);
       }
@@ -122,13 +154,17 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
 
       // Handle multi-file selection reordering
       const filesToMove =
-        selectedFileIds.length > 1 ? selectedFileIds.filter((id) => currentIds.includes(id)) : [sourceFileId];
+        selectedFileIds.length > 1
+          ? selectedFileIds.filter((id) => currentIds.includes(id))
+          : [sourceFileId];
 
       // Create new order
       const newOrder = [...currentIds];
 
       // Remove files to move from their current positions (in reverse order to maintain indices)
-      const sourceIndices = filesToMove.map((id) => newOrder.findIndex((nId) => nId === id)).sort((a, b) => b - a); // Sort descending
+      const sourceIndices = filesToMove
+        .map((id) => newOrder.findIndex((nId) => nId === id))
+        .sort((a, b) => b - a); // Sort descending
 
       sourceIndices.forEach((index) => {
         newOrder.splice(index, 1);
@@ -153,8 +189,23 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
       // Insert files at the calculated position
       newOrder.splice(insertIndex, 0, ...filesToMove);
 
-      // Update file order
-      reorderFiles(newOrder);
+      // Animate the reorder using the View Transitions API where available.
+      // Each FileEditorThumbnail carries a stable `view-transition-name`, so
+      // the browser snapshots each card before and after the DOM reorder and
+      // interpolates the positions automatically. `flushSync` forces React to
+      // apply the reorderFiles dispatch synchronously inside the transition
+      // callback so the BEFORE/AFTER snapshots capture the correct frames.
+      const applyReorder = () => reorderFiles(newOrder);
+      const docWithViewTransition = document as Document & {
+        startViewTransition?: (cb: () => void) => unknown;
+      };
+      if (typeof docWithViewTransition.startViewTransition === "function") {
+        docWithViewTransition.startViewTransition(() => {
+          flushSync(applyReorder);
+        });
+      } else {
+        applyReorder();
+      }
 
       // Update status
       const moveCount = filesToMove.length;
@@ -174,11 +225,19 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
         removeFiles([contextFileId], false);
 
         // Remove from context selections
-        const currentSelected = selectedFileIds.filter((id) => id !== contextFileId);
+        const currentSelected = selectedFileIds.filter(
+          (id) => id !== contextFileId,
+        );
         setSelectedFiles(currentSelected);
       }
     },
-    [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds],
+    [
+      activeStirlingFileStubs,
+      selectors,
+      removeFiles,
+      setSelectedFiles,
+      selectedFileIds,
+    ],
   );
 
   const handleDownloadFile = useCallback(
@@ -211,7 +270,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
             isDirty: false,
           });
         } else {
-          console.log("[FileEditor] Skipping clean mark:", { savedPath: result.savedPath, isDirty: record.isDirty });
+          console.log("[FileEditor] Skipping clean mark:", {
+            savedPath: result.savedPath,
+            isDirty: record.isDirty,
+          });
         }
       }
     },
@@ -225,7 +287,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
       if (record && file) {
         try {
           // Extract and store files using shared service method
-          const result = await zipFileService.extractAndStoreFilesWithHistory(file, record);
+          const result = await zipFileService.extractAndStoreFilesWithHistory(
+            file,
+            record,
+          );
 
           if (result.success && result.extractedStubs.length > 0) {
             // Add extracted file stubs to FileContext
@@ -272,7 +337,12 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
         navActions.setWorkbench("viewer");
       }
     },
-    [activeStirlingFileStubs, setActiveFileId, setActiveFileIndex, navActions.setWorkbench],
+    [
+      activeStirlingFileStubs,
+      setActiveFileId,
+      setActiveFileIndex,
+      navActions.setWorkbench,
+    ],
   );
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
@@ -313,7 +383,8 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
                 </Text>
                 <Text c="dimmed">No files loaded</Text>
                 <Text size="sm" c="dimmed">
-                  Upload PDF files, ZIP archives, or load from storage to get started
+                  Upload PDF files, ZIP archives, or load from storage to get
+                  started
                 </Text>
               </Stack>
             </Center>
@@ -328,7 +399,12 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
               }}
             >
               {/* Add File Card - only show when files exist */}
-              {activeStirlingFileStubs.length > 0 && <AddFileCard key="add-file-card" onFileSelect={handleFileUpload} />}
+              {activeStirlingFileStubs.length > 0 && (
+                <AddFileCard
+                  key="add-file-card"
+                  onFileSelect={handleFileUpload}
+                />
+              )}
 
               {activeStirlingFileStubs.map((record, index) => {
                 return (

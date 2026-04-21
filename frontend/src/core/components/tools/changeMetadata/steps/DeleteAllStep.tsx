@@ -4,11 +4,18 @@ import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useCha
 
 interface DeleteAllStepProps {
   parameters: ChangeMetadataParameters;
-  onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
+  onParameterChange: <K extends keyof ChangeMetadataParameters>(
+    key: K,
+    value: ChangeMetadataParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const DeleteAllStep = ({ parameters, onParameterChange, disabled = false }: DeleteAllStepProps) => {
+const DeleteAllStep = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: DeleteAllStepProps) => {
   const { t } = useTranslation();
 
   return (

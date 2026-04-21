@@ -101,12 +101,25 @@ export default function AutomationEntry({
     return (
       <div style={{ minWidth: "400px", width: "auto" }}>
         {description && (
-          <Text size="sm" mb={8} style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+          <Text
+            size="sm"
+            mb={8}
+            style={{ whiteSpace: "normal", wordWrap: "break-word" }}
+          >
             {description}
           </Text>
         )}
         {operations.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}>{toolChain}</div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {toolChain}
+          </div>
         )}
       </div>
     );
@@ -114,8 +127,23 @@ export default function AutomationEntry({
 
   const buttonContent = (
     <>
-      {BadgeIcon && <ToolIcon icon={<BadgeIcon />} {...(keepIconColor && { color: "var(--mantine-primary-color-filled)" })} />}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1, overflow: "visible" }}>
+      {BadgeIcon && (
+        <ToolIcon
+          icon={<BadgeIcon />}
+          {...(keepIconColor && {
+            color: "var(--mantine-primary-color-filled)",
+          })}
+        />
+      )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          flex: 1,
+          overflow: "visible",
+        }}
+      >
         {title ? (
           // Custom automation with title
           <Text size="sm" style={{ textAlign: "left" }}>
@@ -159,7 +187,9 @@ export default function AutomationEntry({
             borderRadius: 0,
             color: "var(--tools-text-and-icon-color)",
             overflow: "visible",
-            backgroundColor: shouldShowMenu ? "var(--automation-entry-hover-bg)" : undefined,
+            backgroundColor: shouldShowMenu
+              ? "var(--automation-entry-hover-bg)"
+              : undefined,
             "&:hover": {
               backgroundColor: "var(--automation-entry-hover-bg)",
             },
@@ -170,7 +200,12 @@ export default function AutomationEntry({
         {buttonContent}
       </Button>
       {showMenu && (
-        <Menu position="bottom-end" withinPortal onOpen={() => setIsMenuOpen(true)} onClose={() => setIsMenuOpen(false)}>
+        <Menu
+          position="bottom-end"
+          withinPortal
+          onOpen={() => setIsMenuOpen(true)}
+          onClose={() => setIsMenuOpen(false)}
+        >
           <Menu.Target>
             <ActionIcon
               variant="subtle"
@@ -223,7 +258,10 @@ export default function AutomationEntry({
                   onExport();
                 }}
               >
-                {t("automate.exportForFolderScanning", "Export for Folder Scanning")}
+                {t(
+                  "automate.exportForFolderScanning",
+                  "Export for Folder Scanning",
+                )}
               </Menu.Item>
             )}
             {onDelete && (
@@ -247,7 +285,12 @@ export default function AutomationEntry({
   const shouldShowTooltip = description || operations.length > 0;
 
   return shouldShowTooltip ? (
-    <Tooltip content={createTooltipContent()} position="right" arrow={true} delay={500}>
+    <Tooltip
+      content={createTooltipContent()}
+      position="right"
+      arrow={true}
+      delay={500}
+    >
       {wrapperContent}
     </Tooltip>
   ) : (

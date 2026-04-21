@@ -3,6 +3,8 @@ export interface FrontendVersionInfo {
   mismatchVersion: boolean;
 }
 
-export function useFrontendVersionInfo(_backendVersion: string | undefined): FrontendVersionInfo {
+export function useFrontendVersionInfo(
+  _backendVersion: string | undefined,
+): FrontendVersionInfo {
   return { appVersion: undefined, mismatchVersion: false };
 }

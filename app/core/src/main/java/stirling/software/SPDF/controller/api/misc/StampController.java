@@ -37,6 +37,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -92,7 +93,7 @@ public class StampController {
                     "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
                             + " type (text or image), rotation, opacity, width spacer, and height"
                             + " spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
+    public ResponseEntity<StreamingResponseBody> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
@@ -199,7 +200,8 @@ public class StampController {
             // Return the stamped PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"));
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"),
+                    tempFileManager);
         }
     }
 

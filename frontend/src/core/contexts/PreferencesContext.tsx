@@ -1,14 +1,22 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { preferencesService, UserPreferences } from "@app/services/preferencesService";
+import {
+  preferencesService,
+  UserPreferences,
+} from "@app/services/preferencesService";
 
 interface PreferencesContextValue {
   preferences: UserPreferences;
-  updatePreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
+  updatePreference: <K extends keyof UserPreferences>(
+    key: K,
+    value: UserPreferences[K],
+  ) => void;
   resetPreferences: () => void;
   updateServerDefaults: (defaults: Partial<UserPreferences>) => void;
 }
 
-const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
+const PreferencesContext = createContext<PreferencesContextValue | undefined>(
+  undefined,
+);
 
 export const PreferencesProvider: React.FC<{
   children: React.ReactNode;
@@ -18,24 +26,30 @@ export const PreferencesProvider: React.FC<{
     return preferencesService.getAllPreferences();
   });
 
-  const updatePreference = useCallback(<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
-    preferencesService.setPreference(key, value);
-    setPreferences((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  }, []);
+  const updatePreference = useCallback(
+    <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
+      preferencesService.setPreference(key, value);
+      setPreferences((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    [],
+  );
 
   const resetPreferences = useCallback(() => {
     preferencesService.clearAllPreferences();
     setPreferences(preferencesService.getAllPreferences());
   }, []);
 
-  const updateServerDefaults = useCallback((defaults: Partial<UserPreferences>) => {
-    preferencesService.setServerDefaults(defaults);
-    // Reload preferences to apply server defaults
-    setPreferences(preferencesService.getAllPreferences());
-  }, []);
+  const updateServerDefaults = useCallback(
+    (defaults: Partial<UserPreferences>) => {
+      preferencesService.setServerDefaults(defaults);
+      // Reload preferences to apply server defaults
+      setPreferences(preferencesService.getAllPreferences());
+    },
+    [],
+  );
 
   return (
     <PreferencesContext.Provider

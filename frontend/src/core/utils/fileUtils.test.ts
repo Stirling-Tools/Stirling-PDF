@@ -1,10 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { isPdfFile, detectFileExtension, formatFileSize } from "@app/utils/fileUtils";
+import {
+  isPdfFile,
+  detectFileExtension,
+  formatFileSize,
+} from "@app/utils/fileUtils";
 
 describe("fileUtils", () => {
   describe("isPdfFile", () => {
     it("should return true for PDF files with correct MIME type", () => {
-      const pdfFile = new File(["content"], "document.pdf", { type: "application/pdf" });
+      const pdfFile = new File(["content"], "document.pdf", {
+        type: "application/pdf",
+      });
       expect(isPdfFile(pdfFile)).toBe(true);
     });
 
@@ -14,12 +20,16 @@ describe("fileUtils", () => {
     });
 
     it("should return false for non-PDF files", () => {
-      const txtFile = new File(["content"], "document.txt", { type: "text/plain" });
+      const txtFile = new File(["content"], "document.txt", {
+        type: "text/plain",
+      });
       expect(isPdfFile(txtFile)).toBe(false);
     });
 
     it("should return false for image files", () => {
-      const imageFile = new File(["content"], "image.png", { type: "image/png" });
+      const imageFile = new File(["content"], "image.png", {
+        type: "image/png",
+      });
       expect(isPdfFile(imageFile)).toBe(false);
     });
 

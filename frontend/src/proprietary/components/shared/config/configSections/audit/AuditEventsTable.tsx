@@ -15,7 +15,10 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import auditService, { AuditEvent, AuditFilters } from "@app/services/auditService";
+import auditService, {
+  AuditEvent,
+  AuditFilters,
+} from "@app/services/auditService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
@@ -39,20 +42,23 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
-  const [sortKey, setSortKey] = useState<"timestamp" | "eventType" | "username" | "ipAddress" | null>("timestamp");
+  const [sortKey, setSortKey] = useState<
+    "timestamp" | "eventType" | "username" | "ipAddress" | null
+  >("timestamp");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const showAuthor = capturePdfAuthor;
   const showFileHash = captureFileHash;
   const totalColumns = 5 + (showAuthor ? 1 : 0) + (showFileHash ? 1 : 0);
 
   // Use shared filters hook
-  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters(
-    {
-      page: 0,
-      pageSize: 20,
-    },
-    loginEnabled,
-  );
+  const { filters, eventTypes, users, handleFilterChange, handleClearFilters } =
+    useAuditFilters(
+      {
+        page: 0,
+        pageSize: 20,
+      },
+      loginEnabled,
+    );
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -125,7 +131,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   }, [filters, currentPage, loginEnabled]);
 
   // Wrap filter handlers to reset pagination
-  const handleFilterChangeWithReset = (key: keyof AuditFilters, value: AuditFilters[keyof AuditFilters]) => {
+  const handleFilterChangeWithReset = (
+    key: keyof AuditFilters,
+    value: AuditFilters[keyof AuditFilters],
+  ) => {
     handleFilterChange(key, value);
     setCurrentPage(1);
   };
@@ -140,7 +149,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   };
 
   // Sort handling
-  const toggleSort = (key: "timestamp" | "eventType" | "username" | "ipAddress") => {
+  const toggleSort = (
+    key: "timestamp" | "eventType" | "username" | "ipAddress",
+  ) => {
     if (sortKey === key) {
       setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
@@ -149,7 +160,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
     }
   };
 
-  const getSortIcon = (key: "timestamp" | "eventType" | "username" | "ipAddress") => {
+  const getSortIcon = (
+    key: "timestamp" | "eventType" | "username" | "ipAddress",
+  ) => {
     if (sortKey !== key) return "unfold-more";
     return sortDir === "asc" ? "expand-less" : "expand-more";
   };
@@ -225,12 +238,21 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
             <Loader size="lg" my="xl" />
           </div>
         ) : error ? (
-          <Alert color="red" title={t("audit.events.error", "Error loading events")}>
+          <Alert
+            color="red"
+            title={t("audit.events.error", "Error loading events")}
+          >
             {error}
           </Alert>
         ) : (
           <>
-            <div style={{ overflowX: "auto", overflowY: "hidden", marginBottom: "1rem" }}>
+            <div
+              style={{
+                overflowX: "auto",
+                overflowY: "hidden",
+                marginBottom: "1rem",
+              }}
+            >
               <Table
                 horizontalSpacing="md"
                 verticalSpacing="sm"
@@ -243,48 +265,126 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                 }
               >
                 <Table.Thead>
-                  <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-                    <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)", padding: "0.5rem" }} fz="sm">
+                  <Table.Tr
+                    style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
+                  >
+                    <Table.Th
+                      style={{
+                        fontWeight: 600,
+                        color: "var(--mantine-color-gray-7)",
+                        padding: "0.5rem",
+                      }}
+                      fz="sm"
+                    >
                       <UnstyledButton
                         onClick={() => toggleSort("timestamp")}
-                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", userSelect: "none" }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          cursor: "pointer",
+                          userSelect: "none",
+                        }}
                       >
                         {t("audit.events.timestamp", "Timestamp")}
-                        <LocalIcon icon={getSortIcon("timestamp")} width="0.9rem" height="0.9rem" />
+                        <LocalIcon
+                          icon={getSortIcon("timestamp")}
+                          width="0.9rem"
+                          height="0.9rem"
+                        />
                       </UnstyledButton>
                     </Table.Th>
-                    <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)", padding: "0.5rem" }} fz="sm">
+                    <Table.Th
+                      style={{
+                        fontWeight: 600,
+                        color: "var(--mantine-color-gray-7)",
+                        padding: "0.5rem",
+                      }}
+                      fz="sm"
+                    >
                       <UnstyledButton
                         onClick={() => toggleSort("eventType")}
-                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", userSelect: "none" }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          cursor: "pointer",
+                          userSelect: "none",
+                        }}
                       >
                         {t("audit.events.type", "Type")}
-                        <LocalIcon icon={getSortIcon("eventType")} width="0.9rem" height="0.9rem" />
+                        <LocalIcon
+                          icon={getSortIcon("eventType")}
+                          width="0.9rem"
+                          height="0.9rem"
+                        />
                       </UnstyledButton>
                     </Table.Th>
-                    <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)", padding: "0.5rem" }} fz="sm">
+                    <Table.Th
+                      style={{
+                        fontWeight: 600,
+                        color: "var(--mantine-color-gray-7)",
+                        padding: "0.5rem",
+                      }}
+                      fz="sm"
+                    >
                       <UnstyledButton
                         onClick={() => toggleSort("username")}
-                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", userSelect: "none" }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          cursor: "pointer",
+                          userSelect: "none",
+                        }}
                       >
                         {t("audit.events.user", "User")}
-                        <LocalIcon icon={getSortIcon("username")} width="0.9rem" height="0.9rem" />
+                        <LocalIcon
+                          icon={getSortIcon("username")}
+                          width="0.9rem"
+                          height="0.9rem"
+                        />
                       </UnstyledButton>
                     </Table.Th>
-                    <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm">
+                    <Table.Th
+                      style={{
+                        fontWeight: 600,
+                        color: "var(--mantine-color-gray-7)",
+                      }}
+                      fz="sm"
+                    >
                       {t("audit.events.documentName", "Document Name")}
                     </Table.Th>
                     {showAuthor && (
-                      <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm">
+                      <Table.Th
+                        style={{
+                          fontWeight: 600,
+                          color: "var(--mantine-color-gray-7)",
+                        }}
+                        fz="sm"
+                      >
                         {t("audit.events.author", "Author")}
                       </Table.Th>
                     )}
                     {showFileHash && (
-                      <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm">
+                      <Table.Th
+                        style={{
+                          fontWeight: 600,
+                          color: "var(--mantine-color-gray-7)",
+                        }}
+                        fz="sm"
+                      >
                         {t("audit.events.fileHash", "File Hash")}
                       </Table.Th>
                     )}
-                    <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm" ta="center">
+                    <Table.Th
+                      style={{
+                        fontWeight: 600,
+                        color: "var(--mantine-color-gray-7)",
+                      }}
+                      fz="sm"
+                      ta="center"
+                    >
                       {t("audit.events.actions", "Actions")}
                     </Table.Th>
                   </Table.Tr>
@@ -295,7 +395,12 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       <Table.Td colSpan={totalColumns}>
                         <Group justify="center" py="xl">
                           <Stack align="center" gap={0}>
-                            <LocalIcon icon="search" width="2rem" height="2rem" style={{ opacity: 0.4 }} />
+                            <LocalIcon
+                              icon="search"
+                              width="2rem"
+                              height="2rem"
+                              style={{ opacity: 0.4 }}
+                            />
                             <Text ta="center" c="dimmed" size="sm">
                               {t("audit.events.noEvents", "No events found")}
                             </Text>
@@ -310,15 +415,26 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       let author = "";
                       let fileHash = "";
                       if (event.details && typeof event.details === "object") {
-                        const details = event.details as Record<string, unknown>;
+                        const details = event.details as Record<
+                          string,
+                          unknown
+                        >;
                         const files = details.files;
                         if (Array.isArray(files) && files.length > 0) {
                           const firstFile = files[0] as Record<string, unknown>;
-                          documentName = typeof firstFile.name === "string" ? firstFile.name : "";
+                          documentName =
+                            typeof firstFile.name === "string"
+                              ? firstFile.name
+                              : "";
                           if (showAuthor || showFileHash) {
-                            author = typeof firstFile.pdfAuthor === "string" ? firstFile.pdfAuthor : "";
+                            author =
+                              typeof firstFile.pdfAuthor === "string"
+                                ? firstFile.pdfAuthor
+                                : "";
                             fileHash =
-                              typeof firstFile.fileHash === "string" ? firstFile.fileHash.substring(0, 16) + "..." : "";
+                              typeof firstFile.fileHash === "string"
+                                ? firstFile.fileHash.substring(0, 16) + "..."
+                                : "";
                           }
                         }
                       }
@@ -329,7 +445,11 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                             <Text size="sm">{formatDate(event.timestamp)}</Text>
                           </Table.Td>
                           <Table.Td>
-                            <Badge variant="light" size="sm" color={getEventTypeColor(event.eventType)}>
+                            <Badge
+                              variant="light"
+                              size="sm"
+                              color={getEventTypeColor(event.eventType)}
+                            >
                               {event.eventType}
                             </Badge>
                           </Table.Td>
@@ -348,7 +468,14 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           )}
                           {showFileHash && (
                             <Table.Td>
-                              <Text size="sm" title={fileHash} style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
+                              <Text
+                                size="sm"
+                                title={fileHash}
+                                style={{
+                                  fontFamily: "monospace",
+                                  fontSize: "0.75rem",
+                                }}
+                              >
                                 {fileHash}
                               </Text>
                             </Table.Td>
@@ -373,7 +500,11 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
               {/* Pagination */}
               {totalPages > 1 && (
                 <Group justify="center" mt="md">
-                  <Pagination value={currentPage} onChange={setCurrentPage} total={totalPages} />
+                  <Pagination
+                    value={currentPage}
+                    onChange={setCurrentPage}
+                    total={totalPages}
+                  />
                 </Group>
               )}
             </div>

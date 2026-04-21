@@ -1,5 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
-import { Stack, Text, Box, Group, ActionIcon, Center, Alert, Checkbox } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Box,
+  Group,
+  ActionIcon,
+  Center,
+  Alert,
+  Checkbox,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
@@ -8,7 +17,11 @@ import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
 import { PAGE_SIZES } from "@app/constants/pageSizeConstants";
-import { calculatePDFBounds, PDFBounds, Rectangle } from "@app/utils/cropCoordinates";
+import {
+  calculatePDFBounds,
+  PDFBounds,
+  Rectangle,
+} from "@app/utils/cropCoordinates";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
@@ -64,7 +77,12 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         const pdfWidth = viewport.width;
         const pdfHeight = viewport.height;
 
-        const bounds = calculatePDFBounds(pdfWidth, pdfHeight, CONTAINER_SIZE, CONTAINER_SIZE);
+        const bounds = calculatePDFBounds(
+          pdfWidth,
+          pdfHeight,
+          CONTAINER_SIZE,
+          CONTAINER_SIZE,
+        );
         setPdfBounds(bounds);
 
         // Initialize crop area to full PDF if parameters are still default
@@ -77,7 +95,12 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       } catch (error) {
         console.error("Failed to load PDF dimensions:", error);
         // Fallback to A4 dimensions if PDF loading fails
-        const bounds = calculatePDFBounds(PAGE_SIZES.A4.width, PAGE_SIZES.A4.height, CONTAINER_SIZE, CONTAINER_SIZE);
+        const bounds = calculatePDFBounds(
+          PAGE_SIZES.A4.width,
+          PAGE_SIZES.A4.height,
+          CONTAINER_SIZE,
+          CONTAINER_SIZE,
+        );
         setPdfBounds(bounds);
 
         if (
@@ -102,7 +125,8 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     };
 
     window.addEventListener("tour:setCropArea", handleSetCropArea);
-    return () => window.removeEventListener("tour:setCropArea", handleSetCropArea);
+    return () =>
+      window.removeEventListener("tour:setCropArea", handleSetCropArea);
   }, [parameters, pdfBounds]);
 
   // Current crop area
@@ -116,7 +140,10 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   };
 
   // Handle manual coordinate input changes
-  const handleCoordinateChange = (field: keyof Rectangle, value: number | string) => {
+  const handleCoordinateChange = (
+    field: keyof Rectangle,
+    value: number | string,
+  ) => {
     const numValue = typeof value === "string" ? parseFloat(value) : value;
     if (isNaN(numValue)) return;
 
@@ -136,7 +163,9 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   if (!selectedStub || !pdfBounds) {
     return (
       <Center style={{ height: "200px" }}>
-        <Text color="dimmed">{t("crop.noFileSelected", "Select a PDF file to begin cropping")}</Text>
+        <Text color="dimmed">
+          {t("crop.noFileSelected", "Select a PDF file to begin cropping")}
+        </Text>
       </Center>
     );
   }
@@ -150,7 +179,9 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       <Checkbox
         label={t("crop.autoCrop", "Auto-crop whitespace")}
         checked={parameters.parameters.autoCrop}
-        onChange={(e) => parameters.updateParameter("autoCrop", e.currentTarget.checked)}
+        onChange={(e) =>
+          parameters.updateParameter("autoCrop", e.currentTarget.checked)
+        }
         disabled={disabled}
       />
 
@@ -221,7 +252,12 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
       {/* Validation Alert - Only show when autoCrop is false */}
       {!parameters.parameters.autoCrop && !isCropValid && (
         <Alert color="red" variant="light">
-          <Text size="xs">{t("crop.error.invalidArea", "Crop area extends beyond PDF boundaries")}</Text>
+          <Text size="xs">
+            {t(
+              "crop.error.invalidArea",
+              "Crop area extends beyond PDF boundaries",
+            )}
+          </Text>
         </Alert>
       )}
     </Stack>

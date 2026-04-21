@@ -10,7 +10,10 @@
  */
 import type { FormField } from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
-import { fetchFormFieldsWithCoordinates, fillFormFields } from "@app/tools/formFill/formApi";
+import {
+  fetchFormFieldsWithCoordinates,
+  fillFormFields,
+} from "@app/tools/formFill/formApi";
 
 export class PdfBoxFormProvider implements IFormDataProvider {
   readonly name = "pdfbox";
@@ -19,7 +22,11 @@ export class PdfBoxFormProvider implements IFormDataProvider {
     return fetchFormFieldsWithCoordinates(file);
   }
 
-  async fillForm(file: File | Blob, values: Record<string, string>, flatten: boolean): Promise<Blob> {
+  async fillForm(
+    file: File | Blob,
+    values: Record<string, string>,
+    flatten: boolean,
+  ): Promise<Blob> {
     return fillFormFields(file, values, flatten);
   }
 }

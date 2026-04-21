@@ -10,7 +10,9 @@ export function useRightRailTooltipSide(
   useEffect(() => {
     const computePosition = () => {
       const rail = sidebarRefs?.rightRailRef?.current;
-      const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+      const isRTL =
+        typeof document !== "undefined" &&
+        document.documentElement.dir === "rtl";
 
       // No rail visible — buttons are in the top bar, tooltips should point down
       if (!rail || typeof window === "undefined") {

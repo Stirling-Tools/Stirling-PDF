@@ -76,9 +76,13 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
           formData.append("fileInput", file);
 
           try {
-            const response = await apiClient.post("/api/v1/security/get-info-on-pdf", formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-            });
+            const response = await apiClient.post(
+              "/api/v1/security/get-info-on-pdf",
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+              },
+            );
 
             const stub = selectors.getStirlingFileStub(file.fileId);
             const entry: PdfInfoReportEntry = {
@@ -111,22 +115,36 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
           setResults(aggregated);
           if (aggregated.length > 0) {
             // Build V1-compatible JSON: use backend payloads directly.
-            const payloads = aggregated.filter((e) => !e.error).map((e) => e.data);
+            const payloads = aggregated
+              .filter((e) => !e.error)
+              .map((e) => e.data);
             const content = payloads.length === 1 ? payloads[0] : payloads;
             const json = JSON.stringify(content, null, 2);
-            const resultFile = new File([json], INFO_JSON_FILENAME, { type: "application/json" });
+            const resultFile = new File([json], INFO_JSON_FILENAME, {
+              type: "application/json",
+            });
             setFiles([resultFile]);
           }
 
           const anyError = aggregated.some((item) => item.error);
           if (anyError) {
-            setErrorMessage(t("getPdfInfo.error.partial", "Some files could not be processed."));
+            setErrorMessage(
+              t(
+                "getPdfInfo.error.partial",
+                "Some files could not be processed.",
+              ),
+            );
           }
           setStatus(t("getPdfInfo.status.complete", "Extraction complete"));
         }
       } catch (e) {
         console.error("[getPdfInfo] unexpected failure", e);
-        setErrorMessage(t("getPdfInfo.error.unexpected", "Unexpected error during extraction."));
+        setErrorMessage(
+          t(
+            "getPdfInfo.error.unexpected",
+            "Unexpected error during extraction.",
+          ),
+        );
       } finally {
         setIsLoading(false);
       }

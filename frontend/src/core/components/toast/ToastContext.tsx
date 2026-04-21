@@ -1,5 +1,17 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState, useEffect } from "react";
-import { ToastApi, ToastInstance, ToastOptions } from "@app/components/toast/types";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
+import {
+  ToastApi,
+  ToastInstance,
+  ToastOptions,
+} from "@app/components/toast/types";
 
 function normalizeProgress(value: number | undefined): number | undefined {
   if (typeof value !== "number" || Number.isNaN(value)) return undefined;
@@ -12,8 +24,23 @@ function generateId() {
   return `toast_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-type DefaultOpts = Required<Pick<ToastOptions, "alertType" | "title" | "isPersistentPopup" | "location" | "durationMs">> &
-  Partial<Omit<ToastOptions, "id" | "alertType" | "title" | "isPersistentPopup" | "location" | "durationMs">>;
+type DefaultOpts = Required<
+  Pick<
+    ToastOptions,
+    "alertType" | "title" | "isPersistentPopup" | "location" | "durationMs"
+  >
+> &
+  Partial<
+    Omit<
+      ToastOptions,
+      | "id"
+      | "alertType"
+      | "title"
+      | "isPersistentPopup"
+      | "location"
+      | "durationMs"
+    >
+  >;
 
 const defaultOptions: DefaultOpts = {
   alertType: "neutral",
@@ -58,7 +85,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         progress: normalizeProgress(options.progressBarPercentage),
         justCompleted: false,
         expandable: hasButton ? false : options.expandable !== false,
-        isExpanded: hasButton ? true : options.expandable === false ? true : options.alertType === "error" ? true : false,
+        isExpanded: hasButton
+          ? true
+          : options.expandable === false
+            ? true
+            : options.alertType === "error"
+              ? true
+              : false,
         createdAt: Date.now(),
       } as ToastInstance;
       setToasts((prev) => {
@@ -75,7 +108,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             const updated = [...prev];
             const existing = updated[existingIndex];
             const nextCount = (existing.count ?? 1) + 1;
-            updated[existingIndex] = { ...existing, count: nextCount, createdAt: Date.now() };
+            updated[existingIndex] = {
+              ...existing,
+              count: nextCount,
+              createdAt: Date.now(),
+            };
             return updated;
           }
         }
@@ -93,7 +130,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       prev.map((t) => {
         if (t.id !== id) return t;
         const progress =
-          updates.progressBarPercentage !== undefined ? normalizeProgress(updates.progressBarPercentage) : t.progress;
+          updates.progressBarPercentage !== undefined
+            ? normalizeProgress(updates.progressBarPercentage)
+            : t.progress;
 
         const next: ToastInstance = {
           ...t,
@@ -103,7 +142,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
         // Detect completion but do not auto-flip to success.
         // Callers (e.g., compare workbench) explicitly set alertType when done.
-        if (typeof progress === "number" && progress >= 100 && !t.justCompleted) {
+        if (
+          typeof progress === "number" &&
+          progress >= 100 &&
+          !t.justCompleted
+        ) {
           next.justCompleted = true;
         }
 
@@ -148,11 +191,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { id: string } | undefined;
       if (!detail?.id) return;
-      setToasts((prev) => prev.map((t) => (t.id === detail.id ? { ...t, isExpanded: !t.isExpanded } : t)));
+      setToasts((prev) =>
+        prev.map((t) =>
+          t.id === detail.id ? { ...t, isExpanded: !t.isExpanded } : t,
+        ),
+      );
     };
     window.addEventListener("toast:toggle", handler as EventListener);
-    return () => window.removeEventListener("toast:toggle", handler as EventListener);
+    return () =>
+      window.removeEventListener("toast:toggle", handler as EventListener);
   }, []);
 
-  return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;
+  return (
+    <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
+  );
 }

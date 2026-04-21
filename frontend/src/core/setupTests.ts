@@ -97,10 +97,12 @@ for (let i = 0; i < 32; i++) {
 Object.defineProperty(globalThis, "crypto", {
   value: {
     subtle: {
-      digest: vi.fn().mockImplementation(async (_algorithm: string, _data: any) => {
-        // Always return the mock hash buffer regardless of input
-        return mockHashBuffer.slice();
-      }),
+      digest: vi
+        .fn()
+        .mockImplementation(async (_algorithm: string, _data: any) => {
+          // Always return the mock hash buffer regardless of input
+          return mockHashBuffer.slice();
+        }),
     },
     getRandomValues: vi.fn().mockImplementation((array: any) => {
       // Mock getRandomValues if needed
@@ -165,7 +167,14 @@ if (typeof globalThis.DOMMatrix === "undefined") {
 
     constructor(init?: string | number[]) {
       if (Array.isArray(init) && init.length === 6) {
-        [this.a, this.b, this.c, this.d, this.e, this.f] = init as [number, number, number, number, number, number];
+        [this.a, this.b, this.c, this.d, this.e, this.f] = init as [
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+        ];
       }
     }
 

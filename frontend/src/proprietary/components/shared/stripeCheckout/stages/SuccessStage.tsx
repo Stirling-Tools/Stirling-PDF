@@ -1,5 +1,14 @@
 import React from "react";
-import { Alert, Stack, Text, Paper, Code, Button, Group, Loader } from "@mantine/core";
+import {
+  Alert,
+  Stack,
+  Text,
+  Paper,
+  Code,
+  Button,
+  Group,
+  Loader,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PollingStatus } from "@app/components/shared/stripeCheckout/types/checkout";
 
@@ -10,13 +19,23 @@ interface SuccessStageProps {
   onClose: () => void;
 }
 
-export const SuccessStage: React.FC<SuccessStageProps> = ({ pollingStatus, currentLicenseKey, licenseKey, onClose }) => {
+export const SuccessStage: React.FC<SuccessStageProps> = ({
+  pollingStatus,
+  currentLicenseKey,
+  licenseKey,
+  onClose,
+}) => {
   const { t } = useTranslation();
 
   return (
     <Alert color="green" title={t("payment.success", "Payment Successful!")}>
       <Stack gap="md">
-        <Text size="sm">{t("payment.successMessage", "Your subscription has been activated successfully.")}</Text>
+        <Text size="sm">
+          {t(
+            "payment.successMessage",
+            "Your subscription has been activated successfully.",
+          )}
+        </Text>
 
         {/* License Key Polling Status */}
         {pollingStatus === "polling" && (
@@ -24,8 +43,14 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({ pollingStatus, curre
             <Loader size="sm" />
             <Text size="sm" c="dimmed">
               {currentLicenseKey
-                ? t("payment.syncingLicense", "Syncing your upgraded license...")
-                : t("payment.generatingLicense", "Generating your license key...")}
+                ? t(
+                    "payment.syncingLicense",
+                    "Syncing your upgraded license...",
+                  )
+                : t(
+                    "payment.generatingLicense",
+                    "Generating your license key...",
+                  )}
             </Text>
           </Group>
         )}
@@ -37,7 +62,11 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({ pollingStatus, curre
                 {t("payment.licenseKey", "Your License Key")}
               </Text>
               <Code block>{licenseKey}</Code>
-              <Button variant="light" size="sm" onClick={() => navigator.clipboard.writeText(licenseKey)}>
+              <Button
+                variant="light"
+                size="sm"
+                onClick={() => navigator.clipboard.writeText(licenseKey)}
+              >
                 {t("common.copy", "Copy to Clipboard")}
               </Button>
               <Text size="xs" c="dimmed">
@@ -51,7 +80,10 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({ pollingStatus, curre
         )}
 
         {pollingStatus === "ready" && currentLicenseKey && (
-          <Alert color="green" title={t("payment.upgradeComplete", "Upgrade Complete")}>
+          <Alert
+            color="green"
+            title={t("payment.upgradeComplete", "Upgrade Complete")}
+          >
             <Text size="sm">
               {t(
                 "payment.upgradeCompleteMessage",
@@ -62,7 +94,10 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({ pollingStatus, curre
         )}
 
         {pollingStatus === "timeout" && (
-          <Alert color="yellow" title={t("payment.licenseDelayed", "License Key Processing")}>
+          <Alert
+            color="yellow"
+            title={t("payment.licenseDelayed", "License Key Processing")}
+          >
             <Text size="sm">
               {t(
                 "payment.licenseDelayedMessage",

@@ -3,7 +3,10 @@ import { Text, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
-import { ToolRegistryEntry, getSubcategoryColor } from "@app/data/toolsTaxonomy";
+import {
+  ToolRegistryEntry,
+  getSubcategoryColor,
+} from "@app/data/toolsTaxonomy";
 import {
   getIconBackground,
   getIconStyle,
@@ -19,9 +22,15 @@ interface DetailedToolItemProps {
   onClick: () => void;
 }
 
-const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelected, onClick }) => {
+const DetailedToolItem: React.FC<DetailedToolItemProps> = ({
+  id,
+  tool,
+  isSelected,
+  onClick,
+}) => {
   const { t } = useTranslation();
-  const { binding, isFav, toggleFavorite, disabled, disabledReason } = useToolMeta(id, tool);
+  const { binding, isFav, toggleFavorite, disabled, disabledReason } =
+    useToolMeta(id, tool);
 
   const categoryColor = getSubcategoryColor(tool.subcategoryId);
   const iconBg = getIconBackground(categoryColor, true);
@@ -29,7 +38,9 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
 
   let iconNode: React.ReactNode;
   if (React.isValidElement<{ style?: React.CSSProperties }>(tool.icon)) {
-    const element = tool.icon as React.ReactElement<{ style?: React.CSSProperties }>;
+    const element = tool.icon as React.ReactElement<{
+      style?: React.CSSProperties;
+    }>;
     iconNode = React.cloneElement(element, {
       style: {
         ...(element.props.style || {}),
@@ -40,7 +51,8 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
     iconNode = tool.icon;
   }
 
-  const { key: disabledKey, fallback: disabledFallback } = getDisabledLabel(disabledReason);
+  const { key: disabledKey, fallback: disabledFallback } =
+    getDisabledLabel(disabledReason);
   const disabledMessage = t(disabledKey, disabledFallback);
 
   return (
@@ -76,7 +88,11 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
             </Badge>
           )}
         </div>
-        <Text size="sm" c="dimmed" className="tool-panel__fullscreen-description">
+        <Text
+          size="sm"
+          c="dimmed"
+          className="tool-panel__fullscreen-description"
+        >
           {disabled ? (
             <>
               <strong>{disabledMessage} </strong>
@@ -88,7 +104,12 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
         </Text>
         {binding && (
           <div className="tool-panel__fullscreen-shortcut">
-            <span style={{ color: "var(--mantine-color-dimmed)", fontSize: "0.75rem" }}>
+            <span
+              style={{
+                color: "var(--mantine-color-dimmed)",
+                fontSize: "0.75rem",
+              }}
+            >
               {t("settings.hotkeys.shortcut", "Shortcut")}
             </span>
             <HotkeyDisplay binding={binding} size="sm" />
@@ -97,7 +118,11 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({ id, tool, isSelecte
       </span>
       {!disabled && (
         <div className="tool-panel__fullscreen-star">
-          <FavoriteStar isFavorite={isFav} onToggle={toggleFavorite} size="sm" />
+          <FavoriteStar
+            isFavorite={isFav}
+            onToggle={toggleFavorite}
+            size="sm"
+          />
         </div>
       )}
     </button>

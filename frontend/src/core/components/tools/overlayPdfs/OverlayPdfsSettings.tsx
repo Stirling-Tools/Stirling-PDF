@@ -1,6 +1,19 @@
-import { Stack, Text, Group, Select, SegmentedControl, NumberInput, Button, ActionIcon, Divider } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Select,
+  SegmentedControl,
+  NumberInput,
+  Button,
+  ActionIcon,
+  Divider,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { type OverlayPdfsParameters, type OverlayMode } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import {
+  type OverlayPdfsParameters,
+  type OverlayMode,
+} from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import styles from "@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css";
@@ -8,11 +21,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface OverlayPdfsSettingsProps {
   parameters: OverlayPdfsParameters;
-  onParameterChange: <K extends keyof OverlayPdfsParameters>(key: K, value: OverlayPdfsParameters[K]) => void;
+  onParameterChange: <K extends keyof OverlayPdfsParameters>(
+    key: K,
+    value: OverlayPdfsParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-export default function OverlayPdfsSettings({ parameters, onParameterChange, disabled = false }: OverlayPdfsSettingsProps) {
+export default function OverlayPdfsSettings({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: OverlayPdfsSettingsProps) {
   const { t } = useTranslation();
   const { openFilesModal } = useFilesModalContext();
 
@@ -20,7 +40,11 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
     onParameterChange("overlayFiles", files);
     // Reset counts to match number of files if in FixedRepeatOverlay
     if (parameters.overlayMode === "FixedRepeatOverlay") {
-      const nextCounts = files.map((_, i) => (parameters.counts[i] && parameters.counts[i] > 0 ? parameters.counts[i] : 1));
+      const nextCounts = files.map((_, i) =>
+        parameters.counts[i] && parameters.counts[i] > 0
+          ? parameters.counts[i]
+          : 1,
+      );
       onParameterChange("counts", nextCounts);
     }
   };
@@ -32,7 +56,11 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
     } else if (parameters.overlayFiles?.length > 0) {
       onParameterChange(
         "counts",
-        parameters.overlayFiles.map((_, i) => (parameters.counts[i] && parameters.counts[i] > 0 ? parameters.counts[i] : 1)),
+        parameters.overlayFiles.map((_, i) =>
+          parameters.counts[i] && parameters.counts[i] > 0
+            ? parameters.counts[i]
+            : 1,
+        ),
       );
     }
   };
@@ -41,7 +69,10 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
     if (disabled) return;
     openFilesModal({
       customHandler: (files: File[]) => {
-        handleOverlayFilesChange([...(parameters.overlayFiles || []), ...files]);
+        handleOverlayFilesChange([
+          ...(parameters.overlayFiles || []),
+          ...files,
+        ]);
       },
     });
   };
@@ -54,14 +85,28 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
         </Text>
         <Select
           data={[
-            { value: "SequentialOverlay", label: t("overlay-pdfs.mode.sequential", "Sequential Overlay") },
-            { value: "InterleavedOverlay", label: t("overlay-pdfs.mode.interleaved", "Interleaved Overlay") },
-            { value: "FixedRepeatOverlay", label: t("overlay-pdfs.mode.fixedRepeat", "Fixed Repeat Overlay") },
+            {
+              value: "SequentialOverlay",
+              label: t("overlay-pdfs.mode.sequential", "Sequential Overlay"),
+            },
+            {
+              value: "InterleavedOverlay",
+              label: t("overlay-pdfs.mode.interleaved", "Interleaved Overlay"),
+            },
+            {
+              value: "FixedRepeatOverlay",
+              label: t("overlay-pdfs.mode.fixedRepeat", "Fixed Repeat Overlay"),
+            },
           ]}
           value={parameters.overlayMode}
-          onChange={(v) => handleModeChange((v || "SequentialOverlay") as OverlayMode)}
+          onChange={(v) =>
+            handleModeChange((v || "SequentialOverlay") as OverlayMode)
+          }
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Stack>
 
@@ -73,10 +118,18 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
         </Text>
         <SegmentedControl
           value={String(parameters.overlayPosition)}
-          onChange={(v) => onParameterChange("overlayPosition", (v === "1" ? 1 : 0) as 0 | 1)}
+          onChange={(v) =>
+            onParameterChange("overlayPosition", (v === "1" ? 1 : 0) as 0 | 1)
+          }
           data={[
-            { label: t("overlay-pdfs.position.foreground", "Foreground"), value: "0" },
-            { label: t("overlay-pdfs.position.background", "Background"), value: "1" },
+            {
+              label: t("overlay-pdfs.position.foreground", "Foreground"),
+              value: "0",
+            },
+            {
+              label: t("overlay-pdfs.position.background", "Background"),
+              value: "1",
+            },
           ]}
           disabled={disabled}
         />
@@ -94,7 +147,8 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
                 {parameters.overlayFiles.map((_, index) => (
                   <Group key={index} gap="xs" wrap="nowrap">
                     <Text size="sm" className={styles.countLabel}>
-                      {t("overlay-pdfs.counts.item", "Count for file")} {index + 1}
+                      {t("overlay-pdfs.counts.item", "Count for file")}{" "}
+                      {index + 1}
                     </Text>
                     <NumberInput
                       min={1}
@@ -112,7 +166,10 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
               </Stack>
             ) : (
               <Text size="sm" c="dimmed">
-                {t("overlay-pdfs.counts.noFiles", "Add overlay files to configure counts")}
+                {t(
+                  "overlay-pdfs.counts.noFiles",
+                  "Add overlay files to configure counts",
+                )}
               </Text>
             )}
           </Stack>
@@ -144,7 +201,12 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
               <div className={styles.fileListContainer}>
                 <Stack gap="xs">
                   {parameters.overlayFiles.map((file, index) => (
-                    <Group key={index} justify="space-between" p="xs" className={styles.fileItem}>
+                    <Group
+                      key={index}
+                      justify="space-between"
+                      p="xs"
+                      className={styles.fileItem}
+                    >
                       <Group gap="xs" className={styles.fileGroup}>
                         <div className={styles.fileNameContainer}>
                           <div className={styles.fileName} title={file.name}>
@@ -161,12 +223,18 @@ export default function OverlayPdfsSettings({ parameters, onParameterChange, dis
                         color="red"
                         className={styles.removeButton}
                         onClick={() => {
-                          const next = (parameters.overlayFiles || []).filter((_, i) => i !== index);
+                          const next = (parameters.overlayFiles || []).filter(
+                            (_, i) => i !== index,
+                          );
                           handleOverlayFilesChange(next);
                         }}
                         disabled={disabled}
                       >
-                        <LocalIcon icon="close-rounded" width="14" height="14" />
+                        <LocalIcon
+                          icon="close-rounded"
+                          width="14"
+                          height="14"
+                        />
                       </ActionIcon>
                     </Group>
                   ))}

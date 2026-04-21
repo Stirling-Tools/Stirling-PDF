@@ -1,9 +1,15 @@
 import React from "react";
 import { Stack } from "@mantine/core";
-import { createToolSteps, ToolStepProvider } from "@app/components/tools/shared/ToolStep";
+import {
+  createToolSteps,
+  ToolStepProvider,
+} from "@app/components/tools/shared/ToolStep";
 import { ScopedOperationButton } from "@app/components/tools/shared/ScopedOperationButton";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import { ToolWorkflowTitle, ToolWorkflowTitleProps } from "@app/components/tools/shared/ToolWorkflowTitle";
+import {
+  ToolWorkflowTitle,
+  ToolWorkflowTitleProps,
+} from "@app/components/tools/shared/ToolWorkflowTitle";
 import { StirlingFile } from "@app/types/fileContext";
 import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
@@ -89,7 +95,9 @@ export interface ToolFlowConfig<TParams = unknown> {
  * Creates a flexible tool flow with configurable steps and state management left to the tool.
  * Reduces boilerplate while allowing tools to manage their own collapse/expansion logic.
  */
-export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams>) {
+export function createToolFlow<TParams = unknown>(
+  config: ToolFlowConfig<TParams>,
+) {
   const steps = createToolSteps();
 
   return (
@@ -123,7 +131,9 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
 
         {/* Preview (outside steps, above execute button).
             Hide when review is visible or when no files are selected. */}
-        {!config.review.isVisible && (config.files.selectedFiles?.length ?? 0) > 0 && config.preview}
+        {!config.review.isVisible &&
+          (config.files.selectedFiles?.length ?? 0) > 0 &&
+          config.preview}
 
         {/* Execute Button */}
         {config.executeButton &&
@@ -153,7 +163,11 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
                   disabledReason={effectiveDisabledReason}
                   loadingText={eb.loadingText}
                   submitText={eb.text}
-                  showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
+                  showCloudBadge={
+                    eb.showCloudBadge ??
+                    config.review.operation.willUseCloud ??
+                    false
+                  }
                   data-testid={eb.testId}
                   data-tour="run-button"
                 />

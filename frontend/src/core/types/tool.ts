@@ -2,7 +2,13 @@ import React from "react";
 import { ToolOperationHook } from "@app/hooks/tools/shared/toolOperationTypes";
 
 export type MaxFiles = number; // 1=single, >1=limited, -1=unlimited
-export type ToolCategory = "manipulation" | "conversion" | "analysis" | "utility" | "optimization" | "security";
+export type ToolCategory =
+  | "manipulation"
+  | "conversion"
+  | "analysis"
+  | "utility"
+  | "optimization"
+  | "security";
 export type ToolDefinition = Omit<Tool, "name">;
 export type ToolStepType = "files" | "settings" | "results";
 
@@ -33,7 +39,8 @@ export interface AutomationCapableTool {
 /**
  * Type for tool components that can be used in automation
  */
-export type ToolComponent = React.ComponentType<BaseToolProps> & AutomationCapableTool;
+export type ToolComponent = React.ComponentType<BaseToolProps> &
+  AutomationCapableTool;
 
 export interface ToolStepConfig {
   type: ToolStepType;

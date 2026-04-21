@@ -14,7 +14,12 @@ import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOpera
 import { BaseToolProps } from "@app/types/tool";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { useSavedAutomations } from "@app/hooks/tools/automate/useSavedAutomations";
-import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "@app/types/automation";
+import {
+  AutomationConfig,
+  AutomationStepData,
+  AutomationMode,
+  AutomationStep,
+} from "@app/types/automation";
 import { AUTOMATION_STEPS } from "@app/constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -23,13 +28,24 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { actions } = useNavigationActions();
   const { registerToolReset } = useToolWorkflow();
 
-  const [currentStep, setCurrentStep] = useState<AutomationStep>(AUTOMATION_STEPS.SELECTION);
-  const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
+  const [currentStep, setCurrentStep] = useState<AutomationStep>(
+    AUTOMATION_STEPS.SELECTION,
+  );
+  const [stepData, setStepData] = useState<AutomationStepData>({
+    step: AUTOMATION_STEPS.SELECTION,
+  });
 
   const automateOperation = useAutomateOperation();
   const { regularTools: toolRegistry } = useToolRegistry();
-  const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
-  const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
+  const hasResults =
+    automateOperation.files.length > 0 ||
+    automateOperation.downloadUrl !== null;
+  const {
+    savedAutomations,
+    deleteAutomation,
+    refreshAutomations,
+    copyFromSuggested,
+  } = useSavedAutomations();
 
   // Use ref to store the latest reset function to avoid closure issues
   const resetFunctionRef = React.useRef<() => void>(null);
@@ -60,7 +76,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleStepChange = (data: AutomationStepData) => {
     // If navigating away from run step, reset automation results
-    if (currentStep === AUTOMATION_STEPS.RUN && data.step !== AUTOMATION_STEPS.RUN) {
+    if (
+      currentStep === AUTOMATION_STEPS.RUN &&
+      data.step !== AUTOMATION_STEPS.RUN
+    ) {
       automateOperation.resetResults();
     }
 
@@ -100,10 +119,21 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         return (
           <AutomationSelection
             savedAutomations={savedAutomations}
-            onCreateNew={() => handleStepChange({ step: AUTOMATION_STEPS.CREATION, mode: AutomationMode.CREATE })}
-            onRun={(automation: AutomationConfig) => handleStepChange({ step: AUTOMATION_STEPS.RUN, automation })}
+            onCreateNew={() =>
+              handleStepChange({
+                step: AUTOMATION_STEPS.CREATION,
+                mode: AutomationMode.CREATE,
+              })
+            }
+            onRun={(automation: AutomationConfig) =>
+              handleStepChange({ step: AUTOMATION_STEPS.RUN, automation })
+            }
             onEdit={(automation: AutomationConfig) =>
-              handleStepChange({ step: AUTOMATION_STEPS.CREATION, mode: AutomationMode.EDIT, automation })
+              handleStepChange({
+                step: AUTOMATION_STEPS.CREATION,
+                mode: AutomationMode.EDIT,
+                automation,
+              })
             }
             onDelete={async (automation: AutomationConfig) => {
               try {
@@ -118,7 +148,9 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 await copyFromSuggested(suggestedAutomation);
               } catch (error) {
                 console.error("Failed to copy suggested automation:", error);
-                onError?.(`Failed to copy automation: ${suggestedAutomation.name}`);
+                onError?.(
+                  `Failed to copy automation: ${suggestedAutomation.name}`,
+                );
               }
             }}
             toolRegistry={toolRegistry}
@@ -134,7 +166,9 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <AutomationCreation
             mode={stepData.mode}
             existingAutomation={stepData.automation}
-            onBack={() => handleStepChange({ step: AUTOMATION_STEPS.SELECTION })}
+            onBack={() =>
+              handleStepChange({ step: AUTOMATION_STEPS.SELECTION })
+            }
             onComplete={() => {
               refreshAutomations();
               handleStepChange({ step: AUTOMATION_STEPS.SELECTION });
@@ -149,7 +183,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           return null;
         }
         return (
-          <AutomationRun automation={stepData.automation} onComplete={handleComplete} automateOperation={automateOperation} />
+          <AutomationRun
+            automation={stepData.automation}
+            onComplete={handleComplete}
+            automateOperation={automateOperation}
+          />
         );
 
       default:
@@ -157,7 +195,11 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }
   };
 
-  const createStep = (title: string, props: any, content?: React.ReactNode) => ({
+  const createStep = (
+    title: string,
+    props: any,
+    content?: React.ReactNode,
+  ) => ({
     title,
     ...props,
     content,

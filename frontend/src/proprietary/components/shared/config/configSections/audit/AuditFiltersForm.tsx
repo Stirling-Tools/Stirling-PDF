@@ -1,5 +1,12 @@
 import React from "react";
-import { Group, MultiSelect, Button, Stack, SimpleGrid, Text } from "@mantine/core";
+import {
+  Group,
+  MultiSelect,
+  Button,
+  Stack,
+  SimpleGrid,
+  Text,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
 import { AuditFilters } from "@app/services/auditService";
@@ -43,7 +50,10 @@ interface AuditFiltersFormProps {
   filters: AuditFilters;
   eventTypes: string[];
   users: string[];
-  onFilterChange: (key: keyof AuditFilters, value: AuditFilters[keyof AuditFilters]) => void;
+  onFilterChange: (
+    key: keyof AuditFilters,
+    value: AuditFilters[keyof AuditFilters],
+  ) => void;
   onClearFilters: () => void;
   disabled?: boolean;
 }
@@ -77,7 +87,10 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
     const [expectedStart, expectedEnd] = range;
     const expectedStartStr = formatDateToYMD(expectedStart);
     const expectedEndStr = formatDateToYMD(expectedEnd);
-    return filters.startDate === expectedStartStr && filters.endDate === expectedEndStr;
+    return (
+      filters.startDate === expectedStartStr &&
+      filters.endDate === expectedEndStr
+    );
   };
 
   return (
@@ -128,47 +141,86 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         <MultiSelect
           placeholder={t("audit.events.filterByType", "Filter by type")}
           data={eventTypes.map((type) => ({ value: type, label: type }))}
-          value={Array.isArray(filters.eventType) ? filters.eventType : filters.eventType ? [filters.eventType] : []}
-          onChange={(value) => onFilterChange("eventType", value.length > 0 ? value : undefined)}
+          value={
+            Array.isArray(filters.eventType)
+              ? filters.eventType
+              : filters.eventType
+                ? [filters.eventType]
+                : []
+          }
+          onChange={(value) =>
+            onFilterChange("eventType", value.length > 0 ? value : undefined)
+          }
           clearable
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+          }}
         />
         <MultiSelect
           placeholder={t("audit.events.filterByUser", "Filter by user")}
           data={users.map((user) => ({ value: user, label: user }))}
-          value={Array.isArray(filters.username) ? filters.username : filters.username ? [filters.username] : []}
-          onChange={(value) => onFilterChange("username", value.length > 0 ? value : undefined)}
+          value={
+            Array.isArray(filters.username)
+              ? filters.username
+              : filters.username
+                ? [filters.username]
+                : []
+          }
+          onChange={(value) =>
+            onFilterChange("username", value.length > 0 ? value : undefined)
+          }
           clearable
           searchable
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+          }}
         />
         <DateInput
           placeholder={t("audit.events.startDate", "Start date")}
           value={filters.startDate ? new Date(filters.startDate) : null}
           onChange={(value) => {
-            onFilterChange("startDate", value ? formatDateToYMD(new Date(value)) : undefined);
+            onFilterChange(
+              "startDate",
+              value ? formatDateToYMD(new Date(value)) : undefined,
+            );
           }}
           clearable
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          popoverProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+          }}
         />
         <DateInput
           placeholder={t("audit.events.endDate", "End date")}
           value={filters.endDate ? new Date(filters.endDate) : null}
           onChange={(value) => {
-            onFilterChange("endDate", value ? formatDateToYMD(new Date(value)) : undefined);
+            onFilterChange(
+              "endDate",
+              value ? formatDateToYMD(new Date(value)) : undefined,
+            );
           }}
           clearable
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+          popoverProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+          }}
         />
       </SimpleGrid>
 
       {/* Clear Button */}
       <Group justify="flex-end">
-        <Button variant="outline" size="sm" onClick={onClearFilters} disabled={disabled}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClearFilters}
+          disabled={disabled}
+        >
           {t("audit.events.clearFilters", "Clear")}
         </Button>
       </Group>

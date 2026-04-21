@@ -2079,6 +2079,23 @@ keywords = "Keywords: odd, even"
 numbers = "Numbers/ranges: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
 
+[chat.progress]
+thinking = "Thinking..."
+analyzing = "Analysing your request..."
+calling_engine = "AI is thinking..."
+extracting_content = "Extracting content from your documents..."
+executing_tool_single = "Running {{tool}}..."
+executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
+executing_tool_generic = "Running tool..."
+executing_tool_generic_step = "Running tool (step {{step}} of {{total}})..."
+processing = "Processing extracted content..."
+
+[chat.toolsUsed]
+summary_one = "Ran 1 tool"
+summary_other = "Ran {{count}} tools"
+summary = "Ran {{count}} tools"
+unknownTool = "Unknown tool"
+
 [certSign]
 allSigned = "All participants have signed. Ready to finalize."
 awaitingSignatures = "Awaiting signatures"
@@ -2795,6 +2812,33 @@ label = "Swap"
 [compare.toasts]
 unlinkedBody = "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
 unlinkedTitle = "Independent scroll & pan enabled"
+
+[compare.mode]
+pixel = "Pixel Comparison"
+text = "Text Comparison"
+
+[compare.pixel]
+base = "Original"
+changed = "changed"
+comparison = "Edited"
+diff = "Differences"
+diffOnly = "Diff only"
+missingInBase = "Missing in original"
+missingInComparison = "Missing in edited"
+overall = "overall"
+overlay = "Overlay"
+pageLabel = "Page"
+pagesChanged = "pages changed"
+sideBySide = "Side-by-side"
+sizeMismatch = "Size mismatch"
+summaryTitle = "Pixel comparison"
+
+[compare.pixel.warnings]
+noPages = "One or both documents have no pages."
+pageCountMismatch = "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added."
+
+[compare.pixel.errors]
+canvasContextUnavailable = "Unable to acquire 2D canvas context for pixel comparison."
 
 [compare.too.dissimilar]
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."

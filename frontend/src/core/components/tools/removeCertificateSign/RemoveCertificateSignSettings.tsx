@@ -11,13 +11,18 @@ interface RemoveCertificateSignSettingsProps {
   disabled?: boolean;
 }
 
-const RemoveCertificateSignSettings: React.FC<RemoveCertificateSignSettingsProps> = (_) => {
+const RemoveCertificateSignSettings: React.FC<
+  RemoveCertificateSignSettingsProps
+> = (_) => {
   const { t } = useTranslation();
 
   return (
     <div className="remove-certificate-sign-settings">
       <p className="text-muted">
-        {t("removeCertSign.description", "This tool will remove digital certificate signatures from your PDF document.")}
+        {t(
+          "removeCertSign.description",
+          "This tool will remove digital certificate signatures from your PDF document.",
+        )}
       </p>
     </div>
   );

@@ -5,7 +5,11 @@
 export type TooltipPosition = "top" | "bottom" | "left" | "right";
 
 export interface TooltipPositioner {
-  positionTooltip: (event: MouseEvent, tooltip: HTMLElement, container: HTMLElement) => void;
+  positionTooltip: (
+    event: MouseEvent,
+    tooltip: HTMLElement,
+    container: HTMLElement,
+  ) => void;
   hideTooltip: (tooltip: HTMLElement) => void;
 }
 
@@ -14,8 +18,14 @@ export interface TooltipPositioner {
  * @param position The tooltip position preference
  * @returns TooltipPositioner object with positioning functions
  */
-export function createTooltipPositioner(position: TooltipPosition): TooltipPositioner {
-  const positionTooltip = (event: MouseEvent, tooltip: HTMLElement, container: HTMLElement) => {
+export function createTooltipPositioner(
+  position: TooltipPosition,
+): TooltipPositioner {
+  const positionTooltip = (
+    event: MouseEvent,
+    tooltip: HTMLElement,
+    container: HTMLElement,
+  ) => {
     const bounds = container.getBoundingClientRect();
     const offsetX = event.clientX - bounds.left;
     const offsetY = event.clientY - bounds.top;

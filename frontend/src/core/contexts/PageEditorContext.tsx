@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useRef, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
 import { FileId } from "@app/types/file";
 import { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
@@ -136,7 +145,9 @@ interface PageEditorContextValue {
   clearPersistedDocument: () => void;
 }
 
-const PageEditorContext = createContext<PageEditorContextValue | undefined>(undefined);
+const PageEditorContext = createContext<PageEditorContextValue | undefined>(
+  undefined,
+);
 
 interface PageEditorProviderProps {
   children: ReactNode;
@@ -146,13 +157,19 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   const [currentPages, setCurrentPages] = useState<PDFPage[] | null>(null);
   const [reorderedPages, setReorderedPages] = useState<PDFPage[] | null>(null);
 
-  const [persistedDocument, setPersistedDocument] = useState<PDFDocument | null>(null);
-  const [persistedDocumentSignature, setPersistedDocumentSignature] = useState<string | null>(null);
+  const [persistedDocument, setPersistedDocument] =
+    useState<PDFDocument | null>(null);
+  const [persistedDocumentSignature, setPersistedDocumentSignature] = useState<
+    string | null
+  >(null);
 
-  const savePersistedDocument = useCallback((document: PDFDocument, signature: string) => {
-    setPersistedDocument(document);
-    setPersistedDocumentSignature(signature);
-  }, []);
+  const savePersistedDocument = useCallback(
+    (document: PDFDocument, signature: string) => {
+      setPersistedDocument(document);
+      setPersistedDocumentSignature(signature);
+    },
+    [],
+  );
 
   const clearPersistedDocument = useCallback(() => {
     console.log("[PageEditorContext] Clearing persisted document");
@@ -173,8 +190,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   useEffect(() => {
     const prevWorkbench = prevWorkbenchRef.current;
     const nextWorkbench = navigationState.workbench;
-    const isLeavingPageEditor = prevWorkbench === "pageEditor" && nextWorkbench !== "pageEditor";
-    const isEnteringPageEditor = prevWorkbench !== "pageEditor" && nextWorkbench === "pageEditor";
+    const isLeavingPageEditor =
+      prevWorkbench === "pageEditor" && nextWorkbench !== "pageEditor";
+    const isEnteringPageEditor =
+      prevWorkbench !== "pageEditor" && nextWorkbench === "pageEditor";
 
     if (isLeavingPageEditor) {
       clearPersistedDocument();
@@ -185,7 +204,9 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       setReorderedPages(null);
       setCurrentPages(null); // Force clear current pages when entering
       setFileOrder((currentOrder) => {
-        const validOrder = currentOrder.filter((id) => state.files.ids.includes(id));
+        const validOrder = currentOrder.filter((id) =>
+          state.files.ids.includes(id),
+        );
         const newIds = state.files.ids.filter((id) => !validOrder.includes(id));
         if (newIds.length === 0 && validOrder.length === currentOrder.length) {
           return currentOrder;
@@ -196,10 +217,18 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     }
 
     prevWorkbenchRef.current = nextWorkbench;
-  }, [navigationState.workbench, clearPersistedDocument, state.files.ids, setFileOrder, setReorderedPages]);
+  }, [
+    navigationState.workbench,
+    clearPersistedDocument,
+    state.files.ids,
+    setFileOrder,
+    setReorderedPages,
+  ]);
 
   const fileContextSignature = useMemo(() => {
-    return state.files.ids.map((id) => `${id}:${state.files.byId[id]?.versionNumber ?? 0}`).join(",");
+    return state.files.ids
+      .map((id) => `${id}:${state.files.byId[id]?.versionNumber ?? 0}`)
+      .join(",");
   }, [state.files.ids, state.files.byId]);
 
   const prevFileContextSignature = useRef<string | null>(null);
@@ -220,7 +249,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const prevFileIds = prevFileContextIdsRef.current;
     const idsChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
 
-    if (!idsChanged && prevFileContextSignature.current === fileContextSignature) {
+    if (
+      !idsChanged &&
+      prevFileContextSignature.current === fileContextSignature
+    ) {
       return;
     }
 
@@ -232,10 +264,13 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       return;
     }
 
-    console.log("[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:", {
-      prev: previousSignature?.substring(0, 50),
-      current: fileContextSignature.substring(0, 50),
-    });
+    console.log(
+      "[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:",
+      {
+        prev: previousSignature?.substring(0, 50),
+        current: fileContextSignature.substring(0, 50),
+      },
+    );
     clearPersistedDocument();
   }, [fileContextSignature, clearPersistedDocument, state.files.ids]);
 
@@ -254,7 +289,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const prevFileIds = prevFileContextIdsRef.current;
 
     // Only react to FileContext changes, not our own fileOrder changes
-    const fileContextChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
+    const fileContextChanged = haveFileIdSetsChanged(
+      prevFileIds,
+      currentFileIds,
+    );
 
     if (!fileContextChanged) {
       return;
@@ -277,13 +315,20 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     // Use functional setState to read latest fileOrder without depending on it
     setFileOrder((currentOrder) => {
       // Identify new files
-      const newFileIds = currentFileIds.filter((id) => !currentOrder.includes(id));
+      const newFileIds = currentFileIds.filter(
+        (id) => !currentOrder.includes(id),
+      );
       newFileIdsToProcess = newFileIds; // Store for cleanup
 
       // Remove deleted files
-      const validFileOrder = currentOrder.filter((id) => currentFileIds.includes(id));
+      const validFileOrder = currentOrder.filter((id) =>
+        currentFileIds.includes(id),
+      );
 
-      if (newFileIds.length === 0 && validFileOrder.length === currentOrder.length) {
+      if (
+        newFileIds.length === 0 &&
+        validFileOrder.length === currentOrder.length
+      ) {
         return currentOrder; // No changes needed
       }
 
@@ -297,7 +342,9 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       newFileIdsToProcess.forEach((fileId) => {
         const stub = state.files.byId[fileId];
         if (stub?.insertAfterPageId) {
-          fileActions.updateStirlingFileStub(fileId, { insertAfterPageId: undefined });
+          fileActions.updateStirlingFileStub(fileId, {
+            insertAfterPageId: undefined,
+          });
         }
       });
     }, 100);
@@ -317,13 +364,21 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       const isAlreadySelected = currentSelection.includes(fileId);
 
       // Check if we're trying to select when at limit
-      if (selected && !isAlreadySelected && currentSelection.length >= MAX_PAGE_EDITOR_FILES) {
-        console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
+      if (
+        selected &&
+        !isAlreadySelected &&
+        currentSelection.length >= MAX_PAGE_EDITOR_FILES
+      ) {
+        console.warn(
+          `Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`,
+        );
         return;
       }
 
       // Update FileContext selection
-      const newSelectedIds = selected ? [...currentSelection, fileId] : currentSelection.filter((id) => id !== fileId);
+      const newSelectedIds = selected
+        ? [...currentSelection, fileId]
+        : currentSelection.filter((id) => id !== fileId);
 
       fileActions.setSelectedFiles(newSelectedIds);
     },
@@ -336,8 +391,13 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       const isCurrentlySelected = currentSelection.includes(fileId);
 
       // If toggling on and at limit, don't allow
-      if (!isCurrentlySelected && currentSelection.length >= MAX_PAGE_EDITOR_FILES) {
-        console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
+      if (
+        !isCurrentlySelected &&
+        currentSelection.length >= MAX_PAGE_EDITOR_FILES
+      ) {
+        console.warn(
+          `Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`,
+        );
         return;
       }
 
@@ -398,8 +458,12 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
             : newOrder[toIndex + 1]; // Moving up: target is the file just after where we inserted
 
         // Find their positions in the current page order (not the full file list)
-        const pageOrderFromIndex = currentFileOrder.findIndex((id) => id === movedFileId);
-        const pageOrderToIndex = currentFileOrder.findIndex((id) => id === targetFileId);
+        const pageOrderFromIndex = currentFileOrder.findIndex(
+          (id) => id === movedFileId,
+        );
+        const pageOrderToIndex = currentFileOrder.findIndex(
+          (id) => id === targetFileId,
+        );
 
         // Only reorder pages if both files have pages loaded
         if (pageOrderFromIndex >= 0 && pageOrderToIndex >= 0) {
@@ -466,7 +530,11 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     ],
   );
 
-  return <PageEditorContext.Provider value={value}>{children}</PageEditorContext.Provider>;
+  return (
+    <PageEditorContext.Provider value={value}>
+      {children}
+    </PageEditorContext.Provider>
+  );
 }
 
 export function usePageEditor() {

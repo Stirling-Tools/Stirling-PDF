@@ -33,7 +33,9 @@ import {
 describe("useRemovePasswordOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<RemovePasswordParameters>;
+  const getToolConfig = () =>
+    mockUseToolOperation.mock
+      .calls[0][0] as SingleFileToolOperationConfig<RemovePasswordParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -80,7 +82,9 @@ describe("useRemovePasswordOperation", () => {
       password,
     };
 
-    const testFile = new File(["test content"], "test.pdf", { type: "application/pdf" });
+    const testFile = new File(["test content"], "test.pdf", {
+      type: "application/pdf",
+    });
     const formData = buildFormData(testParameters, testFile as any);
 
     // Verify the form data contains the file
@@ -101,7 +105,10 @@ describe("useRemovePasswordOperation", () => {
 
   test.each([
     { property: "toolType" as const, expectedValue: ToolType.singleFile },
-    { property: "endpoint" as const, expectedValue: "/api/v1/security/remove-password" },
+    {
+      property: "endpoint" as const,
+      expectedValue: "/api/v1/security/remove-password",
+    },
     { property: "operationType" as const, expectedValue: "removePassword" },
   ])("should configure $property correctly", ({ property, expectedValue }) => {
     renderHook(() => useRemovePasswordOperation());

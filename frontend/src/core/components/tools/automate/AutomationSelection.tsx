@@ -33,13 +33,22 @@ export default function AutomationSelection({
 
   return (
     <div>
-      <Title order={3} size="h4" fw={600} mb="md" style={{ color: "var(--mantine-color-dimmed)" }}>
+      <Title
+        order={3}
+        size="h4"
+        fw={600}
+        mb="md"
+        style={{ color: "var(--mantine-color-dimmed)" }}
+      >
         {t("automate.selection.saved.title", "Saved")}
       </Title>
 
       <Stack gap="xs">
         <AutomationEntry
-          title={t("automate.selection.createNew.title", "Create New Automation")}
+          title={t(
+            "automate.selection.createNew.title",
+            "Create New Automation",
+          )}
           badgeIcon={AddCircleOutline}
           operations={[]}
           onClick={onCreateNew}
@@ -48,18 +57,24 @@ export default function AutomationSelection({
         />
         {/* Saved Automations */}
         {savedAutomations.map((automation) => {
-          const IconComponent = automation.icon ? iconMap[automation.icon as keyof typeof iconMap] : SettingsIcon;
+          const IconComponent = automation.icon
+            ? iconMap[automation.icon as keyof typeof iconMap]
+            : SettingsIcon;
           return (
             <AutomationEntry
               key={automation.id}
               title={automation.name}
               description={automation.description}
               badgeIcon={IconComponent || SettingsIcon}
-              operations={automation.operations.map((op) => (typeof op === "string" ? op : op.operation))}
+              operations={automation.operations.map((op) =>
+                typeof op === "string" ? op : op.operation,
+              )}
               onClick={() => onRun(automation)}
               showMenu={true}
               onEdit={() => onEdit(automation)}
-              onExport={() => downloadFolderScanningConfig(automation, toolRegistry)}
+              onExport={() =>
+                downloadFolderScanningConfig(automation, toolRegistry)
+              }
               onDelete={() => onDelete(automation)}
               toolRegistry={toolRegistry}
             />
@@ -69,7 +84,13 @@ export default function AutomationSelection({
 
         {/* Suggested Automations */}
         <div>
-          <Title order={3} size="h4" fw={600} mb="md" style={{ color: "var(--mantine-color-dimmed)" }}>
+          <Title
+            order={3}
+            size="h4"
+            fw={600}
+            mb="md"
+            style={{ color: "var(--mantine-color-dimmed)" }}
+          >
             {t("automate.selection.suggested.title", "Suggested")}
           </Title>
           <Stack gap="xs">

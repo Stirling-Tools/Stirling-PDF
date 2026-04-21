@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { springAuth } from "@app/auth/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
-import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import {
+  AxiosError,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -64,13 +68,19 @@ describe("SpringAuthClient", () => {
       const mockToken = "invalid-jwt-token";
       localStorage.setItem("stirling_jwt", mockToken);
 
-      const mockError = new AxiosError("Unauthorized", "ERR_BAD_REQUEST", undefined, undefined, {
-        status: 401,
-        statusText: "Unauthorized",
-        data: {},
-        headers: {},
-        config: {} as InternalAxiosRequestConfig,
-      });
+      const mockError = new AxiosError(
+        "Unauthorized",
+        "ERR_BAD_REQUEST",
+        undefined,
+        undefined,
+        {
+          status: 401,
+          statusText: "Unauthorized",
+          data: {},
+          headers: {},
+          config: {} as InternalAxiosRequestConfig,
+        },
+      );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
 
@@ -86,13 +96,19 @@ describe("SpringAuthClient", () => {
       const mockToken = "forbidden-jwt-token";
       localStorage.setItem("stirling_jwt", mockToken);
 
-      const mockError = new AxiosError("Forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
-        status: 403,
-        statusText: "Forbidden",
-        data: {},
-        headers: {},
-        config: {} as InternalAxiosRequestConfig,
-      });
+      const mockError = new AxiosError(
+        "Forbidden",
+        "ERR_BAD_REQUEST",
+        undefined,
+        undefined,
+        {
+          status: 403,
+          statusText: "Forbidden",
+          data: {},
+          headers: {},
+          config: {} as InternalAxiosRequestConfig,
+        },
+      );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
 
@@ -145,7 +161,9 @@ describe("SpringAuthClient", () => {
         { withCredentials: true },
       );
       expect(localStorage.getItem("stirling_jwt")).toBe(mockToken);
-      expect(dispatchEventSpy).toHaveBeenCalledWith(expect.objectContaining({ type: "jwt-available" }));
+      expect(dispatchEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "jwt-available" }),
+      );
       expect(result.user).toEqual(mockUser);
       expect(result.session?.access_token).toBe(mockToken);
       expect(result.error).toBeNull();
@@ -336,7 +354,9 @@ describe("SpringAuthClient", () => {
         options: { redirectTo: "/auth/callback" },
       });
 
-      expect(startOAuthNavigation).toHaveBeenCalledWith("/oauth2/authorization/github");
+      expect(startOAuthNavigation).toHaveBeenCalledWith(
+        "/oauth2/authorization/github",
+      );
       expect(mockAssign).toHaveBeenCalledWith("/oauth2/authorization/github");
       expect(result.error).toBeNull();
     });
@@ -355,7 +375,9 @@ describe("SpringAuthClient", () => {
         options: { redirectTo: "/auth/callback" },
       });
 
-      expect(startOAuthNavigation).toHaveBeenCalledWith("/oauth2/authorization/github");
+      expect(startOAuthNavigation).toHaveBeenCalledWith(
+        "/oauth2/authorization/github",
+      );
       expect(mockAssign).not.toHaveBeenCalled();
       expect(result.error).toBeNull();
     });

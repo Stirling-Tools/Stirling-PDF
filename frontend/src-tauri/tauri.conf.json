@@ -6,8 +6,8 @@
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npm run dev -- --mode desktop",
-    "beforeBuildCommand": "node scripts/build-provisioner.mjs && npm run build -- --mode desktop"
+    "beforeDevCommand": "npx vite --mode desktop",
+    "beforeBuildCommand": "npx vite build --mode desktop"
   },
   "app": {
     "windows": [
@@ -24,7 +24,7 @@
   "bundle": {
     "active": true,
     "publisher": "Stirling PDF Inc.",
-    "targets": ["deb", "rpm", "dmg", "msi"],
+    "targets": ["deb", "rpm", "appimage", "dmg", "msi"],
     "icon": [
       "icons/icon.png",
       "icons/icon.icns",
@@ -47,6 +47,12 @@
     "linux": {
       "deb": {
         "desktopTemplate": "stirling-pdf.desktop"
+      },
+      "rpm": {
+        "desktopTemplate": "stirling-pdf.desktop"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
       }
     },
     "windows": {

@@ -6,7 +6,10 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useFileState } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { detectFileExtension, detectNonPdfFileType } from "@app/utils/fileUtils";
+import {
+  detectFileExtension,
+  detectNonPdfFileType,
+} from "@app/utils/fileUtils";
 import { CONVERSION_MATRIX } from "@app/constants/convertConstants";
 
 import { NonPdfBanner } from "@app/components/viewer/nonpdf/NonPdfBanner";
@@ -30,7 +33,10 @@ export interface NonPdfViewerProps extends ViewerProps {
 
 export function NonPdfViewer({ file }: NonPdfViewerProps) {
   const fileType = useMemo(() => detectNonPdfFileType(file), [file]);
-  const meta = useMemo(() => getFileTypeMeta(fileType, file.name), [fileType, file.name]);
+  const meta = useMemo(
+    () => getFileTypeMeta(fileType, file.name),
+    [fileType, file.name],
+  );
 
   const { handleToolSelect, toolAvailability } = useToolWorkflow();
 
@@ -38,7 +44,9 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
   // Only show convert when the extension has an explicit entry in the conversion matrix
   // (skip the 'any'/'image' wildcard fallbacks that would match everything)
   const isConvertAvailable =
-    toolAvailability["convert"]?.available === true && fileExtension !== "" && fileExtension in CONVERSION_MATRIX;
+    toolAvailability["convert"]?.available === true &&
+    fileExtension !== "" &&
+    fileExtension in CONVERSION_MATRIX;
 
   const handleConvertToPdf = useCallback(() => {
     handleToolSelect("convert");
@@ -49,7 +57,12 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
       case "image":
         return <ImageViewer file={file} fileName={file.name} />;
       case "csv":
-        return <CsvViewer file={file} isTsv={file.name.toLowerCase().endsWith(".tsv")} />;
+        return (
+          <CsvViewer
+            file={file}
+            isTsv={file.name.toLowerCase().endsWith(".tsv")}
+          />
+        );
       case "json":
         return <JsonViewer file={file} />;
       case "markdown":
@@ -62,12 +75,22 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
         return (
           <Center style={{ flex: 1 }}>
             <Stack align="center" gap="sm">
-              <ArticleIcon style={{ fontSize: "3rem", color: "var(--mantine-color-gray-4)" }} />
+              <ArticleIcon
+                style={{
+                  fontSize: "3rem",
+                  color: "var(--mantine-color-gray-4)",
+                }}
+              />
               <Text c="dimmed" size="sm">
                 Preview not available for this file type
               </Text>
               {isConvertAvailable && (
-                <Button variant="light" color="orange" leftSection={<PictureAsPdfIcon />} onClick={handleConvertToPdf}>
+                <Button
+                  variant="light"
+                  color="orange"
+                  leftSection={<PictureAsPdfIcon />}
+                  onClick={handleConvertToPdf}
+                >
                   Convert to PDF
                 </Button>
               )}
@@ -78,9 +101,29 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
   };
 
   return (
-    <Stack gap={0} style={{ height: "100%", flex: 1, overflow: "hidden", position: "relative" }}>
-      <NonPdfBanner meta={meta} onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined} />
-      <Box style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>{renderContent()}</Box>
+    <Stack
+      gap={0}
+      style={{
+        height: "100%",
+        flex: 1,
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      <NonPdfBanner
+        meta={meta}
+        onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined}
+      />
+      <Box
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {renderContent()}
+      </Box>
     </Stack>
   );
 }
@@ -92,7 +135,8 @@ export function NonPdfViewerWrapper(props: ViewerProps) {
   const activeFiles = selectors.getFiles();
   const { activeFileIndex } = useViewer();
 
-  const file = props.previewFile ?? activeFiles[activeFileIndex] ?? activeFiles[0] ?? null;
+  const file =
+    props.previewFile ?? activeFiles[activeFileIndex] ?? activeFiles[0] ?? null;
 
   if (!file) {
     return (

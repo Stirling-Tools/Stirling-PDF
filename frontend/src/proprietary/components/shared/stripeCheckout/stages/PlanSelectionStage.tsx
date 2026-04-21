@@ -1,5 +1,13 @@
 import React from "react";
-import { Stack, Button, Text, Grid, Paper, Alert, Divider } from "@mantine/core";
+import {
+  Stack,
+  Button,
+  Text,
+  Grid,
+  Paper,
+  Alert,
+  Divider,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PlanTierGroup } from "@app/services/licenseService";
 import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/checkout";
@@ -19,7 +27,12 @@ interface PlanSelectionStageProps {
   onSelectPlan: (period: "monthly" | "yearly") => void;
 }
 
-export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGroup, minimumSeats, savings, onSelectPlan }) => {
+export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
+  planGroup,
+  minimumSeats,
+  savings,
+  onSelectPlan,
+}) => {
   const { t } = useTranslation();
   const isEnterprise = planGroup.tier === "enterprise";
   const seatCount = minimumSeats || 1;
@@ -30,8 +43,18 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGrou
         {/* Monthly Option */}
         {planGroup.monthly && (
           <Grid.Col span={6}>
-            <Paper withBorder p="xl" radius="md" style={getClickablePaperStyle()} onClick={() => onSelectPlan("monthly")}>
-              <Stack gap="md" style={{ height: "100%" }} justify="space-between">
+            <Paper
+              withBorder
+              p="xl"
+              radius="md"
+              style={getClickablePaperStyle()}
+              onClick={() => onSelectPlan("monthly")}
+            >
+              <Stack
+                gap="md"
+                style={{ height: "100%" }}
+                justify="space-between"
+              >
                 <Text size="lg" fw={600}>
                   {t("payment.monthly", "Monthly")}
                 </Text>
@@ -43,7 +66,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGrou
                     mode="enterprise"
                     basePrice={planGroup.monthly.price}
                     seatPrice={planGroup.monthly.seatPrice}
-                    totalPrice={calculateTotalWithSeats(planGroup.monthly.price, planGroup.monthly.seatPrice, seatCount)}
+                    totalPrice={calculateTotalWithSeats(
+                      planGroup.monthly.price,
+                      planGroup.monthly.seatPrice,
+                      seatCount,
+                    )}
                     currency={planGroup.monthly.currency}
                     period="month"
                     seatCount={seatCount}
@@ -82,11 +109,19 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGrou
               {savings && (
                 <PricingBadge
                   type="savings"
-                  label={t("payment.planStage.savePercent", "Save {{percent}}%", { percent: savings.percent })}
+                  label={t(
+                    "payment.planStage.savePercent",
+                    "Save {{percent}}%",
+                    { percent: savings.percent },
+                  )}
                 />
               )}
 
-              <Stack gap="md" style={{ height: "100%" }} justify="space-between">
+              <Stack
+                gap="md"
+                style={{ height: "100%" }}
+                justify="space-between"
+              >
                 <Text size="lg" fw={600}>
                   {t("payment.yearly", "Yearly")}
                 </Text>
@@ -100,7 +135,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGrou
                       basePrice={planGroup.yearly.price}
                       seatPrice={planGroup.yearly.seatPrice}
                       totalPrice={calculateMonthlyEquivalent(
-                        calculateTotalWithSeats(planGroup.yearly.price, planGroup.yearly.seatPrice, seatCount),
+                        calculateTotalWithSeats(
+                          planGroup.yearly.price,
+                          planGroup.yearly.seatPrice,
+                          seatCount,
+                        ),
                       )}
                       currency={planGroup.yearly.currency}
                       period="year"
@@ -108,28 +147,40 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGrou
                       size="sm"
                     />
                     <Text size="sm" c="dimmed">
-                      {t("payment.planStage.billedYearly", "Billed yearly at {{currency}}{{amount}}", {
-                        currency: planGroup.yearly.currency,
-                        amount: calculateTotalWithSeats(planGroup.yearly.price, planGroup.yearly.seatPrice, seatCount).toFixed(
-                          2,
-                        ),
-                      })}
+                      {t(
+                        "payment.planStage.billedYearly",
+                        "Billed yearly at {{currency}}{{amount}}",
+                        {
+                          currency: planGroup.yearly.currency,
+                          amount: calculateTotalWithSeats(
+                            planGroup.yearly.price,
+                            planGroup.yearly.seatPrice,
+                            seatCount,
+                          ).toFixed(2),
+                        },
+                      )}
                     </Text>
                   </Stack>
                 ) : (
                   <Stack gap={0}>
                     <PriceDisplay
                       mode="simple"
-                      price={calculateMonthlyEquivalent(planGroup.yearly?.price || 0)}
+                      price={calculateMonthlyEquivalent(
+                        planGroup.yearly?.price || 0,
+                      )}
                       currency={planGroup.yearly?.currency || "£"}
                       period={t("payment.perMonth", "/month")}
                       size="2.5rem"
                     />
                     <Text size="sm" c="dimmed" mt="xs">
-                      {t("payment.planStage.billedYearly", "Billed yearly at {{currency}}{{amount}}", {
-                        currency: planGroup.yearly?.currency,
-                        amount: planGroup.yearly?.price.toFixed(2),
-                      })}
+                      {t(
+                        "payment.planStage.billedYearly",
+                        "Billed yearly at {{currency}}{{amount}}",
+                        {
+                          currency: planGroup.yearly?.currency,
+                          amount: planGroup.yearly?.price.toFixed(2),
+                        },
+                      )}
                     </Text>
                   </Stack>
                 )}
@@ -137,9 +188,13 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({ planGrou
                 {savings && (
                   <Alert color="green" variant="light" p="sm">
                     <Text size="sm" fw={600}>
-                      {t("payment.planStage.savingsAmount", "You save {{amount}}", {
-                        amount: formatPrice(savings.amount, savings.currency),
-                      })}
+                      {t(
+                        "payment.planStage.savingsAmount",
+                        "You save {{amount}}",
+                        {
+                          amount: formatPrice(savings.amount, savings.currency),
+                        },
+                      )}
                     </Text>
                   </Alert>
                 )}

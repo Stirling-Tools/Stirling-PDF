@@ -39,13 +39,23 @@ const validateSignParameters = (parameters: SignParameters): boolean => {
   // If signature position is set, validate it
   if (parameters.signaturePosition) {
     const pos = parameters.signaturePosition;
-    if (pos.x < 0 || pos.y < 0 || pos.width <= 0 || pos.height <= 0 || pos.page < 0) {
+    if (
+      pos.x < 0 ||
+      pos.y < 0 ||
+      pos.width <= 0 ||
+      pos.height <= 0 ||
+      pos.page < 0
+    ) {
       return false;
     }
   }
 
   // For image and canvas signatures, require signature data
-  if ((parameters.signatureType === "image" || parameters.signatureType === "canvas") && !parameters.signatureData) {
+  if (
+    (parameters.signatureType === "image" ||
+      parameters.signatureType === "canvas") &&
+    !parameters.signatureData
+  ) {
     return false;
   }
   // For text signatures, require signer name

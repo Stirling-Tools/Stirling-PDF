@@ -17,11 +17,19 @@ import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/Too
 interface ToolPickerProps {
   selectedToolKey: string | null;
   onSelect: (id: string) => void;
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{
+    item: [ToolId, ToolRegistryEntry];
+    matchedText?: string;
+  }>;
   isSearching?: boolean;
 }
 
-const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = false }: ToolPickerProps) => {
+const ToolPicker = ({
+  selectedToolKey,
+  onSelect,
+  filteredTools,
+  isSearching = false,
+}: ToolPickerProps) => {
   const { t } = useTranslation();
 
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -31,20 +39,30 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
-  const quickSection = useMemo(() => visibleSections.find((s) => s.key === "quick"), [visibleSections]);
+  const quickSection = useMemo(
+    () => visibleSections.find((s) => s.key === "quick"),
+    [visibleSections],
+  );
 
   const recommendedItems = useMemo(() => {
-    if (!quickSection) return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
+    if (!quickSection)
+      return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
-    quickSection.subcategories.forEach((sc: SubcategoryGroup) => sc.tools.forEach((toolEntry) => items.push(toolEntry)));
+    quickSection.subcategories.forEach((sc: SubcategoryGroup) =>
+      sc.tools.forEach((toolEntry) => items.push(toolEntry)),
+    );
     return items;
   }, [quickSection]);
 
-  const allSection = useMemo(() => visibleSections.find((s) => s.key === "all"), [visibleSections]);
+  const allSection = useMemo(
+    () => visibleSections.find((s) => s.key === "all"),
+    [visibleSections],
+  );
 
   // Build flat list by subcategory for search mode
   const emptyFilteredTools: ToolPickerProps["filteredTools"] = [];
-  const effectiveFilteredForSearch: ToolPickerProps["filteredTools"] = isSearching ? filteredTools : emptyFilteredTools;
+  const effectiveFilteredForSearch: ToolPickerProps["filteredTools"] =
+    isSearching ? filteredTools : emptyFilteredTools;
   const { searchGroups } = useToolSections(effectiveFilteredForSearch);
   const headerTextStyle: React.CSSProperties = {
     fontSize: "0.68rem",
@@ -54,7 +72,11 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
     letterSpacing: "0.06em",
     color: "var(--text-muted)",
   };
-  const toTitleCase = (s: string) => s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+  const toTitleCase = (s: string) =>
+    s.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
+    );
 
   return (
     <Box
@@ -83,7 +105,16 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               <NoToolsFound />
             ) : (
               searchGroups.map((group) =>
-                renderToolButtons(t, group, selectedToolKey, onSelect, true, false, filteredTools, true),
+                renderToolButtons(
+                  t,
+                  group,
+                  selectedToolKey,
+                  onSelect,
+                  true,
+                  false,
+                  filteredTools,
+                  true,
+                ),
               )
             )}
           </Stack>
@@ -93,7 +124,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
             <Stack p="sm" gap="xs">
               {favoriteToolItems.length > 0 && (
                 <Box w="100%">
-                  <div style={headerTextStyle}>{t("toolPanel.fullscreen.favorites", "Favourites")}</div>
+                  <div style={headerTextStyle}>
+                    {t("toolPanel.fullscreen.favorites", "Favourites")}
+                  </div>
                   <div>
                     {favoriteToolItems.map(({ id, tool }) => (
                       <ToolButton
@@ -110,7 +143,9 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               )}
               {recommendedItems.length > 0 && (
                 <Box w="100%">
-                  <div style={headerTextStyle}>{t("toolPanel.fullscreen.recommended", "Recommended")}</div>
+                  <div style={headerTextStyle}>
+                    {t("toolPanel.fullscreen.recommended", "Recommended")}
+                  </div>
                   <div>
                     {recommendedItems.map(({ id, tool }) => (
                       <ToolButton
@@ -128,8 +163,19 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
               {allSection &&
                 allSection.subcategories.map((sc: SubcategoryGroup) => (
                   <Box key={sc.subcategoryId} w="100%">
-                    <div style={headerTextStyle}>{toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}</div>
-                    {renderToolButtons(t, sc, selectedToolKey, onSelect, false, false, undefined, true)}
+                    <div style={headerTextStyle}>
+                      {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
+                    </div>
+                    {renderToolButtons(
+                      t,
+                      sc,
+                      selectedToolKey,
+                      onSelect,
+                      false,
+                      false,
+                      undefined,
+                      true,
+                    )}
                   </Box>
                 ))}
             </Stack>

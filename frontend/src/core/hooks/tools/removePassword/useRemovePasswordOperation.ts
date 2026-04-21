@@ -1,7 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { RemovePasswordParameters, defaultParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import {
+  RemovePasswordParameters,
+  defaultParameters,
+} from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 
 // Re-export for backwards compatibility with any other imports
@@ -22,7 +28,10 @@ export const useRemovePasswordOperation = () => {
   return useToolOperation<RemovePasswordParameters>({
     ...removePasswordOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("removePassword.error.failed", "An error occurred while removing the password from the PDF."),
+      t(
+        "removePassword.error.failed",
+        "An error occurred while removing the password from the PDF.",
+      ),
     ),
   });
 };

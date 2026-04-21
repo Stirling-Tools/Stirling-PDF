@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Stack, Text, Badge, Button, Group, Loader, Center, Divider, Box, Collapse } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Text,
+  Badge,
+  Button,
+  Group,
+  Loader,
+  Center,
+  Divider,
+  Box,
+  Collapse,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { updateService, UpdateSummary, FullUpdateInfo, MachineInfo } from "@app/services/updateService";
+import {
+  updateService,
+  UpdateSummary,
+  FullUpdateInfo,
+  MachineInfo,
+} from "@app/services/updateService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -18,20 +35,32 @@ interface UpdateModalProps {
   machineInfo: MachineInfo;
 }
 
-const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersion, updateSummary, machineInfo }) => {
+const UpdateModal: React.FC<UpdateModalProps> = ({
+  opened,
+  onClose,
+  currentVersion,
+  updateSummary,
+  machineInfo,
+}) => {
   const { t } = useTranslation();
-  const [fullUpdateInfo, setFullUpdateInfo] = useState<FullUpdateInfo | null>(null);
+  const [fullUpdateInfo, setFullUpdateInfo] = useState<FullUpdateInfo | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
-  const [expandedVersions, setExpandedVersions] = useState<Set<number>>(new Set([0]));
+  const [expandedVersions, setExpandedVersions] = useState<Set<number>>(
+    new Set([0]),
+  );
 
   useEffect(() => {
     if (opened) {
       setLoading(true);
       setExpandedVersions(new Set([0]));
-      updateService.getFullUpdateInfo(currentVersion, machineInfo).then((info) => {
-        setFullUpdateInfo(info);
-        setLoading(false);
-      });
+      updateService
+        .getFullUpdateInfo(currentVersion, machineInfo)
+        .then((info) => {
+          setFullUpdateInfo(info);
+          setLoading(false);
+        });
     }
   }, [opened, currentVersion, machineInfo]);
 
@@ -91,7 +120,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
       <Stack gap="lg" pt="md">
         {/* Version Summary Section */}
         <Box>
-          <Group justify="space-between" align="flex-start" wrap="nowrap" mb="md">
+          <Group
+            justify="space-between"
+            align="flex-start"
+            wrap="nowrap"
+            mb="md"
+          >
             <Stack gap={4} style={{ flex: 1 }}>
               <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
                 {t("update.current", "Current Version")}
@@ -157,7 +191,13 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
             }}
           >
             <Group gap="xs" wrap="nowrap" align="flex-start">
-              <InfoOutlinedIcon style={{ fontSize: 18, color: "var(--mantine-color-blue-filled)", marginTop: 2 }} />
+              <InfoOutlinedIcon
+                style={{
+                  fontSize: 18,
+                  color: "var(--mantine-color-blue-filled)",
+                  marginTop: 2,
+                }}
+              />
               <Box style={{ flex: 1 }}>
                 <Text size="xs" fw={600} mb={4} tt="uppercase">
                   {t("update.recommendedAction", "Recommended Action")}
@@ -179,10 +219,19 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
             }}
           >
             <Group gap="xs" wrap="nowrap" align="flex-start">
-              <WarningAmberIcon style={{ fontSize: 18, color: "var(--mantine-color-orange-filled)", marginTop: 2 }} />
+              <WarningAmberIcon
+                style={{
+                  fontSize: 18,
+                  color: "var(--mantine-color-orange-filled)",
+                  marginTop: 2,
+                }}
+              />
               <Box style={{ flex: 1 }}>
                 <Text size="xs" fw={600} mb={4} tt="uppercase">
-                  {t("update.breakingChangesDetected", "Breaking Changes Detected")}
+                  {t(
+                    "update.breakingChangesDetected",
+                    "Breaking Changes Detected",
+                  )}
                 </Text>
                 <Text size="sm">
                   {t(
@@ -196,48 +245,51 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
         )}
 
         {/* Migration guides */}
-        {updateSummary.migration_guides && updateSummary.migration_guides.length > 0 && (
-          <>
-            <Divider />
-            <Stack gap="xs">
-              <Text fw={600} size="sm" tt="uppercase" c="dimmed">
-                {t("update.migrationGuides", "Migration Guides")}
-              </Text>
-              {updateSummary.migration_guides.map((guide, idx) => (
-                <Box
-                  key={idx}
-                  style={{
-                    border: "1px solid var(--mantine-color-gray-3)",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    background: "var(--mantine-color-gray-0)",
-                  }}
-                >
-                  <Group justify="space-between" align="center" wrap="nowrap">
-                    <Box style={{ flex: 1 }}>
-                      <Text fw={600} size="sm">
-                        {t("update.version", "Version")} {guide.version}
-                      </Text>
-                      <Text size="xs" c="dimmed" mt={4}>
-                        {guide.notes}
-                      </Text>
-                    </Box>
-                    <Button
-                      component="a"
-                      href={guide.url}
-                      target="_blank"
-                      variant="light"
-                      size="xs"
-                      rightSection={<OpenInNewIcon style={{ fontSize: 14 }} />}
-                    >
-                      {t("update.viewGuide", "View Guide")}
-                    </Button>
-                  </Group>
-                </Box>
-              ))}
-            </Stack>
-          </>
-        )}
+        {updateSummary.migration_guides &&
+          updateSummary.migration_guides.length > 0 && (
+            <>
+              <Divider />
+              <Stack gap="xs">
+                <Text fw={600} size="sm" tt="uppercase" c="dimmed">
+                  {t("update.migrationGuides", "Migration Guides")}
+                </Text>
+                {updateSummary.migration_guides.map((guide, idx) => (
+                  <Box
+                    key={idx}
+                    style={{
+                      border: "1px solid var(--mantine-color-gray-3)",
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      background: "var(--mantine-color-gray-0)",
+                    }}
+                  >
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                      <Box style={{ flex: 1 }}>
+                        <Text fw={600} size="sm">
+                          {t("update.version", "Version")} {guide.version}
+                        </Text>
+                        <Text size="xs" c="dimmed" mt={4}>
+                          {guide.notes}
+                        </Text>
+                      </Box>
+                      <Button
+                        component="a"
+                        href={guide.url}
+                        target="_blank"
+                        variant="light"
+                        size="xs"
+                        rightSection={
+                          <OpenInNewIcon style={{ fontSize: 14 }} />
+                        }
+                      >
+                        {t("update.viewGuide", "View Guide")}
+                      </Button>
+                    </Group>
+                  </Box>
+                ))}
+              </Stack>
+            </>
+          )}
 
         {/* Version details */}
         <Divider />
@@ -246,18 +298,26 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
             <Stack align="center" gap="sm">
               <Loader size="md" />
               <Text size="sm" c="dimmed">
-                {t("update.loadingDetailedInfo", "Loading detailed information...")}
+                {t(
+                  "update.loadingDetailedInfo",
+                  "Loading detailed information...",
+                )}
               </Text>
             </Stack>
           </Center>
-        ) : fullUpdateInfo && fullUpdateInfo.new_versions && fullUpdateInfo.new_versions.length > 0 ? (
+        ) : fullUpdateInfo &&
+          fullUpdateInfo.new_versions &&
+          fullUpdateInfo.new_versions.length > 0 ? (
           <Stack gap="xs">
             <Group justify="space-between" align="center">
               <Text fw={600} size="sm" tt="uppercase" c="dimmed">
                 {t("update.availableUpdates", "Available Updates")}
               </Text>
               <Badge variant="light" color="gray">
-                {fullUpdateInfo.new_versions.length} {fullUpdateInfo.new_versions.length === 1 ? "version" : "versions"}
+                {fullUpdateInfo.new_versions.length}{" "}
+                {fullUpdateInfo.new_versions.length === 1
+                  ? "version"
+                  : "versions"}
               </Badge>
             </Group>
             <Stack gap="xs">
@@ -278,7 +338,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
                       p="md"
                       style={{
                         cursor: "pointer",
-                        background: isExpanded ? "var(--mantine-color-gray-0)" : "transparent",
+                        background: isExpanded
+                          ? "var(--mantine-color-gray-0)"
+                          : "transparent",
                         transition: "background 0.15s ease",
                       }}
                       onClick={() => toggleVersion(index)}
@@ -292,7 +354,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
                             {version.version}
                           </Text>
                         </Box>
-                        <Badge color={getPriorityColor(version.priority)} size="md">
+                        <Badge
+                          color={getPriorityColor(version.priority)}
+                          size="md"
+                        >
                           {getPriorityLabel(version.priority)}
                         </Badge>
                       </Group>
@@ -304,26 +369,48 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
                           variant="light"
                           size="xs"
                           onClick={(e) => e.stopPropagation()}
-                          rightSection={<OpenInNewIcon style={{ fontSize: 14 }} />}
+                          rightSection={
+                            <OpenInNewIcon style={{ fontSize: 14 }} />
+                          }
                         >
                           {t("update.releaseNotes", "Release Notes")}
                         </Button>
                         {isExpanded ? (
-                          <ExpandLessIcon style={{ fontSize: 20, color: "var(--mantine-color-gray-6)" }} />
+                          <ExpandLessIcon
+                            style={{
+                              fontSize: 20,
+                              color: "var(--mantine-color-gray-6)",
+                            }}
+                          />
                         ) : (
-                          <ExpandMoreIcon style={{ fontSize: 20, color: "var(--mantine-color-gray-6)" }} />
+                          <ExpandMoreIcon
+                            style={{
+                              fontSize: 20,
+                              color: "var(--mantine-color-gray-6)",
+                            }}
+                          />
                         )}
                       </Group>
                     </Group>
 
                     <Collapse in={isExpanded}>
-                      <Box p="md" pt={0} style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
+                      <Box
+                        p="md"
+                        pt={0}
+                        style={{
+                          borderTop: "1px solid var(--mantine-color-gray-2)",
+                        }}
+                      >
                         <Stack gap="md" mt="md">
                           <Box>
                             <Text fw={600} size="sm" mb={6}>
                               {version.announcement.title}
                             </Text>
-                            <Text size="sm" c="dimmed" style={{ lineHeight: 1.6 }}>
+                            <Text
+                              size="sm"
+                              c="dimmed"
+                              style={{ lineHeight: 1.6 }}
+                            >
                               {version.announcement.message}
                             </Text>
                           </Box>
@@ -334,32 +421,55 @@ const UpdateModal: React.FC<UpdateModalProps> = ({ opened, onClose, currentVersi
                                 background: "var(--mantine-color-orange-light)",
                                 padding: "12px",
                                 borderRadius: "6px",
-                                border: "1px solid var(--mantine-color-orange-outline)",
+                                border:
+                                  "1px solid var(--mantine-color-orange-outline)",
                               }}
                             >
-                              <Group gap="xs" align="flex-start" wrap="nowrap" mb="xs">
+                              <Group
+                                gap="xs"
+                                align="flex-start"
+                                wrap="nowrap"
+                                mb="xs"
+                              >
                                 <WarningAmberIcon
-                                  style={{ fontSize: 16, color: "var(--mantine-color-orange-filled)", marginTop: 2 }}
+                                  style={{
+                                    fontSize: 16,
+                                    color: "var(--mantine-color-orange-filled)",
+                                    marginTop: 2,
+                                  }}
                                 />
                                 <Text size="xs" fw={600} tt="uppercase">
-                                  {t("update.breakingChanges", "Breaking Changes")}
+                                  {t(
+                                    "update.breakingChanges",
+                                    "Breaking Changes",
+                                  )}
                                 </Text>
                               </Group>
                               <Text size="sm" mb="xs">
                                 {version.compatibility.breaking_description ||
-                                  t("update.breakingChangesDefault", "This version contains breaking changes.")}
+                                  t(
+                                    "update.breakingChangesDefault",
+                                    "This version contains breaking changes.",
+                                  )}
                               </Text>
                               {version.compatibility.migration_guide_url && (
                                 <Button
                                   component="a"
-                                  href={version.compatibility.migration_guide_url}
+                                  href={
+                                    version.compatibility.migration_guide_url
+                                  }
                                   target="_blank"
                                   variant="light"
                                   color="orange"
                                   size="xs"
-                                  rightSection={<OpenInNewIcon style={{ fontSize: 14 }} />}
+                                  rightSection={
+                                    <OpenInNewIcon style={{ fontSize: 14 }} />
+                                  }
                                 >
-                                  {t("update.migrationGuide", "Migration Guide")}
+                                  {t(
+                                    "update.migrationGuide",
+                                    "Migration Guide",
+                                  )}
                                 </Button>
                               )}
                             </Box>

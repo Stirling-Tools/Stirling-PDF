@@ -1,5 +1,14 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
-import { Text, Modal, Button, Group, Stack, Loader, ActionIcon, Tooltip } from "@mantine/core";
+import {
+  Text,
+  Modal,
+  Button,
+  Group,
+  Stack,
+  Loader,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import { useTranslation } from "react-i18next";
@@ -13,7 +22,10 @@ import LinkIcon from "@mui/icons-material/Link";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
 
@@ -22,7 +34,9 @@ import { useFileContext } from "@app/contexts/FileContext";
 import { useFileState } from "@app/contexts/file/fileHooks";
 import { FileId } from "@app/types/file";
 import ToolChain from "@app/components/shared/ToolChain";
-import HoverActionMenu, { HoverAction } from "@app/components/shared/HoverActionMenu";
+import HoverActionMenu, {
+  HoverAction,
+} from "@app/components/shared/HoverActionMenu";
 import { downloadFile } from "@app/services/downloadService";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
@@ -36,7 +50,11 @@ interface FileEditorThumbnailProps {
   totalFiles: number;
   onCloseFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
-  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onReorderFiles?: (
+    sourceFileId: FileId,
+    targetFileId: FileId,
+    selectedFileIds: FileId[],
+  ) => void;
   onDownloadFile: (fileId: FileId) => void;
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
@@ -57,7 +75,14 @@ const FileEditorThumbnail = ({
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const DownloadOutlinedIcon = icons.download;
-  const { pinFile, unpinFile, isFilePinned, activeFiles, actions: fileActions, openEncryptedUnlockPrompt } = useFileContext();
+  const {
+    pinFile,
+    unpinFile,
+    isFilePinned,
+    activeFiles,
+    actions: fileActions,
+    openEncryptedUnlockPrompt,
+  } = useFileContext();
   const { state, selectors } = useFileState();
   const isMobile = useIsMobile();
 
@@ -100,19 +125,29 @@ const FileEditorThumbnail = ({
   const isCBR = extLower === "cbr";
 
   const uploadEnabled = config?.storageEnabled === true;
-  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
-  const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
+  const sharingEnabled =
+    uploadEnabled && config?.storageSharingEnabled === true;
+  const shareLinksEnabled =
+    sharingEnabled && config?.storageShareLinksEnabled === true;
   const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
-  const isSharedFile = file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink;
+  const isSharedFile =
+    file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink;
   const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
   const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(file.remoteStorageId);
   const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
-
-  const canUpload = uploadEnabled && isOwnedOrLocal && file.isLeaf && (!isUploaded || !isUpToDate);
+  const canUpload =
+    uploadEnabled &&
+    isOwnedOrLocal &&
+    file.isLeaf &&
+    (!isUploaded || !isUpToDate);
   const canShare = shareLinksEnabled && isOwnedOrLocal && file.isLeaf;
 
-  const pageLabel = useMemo(() => (pageCount > 0 ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}` : ""), [pageCount]);
+  const pageLabel = useMemo(
+    () =>
+      pageCount > 0 ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}` : "",
+    [pageCount],
+  );
 
   const dateLabel = useMemo(() => {
     const d = new Date(file.lastModified);
@@ -151,11 +186,20 @@ const FileEditorThumbnail = ({
 
       const dropCleanup = dropTargetForElements({
         element,
-        getData: () => ({ type: "file", fileId: file.id }),
-        canDrop: ({ source }) => source.data.type === "file" && source.data.fileId !== file.id,
+        getData: () => ({
+          type: "file",
+          fileId: file.id,
+        }),
+        canDrop: ({ source }) => {
+          const sourceData = source.data;
+          return sourceData.type === "file" && sourceData.fileId !== file.id;
+        },
         onDrop: ({ source }) => {
-          if (source.data.type === "file" && onReorderFiles) {
-            onReorderFiles(source.data.fileId as FileId, file.id, source.data.selectedFiles as FileId[]);
+          const sourceData = source.data;
+          if (sourceData.type === "file" && onReorderFiles) {
+            const sourceFileId = sourceData.fileId as FileId;
+            const selectedFileIds = sourceData.selectedFiles as FileId[];
+            onReorderFiles(sourceFileId, file.id, selectedFileIds);
           }
         },
       });
@@ -173,7 +217,12 @@ const FileEditorThumbnail = ({
 
   const handleConfirmClose = useCallback(() => {
     onCloseFile(file.id);
-    alert({ alertType: "neutral", title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
+    alert({
+      alertType: "neutral",
+      title: `Closed ${file.name}`,
+      expandable: false,
+      durationMs: 3500,
+    });
     setShowCloseModal(false);
   }, [file.id, file.name, onCloseFile]);
 
@@ -197,15 +246,32 @@ const FileEditorThumbnail = ({
         }
       } catch (error) {
         console.error(`Failed to save ${file.name}:`, error);
-        alert({ alertType: "error", title: "Save failed", body: `Could not save ${file.name}`, expandable: true });
+        alert({
+          alertType: "error",
+          title: "Save failed",
+          body: `Could not save ${file.name}`,
+          expandable: true,
+        });
         setShowCloseModal(false);
         return;
       }
     }
     onCloseFile(file.id);
-    alert({ alertType: "success", title: `Saved and closed ${file.name}`, expandable: false, durationMs: 3500 });
+    alert({
+      alertType: "success",
+      title: `Saved and closed ${file.name}`,
+      expandable: false,
+      durationMs: 3500,
+    });
     setShowCloseModal(false);
-  }, [file.id, file.name, file.localFilePath, onCloseFile, selectors, fileActions]);
+  }, [
+    file.id,
+    file.name,
+    file.localFilePath,
+    onCloseFile,
+    selectors,
+    fileActions,
+  ]);
 
   const hoverActions = useMemo<HoverAction[]>(
     () => [
@@ -282,7 +348,12 @@ const FileEditorThumbnail = ({
           e.stopPropagation();
           if (onUnzipFile) {
             onUnzipFile(file.id);
-            alert({ alertType: "success", title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
+            alert({
+              alertType: "success",
+              title: `Unzipping ${file.name}`,
+              expandable: false,
+              durationMs: 2500,
+            });
           }
         },
         hidden: !isZipFile || !onUnzipFile || isCBZ || isCBR,
@@ -472,7 +543,9 @@ const FileEditorThumbnail = ({
         <Stack gap="md">
           {file.isDirty && file.localFilePath ? (
             <>
-              <Text size="md">{t("confirmCloseUnsaved", "This file has unsaved changes.")}</Text>
+              <Text size="md">
+                {t("confirmCloseUnsaved", "This file has unsaved changes.")}
+              </Text>
               <Text size="sm" c="dimmed" fw={500}>
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
@@ -480,7 +553,11 @@ const FileEditorThumbnail = ({
                 <Button variant="light" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                <Button
+                  variant="filled"
+                  color="red"
+                  onClick={handleConfirmClose}
+                >
                   {t("confirmCloseDiscard", "Discard changes and close")}
                 </Button>
                 <Button variant="filled" onClick={handleSaveAndClose}>
@@ -490,7 +567,12 @@ const FileEditorThumbnail = ({
             </>
           ) : (
             <>
-              <Text size="md">{t("confirmCloseMessage", "Are you sure you want to close this file?")}</Text>
+              <Text size="md">
+                {t(
+                  "confirmCloseMessage",
+                  "Are you sure you want to close this file?",
+                )}
+              </Text>
               <Text size="sm" c="dimmed" fw={500}>
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
@@ -498,7 +580,11 @@ const FileEditorThumbnail = ({
                 <Button variant="light" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                <Button
+                  variant="filled"
+                  color="red"
+                  onClick={handleConfirmClose}
+                >
                   {t("confirmCloseConfirm", "Close File")}
                 </Button>
               </Group>
@@ -530,8 +616,20 @@ const FileEditorThumbnail = ({
         </Stack>
       </Modal>
 
-      {canUpload && <UploadToServerModal opened={showUploadModal} onClose={() => setShowUploadModal(false)} file={file} />}
-      {canShare && <ShareFileModal opened={showShareModal} onClose={() => setShowShareModal(false)} file={file} />}
+      {canUpload && (
+        <UploadToServerModal
+          opened={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          file={file}
+        />
+      )}
+      {canShare && (
+        <ShareFileModal
+          opened={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          file={file}
+        />
+      )}
     </div>
   );
 };

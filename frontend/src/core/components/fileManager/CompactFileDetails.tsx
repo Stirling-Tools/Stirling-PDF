@@ -37,9 +37,14 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
   const hasSelection = selectedFiles.length > 0;
   const hasMultipleFiles = numberOfFiles > 1;
   const showOwner = Boolean(
-    currentFile && (currentFile.remoteOwnedByCurrentUser === false || currentFile.remoteSharedViaLink),
+    currentFile &&
+    (currentFile.remoteOwnedByCurrentUser === false ||
+      currentFile.remoteSharedViaLink),
   );
-  const ownerLabel = currentFile ? currentFile.remoteOwnerUsername || t("fileManager.ownerUnknown", "Unknown") : "";
+  const ownerLabel = currentFile
+    ? currentFile.remoteOwnerUsername ||
+      t("fileManager.ownerUnknown", "Unknown")
+    : "";
 
   return (
     <Stack gap="xs" style={{ height: "100%" }}>
@@ -80,7 +85,9 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
                 borderRadius: 4,
               }}
             >
-              <PictureAsPdfIcon style={{ fontSize: 20, color: "var(--mantine-color-gray-6)" }} />
+              <PictureAsPdfIcon
+                style={{ fontSize: 20, color: "var(--mantine-color-gray-6)" }}
+              />
             </Center>
           ) : null}
         </Box>
@@ -103,7 +110,9 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           {/* Compact tool chain for mobile */}
           {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <Text size="xs" c="dimmed">
-              {currentFile.toolHistory.map((tool) => t(`home.${tool.toolId}.title`, tool.toolId)).join(" → ")}
+              {currentFile.toolHistory
+                .map((tool) => t(`home.${tool.toolId}.title`, tool.toolId))
+                .join(" → ")}
             </Text>
           )}
           {currentFile && showOwner && (
@@ -116,10 +125,20 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* Navigation arrows for multiple files */}
         {hasMultipleFiles && (
           <Box style={{ display: "flex", gap: "0.25rem" }}>
-            <ActionIcon variant="subtle" size="sm" onClick={onPrevious} disabled={isAnimating}>
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              onClick={onPrevious}
+              disabled={isAnimating}
+            >
               <ChevronLeftIcon style={{ fontSize: 16 }} />
             </ActionIcon>
-            <ActionIcon variant="subtle" size="sm" onClick={onNext} disabled={isAnimating}>
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              onClick={onNext}
+              disabled={isAnimating}
+            >
               <ChevronRightIcon style={{ fontSize: 16 }} />
             </ActionIcon>
           </Box>

@@ -1,7 +1,10 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { useNavigationGuard, useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationGuard,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { usePageEditor } from "@app/contexts/PageEditorContext";
 import { PageEditorFunctions, PDFPage } from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
@@ -35,8 +38,11 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const { actions } = useFileActions();
 
   // Navigation guard for unsaved changes
-  const { setHasUnsavedChanges, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } =
-    useNavigationGuard();
+  const {
+    setHasUnsavedChanges,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  } = useNavigationGuard();
   const navigationState = useNavigationState();
 
   // Get PageEditor coordination functions
@@ -56,7 +62,10 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const handleVisibleItemsChange = useCallback((items: PDFPage[]) => {
     setVisiblePageIds((prev) => {
       const ids = items.map((item) => item.id);
-      if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) {
+      if (
+        prev.length === ids.length &&
+        prev.every((id, index) => id === ids[index])
+      ) {
         return prev;
       }
       return ids;
@@ -97,7 +106,9 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const filesSignature = selectors.getFilesSignature();
 
   const fileObjectsRef = useRef(new Map<FileId, any>());
-  const gridItemRefsRef = useRef<React.MutableRefObject<Map<string, HTMLDivElement>> | null>(null);
+  const gridItemRefsRef = useRef<React.MutableRefObject<
+    Map<string, HTMLDivElement>
+  > | null>(null);
 
   const pageEditorFiles = useMemo(() => {
     const cache = fileObjectsRef.current;
@@ -163,14 +174,15 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const initialDocument = useInitialPageDocument();
   const { document: mergedPdfDocument } = usePageDocument();
 
-  const { setEditedDocument, displayDocument, getEditedDocument } = useEditedDocumentState({
-    initialDocument,
-    mergedPdfDocument,
-    reorderedPages,
-    clearReorderedPages,
-    fileOrder,
-    updateCurrentPages,
-  });
+  const { setEditedDocument, displayDocument, getEditedDocument } =
+    useEditedDocumentState({
+      initialDocument,
+      mergedPdfDocument,
+      reorderedPages,
+      clearReorderedPages,
+      fileOrder,
+      updateCurrentPages,
+    });
 
   const displayDocumentRef = useRef(displayDocument);
   useEffect(() => {
@@ -184,7 +196,14 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
 
       const loadedCount = doc.pages.filter((p) => p.thumbnail).length;
       const pending = thumbnailRequestsRef.current.size;
-      const MAX_CONCURRENT_THUMBNAILS = loadedCount < 8 ? 1 : doc.totalPages < 20 ? 3 : doc.totalPages < 50 ? 5 : 8;
+      const MAX_CONCURRENT_THUMBNAILS =
+        loadedCount < 8
+          ? 1
+          : doc.totalPages < 20
+            ? 3
+            : doc.totalPages < 50
+              ? 5
+              : 8;
       const available = Math.max(0, MAX_CONCURRENT_THUMBNAILS - pending);
       if (available === 0) return;
 
@@ -214,7 +233,10 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
                 if (pageIndex === -1) return prev;
 
                 const updated = [...prev.pages];
-                updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail: cache };
+                updated[pageIndex] = {
+                  ...prev.pages[pageIndex],
+                  thumbnail: cache,
+                };
                 return { ...prev, pages: updated };
               });
             })
@@ -230,7 +252,11 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
         if (!file) return;
 
         thumbnailRequestsRef.current.add(pageId);
-        requestThumbnail(pageId, file, page.originalPageNumber || page.pageNumber)
+        requestThumbnail(
+          pageId,
+          file,
+          page.originalPageNumber || page.pageNumber,
+        )
           .then((thumbnail) => {
             if (thumbnail) {
               setEditedDocument((prev) => {
@@ -277,11 +303,17 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     }
 
     const INITIAL_VISIBLE_PAGE_COUNT = 8;
-    const initialIds = displayDocument.pages.slice(0, INITIAL_VISIBLE_PAGE_COUNT).map((page) => page.id);
+    const initialIds = displayDocument.pages
+      .slice(0, INITIAL_VISIBLE_PAGE_COUNT)
+      .map((page) => page.id);
 
     queueThumbnailRequestsForPages(initialIds);
     lastInitialDocumentSignatureRef.current = signature;
-  }, [displayDocumentId, displayDocumentLength, queueThumbnailRequestsForPages]);
+  }, [
+    displayDocumentId,
+    displayDocumentLength,
+    queueThumbnailRequestsForPages,
+  ]);
 
   useEffect(() => {
     setVisiblePageIds([]);
@@ -340,7 +372,14 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   // Grid container ref for positioning split indicators
   const gridContainerRef = useRef<HTMLDivElement>(null);
 
-  const { canUndo, canRedo, executeCommandWithTracking, handleUndo, handleRedo, clearUndoHistory } = useUndoManagerState({
+  const {
+    canUndo,
+    canRedo,
+    executeCommandWithTracking,
+    handleUndo,
+    handleRedo,
+    clearUndoHistory,
+  } = useUndoManagerState({
     setHasUnsavedChanges,
   });
 
@@ -402,7 +441,12 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       },
     });
     return () => unregisterNavigationWarningHandlers();
-  }, [applyChanges, onExportAll, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers]);
+  }, [
+    applyChanges,
+    onExportAll,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  ]);
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
@@ -553,7 +597,9 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       zoomLevelParam?: number,
     ) => {
       gridItemRefsRef.current = refs;
-      const fileColorIndex = page.originalFileId ? (fileColorIndexMap.get(page.originalFileId) ?? 0) : 0;
+      const fileColorIndex = page.originalFileId
+        ? (fileColorIndexMap.get(page.originalFileId) ?? 0)
+        : 0;
       const isBoxSelected = boxSelectedIds.includes(page.id);
       return (
         <PageThumbnail
@@ -628,19 +674,21 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     >
       <LoadingOverlay visible={globalProcessing && !initialDocument} />
 
-      {!initialDocument && !globalProcessing && selectedFileIds.length === 0 && (
-        <Center h="100%">
-          <Stack align="center" gap="md">
-            <Text size="lg" c="dimmed">
-              📄
-            </Text>
-            <Text c="dimmed">No PDF files loaded</Text>
-            <Text size="sm" c="dimmed">
-              Add files to start editing pages
-            </Text>
-          </Stack>
-        </Center>
-      )}
+      {!initialDocument &&
+        !globalProcessing &&
+        selectedFileIds.length === 0 && (
+          <Center h="100%">
+            <Stack align="center" gap="md">
+              <Text size="lg" c="dimmed">
+                📄
+              </Text>
+              <Text c="dimmed">No PDF files loaded</Text>
+              <Text size="sm" c="dimmed">
+                Add files to start editing pages
+              </Text>
+            </Stack>
+          </Center>
+        )}
 
       {!initialDocument && globalProcessing && (
         <Box p={0}>
@@ -650,7 +698,13 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       )}
 
       {displayDocument && (
-        <Box ref={gridContainerRef} p={0} pt="2rem" pb="4rem" style={{ position: "relative" }}>
+        <Box
+          ref={gridContainerRef}
+          p={0}
+          pt="2rem"
+          pb="4rem"
+          style={{ position: "relative" }}
+        >
           {/* Split Lines Overlay */}
           <div
             style={{
@@ -671,7 +725,10 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
               }
 
               const containerRect = containerEl.getBoundingClientRect();
-              const splitIndexes = convertSplitPageIdsToIndexes(displayDocument, splitPositions);
+              const splitIndexes = convertSplitPageIdsToIndexes(
+                displayDocument,
+                splitPositions,
+              );
 
               return Array.from(splitIndexes).map((position) => {
                 const currentPage = displayedPages[position];
@@ -692,7 +749,9 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
                   const nextEl = refsMap.get(nextPage.id);
                   if (nextEl) {
                     const nextRect = nextEl.getBoundingClientRect();
-                    const sameRow = Math.abs(nextRect.top - currentRect.top) < currentRect.height / 2;
+                    const sameRow =
+                      Math.abs(nextRect.top - currentRect.top) <
+                      currentRect.height / 2;
                     if (sameRow) {
                       lineLeft = (currentRect.right + nextRect.left) / 2;
                     } else {

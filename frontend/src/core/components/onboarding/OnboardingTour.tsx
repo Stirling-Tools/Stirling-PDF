@@ -57,7 +57,15 @@ interface OnboardingTourProps {
   onClose: (args: CloseArgs) => void;
 }
 
-export default function OnboardingTour({ tourSteps, tourType, isRTL, t, isOpen, onAdvance, onClose }: OnboardingTourProps) {
+export default function OnboardingTour({
+  tourSteps,
+  tourType,
+  isRTL,
+  t,
+  isOpen,
+  onAdvance,
+  onClose,
+}: OnboardingTourProps) {
   if (!isOpen) return null;
 
   return (
@@ -111,15 +119,31 @@ export default function OnboardingTour({ tourSteps, tourType, isRTL, t, isOpen, 
       disableInteraction={true}
       disableDotsNavigation={false}
       prevButton={() => null}
-      nextButton={({ currentStep: tourCurrentStep, stepsLength, setCurrentStep, setIsOpen }) => {
+      nextButton={({
+        currentStep: tourCurrentStep,
+        stepsLength,
+        setCurrentStep,
+        setIsOpen,
+      }) => {
         const isLast = tourCurrentStep === stepsLength - 1;
         const ArrowIcon = isRTL ? ArrowBackIcon : ArrowForwardIcon;
         return (
           <ActionIcon
-            onClick={() => onAdvance({ setCurrentStep, currentStep: tourCurrentStep, steps: tourSteps, setIsOpen })}
+            onClick={() =>
+              onAdvance({
+                setCurrentStep,
+                currentStep: tourCurrentStep,
+                steps: tourSteps,
+                setIsOpen,
+              })
+            }
             variant="subtle"
             size="lg"
-            aria-label={isLast ? t("onboarding.finish", "Finish") : t("onboarding.next", "Next")}
+            aria-label={
+              isLast
+                ? t("onboarding.finish", "Finish")
+                : t("onboarding.next", "Next")
+            }
           >
             {isLast ? <CheckIcon /> : <ArrowIcon />}
           </ActionIcon>
@@ -127,10 +151,17 @@ export default function OnboardingTour({ tourSteps, tourType, isRTL, t, isOpen, 
       }}
       components={{
         Close: ({ onClick }) => (
-          <CloseButton onClick={onClick} size="md" style={{ position: "absolute", top: "8px", right: "8px" }} />
+          <CloseButton
+            onClick={onClick}
+            size="md"
+            style={{ position: "absolute", top: "8px", right: "8px" }}
+          />
         ),
         Content: ({ content }: { content: string }) => (
-          <div style={{ paddingRight: "16px" }} dangerouslySetInnerHTML={{ __html: content }} />
+          <div
+            style={{ paddingRight: "16px" }}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         ),
       }}
     >

@@ -23,9 +23,12 @@ export function useFooterInfo() {
     const fetchFooterInfo = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get<FooterInfo>("/api/v1/ui-data/footer-info", {
-          suppressErrorToast: true,
-        } as any);
+        const response = await apiClient.get<FooterInfo>(
+          "/api/v1/ui-data/footer-info",
+          {
+            suppressErrorToast: true,
+          } as any,
+        );
         setFooterInfo(response.data);
         setError(null);
       } catch (err) {

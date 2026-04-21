@@ -16,7 +16,10 @@ interface AdvancedOption {
 interface AdvancedOCRSettingsProps {
   advancedOptions: string[];
   ocrRenderType?: string;
-  onParameterChange: <K extends keyof OCRParameters>(key: K, value: OCRParameters[K]) => void;
+  onParameterChange: <K extends keyof OCRParameters>(
+    key: K,
+    value: OCRParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -30,11 +33,31 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
 
   // Define the advanced options available
   const advancedOptionsData: AdvancedOption[] = [
-    { value: "compatibilityMode", label: t("ocr.settings.compatibilityMode.label", "Compatibility Mode"), isSpecial: true },
-    { value: "sidecar", label: t("ocr.settings.advancedOptions.sidecar", "Create a text file"), isSpecial: false },
-    { value: "deskew", label: t("ocr.settings.advancedOptions.deskew", "Deskew pages"), isSpecial: false },
-    { value: "clean", label: t("ocr.settings.advancedOptions.clean", "Clean input file"), isSpecial: false },
-    { value: "cleanFinal", label: t("ocr.settings.advancedOptions.cleanFinal", "Clean final output"), isSpecial: false },
+    {
+      value: "compatibilityMode",
+      label: t("ocr.settings.compatibilityMode.label", "Compatibility Mode"),
+      isSpecial: true,
+    },
+    {
+      value: "sidecar",
+      label: t("ocr.settings.advancedOptions.sidecar", "Create a text file"),
+      isSpecial: false,
+    },
+    {
+      value: "deskew",
+      label: t("ocr.settings.advancedOptions.deskew", "Deskew pages"),
+      isSpecial: false,
+    },
+    {
+      value: "clean",
+      label: t("ocr.settings.advancedOptions.clean", "Clean input file"),
+      isSpecial: false,
+    },
+    {
+      value: "cleanFinal",
+      label: t("ocr.settings.advancedOptions.cleanFinal", "Clean final output"),
+      isSpecial: false,
+    },
   ];
 
   // Handle individual checkbox changes
@@ -74,8 +97,14 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
           {advancedOptionsData.map((option) => (
             <Checkbox
               key={option.value}
-              checked={option.isSpecial ? isSpecialOptionSelected(option.value) : advancedOptions.includes(option.value)}
-              onChange={(event) => handleCheckboxChange(option.value, event.currentTarget.checked)}
+              checked={
+                option.isSpecial
+                  ? isSpecialOptionSelected(option.value)
+                  : advancedOptions.includes(option.value)
+              }
+              onChange={(event) =>
+                handleCheckboxChange(option.value, event.currentTarget.checked)
+              }
               label={option.label}
               disabled={disabled}
               size="sm"

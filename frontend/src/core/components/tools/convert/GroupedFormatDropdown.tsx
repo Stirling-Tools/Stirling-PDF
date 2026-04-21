@@ -8,7 +8,6 @@ import {
   Popover,
   UnstyledButton,
   useMantineTheme,
-  useMantineColorScheme,
 } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
@@ -47,7 +46,6 @@ const GroupedFormatDropdown = ({
 }: GroupedFormatDropdownProps) => {
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
 
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
@@ -65,7 +63,9 @@ const GroupedFormatDropdown = ({
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
     const selected = options.find((opt) => opt.value === value);
-    return selected ? `${selected.group} (${selected.label})` : value.toUpperCase();
+    return selected
+      ? `${selected.group} (${selected.label})`
+      : value.toUpperCase();
   }, [value, options, placeholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
@@ -96,16 +96,14 @@ const GroupedFormatDropdown = ({
             padding: "0.5rem 0.75rem",
             border: `0.0625rem solid ${theme.colors.gray[4]}`,
             borderRadius: theme.radius.sm,
-            backgroundColor: disabled ? theme.colors.gray[1] : colorScheme === "dark" ? theme.colors.dark[6] : theme.white,
+            backgroundColor: disabled
+              ? theme.colors.gray[1]
+              : "var(--dropdown-trigger-bg)",
             cursor: disabled ? "not-allowed" : "pointer",
             width: "100%",
             color: disabled
-              ? colorScheme === "dark"
-                ? theme.colors.dark[1]
-                : theme.colors.dark[7]
-              : colorScheme === "dark"
-                ? theme.colors.dark[0]
-                : theme.colors.dark[9],
+              ? "var(--dropdown-trigger-text-disabled)"
+              : "var(--dropdown-trigger-text)",
           }}
         >
           <Group justify="space-between">
@@ -117,7 +115,7 @@ const GroupedFormatDropdown = ({
                 fontSize: "1rem",
                 transform: dropdownOpened ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.2s ease",
-                color: colorScheme === "dark" ? theme.colors.dark[2] : theme.colors.gray[6],
+                color: "var(--dropdown-trigger-icon)",
               }}
             />
           </Group>
@@ -129,14 +127,19 @@ const GroupedFormatDropdown = ({
           maxWidth: "90vw",
           maxHeight: "40vh",
           overflow: "auto",
-          backgroundColor: colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
-          border: `0.0625rem solid ${colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[4]}`,
+          backgroundColor: "var(--dropdown-panel-bg)",
+          border: `0.0625rem solid var(--dropdown-panel-border)`,
         }}
       >
         <Stack gap="md">
           {Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
             <Box key={groupName}>
-              <Text size="sm" fw={600} c={colorScheme === "dark" ? "dark.2" : "gray.6"} mb="xs">
+              <Text
+                size="sm"
+                fw={600}
+                mb="xs"
+                style={{ color: "var(--dropdown-group-label)" }}
+              >
                 {groupName}
               </Text>
               <Group gap="xs" style={{ flexWrap: "wrap" }}>

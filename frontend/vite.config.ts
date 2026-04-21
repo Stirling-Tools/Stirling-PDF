@@ -3,7 +3,13 @@ import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
-const VALID_MODES = ["core", "proprietary", "saas", "desktop", "prototypes"] as const;
+const VALID_MODES = [
+  "core",
+  "proprietary",
+  "saas",
+  "desktop",
+  "prototypes",
+] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
 const TSCONFIG_MAP: Record<BuildMode, string> = {
@@ -23,7 +29,9 @@ export default defineConfig(({ mode }) => {
   // Resolve the effective build mode.
   // Explicit --mode flags take precedence; otherwise default to proprietary
   // unless DISABLE_ADDITIONAL_FEATURES=true, in which case default to core.
-  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(mode)
+  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(
+    mode,
+  )
     ? (mode as BuildMode)
     : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
       ? "core"
@@ -48,6 +56,19 @@ export default defineConfig(({ mode }) => {
             // Copy jscanify vendor files to dist
             src: "public/vendor/jscanify/*",
             dest: "vendor/jscanify",
+          },
+          {
+            // pdfjs-dist CMap data for CJK / non-latin glyph mapping — required
+            // when rendering PDFs inside workers where the default DOM fetch paths
+            // aren't available.
+            src: "node_modules/pdfjs-dist/cmaps/*",
+            dest: "pdfjs/cmaps",
+          },
+          {
+            // pdfjs-dist standard font data (Helvetica/Times/etc.) — needed so
+            // workers can substitute non-embedded base 14 fonts without DOM access.
+            src: "node_modules/pdfjs-dist/standard_fonts/*",
+            dest: "pdfjs/standard_fonts",
           },
         ],
       }),

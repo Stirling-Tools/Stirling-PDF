@@ -1,6 +1,10 @@
 import { MutableRefObject } from "react";
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
-import { ViewerBridgeRegistry, ScrollState, ZoomState } from "@app/contexts/viewer/viewerBridges";
+import {
+  ViewerBridgeRegistry,
+  ScrollState,
+  ZoomState,
+} from "@app/contexts/viewer/viewerBridges";
 import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
 
 export interface ScrollActions {
@@ -59,14 +63,20 @@ export interface ExportActions {
 export interface BookmarkActions {
   fetchBookmarks: () => Promise<PdfBookmarkObject[] | null>;
   clearBookmarks: () => void;
-  setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
+  setLocalBookmarks: (
+    bookmarks: PdfBookmarkObject[] | null,
+    error?: string | null,
+  ) => void;
 }
 
 export interface AttachmentActions {
   getAttachments: () => Promise<PdfAttachmentObject[] | null>;
   downloadAttachment: (attachment: PdfAttachmentObject) => void;
   clearAttachments: () => void;
-  setLocalAttachments: (attachments: PdfAttachmentObject[] | null, error?: string | null) => void;
+  setLocalAttachments: (
+    attachments: PdfAttachmentObject[] | null,
+    error?: string | null,
+  ) => void;
 }
 
 export interface PrintActions {
@@ -105,11 +115,17 @@ export function createViewerActions({
       const api = registry.current.scroll?.api;
       if (api?.scrollToPage) {
         try {
-          api.scrollToPage({ pageNumber: page, behavior: behavior || "smooth" });
+          api.scrollToPage({
+            pageNumber: page,
+            behavior: behavior || "smooth",
+          });
         } catch (error) {
           // Silently handle "Strategy not found" errors that occur during document transitions
           if (process.env.NODE_ENV === "development") {
-            console.warn("[ScrollActions] scrollToPage failed (document may be transitioning):", error);
+            console.warn(
+              "[ScrollActions] scrollToPage failed (document may be transitioning):",
+              error,
+            );
           }
         }
       }
@@ -170,7 +186,10 @@ export function createViewerActions({
       const api = registry.current.zoom?.api;
       if (api?.zoomIn) {
         const currentState = getZoomState();
-        const newPercent = Math.min(Math.round(currentState.zoomPercent * 1.2), 300);
+        const newPercent = Math.min(
+          Math.round(currentState.zoomPercent * 1.2),
+          300,
+        );
         triggerImmediateZoomUpdate(newPercent);
         api.zoomIn();
       }
@@ -179,7 +198,10 @@ export function createViewerActions({
       const api = registry.current.zoom?.api;
       if (api?.zoomOut) {
         const currentState = getZoomState();
-        const newPercent = Math.max(Math.round(currentState.zoomPercent / 1.2), 20);
+        const newPercent = Math.max(
+          Math.round(currentState.zoomPercent / 1.2),
+          20,
+        );
         triggerImmediateZoomUpdate(newPercent);
         api.zoomOut();
       }

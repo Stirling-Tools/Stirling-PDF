@@ -18,7 +18,8 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Get the currently displayed file
-  const currentFile = selectedFiles.length > 0 ? selectedFiles[currentFileIndex] : null;
+  const currentFile =
+    selectedFiles.length > 0 ? selectedFiles[currentFileIndex] : null;
   const hasSelection = selectedFiles.length > 0;
   const hasActiveFiles = activeFileIds.length > 0;
   // Enable "Close all files" when nothing is checked but files are open in workbench
@@ -36,7 +37,9 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentFileIndex((prev) => (prev > 0 ? prev - 1 : selectedFiles.length - 1));
+      setCurrentFileIndex((prev) =>
+        prev > 0 ? prev - 1 : selectedFiles.length - 1,
+      );
       setIsAnimating(false);
     }, 150);
   };
@@ -45,7 +48,9 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentFileIndex((prev) => (prev < selectedFiles.length - 1 ? prev + 1 : 0));
+      setCurrentFileIndex((prev) =>
+        prev < selectedFiles.length - 1 ? prev + 1 : 0,
+      );
       setIsAnimating(false);
     }, 150);
   };
@@ -77,7 +82,14 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
   return (
     <Stack gap="lg" h={`calc(${modalHeight} - 2rem)`} justify="flex-start">
       {/* Section 1: Thumbnail Preview */}
-      <Box style={{ width: "100%", height: "min(35vh, 280px)", textAlign: "center", flexShrink: 0 }}>
+      <Box
+        style={{
+          width: "100%",
+          height: "min(35vh, 280px)",
+          textAlign: "center",
+          flexShrink: 0,
+        }}
+      >
         <FilePreview
           file={currentFile}
           thumbnail={getCurrentThumbnail()}

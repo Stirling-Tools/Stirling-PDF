@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Text, Alert, Loader, Stack, Group, NumberInput } from "@mantine/core";
+import {
+  Modal,
+  Button,
+  Text,
+  Alert,
+  Loader,
+  Stack,
+  Group,
+  NumberInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
@@ -51,9 +60,13 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
     if (newSeatCount < minimumSeats) {
       setState({
         status: "error",
-        error: t("billing.seatCountTooLow", "Seat count must be at least {{minimum}} (current number of users)", {
-          minimum: minimumSeats,
-        }),
+        error: t(
+          "billing.seatCountTooLow",
+          "Seat count must be at least {{minimum}} (current number of users)",
+          {
+            minimum: minimumSeats,
+          },
+        ),
       });
       return;
     }
@@ -61,7 +74,10 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
     if (newSeatCount === currentSeats) {
       setState({
         status: "error",
-        error: t("billing.seatCountUnchanged", "Please select a different seat count"),
+        error: t(
+          "billing.seatCountUnchanged",
+          "Please select a different seat count",
+        ),
       });
       return;
     }
@@ -79,7 +95,8 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
       // Note: No need to call onSuccess here since we're redirecting
       // The return flow will handle success notification
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update seat count";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update seat count";
       setState({
         status: "error",
         error: errorMessage,
@@ -135,9 +152,14 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
 
         <NumberInput
           label={t("billing.newSeatCount", "New Seat Count")}
-          description={t("billing.newSeatCountDescription", "Select the number of seats for your enterprise license")}
+          description={t(
+            "billing.newSeatCountDescription",
+            "Select the number of seats for your enterprise license",
+          )}
           value={newSeatCount}
-          onChange={(value) => setNewSeatCount(typeof value === "number" ? value : minimumSeats)}
+          onChange={(value) =>
+            setNewSeatCount(typeof value === "number" ? value : minimumSeats)
+          }
           min={minimumSeats}
           max={10000}
           step={1}
@@ -151,7 +173,10 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
           }}
         />
 
-        <Alert color="blue" title={t("billing.whatHappensNext", "What happens next?")}>
+        <Alert
+          color="blue"
+          title={t("billing.whatHappensNext", "What happens next?")}
+        >
           <Text size="sm">
             {t(
               "billing.stripePortalRedirect",
@@ -164,7 +189,12 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
           <Button variant="outline" onClick={handleClose}>
             {t("common.cancel", "Cancel")}
           </Button>
-          <Button onClick={handleUpdateSeats} disabled={newSeatCount === currentSeats || newSeatCount < minimumSeats}>
+          <Button
+            onClick={handleUpdateSeats}
+            disabled={
+              newSeatCount === currentSeats || newSeatCount < minimumSeats
+            }
+          >
             {t("billing.updateSeats", "Update Seats")}
           </Button>
         </Group>

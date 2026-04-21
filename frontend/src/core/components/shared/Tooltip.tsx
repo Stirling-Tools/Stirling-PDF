@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
@@ -73,7 +79,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const tooltipIdRef = useRef(`tooltip-${Math.random().toString(36).slice(2)}`);
 
   // Runtime guard: some browsers may surface non-Node EventTargets for relatedTarget/target
-  const isDomNode = (value: unknown): value is Node => typeof Node !== "undefined" && value instanceof Node;
+  const isDomNode = (value: unknown): value is Node =>
+    typeof Node !== "undefined" && value instanceof Node;
 
   const clearTimers = useCallback(() => {
     if (openTimeoutRef.current) {
@@ -91,15 +98,17 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
   const allowAutoClose = !manualCloseOnly;
 
-  const resolvedPosition: NonNullable<TooltipProps["position"]> = useMemo(() => {
-    const htmlDir = typeof document !== "undefined" ? document.documentElement.dir : "ltr";
-    const isRTL = htmlDir === "rtl";
-    const base = position ?? "right";
-    if (!isRTL) return base as NonNullable<TooltipProps["position"]>;
-    if (base === "left") return "right";
-    if (base === "right") return "left";
-    return base as NonNullable<TooltipProps["position"]>;
-  }, [position]);
+  const resolvedPosition: NonNullable<TooltipProps["position"]> =
+    useMemo(() => {
+      const htmlDir =
+        typeof document !== "undefined" ? document.documentElement.dir : "ltr";
+      const isRTL = htmlDir === "rtl";
+      const base = position ?? "right";
+      if (!isRTL) return base as NonNullable<TooltipProps["position"]>;
+      if (base === "left") return "right";
+      if (base === "right") return "left";
+      return base as NonNullable<TooltipProps["position"]>;
+    }, [position]);
 
   const setOpen = useCallback(
     (newOpen: boolean) => {
@@ -128,8 +137,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const tEl = tooltipRef.current;
       const trg = triggerRef.current;
       const target = e.target as unknown;
-      const insideTooltip = Boolean(tEl && isDomNode(target) && tEl.contains(target));
-      const insideTrigger = Boolean(trg && isDomNode(target) && trg.contains(target));
+      const insideTooltip = Boolean(
+        tEl && isDomNode(target) && tEl.contains(target),
+      );
+      const insideTrigger = Boolean(
+        trg && isDomNode(target) && trg.contains(target),
+      );
 
       // If pinned: only close when clicking outside BOTH tooltip & trigger
       if (isPinned) {
@@ -141,7 +154,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
 
       // Not pinned and configured to close on outside
-      if (allowAutoClose && closeOnOutside && !insideTooltip && !insideTrigger) {
+      if (
+        allowAutoClose &&
+        closeOnOutside &&
+        !insideTooltip &&
+        !insideTrigger
+      ) {
         setOpen(false);
       }
     },
@@ -151,7 +169,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
   useEffect(() => {
     // Attach global click when open (so hover tooltips can also close on outside if desired)
     if (open || isPinned) {
-      return addEventListenerWithCleanup(document, "click", handleDocumentClick as EventListener);
+      return addEventListenerWithCleanup(
+        document,
+        "click",
+        handleDocumentClick as EventListener,
+      );
     }
   }, [open, isPinned, handleDocumentClick]);
 
@@ -171,7 +193,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const getArrowStyleClass = useCallback(
     (key: string) =>
       styles[key as keyof typeof styles] ||
-      styles[key.replace(/-([a-z])/g, (_, l) => l.toUpperCase()) as keyof typeof styles] ||
+      styles[
+        key.replace(/-([a-z])/g, (_, l) =>
+          l.toUpperCase(),
+        ) as keyof typeof styles
+      ] ||
       "",
     [],
   );
@@ -180,7 +206,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const openWithDelay = useCallback(() => {
     clearTimers();
     if (disabled) return;
-    openTimeoutRef.current = setTimeout(() => setOpen(true), Math.max(0, delay || 0));
+    openTimeoutRef.current = setTimeout(
+      () => setOpen(true),
+      Math.max(0, delay || 0),
+    );
   }, [clearTimers, setOpen, delay, disabled]);
 
   const handlePointerEnter = useCallback(
@@ -196,7 +225,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const related = e.relatedTarget as Node | null;
 
       // Moving into the tooltip → keep open
-      if (isDomNode(related) && tooltipRef.current && tooltipRef.current.contains(related)) {
+      if (
+        isDomNode(related) &&
+        tooltipRef.current &&
+        tooltipRef.current.contains(related)
+      ) {
         (children.props as any)?.onPointerLeave?.(e);
         return;
       }
@@ -260,7 +293,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
       const related = e.relatedTarget as Node | null;
-      if (isDomNode(related) && tooltipRef.current && tooltipRef.current.contains(related)) {
+      if (
+        isDomNode(related) &&
+        tooltipRef.current &&
+        tooltipRef.current.contains(related)
+      ) {
         (children.props as any)?.onBlur?.(e);
         return;
       }
@@ -287,7 +324,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleTooltipPointerLeave = useCallback(
     (e: React.PointerEvent) => {
       const related = e.relatedTarget as Node | null;
-      if (isDomNode(related) && triggerRef.current && triggerRef.current.contains(related)) return;
+      if (
+        isDomNode(related) &&
+        triggerRef.current &&
+        triggerRef.current.contains(related)
+      )
+        return;
       if (allowAutoClose && !isPinned) setOpen(false);
     },
     [isPinned, setOpen, allowAutoClose],
@@ -299,7 +341,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
       triggerRef.current = node || null;
       const originalRef = (children as any).ref;
       if (typeof originalRef === "function") originalRef(node);
-      else if (originalRef && typeof originalRef === "object") (originalRef as any).current = node;
+      else if (originalRef && typeof originalRef === "object")
+        (originalRef as any).current = node;
     },
     "aria-describedby": open ? tooltipIdRef.current : undefined,
     onPointerEnter: handlePointerEnter,
@@ -327,7 +370,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
         position: "fixed",
         top: coords.top,
         left: coords.left,
-        width: maxWidth !== undefined ? maxWidth : sidebarTooltip ? ("25rem" as const) : undefined,
+        width:
+          maxWidth !== undefined
+            ? maxWidth
+            : sidebarTooltip
+              ? ("25rem" as const)
+              : undefined,
         minWidth,
         zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
         visibility: positionReady ? "visible" : "hidden",
@@ -364,7 +412,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
           className={`${styles["tooltip-arrow"]} ${getArrowStyleClass(arrowClass!)}`}
           style={
             coords.arrowOffset !== null
-              ? { [resolvedPosition === "top" || resolvedPosition === "bottom" ? "left" : "top"]: coords.arrowOffset }
+              ? {
+                  [resolvedPosition === "top" || resolvedPosition === "bottom"
+                    ? "left"
+                    : "top"]: coords.arrowOffset,
+                }
               : undefined
           }
         />
@@ -373,13 +425,21 @@ export const Tooltip: React.FC<TooltipProps> = ({
         <div className={styles["tooltip-header"]}>
           <div className={styles["tooltip-logo"]}>
             {header.logo || (
-              <img src={tooltipLogo} alt="Stirling PDF" style={{ width: "1.4rem", height: "1.4rem", display: "block" }} />
+              <img
+                src={tooltipLogo}
+                alt="Stirling PDF"
+                style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
+              />
             )}
           </div>
           <span className={styles["tooltip-title"]}>{header.title}</span>
         </div>
       )}
-      <TooltipContent content={content} tips={tips} extraRightPadding={shouldShowCloseButton ? 48 : 0} />
+      <TooltipContent
+        content={content}
+        tips={tips}
+        extraRightPadding={shouldShowCloseButton ? 48 : 0}
+      />
     </div>
   ) : null;
 
@@ -387,9 +447,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
     <>
       {childWithHandlers}
       {(() => {
-        const defaultTarget = typeof document !== "undefined" ? document.body : null;
+        const defaultTarget =
+          typeof document !== "undefined" ? document.body : null;
         const target = portalTarget ?? defaultTarget;
-        return tooltipElement && target ? createPortal(tooltipElement, target) : tooltipElement;
+        return tooltipElement && target
+          ? createPortal(tooltipElement, target)
+          : tooltipElement;
       })()}
     </>
   );

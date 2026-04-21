@@ -14,7 +14,12 @@ import NavigationArrows from "@app/components/shared/filePreview/NavigationArrow
 const AdjustContrast = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("adjustContrast", useAdjustContrastParameters, useAdjustContrastOperation, props);
+  const base = useBaseTool(
+    "adjustContrast",
+    useAdjustContrastParameters,
+    useAdjustContrastOperation,
+    props,
+  );
 
   enum Step {
     NONE = "none",
@@ -43,7 +48,8 @@ const AdjustContrast = (props: BaseToolProps) => {
   }, [base.selectedFiles, previewIndex, totalSelected]);
 
   const handlePrev = () => setPreviewIndex((i) => Math.max(0, i - 1));
-  const handleNext = () => setPreviewIndex((i) => Math.min(totalSelected - 1, i + 1));
+  const handleNext = () =>
+    setPreviewIndex((i) => Math.min(totalSelected - 1, i + 1));
 
   return createToolFlow({
     files: {
@@ -78,13 +84,27 @@ const AdjustContrast = (props: BaseToolProps) => {
     ],
     preview: (
       <div>
-        <NavigationArrows onPrevious={handlePrev} onNext={handleNext} disabled={totalSelected <= 1}>
+        <NavigationArrows
+          onPrevious={handlePrev}
+          onNext={handleNext}
+          disabled={totalSelected <= 1}
+        >
           <div style={{ width: "100%" }}>
-            <AdjustContrastPreview file={currentFile || null} parameters={base.params.parameters} />
+            <AdjustContrastPreview
+              file={currentFile || null}
+              parameters={base.params.parameters}
+            />
           </div>
         </NavigationArrows>
         {totalSelected > 1 && (
-          <div style={{ textAlign: "center", marginTop: 8, fontSize: 12, color: "var(--text-color-muted)" }}>
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: 8,
+              fontSize: 12,
+              color: "var(--text-color-muted)",
+            }}
+          >
             {`${previewIndex + 1} of ${totalSelected}`}
           </div>
         )}

@@ -32,13 +32,20 @@ function sanitizeFilename(name: string): string {
   return trimmed.replace(/[\\/:*?"<>|]/g, "_");
 }
 
-export async function buildHistoryBundle(originalFileIds: FileId[] | FileId): Promise<{
+export async function buildHistoryBundle(
+  originalFileIds: FileId[] | FileId,
+): Promise<{
   bundleFile: File;
   manifest: ShareBundleManifest;
 }> {
-  const roots = Array.isArray(originalFileIds) ? originalFileIds : [originalFileIds];
+  const roots = Array.isArray(originalFileIds)
+    ? originalFileIds
+    : [originalFileIds];
   const uniqueRoots = Array.from(new Set(roots));
-  const allStubs: Array<{ rootId: FileId; stubs: Awaited<ReturnType<typeof fileStorage.getHistoryChainStubs>> }> = [];
+  const allStubs: Array<{
+    rootId: FileId;
+    stubs: Awaited<ReturnType<typeof fileStorage.getHistoryChainStubs>>;
+  }> = [];
 
   for (const rootId of uniqueRoots) {
     const stubs = await fileStorage.getHistoryChainStubs(rootId);

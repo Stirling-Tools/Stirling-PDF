@@ -9,7 +9,11 @@ interface SignatureTypeSelectorProps {
   disabled?: boolean;
 }
 
-export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({ value, onChange, disabled = false }) => {
+export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({
+  value,
+  onChange,
+  disabled = false,
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -24,7 +28,10 @@ export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({ va
         },
         {
           value: "upload",
-          label: t("certSign.collab.signRequest.signatureType.upload", "Upload"),
+          label: t(
+            "certSign.collab.signRequest.signatureType.upload",
+            "Upload",
+          ),
         },
         {
           value: "type",

@@ -7,7 +7,10 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   selectedFiles: StirlingFile[];
   disabled?: boolean;
 }
@@ -19,7 +22,8 @@ const ConvertToPdfaSettings = ({
   disabled = false,
 }: ConvertToPdfaSettingsProps) => {
   const { t } = useTranslation();
-  const { hasDigitalSignatures, isChecking } = usePdfSignatureDetection(selectedFiles);
+  const { hasDigitalSignatures, isChecking } =
+    usePdfSignatureDetection(selectedFiles);
 
   const pdfaFormatOptions = [
     { value: "pdfa-1", label: "PDF/A-1b" },
@@ -59,7 +63,10 @@ const ConvertToPdfaSettings = ({
           data={pdfaFormatOptions}
           disabled={disabled || isChecking}
           data-testid="pdfa-output-format-select"
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
         <Text size="xs" c="dimmed">
           {t(
@@ -71,7 +78,10 @@ const ConvertToPdfaSettings = ({
 
       <Checkbox
         label={t("convert.strictMode", "Strict Mode")}
-        description={t("convert.strictModeDesc", "Error if conversion is not perfect (uses VeraPDF verification)")}
+        description={t(
+          "convert.strictModeDesc",
+          "Error if conversion is not perfect (uses VeraPDF verification)",
+        )}
         checked={parameters.pdfaOptions.strict}
         onChange={(event) =>
           onParameterChange("pdfaOptions", {

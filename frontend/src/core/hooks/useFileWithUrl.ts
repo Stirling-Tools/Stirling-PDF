@@ -27,7 +27,11 @@ export function useFileWithUrl(
       const url = URL.createObjectURL(file);
       return { file, url };
     } catch (error) {
-      console.error("useFileWithUrl: Failed to create object URL:", error, file);
+      console.error(
+        "useFileWithUrl: Failed to create object URL:",
+        error,
+        file,
+      );
       return null;
     }
     // When stableKey is provided, only recreate when the file identity changes — not

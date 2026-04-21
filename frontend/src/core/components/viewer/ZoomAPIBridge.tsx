@@ -12,7 +12,10 @@ import {
 } from "@app/utils/viewerZoom";
 import { getFirstPageAspectRatioFromStub } from "@app/utils/pageMetadata";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { preferencesService, type ViewerZoomSetting } from "@app/services/preferencesService";
+import {
+  preferencesService,
+  type ViewerZoomSetting,
+} from "@app/services/preferencesService";
 
 /**
  * Connects the PDF zoom plugin to the shared ViewerContext.
@@ -90,7 +93,11 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       lastSpreadMode.current = currentSpreadMode;
 
       const hadTrackedAutoZoom = lastAppliedZoom.current !== null;
-      if (zoomLevel === ZoomMode.FitWidth || zoomLevel === ZoomMode.Automatic || hadTrackedAutoZoom) {
+      if (
+        zoomLevel === ZoomMode.FitWidth ||
+        zoomLevel === ZoomMode.Automatic ||
+        hadTrackedAutoZoom
+      ) {
         requestFitWidth();
         scheduleAutoZoom();
       }
@@ -98,7 +105,10 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
   }, [spreadMode, zoomLevel, scheduleAutoZoom, requestFitWidth]);
 
   const isManagedZoom =
-    !!zoom && (zoomLevel === ZoomMode.FitWidth || zoomLevel === ZoomMode.Automatic || lastAppliedZoom.current !== null);
+    !!zoom &&
+    (zoomLevel === ZoomMode.FitWidth ||
+      zoomLevel === ZoomMode.Automatic ||
+      lastAppliedZoom.current !== null);
 
   useFitWidthResize({
     isManaged: isManagedZoom,
@@ -131,7 +141,10 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       return;
     }
 
-    const applyTrackedZoom = (level: number | ZoomMode, effectiveZoom: number) => {
+    const applyTrackedZoom = (
+      level: number | ZoomMode,
+      effectiveZoom: number,
+    ) => {
       zoom.requestZoom(level, { vx: 0.5, vy: 0 });
       lastAppliedZoom.current = effectiveZoom;
       triggerImmediateZoomUpdate(Math.round(effectiveZoom * 100));
@@ -149,7 +162,8 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       }
 
       // Check user preference for default viewer zoom
-      const zoomPref: ViewerZoomSetting = preferencesService.getPreference("defaultViewerZoom");
+      const zoomPref: ViewerZoomSetting =
+        preferencesService.getPreference("defaultViewerZoom");
       if (zoomPref !== "auto") {
         if (zoomPref === "fitWidth") {
           applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
@@ -225,13 +239,15 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       return;
     }
 
-    zoomSubscriptionRef.current = zoom.onZoomChange((event: { newZoom?: number }) => {
-      if (typeof event?.newZoom !== "number") {
-        return;
-      }
-      lastAppliedZoom.current = event.newZoom;
-      triggerImmediateZoomUpdate(Math.round(event.newZoom * 100));
-    });
+    zoomSubscriptionRef.current = zoom.onZoomChange(
+      (event: { newZoom?: number }) => {
+        if (typeof event?.newZoom !== "number") {
+          return;
+        }
+        lastAppliedZoom.current = event.newZoom;
+        triggerImmediateZoomUpdate(Math.round(event.newZoom * 100));
+      },
+    );
 
     return () => {
       if (zoomSubscriptionRef.current) {
@@ -251,7 +267,8 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       return;
     }
 
-    const currentZoomLevel = lastAppliedZoom.current ?? zoomStateCurrentZoomLevel ?? 1;
+    const currentZoomLevel =
+      lastAppliedZoom.current ?? zoomStateCurrentZoomLevel ?? 1;
 
     const newState = {
       currentZoom: currentZoomLevel,

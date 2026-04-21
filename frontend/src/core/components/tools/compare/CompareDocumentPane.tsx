@@ -1,7 +1,10 @@
 import { Group, Loader, Stack, Text } from "@mantine/core";
 import { useMemo, useRef, useEffect, useState } from "react";
 import type { PagePreview } from "@app/types/compare";
-import type { TokenBoundingBox, CompareDocumentPaneProps } from "@app/types/compare";
+import type {
+  TokenBoundingBox,
+  CompareDocumentPaneProps,
+} from "@app/types/compare";
 import {
   mergeConnectedRects,
   normalizeRotation,
@@ -53,7 +56,10 @@ const CompareDocumentPane = ({
     return map;
   }, [pairedPages]);
 
-  const HIGHLIGHT_BG_VAR = pane === "base" ? "var(--spdf-compare-removed-bg)" : "var(--spdf-compare-added-bg)";
+  const HIGHLIGHT_BG_VAR =
+    pane === "base"
+      ? "var(--spdf-compare-removed-bg)"
+      : "var(--spdf-compare-added-bg)";
   const OFFSET_PIXELS = pane === "base" ? 4 : 2;
   const cursorStyle = isPanMode && zoom > 1 ? "grab" : "auto";
   const pagePanRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -64,7 +70,14 @@ const CompareDocumentPane = ({
     startY: number;
     startPanX: number;
     startPanY: number;
-  }>({ active: false, page: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
+  }>({
+    active: false,
+    page: null,
+    startX: 0,
+    startY: 0,
+    startPanX: 0,
+    startPanY: 0,
+  });
 
   // Track which page images have finished loading to avoid flashing between states
   const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
@@ -89,7 +102,10 @@ const CompareDocumentPane = ({
     }
   }, [zoom]);
 
-  const renderedPageNumbers = useMemo(() => new Set(pages.map((p) => p.pageNumber)), [pages]);
+  const renderedPageNumbers = useMemo(
+    () => new Set(pages.map((p) => p.pageNumber)),
+    [pages],
+  );
 
   return (
     <div className="compare-pane">
@@ -103,7 +119,11 @@ const CompareDocumentPane = ({
               <CompareNavigationDropdown
                 changes={changes}
                 placeholder={dropdownPlaceholder ?? null}
-                className={pane === "comparison" ? "compare-changes-select--comparison" : undefined}
+                className={
+                  pane === "comparison"
+                    ? "compare-changes-select--comparison"
+                    : undefined
+                }
                 onNavigate={onNavigateChange}
                 renderedPageNumbers={renderedPageNumbers}
               />
@@ -127,7 +147,9 @@ const CompareDocumentPane = ({
             let bestDist = Number.POSITIVE_INFINITY;
             let nodes = pageNodesRef.current;
             if (!nodes || nodes.length !== pages.length) {
-              nodes = Array.from(container.querySelectorAll(".compare-diff-page")) as HTMLElement[];
+              nodes = Array.from(
+                container.querySelectorAll(".compare-diff-page"),
+              ) as HTMLElement[];
               pageNodesRef.current = nodes;
             }
             for (const el of nodes) {
@@ -142,7 +164,10 @@ const CompareDocumentPane = ({
                 if (!Number.isNaN(pn)) bestPage = pn;
               }
             }
-            if (typeof onVisiblePageChange === "function" && bestPage !== lastReportedVisiblePageRef.current) {
+            if (
+              typeof onVisiblePageChange === "function" &&
+              bestPage !== lastReportedVisiblePageRef.current
+            ) {
               lastReportedVisiblePageRef.current = bestPage;
               onVisiblePageChange(pane, bestPage);
             }
@@ -163,7 +188,10 @@ const CompareDocumentPane = ({
         className="compare-pane__scroll"
         style={{ cursor: cursorStyle }}
       >
-        <Stack gap={zoom <= 0.6 ? 2 : zoom <= 0.85 ? "xs" : "sm"} className="compare-pane__content">
+        <Stack
+          gap={zoom <= 0.6 ? 2 : zoom <= 0.85 ? "xs" : "sm"}
+          className="compare-pane__content"
+        >
           {isLoading && (
             <Group justify="center" gap="xs" py="md">
               <Loader size="sm" />
@@ -173,7 +201,8 @@ const CompareDocumentPane = ({
 
           {pages.map((page) => {
             const peerPage = pairedPageMap.get(page.pageNumber);
-            const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
+            const viewportWidth =
+              typeof window !== "undefined" ? window.innerWidth : 1200;
             const metrics = computePageLayoutMetrics({
               page,
               peerPage: peerPage ?? null,
@@ -185,18 +214,39 @@ const CompareDocumentPane = ({
               offsetPixels: OFFSET_PIXELS,
             });
 
-            const { highlightOffset, containerWidth, containerHeight, innerScale } = metrics;
+            const {
+              highlightOffset,
+              containerWidth,
+              containerHeight,
+              innerScale,
+            } = metrics;
 
             // Compute clamped pan for current zoom so content always touches edges when in bounds
-            const storedPan = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
-            const contentWidth = Math.max(0, Math.round(containerWidth * innerScale));
-            const contentHeight = Math.max(0, Math.round(containerHeight * innerScale));
-            const maxPanX = Math.max(0, contentWidth - Math.round(containerWidth));
-            const maxPanY = Math.max(0, contentHeight - Math.round(containerHeight));
+            const storedPan = pagePanRef.current.get(page.pageNumber) || {
+              x: 0,
+              y: 0,
+            };
+            const contentWidth = Math.max(
+              0,
+              Math.round(containerWidth * innerScale),
+            );
+            const contentHeight = Math.max(
+              0,
+              Math.round(containerHeight * innerScale),
+            );
+            const maxPanX = Math.max(
+              0,
+              contentWidth - Math.round(containerWidth),
+            );
+            const maxPanY = Math.max(
+              0,
+              contentHeight - Math.round(containerHeight),
+            );
             const clampedPanX = Math.max(0, Math.min(maxPanX, storedPan.x));
             const clampedPanY = Math.max(0, Math.min(maxPanY, storedPan.y));
 
-            const groupedRects = groupedRectsByPage.get(page.pageNumber) ?? new Map();
+            const groupedRects =
+              groupedRectsByPage.get(page.pageNumber) ?? new Map();
 
             return (
               <>
@@ -207,7 +257,11 @@ const CompareDocumentPane = ({
                 >
                   <div
                     className="compare-page-title"
-                    style={{ width: `${containerWidth}px`, marginLeft: "auto", marginRight: "auto" }}
+                    style={{
+                      width: `${containerWidth}px`,
+                      marginLeft: "auto",
+                      marginRight: "auto",
+                    }}
                   >
                     <Text size="xs" fw={600} c="dimmed" ta="center">
                       {documentLabel} · {pageLabel} {page.pageNumber}
@@ -228,38 +282,63 @@ const CompareDocumentPane = ({
                       dragRef.current.page = page.pageNumber;
                       dragRef.current.startX = e.clientX;
                       dragRef.current.startY = e.clientY;
-                      const curr = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
+                      const curr = pagePanRef.current.get(page.pageNumber) || {
+                        x: 0,
+                        y: 0,
+                      };
                       dragRef.current.startPanX = curr.x;
                       dragRef.current.startPanY = curr.y;
-                      (e.currentTarget as HTMLElement).style.cursor = "grabbing";
+                      (e.currentTarget as HTMLElement).style.cursor =
+                        "grabbing";
                       e.preventDefault();
                     }}
                     onMouseMove={(e) => {
-                      if (!dragRef.current.active || dragRef.current.page !== page.pageNumber) return;
+                      if (
+                        !dragRef.current.active ||
+                        dragRef.current.page !== page.pageNumber
+                      )
+                        return;
                       const dx = e.clientX - dragRef.current.startX;
                       const dy = e.clientY - dragRef.current.startY;
                       // Clamp panning based on the actual rendered content size.
                       // The inner layer is width/height of the container, then scaled by innerScale.
-                      const contentWidth = Math.max(0, Math.round(containerWidth * innerScale));
-                      const contentHeight = Math.max(0, Math.round(containerHeight * innerScale));
-                      const maxX = Math.max(0, contentWidth - Math.round(containerWidth));
-                      const maxY = Math.max(0, contentHeight - Math.round(containerHeight));
+                      const contentWidth = Math.max(
+                        0,
+                        Math.round(containerWidth * innerScale),
+                      );
+                      const contentHeight = Math.max(
+                        0,
+                        Math.round(containerHeight * innerScale),
+                      );
+                      const maxX = Math.max(
+                        0,
+                        contentWidth - Math.round(containerWidth),
+                      );
+                      const maxY = Math.max(
+                        0,
+                        contentHeight - Math.round(containerHeight),
+                      );
                       const candX = dragRef.current.startPanX - dx;
                       const candY = dragRef.current.startPanY - dy;
-                      const next = { x: Math.max(0, Math.min(maxX, candX)), y: Math.max(0, Math.min(maxY, candY)) };
+                      const next = {
+                        x: Math.max(0, Math.min(maxX, candX)),
+                        y: Math.max(0, Math.min(maxY, candY)),
+                      };
                       pagePanRef.current.set(page.pageNumber, next);
                       e.preventDefault();
                     }}
                     onMouseUp={(e) => {
                       if (dragRef.current.active) {
                         dragRef.current.active = false;
-                        (e.currentTarget as HTMLElement).style.cursor = cursorStyle;
+                        (e.currentTarget as HTMLElement).style.cursor =
+                          cursorStyle;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (dragRef.current.active) {
                         dragRef.current.active = false;
-                        (e.currentTarget as HTMLElement).style.cursor = cursorStyle;
+                        (e.currentTarget as HTMLElement).style.cursor =
+                          cursorStyle;
                       }
                     }}
                   >
@@ -285,7 +364,9 @@ const CompareDocumentPane = ({
                         }}
                       />
                       {/* Overlay loader until the page image is loaded */}
-                      {!(imageLoadedRef.current.get(page.pageNumber) ?? false) && (
+                      {!(
+                        imageLoadedRef.current.get(page.pageNumber) ?? false
+                      ) && (
                         <div className="compare-page-loader-overlay">
                           <Loader size="sm" />
                         </div>
@@ -293,7 +374,10 @@ const CompareDocumentPane = ({
                       {[...groupedRects.entries()].flatMap(([id, rects]) =>
                         mergeConnectedRects(rects).map((rect, index) => {
                           const rotation = normalizeRotation(page.rotation);
-                          const verticalOffset = rotation === 180 ? -highlightOffset : highlightOffset;
+                          const verticalOffset =
+                            rotation === 180
+                              ? -highlightOffset
+                              : highlightOffset;
                           return (
                             <span
                               key={`${pane}-highlight-${page.pageNumber}-${id}-${index}`}

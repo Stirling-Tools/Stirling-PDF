@@ -9,7 +9,9 @@ export interface DownloadResult {
   cancelled?: boolean;
 }
 
-export async function downloadFile(request: DownloadRequest): Promise<DownloadResult> {
+export async function downloadFile(
+  request: DownloadRequest,
+): Promise<DownloadResult> {
   const url = URL.createObjectURL(request.data);
 
   const link = document.createElement("a");
@@ -24,7 +26,11 @@ export async function downloadFile(request: DownloadRequest): Promise<DownloadRe
   return { savedPath: request.localPath };
 }
 
-export async function downloadFromUrl(url: string, filename: string, localPath?: string): Promise<DownloadResult> {
+export async function downloadFromUrl(
+  url: string,
+  filename: string,
+  localPath?: string,
+): Promise<DownloadResult> {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;

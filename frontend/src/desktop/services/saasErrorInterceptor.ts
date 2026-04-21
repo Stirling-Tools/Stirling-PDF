@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { extractAxiosErrorMessage } from "@app/services/httpErrorUtils";
 import { alert } from "@app/components/toast";
 
@@ -12,9 +13,14 @@ import { alert } from "@app/components/toast";
  * false if this is not a SaaS error.
  */
 export function handleSaaSError(error: unknown): boolean {
-  if ((error as any)?.config?._isSaaSRequest !== true) return false;
+  if (
+    !isAxiosError(error) ||
+    (error.config as { _isSaaSRequest?: boolean })?._isSaaSRequest !== true
+  )
+    return false;
 
-  const { title: originalTitle, body: originalBody } = extractAxiosErrorMessage(error);
+  const { title: originalTitle, body: originalBody } =
+    extractAxiosErrorMessage(error);
 
   alert({
     alertType: "error",
@@ -24,6 +30,9 @@ export function handleSaaSError(error: unknown): boolean {
     isPersistentPopup: false,
   });
 
-  console.error("[saasErrorInterceptor] SaaS backend error:", { originalTitle, originalBody });
+  console.error("[saasErrorInterceptor] SaaS backend error:", {
+    originalTitle,
+    originalBody,
+  });
   return true;
 }

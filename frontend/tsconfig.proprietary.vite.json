@@ -7,5 +7,10 @@
       "@core/*": ["src/core/*"]
     }
   },
-  "exclude": ["src/core/**/*.test.ts*", "src/core/**/*.spec.ts*", "src/desktop", "node_modules"]
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/desktop",
+    "node_modules"
+  ]
 }

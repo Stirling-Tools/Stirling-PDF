@@ -38,10 +38,14 @@ export const useConfigNavSections = (
   const sections = useCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
 
   // Add account management under Preferences
-  const preferencesSection = sections.find((section) => section.items.some((item) => item.key === "general"));
+  const preferencesSection = sections.find((section) =>
+    section.items.some((item) => item.key === "general"),
+  );
   if (preferencesSection) {
     preferencesSection.items = preferencesSection.items.map((item) =>
-      item.key === "general" ? { ...item, component: <GeneralSection /> } : item,
+      item.key === "general"
+        ? { ...item, component: <GeneralSection /> }
+        : item,
     );
 
     if (loginEnabled) {
@@ -57,8 +61,14 @@ export const useConfigNavSections = (
   // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
   if (isAdmin || !loginEnabled) {
     const requiresLogin = !loginEnabled;
-    const enableLoginTooltip = t("settings.tooltips.enableLoginFirst", "Enable login mode first");
-    const requiresEnterpriseTooltip = t("settings.tooltips.requiresEnterprise", "Requires Enterprise license");
+    const enableLoginTooltip = t(
+      "settings.tooltips.enableLoginFirst",
+      "Enable login mode first",
+    );
+    const requiresEnterpriseTooltip = t(
+      "settings.tooltips.requiresEnterprise",
+      "Requires Enterprise license",
+    );
 
     // Workspace
     sections.push({
@@ -105,7 +115,10 @@ export const useConfigNavSections = (
         },
         {
           key: "adminStorageSharing",
-          label: t("settings.configuration.storageSharing", "File Storage & Sharing"),
+          label: t(
+            "settings.configuration.storageSharing",
+            "File Storage & Sharing",
+          ),
           icon: "storage-rounded",
           component: <AdminStorageSharingSection />,
           disabled: requiresLogin,
@@ -181,15 +194,22 @@ export const useConfigNavSections = (
           icon: "fact-check-rounded",
           component: <AdminAuditSection />,
           disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : requiresEnterpriseTooltip,
+          disabledTooltip: requiresLogin
+            ? enableLoginTooltip
+            : requiresEnterpriseTooltip,
         },
         {
           key: "adminUsage",
-          label: t("settings.licensingAnalytics.usageAnalytics", "Usage Analytics"),
+          label: t(
+            "settings.licensingAnalytics.usageAnalytics",
+            "Usage Analytics",
+          ),
           icon: "analytics-rounded",
           component: <AdminUsageSection />,
           disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : requiresEnterpriseTooltip,
+          disabledTooltip: requiresLogin
+            ? enableLoginTooltip
+            : requiresEnterpriseTooltip,
         },
       ],
     });
@@ -249,16 +269,26 @@ export const createConfigNavSections = (
   runningEE: boolean = false,
   loginEnabled: boolean = false,
 ): ConfigNavSection[] => {
-  console.warn("createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.");
+  console.warn(
+    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
+  );
 
   // Get the core sections (just Preferences)
-  const sections = createCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
+  const sections = createCoreConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled,
+  );
 
   // Add account management under Preferences
-  const preferencesSection = sections.find((section) => section.items.some((item) => item.key === "general"));
+  const preferencesSection = sections.find((section) =>
+    section.items.some((item) => item.key === "general"),
+  );
   if (preferencesSection) {
     preferencesSection.items = preferencesSection.items.map((item) =>
-      item.key === "general" ? { ...item, component: <GeneralSection /> } : item,
+      item.key === "general"
+        ? { ...item, component: <GeneralSection /> }
+        : item,
     );
 
     if (loginEnabled) {
@@ -285,7 +315,9 @@ export const createConfigNavSections = (
           icon: "group-rounded",
           component: <PeopleSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "teams",
@@ -293,7 +325,9 @@ export const createConfigNavSections = (
           icon: "groups-rounded",
           component: <TeamsSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
       ],
     });
@@ -308,7 +342,9 @@ export const createConfigNavSections = (
           icon: "settings-rounded",
           component: <AdminGeneralSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminFeatures",
@@ -316,7 +352,9 @@ export const createConfigNavSections = (
           icon: "extension-rounded",
           component: <AdminFeaturesSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminEndpoints",
@@ -324,7 +362,9 @@ export const createConfigNavSections = (
           icon: "api-rounded",
           component: <AdminEndpointsSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminDatabase",
@@ -332,7 +372,9 @@ export const createConfigNavSections = (
           icon: "storage-rounded",
           component: <AdminDatabaseSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminAdvanced",
@@ -340,7 +382,9 @@ export const createConfigNavSections = (
           icon: "tune-rounded",
           component: <AdminAdvancedSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
       ],
     });
@@ -355,7 +399,9 @@ export const createConfigNavSections = (
           icon: "shield-rounded",
           component: <AdminSecuritySection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminConnections",
@@ -363,7 +409,9 @@ export const createConfigNavSections = (
           icon: "link-rounded",
           component: <AdminConnectionsSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
       ],
     });
@@ -378,7 +426,9 @@ export const createConfigNavSections = (
           icon: "star-rounded",
           component: <AdminPlanSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminAudit",
@@ -386,7 +436,9 @@ export const createConfigNavSections = (
           icon: "fact-check-rounded",
           component: <AdminAuditSection />,
           disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : "Requires Enterprise license",
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : "Requires Enterprise license",
         },
         {
           key: "adminUsage",
@@ -394,7 +446,9 @@ export const createConfigNavSections = (
           icon: "analytics-rounded",
           component: <AdminUsageSection />,
           disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : "Requires Enterprise license",
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : "Requires Enterprise license",
         },
       ],
     });
@@ -409,7 +463,9 @@ export const createConfigNavSections = (
           icon: "gavel-rounded",
           component: <AdminLegalSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
         {
           key: "adminPrivacy",
@@ -417,7 +473,9 @@ export const createConfigNavSections = (
           icon: "visibility-rounded",
           component: <AdminPrivacySection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? "Enable login mode first" : undefined,
+          disabledTooltip: requiresLogin
+            ? "Enable login mode first"
+            : undefined,
         },
       ],
     });
@@ -446,4 +504,8 @@ export const createConfigNavSections = (
 };
 
 // Re-export types for convenience
-export type { ConfigNavSection, ConfigNavItem, ConfigColors } from "@core/components/shared/config/configNavSections";
+export type {
+  ConfigNavSection,
+  ConfigNavItem,
+  ConfigColors,
+} from "@core/components/shared/config/configNavSections";

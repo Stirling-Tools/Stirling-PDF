@@ -5,7 +5,10 @@ export type PageSizePts = { widthPts: number; heightPts: number } | null;
 export type ImageMeta = { url: string; width: number; height: number } | null;
 
 // Map UI margin option to backend margin factor
-export const marginFactorMap: Record<AddStampParameters["customMargin"], number> = {
+export const marginFactorMap: Record<
+  AddStampParameters["customMargin"],
+  number
+> = {
   small: 0.02,
   medium: 0.035,
   large: 0.05,
@@ -54,7 +57,13 @@ export const getFirstSelectedPage = (input: string): number => {
 export type StampPreviewStyle = { container: any; item: any };
 
 // Unified per-alphabet preview adjustments
-export type Alphabet = "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
+export type Alphabet =
+  | "roman"
+  | "arabic"
+  | "japanese"
+  | "korean"
+  | "chinese"
+  | "thai";
 export type AlphabetTweaks = {
   scale: number;
   rowOffsetRem: [number, number, number];
@@ -64,14 +73,51 @@ export type AlphabetTweaks = {
 };
 export const ALPHABET_PREVIEW_TWEAKS: Record<Alphabet, AlphabetTweaks> = {
   // [top, middle, bottom] row offsets in rem
-  roman: { scale: 1.0 / 1.18, rowOffsetRem: [0, 1, 2.2], lineHeight: 1.28, capHeightRatio: 0.7, defaultFontSize: 80 },
-  arabic: { scale: 1.2, rowOffsetRem: [0, 1.5, 2.5], lineHeight: 1, capHeightRatio: 0.68, defaultFontSize: 80 },
-  japanese: { scale: 1 / 1.2, rowOffsetRem: [-0.1, 1, 2], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 80 },
-  korean: { scale: 1.0 / 1.05, rowOffsetRem: [-0.2, 0.5, 1.4], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 80 },
-  chinese: { scale: 1 / 1.2, rowOffsetRem: [0, 2, 2.8], lineHeight: 1, capHeightRatio: 0.72, defaultFontSize: 30 }, // temporary default font size so that it fits on the PDF
-  thai: { scale: 1 / 1.2, rowOffsetRem: [-1, 0, 0.8], lineHeight: 1, capHeightRatio: 0.66, defaultFontSize: 80 },
+  roman: {
+    scale: 1.0 / 1.18,
+    rowOffsetRem: [0, 1, 2.2],
+    lineHeight: 1.28,
+    capHeightRatio: 0.7,
+    defaultFontSize: 80,
+  },
+  arabic: {
+    scale: 1.2,
+    rowOffsetRem: [0, 1.5, 2.5],
+    lineHeight: 1,
+    capHeightRatio: 0.68,
+    defaultFontSize: 80,
+  },
+  japanese: {
+    scale: 1 / 1.2,
+    rowOffsetRem: [-0.1, 1, 2],
+    lineHeight: 1,
+    capHeightRatio: 0.72,
+    defaultFontSize: 80,
+  },
+  korean: {
+    scale: 1.0 / 1.05,
+    rowOffsetRem: [-0.2, 0.5, 1.4],
+    lineHeight: 1,
+    capHeightRatio: 0.72,
+    defaultFontSize: 80,
+  },
+  chinese: {
+    scale: 1 / 1.2,
+    rowOffsetRem: [0, 2, 2.8],
+    lineHeight: 1,
+    capHeightRatio: 0.72,
+    defaultFontSize: 30,
+  }, // temporary default font size so that it fits on the PDF
+  thai: {
+    scale: 1 / 1.2,
+    rowOffsetRem: [-1, 0, 0.8],
+    lineHeight: 1,
+    capHeightRatio: 0.66,
+    defaultFontSize: 80,
+  },
 };
-export const getAlphabetPreviewScale = (alphabet: string): number => (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.scale ?? 1.0;
+export const getAlphabetPreviewScale = (alphabet: string): number =>
+  (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.scale ?? 1.0;
 
 export const getDefaultFontSizeForAlphabet = (alphabet: string): number => {
   return (ALPHABET_PREVIEW_TWEAKS as any)[alphabet]?.defaultFontSize ?? 80;
@@ -92,9 +138,12 @@ export function computeStampPreviewStyle(
   const heightPts = pageSize?.heightPts ?? 841.89; // A4 height at 72 DPI
   const scaleX = pageWidthPx / widthPts;
   const scaleY = pageHeightPx / heightPts;
-  if (pageWidthPx <= 0 || pageHeightPx <= 0) return { item: {}, container: {} } as any;
+  if (pageWidthPx <= 0 || pageHeightPx <= 0)
+    return { item: {}, container: {} } as any;
 
-  const marginPts = ((widthPts + heightPts) / 2) * (marginFactorMap[parameters.customMargin] ?? 0.035);
+  const marginPts =
+    ((widthPts + heightPts) / 2) *
+    (marginFactorMap[parameters.customMargin] ?? 0.035);
 
   // Compute content dimensions
   const heightPtsContent =
@@ -146,7 +195,8 @@ export function computeStampPreviewStyle(
   // Positioning helpers - mirror backend logic
   const position = parameters.position;
   const calcX = () => {
-    if (parameters.overrideX >= 0 && parameters.overrideY >= 0) return parameters.overrideX;
+    if (parameters.overrideX >= 0 && parameters.overrideY >= 0)
+      return parameters.overrideX;
     switch (position % 3) {
       case 1: // Left
         return marginPts;
@@ -159,11 +209,14 @@ export function computeStampPreviewStyle(
     }
   };
   const calcY = () => {
-    if (parameters.overrideX >= 0 && parameters.overrideY >= 0) return parameters.overrideY;
+    if (parameters.overrideX >= 0 && parameters.overrideY >= 0)
+      return parameters.overrideY;
     // For text, backend positions using cap height, not full font size
     const heightForY =
       parameters.stampType === "text"
-        ? heightPtsContent * ((ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.capHeightRatio ?? 0.7)
+        ? heightPtsContent *
+          ((ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]
+            ?.capHeightRatio ?? 0.7)
         : heightPtsContent;
     switch (Math.floor((position - 1) / 3)) {
       case 0: // Top
@@ -183,9 +236,13 @@ export function computeStampPreviewStyle(
   let yPx = yPts * scaleY;
   if (parameters.stampType === "text") {
     try {
-      const rootFontSizePx = parseFloat(getComputedStyle(document.documentElement).fontSize || "16") || 16;
+      const rootFontSizePx =
+        parseFloat(
+          getComputedStyle(document.documentElement).fontSize || "16",
+        ) || 16;
       const rowIndex = Math.floor((position - 1) / 3); // 0 top, 1 middle, 2 bottom
-      const offsets = (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.rowOffsetRem ?? [0, 0, 0];
+      const offsets = (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]
+        ?.rowOffsetRem ?? [0, 0, 0];
       const offsetRem = offsets[rowIndex] ?? 0;
       yPx += offsetRem * rootFontSizePx;
     } catch (e) {
@@ -234,12 +291,14 @@ export function computeStampPreviewStyle(
       height: `${heightPx}px`,
       opacity: displayOpacity,
       transform: `rotate(${-parameters.rotation}deg)`,
-      transformOrigin: parameters.stampType === "image" ? "left bottom" : "center center",
+      transformOrigin:
+        parameters.stampType === "image" ? "left bottom" : "center center",
       color: parameters.customColor,
       display: "flex",
       flexDirection: "column",
       justifyContent: "flex-start",
-      lineHeight: (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.lineHeight ?? 1,
+      lineHeight:
+        (ALPHABET_PREVIEW_TWEAKS as any)[parameters.alphabet]?.lineHeight ?? 1,
       alignItems,
       cursor: showQuickGrid ? "default" : "move",
       pointerEvents: showQuickGrid ? "none" : "auto",

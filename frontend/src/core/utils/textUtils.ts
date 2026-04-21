@@ -8,7 +8,11 @@ export function truncateCenter(text: string, maxLength: number = 25): string {
   const charsToShow = maxLength - ellipsis.length;
   const frontChars = Math.ceil(charsToShow / 2);
   const backChars = Math.floor(charsToShow / 2);
-  return text.substring(0, frontChars) + ellipsis + text.substring(text.length - backChars);
+  return (
+    text.substring(0, frontChars) +
+    ellipsis +
+    text.substring(text.length - backChars)
+  );
 }
 
 /**

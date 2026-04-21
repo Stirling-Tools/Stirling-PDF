@@ -14,7 +14,12 @@ interface UseToolPanelGeometryOptions {
   rightRailRef?: RefObject<HTMLDivElement | null>;
 }
 
-export function useToolPanelGeometry({ enabled, toolPanelRef, quickAccessRef, rightRailRef }: UseToolPanelGeometryOptions) {
+export function useToolPanelGeometry({
+  enabled,
+  toolPanelRef,
+  quickAccessRef,
+  rightRailRef,
+}: UseToolPanelGeometryOptions) {
   const [geometry, setGeometry] = useState<ToolPanelGeometry | null>(null);
   const scheduleUpdateRef = useRef<() => void>(() => {});
 
@@ -37,10 +42,17 @@ export function useToolPanelGeometry({ enabled, toolPanelRef, quickAccessRef, ri
     const computeAndSetGeometry = () => {
       const rect = panelEl.getBoundingClientRect();
       const rail = rightRailEl();
-      const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+      const isRTL =
+        typeof document !== "undefined" &&
+        document.documentElement.dir === "rtl";
       const railRect = rail?.getBoundingClientRect();
-      const railIsOnRight = railRect ? railRect.right > window.innerWidth / 2 : false;
-      const rightOffset = railRect && railIsOnRight ? Math.max(0, window.innerWidth - railRect.right) : 0;
+      const railIsOnRight = railRect
+        ? railRect.right > window.innerWidth / 2
+        : false;
+      const rightOffset =
+        railRect && railIsOnRight
+          ? Math.max(0, window.innerWidth - railRect.right)
+          : 0;
       let width: number;
       let left: number;
 

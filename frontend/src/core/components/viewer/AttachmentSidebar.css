@@ -32,7 +32,11 @@
 
 .attachment-item:hover {
   background: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  border-color: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--text-primary) 20%,
+    var(--border-subtle)
+  );
   transform: translateX(2px);
 }
 
@@ -41,7 +45,8 @@
 }
 
 .attachment-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+  outline: 2px solid
+    color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
   outline-offset: 2px;
 }
 

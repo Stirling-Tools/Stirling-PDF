@@ -1,4 +1,11 @@
-import { ActionIcon, Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Tooltip,
+  Popover,
+  Stack,
+  Slider,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import OpacityIcon from "@mui/icons-material/Opacity";
@@ -9,7 +16,11 @@ interface OpacityControlProps {
   disabled?: boolean;
 }
 
-export function OpacityControl({ value, onChange, disabled = false }: OpacityControlProps) {
+export function OpacityControl({
+  value,
+  onChange,
+  disabled = false,
+}: OpacityControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
@@ -46,7 +57,13 @@ export function OpacityControl({ value, onChange, disabled = false }: OpacityCon
           <Text size="xs" fw={500}>
             {t("annotation.opacity", "Opacity")}
           </Text>
-          <Slider value={value} onChange={onChange} min={10} max={100} label={(val) => `${val}%`} />
+          <Slider
+            value={value}
+            onChange={onChange}
+            min={10}
+            max={100}
+            label={(val) => `${val}%`}
+          />
         </Stack>
       </Popover.Dropdown>
     </Popover>

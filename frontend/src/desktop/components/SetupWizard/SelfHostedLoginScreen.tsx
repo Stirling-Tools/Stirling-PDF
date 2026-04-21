@@ -48,18 +48,24 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     enabledOAuthProviders,
     loginMethod,
     isUserPassAllowed,
-    shouldShowOAuth: !!(enabledOAuthProviders && enabledOAuthProviders.length > 0),
+    shouldShowOAuth: !!(
+      enabledOAuthProviders && enabledOAuthProviders.length > 0
+    ),
   });
 
   const handleSubmit = async () => {
     // Validation
     if (!username.trim()) {
-      setValidationError(t("setup.login.error.emptyUsername", "Please enter your username"));
+      setValidationError(
+        t("setup.login.error.emptyUsername", "Please enter your username"),
+      );
       return;
     }
 
     if (!password) {
-      setValidationError(t("setup.login.error.emptyPassword", "Please enter your password"));
+      setValidationError(
+        t("setup.login.error.emptyPassword", "Please enter your password"),
+      );
       return;
     }
 
@@ -82,7 +88,11 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
     <>
       <LoginHeader
         title={t("setup.selfhosted.title", "Sign in to Server")}
-        subtitle={isUserPassAllowed ? t("setup.selfhosted.subtitle", "Enter your server credentials") : undefined}
+        subtitle={
+          isUserPassAllowed
+            ? t("setup.selfhosted.subtitle", "Enter your server credentials")
+            : undefined
+        }
       />
 
       <ErrorMessage error={displayError} />

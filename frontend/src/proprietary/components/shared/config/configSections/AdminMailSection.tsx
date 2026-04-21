@@ -1,7 +1,17 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group, Anchor } from "@mantine/core";
+import {
+  TextInput,
+  NumberInput,
+  Switch,
+  Stack,
+  Paper,
+  Text,
+  Loader,
+  Group,
+  Anchor,
+} from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -28,34 +38,54 @@ interface ApiResponseWithPending<T> {
   _pending?: Partial<T>;
 }
 
-type MailApiResponse = MailSettingsData & ApiResponseWithPending<MailSettingsData>;
+type MailApiResponse = MailSettingsData &
+  ApiResponseWithPending<MailSettingsData>;
 
 export default function AdminMailSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { loginEnabled } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<MailSettingsData>({
-      sectionName: "mail",
-      fetchTransformer: async (): Promise<MailSettingsData & { _pending?: Partial<MailSettingsData> }> => {
-        const mailResponse = await apiClient.get<MailApiResponse>("/api/v1/admin/settings/section/mail");
-        return mailResponse.data || {};
-      },
-      saveTransformer: (settings: MailSettingsData) => {
-        return {
-          sectionData: settings,
-          deltaSettings: {},
-        };
-      },
-    });
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<MailSettingsData>({
+    sectionName: "mail",
+    fetchTransformer: async (): Promise<
+      MailSettingsData & { _pending?: Partial<MailSettingsData> }
+    > => {
+      const mailResponse = await apiClient.get<MailApiResponse>(
+        "/api/v1/admin/settings/section/mail",
+      );
+      return mailResponse.data || {};
+    },
+    saveTransformer: (settings: MailSettingsData) => {
+      return {
+        sectionData: settings,
+        deltaSettings: {},
+      };
+    },
+  });
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
 
   const handleSave = async () => {
     try {
@@ -92,7 +122,10 @@ export default function AdminMailSection() {
             {t("admin.settings.mail.title", "Mail Configuration")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.mail.description", "Configure SMTP settings for email notifications.")}
+            {t(
+              "admin.settings.mail.description",
+              "Configure SMTP settings for email notifications.",
+            )}
           </Text>
         </div>
 
@@ -104,13 +137,18 @@ export default function AdminMailSection() {
                   {t("admin.settings.mail.enabled.label", "Enable Mail")}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t("admin.settings.mail.enabled.description", "Enable email notifications and SMTP functionality")}
+                  {t(
+                    "admin.settings.mail.enabled.description",
+                    "Enable email notifications and SMTP functionality",
+                  )}
                 </Text>
               </div>
               <Group gap="xs">
                 <Switch
                   checked={settings.enabled || false}
-                  onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, enabled: e.target.checked })
+                  }
                 />
                 <PendingBadge show={isFieldPending("enabled")} />
               </Group>
@@ -119,7 +157,10 @@ export default function AdminMailSection() {
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.mail.enableInvites.label", "Enable Email Invites")}
+                  {t(
+                    "admin.settings.mail.enableInvites.label",
+                    "Enable Email Invites",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -128,7 +169,10 @@ export default function AdminMailSection() {
                   )}
                 </Text>
                 <Text size="xs" c="orange" mt={8} fw={500}>
-                  {t("admin.settings.mail.frontendUrlNote.note", "Note: Requires Frontend URL to be configured. ")}
+                  {t(
+                    "admin.settings.mail.frontendUrlNote.note",
+                    "Note: Requires Frontend URL to be configured. ",
+                  )}
                   <Anchor
                     href="#"
                     onClick={(e) => {
@@ -138,14 +182,22 @@ export default function AdminMailSection() {
                     c="orange"
                     td="underline"
                   >
-                    {t("admin.settings.mail.frontendUrlNote.link", "Configure in System Settings")}
+                    {t(
+                      "admin.settings.mail.frontendUrlNote.link",
+                      "Configure in System Settings",
+                    )}
                   </Anchor>
                 </Text>
               </div>
               <Group gap="xs">
                 <Switch
                   checked={settings.enableInvites || false}
-                  onChange={(e) => setSettings({ ...settings, enableInvites: e.target.checked })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      enableInvites: e.target.checked,
+                    })
+                  }
                   disabled={!settings.enabled}
                 />
                 <PendingBadge show={isFieldPending("enableInvites")} />
@@ -156,13 +208,20 @@ export default function AdminMailSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mail.host.label", "SMTP Host")}</span>
+                    <span>
+                      {t("admin.settings.mail.host.label", "SMTP Host")}
+                    </span>
                     <PendingBadge show={isFieldPending("host")} />
                   </Group>
                 }
-                description={t("admin.settings.mail.host.description", "SMTP server hostname")}
+                description={t(
+                  "admin.settings.mail.host.description",
+                  "SMTP server hostname",
+                )}
                 value={settings.host || ""}
-                onChange={(e) => setSettings({ ...settings, host: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, host: e.target.value })
+                }
                 placeholder="smtp.example.com"
               />
             </div>
@@ -171,7 +230,9 @@ export default function AdminMailSection() {
               <NumberInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mail.port.label", "SMTP Port")}</span>
+                    <span>
+                      {t("admin.settings.mail.port.label", "SMTP Port")}
+                    </span>
                     <PendingBadge show={isFieldPending("port")} />
                   </Group>
                 }
@@ -180,7 +241,9 @@ export default function AdminMailSection() {
                   "SMTP server port (typically 587 for TLS, 465 for SSL)",
                 )}
                 value={settings.port || 587}
-                onChange={(value) => setSettings({ ...settings, port: Number(value) })}
+                onChange={(value) =>
+                  setSettings({ ...settings, port: Number(value) })
+                }
                 min={1}
                 max={65535}
               />
@@ -190,13 +253,20 @@ export default function AdminMailSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mail.username.label", "SMTP Username")}</span>
+                    <span>
+                      {t("admin.settings.mail.username.label", "SMTP Username")}
+                    </span>
                     <PendingBadge show={isFieldPending("username")} />
                   </Group>
                 }
-                description={t("admin.settings.mail.username.description", "SMTP authentication username")}
+                description={t(
+                  "admin.settings.mail.username.description",
+                  "SMTP authentication username",
+                )}
                 value={settings.username || ""}
-                onChange={(e) => setSettings({ ...settings, username: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, username: e.target.value })
+                }
               />
             </div>
 
@@ -208,9 +278,14 @@ export default function AdminMailSection() {
                 <PendingBadge show={isFieldPending("password")} />
               </Group>
               <EditableSecretField
-                description={t("admin.settings.mail.password.description", "SMTP authentication password")}
+                description={t(
+                  "admin.settings.mail.password.description",
+                  "SMTP authentication password",
+                )}
                 value={settings.password || ""}
-                onChange={(value) => setSettings({ ...settings, password: value })}
+                onChange={(value) =>
+                  setSettings({ ...settings, password: value })
+                }
                 placeholder="Enter SMTP password"
               />
             </div>
@@ -219,13 +294,20 @@ export default function AdminMailSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mail.from.label", "From Address")}</span>
+                    <span>
+                      {t("admin.settings.mail.from.label", "From Address")}
+                    </span>
                     <PendingBadge show={isFieldPending("from")} />
                   </Group>
                 }
-                description={t("admin.settings.mail.from.description", "Email address to use as sender")}
+                description={t(
+                  "admin.settings.mail.from.description",
+                  "Email address to use as sender",
+                )}
                 value={settings.from || ""}
-                onChange={(e) => setSettings({ ...settings, from: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, from: e.target.value })
+                }
                 placeholder="noreply@example.com"
               />
             </div>
@@ -242,7 +324,11 @@ export default function AdminMailSection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

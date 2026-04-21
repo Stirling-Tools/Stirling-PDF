@@ -36,41 +36,46 @@ export const useFileManager = () => {
   const indexedDB = useIndexedDB();
   const { config } = useAppConfig();
 
-  const normalizeServerFileName = useCallback((fileName: string | undefined | null): string => {
-    const fallback = fileName?.trim() || "server-file";
-    const lowerName = fallback.toLowerCase();
-    const historySuffix = "-history.zip";
-    if (lowerName.endsWith(historySuffix)) {
-      return fallback.slice(0, fallback.length - historySuffix.length) || fallback;
-    }
-    if (lowerName.endsWith(".zip")) {
-      const knownInnerExt = [
-        "pdf",
-        "doc",
-        "docx",
-        "ppt",
-        "pptx",
-        "xls",
-        "xlsx",
-        "png",
-        "jpg",
-        "jpeg",
-        "tif",
-        "tiff",
-        "txt",
-        "csv",
-        "rtf",
-        "html",
-        "epub",
-      ];
-      for (const ext of knownInnerExt) {
-        if (lowerName.endsWith(`.${ext}.zip`)) {
-          return fallback.slice(0, fallback.length - 4) || fallback;
+  const normalizeServerFileName = useCallback(
+    (fileName: string | undefined | null): string => {
+      const fallback = fileName?.trim() || "server-file";
+      const lowerName = fallback.toLowerCase();
+      const historySuffix = "-history.zip";
+      if (lowerName.endsWith(historySuffix)) {
+        return (
+          fallback.slice(0, fallback.length - historySuffix.length) || fallback
+        );
+      }
+      if (lowerName.endsWith(".zip")) {
+        const knownInnerExt = [
+          "pdf",
+          "doc",
+          "docx",
+          "ppt",
+          "pptx",
+          "xls",
+          "xlsx",
+          "png",
+          "jpg",
+          "jpeg",
+          "tif",
+          "tiff",
+          "txt",
+          "csv",
+          "rtf",
+          "html",
+          "epub",
+        ];
+        for (const ext of knownInnerExt) {
+          if (lowerName.endsWith(`.${ext}.zip`)) {
+            return fallback.slice(0, fallback.length - 4) || fallback;
+          }
         }
       }
-    }
-    return fallback;
-  }, []);
+      return fallback;
+    },
+    [],
+  );
 
   const convertToFile = useCallback(
     async (fileStub: StirlingFileStub): Promise<File> => {
@@ -85,7 +90,9 @@ export const useFileManager = () => {
           return file;
         }
       }
-      throw new Error(`File not found in storage: ${fileStub.name} (ID: ${fileStub.id})`);
+      throw new Error(
+        `File not found in storage: ${fileStub.name} (ID: ${fileStub.id})`,
+      );
     },
     [indexedDB],
   );
@@ -100,7 +107,9 @@ export const useFileManager = () => {
       // Load only leaf files metadata (processed files that haven't been used as input for other tools)
       const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
       const remoteIdSet = new Set(
-        stirlingFileStubs.map((stub) => stub.remoteStorageId).filter((id): id is number => typeof id === "number"),
+        stirlingFileStubs
+          .map((stub) => stub.remoteStorageId)
+          .filter((id): id is number => typeof id === "number"),
       );
       let combinedStubs = stirlingFileStubs;
 
@@ -108,10 +117,13 @@ export const useFileManager = () => {
 
       if (shouldFetchServerFiles) {
         try {
-          const response = await apiClient.get<StoredFileResponse[]>("/api/v1/storage/files", {
-            suppressErrorToast: true,
-            skipAuthRedirect: true,
-          } as any);
+          const response = await apiClient.get<StoredFileResponse[]>(
+            "/api/v1/storage/files",
+            {
+              suppressErrorToast: true,
+              skipAuthRedirect: true,
+            } as any,
+          );
           const serverFiles = Array.isArray(response.data) ? response.data : [];
           const serverStubs: StirlingFileStub[] = [];
           const serverMap = new Map<number, StoredFileResponse>();
@@ -145,7 +157,10 @@ export const useFileManager = () => {
               };
             }
             // If this server file is a signing-workflow file, detach it from the file manager
-            if (serverFile.filePurpose && serverFile.filePurpose !== "generic") {
+            if (
+              serverFile.filePurpose &&
+              serverFile.filePurpose !== "generic"
+            ) {
               return {
                 ...stub,
                 remoteStorageId: undefined,
@@ -173,7 +188,9 @@ export const useFileManager = () => {
               remoteSharedViaLink: stub.remoteSharedViaLink,
               remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
               remoteStorageUpdatedAt:
-                typeof updatedAtMs === "number" && Number.isFinite(updatedAtMs) ? updatedAtMs : stub.remoteStorageUpdatedAt,
+                typeof updatedAtMs === "number" && Number.isFinite(updatedAtMs)
+                  ? updatedAtMs
+                  : stub.remoteStorageUpdatedAt,
             };
           });
 
@@ -194,7 +211,9 @@ export const useFileManager = () => {
                 ? new Date(file.createdAt).getTime()
                 : Date.now();
             const name = normalizeServerFileName(file.fileName);
-            const lastModified = Number.isFinite(updatedAtMs) ? updatedAtMs : Date.now();
+            const lastModified = Number.isFinite(updatedAtMs)
+              ? updatedAtMs
+              : Date.now();
             const id = `server-${file.id}` as FileId;
             serverStubs.push({
               id,
@@ -211,7 +230,10 @@ export const useFileManager = () => {
               remoteStorageId: file.id,
               remoteStorageUpdatedAt: lastModified,
               remoteOwnerUsername: file.owner ?? undefined,
-              remoteOwnedByCurrentUser: typeof file.ownedByCurrentUser === "boolean" ? file.ownedByCurrentUser : undefined,
+              remoteOwnedByCurrentUser:
+                typeof file.ownedByCurrentUser === "boolean"
+                  ? file.ownedByCurrentUser
+                  : undefined,
               remoteAccessRole: file.accessRole ?? undefined,
               remoteSharedViaLink: false,
               remoteHasShareLinks: Boolean(file.shareLinks?.length),
@@ -225,17 +247,27 @@ export const useFileManager = () => {
 
         if (config?.storageShareLinksEnabled === true) {
           try {
-            const sharedResponse = await apiClient.get<AccessedShareLinkResponse[]>("/api/v1/storage/share-links/accessed", {
+            const sharedResponse = await apiClient.get<
+              AccessedShareLinkResponse[]
+            >("/api/v1/storage/share-links/accessed", {
               suppressErrorToast: true,
               skipAuthRedirect: true,
             } as any);
-            const sharedLinks = Array.isArray(sharedResponse.data) ? sharedResponse.data : [];
+            const sharedLinks = Array.isArray(sharedResponse.data)
+              ? sharedResponse.data
+              : [];
             const allowedShareTokens = new Set(
-              sharedLinks.map((link) => link.shareToken).filter((token): token is string => Boolean(token)),
+              sharedLinks
+                .map((link) => link.shareToken)
+                .filter((token): token is string => Boolean(token)),
             );
             const shareClearUpdates: Array<Promise<boolean>> = [];
             combinedStubs = combinedStubs.map((stub) => {
-              if (stub.remoteSharedViaLink && stub.remoteShareToken && !allowedShareTokens.has(stub.remoteShareToken)) {
+              if (
+                stub.remoteSharedViaLink &&
+                stub.remoteShareToken &&
+                !allowedShareTokens.has(stub.remoteShareToken)
+              ) {
                 const cleared = {
                   ...stub,
                   remoteStorageId: undefined,
@@ -265,7 +297,9 @@ export const useFileManager = () => {
               await Promise.all(shareClearUpdates);
             }
             const existingShareTokens = new Set(
-              combinedStubs.map((stub) => stub.remoteShareToken).filter((token): token is string => Boolean(token)),
+              combinedStubs
+                .map((stub) => stub.remoteShareToken)
+                .filter((token): token is string => Boolean(token)),
             );
             const sharedStubs: StirlingFileStub[] = [];
 
@@ -281,8 +315,12 @@ export const useFileManager = () => {
                 : link.createdAt
                   ? new Date(link.createdAt).getTime()
                   : Date.now();
-              const lastModified = Number.isFinite(createdAtMs) ? createdAtMs : Date.now();
-              const name = normalizeServerFileName(link.fileName || "shared-file");
+              const lastModified = Number.isFinite(createdAtMs)
+                ? createdAtMs
+                : Date.now();
+              const name = normalizeServerFileName(
+                link.fileName || "shared-file",
+              );
               const id = `shared-${link.shareToken}` as FileId;
               sharedStubs.push({
                 id,
@@ -314,7 +352,9 @@ export const useFileManager = () => {
       }
 
       // For now, only regular files - drafts will be handled separately in the future
-      const sortedFiles = combinedStubs.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+      const sortedFiles = combinedStubs.sort(
+        (a, b) => (b.lastModified || 0) - (a.lastModified || 0),
+      );
 
       return sortedFiles;
     } catch (error) {
@@ -323,7 +363,13 @@ export const useFileManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [indexedDB, config?.enableLogin, config?.storageEnabled, config?.storageShareLinksEnabled, normalizeServerFileName]);
+  }, [
+    indexedDB,
+    config?.enableLogin,
+    config?.storageEnabled,
+    config?.storageShareLinksEnabled,
+    normalizeServerFileName,
+  ]);
 
   const handleRemoveFile = useCallback(
     async (
@@ -391,7 +437,9 @@ export const useFileManager = () => {
     (selectedFiles: FileId[], setSelectedFiles: (files: FileId[]) => void) => {
       const toggleSelection = (fileId: FileId) => {
         setSelectedFiles(
-          selectedFiles.includes(fileId) ? selectedFiles.filter((id) => id !== fileId) : [...selectedFiles, fileId],
+          selectedFiles.includes(fileId)
+            ? selectedFiles.filter((id) => id !== fileId)
+            : [...selectedFiles, fileId],
         );
       };
 
@@ -407,7 +455,9 @@ export const useFileManager = () => {
 
         try {
           // Filter by UUID and load full StirlingFile objects directly
-          const selectedFileObjects = files.filter((f) => selectedFiles.includes(f.id));
+          const selectedFileObjects = files.filter((f) =>
+            selectedFiles.includes(f.id),
+          );
 
           const stirlingFiles = await Promise.all(
             selectedFileObjects.map(async (stub) => {

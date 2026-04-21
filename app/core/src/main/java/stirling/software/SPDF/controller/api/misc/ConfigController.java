@@ -23,6 +23,7 @@ import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.GeneralUtils;
 
 @ConfigApi
 @Hidden
@@ -122,8 +123,17 @@ public class ConfigController {
             configData.put("contextPath", appConfig.getContextPath());
             configData.put("serverPort", appConfig.getServerPort());
 
-            // Add frontendUrl for mobile scanner QR codes
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            if ((frontendUrl == null || frontendUrl.isBlank())
+                    && Boolean.parseBoolean(
+                            System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
+                String localIp = GeneralUtils.getLocalNetworkIp();
+                if (localIp != null) {
+                    String scheme =
+                            appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
+                    frontendUrl = scheme + "://" + localIp + ":" + appConfig.getServerPort();
+                }
+            }
             configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
 
             // Add mobile scanner settings

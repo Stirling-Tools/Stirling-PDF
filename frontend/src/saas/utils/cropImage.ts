@@ -17,7 +17,10 @@ export interface Area {
  * @param pixelCrop - Pixel coordinates and dimensions of the crop area
  * @returns Promise that resolves to a PNG Blob of the cropped image
  */
-export async function getCroppedImage(imageSrc: string, pixelCrop: Area): Promise<Blob> {
+export async function getCroppedImage(
+  imageSrc: string,
+  pixelCrop: Area,
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const image = new Image();
 

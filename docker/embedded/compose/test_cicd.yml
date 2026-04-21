@@ -5,10 +5,6 @@ services:
     build:
       context: ../../../
       dockerfile: docker/embedded/Dockerfile.fat
-    deploy:
-      resources:
-        limits:
-          memory: 4G
     healthcheck:
       test: ["CMD-SHELL", "curl -f -H 'X-API-KEY: 123456789' http://localhost:8080${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
       interval: 5s

@@ -9,4 +9,5 @@ export const CREDIT_EVENTS = {
   REFRESH_NEEDED: "credits:refresh-needed",
 } as const;
 
-export type CreditEventType = (typeof CREDIT_EVENTS)[keyof typeof CREDIT_EVENTS];
+export type CreditEventType =
+  (typeof CREDIT_EVENTS)[keyof typeof CREDIT_EVENTS];

@@ -8,5 +8,12 @@
       "@core/*": ["src/core/*"]
     }
   },
-  "include": ["../global.d.ts", "../*.js", "../*.ts", "../*.tsx", "../core/setupTests.ts", "."]
+  "include": [
+    "../global.d.ts",
+    "../*.js",
+    "../*.ts",
+    "../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
 }

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Box, Flex, Group, Text, Button, TextInput, Select } from "@mantine/core";
+import {
+  Box,
+  Flex,
+  Group,
+  Text,
+  Button,
+  TextInput,
+  Select,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
@@ -47,7 +55,9 @@ const FileGrid = ({
   const [sortBy, setSortBy] = useState<SortOption>("date");
 
   // Filter files based on search term
-  const filteredFiles = files.filter((item) => item.file.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredFiles = files.filter((item) =>
+    item.file.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   // Sort files
   const sortedFiles = [...filteredFiles].sort((a, b) => {
@@ -64,9 +74,11 @@ const FileGrid = ({
   });
 
   // Apply max display limit if specified
-  const displayFiles = maxDisplay && !showingAll ? sortedFiles.slice(0, maxDisplay) : sortedFiles;
+  const displayFiles =
+    maxDisplay && !showingAll ? sortedFiles.slice(0, maxDisplay) : sortedFiles;
 
-  const hasMoreFiles = maxDisplay && !showingAll && sortedFiles.length > maxDisplay;
+  const hasMoreFiles =
+    maxDisplay && !showingAll && sortedFiles.length > maxDisplay;
 
   return (
     <Box>
@@ -87,9 +99,18 @@ const FileGrid = ({
             {showSort && (
               <Select
                 data={[
-                  { value: "date", label: t("fileManager.sortByDate", "Sort by Date") },
-                  { value: "name", label: t("fileManager.sortByName", "Sort by Name") },
-                  { value: "size", label: t("fileManager.sortBySize", "Sort by Size") },
+                  {
+                    value: "date",
+                    label: t("fileManager.sortByDate", "Sort by Date"),
+                  },
+                  {
+                    value: "name",
+                    label: t("fileManager.sortByName", "Sort by Name"),
+                  },
+                  {
+                    value: "size",
+                    label: t("fileManager.sortBySize", "Sort by Size"),
+                  },
                 ]}
                 value={sortBy}
                 onChange={(value) => setSortBy(value as SortOption)}
@@ -108,11 +129,20 @@ const FileGrid = ({
       )}
 
       {/* File Grid */}
-      <Flex direction="row" wrap="wrap" gap="md" h="30rem" style={{ overflowY: "auto", width: "100%" }}>
+      <Flex
+        direction="row"
+        wrap="wrap"
+        gap="md"
+        h="30rem"
+        style={{ overflowY: "auto", width: "100%" }}
+      >
         {displayFiles
           .filter((item) => {
             if (!item.record?.id) {
-              console.error("FileGrid: File missing StirlingFileStub with proper ID:", item.file.name);
+              console.error(
+                "FileGrid: File missing StirlingFileStub with proper ID:",
+                item.file.name,
+              );
               return false;
             }
             return true;
@@ -120,18 +150,26 @@ const FileGrid = ({
           .map((item, idx) => {
             const fileId = item.record!.id; // Safe to assert after filter
             const originalIdx = files.findIndex((f) => f.record?.id === fileId);
-            const supported = isFileSupported ? isFileSupported(item.file.name) : true;
+            const supported = isFileSupported
+              ? isFileSupported(item.file.name)
+              : true;
             return (
               <FileCard
                 key={fileId + idx}
                 file={item.file}
                 fileStub={item.record}
                 onRemove={onRemove ? () => onRemove(originalIdx) : () => {}}
-                onDoubleClick={onDoubleClick && supported ? () => onDoubleClick(item) : undefined}
+                onDoubleClick={
+                  onDoubleClick && supported
+                    ? () => onDoubleClick(item)
+                    : undefined
+                }
                 onView={onView && supported ? () => onView(item) : undefined}
                 onEdit={onEdit && supported ? () => onEdit(item) : undefined}
                 isSelected={selectedFiles.includes(fileId)}
-                onSelect={onSelect && supported ? () => onSelect(fileId) : undefined}
+                onSelect={
+                  onSelect && supported ? () => onSelect(fileId) : undefined
+                }
                 isSupported={supported}
               />
             );
@@ -152,7 +190,10 @@ const FileGrid = ({
         <Box style={{ textAlign: "center", padding: "2rem" }}>
           <Text c="dimmed">
             {searchTerm
-              ? t("fileManager.noFilesFound", "No files found matching your search")
+              ? t(
+                  "fileManager.noFilesFound",
+                  "No files found matching your search",
+                )
               : t("fileManager.noFiles", "No files available")}
           </Text>
         </Box>

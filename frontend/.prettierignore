@@ -1,4 +1,6 @@
 dist/
+# Tauri/Cargo build output (binary assets named *.js etc. confuse Prettier)
+src-tauri/target/
 node_modules/
 src-tauri/target/
 src-tauri/gen/
@@ -6,6 +8,7 @@ public/vendor/
 public/pdfjs*/
 public/js/thirdParty/
 public/css/cookieconsent.css
+src-tauri/target/
 *.min.*
 *.md
 *.wxs

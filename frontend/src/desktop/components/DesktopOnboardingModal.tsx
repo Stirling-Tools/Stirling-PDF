@@ -22,7 +22,9 @@ const SIGN_IN_GRADIENT: [string, string] = ["#3B82F6", "#7C3AED"];
  */
 export function DesktopOnboardingModal() {
   const { t } = useTranslation();
-  const [visible, setVisible] = useState(() => !localStorage.getItem(ONBOARDING_KEY));
+  const [visible, setVisible] = useState(
+    () => !localStorage.getItem(ONBOARDING_KEY),
+  );
   const [step, setStep] = useState(0);
 
   const dismissFinal = () => {
@@ -82,12 +84,21 @@ export function DesktopOnboardingModal() {
       <Stack
         gap={0}
         className={styles.modalContent}
-        style={{ height: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{
+          height: "100%",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         {/* Hero section — gradient changes per slide */}
         <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
           <AnimatedSlideBackground
-            gradientStops={(step === 0 ? welcomeSlide.background.gradientStops : SIGN_IN_GRADIENT) as [string, string]}
+            gradientStops={
+              step === 0
+                ? welcomeSlide.background.gradientStops
+                : SIGN_IN_GRADIENT
+            }
             circles={welcomeSlide.background.circles}
             isActive
             slideKey={step === 0 ? "desktop-welcome" : "desktop-sign-in"}
@@ -105,29 +116,50 @@ export function DesktopOnboardingModal() {
               backdropFilter: "blur(4px)",
               zIndex: 10,
             }}
-            styles={{ root: { "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.3)" } } }}
+            styles={{
+              root: {
+                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.3)" },
+              },
+            }}
           >
             <CloseIcon fontSize="small" />
           </ActionIcon>
           <div className={styles.heroLogo} key={`logo-${step}`}>
             <div className={styles.heroLogoCircle}>
               {step === 0 ? (
-                <LocalIcon icon="rocket-launch" width={64} height={64} className={styles.heroIcon} />
+                <LocalIcon
+                  icon="rocket-launch"
+                  width={64}
+                  height={64}
+                  className={styles.heroIcon}
+                />
               ) : (
-                <LocalIcon icon="login" width={64} height={64} className={styles.heroIcon} />
+                <LocalIcon
+                  icon="login"
+                  width={64}
+                  height={64}
+                  className={styles.heroIcon}
+                />
               )}
             </div>
           </div>
         </div>
 
         {/* Body section */}
-        <div className={styles.modalBody} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+        <div
+          className={styles.modalBody}
+          style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}
+        >
           {step === 0 ? (
             // Welcome slide
             <Stack gap={16}>
-              <div className={`${styles.title} ${styles.titleText}`}>{welcomeSlide.title}</div>
+              <div className={`${styles.title} ${styles.titleText}`}>
+                {welcomeSlide.title}
+              </div>
               <div className={styles.bodyText}>
-                <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>{welcomeSlide.body}</div>
+                <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
+                  {welcomeSlide.body}
+                </div>
                 <style>{`.${styles.bodyCopyInner} strong { color: var(--onboarding-title); font-weight: 600; }`}</style>
               </div>
               <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
@@ -151,7 +183,11 @@ export function DesktopOnboardingModal() {
             // Sign-in slide
             <Stack gap={12}>
               <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
-              <SetupWizard noLayout onComplete={handleComplete} onClose={dismissFinal} />
+              <SetupWizard
+                noLayout
+                onComplete={handleComplete}
+                onClose={dismissFinal}
+              />
             </Stack>
           )}
         </div>

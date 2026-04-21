@@ -51,7 +51,11 @@ const ButtonSelector = <T extends string | number>({
           const button = (
             <Button
               variant={value === option.value ? "filled" : "outline"}
-              color={value === option.value ? "var(--color-primary-500)" : "var(--text-muted)"}
+              color={
+                value === option.value
+                  ? "var(--color-primary-500)"
+                  : "var(--text-muted)"
+              }
               onClick={() => onChange(option.value)}
               disabled={isDisabled}
               className={buttonClassName}
@@ -65,21 +69,39 @@ const ButtonSelector = <T extends string | number>({
                 paddingBottom: "0.5rem",
               }}
             >
-              <FitText text={option.label} lines={1} minimumFontScale={0.5} fontSize={10} className={textClassName} />
+              <FitText
+                text={option.label}
+                lines={1}
+                minimumFontScale={0.5}
+                fontSize={10}
+                className={textClassName}
+              />
             </Button>
           );
 
           // Wrap with tooltip if provided (useful for disabled state explanations)
           if (option.tooltip && isDisabled) {
             return (
-              <Tooltip key={option.value} label={option.tooltip} position="top" withArrow>
-                <span style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}>{button}</span>
+              <Tooltip
+                key={option.value}
+                label={option.tooltip}
+                position="top"
+                withArrow
+              >
+                <span
+                  style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}
+                >
+                  {button}
+                </span>
               </Tooltip>
             );
           }
 
           return (
-            <span key={option.value} style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}>
+            <span
+              key={option.value}
+              style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}
+            >
               {button}
             </span>
           );

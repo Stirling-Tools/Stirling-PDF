@@ -21,8 +21,11 @@ from stirling.contracts import (
     PdfQuestionRequest,
     PdfQuestionResponse,
     SupportedCapability,
+    ToolOperationStep,
     UnsupportedCapabilityResponse,
 )
+from stirling.contracts.pdf_edit import EditPlanResponse
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
 
 
@@ -54,6 +57,14 @@ class OrchestratorAgent:
                     description="Delegate requests to create or revise a user agent spec and return the draft result.",
                 ),
                 ToolOutput(
+                    self.math_auditor_agent,
+                    name="math_auditor_agent",
+                    description=(
+                        "Delegate requests to check arithmetic, validate table totals, "
+                        "audit financial calculations, or verify mathematical accuracy in PDFs."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -63,9 +74,11 @@ class OrchestratorAgent:
             system_prompt=(
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
-                "Use delegate_pdf_edit for requested PDF modifications. "
+                "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
                 "Use delegate_pdf_question for questions about PDF contents. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
+                "Use math_auditor_agent for requests to check arithmetic, validate "
+                "table totals, audit financial calculations, or verify math in PDFs. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
@@ -93,6 +106,7 @@ class OrchestratorAgent:
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
                 | SupportedCapability.AGENT_NEXT_ACTION
+                | SupportedCapability.MATH_AUDITOR_AGENT
             ):
                 raise ValueError(f"Cannot resume orchestrator with capability: {capability}")
             case _ as unreachable:
@@ -102,7 +116,9 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        return await PdfEditAgent(self.runtime).handle(PdfEditRequest(user_message=request.user_message))
+        return await PdfEditAgent(self.runtime).handle(
+            PdfEditRequest(user_message=request.user_message, file_names=request.file_names)
+        )
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
         return await self._run_pdf_question(ctx.deps.request)
@@ -122,6 +138,17 @@ class OrchestratorAgent:
 
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
         return await UserSpecAgent(self.runtime).draft(AgentDraftRequest(user_message=request.user_message))
+
+    async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        return EditPlanResponse(
+            summary="Validate mathematical calculations in the document.",
+            steps=[
+                ToolOperationStep(
+                    tool=AgentToolId.MATH_AUDITOR_AGENT,
+                    parameters=MathAuditorAgentParams(),
+                )
+            ],
+        )
 
     async def unsupported_capability(
         self,

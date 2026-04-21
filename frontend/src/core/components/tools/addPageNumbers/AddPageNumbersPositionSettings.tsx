@@ -10,7 +10,10 @@ import PageNumberPreview from "@app/components/tools/addPageNumbers/PageNumberPr
 
 interface AddPageNumbersPositionSettingsProps {
   parameters: AddPageNumbersParameters;
-  onParameterChange: <K extends keyof AddPageNumbersParameters>(key: K, value: AddPageNumbersParameters[K]) => void;
+  onParameterChange: <K extends keyof AddPageNumbersParameters>(
+    key: K,
+    value: AddPageNumbersParameters[K],
+  ) => void;
   disabled?: boolean;
   file?: File | null;
   showQuickGrid?: boolean;
@@ -54,8 +57,13 @@ const AddPageNumbersPositionSettings = ({
           <TextInput
             label={t("addPageNumbers.selectText.5", "Pages to Number")}
             value={parameters.pagesToNumber || ""}
-            onChange={(e) => onParameterChange("pagesToNumber", e.currentTarget.value)}
-            placeholder={t("addPageNumbers.numberPagesDesc", "e.g., 1,3,5-8 or leave blank for all pages")}
+            onChange={(e) =>
+              onParameterChange("pagesToNumber", e.currentTarget.value)
+            }
+            placeholder={t(
+              "addPageNumbers.numberPagesDesc",
+              "e.g., 1,3,5-8 or leave blank for all pages",
+            )}
             disabled={disabled}
           />
         </Tooltip>
@@ -69,7 +77,9 @@ const AddPageNumbersPositionSettings = ({
           <NumberInput
             label={t("addPageNumbers.selectText.4", "Starting Number")}
             value={parameters.startingNumber}
-            onChange={(v) => onParameterChange("startingNumber", typeof v === "number" ? v : 1)}
+            onChange={(v) =>
+              onParameterChange("startingNumber", typeof v === "number" ? v : 1)
+            }
             min={1}
             disabled={disabled}
           />

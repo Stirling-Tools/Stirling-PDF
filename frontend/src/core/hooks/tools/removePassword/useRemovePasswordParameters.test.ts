@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useRemovePasswordParameters, defaultParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import {
+  useRemovePasswordParameters,
+  defaultParameters,
+} from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 
 describe("useRemovePasswordParameters", () => {
   test("should initialize with default parameters", () => {
@@ -69,13 +72,16 @@ describe("useRemovePasswordParameters", () => {
       password: "a",
       expectedValid: true,
     },
-  ])("should validate parameters correctly $description", ({ password, expectedValid }) => {
-    const { result } = renderHook(() => useRemovePasswordParameters());
+  ])(
+    "should validate parameters correctly $description",
+    ({ password, expectedValid }) => {
+      const { result } = renderHook(() => useRemovePasswordParameters());
 
-    act(() => {
-      result.current.updateParameter("password", password);
-    });
+      act(() => {
+        result.current.updateParameter("password", password);
+      });
 
-    expect(result.current.validateParameters()).toBe(expectedValid);
-  });
+      expect(result.current.validateParameters()).toBe(expectedValid);
+    },
+  );
 });

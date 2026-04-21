@@ -4,7 +4,10 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
-import { CONVERSION_ENDPOINTS, ENDPOINT_NAMES } from "@app/constants/convertConstants";
+import {
+  CONVERSION_ENDPOINTS,
+  ENDPOINT_NAMES,
+} from "@app/constants/convertConstants";
 
 export type ExecutionTarget = "local" | "remote";
 
@@ -105,7 +108,9 @@ export class OperationRouter {
         }
       }
       // Fallback to pattern-based extraction if not found in constants
-      const convertMatch = endpoint.match(/^\/api\/v1\/convert\/([^/]+)\/([^/]+)$/);
+      const convertMatch = endpoint.match(
+        /^\/api\/v1\/convert\/([^/]+)\/([^/]+)$/,
+      );
       if (convertMatch) {
         const [, from, to] = convertMatch;
         return `${from}-to-${to}`;
@@ -113,7 +118,9 @@ export class OperationRouter {
     }
 
     // Tool operation endpoints: /api/v1/{category}/{endpoint-name}
-    const toolMatch = endpoint.match(/^\/api\/v1\/(?:general|misc|security|filter|multi-tool)\/(.+)$/);
+    const toolMatch = endpoint.match(
+      /^\/api\/v1\/(?:general|misc|security|filter|multi-tool)\/(.+)$/,
+    );
     if (toolMatch) {
       return toolMatch[1];
     }
@@ -137,10 +144,18 @@ export class OperationRouter {
         const endpointName = this.extractEndpointName(operation);
         const backendUrl = tauriBackendService.getBackendUrl();
         if (backendUrl) {
-          const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointName, backendUrl);
+          const supportedLocally =
+            await endpointAvailabilityService.isEndpointSupportedLocally(
+              endpointName,
+              backendUrl,
+            );
           if (!supportedLocally) {
             // Open the connection settings so the user can sign in
-            window.dispatchEvent(new CustomEvent("appConfig:navigate", { detail: { key: "connectionMode" } }));
+            window.dispatchEvent(
+              new CustomEvent("appConfig:navigate", {
+                detail: { key: "connectionMode" },
+              }),
+            );
             throw new Error(
               i18n.t(
                 "localMode.toolUnavailable",
@@ -152,7 +167,9 @@ export class OperationRouter {
       }
       const backendUrl = tauriBackendService.getBackendUrl();
       if (!backendUrl) {
-        throw new Error("Backend URL not available - backend may still be starting");
+        throw new Error(
+          "Backend URL not available - backend may still be starting",
+        );
       }
       return backendUrl.replace(/\/$/, "");
     }
@@ -162,7 +179,9 @@ export class OperationRouter {
       if (!STIRLING_SAAS_BACKEND_API_URL) {
         throw new Error("VITE_SAAS_BACKEND_API_URL not configured");
       }
-      console.debug(`[operationRouter] Routing ${operation} to SaaS backend (team endpoint)`);
+      console.debug(
+        `[operationRouter] Routing ${operation} to SaaS backend (team endpoint)`,
+      );
       return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, "");
     }
 
@@ -170,7 +189,9 @@ export class OperationRouter {
     if (mode === "saas" && operation && this.isToolEndpoint(operation)) {
       // Extract endpoint name for capability check (e.g., "/api/v1/misc/repair" -> "repair")
       const endpointToCheck = this.extractEndpointName(operation);
-      console.debug(`[operationRouter] Checking capability for ${operation} -> endpoint name: ${endpointToCheck}`);
+      console.debug(
+        `[operationRouter] Checking capability for ${operation} -> endpoint name: ${endpointToCheck}`,
+      );
 
       const backendUrl = tauriBackendService.getBackendUrl();
       const backendHealthy = tauriBackendService.isOnline;
@@ -179,17 +200,30 @@ export class OperationRouter {
       // capability check and fall through to local routing — the backend-readiness check
       // in the Axios interceptor will block non-GET requests until the backend is healthy.
       if (backendUrl && backendHealthy) {
-        const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointToCheck, backendUrl);
-        console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
+        const supportedLocally =
+          await endpointAvailabilityService.isEndpointSupportedLocally(
+            endpointToCheck,
+            backendUrl,
+          );
+        console.debug(
+          `[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`,
+        );
 
         if (!supportedLocally) {
           // Local backend doesn't support this - check if SaaS supports it
-          const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointToCheck);
-          console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`);
+          const supportedOnSaaS =
+            await endpointAvailabilityService.isEndpointSupportedOnSaaS(
+              endpointToCheck,
+            );
+          console.debug(
+            `[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`,
+          );
 
           if (!supportedOnSaaS) {
             // Neither local nor SaaS support this - throw error
-            console.error(`[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`);
+            console.error(
+              `[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`,
+            );
             throw new Error(
               `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`,
             );
@@ -197,7 +231,9 @@ export class OperationRouter {
 
           // SaaS supports it - route to SaaS backend
           if (!STIRLING_SAAS_BACKEND_API_URL) {
-            console.error("[operationRouter] VITE_SAAS_BACKEND_API_URL not configured");
+            console.error(
+              "[operationRouter] VITE_SAAS_BACKEND_API_URL not configured",
+            );
             throw new Error(
               "Cloud processing is required for this tool but VITE_SAAS_BACKEND_API_URL is not configured. " +
                 "Please check your environment configuration.",
@@ -210,7 +246,9 @@ export class OperationRouter {
         }
 
         // Supported locally - continue with local backend
-        console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
+        console.debug(
+          `[operationRouter] Routing ${operation} to local backend (supported locally)`,
+        );
       }
     }
 
@@ -222,9 +260,15 @@ export class OperationRouter {
         const endpointName = this.extractEndpointName(operation);
         const localUrl = tauriBackendService.getBackendUrl();
         if (localUrl) {
-          const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointName, localUrl);
+          const supportedLocally =
+            await endpointAvailabilityService.isEndpointSupportedLocally(
+              endpointName,
+              localUrl,
+            );
           if (supportedLocally) {
-            console.debug(`[operationRouter] Self-hosted server offline, routing ${operation} to local backend`);
+            console.debug(
+              `[operationRouter] Self-hosted server offline, routing ${operation} to local backend`,
+            );
             return localUrl.replace(/\/$/, "");
           }
         }
@@ -245,7 +289,9 @@ export class OperationRouter {
       // Use dynamically assigned port from backend service
       const backendUrl = tauriBackendService.getBackendUrl();
       if (!backendUrl) {
-        throw new Error("Backend URL not available - backend may still be starting");
+        throw new Error(
+          "Backend URL not available - backend may still be starting",
+        );
       }
       // Strip trailing slash to avoid double slashes in URLs
       return backendUrl.replace(/\/$/, "");
@@ -298,7 +344,11 @@ export class OperationRouter {
       // Backend not ready — don't skip the readiness check; let it gate the request.
       if (!backendUrl || !tauriBackendService.isOnline) return false;
       const endpointToCheck = this.extractEndpointName(endpoint);
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(endpointToCheck, backendUrl);
+      const supportedLocally =
+        await endpointAvailabilityService.isEndpointSupportedLocally(
+          endpointToCheck,
+          backendUrl,
+        );
       return !supportedLocally; // Skip check if not supported locally
     }
 
@@ -324,10 +374,11 @@ export class OperationRouter {
     if (this.isToolEndpoint(endpoint)) {
       // For UI data endpoints, extract the endpoint name
       const endpointToCheck = this.extractEndpointName(endpoint);
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
-        endpointToCheck,
-        tauriBackendService.getBackendUrl(),
-      );
+      const supportedLocally =
+        await endpointAvailabilityService.isEndpointSupportedLocally(
+          endpointToCheck,
+          tauriBackendService.getBackendUrl(),
+        );
       return !supportedLocally;
     }
 

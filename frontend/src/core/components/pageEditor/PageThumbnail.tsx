@@ -1,4 +1,10 @@
-import React, { useCallback, useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import { Text, Checkbox } from "@mantine/core";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -12,7 +18,9 @@ import { PDFPage, PDFDocument } from "@app/types/pageEditor";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
 import styles from "@app/components/pageEditor/PageEditor.module.css";
-import HoverActionMenu, { HoverAction } from "@app/components/shared/HoverActionMenu";
+import HoverActionMenu, {
+  HoverAction,
+} from "@app/components/shared/HoverActionMenu";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 
@@ -31,20 +39,34 @@ interface PageThumbnailProps {
   justMoved?: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   dragHandleProps?: any;
-  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
+  onReorderPages: (
+    sourcePageNumber: number,
+    targetIndex: number,
+    selectedPageIds?: string[],
+  ) => void;
   onTogglePage: (pageId: string) => void;
   onAnimateReorder: () => void;
   onExecuteCommand: (command: { execute: () => void }) => void;
   onSetStatus: (status: string) => void;
   onSetMovingPage: (page: number | null) => void;
   onDeletePage: (pageNumber: number) => void;
-  createRotateCommand: (pageIds: string[], rotation: number) => { execute: () => void };
+  createRotateCommand: (
+    pageIds: string[],
+    rotation: number,
+  ) => { execute: () => void };
   createDeleteCommand: (pageIds: string[]) => { execute: () => void };
-  createSplitCommand: (pageId: string, pageNumber: number) => { execute: () => void };
+  createSplitCommand: (
+    pageId: string,
+    pageNumber: number,
+  ) => { execute: () => void };
   pdfDocument: PDFDocument;
   setPdfDocument: (doc: PDFDocument) => void;
   splitPositions: Set<string>;
-  onInsertFiles?: (files: File[] | StirlingFileStub[], insertAfterPage: number, isFromStorage?: boolean) => void;
+  onInsertFiles?: (
+    files: File[] | StirlingFileStub[],
+    insertAfterPage: number,
+    isFromStorage?: boolean,
+  ) => void;
   zoomLevel?: number;
 }
 
@@ -77,15 +99,22 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   justMoved = false,
 }: PageThumbnailProps) => {
   const pageIndex = page.pageNumber - 1;
-  const isSelected = Array.isArray(selectedPageIds) ? selectedPageIds.includes(page.id) : false;
+  const isSelected = Array.isArray(selectedPageIds)
+    ? selectedPageIds.includes(page.id)
+    : false;
 
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [mouseStartPos, setMouseStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [mouseStartPos, setMouseStartPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const isMobile = useIsMobile();
   const lastClickTimeRef = useRef<number>(0);
 
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(
+    page.thumbnail,
+  );
   const elementRef = useRef<HTMLDivElement | null>(null);
   const { openFilesModal } = useFilesModalContext();
 
@@ -95,7 +124,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
     // Find first non-blank page with a thumbnail to get aspect ratio
-    const firstRealPage = pdfDocument.pages.find((p) => !p.isBlankPage && p.thumbnail);
+    const firstRealPage = pdfDocument.pages.find(
+      (p) => !p.isBlankPage && p.thumbnail,
+    );
     if (firstRealPage?.thumbnail) {
       // Try to get aspect ratio from an actual thumbnail image
       // For now, default to A4 but could be enhanced to measure image dimensions
@@ -139,7 +170,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       onExecuteCommand(command);
       onSetStatus(`Rotated page ${page.pageNumber} left`);
     },
-    [page.id, page.pageNumber, onExecuteCommand, onSetStatus, createRotateCommand],
+    [
+      page.id,
+      page.pageNumber,
+      onExecuteCommand,
+      onSetStatus,
+      createRotateCommand,
+    ],
   );
 
   const handleRotateRight = useCallback(
@@ -150,7 +187,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       onExecuteCommand(command);
       onSetStatus(`Rotated page ${page.pageNumber} right`);
     },
-    [page.id, page.pageNumber, onExecuteCommand, onSetStatus, createRotateCommand],
+    [
+      page.id,
+      page.pageNumber,
+      onExecuteCommand,
+      onSetStatus,
+      createRotateCommand,
+    ],
   );
 
   const handleDelete = useCallback(
@@ -174,7 +217,13 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       const action = hasSplit ? "removed" : "added";
       onSetStatus(`Split marker ${action} after position ${pageIndex + 1}`);
     },
-    [pageIndex, splitPositions, onExecuteCommand, onSetStatus, createSplitCommand],
+    [
+      pageIndex,
+      splitPositions,
+      onExecuteCommand,
+      onSetStatus,
+      createSplitCommand,
+    ],
   );
 
   const handleInsertFileAfter = useCallback(
@@ -185,7 +234,11 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         // Open file manager modal with custom handler for page insertion
         openFilesModal({
           insertAfterPage: page.pageNumber,
-          customHandler: (files: File[] | StirlingFileStub[], insertAfterPage?: number, isFromStorage?: boolean) => {
+          customHandler: (
+            files: File[] | StirlingFileStub[],
+            insertAfterPage?: number,
+            isFromStorage?: boolean,
+          ) => {
             if (insertAfterPage !== undefined) {
               onInsertFiles(files, insertAfterPage, isFromStorage);
             }
@@ -242,7 +295,15 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       setIsMouseDown(false);
       setMouseStartPos(null);
     },
-    [isMouseDown, mouseStartPos, isDragging, page.id, isBoxSelected, clearBoxSelection, onTogglePage],
+    [
+      isMouseDown,
+      mouseStartPos,
+      isDragging,
+      page.id,
+      isBoxSelected,
+      clearBoxSelection,
+      onTogglePage,
+    ],
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -251,7 +312,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     setIsHovered(false);
   }, []);
 
-  const fileColorBorder = page.isBlankPage ? "transparent" : getFileColorWithOpacity(fileColorIndex, 0.3);
+  const fileColorBorder = page.isBlankPage
+    ? "transparent"
+    : getFileColorWithOpacity(fileColorIndex, 0.3);
 
   // Spread dragHandleProps but use our merged ref
   const { ref: _, ...restDragProps } = dragHandleProps || {};
@@ -420,7 +483,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             height: "100%",
             backgroundColor: "var(--mantine-color-gray-1)",
             borderRadius: 6,
-            boxShadow: page.isBlankPage ? "none" : `0 0 ${4 + 4 * zoomLevel}px 3px ${fileColorBorder}`,
+            boxShadow: page.isBlankPage
+              ? "none"
+              : `0 0 ${4 + 4 * zoomLevel}px 3px ${fileColorBorder}`,
             padding: 4,
             display: "flex",
             alignItems: "center",

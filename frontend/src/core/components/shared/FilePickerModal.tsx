@@ -25,7 +25,12 @@ interface FilePickerModalProps {
   onSelectFiles: (selectedFiles: File[]) => void;
 }
 
-const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePickerModalProps) => {
+const FilePickerModal = ({
+  opened,
+  onClose,
+  storedFiles,
+  onSelectFiles,
+}: FilePickerModalProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
@@ -39,7 +44,9 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
 
   const toggleFileSelection = (fileId: FileId) => {
     setSelectedFileIds((prev) => {
-      return prev.includes(fileId) ? prev.filter((id) => id !== fileId) : [...prev, fileId];
+      return prev.includes(fileId)
+        ? prev.filter((id) => id !== fileId)
+        : [...prev, fileId];
     });
   };
 
@@ -52,7 +59,9 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
   };
 
   const handleConfirm = async () => {
-    const selectedFiles = storedFiles.filter((f) => selectedFileIds.includes(f.id));
+    const selectedFiles = storedFiles.filter((f) =>
+      selectedFileIds.includes(f.id),
+    );
 
     // Convert stored files to File objects
     const convertedFiles = await Promise.all(
@@ -69,9 +78,14 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
           }
 
           // If it's from IndexedDB storage, reconstruct the File
-          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === "function") {
+          if (
+            fileItem.arrayBuffer &&
+            typeof fileItem.arrayBuffer === "function"
+          ) {
             const arrayBuffer = await fileItem.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: fileItem.type || "application/pdf" });
+            const blob = new Blob([arrayBuffer], {
+              type: fileItem.type || "application/pdf",
+            });
             return new File([blob], fileItem.name, {
               type: fileItem.type || "application/pdf",
               lastModified: fileItem.lastModified || Date.now(),
@@ -80,7 +94,9 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
 
           // If it has data property, reconstruct the File
           if (fileItem.data) {
-            const blob = new Blob([fileItem.data], { type: fileItem.type || "application/pdf" });
+            const blob = new Blob([fileItem.data], {
+              type: fileItem.type || "application/pdf",
+            });
             return new File([blob], fileItem.name, {
               type: fileItem.type || "application/pdf",
               lastModified: fileItem.lastModified || Date.now(),
@@ -130,8 +146,11 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
             {/* Selection controls */}
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
-                {storedFiles.length} {t("fileUpload.filesAvailable", "files available")}
-                {selectedFileIds.length > 0 && <> • {selectedFileIds.length} selected</>}
+                {storedFiles.length}{" "}
+                {t("fileUpload.filesAvailable", "files available")}
+                {selectedFileIds.length > 0 && (
+                  <> • {selectedFileIds.length} selected</>
+                )}
               </Text>
               <Group gap="xs">
                 <Button size="xs" variant="light" onClick={selectAll}>
@@ -155,9 +174,13 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
                       key={fileId}
                       p="sm"
                       style={{
-                        border: isSelected ? "2px solid var(--mantine-color-blue-6)" : "1px solid var(--mantine-color-gray-3)",
+                        border: isSelected
+                          ? "2px solid var(--mantine-color-blue-6)"
+                          : "1px solid var(--mantine-color-gray-3)",
                         borderRadius: 8,
-                        backgroundColor: isSelected ? "var(--mantine-color-blue-0)" : "transparent",
+                        backgroundColor: isSelected
+                          ? "var(--mantine-color-blue-0)"
+                          : "transparent",
                         cursor: "pointer",
                         transition: "all 0.2s ease",
                       }}
@@ -185,7 +208,13 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
                           }}
                         >
                           {file.thumbnail ? (
-                            <Image src={file.thumbnail} alt="PDF thumbnail" height={70} width={50} fit="contain" />
+                            <Image
+                              src={file.thumbnail}
+                              alt="PDF thumbnail"
+                              height={70}
+                              width={50}
+                              fit="contain"
+                            />
                           ) : (
                             <ThemeIcon variant="light" color="red" size={40}>
                               <PictureAsPdfIcon style={{ fontSize: 24 }} />
@@ -200,7 +229,9 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
                           </Text>
                           <Group gap="xs">
                             <Badge size="xs" variant="light" color="gray">
-                              {formatFileSize(file.size || file.file?.size || 0)}
+                              {formatFileSize(
+                                file.size || file.file?.size || 0,
+                              )}
                             </Badge>
                           </Group>
                         </Stack>
@@ -214,7 +245,7 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
             {/* Selection summary */}
             {selectedFileIds.length > 0 && (
               <Text size="sm" c="blue" ta="center">
-                {selectedFileIds.length} {t("fileManager.filesSelected", "files")}
+                {selectedFileIds.length} {t("fileManager.filesSelected", "files selected")}
               </Text>
             )}
           </>
@@ -225,7 +256,10 @@ const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePi
           <Button variant="light" onClick={onClose}>
             {t("close", "Cancel")}
           </Button>
-          <Button onClick={handleConfirm} disabled={selectedFileIds.length === 0}>
+          <Button
+            onClick={handleConfirm}
+            disabled={selectedFileIds.length === 0}
+          >
             {selectedFileIds.length > 0
               ? `${t("fileUpload.loadFromStorage", "Load")} ${selectedFileIds.length} ${terminology.uploadFiles}`
               : t("fileUpload.loadFromStorage", "Load Files")}

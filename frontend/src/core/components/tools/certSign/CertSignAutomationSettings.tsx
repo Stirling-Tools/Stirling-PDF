@@ -15,28 +15,51 @@ import SignatureAppearanceSettings from "@app/components/tools/certSign/Signatur
 
 interface CertSignAutomationSettingsProps {
   parameters: CertSignParameters;
-  onParameterChange: <K extends keyof CertSignParameters>(key: K, value: CertSignParameters[K]) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const CertSignAutomationSettings = ({ parameters, onParameterChange, disabled = false }: CertSignAutomationSettingsProps) => {
+const CertSignAutomationSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: CertSignAutomationSettingsProps) => {
   return (
     <Stack gap="lg">
       {/* Sign Mode Selection (Manual vs Auto) */}
-      <CertificateTypeSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+      <CertificateTypeSettings
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        disabled={disabled}
+      />
 
       {/* Certificate Format - only show for Manual mode */}
       {parameters.signMode === "MANUAL" && (
-        <CertificateFormatSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+        <CertificateFormatSettings
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
       )}
 
       {/* Certificate Files - only show for Manual mode */}
       {parameters.signMode === "MANUAL" && (
-        <CertificateFilesSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+        <CertificateFilesSettings
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
       )}
 
       {/* Signature Appearance Settings */}
-      <SignatureAppearanceSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+      <SignatureAppearanceSettings
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        disabled={disabled}
+      />
     </Stack>
   );
 };

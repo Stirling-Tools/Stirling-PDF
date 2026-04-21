@@ -4,7 +4,10 @@ import { StirlingFile } from "@app/types/fileContext";
 
 interface ConvertToPdfxSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   selectedFiles: StirlingFile[];
   disabled?: boolean;
 }

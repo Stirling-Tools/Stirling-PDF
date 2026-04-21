@@ -4,7 +4,9 @@ import type { ShareBundleManifest } from "@app/services/serverStorageBundle";
 
 const MANIFEST_FILENAME = "stirling-share.json";
 
-export function parseContentDispositionFilename(disposition?: string): string | null {
+export function parseContentDispositionFilename(
+  disposition?: string,
+): string | null {
   if (!disposition) return null;
   const filenameMatch = /filename="([^"]+)"/i.exec(disposition);
   if (filenameMatch?.[1]) return filenameMatch[1];
@@ -34,7 +36,8 @@ export function resolveShareBundleOrder(manifest: ShareBundleManifest): {
   rootOrder: string[];
   sortedEntries: ShareBundleManifest["entries"];
 } {
-  const entryRootId = (entry: ShareBundleManifest["entries"][number]) => getShareBundleEntryRootId(manifest, entry);
+  const entryRootId = (entry: ShareBundleManifest["entries"][number]) =>
+    getShareBundleEntryRootId(manifest, entry);
   const rootOrder =
     manifest.rootLogicalIds && manifest.rootLogicalIds.length > 0
       ? manifest.rootLogicalIds
@@ -83,7 +86,11 @@ export async function loadShareBundleEntries(blob: Blob): Promise<{
   return { manifest, rootOrder, sortedEntries, files };
 }
 
-export async function extractLatestFilesFromBundle(blob: Blob, filename: string, contentType: string): Promise<File[]> {
+export async function extractLatestFilesFromBundle(
+  blob: Blob,
+  filename: string,
+  contentType: string,
+): Promise<File[]> {
   if (!isZipBundle(contentType, filename)) {
     return [new File([blob], filename, { type: contentType || blob.type })];
   }
@@ -100,7 +107,9 @@ export async function extractLatestFilesFromBundle(blob: Blob, filename: string,
     latestByRoot.set(getShareBundleEntryRootId(manifest, entry), files[i]);
   }
 
-  const latestFiles = rootOrder.map((rootId) => latestByRoot.get(rootId)).filter((file): file is File => Boolean(file));
+  const latestFiles = rootOrder
+    .map((rootId) => latestByRoot.get(rootId))
+    .filter((file): file is File => Boolean(file));
 
   if (latestFiles.length > 0) {
     return latestFiles;

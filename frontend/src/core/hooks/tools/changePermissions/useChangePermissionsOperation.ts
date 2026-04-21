@@ -1,5 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   ChangePermissionsParameters,
@@ -8,11 +11,17 @@ import {
 
 export const getFormData = (parameters: ChangePermissionsParameters) => {
   if (!parameters) return [];
-  return Object.entries(parameters).map(([key, value]) => [key, (value ?? false).toString()]) as string[][];
+  return Object.entries(parameters).map(([key, value]) => [
+    key,
+    (value ?? false).toString(),
+  ]) as string[][];
 };
 
 // Static function that can be used by both the hook and automation executor
-export const buildChangePermissionsFormData = (parameters: ChangePermissionsParameters, file: File): FormData => {
+export const buildChangePermissionsFormData = (
+  parameters: ChangePermissionsParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -39,7 +48,10 @@ export const useChangePermissionsOperation = () => {
   return useToolOperation({
     ...changePermissionsOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("changePermissions.error.failed", "An error occurred while changing PDF permissions."),
+      t(
+        "changePermissions.error.failed",
+        "An error occurred while changing PDF permissions.",
+      ),
     ),
   });
 };

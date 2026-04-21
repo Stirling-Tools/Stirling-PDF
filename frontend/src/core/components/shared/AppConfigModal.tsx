@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
 import { useNavigate, useLocation } from "react-router-dom";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -7,9 +13,15 @@ import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import "@app/components/shared/AppConfigModal.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
-import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import {
+  Z_INDEX_CONFIG_MODAL,
+  Z_INDEX_OVER_CONFIG_MODAL,
+} from "@app/styles/zIndex";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
-import { UnsavedChangesProvider, useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
+import {
+  UnsavedChangesProvider,
+  useUnsavedChanges,
+} from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 
 interface AppConfigModalProps {
@@ -17,7 +29,10 @@ interface AppConfigModalProps {
   onClose: () => void;
 }
 
-const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
+const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
+  opened,
+  onClose,
+}) => {
   const [active, setActive] = useState<NavKey>("general");
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -42,7 +57,11 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
     const section = getSectionFromPath(location.pathname);
     if (opened && section) {
       setActive(section);
-    } else if (opened && location.pathname.startsWith("/settings") && !section) {
+    } else if (
+      opened &&
+      location.pathname.startsWith("/settings") &&
+      !section
+    ) {
       // If at /settings without a section, redirect to general
       navigate("/settings/general", { replace: true });
     }
@@ -64,7 +83,11 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       }
     };
     window.addEventListener("appConfig:navigate", handler as EventListener);
-    return () => window.removeEventListener("appConfig:navigate", handler as EventListener);
+    return () =>
+      window.removeEventListener(
+        "appConfig:navigate",
+        handler as EventListener,
+      );
   }, [navigate]);
 
   const colors = useMemo(
@@ -86,7 +109,11 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const loginEnabled = config?.enableLogin ?? false;
 
   // Left navigation structure and icons
-  const configNavSections = useConfigNavSections(isAdmin, runningEE, loginEnabled);
+  const configNavSections = useConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled,
+  );
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {
@@ -151,7 +178,12 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
             {configNavSections.map((section) => (
               <div key={section.title} className="modal-nav-section">
                 {!isMobile && (
-                  <Text size="xs" fw={600} c={colors.sectionTitle} style={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
+                  <Text
+                    size="xs"
+                    fw={600}
+                    c={colors.sectionTitle}
+                    style={{ textTransform: "uppercase", letterSpacing: 0.4 }}
+                  >
                     {section.title}
                   </Text>
                 )}
@@ -159,10 +191,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                   {section.items.map((item) => {
                     const isActive = active === item.key;
                     const isDisabled = item.disabled ?? false;
-                    const color = isActive ? colors.navItemActive : colors.navItem;
+                    const color = isActive
+                      ? colors.navItemActive
+                      : colors.navItem;
                     const iconSize = isMobile ? 28 : 18;
                     const showPlanWarning =
-                      item.key === "adminPlan" && licenseAlert.active && licenseAlert.audience === "admin";
+                      item.key === "adminPlan" &&
+                      licenseAlert.active &&
+                      licenseAlert.audience === "admin";
 
                     const navItemContent = (
                       <div
@@ -174,20 +210,32 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                         }}
                         className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
                         style={{
-                          background: isActive ? colors.navItemActiveBg : "transparent",
+                          background: isActive
+                            ? colors.navItemActiveBg
+                            : "transparent",
                           opacity: isDisabled ? 0.6 : 1,
                           cursor: isDisabled ? "not-allowed" : "pointer",
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
-                        <LocalIcon icon={item.icon} width={iconSize} height={iconSize} style={{ color }} />
+                        <LocalIcon
+                          icon={item.icon}
+                          width={iconSize}
+                          height={iconSize}
+                          style={{ color }}
+                        />
                         {!isMobile && (
                           <Group gap={4} align="center" wrap="nowrap">
                             <Text size="sm" fw={500} style={{ color }}>
                               {item.label}
                             </Text>
                             {item.badge && (
-                              <Badge size="xs" variant="light" color={item.badgeColor ?? "orange"} style={{ flexShrink: 0 }}>
+                              <Badge
+                                size="xs"
+                                variant="light"
+                                color={item.badgeColor ?? "orange"}
+                                style={{ flexShrink: 0 }}
+                              >
                                 {item.badge}
                               </Badge>
                             )}
@@ -196,7 +244,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                                 icon="warning-rounded"
                                 width={14}
                                 height={14}
-                                style={{ color: "var(--mantine-color-orange-7)" }}
+                                style={{
+                                  color: "var(--mantine-color-orange-7)",
+                                }}
                               />
                             )}
                           </Group>
@@ -215,7 +265,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                         {navItemContent}
                       </Tooltip>
                     ) : (
-                      <React.Fragment key={item.key}>{navItemContent}</React.Fragment>
+                      <React.Fragment key={item.key}>
+                        {navItemContent}
+                      </React.Fragment>
                     );
                   })}
                 </div>
@@ -239,8 +291,18 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                 {activeLabel}
               </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar configNavSections={configNavSections} onNavigate={handleNavigation} isMobile={isMobile} />
-                <ActionIcon ref={closeButtonRef} variant="subtle" onClick={handleClose} aria-label="Close" data-autofocus>
+                <SettingsSearchBar
+                  configNavSections={configNavSections}
+                  onNavigate={handleNavigation}
+                  isMobile={isMobile}
+                />
+                <ActionIcon
+                  ref={closeButtonRef}
+                  variant="subtle"
+                  onClick={handleClose}
+                  aria-label="Close"
+                  data-autofocus
+                >
                   <LocalIcon icon="close-rounded" width={18} height={18} />
                 </ActionIcon>
               </Group>

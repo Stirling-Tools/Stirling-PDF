@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
 const { execSync } = require("node:child_process");
-const { existsSync, mkdirSync, writeFileSync, readFileSync } = require("node:fs");
+const {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+} = require("node:fs");
 const path = require("node:path");
 
 const { argv } = require("node:process");
@@ -16,7 +21,13 @@ const POSTPROCESS_ONLY = !!INPUT_FILE;
  * This script creates a JSON file similar to the Java backend's 3rdPartyLicenses.json
  */
 
-const OUTPUT_FILE = path.join(__dirname, "..", "src", "assets", "3rdPartyLicenses.json");
+const OUTPUT_FILE = path.join(
+  __dirname,
+  "..",
+  "src",
+  "assets",
+  "3rdPartyLicenses.json",
+);
 const PACKAGE_JSON = path.join(__dirname, "..", "package.json");
 
 // Ensure the output directory exists
@@ -30,7 +41,9 @@ console.log("🔍 Generating frontend license report...");
 try {
   // Safety guard: don't run this script on fork PRs (workflow setzt PR_IS_FORK)
   if (process.env.PR_IS_FORK === "true" && !POSTPROCESS_ONLY) {
-    console.error("Fork PR detected: only --input (postprocess-only) mode is allowed.");
+    console.error(
+      "Fork PR detected: only --input (postprocess-only) mode is allowed.",
+    );
     process.exit(2);
   }
 
@@ -90,13 +103,21 @@ try {
       licenseType = "Unknown";
     }
 
-    if ("posthog-js" === dep.name && licenseType.startsWith("SEE LICENSE IN LICENSE")) {
-      licenseType = "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
+    if (
+      "posthog-js" === dep.name &&
+      licenseType.startsWith("SEE LICENSE IN LICENSE")
+    ) {
+      licenseType =
+        "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
     }
 
     return {
       name: dep.name,
-      version: dep.installedVersion || dep.definedVersion || dep.remoteVersion || "unknown",
+      version:
+        dep.installedVersion ||
+        dep.definedVersion ||
+        dep.remoteVersion ||
+        "unknown",
       licenseType: licenseType,
       repository: dep.link,
       url: dep.link,
@@ -107,12 +128,17 @@ try {
   // Transform to match Java backend format
   const transformedData = {
     dependencies: licenseArray.map((dep) => {
-      const licenseType = Array.isArray(dep.licenseType) ? dep.licenseType.join(", ") : dep.licenseType || "Unknown";
+      const licenseType = Array.isArray(dep.licenseType)
+        ? dep.licenseType.join(", ")
+        : dep.licenseType || "Unknown";
       const licenseUrl = dep.link || getLicenseUrl(licenseType);
 
       return {
         moduleName: dep.name,
-        moduleUrl: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`,
+        moduleUrl:
+          dep.repository ||
+          dep.url ||
+          `https://www.npmjs.com/package/${dep.name}`,
         moduleVersion: dep.version,
         moduleLicense: licenseType,
         moduleLicenseUrl: licenseUrl,
@@ -122,7 +148,9 @@ try {
 
   // Log summary of license types found
   const licenseSummary = licenseArray.reduce((acc, dep) => {
-    const license = Array.isArray(dep.licenseType) ? dep.licenseType.join(", ") : dep.licenseType || "Unknown";
+    const license = Array.isArray(dep.licenseType)
+      ? dep.licenseType.join(", ")
+      : dep.licenseType || "Unknown";
     acc[license] = (acc[license] || 0) + 1;
     return acc;
   }, {});
@@ -150,7 +178,10 @@ try {
   }
 
   // Check for potentially problematic licenses
-  const problematicLicenses = checkLicenseCompatibility(licenseSummary, licenseArray);
+  const problematicLicenses = checkLicenseCompatibility(
+    licenseSummary,
+    licenseArray,
+  );
   if (problematicLicenses.length > 0) {
     console.log("\n⚠️  License compatibility warnings:");
     problematicLicenses.forEach((warning) => {
@@ -158,7 +189,13 @@ try {
     });
 
     // Write license warnings to a separate file for CI/CD
-    const warningsFile = path.join(__dirname, "..", "src", "assets", "license-warnings.json");
+    const warningsFile = path.join(
+      __dirname,
+      "..",
+      "src",
+      "assets",
+      "license-warnings.json",
+    );
     writeFileSync(
       warningsFile,
       JSON.stringify(
@@ -257,15 +294,21 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
     // Copyleft licenses
     "GPL-2.0": "Strong copyleft license - requires derivative works to be GPL",
     "GPL-3.0": "Strong copyleft license - requires derivative works to be GPL",
-    "LGPL-2.1": "Weak copyleft license - may require source disclosure for modifications",
-    "LGPL-3.0": "Weak copyleft license - may require source disclosure for modifications",
-    "AGPL-3.0": "Network copyleft license - requires source disclosure for network use",
-    "AGPL-1.0": "Network copyleft license - requires source disclosure for network use",
+    "LGPL-2.1":
+      "Weak copyleft license - may require source disclosure for modifications",
+    "LGPL-3.0":
+      "Weak copyleft license - may require source disclosure for modifications",
+    "AGPL-3.0":
+      "Network copyleft license - requires source disclosure for network use",
+    "AGPL-1.0":
+      "Network copyleft license - requires source disclosure for network use",
 
     // Other potentially problematic licenses
     WTFPL: "Potentially problematic license - legal uncertainty",
-    "CC-BY-SA-4.0": "ShareAlike license - requires derivative works to use same license",
-    "CC-BY-SA-3.0": "ShareAlike license - requires derivative works to use same license",
+    "CC-BY-SA-4.0":
+      "ShareAlike license - requires derivative works to use same license",
+    "CC-BY-SA-3.0":
+      "ShareAlike license - requires derivative works to use same license",
     "CC-BY-NC-4.0": "Non-commercial license - prohibits commercial use",
     "CC-BY-NC-3.0": "Non-commercial license - prohibits commercial use",
     "OSL-3.0": "Copyleft license - requires derivative works to be OSL",
@@ -323,7 +366,9 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
 
     // Check if this license only affects our own packages
     const affectedPackages = licenseArray.filter((dep) => {
-      const depLicense = Array.isArray(dep.licenseType) ? dep.licenseType.join(", ") : dep.licenseType;
+      const depLicense = Array.isArray(dep.licenseType)
+        ? dep.licenseType.join(", ")
+        : dep.licenseType;
       return depLicense === license;
     });
 
@@ -335,7 +380,10 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         dep.name.toLowerCase().includes("stirlingpdf"),
     );
 
-    if (isOnlyOurPackages && (license === "UNLICENSED" || license.startsWith("SEE LICENSE IN"))) {
+    if (
+      isOnlyOurPackages &&
+      (license === "UNLICENSED" || license.startsWith("SEE LICENSE IN"))
+    ) {
       return; // Skip warnings for our own Stirling-PDF packages
     }
 
@@ -361,18 +409,25 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
       }
 
       // For AND licenses or OR licenses with no good options, check for problematic components
-      const hasProblematicComponent = Object.keys(problematicLicenses).some((problematic) => license.includes(problematic));
+      const hasProblematicComponent = Object.keys(problematicLicenses).some(
+        (problematic) => license.includes(problematic),
+      );
 
       if (hasProblematicComponent) {
         const affectedPackages = licenseArray
           .filter((dep) => {
-            const depLicense = Array.isArray(dep.licenseType) ? dep.licenseType.join(", ") : dep.licenseType;
+            const depLicense = Array.isArray(dep.licenseType)
+              ? dep.licenseType.join(", ")
+              : dep.licenseType;
             return depLicense === license;
           })
           .map((dep) => ({
             name: dep.name,
             version: dep.version,
-            url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`,
+            url:
+              dep.repository ||
+              dep.url ||
+              `https://www.npmjs.com/package/${dep.name}`,
           }));
 
         const licenseType = license.includes("AND") ? "AND" : "OR";
@@ -397,21 +452,30 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
     if (problematicLicenses[license]) {
       const affectedPackages = licenseArray
         .filter((dep) => {
-          const depLicense = Array.isArray(dep.licenseType) ? dep.licenseType.join(", ") : dep.licenseType;
+          const depLicense = Array.isArray(dep.licenseType)
+            ? dep.licenseType.join(", ")
+            : dep.licenseType;
           return depLicense === license;
         })
         .map((dep) => ({
           name: dep.name,
           version: dep.version,
-          url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`,
+          url:
+            dep.repository ||
+            dep.url ||
+            `https://www.npmjs.com/package/${dep.name}`,
         }));
 
       const packageList =
         affectedPackages
           .map((pkg) => pkg.name)
           .slice(0, 5)
-          .join(", ") + (affectedPackages.length > 5 ? `, and ${affectedPackages.length - 5} more` : "");
-      const licenseUrl = getLicenseUrl(license) || "https://opensource.org/licenses";
+          .join(", ") +
+        (affectedPackages.length > 5
+          ? `, and ${affectedPackages.length - 5} more`
+          : "");
+      const licenseUrl =
+        getLicenseUrl(license) || "https://opensource.org/licenses";
 
       warnings.push({
         message: `⚠️  This PR contains ${count} package${count > 1 ? "s" : ""} with license type [${license}](${licenseUrl}) - ${problematicLicenses[license]}. Affected packages: ${packageList}`,
@@ -425,13 +489,18 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
       // Unknown license type - flag for manual review
       const affectedPackages = licenseArray
         .filter((dep) => {
-          const depLicense = Array.isArray(dep.licenseType) ? dep.licenseType.join(", ") : dep.licenseType;
+          const depLicense = Array.isArray(dep.licenseType)
+            ? dep.licenseType.join(", ")
+            : dep.licenseType;
           return depLicense === license;
         })
         .map((dep) => ({
           name: dep.name,
           version: dep.version,
-          url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`,
+          url:
+            dep.repository ||
+            dep.url ||
+            `https://www.npmjs.com/package/${dep.name}`,
         }));
 
       warnings.push({

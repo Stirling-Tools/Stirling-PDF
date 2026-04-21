@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useRightRailButtons, RightRailButtonWithAction } from "@app/hooks/useRightRailButtons";
+import {
+  useRightRailButtons,
+  RightRailButtonWithAction,
+} from "@app/hooks/useRightRailButtons";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import PageSelectByNumberButton from "@app/components/pageEditor/PageSelectByNumberButton";
 
@@ -20,7 +23,9 @@ interface PageEditorRightRailButtonsParams {
   exportLoading: boolean;
 }
 
-export function usePageEditorRightRailButtons(params: PageEditorRightRailButtonsParams) {
+export function usePageEditorRightRailButtons(
+  params: PageEditorRightRailButtonsParams,
+) {
   const {
     totalPages,
     selectedPageCount,
@@ -42,9 +47,18 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
   // Lift i18n labels out of memo for clarity
   const selectAllLabel = t("rightRail.selectAll", "Select All");
   const deselectAllLabel = t("rightRail.deselectAll", "Deselect All");
-  const selectByNumberLabel = t("rightRail.selectByNumber", "Select by Page Numbers");
-  const deleteSelectedLabel = t("rightRail.deleteSelected", "Delete Selected Pages");
-  const exportSelectedLabel = t("rightRail.exportSelected", "Export Selected Pages");
+  const selectByNumberLabel = t(
+    "rightRail.selectByNumber",
+    "Select by Page Numbers",
+  );
+  const deleteSelectedLabel = t(
+    "rightRail.deleteSelected",
+    "Delete Selected Pages",
+  );
+  const exportSelectedLabel = t(
+    "rightRail.exportSelected",
+    "Export Selected Pages",
+  );
   const saveChangesLabel = t("rightRail.saveChanges", "Save Changes");
   const buttons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
@@ -61,7 +75,13 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
       },
       {
         id: "page-deselect-all",
-        icon: <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />,
+        icon: (
+          <LocalIcon
+            icon="crop-square-outline"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
         tooltip: deselectAllLabel,
         ariaLabel: deselectAllLabel,
         section: "top" as const,
@@ -93,7 +113,13 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
       },
       {
         id: "page-delete-selected",
-        icon: <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />,
+        icon: (
+          <LocalIcon
+            icon="delete-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
         tooltip: deleteSelectedLabel,
         ariaLabel: deleteSelectedLabel,
         section: "top" as const,

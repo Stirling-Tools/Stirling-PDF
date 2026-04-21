@@ -14,7 +14,10 @@ export interface FileStatusIndicatorProps {
   minFiles?: number;
 }
 
-const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusIndicatorProps) => {
+const FileStatusIndicator = ({
+  selectedFiles = [],
+  minFiles = 1,
+}: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
   const { openFilesModal, onFileUpload } = useFilesModalContext();
   const { files: stirlingFileStubs } = useAllFiles();
@@ -58,9 +61,11 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
     if (minFiles === undefined || minFiles === 1) {
       return t("files.selectFromWorkbench", "Add files to the workbench or ");
     } else {
-      return t("files.selectMultipleFromWorkbench", "Add at least {{count}} files to the workbench or ", {
-        count: minFiles,
-      });
+      return t(
+        "files.selectMultipleFromWorkbench",
+        "Add at least {{count}} files to the workbench or ",
+        { count: minFiles },
+      );
     }
   };
 
@@ -73,7 +78,12 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
-            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
             <UploadIcon style={{ fontSize: "0.875rem" }} />
             {t("files.upload", "Upload")}
@@ -87,7 +97,12 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
           <Anchor
             size="sm"
             onClick={() => openFilesModal({})}
-            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
             <FolderIcon style={{ fontSize: "0.875rem" }} />
             {t("files.addFiles", "Add files")}
@@ -107,7 +122,12 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
-            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
             <UploadIcon style={{ fontSize: "0.875rem" }} />
             {t("files.uploadFiles", "Upload Files")}
@@ -122,7 +142,12 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
           <Anchor
             size="sm"
             onClick={() => openFilesModal({})}
-            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
             <FolderIcon style={{ fontSize: "0.875rem" }} />
             {t("files.addFiles", "Add files")}
@@ -133,7 +158,11 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
   }
 
   return (
-    <Text size="sm" c="dimmed" style={{ wordBreak: "break-word", whiteSpace: "normal" }}>
+    <Text
+      size="sm"
+      c="dimmed"
+      style={{ wordBreak: "break-word", whiteSpace: "normal" }}
+    >
       ✓{" "}
       {selectedFiles.length === 1 ? (
         <PrivateContent>{t("fileSelected", "{{filename}}", { filename: selectedFiles[0]?.name })}</PrivateContent>

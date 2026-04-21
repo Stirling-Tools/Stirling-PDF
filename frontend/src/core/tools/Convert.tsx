@@ -22,7 +22,8 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation(convertParams.parameters);
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(convertParams.getEndpointName());
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled(convertParams.getEndpointName());
 
   // Prevent reset immediately after operation completes (when consumeFiles auto-selects outputs)
   const skipNextSelectionResetRef = useRef(false);
@@ -39,7 +40,9 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const hasFiles = selectedFiles.length > 0;
   const hasResults =
-    convertOperation.files.length > 0 || convertOperation.downloadUrl !== null || !!convertOperation.errorMessage;
+    convertOperation.files.length > 0 ||
+    convertOperation.downloadUrl !== null ||
+    !!convertOperation.errorMessage;
   const settingsCollapsed = hasResults;
 
   // When operation completes, flag the next selection change to skip reset
@@ -88,7 +91,10 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       convertOperation.resetResults();
       onPreviewFile?.(null);
     }
-  }, [convertParams.parameters.fromExtension, convertParams.parameters.toExtension]);
+  }, [
+    convertParams.parameters.fromExtension,
+    convertParams.parameters.toExtension,
+  ]);
 
   useEffect(() => {
     if (hasFiles) {
@@ -104,13 +110,18 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleConvert = async () => {
     try {
-      await convertOperation.executeOperation(convertParams.parameters, selectedFiles);
+      await convertOperation.executeOperation(
+        convertParams.parameters,
+        selectedFiles,
+      );
       if (convertOperation.files && onComplete) {
         onComplete(convertOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : "Convert operation failed");
+        onError(
+          error instanceof Error ? error.message : "Convert operation failed",
+        );
       }
     }
   };

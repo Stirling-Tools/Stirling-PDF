@@ -1,6 +1,8 @@
 import { Text, Box, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import OperationButton, { OperationButtonProps } from "@app/components/tools/shared/OperationButton";
+import OperationButton, {
+  OperationButtonProps,
+} from "@app/components/tools/shared/OperationButton";
 import { StirlingFile } from "@app/types/fileContext";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -19,7 +21,11 @@ export interface ScopedOperationButtonProps extends OperationButtonProps {
  * - N>1 files loaded: appends "(N files)" to button text.
  * - All other cases: no change to button text or layout.
  */
-export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...props }: ScopedOperationButtonProps) {
+export function ScopedOperationButton({
+  selectedFiles,
+  disableScopeHints,
+  ...props
+}: ScopedOperationButtonProps) {
   const { t } = useTranslation();
   const { workbench } = useNavigationState();
   const { activeFileIndex } = useViewer();
@@ -46,13 +52,21 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
   }
 
   const viewerFileName =
-    !disableScopeHints && !disabledForViewerMode && isViewerMode && hasMultipleFilesLoaded
+    !disableScopeHints &&
+    !disabledForViewerMode &&
+    isViewerMode &&
+    hasMultipleFilesLoaded
       ? allFiles[activeFileIndex]?.name
       : null;
 
   const pendingCount = fileIds.length - allFiles.length;
   const isBulkLoading = pendingCount > 1;
   const loadProgress = isBulkLoading ? (allFiles.length / fileIds.length) * 100 : 0;
+  const showSelectFilesHint =
+    !disableScopeHints &&
+    isFileEditorMode &&
+    allFiles.length > 0 &&
+    selectedFiles.length === 0;
 
   return (
     <>
@@ -93,7 +107,17 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
       )}
       {viewerFileName && (
         <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
-          {t("tool.singleFileScope", "Only applying to: {{fileName}}", { fileName: viewerFileName })}
+          {t("tool.singleFileScope", "Only applying to: {{fileName}}", {
+            fileName: viewerFileName,
+          })}
+        </Text>
+      )}
+      {showSelectFilesHint && (
+        <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
+          {t(
+            "tool.selectFilesHint",
+            "Select files in Active Files to run this tool",
+          )}
         </Text>
       )}
     </>

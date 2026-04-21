@@ -7,12 +7,19 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useFileState, useFileContext } from "@app/contexts/FileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { useNavigationState, useNavigationGuard, useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationGuard,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useRightRailTooltipSide } from "@app/hooks/useRightRailTooltipSide";
 import { useRedactionMode, useRedaction } from "@app/contexts/RedactionContext";
-import { defaultParameters, RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import {
+  defaultParameters,
+  RedactParameters,
+} from "@app/hooks/tools/redact/useRedactParameters";
 import { RedactionMode } from "@embedpdf/plugin-redaction";
 
 interface ViewerAnnotationControlsProps {
@@ -20,11 +27,15 @@ interface ViewerAnnotationControlsProps {
   disabled?: boolean;
 }
 
-export default function ViewerAnnotationControls({ currentView, disabled = false }: ViewerAnnotationControlsProps) {
+export default function ViewerAnnotationControls({
+  currentView,
+  disabled = false,
+}: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
   const { sidebarRefs } = useSidebarContext();
   const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
-  const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
+  const { position: tooltipPosition, offset: tooltipOffset } =
+    useRightRailTooltipSide(sidebarRefs);
 
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
@@ -45,33 +56,60 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
   // Get redaction pending state and navigation guard
   const { isRedacting: _isRedacting } = useRedactionMode();
-  const { requestNavigation, setHasUnsavedChanges, hasUnsavedChanges } = useNavigationGuard();
-  const { setRedactionMode, activateRedact, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } =
-    useRedaction();
+  const { requestNavigation, setHasUnsavedChanges, hasUnsavedChanges } =
+    useNavigationGuard();
+  const {
+    setRedactionMode,
+    activateRedact,
+    setRedactionConfig,
+    setRedactionsApplied,
+    redactionApiRef,
+    setActiveType,
+  } = useRedaction();
 
   // Check if we're in any annotation tool that should disable the toggle
   const isInAnnotationTool =
-    selectedTool === "annotate" || selectedTool === "sign" || selectedTool === "addImage" || selectedTool === "addText";
+    selectedTool === "annotate" ||
+    selectedTool === "sign" ||
+    selectedTool === "addImage" ||
+    selectedTool === "addText";
 
   // Check if we're on annotate tool to highlight the button
   const isAnnotateActive = selectedTool === "annotate";
-  const annotationsHidden = viewerContext ? !viewerContext.isAnnotationsVisible : false;
+  const annotationsHidden = viewerContext
+    ? !viewerContext.isAnnotationsVisible
+    : false;
 
   // Persist annotations to file if there are unsaved changes
   const saveAnnotationsIfNeeded = async () => {
-    if (!viewerContext?.exportActions?.saveAsCopy || currentView !== "viewer" || !historyApiRef?.current?.canUndo()) return;
+    if (
+      !viewerContext?.exportActions?.saveAsCopy ||
+      currentView !== "viewer" ||
+      !historyApiRef?.current?.canUndo()
+    )
+      return;
     if (activeFiles.length === 0 || state.files.ids.length === 0) return;
 
     try {
       const arrayBuffer = await viewerContext.exportActions.saveAsCopy();
       if (!arrayBuffer) return;
 
-      const file = new File([new Blob([arrayBuffer])], activeFiles[0].name, { type: "application/pdf" });
+      const file = new File([new Blob([arrayBuffer])], activeFiles[0].name, {
+        type: "application/pdf",
+      });
       const parentStub = selectors.getStirlingFileStub(state.files.ids[0]);
       if (!parentStub) return;
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, "redact");
-      await fileActions.consumeFiles([state.files.ids[0]], stirlingFiles, stubs);
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+        [file],
+        parentStub,
+        "redact",
+      );
+      await fileActions.consumeFiles(
+        [state.files.ids[0]],
+        stirlingFiles,
+        stubs,
+      );
 
       // Clear unsaved changes flags after successful save
       setHasUnsavedChanges(false);
@@ -151,7 +189,11 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     <>
       {/* Redaction Mode Toggle */}
       <Tooltip
-        content={isRedactMode ? t("rightRail.exitRedaction", "Exit Redaction Mode") : t("rightRail.redact", "Redact")}
+        content={
+          isRedactMode
+            ? t("rightRail.exitRedaction", "Exit Redaction Mode")
+            : t("rightRail.redact", "Redact")
+        }
         position={tooltipPosition}
         offset={tooltipOffset}
         arrow
@@ -171,7 +213,10 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
       {/* Annotation Visibility Toggle */}
       <Tooltip
-        content={t("rightRail.toggleAnnotations", "Toggle Annotations Visibility")}
+        content={t(
+          "rightRail.toggleAnnotations",
+          "Toggle Annotations Visibility",
+        )}
         position={tooltipPosition}
         offset={tooltipOffset}
         arrow
@@ -183,7 +228,12 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           radius="md"
           className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
-          disabled={disabled || currentView !== "viewer" || (isInAnnotationTool && !isAnnotateActive) || isPlacementMode}
+          disabled={
+            disabled ||
+            currentView !== "viewer" ||
+            (isInAnnotationTool && !isAnnotateActive) ||
+            isPlacementMode
+          }
           data-active={annotationsHidden ? "true" : undefined}
           aria-pressed={annotationsHidden}
         >

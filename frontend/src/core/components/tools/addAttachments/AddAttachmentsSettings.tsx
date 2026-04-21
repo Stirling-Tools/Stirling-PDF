@@ -4,7 +4,15 @@
  * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
 
-import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  ActionIcon,
+  ScrollArea,
+  Button,
+  Checkbox,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -12,11 +20,18 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
-  onParameterChange: <K extends keyof AddAttachmentsParameters>(key: K, value: AddAttachmentsParameters[K]) => void;
+  onParameterChange: <K extends keyof AddAttachmentsParameters>(
+    key: K,
+    value: AddAttachmentsParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = false }: AddAttachmentsSettingsProps) => {
+const AddAttachmentsSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: AddAttachmentsSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -28,7 +43,10 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
           onChange={(e) => {
             const files = Array.from(e.target.files || []);
             // Append to existing attachments instead of replacing
-            const newAttachments = [...(parameters.attachments || []), ...files];
+            const newAttachments = [
+              ...(parameters.attachments || []),
+              ...files,
+            ];
             onParameterChange("attachments", newAttachments);
             // Reset the input so the same file can be selected again
             e.target.value = "";
@@ -54,9 +72,15 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
       {parameters.attachments?.length > 0 && (
         <Stack gap="xs">
           <Text size="sm" fw={500}>
-            {t("AddAttachmentsRequest.selectedFiles", "Selected Files")} ({parameters.attachments.length})
+            {t("AddAttachmentsRequest.selectedFiles", "Selected Files")} (
+            {parameters.attachments.length})
           </Text>
-          <ScrollArea.Autosize mah={300} type="scroll" offsetScrollbars styles={{ viewport: { overflowX: "hidden" } }}>
+          <ScrollArea.Autosize
+            mah={300}
+            type="scroll"
+            offsetScrollbars
+            styles={{ viewport: { overflowX: "hidden" } }}
+          >
             <Stack gap="xs">
               {parameters.attachments.map((file, index) => (
                 <Group
@@ -69,7 +93,10 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
                     alignItems: "flex-start",
                   }}
                 >
-                  <Group gap="xs" style={{ flex: 1, minWidth: 0, alignItems: "flex-start" }}>
+                  <Group
+                    gap="xs"
+                    style={{ flex: 1, minWidth: 0, alignItems: "flex-start" }}
+                  >
                     {/* Filename (two-line clamp, wraps, no icon on the left) */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div
@@ -99,7 +126,9 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
                     color="red"
                     style={{ flexShrink: 0 }}
                     onClick={() => {
-                      const newAttachments = (parameters.attachments || []).filter((_, i) => i !== index);
+                      const newAttachments = (
+                        parameters.attachments || []
+                      ).filter((_, i) => i !== index);
                       onParameterChange("attachments", newAttachments);
                     }}
                     disabled={disabled}
@@ -118,14 +147,22 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
         <Checkbox
           label={
             <Group gap={4}>
-              <Text size="sm">{t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}</Text>
+              <Text size="sm">
+                {t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}
+              </Text>
               <Tooltip
                 header={{
-                  title: t("attachments.convertToPdfA3bTooltipHeader", "About PDF/A-3b Conversion"),
+                  title: t(
+                    "attachments.convertToPdfA3bTooltipHeader",
+                    "About PDF/A-3b Conversion",
+                  ),
                 }}
                 tips={[
                   {
-                    title: t("attachments.convertToPdfA3bTooltipTitle", "What it does"),
+                    title: t(
+                      "attachments.convertToPdfA3bTooltipTitle",
+                      "What it does",
+                    ),
                     description: t(
                       "attachments.convertToPdfA3bTooltip",
                       "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
@@ -144,9 +181,14 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
               </Tooltip>
             </Group>
           }
-          description={t("attachments.convertToPdfA3bDescription", "Creates an archival PDF with embedded attachments")}
+          description={t(
+            "attachments.convertToPdfA3bDescription",
+            "Creates an archival PDF with embedded attachments",
+          )}
           checked={parameters.convertToPdfA3b}
-          onChange={(event) => onParameterChange("convertToPdfA3b", event.currentTarget.checked)}
+          onChange={(event) =>
+            onParameterChange("convertToPdfA3b", event.currentTarget.checked)
+          }
           disabled={disabled}
           styles={{ root: { flex: 1 } }}
         />

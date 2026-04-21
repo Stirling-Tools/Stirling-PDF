@@ -1,11 +1,26 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Badge, Box, Button, Divider, Group, Paper, Stack, Text, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Divider,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
 import { ToolId } from "@app/types/toolId";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
-import { bindingEquals, eventToBinding, HotkeyBinding } from "@app/utils/hotkeys";
+import {
+  bindingEquals,
+  eventToBinding,
+  HotkeyBinding,
+} from "@app/utils/hotkeys";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 
 const rowStyle: React.CSSProperties = {
@@ -25,12 +40,24 @@ const rowHeaderStyle: React.CSSProperties = {
 const HotkeysSection: React.FC = () => {
   const { t } = useTranslation();
   const { toolRegistry } = useToolWorkflow();
-  const { hotkeys, defaults, updateHotkey, resetHotkey, pauseHotkeys, resumeHotkeys, getDisplayParts, isMac } = useHotkeys();
+  const {
+    hotkeys,
+    defaults,
+    updateHotkey,
+    resetHotkey,
+    pauseHotkeys,
+    resumeHotkeys,
+    getDisplayParts,
+    isMac,
+  } = useHotkeys();
   const [editingTool, setEditingTool] = useState<ToolId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const tools = useMemo(() => Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][], [toolRegistry]);
+  const tools = useMemo(
+    () => Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][],
+    [toolRegistry],
+  );
 
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return tools;
@@ -78,14 +105,26 @@ const HotkeysSection: React.FC = () => {
         return;
       }
 
-      const conflictEntry = (Object.entries(hotkeys) as [ToolId, HotkeyBinding][]).find(
-        ([toolId, existing]) => toolId !== editingTool && bindingEquals(existing, binding),
+      const conflictEntry = (
+        Object.entries(hotkeys) as [ToolId, HotkeyBinding][]
+      ).find(
+        ([toolId, existing]) =>
+          toolId !== editingTool && bindingEquals(existing, binding),
       );
 
       if (conflictEntry) {
         const conflictKey = conflictEntry[0];
-        const conflictTool = conflictKey in toolRegistry ? toolRegistry[conflictKey as ToolId]?.name : conflictKey;
-        setError(t("settings.hotkeys.errorConflict", "Shortcut already used by {{tool}}.", { tool: conflictTool }));
+        const conflictTool =
+          conflictKey in toolRegistry
+            ? toolRegistry[conflictKey as ToolId]?.name
+            : conflictKey;
+        setError(
+          t(
+            "settings.hotkeys.errorConflict",
+            "Shortcut already used by {{tool}}.",
+            { tool: conflictTool },
+          ),
+        );
         return;
       }
 
@@ -140,13 +179,22 @@ const HotkeysSection: React.FC = () => {
               const isEditing = editingTool === toolId;
               const defaultParts = getDisplayParts(defaultBinding);
               const defaultLabel =
-                defaultParts.length > 0 ? defaultParts.join(" + ") : t("settings.hotkeys.none", "Not assigned");
+                defaultParts.length > 0
+                  ? defaultParts.join(" + ")
+                  : t("settings.hotkeys.none", "Not assigned");
 
               return (
                 <React.Fragment key={toolId}>
                   <Box style={rowStyle} data-testid={`hotkey-row-${toolId}`}>
                     <div style={rowHeaderStyle}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.25rem",
+                          minWidth: 0,
+                        }}
+                      >
                         <Text fw={600}>{tool.name}</Text>
                         <Group gap="xs" wrap="wrap" align="center">
                           <HotkeyDisplay binding={currentBinding} size="md" />
@@ -156,7 +204,11 @@ const HotkeysSection: React.FC = () => {
                             </Badge>
                           )}
                           <Text size="xs" c="dimmed">
-                            {t("settings.hotkeys.defaultLabel", "Default: {{shortcut}}", { shortcut: defaultLabel })}
+                            {t(
+                              "settings.hotkeys.defaultLabel",
+                              "Default: {{shortcut}}",
+                              { shortcut: defaultLabel },
+                            )}
                           </Text>
                         </Group>
                       </div>
@@ -169,13 +221,19 @@ const HotkeysSection: React.FC = () => {
                           onClick={() => handleStartCapture(toolId)}
                         >
                           {isEditing
-                            ? t("settings.hotkeys.capturing", "Press keys… (Esc to cancel)")
+                            ? t(
+                                "settings.hotkeys.capturing",
+                                "Press keys… (Esc to cancel)",
+                              )
                             : t("settings.hotkeys.change", "Change shortcut")}
                         </Button>
                         <Button
                           size="xs"
                           variant="subtle"
-                          disabled={bindingEquals(currentBinding, defaultBinding)}
+                          disabled={bindingEquals(
+                            currentBinding,
+                            defaultBinding,
+                          )}
                           onClick={() => resetHotkey(toolId)}
                         >
                           {t("settings.hotkeys.reset", "Reset")}

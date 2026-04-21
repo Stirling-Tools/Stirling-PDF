@@ -9,12 +9,18 @@ interface TableOfContentsSectionProps {
   tocArray: PdfTocEntry[];
 }
 
-const TableOfContentsSection: React.FC<TableOfContentsSectionProps> = ({ anchorId, tocArray }) => {
+const TableOfContentsSection: React.FC<TableOfContentsSectionProps> = ({
+  anchorId,
+  tocArray,
+}) => {
   const { t } = useTranslation();
   const noneDetected = t("getPdfInfo.noneDetected", "None detected");
 
   return (
-    <SectionBlock title={t("getPdfInfo.sections.tableOfContents", "Table of Contents")} anchorId={anchorId}>
+    <SectionBlock
+      title={t("getPdfInfo.sections.tableOfContents", "Table of Contents")}
+      anchorId={anchorId}
+    >
       {!tocArray || tocArray.length === 0 ? (
         <Text size="sm" c="dimmed">
           {noneDetected}

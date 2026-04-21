@@ -1,6 +1,16 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { TextInput, Switch, Stack, Paper, Text, Loader, Group, Alert, List } from "@mantine/core";
+import {
+  TextInput,
+  Switch,
+  Stack,
+  Paper,
+  Text,
+  Loader,
+  Group,
+  Alert,
+  List,
+} from "@mantine/core";
 import { alert } from "@app/components/toast";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -19,13 +29,26 @@ interface PremiumSettingsData {
 
 export default function AdminPremiumSection() {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
+    useLoginRequired();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<PremiumSettingsData>({
-      sectionName: "premium",
-    });
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<PremiumSettingsData>({
+    sectionName: "premium",
+  });
 
   useEffect(() => {
     if (loginEnabled) {
@@ -33,7 +56,10 @@ export default function AdminPremiumSection() {
     }
   }, [loginEnabled]);
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
@@ -75,7 +101,10 @@ export default function AdminPremiumSection() {
             {t("admin.settings.premium.title", "Premium & Enterprise")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.premium.description", "Configure your premium or enterprise license key.")}
+            {t(
+              "admin.settings.premium.description",
+              "Configure your premium or enterprise license key.",
+            )}
           </Text>
         </div>
 
@@ -83,7 +112,10 @@ export default function AdminPremiumSection() {
         <Alert
           variant="light"
           color="blue"
-          title={t("admin.settings.premium.movedFeatures.title", "Premium Features Distributed")}
+          title={t(
+            "admin.settings.premium.movedFeatures.title",
+            "Premium Features Distributed",
+          )}
           icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
         >
           <Text size="sm">
@@ -127,25 +159,44 @@ export default function AdminPremiumSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.premium.key.label", "License Key")}</span>
+                    <span>
+                      {t("admin.settings.premium.key.label", "License Key")}
+                    </span>
                     <PendingBadge show={isFieldPending("key")} />
                   </Group>
                 }
-                description={t("admin.settings.premium.key.description", "Enter your premium or enterprise license key")}
+                description={t(
+                  "admin.settings.premium.key.description",
+                  "Enter your premium or enterprise license key",
+                )}
                 value={settings.key || ""}
-                onChange={(e) => setSettings({ ...settings, key: e.target.value })}
+                onChange={(e) =>
+                  setSettings({ ...settings, key: e.target.value })
+                }
                 placeholder="00000000-0000-0000-0000-000000000000"
                 disabled={!loginEnabled}
               />
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.premium.enabled.label", "Enable Premium Features")}
+                  {t(
+                    "admin.settings.premium.enabled.label",
+                    "Enable Premium Features",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t("admin.settings.premium.enabled.description", "Enable license key checks for pro/enterprise features")}
+                  {t(
+                    "admin.settings.premium.enabled.description",
+                    "Enable license key checks for pro/enterprise features",
+                  )}
                 </Text>
               </div>
               <Group gap="xs">
@@ -174,7 +225,11 @@ export default function AdminPremiumSection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

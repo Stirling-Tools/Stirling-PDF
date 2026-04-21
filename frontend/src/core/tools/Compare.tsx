@@ -11,7 +11,10 @@ import {
   useCompareParameters,
   defaultParameters as compareDefaultParameters,
 } from "@app/hooks/tools/compare/useCompareParameters";
-import { useCompareOperation, CompareOperationHook } from "@app/hooks/tools/compare/useCompareOperation";
+import {
+  useCompareOperation,
+  CompareOperationHook,
+} from "@app/hooks/tools/compare/useCompareOperation";
 import CompareWorkbenchView from "@app/components/tools/compare/CompareWorkbenchView";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
@@ -45,7 +48,10 @@ const Compare = (props: BaseToolProps) => {
   const operation = base.operation as CompareOperationHook;
   const params = base.params.parameters;
 
-  const compareIcon = useMemo(() => <CompareRoundedIcon fontSize="small" />, []);
+  const compareIcon = useMemo(
+    () => <CompareRoundedIcon fontSize="small" />,
+    [],
+  );
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
@@ -83,9 +89,15 @@ const Compare = (props: BaseToolProps) => {
     const handler = () => {
       performClearSelected();
     };
-    window.addEventListener("compare:clear-selected", handler as unknown as EventListener);
+    window.addEventListener(
+      "compare:clear-selected",
+      handler as unknown as EventListener,
+    );
     return () => {
-      window.removeEventListener("compare:clear-selected", handler as unknown as EventListener);
+      window.removeEventListener(
+        "compare:clear-selected",
+        handler as unknown as EventListener,
+      );
     };
   }, [performClearSelected]);
 
@@ -264,6 +276,9 @@ const Compare = (props: BaseToolProps) => {
 
         return (
           <Box
+            data-testid={`compare-slot-${role}`}
+            data-slot-state="filled"
+            data-slot-filename={stub?.name}
             style={{
               border: "1px solid var(--border-default)",
               borderRadius: "var(--radius-md)",
@@ -327,7 +342,6 @@ const Compare = (props: BaseToolProps) => {
     },
     [baseSlot, compSlot, clearSlot, t],
   );
-
   const canExecute = Boolean(
     baseSlot &&
     compSlot &&
@@ -346,7 +360,10 @@ const Compare = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("compare.selection.originalEditedTitle", "Select Original and Edited PDFs"),
+        title: t(
+          "compare.selection.originalEditedTitle",
+          "Select Original and Edited PDFs",
+        ),
         isVisible: true,
         content: (
           <Stack gap="sm" className="compare-step-selection">
@@ -408,7 +425,10 @@ const Compare = (props: BaseToolProps) => {
                   )}
                 </Text>
                 <Group justify="flex-end" gap="sm">
-                  <Button variant="light" onClick={() => setSwapConfirmOpen(false)}>
+                  <Button
+                    variant="light"
+                    onClick={() => setSwapConfirmOpen(false)}
+                  >
                     {t("cancel", "Cancel")}
                   </Button>
                   <Button
@@ -434,7 +454,10 @@ const Compare = (props: BaseToolProps) => {
               <Stack gap="md">
                 <Text>{t("compare.clear.confirmBody", "This will clear the current file selections.")}</Text>
                 <Group justify="flex-end" gap="sm">
-                  <Button variant="light" onClick={() => setClearConfirmOpen(false)}>
+                  <Button
+                    variant="light"
+                    onClick={() => setClearConfirmOpen(false)}
+                  >
                     {t("cancel", "Cancel")}
                   </Button>
                   <Button
