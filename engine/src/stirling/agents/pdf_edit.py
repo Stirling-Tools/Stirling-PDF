@@ -22,6 +22,7 @@ from stirling.contracts import (
     ToolOperationStep,
     format_conversation_history,
 )
+from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
 
@@ -64,7 +65,7 @@ class PdfEditSelectionAgent:
     async def select(self, prompt: str) -> PdfEditPlanOutput:
         logger.debug("[pdf-edit selection] prompt:\n%s", prompt)
         result = await self.agent.run(prompt)
-        logger.debug("[pdf-edit selection] output: %s", result.output.model_dump_json())
+        logger.debug("[pdf-edit selection] output: %s", Pretty(result.output))
         return result.output
 
 
@@ -102,7 +103,7 @@ class PdfEditParameterSelector:
                 "Do not include fields from any other operation."
             ),
         )
-        logger.debug("[pdf-edit params %s] output: %s", operation_id.name, parameter_result.output.model_dump_json())
+        logger.debug("[pdf-edit params %s] output: %s", operation_id.name, Pretty(parameter_result.output))
         return parameter_result.output
 
     def _build_parameter_prompt(
@@ -155,7 +156,7 @@ class PdfEditAgent:
         )
         selection = await self._select_plan(request, allow_need_content=allow_need_content)
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
-            logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, selection.model_dump_json())
+            logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
             return selection
         if isinstance(selection, NeedContentResponse):
             logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
