@@ -12,7 +12,7 @@ const date = new Date();
 date.setDate(date.getDate() - 7);
 const beforeDate = date.toISOString().split('T')[0];
 
-console.log(`Updating packages modified since: ${beforeDate}`);
+console.log(`Updating packages modified before: ${beforeDate}`);
 
 // Run npm outdated first
 const outdated = spawn('npm', ['outdated'], { stdio: 'inherit', shell: true });
