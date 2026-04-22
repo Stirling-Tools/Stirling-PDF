@@ -16,10 +16,7 @@ import {
 const recentSpecialByEndpoint: Record<string, number> = {};
 const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
 
-// Keep in sync with the same constant in proprietary/auth/springAuthClient.ts.
-// AuthCallback consumes this after the SSO round-trip to restore the user's
-// original destination. The query-string ?from= approach does not survive
-// because Spring Security 302-strips the query from /login.
+// Mirrors the key in proprietary/auth/springAuthClient.ts; AuthCallback consumes it.
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
 
 function isSafePostLoginPath(path: string): boolean {
@@ -40,7 +37,7 @@ function stashPostLoginRedirect(path: string): void {
     if (typeof window === "undefined" || !isSafePostLoginPath(path)) return;
     window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
   } catch {
-    // sessionStorage unavailable (e.g. private mode) — fail open
+    // sessionStorage unavailable (private mode) — fail open
   }
 }
 
@@ -70,15 +67,10 @@ export async function handleHttpError(error: any): Promise<boolean> {
     // If not on auth page, redirect to login with expired session message
     if (!isAuthPage && !skipAuthRedirect) {
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
-      // Store the current location so we can redirect back after login.
-      // Use sessionStorage: Spring Security 302-strips query params from
-      // /login, so `?from=` would be lost. Same-origin sessionStorage
-      // survives the SAML/OAuth cross-origin round-trip because the callback
-      // lands back on this origin before any other navigation.
+      // Spring 302-strips the ?from= query from /login, so stash the return
+      // path in sessionStorage (AuthCallback reads it after SSO round-trip).
       const currentLocation = window.location.pathname + window.location.search;
       stashPostLoginRedirect(currentLocation);
-      // Keep the `?from=` query in the URL for observability/back-compat
-      // even though it gets stripped; the authoritative value is sessionStorage.
       let hadStoredJwt = false;
       try {
         hadStoredJwt = Boolean(localStorage.getItem("stirling_jwt"));

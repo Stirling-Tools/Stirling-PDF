@@ -7,8 +7,7 @@ import {
   springAuth,
 } from "@app/auth/springAuthClient";
 
-// Mock springAuth but keep the real redirect helpers (they only touch
-// sessionStorage, which is isolated per test).
+// Mock springAuth; keep the real redirect-path helpers.
 vi.mock("@app/auth/springAuthClient", async () => {
   const actual = await vi.importActual<
     typeof import("@app/auth/springAuthClient")

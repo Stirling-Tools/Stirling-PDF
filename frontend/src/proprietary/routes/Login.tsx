@@ -37,11 +37,6 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
-  // Resolve where to send the user after a successful login. React-router
-  // navigations carry this in `location.state.from.pathname`, but a full-page
-  // redirect (e.g. from the global httpErrorHandler on a 401) wipes that state
-  // and preserves the path as a `?from=` query param instead. Check both, in
-  // order of reliability.
   const resolveReturnPath = (): string | null => {
     const fromState = (
       location.state as { from?: { pathname?: string } } | null
@@ -287,13 +282,7 @@ export default function Login() {
       setError(null);
       clearLogoutBlock();
 
-      // Preserve the page the user was trying to reach (e.g. /share/<token>) so
-      // AuthCallback can return them there after the cross-origin OAuth round-trip.
-      // `resolveReturnPath` checks both location.state (react-router navigations)
-      // and `?from=` (theoretical query param, but Spring Security strips it).
-      // When httpErrorHandler has already persisted the path to sessionStorage
-      // on a prior 401 redirect, we mustn't clobber it with null here — only
-      // update when we actually have a value to contribute.
+      // Don't overwrite a path already stashed by httpErrorHandler on a prior 401.
       const returnPath = resolveReturnPath();
       if (returnPath) {
         setPostLoginRedirectPath(returnPath);

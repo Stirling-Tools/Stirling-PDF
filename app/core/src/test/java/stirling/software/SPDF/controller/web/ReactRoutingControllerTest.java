@@ -82,8 +82,6 @@ class ReactRoutingControllerTest {
         assertTrue(response.getBody().contains("Stirling PDF"));
     }
 
-    // --- share-link bootstrap ---
-
     @Test
     void serveShareLinkPage_returnsIndexHtml() {
         controller.init();

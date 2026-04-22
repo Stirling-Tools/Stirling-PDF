@@ -40,8 +40,7 @@ vi.mock("@app/auth/UseSession", () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock springAuth but keep the real redirect-path helpers (they only touch
-// sessionStorage, which is isolated per test).
+// Mock springAuth; keep the real redirect-path helpers.
 vi.mock("@app/auth/springAuthClient", async () => {
   const actual = await vi.importActual<
     typeof import("@app/auth/springAuthClient")
@@ -742,8 +741,7 @@ describe("Login", () => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();
     });
 
-    // The original destination must be stashed BEFORE the SSO redirect, since
-    // the cross-origin round-trip destroys React's in-memory location.state.
+    // Must be stashed before the cross-origin SSO redirect wipes location.state.
     expect(sessionStorage.getItem("stirling_post_login_path")).toBe(
       "/share/abc123",
     );

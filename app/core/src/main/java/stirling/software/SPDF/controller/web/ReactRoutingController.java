@@ -149,13 +149,6 @@ public class ReactRoutingController {
         return serveIndexHtml(request);
     }
 
-    /**
-     * Share-link SPA bootstrap. Must be reachable without authentication so the React {@code
-     * ShareLinkPage} component can load, call the (still authenticated) share-link APIs, and
-     * trigger the login flow while preserving the original URL. The share-link data endpoints under
-     * {@code /api/v1/storage/share-links/**} remain protected by Spring Security and enforce their
-     * own access checks via {@code FileStorageService#canAccessShareLink}.
-     */
     @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
         return serveIndexHtml(request);

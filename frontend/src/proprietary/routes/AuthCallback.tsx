@@ -160,16 +160,10 @@ export default function AuthCallback() {
           `[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`,
         );
 
-        // Restore the page the user was originally trying to reach before SSO
-        // (e.g. /share/<token>). Falls back to home if nothing was stashed or the
-        // stashed value isn't a safe same-origin path.
-        const postLoginTarget = consumePostLoginRedirectPath();
-        const target = postLoginTarget ?? "/";
+        const target = consumePostLoginRedirectPath() ?? "/";
         console.log(
           `[AuthCallback:${executionId}] Step 7: Navigating to ${target}`,
         );
-
-        // Clear the hash from URL and redirect to the intended destination
         navigate(target, { replace: true });
 
         const duration = performance.now() - startTime;

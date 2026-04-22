@@ -183,10 +183,7 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints — access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
-                // Share-link SPA bootstrap: /share/<token> must be reachable without auth so
-                // React can render ShareLinkPage and trigger login. Matches a single path
-                // segment only (not /share/<token>/anything) to avoid future over-matching.
-                // The share-link data APIs (/api/v1/storage/share-links/**) remain protected.
+                // Share-link SPA bootstrap; data APIs remain protected
                 || trimmedUri.matches("^/share/[^/]+/?$");
     }
 

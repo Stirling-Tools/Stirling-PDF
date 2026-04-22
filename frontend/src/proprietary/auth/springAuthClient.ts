@@ -82,12 +82,8 @@ function persistRedirectPath(path: string): void {
   }
 }
 
-/**
- * Returns true if the given path is safe to redirect the browser to after login:
- * same-origin, relative, and not pointing back at auth plumbing. We reject anything
- * that could be interpreted as an absolute URL or protocol-relative URL ("//evil")
- * to prevent open-redirect abuse if the stored value is ever tampered with.
- */
+// Same-origin relative path, not pointing at auth plumbing. Rejects protocol-relative
+// URLs to guard against open-redirect abuse if the stored value is tampered with.
 export function isSafePostLoginRedirect(path: unknown): path is string {
   if (typeof path !== "string" || path.length === 0) return false;
   if (!path.startsWith("/") || path.startsWith("//")) return false;
@@ -113,7 +109,7 @@ export function setPostLoginRedirectPath(path: string | null | undefined): void 
       window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
     }
   } catch (_error) {
-    // sessionStorage may be unavailable (private mode, etc.) — fail open
+    // sessionStorage unavailable (private mode) — fail open
   }
 }
 

@@ -1,11 +1,8 @@
 #!/bin/bash
 set -e
 
-# On Git Bash / MSYS (Windows), bash auto-translates arguments and env values
-# that look like Unix paths (e.g. "/storage") into Windows paths before passing
-# them to Win32 binaries like docker-compose.exe. That mangles values we want
-# the container to receive verbatim, such as STORAGE_LOCAL_BASEPATH=/storage.
-# These two vars disable that translation. No-op on native Linux/macOS.
+# Stop Git Bash / MSYS from mangling Unix-style paths (e.g. /storage) passed
+# to docker-compose.exe. No-op on native Linux/macOS.
 export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
 
@@ -112,13 +109,11 @@ if [ "$WITH_STORAGE" = true ]; then
     export STORAGE_SHARING_LINKENABLED=true
     export STORAGE_SHARING_EMAILENABLED=true
     export STORAGE_SHARING_LINKEXPIRATIONDAYS=3
-    # Note: signing is storage.signing (sibling of storage.sharing), not storage.sharing.signing
+    # storage.signing is a sibling of storage.sharing, not nested under it
     export STORAGE_SIGNING_ENABLED=true
-    # system.frontendUrl must be set for share-link creation to be allowed
-    # (see FileStorageService.isShareLinksEnabled)
+    # Required for share-link creation (FileStorageService.isShareLinksEnabled)
     export SYSTEM_FRONTENDURL="http://localhost:8080"
-    # Ensure the stirling-pdf container is recreated so the env vars take effect
-    # even when --nobuild is passed.
+    # Force recreate so env changes apply even with --nobuild
     if [[ ! " ${COMPOSE_UP_ARGS[*]} " =~ " --force-recreate " ]]; then
         COMPOSE_UP_ARGS+=(--force-recreate)
     fi
