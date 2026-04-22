@@ -28,7 +28,16 @@ from typing import Any
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import AgentRunError
+from pydantic_ai.output import ToolOutput
+from pydantic_ai.tools import RunContext
 
+from stirling.agents._registry import DelegatableAgent, DelegateRegistrar, OrchestratorDeps
+from stirling.contracts import (
+    EditPlanResponse,
+    OrchestratorRequest,
+    SupportedCapability,
+    ToolOperationStep,
+)
 from stirling.contracts.ledger import (
     Discrepancy,
     DiscrepancyKind,
@@ -40,6 +49,7 @@ from stirling.contracts.ledger import (
     Verdict,
 )
 from stirling.logging import Pretty
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
 
 from .prompts import (
@@ -113,7 +123,7 @@ class StatementsResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class MathAuditorAgent:
+class MathAuditorAgent(DelegateRegistrar):
     """
     Encapsulates the Ledger Auditor pipeline.
 
@@ -157,6 +167,38 @@ class MathAuditorAgent:
             model_settings=model_settings,
         )
         self._llm_semaphore = asyncio.Semaphore(10)
+
+    # ------------------------------------------------------------------
+    # Orchestrator delegate registration
+    # ------------------------------------------------------------------
+
+    async def run_as_delegate(self, _request: OrchestratorRequest) -> EditPlanResponse:
+        return EditPlanResponse(
+            summary="Validate mathematical calculations in the document.",
+            steps=[
+                ToolOperationStep(
+                    tool=AgentToolId.MATH_AUDITOR_AGENT,
+                    parameters=MathAuditorAgentParams(),
+                )
+            ],
+        )
+
+    async def delegate(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        return await self.run_as_delegate(ctx.deps.request)
+
+    def register_delegate(self) -> DelegatableAgent:
+        return DelegatableAgent(
+            capability=SupportedCapability.MATH_AUDITOR_AGENT,
+            tool_output=ToolOutput(
+                self.delegate,
+                name="math_auditor_agent",
+                description=(
+                    "Delegate requests to check arithmetic, validate table totals, "
+                    "audit financial calculations, or verify mathematical accuracy in PDFs."
+                ),
+            ),
+            run=self.run_as_delegate,
+        )
 
     # ------------------------------------------------------------------
     # Round 1: Examine

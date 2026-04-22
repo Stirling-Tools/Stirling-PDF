@@ -5,15 +5,18 @@ from typing import Literal, overload
 
 from pydantic import Field
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
+from pydantic_ai.output import NativeOutput, ToolOutput
+from pydantic_ai.tools import RunContext
 
-from stirling.agents._page_text import format_page_text, has_page_text
+from stirling.agents._page_text import format_page_text, has_page_text, page_text_from_artifacts
+from stirling.agents._registry import DelegatableAgent, DelegateRegistrar, OrchestratorDeps
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
     NeedContentFileRequest,
     NeedContentResponse,
+    OrchestratorRequest,
     PdfContentType,
     PdfEditRequest,
     PdfEditResponse,
@@ -136,7 +139,7 @@ class PdfEditParameterSelector:
         )
 
 
-class PdfEditAgent:
+class PdfEditAgent(DelegateRegistrar):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.supported_operations = list(OPERATIONS)
@@ -235,4 +238,28 @@ class PdfEditAgent:
             files=files,
             max_pages=selection.max_pages or self.runtime.settings.max_pages,
             max_characters=selection.max_characters or self.runtime.settings.max_characters,
+        )
+
+    async def run_as_delegate(self, request: OrchestratorRequest) -> PdfEditResponse:
+        return await self.handle(
+            PdfEditRequest(
+                user_message=request.user_message,
+                file_names=request.file_names,
+                conversation_history=request.conversation_history,
+                page_text=page_text_from_artifacts(request.artifacts),
+            )
+        )
+
+    async def delegate(self, ctx: RunContext[OrchestratorDeps]) -> PdfEditResponse:
+        return await self.run_as_delegate(ctx.deps.request)
+
+    def register_delegate(self) -> DelegatableAgent:
+        return DelegatableAgent(
+            capability=SupportedCapability.PDF_EDIT,
+            tool_output=ToolOutput(
+                self.delegate,
+                name="delegate_pdf_edit",
+                description="Delegate requests for PDF modifications and return the PDF edit result.",
+            ),
+            run=self.run_as_delegate,
         )
