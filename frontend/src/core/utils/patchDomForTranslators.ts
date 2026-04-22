@@ -1,30 +1,12 @@
-// Browser page translators (Edge, Chrome / Google Translate, accessibility
-// overlays, extensions) rewrite text nodes by wrapping them in injected <font>
-// elements. That changes the parent of text nodes React is holding references
-// to, so when React's commit phase later tries to remove or reinsert those
-// nodes it throws:
+// Browser page translators (Edge, Chrome, extensions) wrap text nodes in
+// injected <font> elements, reparenting nodes React is holding. React's commit
+// phase then throws NotFoundError on removeChild/insertBefore and the
+// ErrorBoundary unmounts the app. https://github.com/facebook/react/issues/11538
 //
-//   NotFoundError: Failed to execute 'removeChild' on 'Node':
-//     The node to be removed is not a child of this node.
-//   NotFoundError: Failed to execute 'insertBefore' on 'Node':
-//     The node before which the new node is to be inserted is not a child of this node.
-//
-// The ErrorBoundary above the app catches the exception and unmounts the whole
-// tree, so the user sees "Something went wrong" instead of the app.
-// See: https://github.com/facebook/react/issues/11538.
-//
-// Strategy: DON'T patch Node.prototype eagerly (doing so globally changes DOM
-// semantics for every library on the page and could silently hide real bugs).
-// Instead, watch for translator fingerprints via a MutationObserver and only
-// install the prototype guards once we actually see one. For the overwhelming
-// majority of users (no translator active) this module is a no-op beyond a
-// passive observer.
-//
-// Fingerprints we watch for:
-//   - <html class="translated-ltr"> / "translated-rtl" — set by Google Translate
-//   - <font> element inserted anywhere in the document — both Edge and Chrome
-//     translators (and most accessibility overlays) use <font> wrappers; React
-//     never emits <font>, so any such node is an external mutation.
+// We watch for translator fingerprints (Google Translate's translated-* class
+// on <html>, or any injected <font>) and install guards on Node.prototype only
+// once one appears, so native DOM semantics are preserved when no translator
+// is active.
 
 declare global {
   interface Node {
