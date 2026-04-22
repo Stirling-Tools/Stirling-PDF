@@ -133,6 +133,12 @@ export default defineConfig(({ mode }) => {
                 secure: false,
                 xfwd: true,
               },
+              "/engine-api": {
+                target: aiEngineTarget,
+                changeOrigin: true,
+                secure: false,
+                rewrite: (path: string) => path.replace(/^\/engine-api/, ""),
+              },
             },
     },
     base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
