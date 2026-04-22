@@ -80,7 +80,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "update:minor": "npm outdated || npm update --before=$(date -v-7d +%Y-%m-%d) && (npm audit fix --before=$(date -v-7d +%Y-%m-%d) || true) && npm test",
+    "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
     "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"
