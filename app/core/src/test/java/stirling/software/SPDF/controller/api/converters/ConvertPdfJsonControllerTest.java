@@ -4,16 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -60,8 +62,8 @@ class ConvertPdfJsonControllerTest {
 
     private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+        try (java.io.InputStream in = response.getBody().getInputStream()) {
+            in.transferTo(baos);
         }
         return baos.toByteArray();
     }
@@ -83,7 +85,15 @@ class ConvertPdfJsonControllerTest {
         PDFFile request = new PDFFile();
         request.setFileInput(pdfFile);
 
-        when(pdfJsonConversionService.convertPdfToJson(pdfFile, false)).thenReturn(jsonBytes);
+        // Service writes directly to the OutputStream passed by the controller
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(2, OutputStream.class);
+                            os.write(jsonBytes);
+                            return null;
+                        })
+                .when(pdfJsonConversionService)
+                .convertPdfToJson(eq(pdfFile), eq(false), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.convertPdfToJson(request, false);
 
@@ -100,12 +110,20 @@ class ConvertPdfJsonControllerTest {
         PDFFile request = new PDFFile();
         request.setFileInput(pdfFile);
 
-        when(pdfJsonConversionService.convertPdfToJson(pdfFile, true)).thenReturn(jsonBytes);
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(2, OutputStream.class);
+                            os.write(jsonBytes);
+                            return null;
+                        })
+                .when(pdfJsonConversionService)
+                .convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.convertPdfToJson(request, true);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(pdfJsonConversionService).convertPdfToJson(pdfFile, true);
+        verify(pdfJsonConversionService)
+                .convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
     }
 
     @Test
@@ -125,7 +143,14 @@ class ConvertPdfJsonControllerTest {
         GeneralFile request = new GeneralFile();
         request.setFileInput(jsonFile);
 
-        when(pdfJsonConversionService.convertJsonToPdf(jsonFile)).thenReturn(pdfBytes);
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(1, OutputStream.class);
+                            os.write(pdfBytes);
+                            return null;
+                        })
+                .when(pdfJsonConversionService)
+                .convertJsonToPdf(eq(jsonFile), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.convertJsonToPdf(request);
 
@@ -150,8 +175,14 @@ class ConvertPdfJsonControllerTest {
         PDFFile request = new PDFFile();
         request.setFileInput(pdfFile);
 
-        when(pdfJsonConversionService.extractDocumentMetadata(eq(pdfFile), any(String.class)))
-                .thenReturn(jsonBytes);
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(2, OutputStream.class);
+                            os.write(jsonBytes);
+                            return null;
+                        })
+                .when(pdfJsonConversionService)
+                .extractDocumentMetadata(eq(pdfFile), any(String.class), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.extractPdfMetadata(request);
 
@@ -175,7 +206,14 @@ class ConvertPdfJsonControllerTest {
         byte[] jsonBytes = "{\"content\":[]}".getBytes();
         String jobId = "test-job-id";
 
-        when(pdfJsonConversionService.extractSinglePage(jobId, 1)).thenReturn(jsonBytes);
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(2, OutputStream.class);
+                            os.write(jsonBytes);
+                            return null;
+                        })
+                .when(pdfJsonConversionService)
+                .extractSinglePage(eq(jobId), anyInt(), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.extractSinglePage(jobId, 1);
 
@@ -188,7 +226,14 @@ class ConvertPdfJsonControllerTest {
         byte[] jsonBytes = "{\"fonts\":[]}".getBytes();
         String jobId = "test-job-id";
 
-        when(pdfJsonConversionService.extractPageFonts(jobId, 1)).thenReturn(jsonBytes);
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(2, OutputStream.class);
+                            os.write(jsonBytes);
+                            return null;
+                        })
+                .when(pdfJsonConversionService)
+                .extractPageFonts(eq(jobId), anyInt(), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.extractPageFonts(jobId, 1);
 

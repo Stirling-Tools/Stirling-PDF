@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -66,10 +68,6 @@ public class ConvertPdfJsonController {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
 
-        // TODO: Refactor PdfJsonConversionService to write directly to an OutputStream
-        // instead of returning byte[], avoiding the intermediate heap allocation + temp file write
-        byte[] jsonBytes = pdfJsonConversionService.convertPdfToJson(inputFile, lightweight);
-        logJsonResponse("pdf/text-editor", jsonBytes);
         String originalName = inputFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
@@ -79,12 +77,13 @@ public class ConvertPdfJsonController {
                         : "document";
         String docName = baseName + ".json";
         TempFile tempOut = tempFileManager.createManagedTempFile(".json");
-        try {
-            Files.write(tempOut.getPath(), jsonBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.convertPdfToJson(inputFile, lightweight, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
+        logJsonResponse("pdf/text-editor", tempOut.getPath());
         return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
     }
 
@@ -101,7 +100,6 @@ public class ConvertPdfJsonController {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
 
-        byte[] pdfBytes = pdfJsonConversionService.convertJsonToPdf(jsonFile);
         String originalName = jsonFile.getOriginalFilename();
         String baseName =
                 (originalName != null && !originalName.isBlank())
@@ -111,8 +109,8 @@ public class ConvertPdfJsonController {
                         : "document";
         String docName = baseName.endsWith(".pdf") ? baseName : baseName + ".pdf";
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-        try {
-            Files.write(tempOut.getPath(), pdfBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.convertJsonToPdf(jsonFile, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
@@ -140,17 +138,14 @@ public class ConvertPdfJsonController {
 
         log.debug("Extracting metadata for PDF, assigned jobId: {}", scopedJobKey);
 
-        byte[] jsonBytes =
-                pdfJsonConversionService.extractDocumentMetadata(inputFile, scopedJobKey);
-        logJsonResponse("pdf/text-editor/metadata", jsonBytes);
-
         TempFile tempOut = tempFileManager.createManagedTempFile(".json");
-        try {
-            Files.write(tempOut.getPath(), jsonBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.extractDocumentMetadata(inputFile, scopedJobKey, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
+        logJsonResponse("pdf/text-editor/metadata", tempOut.getPath());
         try {
             return ResponseEntity.ok()
                     .header("X-Job-Id", scopedJobKey)
@@ -218,16 +213,15 @@ public class ConvertPdfJsonController {
 
         validateJobAccess(jobId);
 
-        byte[] jsonBytes = pdfJsonConversionService.extractSinglePage(jobId, pageNumber);
-        logJsonResponse("pdf/text-editor/page", jsonBytes);
         String docName = "page_" + pageNumber + ".json";
         TempFile tempOut = tempFileManager.createManagedTempFile(".json");
-        try {
-            Files.write(tempOut.getPath(), jsonBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.extractSinglePage(jobId, pageNumber, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
+        logJsonResponse("pdf/text-editor/page", tempOut.getPath());
         return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
     }
 
@@ -243,16 +237,15 @@ public class ConvertPdfJsonController {
 
         validateJobAccess(jobId);
 
-        byte[] jsonBytes = pdfJsonConversionService.extractPageFonts(jobId, pageNumber);
-        logJsonResponse("pdf/text-editor/fonts/page", jsonBytes);
         String docName = "page_fonts_" + pageNumber + ".json";
         TempFile tempOut = tempFileManager.createManagedTempFile(".json");
-        try {
-            Files.write(tempOut.getPath(), jsonBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.extractPageFonts(jobId, pageNumber, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
+        logJsonResponse("pdf/text-editor/fonts/page", tempOut.getPath());
         return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
     }
 
@@ -280,13 +273,34 @@ public class ConvertPdfJsonController {
         return baseJobId;
     }
 
-    private void logJsonResponse(String label, byte[] jsonBytes) {
-        if (jsonBytes == null) {
-            log.warn("Returning {} JSON response: null bytes", label);
+    private void logJsonResponse(String label, Path jsonPath) {
+        if (jsonPath == null) {
+            log.warn("Returning {} JSON response: null path", label);
             return;
         }
 
-        if (log.isDebugEnabled()) {
+        boolean debugEnabled = log.isDebugEnabled();
+        boolean dumpEnabled = isPdfJsonDebugDumpEnabled();
+        boolean repeatScanEnabled = isPdfJsonRepeatScanEnabled();
+
+        // Reading the full file back from disk is only worth it for these diagnostic paths.
+        // The happy path (no debug flags) returns here immediately — no extra IO.
+        if (!debugEnabled && !dumpEnabled && !repeatScanEnabled) {
+            return;
+        }
+
+        byte[] jsonBytes;
+        try {
+            jsonBytes = Files.readAllBytes(jsonPath);
+        } catch (IOException ex) {
+            log.warn(
+                    "Failed to read PDF JSON ({}) for diagnostic logging: {}",
+                    label,
+                    ex.getMessage());
+            return;
+        }
+
+        if (debugEnabled) {
             int length = jsonBytes.length;
             boolean endsWithJson =
                     length > 0 && (jsonBytes[length - 1] == '}' || jsonBytes[length - 1] == ']');
@@ -307,24 +321,23 @@ public class ConvertPdfJsonController {
                     tail);
         }
 
-        if (isPdfJsonDebugDumpEnabled()) {
+        if (dumpEnabled) {
             try {
                 String tmpDir = System.getProperty("java.io.tmpdir");
                 String customDir = System.getenv("SPDF_PDFJSON_DUMP_DIR");
-                java.nio.file.Path dumpDir =
+                Path dumpDir =
                         customDir != null && !customDir.isBlank()
-                                ? java.nio.file.Path.of(customDir)
-                                : java.nio.file.Path.of(tmpDir);
-                java.nio.file.Path dumpPath =
-                        java.nio.file.Files.createTempFile(dumpDir, "pdfjson_", ".json");
-                java.nio.file.Files.write(dumpPath, jsonBytes);
+                                ? Path.of(customDir)
+                                : Path.of(tmpDir);
+                Path dumpPath = Files.createTempFile(dumpDir, "pdfjson_", ".json");
+                Files.copy(jsonPath, dumpPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 log.debug("PDF JSON debug dump ({}): {}", label, dumpPath);
             } catch (Exception ex) {
                 log.warn("Failed to write PDF JSON debug dump ({}): {}", label, ex.getMessage());
             }
         }
 
-        if (isPdfJsonRepeatScanEnabled()) {
+        if (repeatScanEnabled) {
             logRepeatedJsonStrings(label, jsonBytes);
         }
     }
