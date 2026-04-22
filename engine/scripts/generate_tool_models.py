@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -101,22 +102,13 @@ class ToolDiscovery:
         combined schema is handed to datamodel-code-generator, producing ``RootModel[Any]``
         shells that downstream JSON-schema strict-mode transformers reject.
         """
-        pending = self._collect_component_refs(defs)
-        while pending:
-            name = pending.pop()
-            if name in defs:
-                continue
-            component = self.spec.get("components", {}).get("schemas", {}).get(name)
-            if component is None:
-                continue
-            defs[name] = component
-            pending.update(self._collect_component_refs(component))
-        _rewrite_component_refs(defs)
-
-    def _collect_component_refs(self, obj: Any) -> set[str]:
-        found: set[str] = set()
-        _walk_refs(obj, found)
-        return found
+        schemas = self.spec.get("components", {}).get("schemas", {})
+        queue: list[object] = list(defs.values())
+        while queue:
+            for name in _rewrite_refs(queue.pop()):
+                if name not in defs and name in schemas:
+                    defs[name] = schemas[name]
+                    queue.append(schemas[name])
 
     def _resolve_ref(self, schema: dict[str, Any]) -> dict[str, Any]:
         if "$ref" in schema:
@@ -151,28 +143,21 @@ class ToolDiscovery:
 _COMPONENT_REF_PREFIX = "#/components/schemas/"
 
 
-def _walk_refs(obj: Any, found: set[str]) -> None:
+def _rewrite_refs(obj: object) -> Iterable[str]:
+    """Rewrite ``#/components/schemas/X`` refs to ``#/$defs/X`` in place, yielding each
+    component name encountered so the caller can pull referenced schemas into ``$defs``.
+    """
     if isinstance(obj, dict):
         ref = obj.get("$ref")
         if isinstance(ref, str) and ref.startswith(_COMPONENT_REF_PREFIX):
-            found.add(ref.removeprefix(_COMPONENT_REF_PREFIX))
+            name = ref.removeprefix(_COMPONENT_REF_PREFIX)
+            obj["$ref"] = "#/$defs/" + name
+            yield name
         for value in obj.values():
-            _walk_refs(value, found)
+            yield from _rewrite_refs(value)
     elif isinstance(obj, list):
         for value in obj:
-            _walk_refs(value, found)
-
-
-def _rewrite_component_refs(obj: Any) -> None:
-    if isinstance(obj, dict):
-        ref = obj.get("$ref")
-        if isinstance(ref, str) and ref.startswith(_COMPONENT_REF_PREFIX):
-            obj["$ref"] = "#/$defs/" + ref.removeprefix(_COMPONENT_REF_PREFIX)
-        for value in obj.values():
-            _rewrite_component_refs(value)
-    elif isinstance(obj, list):
-        for value in obj:
-            _rewrite_component_refs(value)
+            yield from _rewrite_refs(value)
 
 
 def _tool_name_segments(path: str) -> str:
