@@ -22,11 +22,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.model.api.GeneralFile;
@@ -58,10 +58,11 @@ class ConvertPdfJsonControllerTest {
                         });
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -84,8 +85,7 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.convertPdfToJson(pdfFile, false)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> response =
-                controller.convertPdfToJson(request, false);
+        ResponseEntity<Resource> response = controller.convertPdfToJson(request, false);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -102,7 +102,7 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.convertPdfToJson(pdfFile, true)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertPdfToJson(request, true);
+        ResponseEntity<Resource> response = controller.convertPdfToJson(request, true);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(pdfJsonConversionService).convertPdfToJson(pdfFile, true);
@@ -127,7 +127,7 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.convertJsonToPdf(jsonFile)).thenReturn(pdfBytes);
 
-        ResponseEntity<StreamingResponseBody> response = controller.convertJsonToPdf(request);
+        ResponseEntity<Resource> response = controller.convertJsonToPdf(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -153,7 +153,7 @@ class ConvertPdfJsonControllerTest {
         when(pdfJsonConversionService.extractDocumentMetadata(eq(pdfFile), any(String.class)))
                 .thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> response = controller.extractPdfMetadata(request);
+        ResponseEntity<Resource> response = controller.extractPdfMetadata(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
@@ -177,7 +177,7 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.extractSinglePage(jobId, 1)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> response = controller.extractSinglePage(jobId, 1);
+        ResponseEntity<Resource> response = controller.extractSinglePage(jobId, 1);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -190,7 +190,7 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.extractPageFonts(jobId, 1)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> response = controller.extractPageFonts(jobId, 1);
+        ResponseEntity<Resource> response = controller.extractPageFonts(jobId, 1);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());

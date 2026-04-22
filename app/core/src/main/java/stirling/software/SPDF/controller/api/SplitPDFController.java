@@ -9,11 +9,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -48,7 +48,7 @@ public class SplitPDFController {
                             + " specified page numbers or ranges. Users can specify pages using"
                             + " individual numbers, ranges, or 'all' for every page. Input:PDF"
                             + " Output:PDF Type:SIMO")
-    public ResponseEntity<StreamingResponseBody> splitPdf(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> splitPdf(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
         MultipartFile file = request.getFileInput();
