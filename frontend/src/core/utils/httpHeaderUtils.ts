@@ -40,7 +40,9 @@ export function getHeaderString(
     }
   }
 
-  const candidateSet = new Set(candidates.map((candidate) => candidate.toLowerCase()));
+  const candidateSet = new Set(
+    candidates.map((candidate) => candidate.toLowerCase()),
+  );
   for (const [key, value] of Object.entries(headers)) {
     if (!candidateSet.has(key.toLowerCase())) {
       continue;
