@@ -6,7 +6,7 @@ authors = ["Stirling-PDF Contributors"]
 license = ""
 repository = ""
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.85"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -44,7 +44,7 @@ url = "2.5"
 urlencoding = "2.1"
 sha2 = "0.10"
 base64 = "0.22"
-rand = "0.9"
+rand = "0.10.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"

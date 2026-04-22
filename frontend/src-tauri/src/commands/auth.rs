@@ -6,7 +6,7 @@ use tauri_plugin_store::StoreExt;
 use tiny_http::{Response, Server};
 use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use rand::Rng;
+use rand::RngExt;
 use rand::distr::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
