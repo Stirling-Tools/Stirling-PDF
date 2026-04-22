@@ -11,18 +11,19 @@ export function LoginLogoutButton() {
   const { config } = useAppConfig();
   const { user, loading, signOut } = useAuth();
   const accountLogout = useAccountLogout();
+  const loginUrl = new URL("login", document.baseURI).toString();
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign("/login");
-  }, []);
+    window.location.assign(loginUrl);
+  }, [loginUrl]);
 
   const handleLogout = useCallback(async () => {
     await accountLogout({ signOut, redirectToLogin });
   }, [accountLogout, signOut, redirectToLogin]);
 
   const handleLogin = useCallback(() => {
-    window.location.assign("/login");
-  }, []);
+    window.location.assign(loginUrl);
+  }, [loginUrl]);
 
   // Only show when login is enabled
   if (config?.enableLogin !== true) return null;
