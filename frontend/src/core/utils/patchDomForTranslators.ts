@@ -55,7 +55,8 @@ function applyDomPatch(trigger: string): void {
 }
 
 export function armTranslatorDetector(): void {
-  if (typeof window === "undefined" || typeof MutationObserver === "undefined") return;
+  if (typeof window === "undefined" || typeof MutationObserver === "undefined")
+    return;
   if (typeof document === "undefined" || !document.documentElement) return;
 
   // Edge case: class already set (e.g., bfcache restore).
@@ -66,7 +67,11 @@ export function armTranslatorDetector(): void {
 
   const observer = new MutationObserver((mutations) => {
     for (const m of mutations) {
-      if (m.type === "attributes" && m.target === document.documentElement && isGoogleTranslateActive()) {
+      if (
+        m.type === "attributes" &&
+        m.target === document.documentElement &&
+        isGoogleTranslateActive()
+      ) {
         applyDomPatch("<html> translated-* class appeared");
         observer.disconnect();
         return;
