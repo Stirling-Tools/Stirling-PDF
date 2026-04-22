@@ -429,9 +429,9 @@ describe("SpringAuthClient", () => {
     describe("setPostLoginRedirectPath", () => {
       it("stores a safe path in sessionStorage", () => {
         setPostLoginRedirectPath("/share/abc123");
-        expect(
-          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
-        ).toBe("/share/abc123");
+        expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBe(
+          "/share/abc123",
+        );
       });
 
       it("clears any existing entry when given an unsafe value", () => {

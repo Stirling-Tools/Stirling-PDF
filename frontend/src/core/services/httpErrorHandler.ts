@@ -20,7 +20,11 @@ const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate 
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
 
 function isSafePostLoginPath(path: string): boolean {
-  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) {
+  if (
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.startsWith("/\\")
+  ) {
     return false;
   }
   const lowered = path.toLowerCase();

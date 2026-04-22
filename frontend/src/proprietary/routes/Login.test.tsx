@@ -720,7 +720,10 @@ describe("Login", () => {
       <TestWrapper>
         <MemoryRouter
           initialEntries={[
-            { pathname: "/login", state: { from: { pathname: "/share/abc123" } } },
+            {
+              pathname: "/login",
+              state: { from: { pathname: "/share/abc123" } },
+            },
           ]}
         >
           <Login />

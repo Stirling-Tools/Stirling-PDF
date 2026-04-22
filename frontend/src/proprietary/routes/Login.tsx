@@ -188,7 +188,6 @@ export default function Login() {
       });
       navigate(returnPath || "/", { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, loading, navigate, location.state, searchParams]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)

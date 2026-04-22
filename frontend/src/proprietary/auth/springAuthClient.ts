@@ -100,7 +100,9 @@ export function isSafePostLoginRedirect(path: unknown): path is string {
   return true;
 }
 
-export function setPostLoginRedirectPath(path: string | null | undefined): void {
+export function setPostLoginRedirectPath(
+  path: string | null | undefined,
+): void {
   try {
     if (typeof window === "undefined") return;
     if (isSafePostLoginRedirect(path)) {
@@ -116,7 +118,9 @@ export function setPostLoginRedirectPath(path: string | null | undefined): void 
 export function consumePostLoginRedirectPath(): string | null {
   try {
     if (typeof window === "undefined") return null;
-    const value = window.sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
+    const value = window.sessionStorage.getItem(
+      POST_LOGIN_REDIRECT_STORAGE_KEY,
+    );
     window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
     return isSafePostLoginRedirect(value) ? value : null;
   } catch (_error) {
