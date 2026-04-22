@@ -58,6 +58,9 @@ class WorkflowOutcome(StrEnum):
     COMPLETED = "completed"
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
+    KNOWLEDGE_UPDATE = "knowledge_update"
+    MULTI_PROFILE_EXTRACTION = "multi_profile_extraction"
+    BATCH_FILL_RESULT = "batch_fill_result"
 
 
 class ArtifactKind(StrEnum):

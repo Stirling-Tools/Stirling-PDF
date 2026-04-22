@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.contracts import format_conversation_history
 from stirling.contracts.form_fill import (
     FormAnalysisRequest,
     FormAnalysisResponse,
@@ -91,7 +92,9 @@ class FormAnalyserAgent:
                 f"Fields:\n{fields_text}"
             )
 
+        history = format_conversation_history(request.conversation_history)
         return (
+            f"Conversation history:\n{history}\n\n"
             f"Analyse {len(request.files)} form(s):\n\n"
             + "\n\n".join(sections)
             + "\n\nDetect roles per file, merge matching roles across files, "

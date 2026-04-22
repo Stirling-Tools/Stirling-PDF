@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.contracts import format_conversation_history
 from stirling.contracts.form_fill import (
     FormField,
     FormFillBatchRequest,
@@ -54,7 +55,9 @@ class FormFillerAgent:
             fields_text = "\n".join(self._format_field(f) for f in file_req.form_fields)
             file_sections.append(f"=== FILE {file_req.file_id} (role: {file_req.role_label}) ===\n{fields_text}")
 
+        history = format_conversation_history(request.conversation_history)
         return (
+            f"Conversation history:\n{history}\n\n"
             f"Known user information:\n{knowledge_text}\n\n"
             + "\n\n".join(file_sections)
             + "\n\nMatch fields to knowledge entries. Return filled_fields per file."

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.contracts import format_conversation_history
 from stirling.contracts.form_fill import (
     DocumentExtractionRequest,
     DocumentExtractionResponse,
@@ -79,7 +80,9 @@ class DocumentExtractorAgent:
             f"--- Document: {doc.file_name} ---\n{doc.text[:MAX_DOC_TEXT_CHARS]}" for doc in request.documents
         )
         existing = ", ".join(request.existing_profile_names) if request.existing_profile_names else "None"
+        history = format_conversation_history(request.conversation_history)
         prompt = (
+            f"Conversation history:\n{history}\n\n"
             f"Documents ({len(request.documents)} total):\n{docs_text}\n\n"
             f"Existing profile names (avoid conflicts): {existing}\n\n"
             "Identify distinct people, extract their information, and group by person."

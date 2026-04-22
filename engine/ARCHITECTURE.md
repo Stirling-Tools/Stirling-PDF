@@ -93,7 +93,7 @@ All under `POST /api/v1/form/ai/`:
 | `POST /fill-batch` | FormFillerAgent | Multi-file batch fill |
 | `POST /extract` | DocumentExtractorAgent | Extract knowledge from documents (single or multi-person) |
 
-The orchestrator (`POST /api/v1/orchestrator`) can also delegate natural-language document-extraction requests to `DocumentExtractorAgent.extract_single`.
+Form fill is reachable only via these three endpoints. It is **not** wired as an orchestrator delegate — the frontend calls the engine directly via the `/engine-api` proxy.
 
 ## Data Flow
 
@@ -183,6 +183,12 @@ On startup, `build_runtime()` creates an `AppRuntime` with two model instances:
 Both models must support structured JSON schema outputs. This is validated at startup — the engine crashes immediately if a model doesn't support it.
 
 All agents are instantiated once in the FastAPI lifespan and stored in `app.state`. They are stateless — no conversation memory, no persistent state. The frontend manages all state (entities, templates, analysis results).
+
+### Where state actually lives
+
+- **Engine:** in-memory only, per-request. Logs don't persist form content.
+- **Frontend:** browser `localStorage` keys `stirling-pdf-ai-profiles` (entities/profiles containing PII) and `stirling-pdf-ai-workflows` (templates). These survive across sessions on the same browser but are not synced anywhere — no server, no cross-device sharing. Clearing browser storage wipes them. There is no user-scoping: multiple users sharing a browser share the same entity store.
+- **Java backend:** PDF files and user accounts only — no form-fill entity data.
 
 ## Contract Design
 

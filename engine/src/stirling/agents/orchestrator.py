@@ -7,7 +7,6 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
-from stirling.agents.document_extractor import DocumentExtractorAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.user_spec import UserSpecAgent
@@ -52,11 +51,6 @@ class OrchestratorAgent:
                     self.delegate_pdf_question,
                     name="delegate_pdf_question",
                     description="Delegate questions about PDF contents and return the PDF question result.",
-                ),
-                ToolOutput(
-                    self.delegate_form_fill,
-                    name="delegate_form_fill",
-                    description="Delegate requests to extract personal information from documents for form filling.",
                 ),
                 ToolOutput(
                     self.delegate_user_spec,

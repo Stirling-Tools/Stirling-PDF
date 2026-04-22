@@ -15,7 +15,6 @@ from .common import (
     WorkflowOutcome,
 )
 from .execution import NextExecutionAction
-from .form_fill import KnowledgeUpdateResponse
 from .pdf_edit import PdfEditResponse
 from .pdf_questions import PdfQuestionResponse
 
@@ -43,11 +42,6 @@ class UnsupportedCapabilityResponse(ApiModel):
 
 
 OrchestratorResponse = Annotated[
-    PdfEditResponse
-    | PdfQuestionResponse
-    | KnowledgeUpdateResponse
-    | AgentDraftResponse
-    | NextExecutionAction
-    | UnsupportedCapabilityResponse,
+    PdfEditResponse | PdfQuestionResponse | AgentDraftResponse | NextExecutionAction | UnsupportedCapabilityResponse,
     Field(discriminator="outcome"),
 ]

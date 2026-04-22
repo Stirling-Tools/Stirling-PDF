@@ -19,7 +19,10 @@ public enum AiWorkflowOutcome {
     TOOL_CALL("tool_call"),
     COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),
-    CANNOT_CONTINUE("cannot_continue");
+    CANNOT_CONTINUE("cannot_continue"),
+    KNOWLEDGE_UPDATE("knowledge_update"),
+    MULTI_PROFILE_EXTRACTION("multi_profile_extraction"),
+    BATCH_FILL_RESULT("batch_fill_result");
 
     private final String value;
 

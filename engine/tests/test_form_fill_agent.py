@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import pytest
+from conftest import build_app_settings
 
 from stirling.agents import DocumentExtractorAgent, FormAnalyserAgent, FormFillerAgent
-from stirling.config import AppSettings
 from stirling.contracts.form_fill import (
     AnalysedFileResult,
     CrossFileRole,
     DetectedRole,
+    DocumentExtractionRequest,
+    DocumentExtractionResponse,
+    DocumentText,
     FieldMapping,
     FileFieldSet,
     FileFillRequest,
@@ -21,25 +24,17 @@ from stirling.contracts.form_fill import (
     FormFillBatchResponse,
     KnowledgeEntry,
     KnowledgeUpdateResponse,
+    MultiProfileExtractionResponse,
+    ProposedProfile,
 )
 from stirling.services import build_runtime
-
-
-def build_test_settings() -> AppSettings:
-    return AppSettings(
-        smart_model_name="test",
-        fast_model_name="test",
-        smart_model_max_tokens=8192,
-        fast_model_max_tokens=2048,
-    )
-
 
 # --- FormAnalyserAgent stubs ---
 
 
 class StubFormAnalyserAgent(FormAnalyserAgent):
     def __init__(self, response: FormAnalysisResponse) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+        super().__init__(build_runtime(build_app_settings()))
         self._response = response
 
     async def analyse(self, request: FormAnalysisRequest) -> FormAnalysisResponse:
@@ -51,7 +46,7 @@ class StubFormAnalyserAgent(FormAnalyserAgent):
 
 class StubFormFillerAgent(FormFillerAgent):
     def __init__(self, response: FormFillBatchResponse) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+        super().__init__(build_runtime(build_app_settings()))
         self._response = response
 
     async def fill_batch(self, request: FormFillBatchRequest) -> FormFillBatchResponse:
@@ -62,11 +57,11 @@ class StubFormFillerAgent(FormFillerAgent):
 
 
 class StubDocumentExtractorAgent(DocumentExtractorAgent):
-    def __init__(self, response: KnowledgeUpdateResponse) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+    def __init__(self, response: DocumentExtractionResponse) -> None:
+        super().__init__(build_runtime(build_app_settings()))
         self._response = response
 
-    async def extract_single(self, document_text: str, user_message: str = "") -> KnowledgeUpdateResponse:
+    async def extract_multiple(self, request: DocumentExtractionRequest) -> DocumentExtractionResponse:
         return self._response
 
 
@@ -219,14 +214,49 @@ async def test_filler_returns_empty_when_no_match() -> None:
 
 
 @pytest.mark.anyio
-async def test_document_extractor_returns_entries() -> None:
+async def test_document_extractor_single_profile_outcome() -> None:
     expected = KnowledgeUpdateResponse(
         proposed_entries=[KnowledgeEntry(key="full_name", value="John Doe", source="extracted from CV")],
         message="Extracted 1 entry.",
     )
     agent = StubDocumentExtractorAgent(expected)
 
-    result = await agent.extract_single("John Doe, Software Engineer")
+    result = await agent.extract_multiple(
+        DocumentExtractionRequest(documents=[DocumentText(file_name="cv.pdf", text="John Doe, Software Engineer")])
+    )
 
+    assert result.outcome == "knowledge_update"
     assert len(result.proposed_entries) == 1
     assert result.proposed_entries[0].key == "full_name"
+
+
+@pytest.mark.anyio
+async def test_document_extractor_multi_profile_outcome() -> None:
+    expected = MultiProfileExtractionResponse(
+        proposed_profiles=[
+            ProposedProfile(
+                suggested_name="John Doe",
+                entries=[KnowledgeEntry(key="full_name", value="John Doe", source="cv.pdf")],
+                source_documents=["cv.pdf"],
+            ),
+            ProposedProfile(
+                suggested_name="Jane Smith",
+                entries=[KnowledgeEntry(key="full_name", value="Jane Smith", source="passport.pdf")],
+                source_documents=["passport.pdf"],
+            ),
+        ],
+        message="Detected 2 people.",
+    )
+    agent = StubDocumentExtractorAgent(expected)
+
+    result = await agent.extract_multiple(
+        DocumentExtractionRequest(
+            documents=[
+                DocumentText(file_name="cv.pdf", text="John Doe"),
+                DocumentText(file_name="passport.pdf", text="Jane Smith"),
+            ]
+        )
+    )
+
+    assert result.outcome == "multi_profile_extraction"
+    assert len(result.proposed_profiles) == 2
