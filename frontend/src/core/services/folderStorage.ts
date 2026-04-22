@@ -138,6 +138,21 @@ class FolderStorage {
     });
   }
 
+  /** Overwrite the entire folder record (used by sync from server). */
+  async setFolderData(folderId: string, record: FolderRecord): Promise<void> {
+    const db = await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.recordsStore], 'readwrite');
+      const store = transaction.objectStore(this.recordsStore);
+      const request = store.put(record);
+      request.onsuccess = () => {
+        this.dispatchChange(folderId);
+        resolve();
+      };
+      request.onerror = () => reject(new Error('Failed to set folder data'));
+    });
+  }
+
   async clearFolder(folderId: string): Promise<void> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {

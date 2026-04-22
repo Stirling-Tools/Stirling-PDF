@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -1003,6 +1004,52 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 400 BAD_REQUEST
      */
+    /**
+     * Handle {@link DataIntegrityViolationException} — typically a unique-constraint violation or a
+     * PK collision surfacing from a Spring Data repository write. Mapped to {@code 409 Conflict} so
+     * clients can tell the difference between "bad input" (400) and "that key is already taken by
+     * someone else" (409).
+     *
+     * @param ex the DataIntegrityViolationException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with 409 Conflict status
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        String title =
+                getLocalizedMessage(
+                        "error.conflict.title", ErrorTitles.CONFLICT_DEFAULT);
+
+        // Do NOT leak the underlying SQL / constraint message — the root cause often includes DB
+        // identifiers that we'd rather not echo back to the caller. A fixed, neutral detail is
+        // enough for the client to understand the outcome.
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(
+                        HttpStatus.CONFLICT,
+                        "The request conflicts with existing data. The resource already exists or"
+                                + " violates a uniqueness constraint.",
+                        request);
+        problemDetail.setType(URI.create(ErrorTypes.CONFLICT));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title);
+        addStandardHints(
+                problemDetail,
+                "error.conflict.hints",
+                List.of(
+                        "Check whether a resource with the same identifier already exists.",
+                        "Retry with a different identifier, or update the existing resource"
+                                + " instead.",
+                        "If this was a concurrent write, re-fetch the latest state and retry."));
+        problemDetail.setProperty("actionRequired", "Resolve the conflict and retry.");
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleIllegalArgument(
             IllegalArgumentException ex, HttpServletRequest request) {
@@ -1378,6 +1425,7 @@ public class GlobalExceptionHandler {
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
         static final String UNEXPECTED = "/errors/unexpected";
+        static final String CONFLICT = "/errors/conflict";
     }
 
     /** Constants for default error titles. */
@@ -1405,5 +1453,6 @@ public class GlobalExceptionHandler {
         static final String INVALID_ARGUMENT_DEFAULT = "Invalid Argument";
         static final String IO_ERROR_DEFAULT = "File Processing Error";
         static final String UNEXPECTED_DEFAULT = "Internal Server Error";
+        static final String CONFLICT_DEFAULT = "Conflict";
     }
 }

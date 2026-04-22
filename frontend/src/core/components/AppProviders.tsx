@@ -25,6 +25,8 @@ import AppConfigLoader from '@app/components/shared/AppConfigLoader';
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
+import { WatchFolderStorageProvider } from "@app/contexts/WatchFolderStorageContext";
+import { idbBackend } from "@app/services/watchFolderIdbBackend";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -124,9 +126,11 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                         <RightRailProvider>
                                           <TourOrchestrationProvider>
                                             <AdminTourOrchestrationProvider>
-                                              <FolderFileContextProvider>
-                                                {children}
-                                              </FolderFileContextProvider>
+                                              <WatchFolderStorageProvider backend={idbBackend}>
+                                                <FolderFileContextProvider>
+                                                  {children}
+                                                </FolderFileContextProvider>
+                                              </WatchFolderStorageProvider>
                                             </AdminTourOrchestrationProvider>
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>

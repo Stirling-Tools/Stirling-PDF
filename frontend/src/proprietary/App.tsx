@@ -13,6 +13,7 @@ import InviteAccept from "@app/routes/InviteAccept";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import SmartFoldersRegistration from "@app/components/smartFolders/SmartFoldersRegistration";
+import { WatchFolderServerProvider } from "@proprietary/components/WatchFolderServerProvider";
 // Import global styles
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
@@ -52,6 +53,7 @@ export default function App() {
           path="*"
           element={
             <AppProviders>
+              <WatchFolderServerProvider>
               <AppLayout>
                 <Routes>
                   {/* Auth routes - no nested providers needed */}
@@ -66,6 +68,7 @@ export default function App() {
                 <Onboarding />
                 <SmartFoldersRegistration />
               </AppLayout>
+              </WatchFolderServerProvider>
             </AppProviders>
           }
         />

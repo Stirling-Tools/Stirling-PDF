@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { SmartFolder, SmartFolderRunEntry } from '@app/types/smartFolders';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
+import { useWatchFolderStorage } from '@app/contexts/WatchFolderStorageContext';
 
 export type FolderRunStatus = 'idle' | 'processing' | 'done';
 
@@ -19,6 +20,7 @@ function deriveStatus(runs: SmartFolderRunEntry[]): FolderRunStatus {
 }
 
 export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, FolderRunStatus> {
+  const backend = useWatchFolderStorage();
   const [statuses, setStatuses] = useState<Record<string, FolderRunStatus>>({});
   const doneTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const foldersRef = useRef(folders);
@@ -31,7 +33,9 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
       const results = await Promise.all(
         folders.map(async (folder) => {
           try {
-            const runs = await folderRunStateStorage.getFolderRunState(folder.id);
+            const runs = backend
+              ? await backend.getFolderRunState(folder.id)
+              : await folderRunStateStorage.getFolderRunState(folder.id);
             return [folder.id, deriveStatus(runs)] as const;
           } catch {
             return [folder.id, 'idle' as FolderRunStatus] as const;
