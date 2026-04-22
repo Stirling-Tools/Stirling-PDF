@@ -23,6 +23,7 @@ from stirling.contracts import (
     SupportedCapability,
     ToolOperationStep,
     UnsupportedCapabilityResponse,
+    format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
@@ -74,7 +75,7 @@ class OrchestratorAgent:
             system_prompt=(
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
-                "Use delegate_pdf_edit for requested PDF modifications. "
+                "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
                 "Use delegate_pdf_question for questions about PDF contents. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
@@ -116,7 +117,13 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        return await PdfEditAgent(self.runtime).handle(PdfEditRequest(user_message=request.user_message))
+        return await PdfEditAgent(self.runtime).handle(
+            PdfEditRequest(
+                user_message=request.user_message,
+                file_names=request.file_names,
+                conversation_history=request.conversation_history,
+            )
+        )
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
         return await self._run_pdf_question(ctx.deps.request)
@@ -128,6 +135,7 @@ class OrchestratorAgent:
                 question=request.user_message,
                 file_names=request.file_names,
                 page_text=extracted_text.files if extracted_text is not None else [],
+                conversation_history=request.conversation_history,
             )
         )
 
@@ -135,7 +143,12 @@ class OrchestratorAgent:
         return await self._run_agent_draft(ctx.deps.request)
 
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
-        return await UserSpecAgent(self.runtime).draft(AgentDraftRequest(user_message=request.user_message))
+        return await UserSpecAgent(self.runtime).draft(
+            AgentDraftRequest(
+                user_message=request.user_message,
+                conversation_history=request.conversation_history,
+            )
+        )
 
     async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
         return EditPlanResponse(
@@ -165,7 +178,13 @@ class OrchestratorAgent:
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
         file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
-        return f"User message: {request.user_message}\nFiles: {file_names}\nAvailable artifacts:\n{artifact_summary}"
+        history = format_conversation_history(request.conversation_history)
+        return (
+            f"Conversation history:\n{history}\n"
+            f"User message: {request.user_message}\n"
+            f"Files: {file_names}\n"
+            f"Available artifacts:\n{artifact_summary}"
+        )
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:
         if not request.artifacts:

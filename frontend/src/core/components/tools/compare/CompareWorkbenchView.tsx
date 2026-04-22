@@ -12,6 +12,7 @@ import {
   computeMaxSharedPages,
 } from "@app/components/tools/compare/compare";
 import { CompareResultData, CompareWorkbenchData } from "@app/types/compare";
+import ComparePixelWorkbenchView from "@app/components/tools/compare/ComparePixelWorkbenchView";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useRightRailButtons } from "@app/hooks/useRightRailButtons";
 import CompareDocumentPane from "@app/components/tools/compare/CompareDocumentPane";
@@ -36,11 +37,25 @@ interface CompareWorkbenchViewProps {
 // helpers moved to compare.ts
 
 const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
+  const rawResult = data?.result ?? null;
+  if (rawResult && rawResult.mode === "pixel") {
+    return <ComparePixelWorkbenchView result={rawResult} />;
+  }
+  return <CompareTextWorkbenchView data={data} />;
+};
+
+interface CompareTextWorkbenchViewProps {
+  data: CompareWorkbenchData | null;
+}
+
+const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
   const { t } = useTranslation();
   const prefersStacked = useIsMobile();
   const { selectors } = useFileContext();
 
-  const result: CompareResultData | null = data?.result ?? null;
+  const rawResult = data?.result ?? null;
+  const result: CompareResultData | null =
+    rawResult && rawResult.mode === "text" ? rawResult : null;
   const baseFileId = data?.baseFileId ?? null;
   const comparisonFileId = data?.comparisonFileId ?? null;
   const isOperationLoading = data?.isLoading ?? false;

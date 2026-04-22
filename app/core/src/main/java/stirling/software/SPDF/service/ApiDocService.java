@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -30,7 +31,14 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
-public class ApiDocService {
+public class ApiDocService implements stirling.software.common.service.ToolMetadataService {
+
+    // Matches a bare "Output:ZIP" declaration (i.e. ZIP is not followed by "-" or "/").
+    // Bare ZIP means the archive itself is the deliverable (e.g. get-attachments), so it
+    // should not be auto-unpacked. Wrapper forms like Output:ZIP-PDF or Output:IMAGE/ZIP
+    // use ZIP as transport for multiple typed results and are safe to unpack.
+    private static final Pattern BARE_ZIP_OUTPUT =
+            Pattern.compile("Output\\s*:\\s*ZIP(?![-/])", Pattern.CASE_INSENSITIVE);
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
 
@@ -149,6 +157,7 @@ public class ApiDocService {
         return endpoint.areParametersValid(parameters);
     }
 
+    @Override
     public boolean isMultiInput(String operationName) {
         if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
             loadApiDocumentation();
@@ -163,6 +172,37 @@ public class ApiDocService {
         if (matcher.find()) {
             String type = matcher.group(1);
             return type.startsWith("MI");
+        }
+        return false;
+    }
+
+    @Override
+    public boolean shouldUnpackZipResponse(String operationName) {
+        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
+            loadApiDocumentation();
+        }
+        if (!apiDocumentation.containsKey(operationName)) {
+            return false;
+        }
+        ApiEndpoint endpoint = apiDocumentation.get(operationName);
+        String description = endpoint.getDescription();
+        Matcher typeMatcher =
+                RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
+        if (typeMatcher.find()) {
+            String type = typeMatcher.group(1);
+            // Multi-output endpoints (SIMO/MIMO) return a ZIP of their outputs.
+            if (type.endsWith("MO")) {
+                return true;
+            }
+        }
+        Matcher outputMatcher =
+                RegexPatternUtils.getInstance().getApiDocOutputTypePattern().matcher(description);
+        if (outputMatcher.find()) {
+            String output = outputMatcher.group(1).toUpperCase(Locale.ROOT);
+            if (output.startsWith("ZIP")) {
+                // Bare "Output:ZIP" is a single-archive deliverable, not a transport.
+                return !BARE_ZIP_OUTPUT.matcher(description).find();
+            }
         }
         return false;
     }

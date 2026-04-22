@@ -13,14 +13,15 @@ from stirling.contracts import (
     PdfEditRequest,
     PdfEditResponse,
     ToolOperationStep,
+    format_conversation_history,
 )
-from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
+from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
 
 
 class PdfEditPlanSelection(ApiModel):
     outcome: Literal["plan"] = "plan"
-    operations: list[OperationId] = Field(min_length=1)
+    operations: list[ToolEndpoint] = Field(min_length=1)
     summary: str
     rationale: str | None = None
 
@@ -41,7 +42,7 @@ class PdfEditParameterSelector:
     async def select(
         self,
         request: PdfEditRequest,
-        operation_plan: list[OperationId],
+        operation_plan: list[ToolEndpoint],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
     ) -> ParamToolModel:
@@ -51,7 +52,7 @@ class PdfEditParameterSelector:
             self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps),
             output_type=NativeOutput(parameter_model),
             instructions=(
-                f"Generate only the parameters for the PDF operation `{operation_id.value}`. "
+                f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
                 "Do not include fields from any other operation."
             ),
         )
@@ -60,12 +61,12 @@ class PdfEditParameterSelector:
     def _build_parameter_prompt(
         self,
         request: PdfEditRequest,
-        operation_plan: list[OperationId],
+        operation_plan: list[ToolEndpoint],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
     ) -> str:
         operation_id = operation_plan[operation_index]
-        operation_list = ", ".join(operation.value for operation in operation_plan)
+        operation_list = ", ".join(operation.name for operation in operation_plan)
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         generated_steps_text = (
             "\n".join(
@@ -79,7 +80,7 @@ class PdfEditParameterSelector:
             f"Files: {file_names}\n"
             f"Operation plan: {operation_list}\n"
             f"Selected operation index: {operation_index + 1} of {len(operation_plan)}\n"
-            f"Selected operation: {operation_id.value}\n"
+            f"Selected operation: {operation_id.name}\n"
             f"Already generated steps:\n{generated_steps_text}\n"
             "Return only the parameter object for the selected operation."
         )
@@ -146,6 +147,7 @@ class PdfEditAgent:
     def _build_selection_prompt(self, request: PdfEditRequest) -> str:
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         return (
+            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {file_names}\n"
             f"Supported operations: {self._supported_operations_prompt()}\n"
@@ -153,4 +155,4 @@ class PdfEditAgent:
         )
 
     def _supported_operations_prompt(self) -> str:
-        return ", ".join(operation_id.value for operation_id in self.supported_operations)
+        return ", ".join(f"{op.name} ({op.value})" for op in self.supported_operations)

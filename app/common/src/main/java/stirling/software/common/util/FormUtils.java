@@ -629,11 +629,12 @@ public class FormUtils {
             }
             log.debug("Skipping form fill because document has no AcroForm");
             if (flatten) {
-                flattenEntireDocument(document, null);
+                flattenEntireDocument(document, null, false);
             }
             return;
         }
 
+        boolean valuesApplied = false;
         if (values != null && !values.isEmpty()) {
             acroForm.setCacheFields(true);
 
@@ -667,17 +668,25 @@ public class FormUtils {
                 Object rawValue = entry.getValue();
                 String value = rawValue == null ? null : Objects.toString(rawValue, null);
                 applyValueToField(field, value, strict);
+                valuesApplied = true;
             }
 
-            ensureAppearances(acroForm);
+            if (valuesApplied) {
+                ensureAppearances(acroForm);
+            }
         }
 
         repairWidgetGeometry(document, acroForm);
 
         if (flatten) {
-            flattenEntireDocument(document, acroForm);
+            flattenEntireDocument(document, acroForm, valuesApplied);
         }
     }
+
+    // Cap the fallback rendering DPI. This path only runs when acroForm.flatten()
+    // throws, and the goal is a readable flattened document — not print quality —
+    // so clamping avoids runaway memory/CPU on pathological inputs.
+    private static final int FLATTEN_FALLBACK_MAX_DPI = 200;
 
     private void flattenViaRendering(PDDocument document, PDAcroForm acroForm) throws IOException {
         if (document == null) {
@@ -704,28 +713,34 @@ public class FormUtils {
                 properties != null && properties.getSystem() != null
                         ? properties.getSystem().getMaxDPI()
                         : 300;
+        int effectiveDpi = Math.min(requestedDpi, FLATTEN_FALLBACK_MAX_DPI);
 
-        rebuildDocumentFromImages(document, renderer, requestedDpi);
+        rebuildDocumentFromImages(document, renderer, effectiveDpi);
     }
 
-    // note: this implementation suffers from:
-    // https://issues.apache.org/jira/browse/PDFBOX-5962
-    private void flattenEntireDocument(PDDocument document, PDAcroForm acroForm)
-            throws IOException {
-        if (document == null) {
+    // Use PDFBox's built-in field flattening which bakes form field values
+    // into the page content stream as static text/graphics, removing the
+    // interactive form structure but preserving all other document content
+    // (images, text, annotations, etc.) at full quality.
+    //
+    // Forcing appearance regeneration via setNeedAppearances(true) drives
+    // PDFBox into refreshAppearances inside flatten(), where it can hang on
+    // certain documents (PDFBOX-5962). We therefore only regenerate when we
+    // actually wrote new values, or when some widgets are missing appearance
+    // streams and would otherwise flatten blank.
+    private void flattenEntireDocument(
+            PDDocument document, PDAcroForm acroForm, boolean valuesWritten) throws IOException {
+        if (document == null || acroForm == null) {
             return;
         }
 
-        if (acroForm == null) {
-            return;
-        }
-
-        // Use PDFBox's built-in field flattening which bakes form field values
-        // into the page content stream as static text/graphics, removing the
-        // interactive form structure but preserving all other document content
-        // (images, text, annotations, etc.) at full quality.
-        try {
+        if (valuesWritten || hasWidgetWithoutAppearance(acroForm)) {
             ensureAppearances(acroForm);
+        } else {
+            acroForm.setNeedAppearances(false);
+        }
+
+        try {
             acroForm.flatten();
         } catch (Exception e) {
             log.warn(
@@ -734,6 +749,28 @@ public class FormUtils {
                     e);
             flattenViaRendering(document, acroForm);
         }
+    }
+
+    private boolean hasWidgetWithoutAppearance(PDAcroForm acroForm) {
+        for (PDField field : acroForm.getFieldTree()) {
+            if (!(field instanceof PDTerminalField terminalField)) {
+                continue;
+            }
+            List<PDAnnotationWidget> widgets = terminalField.getWidgets();
+            if (widgets == null) {
+                continue;
+            }
+            for (PDAnnotationWidget widget : widgets) {
+                if (widget == null) {
+                    continue;
+                }
+                PDAppearanceDictionary appearance = widget.getAppearance();
+                if (appearance == null || appearance.getNormalAppearance() == null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void rebuildDocumentFromImages(PDDocument document, PDFRenderer renderer, int dpi)

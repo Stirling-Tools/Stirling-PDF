@@ -95,9 +95,9 @@ export function DesktopOnboardingModal() {
         <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
           <AnimatedSlideBackground
             gradientStops={
-              (step === 0
+              step === 0
                 ? welcomeSlide.background.gradientStops
-                : SIGN_IN_GRADIENT) as [string, string]
+                : SIGN_IN_GRADIENT
             }
             circles={welcomeSlide.background.circles}
             isActive

@@ -65,7 +65,48 @@ export interface CompareChange {
   comparison: CompareChangeSide | null;
 }
 
+export type CompareMode = "text" | "pixel";
+
+export interface ComparePixelPageResult {
+  pageNumber: number;
+  width: number;
+  height: number;
+  baseImageUrl: string;
+  comparisonImageUrl: string;
+  diffImageUrl: string;
+  diffPixels: number;
+  totalPixels: number;
+  diffRatio: number;
+  sizeMismatch: boolean;
+  // One side of the comparison had no corresponding page (the other PDF was shorter).
+  // The missing side is rendered as a blank white canvas and the entire opposite page
+  // is marked as diff.
+  missingBase?: boolean;
+  missingComparison?: boolean;
+}
+
+export interface CompareResultPixelData {
+  mode: "pixel";
+  base: { fileId: string; fileName: string };
+  comparison: { fileId: string; fileName: string };
+  pages: ComparePixelPageResult[];
+  totals: {
+    diffPixels: number;
+    totalPixels: number;
+    diffRatio: number;
+    pagesWithChanges: number;
+    durationMs: number;
+    processedAt: number;
+  };
+  warnings: string[];
+  settings: {
+    dpi: number;
+    threshold: number;
+  };
+}
+
 export interface CompareResultData {
+  mode: "text";
   base: CompareDocumentInfo;
   comparison: CompareDocumentInfo;
   totals: {
@@ -145,6 +186,63 @@ export type CompareWorkerResponse =
       message: string;
       code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR";
     };
+
+export interface PixelCompareWorkerWarnings {
+  pageCountMismatch: string; // supports {{base}}, {{comparison}}, {{shared}}
+  noPages: string;
+}
+
+export interface PixelCompareWorkerErrors {
+  canvasContextUnavailable: string;
+}
+
+export type PixelRgb = [number, number, number];
+
+export interface PixelCompareWorkerRequest {
+  type: "pixel-compare";
+  payload: {
+    // File objects (not ArrayBuffers): structured-cloning a File is O(1) since
+    // the underlying blob storage is reference-counted, so we avoid reading
+    // the whole PDF into memory on the main thread before posting.
+    baseFile: File;
+    comparisonFile: File;
+    dpi: number;
+    threshold: number;
+    concurrency?: number;
+    warnings: PixelCompareWorkerWarnings;
+    errors: PixelCompareWorkerErrors;
+    // Colour for pixels removed from the base (content in base, missing in comparison).
+    diffColor: PixelRgb;
+    // Colour for pixels added in the comparison (content in comparison, missing in base).
+    // When null/undefined, pixelmatch falls back to diffColor for all diffs.
+    diffColorAlt?: PixelRgb;
+  };
+}
+
+export interface PixelCompareWorkerPagePayload {
+  pageNumber: number;
+  width: number;
+  height: number;
+  baseBlob: Blob;
+  comparisonBlob: Blob;
+  diffBlob: Blob;
+  diffPixels: number;
+  totalPixels: number;
+  diffRatio: number;
+  sizeMismatch: boolean;
+  missingBase?: boolean;
+  missingComparison?: boolean;
+}
+
+export type PixelCompareWorkerResponse =
+  | { type: "progress"; pageNumber: number; totalPages: number }
+  | { type: "page"; page: PixelCompareWorkerPagePayload }
+  | {
+      type: "success";
+      totals: Omit<CompareResultPixelData["totals"], "processedAt">;
+      warnings: string[];
+    }
+  | { type: "error"; message: string };
 
 export interface CompareDocumentPaneProps {
   pane: "base" | "comparison";
@@ -326,8 +424,10 @@ export interface WordHighlightEntry {
 
 // Removed legacy upload section types; upload flow now uses the standard active files workbench
 
+export type CompareAnyResult = CompareResultData | CompareResultPixelData;
+
 export interface CompareWorkbenchData {
-  result: CompareResultData | null;
+  result: CompareAnyResult | null;
   baseFileId: FileId | null;
   comparisonFileId: FileId | null;
   onSelectBase?: (fileId: FileId | null) => void;

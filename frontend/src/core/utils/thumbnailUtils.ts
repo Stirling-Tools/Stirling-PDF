@@ -1,4 +1,12 @@
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import {
+  openRawDocumentSafe,
+  closeRawDocument,
+  getPdfiumModule,
+} from "@app/services/pdfiumService";
+import {
+  renderPdfiumPageDataUrl,
+  readPdfiumPageMetadata,
+} from "@app/utils/pdfiumPageRender";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -519,26 +527,88 @@ function drawLargeLockIcon(
   ctx.fillRect(keyholeX - 2, keyholeY, 4, 8);
 }
 
-/**
- * Generate standard PDF thumbnail by rendering first page
- */
-async function generateStandardPDFThumbnail(
-  pdf: any,
-  scale: number,
-): Promise<string> {
-  const page = await pdf.getPage(1);
-  const viewport = page.getViewport({ scale });
-  const canvas = document.createElement("canvas");
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  const context = canvas.getContext("2d");
+/** PDFium error code 4 = password required (encrypted PDF). */
+const PDFIUM_ERR_PASSWORD = 4;
 
-  if (!context) {
-    throw new Error("Could not get canvas context");
+interface PdfiumRenderResult {
+  thumbnail: string;
+  pageCount: number;
+  pageRotations: number[];
+  pageDimensions: Array<{ width: number; height: number }>;
+  /** Set when the document is password-protected — caller substitutes the
+   * encrypted placeholder. Thumbnail/metadata fields are empty in that case. */
+  isEncrypted?: boolean;
+}
+
+/**
+ * Open a PDF with PDFium, render page 1 to a data URL, and optionally
+ * collect rotation + dimensions for every page. Returns `isEncrypted: true`
+ * (without rendering) when the document is password-protected.
+ *
+ * @param applyRotation When true, bakes the page's own rotation into the
+ *   bitmap (static display). When false, renders upright so callers can
+ *   apply rotation via CSS (PageEditor).
+ * @param collectAllPagesMetadata When true, reads per-page rotation and
+ *   dimensions for all pages. When false (very large files), only the
+ *   first page's metadata is populated.
+ */
+async function renderPdfThumbnailPdfium(
+  data: ArrayBuffer,
+  scale: number,
+  applyRotation: boolean,
+  collectAllPagesMetadata: boolean,
+): Promise<PdfiumRenderResult> {
+  const m = await getPdfiumModule();
+  let docPtr: number;
+  try {
+    docPtr = await openRawDocumentSafe(data);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      new RegExp(`error ${PDFIUM_ERR_PASSWORD}`).test(error.message)
+    ) {
+      return {
+        thumbnail: "",
+        pageCount: 1,
+        pageRotations: [],
+        pageDimensions: [],
+        isEncrypted: true,
+      };
+    }
+    throw error;
   }
 
-  await page.render({ canvasContext: context, viewport }).promise;
-  return canvas.toDataURL();
+  try {
+    const pageCount = m.FPDF_GetPageCount(docPtr);
+    const thumbnail = await renderPdfiumPageDataUrl(docPtr, 0, scale, {
+      applyRotation,
+    });
+    if (!thumbnail) throw new Error("PDFium: failed to render page 0");
+
+    // Page 0 metadata is already available via the render, but read it
+    // directly for consistency with the later per-page loop.
+    const firstMeta = await readPdfiumPageMetadata(docPtr, 0);
+    const pageRotations: number[] = [firstMeta?.rotation ?? 0];
+    const pageDimensions: Array<{ width: number; height: number }> = [
+      {
+        width: firstMeta?.width ?? 0,
+        height: firstMeta?.height ?? 0,
+      },
+    ];
+
+    if (collectAllPagesMetadata) {
+      for (let i = 1; i < pageCount; i++) {
+        const meta = await readPdfiumPageMetadata(docPtr, i);
+        if (!meta) continue;
+        pageRotations[i] = meta.rotation;
+        pageDimensions[i] = { width: meta.width, height: meta.height };
+      }
+    }
+
+    return { thumbnail, pageCount, pageRotations, pageDimensions };
+  } finally {
+    await closeRawDocument(docPtr);
+  }
 }
 
 /**
@@ -590,27 +660,16 @@ async function generatePDFThumbnail(
   file: File,
   scale: number,
 ): Promise<string> {
-  try {
-    const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-      disableAutoFetch: true,
-      disableStream: true,
-    });
-
-    const thumbnail = await generateStandardPDFThumbnail(pdf, scale);
-
-    // Immediately clean up memory after thumbnail generation using worker manager
-    pdfWorkerManager.destroyDocument(pdf);
-    return thumbnail;
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      (error as any).name === "PasswordException"
-    ) {
-      return generateEncryptedPDFThumbnail(file);
-    }
-    throw error; // Not an encryption issue, re-throw
+  const result = await renderPdfThumbnailPdfium(
+    arrayBuffer,
+    scale,
+    true,
+    false,
+  );
+  if (result.isEncrypted) {
+    return generateEncryptedPDFThumbnail(file);
   }
+  return result.thumbnail;
 }
 
 /**
@@ -643,27 +702,20 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
 
     try {
       return await generatePDFThumbnail(arrayBuffer, file, scale);
-    } catch (error) {
-      if (error instanceof Error && error.name === "InvalidPDFException") {
+    } catch {
+      // PDFium needs the xref table at the end of the file, so the 2MB
+      // chunk can fail to open for PDFs larger than that. Retry with the
+      // full buffer before falling back to a placeholder.
+      try {
+        const fullArrayBuffer = await file.arrayBuffer();
+        return await generatePDFThumbnail(fullArrayBuffer, file, scale);
+      } catch (error) {
         console.warn(
-          `PDF structure issue for ${file.name} - trying with full file`,
+          `PDF processing failed for ${file.name} - using placeholder:`,
+          error,
         );
-        try {
-          // Try with full file instead of chunk
-          const fullArrayBuffer = await file.arrayBuffer();
-          return await generatePDFThumbnail(fullArrayBuffer, file, scale);
-        } catch {
-          console.warn(
-            `Full file PDF processing also failed for ${file.name} - using placeholder`,
-          );
-          return generatePlaceholderThumbnail(file);
-        }
+        return generatePlaceholderThumbnail(file);
       }
-      console.warn(
-        `PDF processing failed for ${file.name} - using placeholder:`,
-        error,
-      );
-      return generatePlaceholderThumbnail(file);
     }
   }
 
@@ -691,76 +743,28 @@ export async function generateThumbnailWithMetadata(
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+    const result = await renderPdfThumbnailPdfium(
+      arrayBuffer,
+      scale,
+      applyRotation,
+      !isVeryLarge,
+    );
 
-    const pageCount = pdf.numPages;
-    const page = await pdf.getPage(1);
-    const pageDimensions: Array<{ width: number; height: number }> = [];
-
-    // If applyRotation is false, render without rotation (for CSS-based rotation)
-    // If applyRotation is true, let PDF.js apply rotation (for static display)
-    const viewport = applyRotation
-      ? page.getViewport({ scale })
-      : page.getViewport({ scale, rotation: 0 });
-    const baseViewport = page.getViewport({ scale: 1, rotation: 0 });
-    pageDimensions[0] = {
-      width: baseViewport.width,
-      height: baseViewport.height,
-    };
-
-    const canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-      pdfWorkerManager.destroyDocument(pdf);
-      throw new Error("Could not get canvas context");
-    }
-
-    await page.render({ canvasContext: context, viewport, canvas }).promise;
-    const thumbnail = canvas.toDataURL();
-
-    // For very large files, skip reading rotation/dimensions for all pages (just use first page data)
-    if (isVeryLarge) {
-      const rotation = page.rotate || 0;
-      pdfWorkerManager.destroyDocument(pdf);
+    if (result.isEncrypted) {
       return {
-        thumbnail,
-        pageCount,
-        pageRotations: [rotation],
-        pageDimensions: [pageDimensions[0]],
+        thumbnail: generateEncryptedPDFThumbnail(file),
+        pageCount: 1,
+        isEncrypted: true,
       };
     }
 
-    // Read rotation for all pages
-    const pageRotations: number[] = [];
-    for (let i = 1; i <= pageCount; i++) {
-      const p = await pdf.getPage(i);
-      const rotation = p.rotate || 0;
-      pageRotations.push(rotation);
-      if (!pageDimensions[i - 1]) {
-        const pageViewport = p.getViewport({ scale: 1, rotation: 0 });
-        pageDimensions[i - 1] = {
-          width: pageViewport.width,
-          height: pageViewport.height,
-        };
-      }
-    }
-
-    pdfWorkerManager.destroyDocument(pdf);
-    return { thumbnail, pageCount, pageRotations, pageDimensions };
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      (error as any).name === "PasswordException"
-    ) {
-      // Handle encrypted PDFs
-      const thumbnail = generateEncryptedPDFThumbnail(file);
-      return { thumbnail, pageCount: 1, isEncrypted: true };
-    }
-
+    return {
+      thumbnail: result.thumbnail,
+      pageCount: result.pageCount,
+      pageRotations: result.pageRotations,
+      pageDimensions: result.pageDimensions,
+    };
+  } catch {
     const thumbnail = generatePlaceholderThumbnail(file);
     return { thumbnail, pageCount: 1 };
   }

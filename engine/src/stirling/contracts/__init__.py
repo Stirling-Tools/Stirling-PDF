@@ -18,6 +18,7 @@ from .common import (
     SupportedCapability,
     ToolOperationStep,
     WorkflowOutcome,
+    format_conversation_history,
 )
 from .execution import (
     AgentExecutionRequest,
@@ -62,8 +63,20 @@ from .pdf_questions import (
     PdfQuestionRequest,
     PdfQuestionResponse,
 )
+from .rag import (
+    MAX_INDEX_TEXT_LENGTH,
+    RagCollectionsResponse,
+    RagDeleteCollectionResponse,
+    RagIndexRequest,
+    RagIndexResponse,
+    RagSearchRequest,
+    RagSearchResponse,
+    RagSearchResultItem,
+    RagStatusResponse,
+)
 
 __all__ = [
+    "MAX_INDEX_TEXT_LENGTH",
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
@@ -92,6 +105,7 @@ __all__ = [
     "Folio",
     "FolioManifest",
     "FolioType",
+    "format_conversation_history",
     "HealthResponse",
     "NeedContentFileRequest",
     "NextExecutionAction",
@@ -106,6 +120,14 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfTextSelection",
+    "RagCollectionsResponse",
+    "RagDeleteCollectionResponse",
+    "RagIndexRequest",
+    "RagIndexResponse",
+    "RagSearchRequest",
+    "RagSearchResponse",
+    "RagSearchResultItem",
+    "RagStatusResponse",
     "Requisition",
     "Severity",
     "StepKind",

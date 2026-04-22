@@ -99,6 +99,7 @@ const FileEditorThumbnail = ({
 
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
   const [showHoverMenu, setShowHoverMenu] = useState(false);
   const isMobile = useIsMobile();
@@ -210,7 +211,10 @@ const FileEditorThumbnail = ({
           const sourceData = source.data;
           return sourceData.type === "file" && sourceData.fileId !== file.id;
         },
+        onDragEnter: () => setIsDragOver(true),
+        onDragLeave: () => setIsDragOver(false),
         onDrop: ({ source }) => {
+          setIsDragOver(false);
           const sourceData = source.data;
           if (sourceData.type === "file" && onReorderFiles) {
             const sourceFileId = sourceData.fileId as FileId;
@@ -435,7 +439,22 @@ const FileEditorThumbnail = ({
       data-selected={isSelected}
       data-supported={isSupported}
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
-      style={{ opacity: isDragging ? 0.9 : 1 }}
+      style={
+        {
+          opacity: isDragging ? 0.4 : 1,
+          outline: isDragOver
+            ? "3px dashed var(--mantine-color-blue-5, #3b82f6)"
+            : undefined,
+          outlineOffset: isDragOver ? "2px" : undefined,
+          transform: isDragOver ? "scale(1.02)" : undefined,
+          transition:
+            "outline 120ms ease, transform 120ms ease, opacity 120ms ease",
+          // Tag each card with a stable, unique view-transition-name so the
+          // browser can animate the reorder (see FileEditor.handleReorderFiles,
+          // which dispatches reorderFiles inside document.startViewTransition).
+          viewTransitionName: `file-card-${file.id}`,
+        } as React.CSSProperties
+      }
       tabIndex={0}
       role="listitem"
       aria-selected={isSelected}

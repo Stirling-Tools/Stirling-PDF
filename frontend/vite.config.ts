@@ -57,6 +57,19 @@ export default defineConfig(({ mode }) => {
             src: "public/vendor/jscanify/*",
             dest: "vendor/jscanify",
           },
+          {
+            // pdfjs-dist CMap data for CJK / non-latin glyph mapping — required
+            // when rendering PDFs inside workers where the default DOM fetch paths
+            // aren't available.
+            src: "node_modules/pdfjs-dist/cmaps/*",
+            dest: "pdfjs/cmaps",
+          },
+          {
+            // pdfjs-dist standard font data (Helvetica/Times/etc.) — needed so
+            // workers can substitute non-embedded base 14 fonts without DOM access.
+            src: "node_modules/pdfjs-dist/standard_fonts/*",
+            dest: "pdfjs/standard_fonts",
+          },
         ],
       }),
     ],

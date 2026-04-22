@@ -61,20 +61,12 @@ const LandingPage = () => {
         activateOnClick={false}
         enablePointerEvents
         aria-label={terminology.dropFilesHere}
-        className="flex min-h-0 flex-1 cursor-default flex-col items-center justify-center border-none bg-transparent px-4 py-8 shadow-none outline-none"
+        className="landing-dropzone flex min-h-0 flex-1 cursor-default flex-col items-center justify-center border-none bg-transparent px-4 py-8 shadow-none outline-none"
         styles={{
           root: {
             border: "none !important",
             backgroundColor: "transparent",
             overflow: "visible",
-            "&[data-accept]": {
-              outline: "2px dashed var(--accent-interactive)",
-              outlineOffset: 4,
-            },
-            "&[data-reject]": {
-              outline: "2px dashed var(--mantine-color-red-6)",
-              outlineOffset: 4,
-            },
           },
           inner: {
             overflow: "visible",
