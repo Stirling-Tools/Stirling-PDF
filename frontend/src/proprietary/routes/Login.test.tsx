@@ -40,13 +40,20 @@ vi.mock("@app/auth/UseSession", () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock springAuth
-vi.mock("@app/auth/springAuthClient", () => ({
-  springAuth: {
-    signInWithPassword: vi.fn(),
-    signInWithOAuth: vi.fn(),
-  },
-}));
+// Mock springAuth but keep the real redirect-path helpers (they only touch
+// sessionStorage, which is isolated per test).
+vi.mock("@app/auth/springAuthClient", async () => {
+  const actual = await vi.importActual<
+    typeof import("@app/auth/springAuthClient")
+  >("@app/auth/springAuthClient");
+  return {
+    ...actual,
+    springAuth: {
+      signInWithPassword: vi.fn(),
+      signInWithOAuth: vi.fn(),
+    },
+  };
+});
 
 // Mock useDocumentMeta
 vi.mock("@app/hooks/useDocumentMeta", () => ({
@@ -691,5 +698,54 @@ describe("Login", () => {
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
     });
+  });
+
+  it("should persist location.state.from.pathname before triggering SSO so the user returns to their original URL", async () => {
+    const user = userEvent.setup();
+    sessionStorage.clear();
+
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enableLogin: true,
+        providerList: {
+          "/oauth2/authorization/authentik": "Authentik",
+        },
+      },
+    });
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <MemoryRouter
+          initialEntries={[
+            { pathname: "/login", state: { from: { pathname: "/share/abc123" } } },
+          ]}
+        >
+          <Login />
+        </MemoryRouter>
+      </TestWrapper>,
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("Authentik")).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
+
+    await user.click(screen.getByText("Authentik"));
+
+    await waitFor(() => {
+      expect(springAuth.signInWithOAuth).toHaveBeenCalled();
+    });
+
+    // The original destination must be stashed BEFORE the SSO redirect, since
+    // the cross-origin round-trip destroys React's in-memory location.state.
+    expect(sessionStorage.getItem("stirling_post_login_path")).toBe(
+      "/share/abc123",
+    );
   });
 });

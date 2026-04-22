@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { springAuth } from "@app/auth/springAuthClient";
+import {
+  consumePostLoginRedirectPath,
+  isSafePostLoginRedirect,
+  POST_LOGIN_REDIRECT_STORAGE_KEY,
+  setPostLoginRedirectPath,
+  springAuth,
+} from "@app/auth/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
 import {
@@ -380,6 +386,97 @@ describe("SpringAuthClient", () => {
       );
       expect(mockAssign).not.toHaveBeenCalled();
       expect(result.error).toBeNull();
+    });
+  });
+
+  describe("post-login redirect path", () => {
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    describe("isSafePostLoginRedirect", () => {
+      it("accepts same-origin paths with a single leading slash", () => {
+        expect(isSafePostLoginRedirect("/share/abc123")).toBe(true);
+        expect(isSafePostLoginRedirect("/workbench")).toBe(true);
+        expect(isSafePostLoginRedirect("/share/abc?x=1")).toBe(true);
+      });
+
+      it("rejects empty, null, or non-string values", () => {
+        expect(isSafePostLoginRedirect("")).toBe(false);
+        expect(isSafePostLoginRedirect(null)).toBe(false);
+        expect(isSafePostLoginRedirect(undefined)).toBe(false);
+        expect(isSafePostLoginRedirect(42 as unknown)).toBe(false);
+      });
+
+      it("rejects protocol-relative and absolute URLs (open-redirect guard)", () => {
+        expect(isSafePostLoginRedirect("//evil.example")).toBe(false);
+        expect(isSafePostLoginRedirect("http://evil.example")).toBe(false);
+        expect(isSafePostLoginRedirect("https://evil.example/x")).toBe(false);
+        expect(isSafePostLoginRedirect("/\\evil")).toBe(false);
+      });
+
+      it("rejects auth-plumbing paths to avoid login loops", () => {
+        expect(isSafePostLoginRedirect("/login")).toBe(false);
+        expect(isSafePostLoginRedirect("/login?foo=1")).toBe(false);
+        expect(isSafePostLoginRedirect("/auth/callback")).toBe(false);
+        expect(isSafePostLoginRedirect("/oauth2/authorization/google")).toBe(
+          false,
+        );
+        expect(isSafePostLoginRedirect("/saml2/authenticate/x")).toBe(false);
+      });
+    });
+
+    describe("setPostLoginRedirectPath", () => {
+      it("stores a safe path in sessionStorage", () => {
+        setPostLoginRedirectPath("/share/abc123");
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBe("/share/abc123");
+      });
+
+      it("clears any existing entry when given an unsafe value", () => {
+        sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, "/share/old");
+        setPostLoginRedirectPath("//evil.example");
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+
+      it("clears any existing entry when given null", () => {
+        sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, "/share/old");
+        setPostLoginRedirectPath(null);
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+    });
+
+    describe("consumePostLoginRedirectPath", () => {
+      it("returns the stored path and clears it (single-use)", () => {
+        sessionStorage.setItem(
+          POST_LOGIN_REDIRECT_STORAGE_KEY,
+          "/share/abc123",
+        );
+        expect(consumePostLoginRedirectPath()).toBe("/share/abc123");
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+
+      it("returns null (and still clears) when the stored value is unsafe", () => {
+        sessionStorage.setItem(
+          POST_LOGIN_REDIRECT_STORAGE_KEY,
+          "//evil.example",
+        );
+        expect(consumePostLoginRedirectPath()).toBeNull();
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+
+      it("returns null when nothing is stored", () => {
+        expect(consumePostLoginRedirectPath()).toBeNull();
+      });
     });
   });
 });

@@ -16,6 +16,34 @@ import {
 const recentSpecialByEndpoint: Record<string, number> = {};
 const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
 
+// Keep in sync with the same constant in proprietary/auth/springAuthClient.ts.
+// AuthCallback consumes this after the SSO round-trip to restore the user's
+// original destination. The query-string ?from= approach does not survive
+// because Spring Security 302-strips the query from /login.
+const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
+
+function isSafePostLoginPath(path: string): boolean {
+  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) {
+    return false;
+  }
+  const lowered = path.toLowerCase();
+  return (
+    !lowered.startsWith("/login") &&
+    !lowered.startsWith("/auth/") &&
+    !lowered.startsWith("/oauth2") &&
+    !lowered.startsWith("/saml2")
+  );
+}
+
+function stashPostLoginRedirect(path: string): void {
+  try {
+    if (typeof window === "undefined" || !isSafePostLoginPath(path)) return;
+    window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
+  } catch {
+    // sessionStorage unavailable (e.g. private mode) — fail open
+  }
+}
+
 /**
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise
@@ -42,9 +70,15 @@ export async function handleHttpError(error: any): Promise<boolean> {
     // If not on auth page, redirect to login with expired session message
     if (!isAuthPage && !skipAuthRedirect) {
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
-      // Store the current location so we can redirect back after login
+      // Store the current location so we can redirect back after login.
+      // Use sessionStorage: Spring Security 302-strips query params from
+      // /login, so `?from=` would be lost. Same-origin sessionStorage
+      // survives the SAML/OAuth cross-origin round-trip because the callback
+      // lands back on this origin before any other navigation.
       const currentLocation = window.location.pathname + window.location.search;
-      // Redirect to login with state (only show expired when a JWT existed)
+      stashPostLoginRedirect(currentLocation);
+      // Keep the `?from=` query in the URL for observability/back-compat
+      // even though it gets stripped; the authoritative value is sessionStorage.
       let hadStoredJwt = false;
       try {
         hadStoredJwt = Boolean(localStorage.getItem("stirling_jwt"));
