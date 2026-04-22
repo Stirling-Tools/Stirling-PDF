@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const VALID_MODES = [
@@ -42,9 +41,6 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      tsconfigPaths({
-        projects: [tsconfigProject],
-      }),
       viteStaticCopy({
         targets: [
           {
@@ -73,6 +69,11 @@ export default defineConfig(({ mode }) => {
         ],
       }),
     ],
+    resolve: {
+      tsconfigPaths: {
+        projects: [tsconfigProject],
+      },
+    },
     server: {
       host: true,
       // make sure this port matches the devUrl port in tauri.conf.json file

@@ -120,6 +120,9 @@ export default defineConfig({
       },
     ],
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
   esbuild: {
     target: "es2020",
   },
