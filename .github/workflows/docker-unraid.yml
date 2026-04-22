@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64, oracle]
 
     steps:
       - name: Checkout repository
@@ -75,7 +75,7 @@ jobs:
   update-unraid:
     name: Request Unraid update
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64, oracle]
 
     steps:
       - name: Checkout repository
