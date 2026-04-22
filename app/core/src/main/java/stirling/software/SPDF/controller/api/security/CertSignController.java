@@ -206,9 +206,7 @@ public class CertSignController {
         float h = (float) (clampSizeFraction(fracH) * pageHeight);
         float llx = xTop;
         float lly = pageHeight - yTop - h;
-        float urx = llx + w;
-        float ury = lly + h;
-        return new PDRectangle(llx, lly, urx, ury);
+        return new PDRectangle(llx, lly, w, h);
     }
 
     private static double clampFraction(Double v) {
