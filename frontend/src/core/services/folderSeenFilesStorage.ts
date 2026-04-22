@@ -4,9 +4,9 @@
  * Prevents re-submitting the same file on every poll cycle.
  */
 
-const DB_NAME = 'stirling-pdf-folder-seen-files';
+const DB_NAME = "stirling-pdf-folder-seen-files";
 const DB_VERSION = 1;
-const STORE = 'seenFiles';
+const STORE = "seenFiles";
 
 /** Cached singleton DB connection — avoids opening a new connection per call. */
 let cachedDB: IDBDatabase | null = null;
@@ -20,10 +20,16 @@ function getDB(): Promise<IDBDatabase> {
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
     req.onsuccess = () => {
       cachedDB = req.result;
-      cachedDB.onclose = () => { cachedDB = null; initPromise = null; };
+      cachedDB.onclose = () => {
+        cachedDB = null;
+        initPromise = null;
+      };
       resolve(cachedDB);
     };
-    req.onerror = () => { initPromise = null; reject(req.error); };
+    req.onerror = () => {
+      initPromise = null;
+      reject(req.error);
+    };
   });
   return initPromise;
 }
@@ -45,7 +51,7 @@ export const folderSeenFilesStorage = {
   async markSeen(key: string): Promise<void> {
     const db = await getDB();
     return new Promise((resolve, reject) => {
-      const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(Date.now(), key);
+      const req = db.transaction(STORE, "readwrite").objectStore(STORE).put(Date.now(), key);
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
@@ -55,15 +61,18 @@ export const folderSeenFilesStorage = {
   async clearFolder(folderId: string): Promise<void> {
     const db = await getDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
+      const tx = db.transaction(STORE, "readwrite");
       const store = tx.objectStore(STORE);
       const prefix = `${folderId}|`;
       // Use key range to narrow cursor scan to keys starting with the folder prefix
-      const range = IDBKeyRange.bound(prefix, prefix + '\uffff');
+      const range = IDBKeyRange.bound(prefix, prefix + "\uffff");
       const req = store.openCursor(range);
       req.onsuccess = () => {
         const cursor = req.result;
-        if (!cursor) { resolve(); return; }
+        if (!cursor) {
+          resolve();
+          return;
+        }
         cursor.delete();
         cursor.continue();
       };

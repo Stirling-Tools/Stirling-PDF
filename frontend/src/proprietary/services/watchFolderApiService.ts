@@ -5,7 +5,7 @@
  * in the server database — the source of truth for proprietary deployments.
  */
 
-import apiClient from '@app/services/apiClient';
+import apiClient from "@app/services/apiClient";
 
 // ── Types matching the JPA entities ────────────────────────────────────────
 
@@ -16,7 +16,7 @@ export interface WatchFolderDTO {
   automationConfig?: string; // JSON-stringified operations array
   icon?: string;
   accentColor?: string;
-  scope: 'PERSONAL' | 'ORGANISATION';
+  scope: "PERSONAL" | "ORGANISATION";
   orderIndex?: number;
   isDefault?: boolean;
   isPaused?: boolean;
@@ -59,7 +59,7 @@ export interface WatchFolderRunDTO {
 
 // ── API calls ──────────────────────────────────────────────────────────────
 
-const BASE = '/api/v1/watch-folders';
+const BASE = "/api/v1/watch-folders";
 
 export const watchFolderApi = {
   // Folders

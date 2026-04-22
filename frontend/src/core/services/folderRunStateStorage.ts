@@ -2,9 +2,9 @@
  * Service for managing Watch Folder run state in IndexedDB
  */
 
-import { SmartFolderRunEntry } from '@app/types/smartFolders';
+import { SmartFolderRunEntry } from "@app/types/smartFolders";
 
-const FOLDER_RUN_STATE_CHANGE_EVENT = 'folder-run-state-changed';
+const FOLDER_RUN_STATE_CHANGE_EVENT = "folder-run-state-changed";
 
 interface RunStateRecord {
   folderId: string;
@@ -13,25 +13,28 @@ interface RunStateRecord {
 }
 
 class FolderRunStateStorage {
-  private dbName = 'stirling-pdf-folder-run-state';
+  private dbName = "stirling-pdf-folder-run-state";
   private dbVersion = 1;
-  private storeName = 'runStates';
+  private storeName = "runStates";
   private db: IDBDatabase | null = null;
   private initPromise: Promise<void> | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
-      request.onerror = () => reject(new Error('Failed to open folder run state database'));
+      request.onerror = () => reject(new Error("Failed to open folder run state database"));
       request.onsuccess = () => {
         this.db = request.result;
-        this.db.onclose = () => { this.db = null; this.initPromise = null; };
+        this.db.onclose = () => {
+          this.db = null;
+          this.initPromise = null;
+        };
         resolve();
       };
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.storeName)) {
-          db.createObjectStore(this.storeName, { keyPath: 'folderId' });
+          db.createObjectStore(this.storeName, { keyPath: "folderId" });
         }
       };
     });
@@ -43,7 +46,7 @@ class FolderRunStateStorage {
       await this.initPromise;
     }
     if (!this.db) {
-      throw new Error('Folder run state database not initialized');
+      throw new Error("Folder run state database not initialized");
     }
     return this.db;
   }
@@ -51,14 +54,14 @@ class FolderRunStateStorage {
   async getFolderRunState(folderId: string): Promise<SmartFolderRunEntry[]> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.get(folderId);
       request.onsuccess = () => {
         const record: RunStateRecord | undefined = request.result;
         resolve(record?.runs || []);
       };
-      request.onerror = () => reject(new Error('Failed to get folder run state'));
+      request.onerror = () => reject(new Error("Failed to get folder run state"));
     });
   }
 
@@ -66,14 +69,14 @@ class FolderRunStateStorage {
     const db = await this.ensureDB();
     const record: RunStateRecord = { folderId, runs, lastUpdated: Date.now() };
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.put(record);
       request.onsuccess = () => {
         window.dispatchEvent(new CustomEvent(FOLDER_RUN_STATE_CHANGE_EVENT, { detail: { folderId } }));
         resolve();
       };
-      request.onerror = () => reject(new Error('Failed to set folder run state'));
+      request.onerror = () => reject(new Error("Failed to set folder run state"));
     });
   }
 
@@ -89,7 +92,7 @@ class FolderRunStateStorage {
     if (entries.length === 0) return;
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const getRequest = store.get(folderId);
       getRequest.onsuccess = () => {
@@ -106,20 +109,20 @@ class FolderRunStateStorage {
           window.dispatchEvent(new CustomEvent(FOLDER_RUN_STATE_CHANGE_EVENT, { detail: { folderId } }));
           resolve();
         };
-        putRequest.onerror = () => reject(new Error('Failed to append run entries'));
+        putRequest.onerror = () => reject(new Error("Failed to append run entries"));
       };
-      getRequest.onerror = () => reject(new Error('Failed to read run state for append'));
+      getRequest.onerror = () => reject(new Error("Failed to read run state for append"));
     });
   }
 
   async clearFolderRunState(folderId: string): Promise<void> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(folderId);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to clear folder run state'));
+      request.onerror = () => reject(new Error("Failed to clear folder run state"));
     });
   }
 }

@@ -27,9 +27,7 @@ import "@app/utils/fileIdSafety";
 function MobileScannerProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>
-        {children}
-      </RainbowThemeProvider>
+      <RainbowThemeProvider>{children}</RainbowThemeProvider>
     </PreferencesProvider>
   );
 }
@@ -54,20 +52,20 @@ export default function App() {
           element={
             <AppProviders>
               <WatchFolderServerProvider>
-              <AppLayout>
-                <Routes>
-                  {/* Auth routes - no nested providers needed */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/invite/:token" element={<InviteAccept />} />
+                <AppLayout>
+                  <Routes>
+                    {/* Auth routes - no nested providers needed */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/invite/:token" element={<InviteAccept />} />
 
-                  {/* Main app routes - Landing handles auth logic */}
-                  <Route path="/*" element={<Landing />} />
-                </Routes>
-                <Onboarding />
-                <SmartFoldersRegistration />
-              </AppLayout>
+                    {/* Main app routes - Landing handles auth logic */}
+                    <Route path="/*" element={<Landing />} />
+                  </Routes>
+                  <Onboarding />
+                  <SmartFoldersRegistration />
+                </AppLayout>
               </WatchFolderServerProvider>
             </AppProviders>
           }

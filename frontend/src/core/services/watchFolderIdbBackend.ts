@@ -5,11 +5,11 @@
  * so core hooks can use them through the context.
  */
 
-import type { WatchFolderStorageBackend } from '@app/contexts/WatchFolderStorageContext';
-import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from '@app/services/smartFolderStorage';
-import { folderStorage } from '@app/services/folderStorage';
-import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
-import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from '@app/types/smartFolders';
+import type { WatchFolderStorageBackend } from "@app/contexts/WatchFolderStorageContext";
+import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from "@app/services/smartFolderStorage";
+import { folderStorage } from "@app/services/folderStorage";
+import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
+import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from "@app/types/smartFolders";
 
 export const idbBackend: WatchFolderStorageBackend = {
   // Folder CRUD

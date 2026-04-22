@@ -6,12 +6,12 @@
  * Falls back to IDB-only if the server is unreachable.
  */
 
-import type { WatchFolderStorageBackend } from '@app/contexts/WatchFolderStorageContext';
-import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from '@app/services/smartFolderStorage';
-import { folderStorage } from '@app/services/folderStorage';
-import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
-import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from '@app/types/smartFolders';
-import { watchFolderApi, WatchFolderDTO, WatchFolderFileDTO, WatchFolderRunDTO } from './watchFolderApiService';
+import type { WatchFolderStorageBackend } from "@app/contexts/WatchFolderStorageContext";
+import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from "@app/services/smartFolderStorage";
+import { folderStorage } from "@app/services/folderStorage";
+import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
+import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from "@app/types/smartFolders";
+import { watchFolderApi, WatchFolderDTO, WatchFolderFileDTO, WatchFolderRunDTO } from "./watchFolderApiService";
 
 // ── DTO ↔ Domain conversions ───────────────────────────────────────────────
 
@@ -19,20 +19,20 @@ function toSmartFolder(dto: WatchFolderDTO): SmartFolder {
   return {
     id: dto.id,
     name: dto.name,
-    description: dto.description ?? '',
-    automationId: '', // automation config is inlined — hooks resolve this
-    icon: dto.icon ?? 'FolderIcon',
-    accentColor: dto.accentColor ?? '#3b82f6',
+    description: dto.description ?? "",
+    automationId: "", // automation config is inlined — hooks resolve this
+    icon: dto.icon ?? "FolderIcon",
+    accentColor: dto.accentColor ?? "#3b82f6",
     createdAt: dto.createdAt ?? new Date().toISOString(),
     updatedAt: dto.updatedAt ?? new Date().toISOString(),
     order: dto.orderIndex,
     isDefault: dto.isDefault,
     isPaused: dto.isPaused,
-    inputSource: (dto.inputSource as SmartFolder['inputSource']) ?? 'idb',
-    processingMode: (dto.processingMode as SmartFolder['processingMode']) ?? 'local',
-    outputMode: (dto.outputMode as SmartFolder['outputMode']) ?? 'new_file',
+    inputSource: (dto.inputSource as SmartFolder["inputSource"]) ?? "idb",
+    processingMode: (dto.processingMode as SmartFolder["processingMode"]) ?? "local",
+    outputMode: (dto.outputMode as SmartFolder["outputMode"]) ?? "new_file",
     outputName: dto.outputName,
-    outputNamePosition: (dto.outputNamePosition as SmartFolder['outputNamePosition']) ?? 'prefix',
+    outputNamePosition: (dto.outputNamePosition as SmartFolder["outputNamePosition"]) ?? "prefix",
     outputTtlHours: dto.outputTtlHours,
     deleteOutputOnDownload: dto.deleteOutputOnDownload,
     maxRetries: dto.maxRetries,
@@ -47,7 +47,7 @@ function toDTO(folder: SmartFolder & { scope?: string }): WatchFolderDTO {
     description: folder.description,
     icon: folder.icon,
     accentColor: folder.accentColor,
-    scope: (folder as any).scope ?? 'PERSONAL',
+    scope: (folder as any).scope ?? "PERSONAL",
     orderIndex: folder.order,
     isDefault: folder.isDefault,
     isPaused: folder.isPaused,
@@ -74,7 +74,7 @@ async function syncFoldersToIdb(): Promise<SmartFolder[]> {
   const folders = dtos.map(toSmartFolder);
   // Overwrite IDB with server state
   const existing = await smartFolderStorage.getAllFolders();
-  const serverIds = new Set(folders.map(f => f.id));
+  const serverIds = new Set(folders.map((f) => f.id));
   // Remove folders from IDB that no longer exist on server
   for (const f of existing) {
     if (!serverIds.has(f.id)) {
@@ -177,7 +177,7 @@ export const serverBackend: WatchFolderStorageBackend = {
       for (const f of files) {
         record.files[f.fileId] = {
           addedAt: f.addedAt ? new Date(f.addedAt) : new Date(),
-          status: f.status as FolderFileMetadata['status'],
+          status: f.status as FolderFileMetadata["status"],
           name: f.name,
           errorMessage: f.errorMessage,
           failedAttempts: f.failedAttempts,
@@ -228,7 +228,7 @@ export const serverBackend: WatchFolderStorageBackend = {
     try {
       await watchFolderApi.upsertFile(folderId, {
         fileId,
-        status: meta?.status ?? 'pending',
+        status: meta?.status ?? "pending",
         name: meta?.name,
         ownedByFolder: meta?.ownedByFolder,
         addedAt: meta?.addedAt?.toISOString() ?? new Date().toISOString(),
@@ -241,7 +241,9 @@ export const serverBackend: WatchFolderStorageBackend = {
   async clearFolder(folderId) {
     try {
       await watchFolderApi.deleteFiles(folderId);
-    } catch { /* best-effort */ }
+    } catch {
+      /* best-effort */
+    }
     await folderStorage.clearFolder(folderId);
   },
 
@@ -249,11 +251,11 @@ export const serverBackend: WatchFolderStorageBackend = {
   async getFolderRunState(folderId) {
     try {
       const runs = await watchFolderApi.listRuns(folderId);
-      const entries: SmartFolderRunEntry[] = runs.map(r => ({
+      const entries: SmartFolderRunEntry[] = runs.map((r) => ({
         inputFileId: r.inputFileId,
-        displayFileId: r.displayFileId ?? '',
+        displayFileId: r.displayFileId ?? "",
         displayFileIds: r.displayFileIds ? JSON.parse(r.displayFileIds) : undefined,
-        status: r.status as SmartFolderRunEntry['status'],
+        status: r.status as SmartFolderRunEntry["status"],
         processedAt: r.processedAt ? new Date(r.processedAt) : undefined,
       }));
       return entries;
@@ -269,21 +271,25 @@ export const serverBackend: WatchFolderStorageBackend = {
     try {
       await watchFolderApi.addRuns(
         folderId,
-        entries.map(e => ({
+        entries.map((e) => ({
           inputFileId: e.inputFileId,
           displayFileId: e.displayFileId,
           displayFileIds: e.displayFileIds ? JSON.stringify(e.displayFileIds) : undefined,
           status: e.status,
           processedAt: e.processedAt?.toISOString(),
-        }))
+        })),
       );
-    } catch { /* offline */ }
+    } catch {
+      /* offline */
+    }
   },
 
   async clearFolderRunState(folderId) {
     try {
       // No dedicated endpoint yet — runs are deleted with the folder
-    } catch { /* best-effort */ }
+    } catch {
+      /* best-effort */
+    }
     await folderRunStateStorage.clearFolderRunState(folderId);
   },
 

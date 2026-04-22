@@ -6,9 +6,9 @@
  * that uses IDB as a local cache.
  */
 
-import React, { createContext, useContext } from 'react';
-import { SmartFolder, FolderRecord } from '@app/types/smartFolders';
-import { SmartFolderRunEntry } from '@app/types/smartFolders';
+import React, { createContext, useContext } from "react";
+import { SmartFolder, FolderRecord } from "@app/types/smartFolders";
+import { SmartFolderRunEntry } from "@app/types/smartFolders";
 
 // ── Storage interface ──────────────────────────────────────────────────────
 
@@ -16,15 +16,23 @@ export interface WatchFolderStorageBackend {
   // Folder CRUD
   getAllFolders(): Promise<SmartFolder[]>;
   getFolder(id: string): Promise<SmartFolder | null>;
-  createFolder(data: Omit<SmartFolder, 'id' | 'createdAt' | 'updatedAt'>): Promise<SmartFolder>;
+  createFolder(data: Omit<SmartFolder, "id" | "createdAt" | "updatedAt">): Promise<SmartFolder>;
   createFolderWithId(folder: SmartFolder): Promise<SmartFolder>;
   updateFolder(folder: SmartFolder): Promise<SmartFolder>;
   deleteFolder(id: string): Promise<void>;
 
   // File metadata
   getFolderData(folderId: string): Promise<FolderRecord | null>;
-  updateFileMetadata(folderId: string, fileId: string, meta: Partial<import('@app/types/smartFolders').FolderFileMetadata>): Promise<void>;
-  addFileToFolder(folderId: string, fileId: string, meta?: Partial<import('@app/types/smartFolders').FolderFileMetadata>): Promise<void>;
+  updateFileMetadata(
+    folderId: string,
+    fileId: string,
+    meta: Partial<import("@app/types/smartFolders").FolderFileMetadata>,
+  ): Promise<void>;
+  addFileToFolder(
+    folderId: string,
+    fileId: string,
+    meta?: Partial<import("@app/types/smartFolders").FolderFileMetadata>,
+  ): Promise<void>;
   clearFolder(folderId: string): Promise<void>;
 
   // Run state
@@ -47,11 +55,7 @@ export function WatchFolderStorageProvider({
   backend: WatchFolderStorageBackend;
   children: React.ReactNode;
 }) {
-  return (
-    <WatchFolderStorageContext.Provider value={backend}>
-      {children}
-    </WatchFolderStorageContext.Provider>
-  );
+  return <WatchFolderStorageContext.Provider value={backend}>{children}</WatchFolderStorageContext.Provider>;
 }
 
 /**

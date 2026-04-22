@@ -3,20 +3,23 @@
  * 'done' automatically reverts to 'idle' after 5 minutes
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { SmartFolder, SmartFolderRunEntry } from '@app/types/smartFolders';
-import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
-import { useWatchFolderStorage } from '@app/contexts/WatchFolderStorageContext';
+import { useState, useEffect, useRef } from "react";
+import { SmartFolder, SmartFolderRunEntry } from "@app/types/smartFolders";
+import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
+import { useWatchFolderStorage } from "@app/contexts/WatchFolderStorageContext";
 
-export type FolderRunStatus = 'idle' | 'processing' | 'done';
+export type FolderRunStatus = "idle" | "processing" | "done";
 
 const DONE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 function deriveStatus(runs: SmartFolderRunEntry[]): FolderRunStatus {
-  if (runs.some(r => r.status === 'processing')) return 'processing';
+  if (runs.some((r) => r.status === "processing")) return "processing";
   // Only treat recent runs (within TTL) as 'done' — avoids permanent green tick on old folders
-  if (runs.some(r => r.status === 'processed' && r.processedAt != null && (Date.now() - r.processedAt.getTime()) < DONE_TTL_MS)) return 'done';
-  return 'idle';
+  if (
+    runs.some((r) => r.status === "processed" && r.processedAt != null && Date.now() - r.processedAt.getTime() < DONE_TTL_MS)
+  )
+    return "done";
+  return "idle";
 }
 
 export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, FolderRunStatus> {
@@ -38,9 +41,9 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
               : await folderRunStateStorage.getFolderRunState(folder.id);
             return [folder.id, deriveStatus(runs)] as const;
           } catch {
-            return [folder.id, 'idle' as FolderRunStatus] as const;
+            return [folder.id, "idle" as FolderRunStatus] as const;
           }
-        })
+        }),
       );
       const newStatuses: Record<string, FolderRunStatus> = {};
       for (const [id, status] of results) {
@@ -55,10 +58,13 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
   // Update individual folder status live when new run entries are appended
   useEffect(() => {
     return folderRunStateStorage.onRunStateChange((changedFolderId) => {
-      if (!foldersRef.current.find(f => f.id === changedFolderId)) return;
-      folderRunStateStorage.getFolderRunState(changedFolderId)
-        .then((runs) => { setStatuses(prev => ({ ...prev, [changedFolderId]: deriveStatus(runs) })); })
-        .catch((err) => console.error('Failed to update run status:', err));
+      if (!foldersRef.current.find((f) => f.id === changedFolderId)) return;
+      folderRunStateStorage
+        .getFolderRunState(changedFolderId)
+        .then((runs) => {
+          setStatuses((prev) => ({ ...prev, [changedFolderId]: deriveStatus(runs) }));
+        })
+        .catch((err) => console.error("Failed to update run status:", err));
     });
   }, []);
 
@@ -66,13 +72,13 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
   useEffect(() => {
     const timers = doneTimersRef.current;
     Object.entries(statuses).forEach(([folderId, status]) => {
-      if (status === 'done' && !timers.has(folderId)) {
+      if (status === "done" && !timers.has(folderId)) {
         const timer = setTimeout(() => {
-          setStatuses(prev => ({ ...prev, [folderId]: 'idle' }));
+          setStatuses((prev) => ({ ...prev, [folderId]: "idle" }));
           timers.delete(folderId);
         }, DONE_TTL_MS);
         timers.set(folderId, timer);
-      } else if (status !== 'done' && timers.has(folderId)) {
+      } else if (status !== "done" && timers.has(folderId)) {
         clearTimeout(timers.get(folderId)!);
         timers.delete(folderId);
       }
@@ -83,7 +89,7 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
   useEffect(() => {
     const timers = doneTimersRef.current;
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
       timers.clear();
     };
   }, []);

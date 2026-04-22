@@ -4,10 +4,10 @@
  * For full CRUD, use useSmartFolders instead.
  */
 
-import { useState, useEffect } from 'react';
-import { SmartFolder } from '@app/types/smartFolders';
-import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from '@app/services/smartFolderStorage';
-import { useWatchFolderStorage } from '@app/contexts/WatchFolderStorageContext';
+import { useState, useEffect } from "react";
+import { SmartFolder } from "@app/types/smartFolders";
+import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from "@app/services/smartFolderStorage";
+import { useWatchFolderStorage } from "@app/contexts/WatchFolderStorageContext";
 
 export function useAllSmartFolders(): SmartFolder[] {
   const backend = useWatchFolderStorage();
@@ -16,12 +16,10 @@ export function useAllSmartFolders(): SmartFolder[] {
   useEffect(() => {
     const load = async () => {
       try {
-        const all = backend
-          ? await backend.getAllFolders()
-          : await smartFolderStorage.getAllFolders();
+        const all = backend ? await backend.getAllFolders() : await smartFolderStorage.getAllFolders();
         setFolders(all);
       } catch (err) {
-        console.error('Failed to load smart folders:', err);
+        console.error("Failed to load smart folders:", err);
       }
     };
 

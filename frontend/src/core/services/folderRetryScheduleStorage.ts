@@ -20,27 +20,30 @@ export interface RetryEntry {
 }
 
 class FolderRetryScheduleStorage {
-  private dbName = 'stirling-pdf-retry-schedule';
+  private dbName = "stirling-pdf-retry-schedule";
   private dbVersion = 1;
-  private storeName = 'retries';
+  private storeName = "retries";
   private db: IDBDatabase | null = null;
   private initPromise: Promise<void> | null = null;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
-      request.onerror = () => reject(new Error('Failed to open retry schedule database'));
+      request.onerror = () => reject(new Error("Failed to open retry schedule database"));
       request.onsuccess = () => {
         this.db = request.result;
-        this.db.onclose = () => { this.db = null; this.initPromise = null; };
+        this.db.onclose = () => {
+          this.db = null;
+          this.initPromise = null;
+        };
         resolve();
       };
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
+          const store = db.createObjectStore(this.storeName, { keyPath: "id" });
           // Index on dueAt lets the SW and claimDue() range-scan efficiently
-          store.createIndex('dueAt', 'dueAt', { unique: false });
+          store.createIndex("dueAt", "dueAt", { unique: false });
         }
       };
     });
@@ -51,18 +54,12 @@ class FolderRetryScheduleStorage {
       this.initPromise ??= this.init();
       await this.initPromise;
     }
-    if (!this.db) throw new Error('Retry schedule database not initialized');
+    if (!this.db) throw new Error("Retry schedule database not initialized");
     return this.db;
   }
 
   /** Upsert a retry entry. Calling again for the same file replaces the previous schedule. */
-  async schedule(
-    folderId: string,
-    fileId: string,
-    dueAt: number,
-    attempt: number,
-    ownedByFolder: boolean
-  ): Promise<void> {
+  async schedule(folderId: string, fileId: string, dueAt: number, attempt: number, ownedByFolder: boolean): Promise<void> {
     const db = await this.ensureDB();
     const entry: RetryEntry = {
       id: `${folderId}:${fileId}`,
@@ -73,10 +70,10 @@ class FolderRetryScheduleStorage {
       ownedByFolder,
     };
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([this.storeName], 'readwrite');
+      const tx = db.transaction([this.storeName], "readwrite");
       const request = tx.objectStore(this.storeName).put(entry);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to schedule retry'));
+      request.onerror = () => reject(new Error("Failed to schedule retry"));
     });
   }
 
@@ -84,10 +81,10 @@ class FolderRetryScheduleStorage {
   async cancel(folderId: string, fileId: string): Promise<void> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([this.storeName], 'readwrite');
+      const tx = db.transaction([this.storeName], "readwrite");
       const request = tx.objectStore(this.storeName).delete(`${folderId}:${fileId}`);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(new Error('Failed to cancel retry'));
+      request.onerror = () => reject(new Error("Failed to cancel retry"));
     });
   }
 
@@ -101,8 +98,8 @@ class FolderRetryScheduleStorage {
     return new Promise((resolve, reject) => {
       const now = Date.now();
       const claimed: RetryEntry[] = [];
-      const tx = db.transaction([this.storeName], 'readwrite');
-      const index = tx.objectStore(this.storeName).index('dueAt');
+      const tx = db.transaction([this.storeName], "readwrite");
+      const index = tx.objectStore(this.storeName).index("dueAt");
       const cursorRequest = index.openCursor(IDBKeyRange.upperBound(now));
       cursorRequest.onsuccess = () => {
         const cursor = cursorRequest.result;
@@ -113,7 +110,7 @@ class FolderRetryScheduleStorage {
         }
       };
       tx.oncomplete = () => resolve(claimed);
-      tx.onerror = () => reject(new Error('Failed to claim due retries'));
+      tx.onerror = () => reject(new Error("Failed to claim due retries"));
     });
   }
 
@@ -121,7 +118,7 @@ class FolderRetryScheduleStorage {
   async clearFolder(folderId: string): Promise<void> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([this.storeName], 'readwrite');
+      const tx = db.transaction([this.storeName], "readwrite");
       const store = tx.objectStore(this.storeName);
       const cursorRequest = store.openCursor();
       cursorRequest.onsuccess = () => {
@@ -132,7 +129,7 @@ class FolderRetryScheduleStorage {
         cursor.continue();
       };
       tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(new Error('Failed to clear folder retries'));
+      tx.onerror = () => reject(new Error("Failed to clear folder retries"));
     });
   }
 
@@ -140,11 +137,10 @@ class FolderRetryScheduleStorage {
   async getEarliestDueAt(): Promise<number | null> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([this.storeName], 'readonly');
-      const cursorRequest = tx.objectStore(this.storeName).index('dueAt').openCursor();
-      cursorRequest.onsuccess = () =>
-        resolve(cursorRequest.result ? (cursorRequest.result.value as RetryEntry).dueAt : null);
-      cursorRequest.onerror = () => reject(new Error('Failed to get earliest due at'));
+      const tx = db.transaction([this.storeName], "readonly");
+      const cursorRequest = tx.objectStore(this.storeName).index("dueAt").openCursor();
+      cursorRequest.onsuccess = () => resolve(cursorRequest.result ? (cursorRequest.result.value as RetryEntry).dueAt : null);
+      cursorRequest.onerror = () => reject(new Error("Failed to get earliest due at"));
     });
   }
 }

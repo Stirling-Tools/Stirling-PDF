@@ -3,10 +3,10 @@
  * with the server-backed implementation when premium is enabled.
  */
 
-import React from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { WatchFolderStorageProvider } from '@app/contexts/WatchFolderStorageContext';
-import { serverBackend } from '@proprietary/services/watchFolderServerBackend';
+import React from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { WatchFolderStorageProvider } from "@app/contexts/WatchFolderStorageContext";
+import { serverBackend } from "@proprietary/services/watchFolderServerBackend";
 
 export function WatchFolderServerProvider({ children }: { children: React.ReactNode }) {
   const { config } = useAppConfig();
@@ -18,9 +18,5 @@ export function WatchFolderServerProvider({ children }: { children: React.ReactN
   }
 
   // Override with server-backed storage
-  return (
-    <WatchFolderStorageProvider backend={serverBackend}>
-      {children}
-    </WatchFolderStorageProvider>
-  );
+  return <WatchFolderStorageProvider backend={serverBackend}>{children}</WatchFolderStorageProvider>;
 }

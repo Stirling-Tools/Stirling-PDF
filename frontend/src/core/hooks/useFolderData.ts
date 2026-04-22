@@ -2,10 +2,10 @@
  * Hook for reading and managing files within a Smart Folder
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { FolderFileMetadata, FolderRecord } from '@app/types/smartFolders';
-import { folderStorage } from '@app/services/folderStorage';
-import { useWatchFolderStorage } from '@app/contexts/WatchFolderStorageContext';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { FolderFileMetadata, FolderRecord } from "@app/types/smartFolders";
+import { folderStorage } from "@app/services/folderStorage";
+import { useWatchFolderStorage } from "@app/contexts/WatchFolderStorageContext";
 
 interface UseFolderDataReturn {
   folderRecord: FolderRecord | null;
@@ -29,12 +29,10 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
   const refresh = useCallback(async () => {
     if (!folderId) return;
     try {
-      const record = backend
-        ? await backend.getFolderData(folderId)
-        : await folderStorage.getFolderData(folderId);
+      const record = backend ? await backend.getFolderData(folderId) : await folderStorage.getFolderData(folderId);
       setFolderRecord(record);
     } catch (error) {
-      console.error('Failed to load folder data:', error);
+      console.error("Failed to load folder data:", error);
     }
   }, [folderId, backend]);
 
@@ -53,9 +51,9 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
 
   const files = folderRecord?.files ?? {};
   const fileIds = useMemo(() => Object.keys(files), [files]);
-  const processingFileIds = useMemo(() => fileIds.filter(id => files[id]?.status === 'processing'), [fileIds, files]);
-  const processedFileIds = useMemo(() => fileIds.filter(id => files[id]?.status === 'processed'), [fileIds, files]);
-  const pendingFileIds = useMemo(() => fileIds.filter(id => files[id]?.status === 'pending'), [fileIds, files]);
+  const processingFileIds = useMemo(() => fileIds.filter((id) => files[id]?.status === "processing"), [fileIds, files]);
+  const processedFileIds = useMemo(() => fileIds.filter((id) => files[id]?.status === "processed"), [fileIds, files]);
+  const pendingFileIds = useMemo(() => fileIds.filter((id) => files[id]?.status === "pending"), [fileIds, files]);
 
   const addFile = useCallback(
     async (fileId: string, metadata?: Partial<FolderFileMetadata>) => {
@@ -65,14 +63,14 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
         await folderStorage.addFileToFolder(folderId, fileId, metadata);
       }
     },
-    [folderId, backend]
+    [folderId, backend],
   );
 
   const removeFile = useCallback(
     async (fileId: string) => {
       await folderStorage.removeFileFromFolder(folderId, fileId);
     },
-    [folderId]
+    [folderId],
   );
 
   const updateFileMetadata = useCallback(
@@ -83,7 +81,7 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
         await folderStorage.updateFileMetadata(folderId, fileId, updates);
       }
     },
-    [folderId, backend]
+    [folderId, backend],
   );
 
   const clearFolder = useCallback(async () => {
@@ -98,17 +96,14 @@ export function useFolderData(folderId: string): UseFolderDataReturn {
     (fileId: string): FolderFileMetadata | null => {
       return folderRecord?.files[fileId] ?? null;
     },
-    [folderRecord]
+    [folderRecord],
   );
 
-  const isFileProcessed = useCallback(
-    (fileId: string) => folderRecord?.files[fileId]?.status === 'processed',
-    [folderRecord]
-  );
+  const isFileProcessed = useCallback((fileId: string) => folderRecord?.files[fileId]?.status === "processed", [folderRecord]);
 
   const isFileProcessing = useCallback(
-    (fileId: string) => folderRecord?.files[fileId]?.status === 'processing',
-    [folderRecord]
+    (fileId: string) => folderRecord?.files[fileId]?.status === "processing",
+    [folderRecord],
   );
 
   return {
