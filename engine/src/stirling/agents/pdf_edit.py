@@ -214,8 +214,7 @@ class PdfEditAgent:
             f"User request: {request.user_message}\n"
             f"Files: {file_names}\n"
             f"Supported operations: {self._supported_operations_prompt()}\n"
-            f"Extracted page text:\n{format_page_text(request.page_text)}\n"
-            "Plan an ordered list of supported PDF edit operations or return clarification/cannot_do/need_content."
+            f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
     def _supported_operations_prompt(self) -> str:
