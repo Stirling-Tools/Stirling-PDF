@@ -93,6 +93,48 @@ class InternalApiClientTest {
     }
 
     @Test
+    void postRejectsNonAgentAiEndpoint() {
+        // /api/v1/ai/orchestrate is an AI endpoint but not an agent tool — must be rejected.
+        // Only paths explicitly registered in AgentTool are allowed through the secondary
+        // allowlist.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/ai/orchestrate", body));
+    }
+
+    @Test
+    void postAcceptsRegisteredAgentToolPath() throws Exception {
+        // /api/v1/ai/pdf-comment-agent is registered in AgentTool and must pass validation,
+        // even though it is outside the primary (general|misc|security|convert|filter) namespaces.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+        body.add("prompt", "flag dates");
+
+        Path tempPath = Files.createTempFile("internal-api-agent-test", ".tmp");
+        TempFile tempFile = mock(TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFile.getFile()).thenReturn(tempPath.toFile());
+        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenReturn((RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
+                        })) {
+
+            ResponseEntity<Resource> response = client.post("/api/v1/ai/pdf-comment-agent", body);
+
+            assertNotNull(response);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Test
     void postRejectsPathTraversal() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         assertThrows(

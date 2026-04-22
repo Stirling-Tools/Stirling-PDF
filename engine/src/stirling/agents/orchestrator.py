@@ -27,7 +27,7 @@ from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams, PdfCommentAgentParams
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,14 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
+                    self.delegate_pdf_comment,
+                    name="delegate_pdf_comment",
+                    description=(
+                        "Delegate requests to add review comments, notes, or sticky-note "
+                        "annotations to a PDF based on a user prompt."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -83,6 +91,8 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
+                "Use delegate_pdf_comment when the user wants to add comments, notes, "
+                "sticky notes, or review annotations to a PDF. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
@@ -170,6 +180,17 @@ class OrchestratorAgent:
                 ToolOperationStep(
                     tool=AgentToolId.MATH_AUDITOR_AGENT,
                     parameters=MathAuditorAgentParams(),
+                )
+            ],
+        )
+
+    async def delegate_pdf_comment(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        return EditPlanResponse(
+            summary="Add AI-generated review comments to the PDF.",
+            steps=[
+                ToolOperationStep(
+                    tool=AgentToolId.PDF_COMMENT_AGENT,
+                    parameters=PdfCommentAgentParams(prompt=ctx.deps.request.user_message),
                 )
             ],
         )

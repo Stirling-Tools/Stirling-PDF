@@ -14,17 +14,23 @@ from stirling.models.tool_models import ParamToolModel, ToolEndpoint
 
 class AgentToolId(StrEnum):
     MATH_AUDITOR_AGENT = "mathAuditorAgent"
+    PDF_COMMENT_AGENT = "pdfCommentAgent"
 
 
 class MathAuditorAgentParams(ApiModel):
     tolerance: str = "0.01"
 
 
-type AgentParamModel = MathAuditorAgentParams
+class PdfCommentAgentParams(ApiModel):
+    prompt: str
+
+
+type AgentParamModel = MathAuditorAgentParams | PdfCommentAgentParams
 
 type AnyToolId = ToolEndpoint | AgentToolId
 type AnyParamModel = ParamToolModel | AgentParamModel
 
 AGENT_OPERATIONS: dict[AgentToolId, type[AgentParamModel]] = {
     AgentToolId.MATH_AUDITOR_AGENT: MathAuditorAgentParams,
+    AgentToolId.PDF_COMMENT_AGENT: PdfCommentAgentParams,
 }

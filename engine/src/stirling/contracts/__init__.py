@@ -50,6 +50,12 @@ from .orchestrator import (
     UnsupportedCapabilityResponse,
     WorkflowArtifact,
 )
+from .pdf_comments import (
+    PdfCommentInstruction,
+    PdfCommentRequest,
+    PdfCommentResponse,
+    TextChunk,
+)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -114,6 +120,9 @@ __all__ = [
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",
+    "PdfCommentInstruction",
+    "PdfCommentRequest",
+    "PdfCommentResponse",
     "PdfContentType",
     "PdfEditRequest",
     "PdfEditResponse",
@@ -136,6 +145,7 @@ __all__ = [
     "Severity",
     "StepKind",
     "SupportedCapability",
+    "TextChunk",
     "ToolCallExecutionAction",
     "ToolOperationStep",
     "UnsupportedCapabilityResponse",

@@ -26,6 +26,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.service.AgentTool;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
@@ -208,7 +209,7 @@ public class AiWorkflowService {
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesByName,
             ProgressListener listener) {
-        String endpointPath = response.getTool();
+        String endpointPath = resolveToolPath(response.getTool());
         Map<String, Object> parameters = response.getParameters();
         if (endpointPath == null || endpointPath.isBlank()) {
             return new WorkflowState.Terminal(
@@ -250,7 +251,7 @@ public class AiWorkflowService {
 
             for (int i = 0; i < steps.size(); i++) {
                 Map<String, Object> step = steps.get(i);
-                String endpointPath = (String) step.get("tool");
+                String endpointPath = resolveToolPath((String) step.get("tool"));
                 Map<String, Object> parameters =
                         step.containsKey("parameters")
                                 ? (Map<String, Object>) step.get("parameters")
@@ -409,6 +410,21 @@ public class AiWorkflowService {
         response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
         response.setReason(reason);
         return response;
+    }
+
+    /**
+     * Resolve a wire-level tool identifier to the Spring endpoint path dispatch expects.
+     *
+     * <p>Regular tools already arrive as full paths (e.g. {@code /api/v1/misc/compress-pdf}) and
+     * pass through unchanged. AI-agent tools arrive as the short {@code AgentToolId} value (e.g.
+     * {@code "pdfCommentAgent"}) and are translated to their registered Spring path via {@link
+     * AgentTool}. Returns {@code null} unchanged for downstream null-handling.
+     */
+    private static String resolveToolPath(String toolIdOrPath) {
+        if (toolIdOrPath == null) {
+            return null;
+        }
+        return AgentTool.byId(toolIdOrPath).map(AgentTool::path).orElse(toolIdOrPath);
     }
 
     private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request) throws IOException {

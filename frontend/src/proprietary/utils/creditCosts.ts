@@ -81,6 +81,7 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
 
   // Extra large operations (10 credits)
   automate: CREDIT_COSTS.XLARGE,
+  pdfCommentAgent: CREDIT_COSTS.XLARGE,
 };
 
 /**
