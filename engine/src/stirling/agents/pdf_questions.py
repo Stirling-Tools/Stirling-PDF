@@ -12,6 +12,7 @@ from stirling.contracts import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    format_conversation_history,
 )
 from stirling.services import AppRuntime
 
@@ -22,6 +23,7 @@ class PdfQuestionAgent:
 
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
+        rag = runtime.rag_capability
         self.agent = Agent(
             model=runtime.smart_model,
             output_type=NativeOutput(
@@ -36,6 +38,8 @@ class PdfQuestionAgent:
                 "If the answer is not supported by the provided text, return not_found. "
                 "When answering, include a short list of evidence snippets with their page numbers."
             ),
+            instructions=rag.instructions,
+            toolsets=[rag.toolset],
             model_settings=runtime.smart_model_settings,
         )
 
@@ -67,7 +71,13 @@ class PdfQuestionAgent:
             for selection in file_text.pages
         ]
         pages = "\n\n".join(sections)
-        return f"Files: {file_names}\nQuestion: {request.question}\nExtracted page text:\n{pages}"
+        history = format_conversation_history(request.conversation_history)
+        return (
+            f"Conversation history:\n{history}\n"
+            f"Files: {file_names}\n"
+            f"Question: {request.question}\n"
+            f"Extracted page text:\n{pages}"
+        )
 
     def _has_page_text(self, page_text: list[ExtractedFileText]) -> bool:
         return any(selection.text.strip() for file_text in page_text for selection in file_text.pages)
