@@ -1,7 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import { ProcessedFile, ProcessingState, ProcessingConfig } from '@app/types/processing';
-import { enhancedPDFProcessingService } from '@app/services/enhancedPDFProcessingService';
-import { FileHasher } from '@app/utils/fileHash';
+import { useState, useEffect, useRef } from "react";
+import {
+  ProcessedFile,
+  ProcessingState,
+  ProcessingConfig,
+} from "@app/types/processing";
+import { enhancedPDFProcessingService } from "@app/services/enhancedPDFProcessingService";
+import { FileHasher } from "@app/utils/fileHash";
 
 interface UseEnhancedProcessedFilesResult {
   processedFiles: Map<File, ProcessedFile>;
@@ -34,24 +38,35 @@ interface UseEnhancedProcessedFilesResult {
 
 export function useEnhancedProcessedFiles(
   activeFiles: File[],
-  config?: Partial<ProcessingConfig>
+  config?: Partial<ProcessingConfig>,
 ): UseEnhancedProcessedFilesResult {
-  const [processedFiles, setProcessedFiles] = useState<Map<File, ProcessedFile>>(new Map());
+  const [processedFiles, setProcessedFiles] = useState<
+    Map<File, ProcessedFile>
+  >(new Map());
   const fileHashMapRef = useRef<Map<File, string>>(new Map()); // Use ref to avoid state update loops
-  const [processingStates, setProcessingStates] = useState<Map<string, ProcessingState>>(new Map());
+  const [processingStates, setProcessingStates] = useState<
+    Map<string, ProcessingState>
+  >(new Map());
 
   // Subscribe to processing state changes once
   useEffect(() => {
-    const unsubscribe = enhancedPDFProcessingService.onProcessingChange(setProcessingStates);
+    const unsubscribe =
+      enhancedPDFProcessingService.onProcessingChange(setProcessingStates);
     return unsubscribe;
   }, []);
 
   // Process files when activeFiles changes
   useEffect(() => {
-    console.log('useEnhancedProcessedFiles: activeFiles changed', activeFiles.length, 'files');
+    console.log(
+      "useEnhancedProcessedFiles: activeFiles changed",
+      activeFiles.length,
+      "files",
+    );
 
     if (activeFiles.length === 0) {
-      console.log('useEnhancedProcessedFiles: No active files, clearing processed cache');
+      console.log(
+        "useEnhancedProcessedFiles: No active files, clearing processed cache",
+      );
       setProcessedFiles(new Map());
       // Clear any ongoing processing when no files
       enhancedPDFProcessingService.clearAllProcessing();
@@ -86,7 +101,10 @@ export function useEnhancedProcessedFiles(
         }
 
         try {
-          const processed = await enhancedPDFProcessingService.processFile(file, config);
+          const processed = await enhancedPDFProcessingService.processFile(
+            file,
+            config,
+          );
           if (processed) {
             newProcessedFiles.set(file, processed);
           }
@@ -96,8 +114,11 @@ export function useEnhancedProcessedFiles(
       }
 
       // Only update if the content actually changed
-      const hasChanged = newProcessedFiles.size !== processedFiles.size ||
-        Array.from(newProcessedFiles.keys()).some(file => !processedFiles.has(file));
+      const hasChanged =
+        newProcessedFiles.size !== processedFiles.size ||
+        Array.from(newProcessedFiles.keys()).some(
+          (file) => !processedFiles.has(file),
+        );
 
       if (hasChanged) {
         setProcessedFiles(newProcessedFiles);
@@ -116,7 +137,7 @@ export function useEnhancedProcessedFiles(
       // Generate file keys for all files first
       const fileKeyPromises = activeFiles.map(async (file) => ({
         file,
-        key: await FileHasher.generateHybridHash(file)
+        key: await FileHasher.generateHybridHash(file),
       }));
 
       const fileKeyPairs = await Promise.all(fileKeyPromises);
@@ -128,9 +149,15 @@ export function useEnhancedProcessedFiles(
 
           // Check for both processing and recently completed files
           // This ensures we catch completed files before they're cleaned up
-          if (processingState?.status === 'processing' || processingState?.status === 'completed') {
+          if (
+            processingState?.status === "processing" ||
+            processingState?.status === "completed"
+          ) {
             try {
-              const processed = await enhancedPDFProcessingService.processFile(file, config);
+              const processed = await enhancedPDFProcessingService.processFile(
+                file,
+                config,
+              );
               if (processed) {
                 updatedFiles.set(file, processed);
                 hasNewFiles = true;
@@ -152,19 +179,20 @@ export function useEnhancedProcessedFiles(
     return () => clearInterval(interval);
   }, [activeFiles, processingStates]);
 
-
   // Cleanup when activeFiles changes
   useEffect(() => {
     const currentFiles = new Set(activeFiles);
     const previousFiles = Array.from(processedFiles.keys());
-    const removedFiles = previousFiles.filter(file => !currentFiles.has(file));
+    const removedFiles = previousFiles.filter(
+      (file) => !currentFiles.has(file),
+    );
 
     if (removedFiles.length > 0) {
       // Clean up processing service cache
       enhancedPDFProcessingService.cleanup(removedFiles);
 
       // Update local state
-      setProcessedFiles(prev => {
+      setProcessedFiles((prev) => {
         const updated = new Map();
         for (const [file, processed] of prev) {
           if (currentFiles.has(file)) {
@@ -178,7 +206,9 @@ export function useEnhancedProcessedFiles(
 
   // Calculate derived state
   const isProcessing = processingStates.size > 0;
-  const hasProcessingErrors = Array.from(processingStates.values()).some(state => state.status === 'error');
+  const hasProcessingErrors = Array.from(processingStates.values()).some(
+    (state) => state.status === "error",
+  );
 
   // Calculate overall progress
   const processingProgress = calculateProcessingProgress(processingStates);
@@ -203,7 +233,7 @@ export function useEnhancedProcessedFiles(
 
     clearCache: () => {
       enhancedPDFProcessingService.clearAll();
-    }
+    },
   };
 
   // Cleanup on unmount
@@ -221,7 +251,7 @@ export function useEnhancedProcessedFiles(
     processingProgress,
     cacheStats,
     metrics,
-    actions
+    actions,
   };
 }
 
@@ -237,7 +267,7 @@ function calculateProcessingProgress(states: Map<string, ProcessingState>): {
     return {
       overall: 100,
       fileProgress: new Map(),
-      estimatedTimeRemaining: 0
+      estimatedTimeRemaining: 0,
     };
   }
 
@@ -257,7 +287,7 @@ function calculateProcessingProgress(states: Map<string, ProcessingState>): {
   return {
     overall,
     fileProgress,
-    estimatedTimeRemaining
+    estimatedTimeRemaining,
   };
 }
 
@@ -266,7 +296,7 @@ function calculateProcessingProgress(states: Map<string, ProcessingState>): {
  */
 export function useEnhancedProcessedFile(
   file: File | null,
-  config?: Partial<ProcessingConfig>
+  config?: Partial<ProcessingConfig>,
 ): {
   processedFile: ProcessedFile | null;
   isProcessing: boolean;
@@ -282,8 +312,10 @@ export function useEnhancedProcessedFile(
 
   const processedFile = file ? result.processedFiles.get(file) || null : null;
   // Note: This is async but we can't await in hook return - consider refactoring if needed
-  const fileKey = file ? '' : '';
-  const processingState = fileKey ? result.processingStates.get(fileKey) || null : null;
+  const fileKey = file ? "" : "";
+  const processingState = fileKey
+    ? result.processingStates.get(fileKey) || null
+    : null;
   const isProcessing = !!processingState;
   const error = processingState?.error?.message || null;
   const canRetry = processingState?.error?.recoverable || false;
@@ -298,7 +330,7 @@ export function useEnhancedProcessedFile(
       if (file) {
         result.actions.retryProcessing(file);
       }
-    }
+    },
   };
 
   return {
@@ -307,6 +339,6 @@ export function useEnhancedProcessedFile(
     processingState,
     error,
     canRetry,
-    actions
+    actions,
   };
 }

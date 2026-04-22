@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import LoginHeader from '@app/routes/login/LoginHeader';
-import ErrorMessage from '@app/routes/login/ErrorMessage';
-import SignupForm from '@app/routes/signup/SignupForm';
-import { useSignupFormValidation, SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
-import { authService } from '@app/services/authService';
-import '@app/routes/authShared/auth.css';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import LoginHeader from "@app/routes/login/LoginHeader";
+import ErrorMessage from "@app/routes/login/ErrorMessage";
+import SignupForm from "@app/routes/signup/SignupForm";
+import {
+  useSignupFormValidation,
+  SignupFieldErrors,
+} from "@app/routes/signup/SignupFormValidation";
+import { authService } from "@app/services/authService";
+import "@app/routes/authShared/auth.css";
 
 interface SaaSSignupScreenProps {
   loading: boolean;
@@ -21,12 +24,16 @@ export const SaaSSignupScreen: React.FC<SaaSSignupScreenProps> = ({
   onSwitchToLogin: _onSwitchToLogin,
 }) => {
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [signupFieldErrors, setSignupFieldErrors] = useState<SignupFieldErrors>({});
-  const [signupSuccessMessage, setSignupSuccessMessage] = useState<string | null>(null);
+  const [signupFieldErrors, setSignupFieldErrors] = useState<SignupFieldErrors>(
+    {},
+  );
+  const [signupSuccessMessage, setSignupSuccessMessage] = useState<
+    string | null
+  >(null);
   const [isSignupSubmitting, setIsSignupSubmitting] = useState(false);
   const { validateSignupForm } = useSignupFormValidation();
 
@@ -47,12 +54,20 @@ export const SaaSSignupScreen: React.FC<SaaSSignupScreenProps> = ({
     try {
       setIsSignupSubmitting(true);
       await authService.signUpSaas(email.trim(), password);
-      setSignupSuccessMessage(t('signup.checkEmailConfirmation', 'Check your email for a confirmation link to complete your registration.'));
+      setSignupSuccessMessage(
+        t(
+          "signup.checkEmailConfirmation",
+          "Check your email for a confirmation link to complete your registration.",
+        ),
+      );
       setSignupFieldErrors({});
       setValidationError(null);
     } catch (err) {
       setSignupSuccessMessage(null);
-      const message = err instanceof Error ? err.message : t('signup.unexpectedError', { message: 'Unknown error' });
+      const message =
+        err instanceof Error
+          ? err.message
+          : t("signup.unexpectedError", { message: "Unknown error" });
       setValidationError(message);
     } finally {
       setIsSignupSubmitting(false);
@@ -62,8 +77,8 @@ export const SaaSSignupScreen: React.FC<SaaSSignupScreenProps> = ({
   return (
     <>
       <LoginHeader
-        title={t('signup.title', 'Create an account')}
-        subtitle={t('signup.subtitle', 'Join Stirling PDF')}
+        title={t("signup.title", "Create an account")}
+        subtitle={t("signup.subtitle", "Join Stirling PDF")}
       />
 
       <ErrorMessage error={displayError} />
@@ -98,7 +113,6 @@ export const SaaSSignupScreen: React.FC<SaaSSignupScreenProps> = ({
         showName={false}
         showTerms={false}
       />
-
     </>
   );
 };

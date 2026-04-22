@@ -3,8 +3,9 @@
  * Desktop layer shadows this with the real implementation
  * In web builds, always allows the operation (no credit system)
  */
-export function useCreditCheck(_operationType?: string) {
+export function useCreditCheck(_operationType?: string, _endpoint?: string) {
   return {
-    checkCredits: async (): Promise<string | null> => null, // null = allowed
+    checkCredits: async (_runtimeEndpoint?: string): Promise<string | null> =>
+      null, // null = allowed
   };
 }

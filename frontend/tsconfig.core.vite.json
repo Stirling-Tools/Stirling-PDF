@@ -2,14 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": [
-        "src/core/*"
-      ]
+      "@app/*": ["src/core/*"]
     }
   },
   "exclude": [
     "src/proprietary",
     "src/desktop",
+    "src/saas",
+    "src/prototypes",
     "node_modules"
   ]
 }

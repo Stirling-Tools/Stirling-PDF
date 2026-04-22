@@ -1,5 +1,8 @@
-import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import { HORIZONTAL_PADDING_RATIO, VERTICAL_PADDING_RATIO } from '@app/constants/signConstants';
+import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import {
+  HORIZONTAL_PADDING_RATIO,
+  VERTICAL_PADDING_RATIO,
+} from "@app/constants/signConstants";
 
 export interface SignaturePreview {
   dataUrl: string;
@@ -15,8 +18,10 @@ const loadImage = (src: string): Promise<HTMLImageElement> =>
     img.src = src;
   });
 
-export const buildSignaturePreview = async (config: SignParameters | null): Promise<SignaturePreview | null> => {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
+export const buildSignaturePreview = async (
+  config: SignParameters | null,
+): Promise<SignaturePreview | null> => {
+  if (typeof window === "undefined" || typeof document === "undefined") {
     return null;
   }
 
@@ -24,21 +29,21 @@ export const buildSignaturePreview = async (config: SignParameters | null): Prom
     return null;
   }
 
-  if (config.signatureType === 'text') {
+  if (config.signatureType === "text") {
     const text = config.signerName?.trim();
     if (!text) {
       return null;
     }
 
     const fontSize = config.fontSize ?? 16;
-    const fontFamily = config.fontFamily ?? 'Helvetica';
-    const textColor = config.textColor ?? '#000000';
+    const fontFamily = config.fontFamily ?? "Helvetica";
+    const textColor = config.textColor ?? "#000000";
 
     const paddingX = Math.round(fontSize * HORIZONTAL_PADDING_RATIO);
     const paddingY = Math.round(fontSize * VERTICAL_PADDING_RATIO);
 
-    const measureCanvas = document.createElement('canvas');
-    const measureCtx = measureCanvas.getContext('2d');
+    const measureCanvas = document.createElement("canvas");
+    const measureCtx = measureCanvas.getContext("2d");
 
     if (!measureCtx) {
       return null;
@@ -51,22 +56,22 @@ export const buildSignaturePreview = async (config: SignParameters | null): Prom
     const width = Math.max(1, textWidth + paddingX * 2);
     const height = Math.max(1, Math.ceil(fontSize + paddingY * 2));
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) {
       return null;
     }
 
     ctx.fillStyle = textColor;
     ctx.font = `${fontSize}px ${fontFamily}`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
     ctx.fillText(text, paddingX, height / 2);
 
-    const dataUrl = canvas.toDataURL('image/png');
+    const dataUrl = canvas.toDataURL("image/png");
     return { dataUrl, width, height };
   }
 

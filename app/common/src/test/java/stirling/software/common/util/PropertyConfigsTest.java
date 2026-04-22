@@ -1,70 +1,82 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-public class PropertyConfigsTest {
+class PropertyConfigsTest {
 
-    @Test
-    public void testGetBooleanValue_WithKeys() {
-        // Define keys and default value
-        List<String> keys = Arrays.asList("test.key1", "test.key2", "test.key3");
-        boolean defaultValue = false;
+    private static final String TEST_KEY = "stirling.test.property.key";
+    private static final String TEST_KEY_2 = "stirling.test.property.key2";
 
-        // Set property for one of the keys
-        System.setProperty("test.key2", "true");
-
-        // Call the method under test
-        boolean result = PropertyConfigs.getBooleanValue(keys, defaultValue);
-
-        // Verify the result
-        assertTrue(result);
+    @AfterEach
+    void tearDown() {
+        System.clearProperty(TEST_KEY);
+        System.clearProperty(TEST_KEY_2);
     }
 
     @Test
-    public void testGetStringValue_WithKeys() {
-        // Define keys and default value
-        List<String> keys = Arrays.asList("test.key1", "test.key2", "test.key3");
-        String defaultValue = "default";
-
-        // Set property for one of the keys
-        System.setProperty("test.key2", "value");
-
-        // Call the method under test
-        String result = PropertyConfigs.getStringValue(keys, defaultValue);
-
-        // Verify the result
-        assertEquals("value", result);
+    void testGetBooleanValue_singleKey_fromSystemProperty() {
+        System.setProperty(TEST_KEY, "true");
+        assertTrue(PropertyConfigs.getBooleanValue(TEST_KEY, false));
     }
 
     @Test
-    public void testGetBooleanValue_WithKey() {
-        // Define key and default value
-        String key = "test.key";
-        boolean defaultValue = true;
-
-        // Call the method under test
-        boolean result = PropertyConfigs.getBooleanValue(key, defaultValue);
-
-        // Verify the result
-        assertTrue(result);
+    void testGetBooleanValue_singleKey_defaultWhenMissing() {
+        assertFalse(PropertyConfigs.getBooleanValue(TEST_KEY, false));
+        assertTrue(PropertyConfigs.getBooleanValue(TEST_KEY, true));
     }
 
     @Test
-    public void testGetStringValue_WithKey() {
-        // Define key and default value
-        String key = "test.key";
-        String defaultValue = "default";
+    void testGetBooleanValue_singleKey_falseValue() {
+        System.setProperty(TEST_KEY, "false");
+        assertFalse(PropertyConfigs.getBooleanValue(TEST_KEY, true));
+    }
 
-        // Call the method under test
-        String result = PropertyConfigs.getStringValue(key, defaultValue);
+    @Test
+    void testGetStringValue_singleKey_fromSystemProperty() {
+        System.setProperty(TEST_KEY, "hello");
+        assertEquals("hello", PropertyConfigs.getStringValue(TEST_KEY, "default"));
+    }
 
-        // Verify the result
-        assertEquals("default", result);
+    @Test
+    void testGetStringValue_singleKey_defaultWhenMissing() {
+        assertEquals("default", PropertyConfigs.getStringValue(TEST_KEY, "default"));
+    }
+
+    @Test
+    void testGetBooleanValue_listKeys_firstMatch() {
+        System.setProperty(TEST_KEY_2, "true");
+        assertTrue(PropertyConfigs.getBooleanValue(List.of(TEST_KEY, TEST_KEY_2), false));
+    }
+
+    @Test
+    void testGetBooleanValue_listKeys_defaultWhenNoneMatch() {
+        assertFalse(PropertyConfigs.getBooleanValue(List.of(TEST_KEY, TEST_KEY_2), false));
+    }
+
+    @Test
+    void testGetStringValue_listKeys_firstMatch() {
+        System.setProperty(TEST_KEY, "first");
+        System.setProperty(TEST_KEY_2, "second");
+        assertEquals(
+                "first", PropertyConfigs.getStringValue(List.of(TEST_KEY, TEST_KEY_2), "default"));
+    }
+
+    @Test
+    void testGetStringValue_listKeys_defaultWhenNoneMatch() {
+        assertEquals(
+                "default",
+                PropertyConfigs.getStringValue(List.of(TEST_KEY, TEST_KEY_2), "default"));
+    }
+
+    @Test
+    void testGetBooleanValue_nonBooleanString() {
+        System.setProperty(TEST_KEY, "notaboolean");
+        // Boolean.valueOf returns false for non-boolean strings
+        assertFalse(PropertyConfigs.getBooleanValue(TEST_KEY, true));
     }
 }

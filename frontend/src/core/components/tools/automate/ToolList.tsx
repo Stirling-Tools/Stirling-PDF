@@ -49,8 +49,14 @@ export default function ToolList({
 
   return (
     <div>
-      <Text size="sm" fw={500} mb="xs" style={{ color: "var(--mantine-color-text)" }}>
-        {t("automate.creation.tools.selected", "Selected Tools")} ({tools.length})
+      <Text
+        size="sm"
+        fw={500}
+        mb="xs"
+        style={{ color: "var(--mantine-color-text)" }}
+      >
+        {t("automate.creation.tools.selected", "Selected Tools")} (
+        {tools.length})
       </Text>
       <Stack gap="0">
         {tools.map((tool, index) => (
@@ -58,13 +64,15 @@ export default function ToolList({
             <div
               style={{
                 border: "1px solid var(--mantine-color-gray-2)",
-                borderRadius: tool.operation && !tool.configured
-                  ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
-                  : "var(--mantine-radius-lg)",
+                borderRadius:
+                  tool.operation && !tool.configured
+                    ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
+                    : "var(--mantine-radius-lg)",
                 backgroundColor: "var(--mantine-color-gray-2)",
                 position: "relative",
                 padding: "var(--mantine-spacing-xs)",
-                borderBottomWidth: tool.operation && !tool.configured ? "0" : "1px",
+                borderBottomWidth:
+                  tool.operation && !tool.configured ? "0" : "1px",
               }}
             >
               {/* Delete X in top right - only show for tools after the first 2 */}
@@ -92,7 +100,9 @@ export default function ToolList({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <ToolSelector
                       key={`tool-selector-${tool.id}`}
-                      onSelect={(newOperation) => handleToolSelect(index, newOperation)}
+                      onSelect={(newOperation) =>
+                        handleToolSelect(index, newOperation)
+                      }
                       excludeTools={["automate"]}
                       toolRegistry={toolRegistry}
                       selectedValue={tool.operation}
@@ -106,7 +116,10 @@ export default function ToolList({
                       variant="subtle"
                       size="sm"
                       onClick={() => onToolConfigure(index)}
-                      title={t("automate.creation.tools.configure", "Configure tool")}
+                      title={t(
+                        "automate.creation.tools.configure",
+                        "Configure tool",
+                      )}
                       style={{ color: "var(--mantine-color-gray-6)" }}
                     >
                       <SettingsIcon style={{ fontSize: 16 }} />
@@ -122,13 +135,17 @@ export default function ToolList({
                   width: "100%",
                   border: "1px solid var(--mantine-color-gray-2)",
                   borderTop: "none",
-                  borderRadius: "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
+                  borderRadius:
+                    "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
                   backgroundColor: "var(--active-bg)",
                   padding: "var(--mantine-spacing-xs)",
                 }}
               >
-                <Text pl="md" size="xs" >
-                  {t("automate.creation.tools.notConfigured", "! Not Configured")}
+                <Text pl="md" size="xs">
+                  {t(
+                    "automate.creation.tools.notConfigured",
+                    "! Not Configured",
+                  )}
                 </Text>
               </div>
             )}

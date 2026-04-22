@@ -112,8 +112,6 @@ public class FileMonitor {
          All files observed changes in the last iteration will be considered as staging files.
          If those files are not modified in current iteration, they will be considered as ready for processing.
         */
-        stagingFiles = new HashSet<>(newlyDiscoveredFiles);
-        readyForProcessingFiles.clear();
 
         if (path2KeyMapping.isEmpty()) {
             log.warn("Not monitoring any directories; attempting to re-register root paths.");
@@ -129,8 +127,19 @@ public class FileMonitor {
             }
         }
 
-        WatchKey key;
-        while ((key = watchService.poll()) != null) {
+        // Skip expensive collection work when there is nothing to track
+        WatchKey firstKey = watchService.poll();
+        if (firstKey == null
+                && newlyDiscoveredFiles.isEmpty()
+                && readyForProcessingFiles.isEmpty()) {
+            return;
+        }
+
+        stagingFiles = new HashSet<>(newlyDiscoveredFiles);
+        readyForProcessingFiles.clear();
+
+        WatchKey key = firstKey;
+        while (key != null) {
             final Path watchingDir = (Path) key.watchable();
             key.pollEvents()
                     .forEach(
@@ -167,6 +176,7 @@ public class FileMonitor {
             if (!isKeyValid) { // key is invalid when the directory itself is no longer exists
                 path2KeyMapping.remove((Path) key.watchable());
             }
+            key = watchService.poll();
         }
         readyForProcessingFiles.addAll(stagingFiles);
     }

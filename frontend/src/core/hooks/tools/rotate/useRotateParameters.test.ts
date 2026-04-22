@@ -1,9 +1,13 @@
-import { describe, expect, test } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useRotateParameters, defaultParameters, normalizeAngle } from '@app/hooks/tools/rotate/useRotateParameters';
+import { describe, expect, test } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import {
+  useRotateParameters,
+  defaultParameters,
+  normalizeAngle,
+} from "@app/hooks/tools/rotate/useRotateParameters";
 
-describe('useRotateParameters', () => {
-  test('should initialize with default parameters', () => {
+describe("useRotateParameters", () => {
+  test("should initialize with default parameters", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     expect(result.current.parameters).toEqual(defaultParameters);
@@ -11,7 +15,7 @@ describe('useRotateParameters', () => {
     expect(result.current.hasRotation).toBe(false);
   });
 
-  test('should validate parameters correctly', () => {
+  test("should validate parameters correctly", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     // Default should be valid
@@ -19,18 +23,18 @@ describe('useRotateParameters', () => {
 
     // Set invalid angle
     act(() => {
-      result.current.updateParameter('angle', 45);
+      result.current.updateParameter("angle", 45);
     });
     expect(result.current.validateParameters()).toBe(false);
 
     // Set valid angle
     act(() => {
-      result.current.updateParameter('angle', 90);
+      result.current.updateParameter("angle", 90);
     });
     expect(result.current.validateParameters()).toBe(true);
   });
 
-  test('should rotate clockwise correctly', () => {
+  test("should rotate clockwise correctly", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     act(() => {
@@ -57,7 +61,7 @@ describe('useRotateParameters', () => {
     expect(result.current.hasRotation).toBe(false);
   });
 
-  test('should rotate anticlockwise correctly', () => {
+  test("should rotate anticlockwise correctly", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     act(() => {
@@ -84,7 +88,7 @@ describe('useRotateParameters', () => {
     expect(result.current.hasRotation).toBe(false);
   });
 
-  test('should normalize angles correctly', () => {
+  test("should normalize angles correctly", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     expect(result.current.normalizeAngle(360)).toBe(0);
@@ -93,7 +97,7 @@ describe('useRotateParameters', () => {
     expect(result.current.normalizeAngle(-180)).toBe(180);
   });
 
-  test('should reset parameters correctly', () => {
+  test("should reset parameters correctly", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     // Set some rotation
@@ -115,29 +119,29 @@ describe('useRotateParameters', () => {
     expect(result.current.hasRotation).toBe(false);
   });
 
-  test('should update parameters', () => {
+  test("should update parameters", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     act(() => {
-      result.current.updateParameter('angle', 450);
+      result.current.updateParameter("angle", 450);
     });
     expect(result.current.parameters.angle).toBe(450);
     expect(normalizeAngle(result.current.parameters.angle)).toBe(90);
 
     act(() => {
-      result.current.updateParameter('angle', -90);
+      result.current.updateParameter("angle", -90);
     });
     expect(result.current.parameters.angle).toBe(-90);
     expect(normalizeAngle(result.current.parameters.angle)).toBe(270);
   });
 
-  test('should return correct endpoint name', () => {
+  test("should return correct endpoint name", () => {
     const { result } = renderHook(() => useRotateParameters());
 
-    expect(result.current.getEndpointName()).toBe('rotate-pdf');
+    expect(result.current.getEndpointName()).toBe("rotate-pdf");
   });
 
-  test('should detect rotation state correctly', () => {
+  test("should detect rotation state correctly", () => {
     const { result } = renderHook(() => useRotateParameters());
 
     // Initially no rotation

@@ -1,58 +1,59 @@
-import React, { useMemo, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Box, Tooltip, useMantineTheme, useComputedColorScheme, rem } from '@mantine/core';
-import { useBackendHealth } from '@app/hooks/useBackendHealth';
+import React, { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { Box, Tooltip, useMantineTheme, rem } from "@mantine/core";
+import { useBackendHealth } from "@app/hooks/useBackendHealth";
 
 interface BackendHealthIndicatorProps {
   className?: string;
 }
 
 export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
-  className = ''
+  className = "",
 }) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const colorScheme = useComputedColorScheme('light');
-  const { status, isHealthy, checkHealth } = useBackendHealth();
+  const { status, isOnline, checkHealth } = useBackendHealth();
 
   const label = useMemo(() => {
-    if (status === 'starting') {
-      return t('backendHealth.checking', 'Checking backend status...');
+    if (status === "starting") {
+      return t("backendHealth.checking", "Checking backend status...");
     }
 
-    if (isHealthy) {
-      return t('backendHealth.online', 'Backend Online');
+    if (isOnline) {
+      return t("backendHealth.online", "Backend Online");
     }
 
-    return t('backendHealth.offline', 'Backend Offline');
-  }, [status, isHealthy, t]);
+    return t("backendHealth.offline", "Backend Offline");
+  }, [status, isOnline, t]);
 
   const dotColor = useMemo(() => {
-    if (status === 'starting') {
-      return theme.colors.yellow?.[5] ?? '#fcc419';
+    if (status === "starting") {
+      return theme.colors.yellow?.[5] ?? "#fcc419";
     }
-    if (isHealthy) {
-      return theme.colors.green?.[5] ?? '#37b24d';
+    if (isOnline) {
+      return theme.colors.green?.[5] ?? "#37b24d";
     }
-    return theme.colors.red?.[6] ?? '#e03131';
-  }, [status, isHealthy, theme.colors.green, theme.colors.red, theme.colors.yellow]);
+    return theme.colors.red?.[6] ?? "#e03131";
+  }, [
+    status,
+    isOnline,
+    theme.colors.green,
+    theme.colors.red,
+    theme.colors.yellow,
+  ]);
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLSpanElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      checkHealth();
-    }
-  }, [checkHealth]);
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLSpanElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        checkHealth();
+      }
+    },
+    [checkHealth],
+  );
 
   return (
-    <Tooltip
-      label={label}
-      position="left"
-      offset={12}
-      withArrow
-      withinPortal
-      color={colorScheme === 'dark' ? undefined : 'dark'}
-    >
+    <Tooltip label={label} position="left" offset={12} withArrow withinPortal>
       <Box
         component="span"
         className={className ? `${className}` : undefined}
@@ -65,14 +66,12 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
         style={{
           width: rem(12),
           height: rem(12),
-          borderRadius: '50%',
+          borderRadius: "50%",
           backgroundColor: dotColor,
-          boxShadow: colorScheme === 'dark'
-            ? '0 0 0 2px rgba(255, 255, 255, 0.18)'
-            : '0 0 0 2px rgba(0, 0, 0, 0.08)',
-          cursor: 'pointer',
-          display: 'inline-block',
-          outline: 'none',
+          boxShadow: "var(--status-dot-ring)",
+          cursor: "pointer",
+          display: "inline-block",
+          outline: "none",
         }}
       />
     </Tooltip>

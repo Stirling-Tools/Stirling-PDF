@@ -7,11 +7,8 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -88,20 +85,11 @@ public class PostHogService {
             metrics.put("os_name", System.getProperty("os.name"));
             metrics.put("os_version", System.getProperty("os.version"));
             metrics.put("java_version", System.getProperty("java.version"));
-            metrics.put("user_name", System.getProperty("user.name"));
-            metrics.put("user_home", System.getProperty("user.home"));
-            metrics.put("user_dir", System.getProperty("user.dir"));
 
             // CPU and Memory
             metrics.put("cpu_cores", Runtime.getRuntime().availableProcessors());
             metrics.put("total_memory", Runtime.getRuntime().totalMemory());
             metrics.put("free_memory", Runtime.getRuntime().freeMemory());
-
-            // Network and Server Identity
-            InetAddress localHost = InetAddress.getLocalHost();
-            metrics.put("ip_address", localHost.getHostAddress());
-            metrics.put("hostname", localHost.getHostName());
-            metrics.put("mac_address", getMacAddress());
 
             // JVM info
             metrics.put("jvm_vendor", System.getProperty("java.vendor"));
@@ -146,9 +134,6 @@ public class PostHogService {
                 metrics.put("gc_" + gcBean.getName() + "_count", gcBean.getCollectionCount());
                 metrics.put("gc_" + gcBean.getName() + "_time", gcBean.getCollectionTime());
             }
-
-            // Network interfaces
-            metrics.put("network_interfaces", getNetworkInterfacesInfo());
 
             // Docker detection and stats
             boolean isDocker = isRunningInDocker();
@@ -347,30 +332,6 @@ public class PostHogService {
                             .getProFeatures()
                             .getCustomMetadata()
                             .isAutoUpdateMetadata());
-            addIfNotEmpty(
-                    properties,
-                    "enterpriseEdition_customMetadata_author",
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getAuthor());
-            addIfNotEmpty(
-                    properties,
-                    "enterpriseEdition_customMetadata_creator",
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getCreator());
-            addIfNotEmpty(
-                    properties,
-                    "enterpriseEdition_customMetadata_producer",
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getProducer());
         }
         // Capture AutoPipeline properties
         addIfNotEmpty(
@@ -379,40 +340,5 @@ public class PostHogService {
                 applicationProperties.getAutoPipeline().getOutputFolder());
 
         return properties;
-    }
-
-    private String getMacAddress() {
-        try {
-            Enumeration<NetworkInterface> networkInterfaces =
-                    NetworkInterface.getNetworkInterfaces();
-            while (networkInterfaces.hasMoreElements()) {
-                NetworkInterface ni = networkInterfaces.nextElement();
-                byte[] hardwareAddress = ni.getHardwareAddress();
-                if (hardwareAddress != null) {
-                    String[] hexadecimal = new String[hardwareAddress.length];
-                    for (int i = 0; i < hardwareAddress.length; i++) {
-                        hexadecimal[i] = String.format("%02X", hardwareAddress[i]);
-                    }
-                    return String.join("-", hexadecimal);
-                }
-            }
-        } catch (Exception e) {
-            // Handle exception
-        }
-        return "Unknown";
-    }
-
-    private Map<String, String> getNetworkInterfacesInfo() {
-        Map<String, String> interfacesInfo = new HashMap<>();
-        try {
-            Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-            while (nets.hasMoreElements()) {
-                NetworkInterface netint = nets.nextElement();
-                interfacesInfo.put(netint.getName(), netint.getDisplayName());
-            }
-        } catch (Exception e) {
-            interfacesInfo.put("error", e.getMessage());
-        }
-        return interfacesInfo;
     }
 }

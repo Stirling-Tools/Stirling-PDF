@@ -613,6 +613,7 @@ public class AdminSettingsController {
             case "metrics" -> applicationProperties.getMetrics();
             case "mail" -> applicationProperties.getMail();
             case "googledrive", "googleDrive" -> applicationProperties.getGoogleDrive();
+            case "storage" -> applicationProperties.getStorage();
             case "premium" -> applicationProperties.getPremium();
             case "processexecutor", "processExecutor" -> applicationProperties.getProcessExecutor();
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
@@ -636,6 +637,7 @@ public class AdminSettingsController {
                     "mail",
                     "googleDrive",
                     "googledrive",
+                    "storage",
                     "premium",
                     "processExecutor",
                     "processexecutor",

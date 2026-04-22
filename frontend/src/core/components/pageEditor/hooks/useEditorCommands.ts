@@ -7,10 +7,7 @@ import {
   ReorderPagesCommand,
   SplitCommand,
 } from "@app/components/pageEditor/commands/pageCommands";
-import type {
-  useFileActions,
-  useFileState,
-} from "@app/contexts/FileContext";
+import type { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -66,20 +63,30 @@ export const usePageEditorCommands = ({
 
   const handleRotatePages = useCallback(
     (pageIds: string[], rotation: number) => {
-      const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
+      const bulkRotateCommand = new BulkRotateCommand(
+        pageIds,
+        rotation,
+        getEditedDocument,
+        setEditedDocument,
+      );
       executeCommandWithTracking(bulkRotateCommand);
     },
-    [executeCommandWithTracking]
+    [executeCommandWithTracking, getEditedDocument, setEditedDocument],
   );
 
   const createRotateCommand = useCallback(
     (pageIds: string[], rotation: number) => ({
       execute: () => {
-        const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
+        const bulkRotateCommand = new BulkRotateCommand(
+          pageIds,
+          rotation,
+          getEditedDocument,
+          setEditedDocument,
+        );
         executeCommandWithTracking(bulkRotateCommand);
       },
     }),
-    [executeCommandWithTracking]
+    [executeCommandWithTracking, getEditedDocument, setEditedDocument],
   );
 
   const createDeleteCommand = useCallback(
@@ -104,7 +111,7 @@ export const usePageEditorCommands = ({
             () => splitPositions,
             setSplitPositions,
             () => getPageNumbersFromIds(selectedPageIds),
-            () => closePdf()
+            () => closePdf(),
           );
           executeCommandWithTracking(deleteCommand);
         }
@@ -120,7 +127,7 @@ export const usePageEditorCommands = ({
       setSelectedPageIds,
       setSplitPositions,
       splitPositions,
-    ]
+    ],
   );
 
   const createSplitCommand = useCallback(
@@ -130,12 +137,12 @@ export const usePageEditorCommands = ({
           pageId,
           pageNumber,
           () => splitPositionsRef.current,
-          setSplitPositions
+          setSplitPositions,
         );
         executeCommandWithTracking(splitCommand);
       },
     }),
-    [executeCommandWithTracking, setSplitPositions]
+    [executeCommandWithTracking, setSplitPositions],
   );
 
   const executeCommand = useCallback((command: any) => {
@@ -151,7 +158,7 @@ export const usePageEditorCommands = ({
 
       handleRotatePages(selectedPageIds, rotation);
     },
-    [displayDocument, selectedPageIds, handleRotatePages]
+    [displayDocument, selectedPageIds, handleRotatePages],
   );
 
   const handleDelete = useCallback(() => {
@@ -167,7 +174,7 @@ export const usePageEditorCommands = ({
       () => splitPositions,
       setSplitPositions,
       () => selectedPageNumbers,
-      () => closePdf()
+      () => closePdf(),
     );
     executeCommandWithTracking(deleteCommand);
   }, [
@@ -195,7 +202,7 @@ export const usePageEditorCommands = ({
         () => splitPositions,
         setSplitPositions,
         () => getPageNumbersFromIds(selectedPageIds),
-        () => closePdf()
+        () => closePdf(),
       );
       executeCommandWithTracking(deleteCommand);
     },
@@ -209,22 +216,24 @@ export const usePageEditorCommands = ({
       setSelectedPageIds,
       setSplitPositions,
       splitPositions,
-    ]
+    ],
   );
 
   const handleSplit = useCallback(() => {
     if (!displayDocument || selectedPageIds.length === 0) return;
 
     const selectedSplitPageIds = displayDocument.pages
-      .filter((page, index) =>
-        selectedPageIds.includes(page.id) && index < displayDocument.pages.length - 1
+      .filter(
+        (page, index) =>
+          selectedPageIds.includes(page.id) &&
+          index < displayDocument.pages.length - 1,
       )
       .map((page) => page.id);
 
     if (selectedSplitPageIds.length === 0) return;
 
     const existingSplitsCount = selectedSplitPageIds.filter((id) =>
-      splitPositions.has(id)
+      splitPositions.has(id),
     ).length;
     const noSplitsCount = selectedSplitPageIds.length - existingSplitsCount;
     const shouldRemoveSplits = existingSplitsCount > noSplitsCount;
@@ -265,7 +274,7 @@ export const usePageEditorCommands = ({
     const pageBreakCommand = new PageBreakCommand(
       selectedPageNumbers,
       getEditedDocument,
-      setEditedDocument
+      setEditedDocument,
     );
     executeCommandWithTracking(pageBreakCommand);
   }, [
@@ -283,9 +292,9 @@ export const usePageEditorCommands = ({
     async (
       files: File[] | StirlingFileStub[],
       insertAfterPage: number,
-      isFromStorage?: boolean
+      isFromStorage?: boolean,
     ) => {
-      console.log('[PageEditor] handleInsertFiles called:', {
+      console.log("[PageEditor] handleInsertFiles called:", {
         fileCount: files.length,
         insertAfterPage,
         isFromStorage,
@@ -293,7 +302,7 @@ export const usePageEditorCommands = ({
 
       const workingDocument = getEditedDocument();
       if (!workingDocument || files.length === 0) {
-        console.log('[PageEditor] handleInsertFiles early return:', {
+        console.log("[PageEditor] handleInsertFiles early return:", {
           hasDocument: !!workingDocument,
           fileCount: files.length,
         });
@@ -302,15 +311,15 @@ export const usePageEditorCommands = ({
 
       try {
         const targetPage = workingDocument.pages.find(
-          (p) => p.pageNumber === insertAfterPage
+          (p) => p.pageNumber === insertAfterPage,
         );
         if (!targetPage) {
-          console.log('[PageEditor] Target page not found:', insertAfterPage);
+          console.log("[PageEditor] Target page not found:", insertAfterPage);
           return;
         }
 
         const insertAfterPageId = targetPage.id;
-        console.log('[PageEditor] Inserting files after page:', {
+        console.log("[PageEditor] Inserting files after page:", {
           pageNumber: insertAfterPage,
           pageId: insertAfterPageId,
         });
@@ -329,7 +338,7 @@ export const usePageEditorCommands = ({
             insertAfterPageId,
           });
           addedFileIds = result.map((file) => file.fileId);
-          console.log('[PageEditor] Files added to context:', {
+          console.log("[PageEditor] Files added to context:", {
             addedCount: addedFileIds.length,
             fileIds: addedFileIds,
           });
@@ -359,7 +368,7 @@ export const usePageEditorCommands = ({
 
         if (newPages.length > 0) {
           const targetIndex = workingDocument.pages.findIndex(
-            (p) => p.id === targetPage.id
+            (p) => p.id === targetPage.id,
           );
 
           if (targetIndex >= 0) {
@@ -388,14 +397,14 @@ export const usePageEditorCommands = ({
       selectors,
       updateFileOrderFromPages,
       setEditedDocument,
-    ]
+    ],
   );
 
   const handleReorderPages = useCallback(
     (
       sourcePageNumber: number,
       targetIndex: number,
-      draggedPageIds?: string[]
+      draggedPageIds?: string[],
     ) => {
       if (!displayDocument) return;
 
@@ -409,7 +418,7 @@ export const usePageEditorCommands = ({
         selectedPages,
         getEditedDocument,
         setEditedDocument,
-        (newPages) => updateFileOrderFromPages(newPages)
+        (newPages) => updateFileOrderFromPages(newPages),
       );
       executeCommandWithTracking(reorderCommand);
     },
@@ -420,7 +429,7 @@ export const usePageEditorCommands = ({
       getPageNumbersFromIds,
       setEditedDocument,
       updateFileOrderFromPages,
-    ]
+    ],
   );
 
   return {

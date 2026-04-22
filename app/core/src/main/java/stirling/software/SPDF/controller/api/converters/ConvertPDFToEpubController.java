@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +30,7 @@ import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -85,8 +87,8 @@ public class ConvertPDFToEpubController {
             description =
                     "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF"
                             + " Output:EPUB/AZW3 Type:SISO")
-    public ResponseEntity<byte[]> convertPdfToEpub(@ModelAttribute ConvertPdfToEpubRequest request)
-            throws Exception {
+    public ResponseEntity<StreamingResponseBody> convertPdfToEpub(
+            @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
 
         if (!endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
             throw new IllegalStateException(
@@ -170,9 +172,16 @@ public class ConvertPDFToEpubController {
                                     + "."
                                     + outputFormat.getExtension());
 
-            byte[] outputBytes = Files.readAllBytes(outputPath);
             MediaType mediaType = MediaType.valueOf(outputFormat.getMediaType());
-            return WebResponseUtils.bytesToWebResponse(outputBytes, outputFilename, mediaType);
+            TempFile tempOut =
+                    tempFileManager.createManagedTempFile("." + outputFormat.getExtension());
+            try {
+                Files.copy(outputPath, tempOut.getPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception e) {
+                tempOut.close();
+                throw e;
+            }
+            return WebResponseUtils.fileToWebResponse(tempOut, outputFilename, mediaType);
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }

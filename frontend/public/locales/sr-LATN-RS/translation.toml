@@ -8,6 +8,7 @@ black = "Crno"
 blue = "Plavo"
 bored = "Da li ti je dosadno dok čekaš?"
 cancel = "Otkaži"
+confirm = "Potvrdi"
 changedCredsMessage = "Podaci za prijavu uspešno promenjeni!"
 chooseFile = "Izaberi datoteku"
 close = "Zatvori"
@@ -142,6 +143,11 @@ welcome = "Dobrodošli"
 white = "Belo"
 WorkInProgess = "Radovi u toku, možda neće raditi ili će biti grešaka, molimo prijavite sve probleme !"
 yes = "Da"
+insufficientCredits = "Nedovoljno kredita. Potrebno: {{requiredCredits}}, Dostupno: {{currentBalance}}, Manjak: {{shortfall}}"
+loadingCredits = "Provera kredita..."
+loadingProStatus = "Provera statusa pretplate..."
+noticeTopUpOrPlan = "Nedovoljno kredita, dopunite ili pređite na plan"
+accessInvite = "Pozovi"
 
 [account]
 accountSettings = "Podešavanja naloga"
@@ -1423,6 +1429,34 @@ title = "Obrada"
 description = "Maksimalno vreme čekanja na zadatak obrade pre prijave greške."
 label = "Vremensko ograničenje obrade (sekunde)"
 
+[admin.settings.storage]
+description = "Kontrolišite skladištenje na serveru i opcije deljenja."
+title = "Skladištenje datoteka i deljenje"
+
+[admin.settings.storage.enabled]
+description = "Dozvoli korisnicima da čuvaju datoteke na serveru."
+label = "Omogući skladištenje datoteka na serveru"
+
+[admin.settings.storage.sharing.email]
+description = "Dozvoli deljenje preko adresa e-pošte."
+label = "Omogući deljenje putem e-pošte"
+mailLink = "Podesi podešavanja pošte"
+mailNote = "Zahteva podešavanje pošte. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Dozvoli korisnicima da dele sačuvane datoteke."
+label = "Omogući deljenje"
+
+[admin.settings.storage.sharing.links]
+description = "Dozvoli deljenje putem linkova uz prijavu."
+frontendUrlLink = "Podesi u sistemskim podešavanjima"
+frontendUrlNote = "Zahteva Frontend URL. "
+label = "Omogući linkove za deljenje"
+
+[admin.settings.storage.signing.enabled]
+description = "Dozvoli korisnicima da kreiraju sesije potpisivanja sa više učesnika. Zahteva da skladištenje datoteka na serveru bude omogućeno."
+label = "Omogući grupno potpisivanje (alfa)"
+
 [admin.settings.unsavedChanges]
 cancel = "Nastavi uređivanje"
 discard = "Odbaci promene"
@@ -1513,6 +1547,7 @@ editStampHint = "Da biste promenili sliku, obrišite ovaj pečat i dodajte novi.
 editSwitchToSelect = "Prebacite se na Izaberi i uredi da biste uredili ovu anotaciju."
 editText = "Uredi tekstualni okvir"
 editTextMarkup = "Uredi označavanje teksta"
+annotationStyle = "Stil anotacije"
 ellipse = "Elipsa"
 exit = "Izađi iz režima anotiranja"
 fillColor = "Boja popune"
@@ -1523,13 +1558,19 @@ highlight = "Istakni"
 imagePreview = "Pregled"
 inkHighlighter = "Ručni marker"
 line = "Linija"
+lineArrow = "Strelica"
 noBackground = "Bez pozadine"
 note = "Beleška"
+comment = "Komentar"
+comments = "Komentari"
+insertText = "Umetni tekst"
+replaceText = "Zameni tekst"
 noteIcon = "Ikona beleške"
 notesStamps = "Beleške i pečati"
 opacity = "Neprozirnost"
 pen = "Olovka"
 polygon = "Poligon"
+polyline = "Polilinija"
 properties = "Svojstva"
 rectangle = "Pravougaonik"
 redo = "Ponovi"
@@ -2048,7 +2089,19 @@ numbers = "Brojevi/opsezi: 5, 10-20"
 progressions = "Progresije: 3n, 4n+1"
 
 [certSign]
+allSigned = "Svi učesnici su potpisali. Spremno za finalizaciju."
+awaitingSignatures = "Čeka se na potpise"
+signatureProgress = "{{signedCount}}/{{totalCount}} potpisa"
 chooseCertificate = "Izaberite fajl sertifikata"
+declined = "Odbijeno"
+fetchFailed = "Učitavanje podataka o potpisivanju nije uspelo"
+finalized = "Finalizovano"
+notified = "Na čekanju"
+partialNote = "Možete finalizovati ranije sa trenutnim potpisima. Nepotpisani učesnici biće isključeni."
+pending = "Na čekanju"
+readyToFinalize = "Spremno za finalizaciju"
+signed = "Potpisano"
+viewed = "Pregledano"
 chooseJksFile = "Izaberite JKS fajl"
 chooseP12File = "Izaberite PKCS12 fajl"
 choosePfxFile = "Izaberite PFX fajl"
@@ -2071,6 +2124,7 @@ title = "Potpisivanje Sertifikatom"
 invisible = "Nevidljiv"
 stepTitle = "Izgled potpisa"
 visible = "Vidljiv"
+visibility = "Vidljivost"
 
 [certSign.appearance.options]
 title = "Detalji potpisa"
@@ -2176,6 +2230,252 @@ bullet3 = "Proverava da li je dokument izmenjen nakon potpisivanja"
 bullet4 = "Može koristiti prilagođene sertifikate za verifikaciju"
 text = "Kada proveravate potpise, alat prikazuje da li su važeći, ko je potpisao dokument, kada je potpisan i da li je dokument promenjen nakon potpisivanja."
 title = "Provera potpisa"
+
+[certSign.collab.finalize]
+button = "Finalizuj i učitaj potpisani PDF"
+early = "Finalizuj sa trenutnim potpisima"
+
+[certSign.collab.sessionDetail]
+addButton = "Dodaj učesnike"
+addParticipants = "Dodaj učesnike"
+addParticipantsError = "Dodavanje učesnika nije uspelo"
+backToList = "Nazad na sesije"
+deleteConfirm = "Da li ste sigurni? Ovo se ne može opozvati."
+deleteError = "Brisanje sesije nije uspelo"
+deleted = "Sesija je obrisana"
+deleteSession = "Obriši sesiju"
+dueDate = "Rok"
+finalizeError = "Finalizacija sesije nije uspela"
+loadPdfError = "Učitavanje potpisanog PDF-a nije uspelo"
+loadSignedPdf = "Učitaj potpisani PDF u aktivne datoteke"
+messageLabel = "Poruka"
+noAdditionalInfo = "Nema dodatnih informacija"
+owner = "Vlasnik"
+participantRemoved = "Učesnik uklonjen"
+participants = "Učesnici"
+participantsAdded = "Učesnici su uspešno dodati"
+removeParticipant = "Ukloni"
+removeParticipantError = "Uklanjanje učesnika nije uspelo"
+selectUsers = "Izaberite korisnike..."
+sessionInfo = "Informacije o sesiji"
+workbenchTitle = "Upravljanje sesijom"
+
+[certSign.collab.signRequest]
+addedToFiles = "Dokument dodat u aktivne datoteke"
+addSignature = "Dodajte svoj potpis"
+addToFiles = "Dodaj u aktivne datoteke"
+advancedSettings = "Napredna podešavanja"
+backToList = "Nazad na zahteve za potpisivanje"
+certificateChoice = "Izaberite sertifikat za potpisivanje"
+changeSignature = "Promeni potpis"
+clearSignature = "Obriši potpis"
+completeAndSign = "Dovrši i potpiši"
+createNewSignature = "Kreiraj novi potpis"
+declineButton = "Odbij"
+decline = "Odbij zahtev"
+deleteSelected = "Obriši izabrani potpis"
+drawSignature = "Nacrtajte svoj potpis ispod"
+dueDate = "Rok"
+fileTooLarge = "Veličina datoteke mora biti manja od 5 MB"
+fontFamily = "Porodica fonta"
+fontSize = "Veličina fonta: {{size}}px"
+fontSizePlaceholder = "Veličina"
+from = "Od"
+invalidCertFile = "Izaberite P12 ili PFX datoteku sertifikata"
+invalidFileType = "Izaberite slikovnu datoteku"
+location = "Lokacija (opciono)"
+locationPlaceholder = "Odakle potpisujete?"
+message = "Poruka"
+noCertificate = "Izaberite datoteku sertifikata"
+noSignatures = "Postavite bar jedan potpis na PDF"
+p12File = "P12/PFX datoteka sertifikata"
+password = "Lozinka sertifikata"
+passwordPlaceholder = "Unesite lozinku..."
+penColor = "Boja olovke"
+penSize = "Veličina olovke: {{size}}px"
+placementActive = "Kliknite na PDF za postavljanje"
+placeSignatureButton = "Postavi potpis na PDF"
+reason = "Razlog (opciono)"
+reasonPlaceholder = "Zašto potpisujete?"
+removeImage = "Ukloni sliku"
+removeCertFile = "Ukloni datoteku"
+savedSignatures = "Sačuvani potpisi"
+selectFile = "Izaberite slikovnu datoteku"
+selectSignatureTitle = "Izaberite ili kreirajte potpis"
+signButton = "Potpiši dokument"
+signatureInfo = "Ova podešavanja je konfigurisao vlasnik dokumenta"
+signaturePlaced = "Potpis postavljen na stranici"
+signatureSettings = "Postavke potpisa"
+signatureText = "Tekst potpisa"
+signatureTextPlaceholder = "Unesite svoje ime..."
+signatureTypeLabel = "Tip potpisa"
+signingTitle = "Potpisivanje"
+textColor = "Boja teksta"
+typeSignature = "Unesite svoje ime da kreirate potpis"
+uploadCert = "Prilagođeni sertifikat"
+uploadCertDesc = "Koristite sopstveni P12/PFX sertifikat"
+uploadSignature = "Otpremite sliku svog potpisa"
+usePersonalCert = "Lični sertifikat"
+usePersonalCertDesc = "Automatski generisan za vaš nalog"
+useServerCert = "Sertifikat organizacije"
+useServerCertDesc = "Deljeni sertifikat organizacije"
+workbenchTitle = "Zahtev za potpisivanje"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Izaberite boju poteza"
+continue = "Nastavi"
+
+[certSign.collab.signRequest.certModal]
+description = "Postavili ste {{count}} potpis(a). Izaberite sertifikat da dovršite potpisivanje."
+sign = "Potpiši dokument"
+certValidating = "Provera sertifikata..."
+certValidUntil = "Sertifikat važi do {{date}}"
+certInvalid = "Nevažeći sertifikat: {{error}}"
+certInvalidFallback = "Nevažeći sertifikat"
+certNetworkError = "Nije moguće potvrditi sertifikat"
+title = "Podesi sertifikat"
+
+[certSign.collab.signRequest.image]
+hint = "Otpremite PNG ili JPG sliku svog potpisa"
+
+[certSign.collab.signRequest.mode]
+move = "Pomeri potpis"
+place = "Postavi potpis"
+title = "Režim potpisivanja ili pomeranja"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Crtanje"
+image = "Otpremanje"
+text = "Kucanje"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Kliknite na PDF da postavite svoj potpis"
+title = "Postavljanje potpisa"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Izabrani potpis"
+missing = "Nema pregleda"
+textFallback = "Potpis"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Crtani potpis"
+defaultImageLabel = "Otpremljeni potpis"
+defaultLabel = "Potpis"
+defaultTextLabel = "Kucani potpis"
+delete = "Obriši potpis"
+none = "Nema sačuvanih potpisa"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Crtanje"
+type = "Kucanje"
+upload = "Otpremanje"
+
+[certSign.collab.signRequest.steps]
+back = "Nazad"
+cancelPlacement = "Otkaži postavljanje"
+certificate = "Sertifikat"
+clickMultipleTimes = "Kliknite više puta na PDF da postavite potpise. Prevucite bilo koji potpis da ga pomerite ili promenite veličinu."
+clickToPlace = "Kliknite na PDF gde želite da se pojavi vaš potpis."
+continue = "Nastavi na izbor sertifikata"
+continueToPlacement = "Nastavi na postavljanje"
+continueToReview = "Nastavi na pregled"
+createSignature = "Kreiraj potpis"
+invisible = "Nevidljivo"
+location = "Lokacija:"
+multipleSignatures = "{{count}} potpisa biće primenjeno na PDF"
+oneSignature = "1 potpis biće primenjen na PDF"
+placeOnPdf = "Postavi na PDF"
+reason = "Razlog:"
+reviewTitle = "Pregled pre potpisivanja"
+signaturePlaced = "Potpis postavljen na stranici {{page}}. Možete prilagoditi poziciju ponovnim klikom ili nastaviti na pregled."
+visible = "Vidljivo"
+visibility = "Vidljivost:"
+yourSignatures = "Vaši potpisi ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Boja"
+fontLabel = "Font"
+fontSizeLabel = "Veličina"
+fontSizePlaceholder = "16"
+label = "Tekst potpisa"
+modalHint = "Unesite svoje ime, zatim kliknite na Nastavi da ga postavite na PDF."
+placeholder = "Unesite svoje ime..."
+
+[certSign.collab.participant]
+certValidating = "Provera sertifikata..."
+certValid = "✓ Sertifikat važi"
+certValidUntil = " do {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Nevažeći sertifikat"
+certNetworkError = "Nije moguće potvrditi sertifikat"
+
+[certSign.collab.addParticipants]
+add = "Dodaj {{count}} učesnika"
+back = "Nazad"
+configureSignatures = "Podesi postavke potpisa"
+continue = "Nastavi na postavke potpisa"
+reasonHelp = "Unapred postavite razlog potpisivanja za ove učesnike (opciono, mogu ga promeniti pri potpisivanju)"
+reasonPlaceholder = "npr. Odobrenje, Revizija..."
+selectUsers = "Izaberi korisnike"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Uključi stranicu sa sažetkom potpisa"
+includeSummaryPageHelp = "Na kraju će biti dodata stranica sa svim metapodacima potpisa. Okviri digitalnog sertifikata na pojedinačnim stranicama biće potisnuti (vlažni potpisi nisu pogođeni)."
+
+[certSign.collab.sessionList]
+active = "Aktivno"
+finalized = "Finalizovano"
+
+[certSign.collab.signatureSettings]
+description = "Podesite kako će potpisi izgledati za sve učesnike"
+title = "Izgled potpisa"
+
+[certSign.collab.userSelector]
+inviteUsers = "Dodaj korisnike"
+loadError = "Učitavanje korisnika nije uspelo"
+noTeam = "Nema tima"
+noUsers = "Nisu pronađeni drugi korisnici."
+placeholder = "Izaberite korisnike..."
+
+[certSign.mobile]
+panelActions = "Radnje"
+panelDocument = "Dokument"
+panelPeople = "Osobe"
+
+[certSign.sessions]
+deleted = "Sesija je obrisana"
+fetchFailed = "Učitavanje detalja sesije nije uspelo"
+finalized = "Sesija finalizovana"
+loaded = "Potpisani PDF je učitan"
+pdfNotReady = "PDF nije spreman"
+pdfNotReadyDesc = "Potpisani PDF se generiše. Pokušajte ponovo za trenutak."
+
+[certificateChoice.tooltip]
+header = "Tipovi sertifikata"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Upravlja sistemski administrator"
+bullet2 = "Deljen među ovlašćenim korisnicima"
+bullet3 = "Predstavlja identitet kompanije, ne pojedinca"
+bullet4 = "Najbolje za: Zvanična dokumenta, timske potpise"
+description = "Deljeni sertifikat koji obezbeđuje vaša organizacija. Koristi se za ovlašćeno potpisivanje u ime kompanije."
+title = "Sertifikat organizacije"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Generiše se automatski pri prvoj upotrebi"
+bullet2 = "Povezan sa vašim korisničkim nalogom"
+bullet3 = "Ne može se deliti sa drugim korisnicima"
+bullet4 = "Najbolje za: Lična dokumenta, individualnu odgovornost"
+description = "Automatski generisan sertifikat jedinstven za vaš korisnički nalog. Pogodan za individualne potpise."
+title = "Lični sertifikat"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Zahteva P12/PFX datoteku i lozinku"
+bullet2 = "Može biti izdat od strane eksternih sertifikacionih tela"
+bullet3 = "Viši nivo poverenja za pravna dokumenta"
+bullet4 = "Najbolje za: Pravno obavezujuće ugovore, eksternu verifikaciju"
+description = "Koristite svoju PKCS#12 datoteku sertifikata. Obezbeđuje potpunu kontrolu nad svojstvima sertifikata."
+title = "Otpremi prilagođeni P12"
 
 [changeCreds]
 changePassword = "Koristiš podrazumevane pristupne podatke. Molim te unesi novu lozinku"
@@ -2574,10 +2874,48 @@ title = "Podešavanje kvaliteta"
 [compressPdfs]
 tags = "smanji,mali,minijaturni"
 
+[config]
+plan = "Plan"
+
 [config.account.overview]
+confirmDelete = "Obriši moj nalog"
+deleteAccount = "Obriši nalog"
+deleteAccountTitle = "Obriši nalog"
+deleteFailed = "Brisanje naloga nije uspelo."
+deleteFailedTitle = "Nije moguće obrisati nalog"
+deleteWarning = "Ova radnja je trajna i ne može se poništiti. Svi vaši podaci biće obrisani."
+enterEmailConfirm = "Da biste potvrdili brisanje, unesite svoju adresu e-pošte ({{email}}) ispod:"
 guestDescription = "Prijavljeni ste kao gost. Razmislite o nadogradnji naloga iznad."
+label = "Pregled"
 manageAccountPreferences = "Upravljajte postavkama naloga"
+signedInAs = "Prijavljeni kao"
 title = "Podešavanja naloga"
+
+[config.account.profilePicture]
+description = "Otpremite sliku da personalizujete svoj nalog."
+help = "PNG, JPG ili WebP do 2 MB."
+remove = "Ukloni"
+sizeError = "Izaberite sliku manju od 2 MB."
+switchedToCustom = "Prebačeno na prilagođenu sliku. Sada možete otpremiti svoju."
+title = "Profilna slika"
+upload = "Otpremi"
+useCustom = "Koristi prilagođenu sliku"
+usingProvider = "Koristi se profilna slika sa {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Isecanje slike nije uspelo. Pokušajte ponovo."
+invalidImage = "Neispravna slikovna datoteka. Izaberite važeću PNG, JPG ili WebP datoteku."
+processing = "Obrada isecanja..."
+save = "Sačuvaj isečenu sliku"
+sizeErrorAfterCrop = "Isečena slika je prevelika. Umanjite ili isecite manju oblast."
+title = "Iseci profilnu sliku"
+zoom = "Zum"
+
+[config.account.security]
+changePassword = "Promeni lozinku"
+description = "Upravljajte lozinkom i bezbednosnim podešavanjima."
+title = "Lozinke i bezbednost"
+update = "Ažuriraj lozinku"
 
 [config.account.upgrade]
 description = "Povežite nalog da sačuvate istoriju i pristupite više funkcija!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Nadogradi nalog"
 [config.apiKeys]
 chartAriaLabel = "Upotreba kredita: uključeno {{includedUsed}} od {{includedTotal}}, kupljeno {{purchasedUsed}} od {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopiraj API ključ"
+creditsRemaining = "Preostali krediti"
 description = "Vaš API ključ za pristup Stirlingovom paketu PDF alata. Kopirajte ga u svoj projekat ili osvežite da generišete novi."
 docsDescription = "Saznajte više o integraciji sa Stirling PDF:"
 docsLink = "API dokumentacija"
@@ -2643,6 +2982,14 @@ basic = "Osnovna konfiguracija"
 integration = "Konfiguracija integracije"
 security = "Bezbednosna konfiguracija"
 system = "Sistemska konfiguracija"
+
+[connectionMode.status]
+localOffline = "Režim van mreže je aktivan"
+localOnline = "Režim van mreže je aktivan"
+saas = "Povezano sa Stirling Cloud"
+selfhostedChecking = "Povezano na samohostovani server (provera...)"
+selfhostedOffline = "Samohostovani server je nedostupan"
+selfhostedOnline = "Povezano na samohostovani server"
 
 [convert]
 autoRotate = "Automatska rotacija"
@@ -2728,6 +3075,15 @@ webOptions = "Veb u PDF opcije"
 wordDoc = "Word dokument"
 wordDocExt = "Word dokument (.docx)"
 zoomLevel = "Nivo zumiranja"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "e-knjiga → PDF"
+emlToPdf = "E-pošta → PDF"
+fileToPdf = "Office/Dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opcije za eBook u PDF"
@@ -3175,6 +3531,46 @@ totalSelected = "Ukupno izabrano"
 unsupported = "Nepodržano"
 unzip = "Raspakuj"
 uploadError = "Nije uspelo otpremanje nekih datoteka."
+copyCreated = "Kopija sačuvana na ovom uređaju."
+copyFailed = "Nije moguće napraviti kopiju."
+leaveShare = "Ukloni sa moje liste"
+leaveShareFailed = "Nije moguće ukloniti deljenu datoteku."
+leaveShareSuccess = "Uklonjeno sa vaše liste deljenih datoteka."
+removeBoth = "Ukloni sa oba mesta"
+removeFilePrompt = "Ova datoteka je sačuvana na ovom uređaju i na vašem serveru. Odakle želite da je uklonite?"
+removeFileTitle = "Ukloni datoteku"
+removeLocalOnly = "Samo ovaj uređaj"
+removeServerFailed = "Nije moguće ukloniti datoteku sa servera."
+removeServerOnly = "Samo server"
+removeServerOnlyPrompt = "Ova datoteka je sačuvana samo na vašem serveru. Želite li da je uklonite sa servera?"
+removeServerSuccess = "Uklonjeno sa servera."
+removeSharedPrompt = "Ova datoteka je podeljena sa vama. Možete je ukloniti sa ovog uređaja ili sa liste deljenih."
+removeSharedServerOnlyBlockedPrompt = "Ova datoteka je podeljena sa vama i nalazi se samo na serveru."
+removeSharedServerOnlyPrompt = "Ova datoteka je podeljena sa vama i nalazi se samo na serveru. Ukloniti je sa vaše liste?"
+changesNotUploaded = "Izmene nisu otpremljene"
+cloudFile = "Datoteka u oblaku"
+filterAll = "Sve"
+filterLocal = "Lokalno"
+filterSharedByMe = "Deljeno od mene"
+filterSharedWithMe = "Deljeno sa mnom"
+lastSynced = "Poslednja sinhronizacija"
+localOnly = "Samo lokalno"
+makeCopy = "Napravi kopiju"
+owner = "Vlasnik"
+ownerUnknown = "Nepoznato"
+share = "Podeli"
+shareSelected = "Podeli izabrano"
+sharedByYou = "Deljeno od vas"
+sharedEditNoticeBody = "Nemate prava za uređivanje serverske verzije ove datoteke. Sve izmene koje napravite biće sačuvane kao lokalna kopija."
+sharedEditNoticeConfirm = "Razumem"
+sharedEditNoticeTitle = "Serverska kopija samo za čitanje"
+sharedWithYou = "Deljeno sa vama"
+sharing = "Deljenje"
+storageState = "Skladište"
+synced = "Sinhronizovano"
+updateOnServer = "Ažuriraj na serveru"
+uploadSelected = "Otpremi izabrano"
+uploadToServer = "Otpremi na server"
 
 [files]
 addFiles = "Dodaj datoteke"
@@ -3299,6 +3695,77 @@ title = "O ravnanju PDF-ova"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "O grupnom potpisivanju"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Svi potpisi se primenjuju redom učesnika koji ste naveli"
+bullet2 = "Možete finalizovati sa delimičnim potpisima po potrebi"
+bullet3 = "Kada se finalizuje, sesija se ne može izmeniti"
+description = "Kada svi učesnici potpišu (ili izaberete da finalizujete ranije), možete generisati konačni potpisani PDF."
+title = "Proces finalizacije"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Vlasnik (vi): Kreira sesiju, podešava podrazumevani izgled potpisa, finalizuje dokument"
+bullet2 = "Učesnici: Kreiraju svoj potpis, biraju sertifikat, postavljaju potpis na PDF"
+bullet3 = "Učesnici ne mogu menjati vidljivost, razlog ili postavke lokacije potpisa"
+description = "Vi kontrolišete podešavanja izgleda potpisa za sve učesnike."
+title = "Uloge učesnika"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "Prvi učesnik mora potpisati pre nego što drugi dobije pristup dokumentu"
+bullet2 = "Obezbeđuje ispravan redosled potpisivanja radi pravne usklađenosti"
+bullet3 = "Možete promeniti redosled prevlačenjem u listi"
+description = "Učesnici potpisuju dokumente redosledom koji navedete. Svaki potpisnik dobija obaveštenje kada dođe na red."
+title = "Sekvencijalno potpisivanje"
+
+[groupSigning.steps]
+back = "Nazad"
+completed = "Završeno"
+current = "Trenutno"
+stepLabel = "Korak {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Nastavi na pregled"
+invisible = "Potpisi će biti nevidljivi (samo metapodaci)"
+locationLabel = "Lokacija:"
+preview = "Pregled"
+reasonLabel = "Razlog:"
+title = "Podesi postavke potpisa"
+visible = "Potpisi će biti vidljivi na stranici {{page}}"
+
+[groupSigning.steps.review]
+document = "Dokument"
+dueDate = "Rok (opciono)"
+dueDatePlaceholder = "Izaberite rok..."
+invisible = "Nevidljivo (samo metapodaci)"
+location = "Lokacija:"
+logo = "Logotip:"
+logoHidden = "Bez logotipa"
+logoShown = "Prikazan Stirling PDF logotip"
+participants = "Učesnici"
+reason = "Razlog:"
+send = "Pošalji zahteve za potpisivanje"
+signatureSettings = "Postavke potpisa"
+title = "Pregled detalja sesije"
+titleShort = "Pregled i slanje"
+visibility = "Vidljivost:"
+visible = "Vidljivo na stranici {{page}}"
+participantCount = "{{count}} učesnika će potpisivati redom"
+
+[groupSigning.steps.selectDocument]
+continue = "Nastavi na izbor učesnika"
+noFile = "Izaberite jednu PDF datoteku iz svojih aktivnih datoteka da biste kreirali sesiju potpisivanja."
+selectedFile = "Izabrani dokument"
+title = "Izaberite dokument"
+
+[groupSigning.steps.selectParticipants]
+continue = "Nastavi na postavke potpisa"
+count = "Izabrano učesnika: {{count}}"
+label = "Izaberite učesnike"
+placeholder = "Izaberite učesnike za potpisivanje..."
+title = "Izaberite učesnike"
 
 [getPdfInfo]
 downloadJson = "Preuzmi JSON"
@@ -3718,6 +4185,11 @@ desc = "Dodaje potpis u PDF crtežom, tekstom ili slikom"
 tags = "potpis,autogram"
 title = "Potpis"
 
+[home.timestampPdf]
+desc = "Dodajte vremensku oznaku dokumenta prema RFC 3161 da dokažete kada je vaš PDF postojao"
+tags = "vremenska oznaka,RFC 3161,TSA,autoritet vremenske oznake,vremenska oznaka dokumenta,dokaz postojanja,token vremenske oznake,pouzdana vremenska oznaka,potpis vremenske oznake,notarizacija"
+title = "Vremenska oznaka PDF-a"
+
 [home.split]
 desc = "Razdvojite PDF-ove u više dokumenata"
 tags = "podeli,razdvoji,razbij"
@@ -3854,6 +4326,7 @@ version = "Verzija"
 accountCreatedSuccess = "Nalog je uspešno kreiran! Sada se možete prijaviti."
 alreadyLoggedIn = "Već si prijavljen na"
 alreadyLoggedIn2 = "uređaja. Odjavi se sa uređaja i pokušaj ponovo."
+backToSignIn = "Nazad na prijavu"
 cancel = "Otkaži"
 changePasswordWarning = "Promenite lozinku nakon prve prijave"
 credentialsUpdated = "Vaši prijavni podaci su ažurirani. Prijavite se ponovo."
@@ -3895,16 +4368,21 @@ or = "Ili"
 password = "Lozinka"
 passwordChangedSuccess = "Lozinka je uspešno promenjena! Prijavite se novom lozinkom."
 passwordResetSent = "Link za resetovanje lozinke poslat na {{email}}! Proverite e-mail i sledite uputstva."
+passwordUpdatedSuccess = "Lozinka je uspešno ažurirana."
 pleaseEnterBoth = "Unesite i e-mail i lozinku"
 pleaseEnterEmail = "Unesite svoju e-mail adresu"
 relyingPartyRegistrationNotFound = "Nije pronađena registracija partnerske strane"
 rememberme = "Zapamti me"
+resetHelp = "Unesite svoju e-poštu da biste dobili bezbedan link za resetovanje lozinke. Ako je link istekao, zatražite novi."
+resetYourPassword = "Resetujte lozinku"
 saml2RequiresLicense = "Prijava putem SAML zahteva plaćenu licencu (Server ili Enterprise). Kontaktirajte administratora da unapredi vaš plan."
 sending = "Slanje…"
 sendMagicLink = "Pošalji magični link"
+sendResetLink = "Pošalji link za resetovanje"
 sessionExpired = "Vaša sesija je istekla. Prijavite se ponovo."
 signin = "Prijavite se"
 signInAnonymously = "Prijava kao gost"
+subtitle = "Ponovo se prijavite na Stirling PDF"
 signingIn = "Prijavljivanje..."
 signinTitle = "Molimo vas da se prijavite"
 signInWith = "Prijavite se pomoću"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Prijavite se putem jedinstvene prijave"
 title = "Prijavite se"
 toManySessions = "Imaš previše aktivnih sesija"
 unexpectedError = "Neočekivana greška: {{message}}"
+updatePassword = "Ažuriraj lozinku"
 useEmailInstead = "Prijava pomoću e-maila"
 useMagicLink = "Umesto toga koristite magični link"
 userIsDisabled = "Korisnik deaktiviran, prijava sa ovim korisničkim imenom je trenutno blokirana. Kontaktiraj administratora."
@@ -4222,6 +4701,15 @@ viewSwitcher = "Koristite ove kontrole da izaberete kako želite da pregledate s
 workbench = "Ovo je <strong>Workbench</strong> - glavno područje gde pregledate i uređujete svoje PDF-ove."
 wrapUp = "Spremni ste! Naučili ste o glavnim delovima aplikacije i kako da ih koristite. Kliknite na dugme <strong>Pomoć</strong> kada god želite da ponovo vidite ovu turu."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Nakon isteka probe, nastavićete sa besplatnim nivoom. Dodajte način plaćanja da biste zadržali Pro pristup."
+afterTrialWithPayment = "Vaša Pro pretplata će automatski početi po završetku probe."
+body = "Tokom probnog perioda imate potpuni pristup Stirling PDF Pro funkcijama. Uživajte u neograničenim konverzijama, većim veličinama datoteka i prioritetnoj obradi."
+daysRemaining = "{{days}} dana preostalo"
+daysRemainingSingular = "{{days}} dan preostao"
+title = "Vaš 30-dnevni Pro probni period"
+trialEnds = "Probni period se završava {{date}}"
+
 [onboarding.buttons]
 back = "Nazad"
 download = "Preuzmi →"
@@ -4372,7 +4860,10 @@ zoomOut = "Umanji"
 
 [viewer]
 cannotPreviewFile = "Nije moguće pregledati datoteku"
+disableColorFilter = "Onemogući filter boja"
 dualPageView = "Prikaz dve stranice"
+enableDarkFilter = "Omogući tamni filter"
+enableSepiaFilter = "Omogući sepija filter"
 firstPage = "Prva stranica"
 lastPage = "Poslednja stranica"
 nextPage = "Sledeća stranica"
@@ -4382,6 +4873,22 @@ singlePageView = "Prikaz jedne stranice"
 unknownFile = "Nepoznata datoteka"
 zoomIn = "Uvećaj"
 zoomOut = "Umanji"
+resetZoom = "Resetuj zum"
+
+[viewer.nonPdf]
+fileTypeBadge = "{{type}} datoteka"
+convertToPdf = "Konvertuj u PDF"
+loading = "Učitavanje..."
+emptyFile = "Prazna datoteka"
+csvStats = "{{rows}} redova · {{columns}} kolona · {{size}}"
+sortedBy = "Sortirano po: {{column}}"
+columnDefault = "Kolona {{index}}"
+htmlPreviewWarning = "HTML pregled — spoljašnji resursi možda neće biti učitani · {{size}}"
+htmlPreview = "HTML pregled"
+invalidJson = "Nevažeći JSON — prikaz sirovog sadržaja"
+textStats = "{{lines}} linija · {{size}}"
+lineNumbers = "Brojevi linija"
+renderMarkdown = "Prikaži markdown"
 
 [viewer.attachments]
 title = "Prilozi"
@@ -4391,6 +4898,31 @@ noDocument = "Otvorite PDF da biste videli njegove priloge."
 loading = "Učitavanje priloga..."
 empty = "Nema priloga u ovom dokumentu"
 noMatch = "Nijedan prilog ne odgovara vašoj pretrazi"
+
+[viewer.comments]
+title = "Komentari"
+hint = "Postavite komentare pomoću alata Komentar, Umetni tekst ili Zameni tekst. Ovde će se prikazivati po stranici."
+placeholder = "Unesite komentar..."
+pageLabel = "Stranica {{page}}"
+oneComment = "1 komentar"
+nComments = "{{count}} komentara"
+addCommentPlaceholder = "Dodaj komentar..."
+addLink = "Dodaj link"
+goToLink = "Idi na link"
+addComment = "Dodaj komentar"
+viewComment = "Prikaži komentar"
+addReplyPlaceholder = "Dodaj odgovor..."
+saveReply = "Sačuvaj odgovor"
+send = "Pošalji"
+moreActions = "Više radnji"
+typeComment = "Komentar"
+typeInsertText = "Umetni tekst"
+typeReplaceText = "Zameni tekst"
+locateAnnotation = "Pronađi u dokumentu"
+deleteTitle = "Ukloniti anotaciju iz komentara?"
+deleteDescription = "Ovoj anotaciji je pridružen komentar. Možete ukloniti samo komentar iz bočne trake i zadržati anotaciju ili obrisati sve."
+removeCommentOnly = "Ukloni samo komentar"
+deleteAnnotationAndComment = "Obriši anotaciju i komentar"
 
 [viewer.formBar]
 title = "Polja formulara"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Prikaži/sakrij priloge"
 toggleTheme = "Uključi/isključi temu"
 language = "Jezik"
 toggleAnnotations = "Uključi/isključi vidljivost anotacija"
+toggleLayers = "Uključi/isključi slojeve"
 search = "Pretraži PDF"
 panMode = "Režim pomeranja"
 applyRedactionsFirst = "Prvo primenite zacrnjivanja"
@@ -4425,14 +4958,20 @@ rotateLeft = "Rotiraj ulevo"
 rotateRight = "Rotiraj udesno"
 toggleSidebar = "Uključi/isključi bočnu traku"
 toggleBookmarks = "Prikaži/sakrij obeleživače"
+toggleComments = "Komentari"
 print = "Štampaj PDF"
 ruler = "Lenjir / Merenje"
+readAloud = "Čitanje naglas"
+readAloudSpeed = "Brzina"
+readAloudLanguage = "Jezik"
+selectLanguage = "Izaberite jezik"
 draw = "Crtaj"
 redact = "Zacrni"
 exitRedaction = "Izađi iz režima zacrnjivanja"
 save = "Sačuvaj"
 downloadAll = "Preuzmi sve"
 saveAll = "Sačuvaj sve"
+saveAs = "Sačuvaj kao"
 
 [textAlign]
 left = "Levo"
@@ -4447,21 +4986,132 @@ title = "Izdvajanje stranica"
 
 [pageLayout]
 addBorder = "Dodaj ivice"
+borderWidth = "Debljina okvira"
+bottom = "Donja margina"
+cols = "Kolone"
 header = "Višestruki Raspored Stranica"
+innerMargin = "Unutrašnja margina"
+left = "Leva margina"
 pagesPerSheet = "Stranica po listu:"
+right = "Desna margina"
+rows = "Redovi"
 submit = "Potvrdi"
 tags = "spajanje,kompozit,pojedinačan-prikaz,organizacija"
 title = "Višestruki Raspored Stranica"
+top = "Gornja margina"
+
+[pageLayout.mode]
+default = "Podrazumevano"
+custom = "Prilagođeno"
+label = "Režim:"
+
+[pageLayout.arrangement]
+byColumns = "Po kolonama"
+byRows = "Po redovima"
+label = "Raspored stranica:"
 
 [pageLayout.desc]
 16 = "Postavite 16 stranica na jedan list (mreža 4 × 4)."
 2 = "Postavite 2 stranice jedna pored druge na jedan list."
-3 = "Postavite 3 stranice na jedan list u jednom redu."
 4 = "Postavite 4 stranice na jedan list (mreža 2 × 2)."
 9 = "Postavite 9 stranica na jedan list (mreža 3 × 3)."
 
 [pageLayout.error]
 failed = "Došlo je do greške prilikom kreiranja rasporeda više stranica."
+outerVerticalMarginsTooLarge = "Gornje/donje margine su prevelike za ovu veličinu stranice."
+outerHorizontalMarginsTooLarge = "Leve/desne margine su prevelike za ovu veličinu stranice."
+innerMarginTooLarge = "Unutrašnja margina je prevelika za izabrani raspored."
+
+[pageLayout.orientation]
+landscape = "Pejzaž"
+portrait = "Portret"
+label = "Orijentacija:"
+
+[pageLayout.readingDirection]
+ltr = "S leva na desno"
+rtl = "S desna na levo"
+label = "Smer čitanja:"
+
+[pageLayout.tooltip.header]
+title = "Vodič za raspored stranica"
+
+[pageLayout.tooltip.overview]
+title = "Šta je raspored stranica?"
+text = "Složite više strana na jedan list za materijale ili radi uštede papira."
+
+[pageLayout.tooltip.mode]
+title = "Režim"
+text = "Izaberite kako je mreža podešena:"
+bullet1 = "Podrazumevano: Izaberite unapred podešen raspored i mreža se računa automatski."
+bullet2 = "Prilagođeno: Ručno postavite redove i kolone."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Stranica po listu (podrazumevani režim)"
+text = "Izaberite koliko stranica po listu (npr. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Redovi i kolone (prilagođeni režim)"
+text = "Postavite tačne dimenzije mreže. Ukupno stranica po listu = redovi × kolone."
+
+[pageLayout.tooltip.orientation]
+title = "Orijentacija"
+text = "Postavlja orijentaciju izlaznog lista:"
+bullet1 = "Portret: Veća visina od širine."
+bullet2 = "Pejzaž: Veća širina od visine."
+
+[pageLayout.tooltip.arrangement]
+title = "Raspored stranica"
+text = "Kontroliše redosled kojim stranice popunjavaju mrežu:"
+bullet1 = "Po redovima: Popunjavaj red po red (s leva na desno ili s desna na levo)."
+bullet2 = "Po kolonama: Popunjavaj od vrha ka dnu, kolonu po kolonu."
+
+[pageLayout.tooltip.readingDirection]
+title = "Smer čitanja"
+text = "Kontroliše horizontalni redosled stranica:"
+bullet1 = "LTR: S leva na desno."
+bullet2 = "RTL: S desna na levo."
+
+[pageLayout.tooltip.addBorder]
+title = "Dodaj okvire"
+text = "Iscrtava linije okvira oko svake ćelije stranice za rezne vodiče ili vizuelno razdvajanje."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margine i okviri"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margine"
+text = "Koristite gornju, donju, levu i desnu marginu za razmak oko celog izlaznog lista."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Unutrašnja margina"
+text = "Unutrašnja margina dodaje razmak između ćelija u mreži stranica radi boljeg razdvajanja i čitljivosti."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Dodaj okvire"
+text = "Uključite okvire da biste iscrtali linije oko svake postavljene stranice. Ovo može pomoći vizuelnom razdvajanju ili obrezivanju."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Debljina okvira"
+text = "Debljina okvira se primenjuje samo kada su okviri omogućeni. Veće vrednosti daju deblje linije."
+
+[pageLayout.advanced.tooltip.header]
+title = "Napredne opcije rasporeda"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orijentacija"
+text = "Izaberite konačnu orijentaciju lista. Portret je bolji za uspravan sadržaj, dok pejzaž odgovara širim rasporedima."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Raspored stranica"
+text = "Kontroliše da li stranice popunjavaju mrežu red-po-red ili kolona-po-kolona."
+bullet1 = "Po redovima: Prvo popunjavaj svaki red."
+bullet2 = "Po kolonama: Prvo popunjavaj svaku kolonu."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Smer čitanja"
+text = "Postavlja horizontalni redosled u mreži, korisno za konvencije čitanja s leva na desno i s desna na levo."
+bullet1 = "LTR: Redosled s leva na desno."
+bullet2 = "RTL: Redosled s desna na levo."
 
 [pageRemover]
 header = "Uklanjanje stranica iz PDF-a"
@@ -4977,7 +5627,10 @@ perMonth = "/mesec"
 perSeat = "/mesto"
 popular = "Popularno"
 selectPlan = "Izaberi plan"
+selectCredits = "Izaberite količinu kredita"
 showComparison = "Uporedi sve funkcije"
+purchase = "Kupi"
+totalCost = "Ukupna cena"
 upgrade = "Nadogradi"
 withServer = "+ Server plan"
 
@@ -5069,6 +5722,30 @@ successMessage = "Vaša licenca je uspešno aktivirana. Sada možete zatvoriti o
 name = "Team"
 siteLicense = "Licenca za organizaciju"
 
+[plan.api]
+large = "5.000 kredita"
+medium = "1.000 kredita"
+small = "500 kredita"
+xsmall = "100 kredita"
+
+[plan.apiPackages]
+subtitle = "Kupite API kredite za svoje aplikacije"
+title = "API paketi kredita"
+
+[plan.trial]
+badge = "Proba"
+continueWithFree = "Nastavite sa besplatnim"
+daysRemaining = "Vaš probni period se završava za {{days}} dana"
+endDate = "Ističe: {{date}}"
+expired = "Vaš probni period je istekao"
+expiredMessage = "Vaš 30-dnevni Pro probni period je istekao. Pretplatite se na Pro da biste nastavili da pristupate premijum funkcijama, ili nastavite sa našim besplatnim nivoom."
+freeTierLimitations = "Besplatni nivo uključuje osnovne PDF alate sa ograničenjima upotrebe."
+message = ""
+subscribe = "Pretplatite se na Pro"
+subscribeToPro = "Pretplatite se na Pro"
+subscriptionScheduled = "Pretplata je zakazana – počinje {{date}}"
+title = "Besplatan probni period je aktivan"
+
 [credits]
 enableOverageBilling = "Omogući naplatu prekoračenja"
 maybeLater = "Možda kasnije"
@@ -5150,20 +5827,72 @@ title = "Odštampaj datoteku"
 2 = "Unesi naziv štampača"
 
 [quickAccess]
+access = "Pristup"
+accessAddPerson = "Dodaj još jednu osobu"
+accessBack = "Nazad"
+accessCopyLink = "Kopiraj link"
+accessEmail = "Adresa e-pošte"
+accessEmailPlaceholder = "name@company.com"
+accessFileLabel = "Datoteka"
+accessGeneral = "Opšti pristup"
+accessInviteTitle = "Pozovi osobe"
+accessOwner = "Vlasnik"
+accessPanel = "Pristup dokumentu"
+accessPeople = "Osobe sa pristupom"
+accessRemove = "Ukloni"
+accessRestricted = "Ograničeno"
+accessRestrictedHint = "Samo osobe sa pristupom mogu da otvore"
+accessRole = "Uloga"
+accessRoleCommenter = "Komentator"
+accessRoleEditor = "Urednik"
+accessRoleViewer = "Čitalac"
+accessSelectedFile = "Izabrana datoteka"
+accessSendInvite = "Pošalji poziv"
+accessTitle = "Pristup dokumentu"
+accessYou = "Vi"
 account = "Nalog"
+activeSessions = "Aktivne sesije"
+activeTab = "Aktivno"
 activity = "Istorija"
 adminSettings = "Admin postavke"
+allSessions = "Sve sesije"
 allTools = "All Tools"
 automate = "Auto radnje"
+back = "Nazad"
+certSign = "Potpisivanje sertifikatom"
+completedSessions = "Završene sesije"
+completedTab = "Završeno"
 config = "Konfig"
+createNew = "Kreiraj novi zahtev"
+createSession = "Kreiraj zahtev za potpisivanje"
+dueDate = "Rok (opciono)"
 files = "Fajlovi"
 help = "Pomoć"
+noActiveSessions = "Nema zahteva za potpisivanje na čekanju niti aktivnih sesija"
+noCompletedSessions = "Nema završenih sesija"
+noFile = "Nije izabrana datoteka"
 read = "Čitanje"
 reader = "Čitač"
+refresh = "Osveži"
+requestSignatures = "Zatraži potpise"
+selectSingleFileToRequest = "Izaberite jednu PDF datoteku da zatražite potpise"
+selectedFile = "Izabrana datoteka"
+selectUsers = "Izaberite korisnike za potpisivanje"
+selectUsersPlaceholder = "Izaberite učesnike..."
+sendingRequest = "Slanje..."
 settings = "Postavke"
 showMeAround = "Provedi me kroz"
 sign = "Potpis"
+signatureRequests = "Zahtevi za potpisivanje"
+signYourself = "Potpišite sami"
+newRequest = "Novi zahtev"
 tours = "Obilasci"
+wetSign = "Dodaj potpis"
+filterMine = "Moji"
+filterOverdue = "Istekli rok"
+filterSigned = "Potpisano"
+filterDeclined = "Odbijeno"
+searchDocuments = "Pretraži dokumente…"
 
 [quickAccess.helpMenu]
 adminTour = "Administratorski obilazak"
@@ -5631,6 +6360,32 @@ text = "Rotirajte stranice PDF-a u smeru ili suprotno od kazaljke na satu u kora
 [rotate.tooltip.header]
 title = "Pregled podešavanja rotacije"
 
+[timestampPdf]
+completed = "PDF je uspešno vremenski označen"
+desc = "Dodajte vremensku oznaku dokumenta prema RFC 3161 svom PDF-u koristeći pouzdan TSA server."
+filenamePrefix = "vremenski-oznaceno"
+results = "Rezultati vremenske oznake"
+submit = "Primeni vremensku oznaku"
+title = "Vremenska oznaka PDF-a"
+
+[timestampPdf.error]
+failed = "Došlo je do greške pri dodavanju vremenske oznake PDF-u."
+generic = "Vremenska oznaka nije uspela"
+
+[timestampPdf.files]
+placeholder = "Izaberite PDF u glavnom prikazu da biste započeli"
+
+[timestampPdf.options]
+note = "Samo SHA-256 heš vašeg dokumenta se šalje TSA serveru; sam PDF se nikada ne šalje TSA serveru."
+title = "Server vremenske oznake (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Izaberite pouzdan Autoritet vremenske oznake"
+label = "Izaberite TSA server"
+
+[timestampPdf.steps]
+settings = "Podešavanja"
+
 [sanitize]
 completed = "Sanitizacija uspešno završena"
 desc = "Uklonite potencijalno štetne elemente iz PDF datoteka."
@@ -5755,25 +6510,100 @@ placeholder = "Unesite pojam pretrage..."
 searching = "Pretraga..."
 title = "Pretraži PDF"
 
+[selfHosted.offline]
+hideTools = "Sakrij nedostupne alate ▴"
+messageNoFallback = "Alati nisu dostupni dok se vaš server ne vrati na mrežu."
+messageWithFallback = "Neki alati zahtevaju vezu sa serverom."
+showTools = "Prikaži nedostupne alate ▾"
+title = "Vaš Stirling-PDF server je nedostupan"
+toolNotAvailableLocally = "Vaš Stirling-PDF server je van mreže i \"{{endpoint}}\" nije dostupan na lokalnom pozadinskom servisu."
+
 [session]
 expired = "Istekla ti je sesija. Osveži stranicu i pokušaj ponovo."
 refreshPage = "Osveži stranicu"
+
+[sessionManagement.tooltip]
+header = "Upravljanje sesijama potpisivanja"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Novi učesnici se dodaju na kraj redosleda potpisivanja"
+bullet2 = "Ne možete dodavati učesnike nakon finalizacije sesije"
+bullet3 = "Svaki učesnik dobija obaveštenje kada dođe na red"
+description = "Možete dodati još učesnika u aktivnu sesiju u bilo kom trenutku pre finalizacije."
+title = "Dodavanje učesnika"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Potpuna finalizacija</b>: Svi učesnici su potpisali"
+bullet2 = "<b>Delimična finalizacija</b>: Neki učesnici još nisu potpisali"
+bullet3 = "Učesnici koji nisu potpisali biće isključeni iz konačnog dokumenta"
+bullet4 = "Nakon finalizacije možete učitati potpisani PDF u aktivne datoteke"
+description = "Finalizacija kombinuje sve potpise u jedan potpisani PDF. Ova radnja se ne može opozvati."
+title = "Finalizacija sesije"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Ne možete ukloniti učesnike koji su već potpisali"
+bullet2 = "Uklonjeni učesnici više ne dobijaju obaveštenja"
+bullet3 = "Redosled potpisivanja se automatski prilagođava"
+description = "Učesnici se mogu ukloniti iz sesije pre nego što potpišu."
+title = "Uklanjanje učesnika"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Svaki potpis se primenjuje sekvencijalno na PDF"
+bullet2 = "Kasniji potpisnici mogu videti ranije potpise"
+bullet3 = "Ključno za tokove odobravanja i pravni lanac čuvanja"
+description = "Redosled koji navedete pri kreiranju sesije određuje ko potpisuje prvi."
+title = "Redosled potpisivanja"
+
+[signatureSettings.tooltip]
+header = "Podešavanja izgleda potpisa"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Primeri: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Nije isto što i pozicija na stranici"
+bullet3 = "Može biti obavezno u određenim pravnim jurisdikcijama"
+description = "Opciona geografska lokacija gde je potpis primenjen. Čuva se u metapodacima sertifikata."
+title = "Lokacija potpisa"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Prikazano uz potpis i tekst"
+bullet2 = "Podržava PNG, JPG formate"
+bullet3 = "Poboljšava profesionalni izgled"
+description = "Dodajte logotip kompanije vidljivim potpisima radi brendiranja i autentičnosti."
+title = "Logotip kompanije"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Primeri: \"Approval\", \"Contract Agreement\", \"Review Complete\""
+bullet2 = "Vidljivo u svojstvima potpisa u PDF-u"
+bullet3 = "Korisno za revizione tragove i usklađenost"
+description = "Opcioni tekst koji objašnjava zašto se dokument potpisuje. Čuva se u metapodacima sertifikata."
+title = "Razlog potpisa"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Vidljivo</b>: Potpis se pojavljuje u PDF-u sa prilagođenim izgledom"
+bullet2 = "<b>Nevidljivo</b>: Sertifikat je ugrađen bez vizuelne oznake"
+bullet3 = "Nevidljivi potpisi i dalje pružaju kriptografsku verifikaciju"
+description = "Kontroliše da li je potpis vidljiv na dokumentu ili je nevidljivo ugrađen."
+title = "Vidljivost potpisa"
 
 [settings.configuration]
 advanced = "Napredno"
 database = "Baza podataka"
 endpoints = "Krajnje tačke"
 features = "Funkcije"
+storageSharing = "Skladištenje datoteka i deljenje"
 systemSettings = "Sistemska podešavanja"
 title = "Konfiguracija"
 
 [settings.connection]
+localDescription = "Koristite lokalni pozadinski servis bez naloga. Neki alati koji zahtevaju obradu u oblaku ili samohostovani server nisu dostupni."
 logout = "Odjava"
 server = "Server"
+signIn = "Prijava"
 title = "Režim povezivanja"
 user = "Prijavljeni kao"
 
 [settings.connection.mode]
+local = "Samo lokalno"
 saas = "Stirling Cloud"
 selfhosted = "Samohostovano"
 
@@ -5931,6 +6761,9 @@ title = "Politike i privatnost"
 [settings.preferences]
 title = "Preferencije"
 
+[settings.search]
+placeholder = "Pretražite stranice podešavanja..."
+
 [settings.security]
 description = "Ažurirajte lozinku da biste svoj nalog održali bezbednim."
 title = "Bezbednost"
@@ -5968,6 +6801,18 @@ title = "Radni prostor"
 [settings.team]
 title = "Tim"
 
+[localMode]
+toolUnavailable = "Ovaj alat zahteva nalog. Prijavite se na Stirling Cloud ili se povežite na samohostovani server da biste ga koristili."
+
+[localMode.banner]
+message = "Prijavite se da otključate sve alate."
+signIn = "Prijava"
+title = "Pokrenuto lokalno"
+
+[localMode.toolPicker]
+message = "Prijavite se da otključate sve alate."
+signIn = "Prijava"
+
 [setup]
 description = "Započnite izborom načina na koji želite da koristite Stirling PDF"
 welcome = "Dobrodošli u Stirling PDF"
@@ -5975,6 +6820,7 @@ welcome = "Dobrodošli u Stirling PDF"
 [setup.login]
 connectingTo = "Povezivanje na:"
 hideInstructions = "Sakrij uputstva"
+skipSignIn = "Nastavite bez prijave"
 instructions = "Da biste omogućili prijavu na svom Stirling PDF serveru:"
 instructionsEnvVar = "Podesite promenljivu okruženja:"
 instructionsOrYml = "Ili u settings.yml:"
@@ -6022,7 +6868,17 @@ title = "Prijavite se u Stirling"
 [setup.selfhosted]
 link = "ili se povežite na samohostovani nalog"
 subtitle = "Unesite kredencijale servera"
+changeServerLocked = "Vaša organizacija je ograničila ovu aplikaciju na određeni server"
+switchToLocal = "Umesto toga koristite lokalne alate"
 title = "Prijava na server"
+
+[setup.selfhosted.unreachable]
+changeServer = "Povežite se na drugi server"
+changeServerLocked = "Vaša organizacija je ograničila ovu aplikaciju na određeni server"
+continueOffline = "Umesto toga koristite lokalne alate"
+message = "Nije moguće pristupiti {{url}}. Proverite da li server radi i da li je dostupan."
+retry = "Pokušajte ponovo"
+title = "Nije moguće povezati se sa serverom"
 
 [setup.server]
 subtitle = "Unesite URL svog samohostovanog servera"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Nije uspelo preuzimanje konfiguracije servera. Proverite URL i pokušajte ponovo."
+configFetchError = "Nije uspelo preuzimanje konfiguracije servera: {{error}}"
 emptyUrl = "Unesite URL servera"
 invalidUrl = "Nevažeći format URL-a. Unesite ispravan URL kao https://your-server.com"
 testFailed = "Test veze nije uspeo"
@@ -6210,6 +7067,15 @@ image = "Slika"
 saved = "Sačuvano"
 text = "Tekst"
 title = "Tip potpisa"
+
+[signRequest]
+declined = "Zahtev za potpisivanje je odbijen"
+fetchFailed = "Učitavanje zahteva za potpisivanje nije uspelo"
+signed = "Dokument je uspešno potpisan"
+
+[signSession]
+createFailed = "Kreiranje zahteva za potpisivanje nije uspelo"
+created = "Zahtev za potpisivanje je poslat"
 
 [signup]
 accountCreatedSuccessfully = "Nalog je uspešno kreiran! Sada se možete prijaviti."
@@ -6489,6 +7355,106 @@ title = "Podeli PDF po poglavljima"
 [splitPdfByChapters]
 tags = "podeli,poglavlja,zabeleške,organizacija"
 
+[storageShare]
+accessed = "Pristupljeno"
+accessDenied = "Nemate pristup ovoj deljenoj datoteci. Zatražite od vlasnika da je podeli sa vama."
+accessFailed = "Nije moguće učitati aktivnost."
+accessDeniedBody = "Nemate pristup ovoj datoteci. Zatražite od vlasnika da je podeli sa vama."
+accessDeniedTitle = "Nema pristupa"
+accessLimitedCommenter = "Pristup za komentarisanje uskoro stiže. Zatražite od vlasnika pristup urednika ako treba da preuzmete."
+accessLimitedTitle = "Ograničen pristup"
+accessLimitedViewer = "Ovaj link je samo za pregled. Zatražite od vlasnika pristup urednika ako treba da preuzmete."
+createdAt = "Kreirano"
+download = "Preuzmi"
+downloadFailed = "Nije moguće preuzeti ovu datoteku."
+expiredBody = "Ovaj link za deljenje je nevažeći ili je istekao."
+expiredTitle = "Link je istekao"
+goToLogin = "Idi na prijavu"
+loadFailed = "Nije moguće otvoriti deljenu datoteku."
+loading = "Učitavanje linka za deljenje..."
+loginPrompt = "Prijavite se da pristupite ovoj deljenoj datoteci."
+loginRequired = "Potrebna je prijava"
+openInApp = "Otvori u Stirling PDF"
+ownerLabel = "Vlasnik"
+ownerUnknown = "Nepoznato"
+requiresLogin = "Ova deljena datoteka zahteva prijavu."
+roleCommenter = "Komentator"
+roleEditor = "Urednik"
+roleViewer = "Čitalac"
+shareHeading = "Deljena datoteka"
+titleDefault = "Deljena datoteka"
+tryAgain = "Pokušajte ponovo kasnije."
+addUser = "Dodaj"
+commenterHint = "Komentarisanje uskoro stiže."
+copied = "Link kopiran u privremenu memoriju"
+copy = "Kopiraj"
+copyFailed = "Kopiranje nije uspelo"
+description = "Kreirajte link za deljenje za ovu datoteku. Prijavljeni korisnici sa linkom mogu da mu pristupe."
+downloadsCount = "Preuzimanja: {{count}}"
+emailWarningBody = "Ovo izgleda kao adresa e-pošte. Ako ova osoba nije već korisnik Stirling PDF-a, neće moći da pristupi datoteci."
+emailWarningConfirm = "Ipak podeli"
+emailWarningTitle = "Adresa e-pošte"
+errorTitle = "Deljenje nije uspelo"
+failure = "Nije moguće generisati link za deljenje. Pokušajte ponovo."
+fileLabel = "Datoteka"
+generate = "Generiši link"
+generated = "Link za deljenje je generisan"
+hideActivity = "Sakrij aktivnost"
+invalidUsername = "Unesite važeće korisničko ime ili adresu e-pošte."
+lastAccessed = "Poslednji pristup"
+linkAccessTitle = "Pristup putem linka za deljenje"
+linkLabel = "Link za deljenje"
+linksDisabled = "Linkovi za deljenje su onemogućeni."
+linksDisabledBody = "Linkovi za deljenje su onemogućeni podešavanjima vašeg servera."
+manage = "Upravljaj deljenjem"
+manageDescription = "Kreirajte i upravljajte linkovima za deljenje ove datoteke."
+manageLoadFailed = "Nije moguće učitati linkove za deljenje."
+manageTitle = "Upravljanje deljenjem"
+noActivity = "Još nema aktivnosti."
+noLinks = "Još nema aktivnih linkova za deljenje."
+noSharedUsers = "Još niko nema pristup."
+removeLink = "Ukloni link"
+removeUser = "Ukloni"
+revokeFailed = "Nije moguće ukloniti link za deljenje."
+revoked = "Link za deljenje uklonjen"
+roleLabel = "Uloga"
+sharingDisabled = "Deljenje je onemogućeno."
+sharingDisabledBody = "Deljenje je onemogućeno podešavanjima vašeg servera."
+sharedUsersTitle = "Korisnici sa kojima je podeljeno"
+title = "Podeli datoteku"
+unknownUser = "Nepoznat korisnik"
+userAddFailed = "Nije moguće podeliti sa tim korisnikom."
+userAdded = "Korisnik je dodat na listu deljenja."
+usernameLabel = "Korisničko ime ili e-pošta"
+usernamePlaceholder = "Unesite korisničko ime ili e-poštu"
+userRemoveFailed = "Nije moguće ukloniti tog korisnika."
+userRemoved = "Korisnik je uklonjen sa liste deljenja."
+viewActivity = "Prikaži aktivnost"
+viewed = "Pregledano"
+viewsCount = "Pregledi: {{count}}"
+downloaded = "Preuzeto"
+bulkDescription = "Napravite jedan link za deljenje svih izabranih datoteka sa prijavljenim korisnicima."
+bulkTitle = "Podeli izabrane datoteke"
+copyLink = "Kopiraj link za deljenje"
+fileCount = "{{count}} izabranih datoteka"
+ownerOnly = "Samo vlasnik može da upravlja deljenjem."
+selectSingleFile = "Izaberite jednu datoteku da biste upravljali deljenjem."
+
+[storageUpload]
+description = "Ovo otprema trenutnu datoteku na serversko skladište za vaš sopstveni pristup."
+errorTitle = "Otpremanje nije uspelo"
+failure = "Otpremanje nije uspelo. Proverite prijavu i podešavanja skladišta."
+fileLabel = "Datoteka"
+hint = "Javni linkovi i režimi pristupa kontrolišu se podešavanjima vašeg servera."
+success = "Otpremljeno na server"
+title = "Otpremi na server"
+updateButton = "Ažuriraj na serveru"
+uploadButton = "Otpremi na server"
+bulkDescription = "Ovo otprema izabrane datoteke na vaše serversko skladište."
+bulkTitle = "Otpremi izabrane datoteke"
+fileCount = "{{count}} izabranih datoteka"
+more = " +{{count}} još"
+
 [storage]
 approximateSize = "Približna veličina"
 fileTooLarge = "Datoteka je prevelika. Maksimalna veličina po datoteci je"
@@ -6557,6 +7523,7 @@ favorites = "Omiljeno"
 heading = "Svi alati (prikaz preko celog ekrana)"
 noResults = "Pokušajte da prilagodite pretragu ili uključite opise da biste našli šta vam treba."
 recommended = "Preporučeno"
+selfHostedOffline = "Zahteva vaš Stirling-PDF server (trenutno van mreže):"
 showDetails = "Prikaži detalje"
 unavailable = "Onemogućio administrator servera:"
 unavailableDependency = "Nedostupno - potreban alat nedostaje na serveru:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Formatiranje stranica"
 removal = "Uklanjanje"
 signing = "Potpisivanje"
 verification = "Verifikacija"
+
+[tool]
+endpointUnavailable = "Ovaj alat nije dostupan na vašem serveru."
+endpointUnavailableClickable = "Nije dostupno u ovom režimu. Kliknite za prijavu."
+invalidParams = "Popunite obavezna podešavanja."
+noFiles = "Dodajte datoteku da biste počeli."
 
 [tools]
 noSearchResults = "Nema pronađenih alata"
@@ -6828,6 +7801,30 @@ title = "Pogledaj/Izmeni PDF"
 [warning]
 tooltipTitle = "Upozorenje"
 
+[wetSignature.tooltip]
+header = "Metode kreiranja potpisa"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Prilagodite boju i debljinu olovke"
+bullet2 = "Brišite i crtajte ponovo dok ne budete zadovoljni"
+bullet3 = "Radi na uređajima na dodir (tableti, telefoni)"
+description = "Napravite rukom pisani potpis pomoću miša ili ekrana osetljivog na dodir. Najbolje za lične, autentične potpise."
+title = "Nacrtaj potpis"
+
+[wetSignature.tooltip.type]
+bullet1 = "Izaberite među više fontova"
+bullet2 = "Prilagodite veličinu i boju teksta"
+bullet3 = "Idealno za standardizovane potpise"
+description = "Generišite potpis iz unetog teksta. Brzo i dosledno, pogodno za poslovna dokumenta."
+title = "Unesi potpis"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Podržava PNG, JPG i druge formate slika"
+bullet2 = "Za najbolje rezultate preporučuju se providne pozadine"
+bullet3 = "Slika će biti prilagođena veličini oblasti potpisa"
+description = "Otpremite unapred napravljenu sliku potpisa. Idealno ako imate skenirani potpis ili logo kompanije."
+title = "Otpremi sliku potpisa"
+
 [watermark]
 completed = "Vodeni žig je dodat"
 desc = "Dodajte tekstualne ili slikovne vodene žigove PDF datotekama"
@@ -7008,6 +8005,7 @@ activeSession = "Aktivna sesija"
 addMembers = "Dodaj članove"
 admin = "Admin"
 confirmDelete = "Da li ste sigurni da želite da obrišete ovog korisnika? Ova radnja je nepovratna."
+confirmUnlock = "Da li ste sigurni da želite da otključate ovaj korisnički nalog?"
 deleteUser = "Obriši korisnika"
 deleteUserError = "Brisanje korisnika nije uspelo"
 deleteUserSuccess = "Korisnik uspešno obrisan"
@@ -7016,6 +8014,8 @@ disable = "Onemogući"
 disabled = "Onemogućen"
 editRole = "Uredi ulogu"
 enable = "Omogući"
+locked = "zaključan"
+lockedBadge = "Zaključan"
 loading = "Učitavanje osoba..."
 loginRequired = "Prvo omogućite režim prijave"
 member = "Član"
@@ -7025,6 +8025,9 @@ searchMembers = "Pretraži članove..."
 status = "Status"
 team = "Tim"
 title = "Osobe"
+unlockAccount = "Otključaj nalog"
+unlockUserError = "Nije uspelo otključavanje korisničkog naloga"
+unlockUserSuccess = "Korisnički nalog je uspešno otključan"
 user = "Korisnik"
 
 [workspace.people.actions]

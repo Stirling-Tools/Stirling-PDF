@@ -1,5 +1,5 @@
-import React from 'react';
-import { TextInput, Combobox, useCombobox } from '@mantine/core';
+import React from "react";
+import { TextInput, Combobox, useCombobox } from "@mantine/core";
 
 interface PenSizeSelectorProps {
   value: number;
@@ -20,11 +20,11 @@ const PenSizeSelector = ({
   disabled = false,
   placeholder = "Type or select pen size (1-200)",
   style,
-  size
+  size,
 }: PenSizeSelectorProps) => {
   const combobox = useCombobox();
 
-  const penSizeOptions = ['1', '2', '3', '4', '5', '8', '10', '12', '15', '20'];
+  const penSizeOptions = ["1", "2", "3", "4", "5", "8", "10", "12", "15", "20"];
 
   return (
     <Combobox

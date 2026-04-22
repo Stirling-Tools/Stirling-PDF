@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Button, Text, NumberInput, Group } from '@mantine/core';
-import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
+import { useState } from "react";
+import { Button, Text, NumberInput, Group } from "@mantine/core";
+import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 
 interface SelectPagesProps {
   title: string;
@@ -9,7 +9,7 @@ interface SelectPagesProps {
   maxPages: number;
   validationFn?: (value: number) => string | null;
   isRange?: boolean;
-  rangeEndValue?: number | '';
+  rangeEndValue?: number | "";
   onRangeEndChange?: (value: string | number) => void;
   rangeEndPlaceholder?: string;
 }
@@ -24,14 +24,14 @@ const SelectPages = ({
   onRangeEndChange,
   rangeEndPlaceholder,
 }: SelectPagesProps) => {
-  const [value, setValue] = useState<number | ''>('');
+  const [value, setValue] = useState<number | "">("");
   const [error, setError] = useState<string | null>(null);
 
   const handleValueChange = (val: string | number) => {
-    const next = typeof val === 'number' ? val : '';
+    const next = typeof val === "number" ? val : "";
     setValue(next);
-    
-    if (validationFn && typeof next === 'number') {
+
+    if (validationFn && typeof next === "number") {
       setError(validationFn(next));
     } else {
       setError(null);
@@ -39,18 +39,24 @@ const SelectPages = ({
   };
 
   const handleApply = () => {
-    if (value === '' || typeof value !== 'number') return;
+    if (value === "" || typeof value !== "number") return;
     onApply(value);
-    setValue('');
+    setValue("");
     setError(null);
   };
 
-  const isDisabled = Boolean(error) || value === '';
+  const isDisabled = Boolean(error) || value === "";
 
   return (
     <div className={classes.advancedCard}>
-      <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">{title}</Text>
-      {error && (<Text size="xs" c="var(--text-brand-accent)" mb="xs">{error}</Text>)}
+      <Text size="sm" fw={600} c="var(--text-secondary)" mb="xs">
+        {title}
+      </Text>
+      {error && (
+        <Text size="xs" c="var(--text-brand-accent)" mb="xs">
+          {error}
+        </Text>
+      )}
       <div className={classes.inputGroup}>
         <Group gap="sm" align="flex-end" wrap="nowrap">
           {isRange ? (
@@ -87,8 +93,8 @@ const SelectPages = ({
               error={Boolean(error)}
             />
           )}
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className={classes.applyButton}
             onClick={handleApply}
             disabled={isDisabled}

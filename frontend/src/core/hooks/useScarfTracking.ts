@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useCookieConsent } from '@app/hooks/useCookieConsent';
-import { setScarfConfig, firePixel } from '@app/utils/scarfTracking';
+import { useEffect } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { setScarfConfig, firePixel } from "@app/utils/scarfTracking";
 
 /**
  * Hook for initializing Scarf tracking
@@ -15,7 +15,9 @@ import { setScarfConfig, firePixel } from '@app/utils/scarfTracking';
  */
 export function useScarfTracking() {
   const { config } = useAppConfig();
-  const { isServiceAccepted } = useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
+  const { isServiceAccepted } = useCookieConsent({
+    analyticsEnabled: config?.enableAnalytics === true,
+  });
 
   // Update scarf config whenever config or consent changes
   useEffect(() => {
@@ -27,18 +29,20 @@ export function useScarfTracking() {
   // Listen to cookie consent changes and auto-fire pixel when consent is granted
   useEffect(() => {
     const handleConsentChange = () => {
-      console.warn('[useScarfTracking] Consent changed, checking scarf service acceptance');
-      if (isServiceAccepted('scarf', 'analytics')) {
+      console.warn(
+        "[useScarfTracking] Consent changed, checking scarf service acceptance",
+      );
+      if (isServiceAccepted("scarf", "analytics")) {
         firePixel(window.location.pathname);
       }
     };
 
-    window.addEventListener('cc:onConsent', handleConsentChange);
-    window.addEventListener('cc:onChange', handleConsentChange);
+    window.addEventListener("cc:onConsent", handleConsentChange);
+    window.addEventListener("cc:onChange", handleConsentChange);
 
     return () => {
-      window.removeEventListener('cc:onConsent', handleConsentChange);
-      window.removeEventListener('cc:onChange', handleConsentChange);
+      window.removeEventListener("cc:onConsent", handleConsentChange);
+      window.removeEventListener("cc:onChange", handleConsentChange);
     };
   }, [isServiceAccepted]);
 }

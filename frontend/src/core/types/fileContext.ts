@@ -2,8 +2,8 @@
  * Types for global file context management across views and tools
  */
 
-import { PageOperation } from '@app/types/pageEditor';
-import { FileId, BaseFileMetadata } from '@app/types/file';
+import { PageOperation } from "@app/types/pageEditor";
+import { FileId, BaseFileMetadata } from "@app/types/file";
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -42,14 +42,14 @@ export interface ProcessedFileMetadata {
  * where files persist across tool operations.
  */
 export interface StirlingFileStub extends BaseFileMetadata {
-  quickKey?: string;             // Fast deduplication key: name|size|lastModified
-  thumbnailUrl?: string;         // Generated thumbnail blob URL for visual display
-  blobUrl?: string;             // File access blob URL for downloads/processing
-  localFilePath?: string;        // Original local filesystem path (desktop app only)
+  quickKey?: string; // Fast deduplication key: name|size|lastModified
+  thumbnailUrl?: string; // Generated thumbnail blob URL for visual display
+  blobUrl?: string; // File access blob URL for downloads/processing
+  localFilePath?: string; // Original local filesystem path (desktop app only)
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
-  insertAfterPageId?: string;   // Page ID after which this file should be inserted
-  isPinned?: boolean;           // Protected from tool consumption (replace/remove)
-  isDirty?: boolean;            // Has unsaved changes (only for files with localFilePath)
+  insertAfterPageId?: string; // Page ID after which this file should be inserted
+  isPinned?: boolean; // Protected from tool consumption (replace/remove)
+  isDirty?: boolean; // Has unsaved changes (only for files with localFilePath)
   // Note: File object stored in provider ref, not in state
 }
 
@@ -61,13 +61,13 @@ export interface FileContextNormalizedFiles {
 // Helper functions - UUID-based primary keys (zero collisions, synchronous)
 export function createFileId(): FileId {
   // Use crypto.randomUUID for authoritative primary key
-  if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
     return window.crypto.randomUUID() as FileId;
   }
   // Fallback for environments without randomUUID
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = Math.random() * 16 | 0;
-    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c == "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   }) as FileId;
 }
@@ -86,8 +86,13 @@ export interface StirlingFile extends File {
 
 // Type guard to check if a File object has an embedded fileId
 export function isStirlingFile(file: File | Blob): file is StirlingFile {
-  return file instanceof File && 'fileId' in file && typeof (file as any).fileId === 'string' &&
-    'quickKey' in file && typeof (file as any).quickKey === 'string';
+  return (
+    file instanceof File &&
+    "fileId" in file &&
+    typeof (file as any).fileId === "string" &&
+    "quickKey" in file &&
+    typeof (file as any).quickKey === "string"
+  );
 }
 
 /**
@@ -95,7 +100,9 @@ export function isStirlingFile(file: File | Blob): file is StirlingFile {
  * This ensures that form widgets/values are correctly isolated between files
  * even if they have the same name or are re-scanned.
  */
-export function getFormFillFileId(file: File | Blob | null | undefined): string | null {
+export function getFormFillFileId(
+  file: File | Blob | null | undefined,
+): string | null {
   if (!file) return null;
 
   if (isStirlingFile(file)) {
@@ -131,18 +138,18 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
 
   // Use Object.defineProperty to add properties while preserving the original File object
   // This maintains proper method binding and avoids "Illegal invocation" errors
-  Object.defineProperty(file, 'fileId', {
+  Object.defineProperty(file, "fileId", {
     value: fileId,
     writable: false,
     enumerable: true,
-    configurable: false
+    configurable: false,
   });
 
-  Object.defineProperty(file, 'quickKey', {
+  Object.defineProperty(file, "quickKey", {
     value: quickKey,
     writable: false,
     enumerable: true,
-    configurable: false
+    configurable: false,
   });
 
   return file as StirlingFile;
@@ -150,7 +157,7 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
 
 // Extract FileIds from StirlingFile array
 export function extractFileIds(files: StirlingFile[]): FileId[] {
-  return files.map(file => file.fileId);
+  return files.map((file) => file.fileId);
 }
 
 // Extract regular File objects from StirlingFile array
@@ -160,21 +167,21 @@ export function extractFiles(files: StirlingFile[]): File[] {
 
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)
 export function isFileObject(obj: any): obj is File | StirlingFile {
-  return obj &&
-    typeof obj.name === 'string' &&
-    typeof obj.size === 'number' &&
-    typeof obj.type === 'string' &&
-    typeof obj.lastModified === 'number' &&
-    typeof obj.arrayBuffer === 'function';
+  return (
+    obj &&
+    typeof obj.name === "string" &&
+    typeof obj.size === "number" &&
+    typeof obj.type === "string" &&
+    typeof obj.lastModified === "number" &&
+    typeof obj.arrayBuffer === "function"
+  );
 }
-
-
 
 export function createNewStirlingFileStub(
   file: File,
   id?: FileId,
   thumbnail?: string,
-  processedFileMetadata?: ProcessedFileMetadata
+  processedFileMetadata?: ProcessedFileMetadata,
 ): StirlingFileStub {
   const fileId = id || createFileId();
   return {
@@ -189,34 +196,34 @@ export function createNewStirlingFileStub(
     isLeaf: true, // New files are leaf nodes by default
     versionNumber: 1, // New files start at version 1
     thumbnailUrl: thumbnail,
-    processedFile: processedFileMetadata
+    processedFile: processedFileMetadata,
   };
 }
 
 export function revokeFileResources(record: StirlingFileStub): void {
   // Only revoke blob: URLs to prevent errors on other schemes
-  if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
+  if (record.thumbnailUrl && record.thumbnailUrl.startsWith("blob:")) {
     try {
       URL.revokeObjectURL(record.thumbnailUrl);
     } catch (error) {
-      console.warn('Failed to revoke thumbnail URL:', error);
+      console.warn("Failed to revoke thumbnail URL:", error);
     }
   }
-  if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
+  if (record.blobUrl && record.blobUrl.startsWith("blob:")) {
     try {
       URL.revokeObjectURL(record.blobUrl);
     } catch (error) {
-      console.warn('Failed to revoke blob URL:', error);
+      console.warn("Failed to revoke blob URL:", error);
     }
   }
   // Clean up processed file thumbnails
   if (record.processedFile?.pages) {
-    record.processedFile.pages.forEach(page => {
-      if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
+    record.processedFile.pages.forEach((page) => {
+      if (page.thumbnail && page.thumbnail.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(page.thumbnail);
         } catch (error) {
-          console.warn('Failed to revoke page thumbnail URL:', error);
+          console.warn("Failed to revoke page thumbnail URL:", error);
         }
       }
     });
@@ -226,7 +233,7 @@ export function revokeFileResources(record: StirlingFileStub): void {
 export interface ViewerConfig {
   zoom: number;
   currentPage: number;
-  viewMode: 'single' | 'continuous' | 'facing';
+  viewMode: "single" | "continuous" | "facing";
   sidebarOpen: boolean;
 }
 
@@ -260,38 +267,83 @@ export interface FileContextState {
 // Action types for reducer pattern
 export type FileContextAction =
   // File management actions
-  | { type: 'ADD_FILES'; payload: { stirlingFileStubs: StirlingFileStub[] } }
-  | { type: 'REMOVE_FILES'; payload: { fileIds: FileId[] } }
-  | { type: 'UPDATE_FILE_RECORD'; payload: { id: FileId; updates: Partial<StirlingFileStub> } }
-  | { type: 'REORDER_FILES'; payload: { orderedFileIds: FileId[] } }
+  | { type: "ADD_FILES"; payload: { stirlingFileStubs: StirlingFileStub[] } }
+  | { type: "REMOVE_FILES"; payload: { fileIds: FileId[] } }
+  | {
+      type: "UPDATE_FILE_RECORD";
+      payload: { id: FileId; updates: Partial<StirlingFileStub> };
+    }
+  | { type: "REORDER_FILES"; payload: { orderedFileIds: FileId[] } }
 
   // Pinned files actions
-  | { type: 'PIN_FILE'; payload: { fileId: FileId } }
-  | { type: 'UNPIN_FILE'; payload: { fileId: FileId } }
-  | { type: 'CONSUME_FILES'; payload: { inputFileIds: FileId[]; outputStirlingFileStubs: StirlingFileStub[] } }
-  | { type: 'UNDO_CONSUME_FILES'; payload: { inputStirlingFileStubs: StirlingFileStub[]; outputFileIds: FileId[] } }
+  | { type: "PIN_FILE"; payload: { fileId: FileId } }
+  | { type: "UNPIN_FILE"; payload: { fileId: FileId } }
+  | {
+      type: "CONSUME_FILES";
+      payload: {
+        inputFileIds: FileId[];
+        outputStirlingFileStubs: StirlingFileStub[];
+      };
+    }
+  | {
+      type: "UNDO_CONSUME_FILES";
+      payload: {
+        inputStirlingFileStubs: StirlingFileStub[];
+        outputFileIds: FileId[];
+      };
+    }
 
   // UI actions
-  | { type: 'SET_SELECTED_FILES'; payload: { fileIds: FileId[] } }
-  | { type: 'SET_SELECTED_PAGES'; payload: { pageNumbers: number[] } }
-  | { type: 'CLEAR_SELECTIONS' }
-  | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; progress: number } }
-  | { type: 'MARK_FILE_ERROR'; payload: { fileId: FileId } }
-  | { type: 'CLEAR_FILE_ERROR'; payload: { fileId: FileId } }
-  | { type: 'CLEAR_ALL_FILE_ERRORS' }
+  | { type: "SET_SELECTED_FILES"; payload: { fileIds: FileId[] } }
+  | { type: "SET_SELECTED_PAGES"; payload: { pageNumbers: number[] } }
+  | { type: "CLEAR_SELECTIONS" }
+  | {
+      type: "SET_PROCESSING";
+      payload: { isProcessing: boolean; progress: number };
+    }
+  | { type: "MARK_FILE_ERROR"; payload: { fileId: FileId } }
+  | { type: "CLEAR_FILE_ERROR"; payload: { fileId: FileId } }
+  | { type: "CLEAR_ALL_FILE_ERRORS" }
 
   // Navigation guard actions (minimal for file-related unsaved changes only)
-  | { type: 'SET_UNSAVED_CHANGES'; payload: { hasChanges: boolean } }
+  | { type: "SET_UNSAVED_CHANGES"; payload: { hasChanges: boolean } }
 
   // Context management
-  | { type: 'RESET_CONTEXT' };
+  | { type: "RESET_CONTEXT" };
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
-  addStirlingFileStubs: (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
-  removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
-  updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
+  addFiles: (
+    files: File[],
+    options?: { insertAfterPageId?: string; selectFiles?: boolean },
+  ) => Promise<StirlingFile[]>;
+  addFilesWithOptions: (
+    files: File[],
+    options?: {
+      insertAfterPageId?: string;
+      selectFiles?: boolean;
+      autoUnzip?: boolean;
+      autoUnzipFileLimit?: number;
+      skipAutoUnzip?: boolean;
+      confirmLargeExtraction?: (
+        fileCount: number,
+        fileName: string,
+      ) => Promise<boolean>;
+      allowDuplicates?: boolean;
+    },
+  ) => Promise<StirlingFile[]>;
+  addStirlingFileStubs: (
+    stirlingFileStubs: StirlingFileStub[],
+    options?: { insertAfterPageId?: string; selectFiles?: boolean },
+  ) => Promise<StirlingFile[]>;
+  removeFiles: (
+    fileIds: FileId[],
+    deleteFromStorage?: boolean,
+  ) => Promise<void>;
+  updateStirlingFileStub: (
+    id: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -301,8 +353,16 @@ export interface FileContextActions {
   unpinFile: (file: StirlingFile) => void;
 
   // File consumption (replace unpinned files with outputs)
-  consumeFiles: (inputFileIds: FileId[], outputStirlingFiles: StirlingFile[], outputStirlingFileStubs: StirlingFileStub[]) => Promise<FileId[]>;
-  undoConsumeFiles: (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]) => Promise<void>;
+  consumeFiles: (
+    inputFileIds: FileId[],
+    outputStirlingFiles: StirlingFile[],
+    outputStirlingFileStubs: StirlingFileStub[],
+  ) => Promise<FileId[]>;
+  undoConsumeFiles: (
+    inputFiles: File[],
+    inputStirlingFileStubs: StirlingFileStub[],
+    outputFileIds: FileId[],
+  ) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;

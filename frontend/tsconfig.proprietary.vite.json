@@ -2,10 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": [
-        "src/proprietary/*",
-        "src/core/*"
-      ],
+      "@app/*": ["src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"]
     }
@@ -13,7 +10,11 @@
   "exclude": [
     "src/core/**/*.test.ts*",
     "src/core/**/*.spec.ts*",
+    "src/proprietary/**/*.test.ts*",
+    "src/proprietary/**/*.spec.ts*",
     "src/desktop",
+    "src/saas",
+    "src/prototypes",
     "node_modules"
   ]
 }

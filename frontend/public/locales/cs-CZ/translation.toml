@@ -8,6 +8,7 @@ black = "Černá"
 blue = "Modrá"
 bored = "Nudíte se při čekání?"
 cancel = "Zrušit"
+confirm = "Potvrdit"
 changedCredsMessage = "Přihlašovací údaje byly změněny!"
 chooseFile = "Vybrat soubor"
 close = "Zavřít"
@@ -142,6 +143,11 @@ welcome = "Vítejte"
 white = "Bílá"
 WorkInProgess = "Práce probíhá, nemusí fungovat nebo může obsahovat chyby. Prosím, nahlaste případné problémy!"
 yes = "Ano"
+insufficientCredits = "Nedostatek kreditů. Požadováno: {{requiredCredits}}, Dostupné: {{currentBalance}}, Chybí: {{shortfall}}"
+loadingCredits = "Kontrola kreditů..."
+loadingProStatus = "Kontrola stavu předplatného..."
+noticeTopUpOrPlan = "Není dostatek kreditů, dobijte je nebo přejděte na tarif"
+accessInvite = "Pozvat"
 
 [account]
 accountSettings = "Nastavení účtu"
@@ -1423,6 +1429,34 @@ title = "Zpracování"
 description = "Maximální doba čekání na úlohu zpracování před ohlášením chyby."
 label = "Časový limit zpracování (sekundy)"
 
+[admin.settings.storage]
+description = "Spravujte úložiště serveru a možnosti sdílení."
+title = "Ukládání souborů a sdílení"
+
+[admin.settings.storage.enabled]
+description = "Umožnit uživatelům ukládat soubory na serveru."
+label = "Povolit ukládání souborů na serveru"
+
+[admin.settings.storage.sharing.email]
+description = "Umožnit sdílení s e-mailovými adresami."
+label = "Povolit sdílení e-mailem"
+mailLink = "Nastavit poštu"
+mailNote = "Vyžaduje nastavení pošty. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Umožnit uživatelům sdílet uložené soubory."
+label = "Povolit sdílení"
+
+[admin.settings.storage.sharing.links]
+description = "Umožnit sdílení prostřednictvím odkazů pro přihlášené uživatele."
+frontendUrlLink = "Nastavit v nastavení systému"
+frontendUrlNote = "Vyžaduje Frontend URL. "
+label = "Povolit odkazy ke sdílení"
+
+[admin.settings.storage.signing.enabled]
+description = "Umožnit uživatelům vytvářet relace podepisování s více účastníky. Vyžaduje povolené ukládání souborů na serveru."
+label = "Povolit skupinové podepisování (Alpha)"
+
 [admin.settings.unsavedChanges]
 cancel = "Pokračovat v úpravách"
 discard = "Zahodit změny"
@@ -1513,6 +1547,7 @@ editStampHint = "To change the image, delete this stamp and add a new one."
 editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
 editText = "Edit Text Box"
 editTextMarkup = "Edit Text Markup"
+annotationStyle = "Styl anotace"
 ellipse = "Ellipse"
 exit = "Exit annotation mode"
 fillColor = "Fill Colour"
@@ -1523,13 +1558,19 @@ highlight = "Highlight"
 imagePreview = "Preview"
 inkHighlighter = "Freehand Highlighter"
 line = "Line"
+lineArrow = "Šipka"
 noBackground = "No background"
 note = "Note"
+comment = "Komentář"
+comments = "Komentáře"
+insertText = "Vložit text"
+replaceText = "Nahradit text"
 noteIcon = "Note Icon"
 notesStamps = "Notes & Stamps"
 opacity = "Opacity"
 pen = "Pen"
 polygon = "Polygon"
+polyline = "Lomená čára"
 properties = "Vlastnosti"
 rectangle = "Rectangle"
 redo = "Redo"
@@ -2048,7 +2089,19 @@ numbers = "Čísla/rozsahy: 5, 10-20"
 progressions = "Progrese: 3n, 4n+1"
 
 [certSign]
+allSigned = "Všichni účastníci podepsali. Připraveno k dokončení."
+awaitingSignatures = "Čeká na podpisy"
+signatureProgress = "{{signedCount}}/{{totalCount}} podpisů"
 chooseCertificate = "Vyberte soubor s certifikátem"
+declined = "Odmítnuto"
+fetchFailed = "Nepodařilo se načíst data o podepisování"
+finalized = "Dokončeno"
+notified = "Oznámeno"
+partialNote = "Můžete dokončit dříve s aktuálními podpisy. Nepodepsaní účastníci budou vyloučeni."
+pending = "Čeká"
+readyToFinalize = "Připraveno k dokončení"
+signed = "Podepsáno"
+viewed = "Zobrazeno"
 chooseJksFile = "Vyberte soubor JKS"
 chooseP12File = "Vyberte soubor PKCS12"
 choosePfxFile = "Vyberte soubor PFX"
@@ -2071,6 +2124,7 @@ title = "Podepisování certifikátem"
 invisible = "Neviditelné"
 stepTitle = "Vzhled podpisu"
 visible = "Viditelné"
+visibility = "Viditelnost"
 
 [certSign.appearance.options]
 title = "Podrobnosti podpisu"
@@ -2176,6 +2230,252 @@ bullet3 = "Kontroluje, zda byl dokument po podpisu upraven"
 bullet4 = "Může použít vlastní certifikáty k ověření"
 text = "Při kontrole podpisů nástroj sdělí, zda jsou platné, kdo dokument podepsal, kdy byl podepsán a zda byl po podpisu změněn."
 title = "Kontrola podpisů"
+
+[certSign.collab.finalize]
+button = "Dokončit a načíst podepsané PDF"
+early = "Dokončit s aktuálními podpisy"
+
+[certSign.collab.sessionDetail]
+addButton = "Přidat účastníky"
+addParticipants = "Přidat účastníky"
+addParticipantsError = "Nepodařilo se přidat účastníky"
+backToList = "Zpět na relace"
+deleteConfirm = "Opravdu? Tuto akci nelze vrátit."
+deleteError = "Relaci se nepodařilo smazat"
+deleted = "Relace smazána"
+deleteSession = "Smazat relaci"
+dueDate = "Termín"
+finalizeError = "Nepodařilo se dokončit relaci"
+loadPdfError = "Nepodařilo se načíst podepsané PDF"
+loadSignedPdf = "Načíst podepsané PDF mezi aktivní soubory"
+messageLabel = "Zpráva"
+noAdditionalInfo = "Žádné další informace"
+owner = "Vlastník"
+participantRemoved = "Účastník odstraněn"
+participants = "Účastníci"
+participantsAdded = "Účastníci byli úspěšně přidáni"
+removeParticipant = "Odebrat"
+removeParticipantError = "Nepodařilo se odebrat účastníka"
+selectUsers = "Vyberte uživatele..."
+sessionInfo = "Informace o relaci"
+workbenchTitle = "Správa relací"
+
+[certSign.collab.signRequest]
+addedToFiles = "Dokument přidán mezi aktivní soubory"
+addSignature = "Přidat svůj podpis"
+addToFiles = "Přidat mezi aktivní soubory"
+advancedSettings = "Pokročilá nastavení"
+backToList = "Zpět na požadavky na podpis"
+certificateChoice = "Vyberte certifikát pro podepsání"
+changeSignature = "Změnit podpis"
+clearSignature = "Vymazat podpis"
+completeAndSign = "Dokončit a podepsat"
+createNewSignature = "Vytvořit nový podpis"
+declineButton = "Odmítnout"
+decline = "Odmítnout požadavek"
+deleteSelected = "Smazat vybraný podpis"
+drawSignature = "Nakreslete níže svůj podpis"
+dueDate = "Termín"
+fileTooLarge = "Velikost souboru musí být menší než 5 MB"
+fontFamily = "Písmo"
+fontSize = "Velikost písma: {{size}}px"
+fontSizePlaceholder = "Velikost"
+from = "Od"
+invalidCertFile = "Vyberte soubor certifikátu P12 nebo PFX"
+invalidFileType = "Vyberte soubor obrázku"
+location = "Místo (volitelné)"
+locationPlaceholder = "Odkud podepisujete?"
+message = "Zpráva"
+noCertificate = "Vyberte soubor certifikátu"
+noSignatures = "Umístěte na PDF alespoň jeden podpis"
+p12File = "Soubor certifikátu P12/PFX"
+password = "Heslo certifikátu"
+passwordPlaceholder = "Zadejte heslo..."
+penColor = "Barva pera"
+penSize = "Tloušťka pera: {{size}}px"
+placementActive = "Klikněte do PDF pro umístění"
+placeSignatureButton = "Umístit podpis na PDF"
+reason = "Důvod (volitelné)"
+reasonPlaceholder = "Proč podepisujete?"
+removeImage = "Odebrat obrázek"
+removeCertFile = "Odebrat soubor"
+savedSignatures = "Uložené podpisy"
+selectFile = "Vyberte soubor obrázku"
+selectSignatureTitle = "Vyberte nebo vytvořte podpis"
+signButton = "Podepsat dokument"
+signatureInfo = "Tato nastavení jsou určena vlastníkem dokumentu"
+signaturePlaced = "Podpis umístěn na stránku"
+signatureSettings = "Nastavení podpisu"
+signatureText = "Text podpisu"
+signatureTextPlaceholder = "Zadejte své jméno..."
+signatureTypeLabel = "Typ podpisu"
+signingTitle = "Podepisování"
+textColor = "Barva textu"
+typeSignature = "Zadejte své jméno pro vytvoření podpisu"
+uploadCert = "Vlastní certifikát"
+uploadCertDesc = "Použijte vlastní certifikát P12/PFX"
+uploadSignature = "Nahrajte obrázek svého podpisu"
+usePersonalCert = "Osobní certifikát"
+usePersonalCertDesc = "Automaticky vytvořen pro váš účet"
+useServerCert = "Certifikát organizace"
+useServerCertDesc = "Sdílený certifikát organizace"
+workbenchTitle = "Požadavek na podpis"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Vyberte barvu tahu"
+continue = "Pokračovat"
+
+[certSign.collab.signRequest.certModal]
+description = "Umístili jste {{count}} podpis(ů). Vyberte certifikát pro dokončení podepisování."
+sign = "Podepsat dokument"
+certValidating = "Ověřování certifikátu..."
+certValidUntil = "Certifikát platný do {{date}}"
+certInvalid = "Certifikát je neplatný: {{error}}"
+certInvalidFallback = "Neplatný certifikát"
+certNetworkError = "Nepodařilo se ověřit certifikát"
+title = "Nastavení certifikátu"
+
+[certSign.collab.signRequest.image]
+hint = "Nahrajte obrázek podpisu ve formátu PNG nebo JPG"
+
+[certSign.collab.signRequest.mode]
+move = "Přesunout podpis"
+place = "Umístit podpis"
+title = "Režim podpisu nebo přesunu"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Kreslit"
+image = "Nahrát"
+text = "Psát"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Klikněte na PDF pro umístění podpisu"
+title = "Umístit podpis"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Vybraný podpis"
+missing = "Žádný náhled"
+textFallback = "Podpis"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Nakreslený podpis"
+defaultImageLabel = "Nahraný podpis"
+defaultLabel = "Podpis"
+defaultTextLabel = "Zadaný podpis"
+delete = "Smazat podpis"
+none = "Žádné uložené podpisy"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Kresba"
+type = "Psát"
+upload = "Nahrát"
+
+[certSign.collab.signRequest.steps]
+back = "Zpět"
+cancelPlacement = "Zrušit umístění"
+certificate = "Certifikát"
+clickMultipleTimes = "Klikněte do PDF vícekrát pro umístění podpisů. Libovolný podpis přesuňte nebo změňte jeho velikost přetažením."
+clickToPlace = "Klikněte do PDF tam, kde chcete, aby se podpis zobrazil."
+continue = "Pokračovat k výběru certifikátu"
+continueToPlacement = "Pokračovat k umístění"
+continueToReview = "Pokračovat ke kontrole"
+createSignature = "Vytvořit podpis"
+invisible = "Neviditelný"
+location = "Místo:"
+multipleSignatures = "{{count}} podpisů bude aplikováno na PDF"
+oneSignature = "Na PDF bude aplikován 1 podpis"
+placeOnPdf = "Umístit na PDF"
+reason = "Důvod:"
+reviewTitle = "Zkontrolujte před podpisem"
+signaturePlaced = "Podpis umístěn na stránku {{page}}. Polohu můžete upravit opětovným kliknutím nebo pokračovat ke kontrole."
+visible = "Viditelný"
+visibility = "Viditelnost:"
+yourSignatures = "Vaše podpisy ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Barva"
+fontLabel = "Písmo"
+fontSizeLabel = "Velikost"
+fontSizePlaceholder = "16"
+label = "Text podpisu"
+modalHint = "Zadejte své jméno a poté klikněte na Pokračovat pro umístění do PDF."
+placeholder = "Zadejte své jméno..."
+
+[certSign.collab.participant]
+certValidating = "Ověřování certifikátu..."
+certValid = "✓ Certifikát je platný"
+certValidUntil = " do {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Neplatný certifikát"
+certNetworkError = "Nepodařilo se ověřit certifikát"
+
+[certSign.collab.addParticipants]
+add = "Přidat {{count}} účastníka(ů)"
+back = "Zpět"
+configureSignatures = "Konfigurovat nastavení podpisu"
+continue = "Pokračovat k nastavení podpisu"
+reasonHelp = "Přednastavte důvod podpisu pro tyto účastníky (volitelné, při podpisu jej mohou změnit)"
+reasonPlaceholder = "např. Schválení, Kontrola..."
+selectUsers = "Vybrat uživatele"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Zahrnout souhrnnou stránku podpisů"
+includeSummaryPageHelp = "Na konec bude přidána souhrnná stránka se všemi metadaty podpisů. Rámečky digitálního certifikátu na jednotlivých stránkách budou potlačeny (vlastnoruční podpisy nejsou ovlivněny)."
+
+[certSign.collab.sessionList]
+active = "Aktivní"
+finalized = "Dokončeno"
+
+[certSign.collab.signatureSettings]
+description = "Nastavte, jak budou podpisy vypadat pro všechny účastníky"
+title = "Vzhled podpisu"
+
+[certSign.collab.userSelector]
+inviteUsers = "Přidat uživatele"
+loadError = "Nepodařilo se načíst uživatele"
+noTeam = "Žádný tým"
+noUsers = "Nebyli nalezeni žádní další uživatelé."
+placeholder = "Vyberte uživatele..."
+
+[certSign.mobile]
+panelActions = "Akce"
+panelDocument = "Dokument"
+panelPeople = "Lidé"
+
+[certSign.sessions]
+deleted = "Relace smazána"
+fetchFailed = "Nepodařilo se načíst podrobnosti relace"
+finalized = "Relace dokončena"
+loaded = "Podepsané PDF načteno"
+pdfNotReady = "PDF není připraveno"
+pdfNotReadyDesc = "Podepsané PDF se generuje. Zkuste to prosím za okamžik."
+
+[certificateChoice.tooltip]
+header = "Typy certifikátů"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Spravováno správci systému"
+bullet2 = "Sdíleno mezi oprávněnými uživateli"
+bullet3 = "Reprezentuje identitu společnosti, nikoli jednotlivce"
+bullet4 = "Vhodné pro: Oficiální dokumenty, týmové podpisy"
+description = "Sdílený certifikát poskytovaný vaší organizací. Používá se pro firemní oprávnění k podepisování."
+title = "Certifikát organizace"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Vygenerován automaticky při prvním použití"
+bullet2 = "Navázán na váš uživatelský účet"
+bullet3 = "Nelze sdílet s jinými uživateli"
+bullet4 = "Vhodné pro: Osobní dokumenty, individuální odpovědnost"
+description = "Automaticky generovaný certifikát jedinečný pro váš uživatelský účet. Vhodný pro individuální podpisy."
+title = "Osobní certifikát"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Vyžaduje soubor P12/PFX a heslo"
+bullet2 = "Může být vydán externími certifikačními autoritami"
+bullet3 = "Vyšší úroveň důvěry pro právní dokumenty"
+bullet4 = "Vhodné pro: Právně závazné smlouvy, externí ověření"
+description = "Použijte svůj vlastní certifikát PKCS#12. Poskytuje plnou kontrolu nad vlastnostmi certifikátu."
+title = "Nahrát vlastní P12"
 
 [changeCreds]
 changePassword = "Používáte výchozí přihlašovací údaje. Zadejte prosím nové heslo"
@@ -2574,10 +2874,48 @@ title = "Úprava kvality"
 [compressPdfs]
 tags = "stlačit,malý,drobný"
 
+[config]
+plan = "Tarif"
+
 [config.account.overview]
+confirmDelete = "Smazat můj účet"
+deleteAccount = "Smazat účet"
+deleteAccountTitle = "Smazat účet"
+deleteFailed = "Nepodařilo se smazat účet."
+deleteFailedTitle = "Nelze smazat účet"
+deleteWarning = "Tato akce je trvalá a nelze ji vrátit zpět. Všechna vaše data budou smazána."
+enterEmailConfirm = "Pro potvrzení smazání zadejte níže svou e-mailovou adresu ({{email}}):"
 guestDescription = "Jste přihlášeni jako host. Zvažte vylepšení účtu výše."
+label = "Přehled"
 manageAccountPreferences = "Spravovat předvolby účtu"
+signedInAs = "Přihlášeno jako"
 title = "Nastavení účtu"
+
+[config.account.profilePicture]
+description = "Nahrajte obrázek pro personalizaci účtu."
+help = "PNG, JPG nebo WebP do 2 MB."
+remove = "Odebrat"
+sizeError = "Vyberte obrázek menší než 2 MB."
+switchedToCustom = "Přepnuto na vlastní obrázek. Nyní můžete nahrát svůj."
+title = "Profilový obrázek"
+upload = "Nahrát"
+useCustom = "Použít vlastní obrázek"
+usingProvider = "Používá se profilový obrázek {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Oříznutí obrázku se nezdařilo. Zkuste to znovu."
+invalidImage = "Neplatný obrazový soubor. Vyberte platný soubor PNG, JPG nebo WebP."
+processing = "Probíhá zpracování ořezu..."
+save = "Uložit oříznutý obrázek"
+sizeErrorAfterCrop = "Oříznutý obrázek je příliš velký. Oddalte nebo ořízněte menší oblast."
+title = "Oříznout profilový obrázek"
+zoom = "Přiblížení"
+
+[config.account.security]
+changePassword = "Změnit heslo"
+description = "Spravujte své heslo a nastavení zabezpečení."
+title = "Hesla a zabezpečení"
+update = "Aktualizovat heslo"
 
 [config.account.upgrade]
 description = "Propojte svůj účet, abyste zachovali historii a získali přístup k dalším funkcím!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Vylepšit účet"
 [config.apiKeys]
 chartAriaLabel = "Využití kreditů: zahrnuto {{includedUsed}} z {{includedTotal}}, zakoupeno {{purchasedUsed}} z {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopírovat API klíč"
+creditsRemaining = "Zbývající kredity"
 description = "Váš API klíč pro přístup k sadě PDF nástrojů Stirlingu. Zkopírujte si ho do projektu nebo obnovte pro vygenerování nového."
 docsDescription = "Zjistěte více o integraci se Stirling PDF:"
 docsLink = "API dokumentace"
@@ -2643,6 +2982,14 @@ basic = "Základní konfigurace"
 integration = "Integrační konfigurace"
 security = "Bezpečnostní konfigurace"
 system = "Systémová konfigurace"
+
+[connectionMode.status]
+localOffline = "Běží offline režim"
+localOnline = "Běží offline režim"
+saas = "Připojeno ke službě Stirling Cloud"
+selfhostedChecking = "Připojeno k samostatně hostovanému serveru (kontrola...)"
+selfhostedOffline = "Samostatně hostovaný server nedostupný"
+selfhostedOnline = "Připojeno k samostatně hostovanému serveru"
 
 [convert]
 autoRotate = "Automaticky otočit"
@@ -2728,6 +3075,15 @@ webOptions = "Možnosti Web → PDF"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
 zoomLevel = "Úroveň přiblížení"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E‑mail → PDF"
+fileToPdf = "Office/dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -3175,6 +3531,46 @@ totalSelected = "Celkem vybráno"
 unsupported = "Nepodporováno"
 unzip = "Rozbalit"
 uploadError = "Nepodařilo se nahrát některé soubory."
+copyCreated = "Kopie uložena do tohoto zařízení."
+copyFailed = "Kopii se nepodařilo vytvořit."
+leaveShare = "Odebrat z mého seznamu"
+leaveShareFailed = "Nepodařilo se odebrat sdílený soubor."
+leaveShareSuccess = "Odebráno z vašeho seznamu sdílení."
+removeBoth = "Odebrat z obou"
+removeFilePrompt = "Tento soubor je uložen v tomto zařízení i na vašem serveru. Odkud jej chcete odebrat?"
+removeFileTitle = "Odebrat soubor"
+removeLocalOnly = "Pouze toto zařízení"
+removeServerFailed = "Soubor se nepodařilo odebrat ze serveru."
+removeServerOnly = "Pouze server"
+removeServerOnlyPrompt = "Tento soubor je uložen pouze na vašem serveru. Chcete jej odebrat ze serveru?"
+removeServerSuccess = "Odebrán ze serveru."
+removeSharedPrompt = "Tento soubor je s vámi sdílen. Můžete jej odebrat z tohoto zařízení nebo ze svého seznamu sdílených."
+removeSharedServerOnlyBlockedPrompt = "Tento soubor je s vámi sdílen a je uložen pouze na serveru."
+removeSharedServerOnlyPrompt = "Tento soubor je s vámi sdílen a je uložen pouze na serveru. Odebrat jej z vašeho seznamu?"
+changesNotUploaded = "Změny nebyly nahrány"
+cloudFile = "Cloudový soubor"
+filterAll = "Vše"
+filterLocal = "Místní"
+filterSharedByMe = "Sdíleno mnou"
+filterSharedWithMe = "Sdíleno se mnou"
+lastSynced = "Naposledy synchronizováno"
+localOnly = "Pouze místní"
+makeCopy = "Vytvořit kopii"
+owner = "Vlastník"
+ownerUnknown = "Neznámý"
+share = "Sdílet"
+shareSelected = "Sdílet vybrané"
+sharedByYou = "Sdíleno vámi"
+sharedEditNoticeBody = "Nemáte práva upravovat serverovou verzi tohoto souboru. Jakékoli úpravy se uloží jako místní kopie."
+sharedEditNoticeConfirm = "Rozumím"
+sharedEditNoticeTitle = "Kopie na serveru je jen pro čtení"
+sharedWithYou = "Sdíleno s vámi"
+sharing = "Sdílení"
+storageState = "Úložiště"
+synced = "Synchronizováno"
+updateOnServer = "Aktualizovat na serveru"
+uploadSelected = "Nahrát vybrané"
+uploadToServer = "Nahrát na server"
 
 [files]
 addFiles = "Přidat soubory"
@@ -3299,6 +3695,77 @@ title = "O zplošťování PDF"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "O skupinovém podepisování"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Všechny podpisy se aplikují v pořadí účastníků, které jste určili"
+bullet2 = "V případě potřeby můžete dokončit i s neúplnými podpisy"
+bullet3 = "Po dokončení již relaci nelze upravovat"
+description = "Jakmile všichni účastníci podepíší (nebo se rozhodnete dokončit dříve), můžete vygenerovat finální podepsané PDF."
+title = "Proces dokončení"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Vlastník (vy): Vytváří relaci, nastavuje výchozí podpisové parametry, dokončuje dokument"
+bullet2 = "Účastníci: Vytvářejí svůj podpis, volí certifikát, umisťují na PDF"
+bullet3 = "Účastníci nemohou měnit nastavení viditelnosti, důvodu ani místa podpisu"
+description = "Nastavení vzhledu podpisů ovládáte pro všechny účastníky."
+title = "Role účastníků"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "První účastník musí podepsat, než se druhý dostane k dokumentu"
+bullet2 = "Zajišťuje správné pořadí podpisů pro právní soulad"
+bullet3 = "Účastníky můžete přeřadit přetažením v seznamu"
+description = "Účastníci podepisují dokumenty v pořadí, které určíte. Každý podepisující obdrží oznámení, když je na řadě."
+title = "Sekvenční podepisování"
+
+[groupSigning.steps]
+back = "Zpět"
+completed = "Dokončeno"
+current = "Aktuální"
+stepLabel = "Krok {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Pokračovat ke kontrole"
+invisible = "Podpisy budou neviditelné (pouze metadata)"
+locationLabel = "Místo:"
+preview = "Náhled"
+reasonLabel = "Důvod:"
+title = "Nastavit parametry podpisu"
+visible = "Podpisy budou viditelné na stránce {{page}}"
+
+[groupSigning.steps.review]
+document = "Dokument"
+dueDate = "Termín (volitelné)"
+dueDatePlaceholder = "Vyberte termín..."
+invisible = "Neviditelné (pouze metadata)"
+location = "Místo:"
+logo = "Logo:"
+logoHidden = "Bez loga"
+logoShown = "Zobrazeno logo Stirling PDF"
+participants = "Účastníci"
+reason = "Důvod:"
+send = "Odeslat požadavky na podpis"
+signatureSettings = "Nastavení podpisu"
+title = "Zkontrolovat údaje relace"
+titleShort = "Zkontrolovat a odeslat"
+visibility = "Viditelnost:"
+visible = "Viditelné na stránce {{page}}"
+participantCount = "{{count}} účastník(ů) bude podepisovat v daném pořadí"
+
+[groupSigning.steps.selectDocument]
+continue = "Pokračovat k výběru účastníků"
+noFile = "Vyberte jeden soubor PDF z vašich aktivních souborů pro vytvoření relace podepisování."
+selectedFile = "Vybraný dokument"
+title = "Vyberte dokument"
+
+[groupSigning.steps.selectParticipants]
+continue = "Pokračovat k nastavení podpisu"
+count = "Vybráno: {{count}} účastník(ů)"
+label = "Vyberte účastníky"
+placeholder = "Zvolte účastníky k podpisu..."
+title = "Zvolte účastníky"
 
 [getPdfInfo]
 downloadJson = "Stáhnout JSON"
@@ -3718,6 +4185,11 @@ desc = "Přidá podpis do PDF kreslením, textem nebo obrázkem"
 tags = "podpis,autogram"
 title = "Podepsat"
 
+[home.timestampPdf]
+desc = "Přidejte dokumentu PDF časové razítko RFC 3161 pro prokázání, kdy váš PDF existoval"
+tags = "časové razítko,RFC 3161,TSA,autorita časových razítek,časové razítko dokumentu,důkaz existence,token časového razítka,důvěryhodné časové razítko,podepsat časovým razítkem,notářsky ověřit"
+title = "Časové razítko PDF"
+
 [home.split]
 desc = "Rozdělit PDF do více dokumentů"
 tags = "rozdělit,oddělit,rozpojit"
@@ -3854,6 +4326,7 @@ version = "Verze"
 accountCreatedSuccess = "Účet byl úspěšně vytvořen! Nyní se můžete přihlásit."
 alreadyLoggedIn = "Již jste přihlášeni na"
 alreadyLoggedIn2 = "zařízeních. Odhlaste se prosím z těchto zařízení a zkuste to znovu."
+backToSignIn = "Zpět na přihlášení"
 cancel = "Zrušit"
 changePasswordWarning = "Po prvním přihlášení si prosím změňte heslo"
 credentialsUpdated = "Vaše přihlašovací údaje byly aktualizovány. Přihlaste se prosím znovu."
@@ -3895,16 +4368,21 @@ or = "Nebo"
 password = "Heslo"
 passwordChangedSuccess = "Heslo bylo úspěšně změněno! Přihlaste se novým heslem."
 passwordResetSent = "Odkaz na reset hesla byl odeslán na {{email}}! Zkontrolujte e-mail a postupujte podle pokynů."
+passwordUpdatedSuccess = "Vaše heslo bylo úspěšně aktualizováno."
 pleaseEnterBoth = "Zadejte prosím e-mail i heslo"
 pleaseEnterEmail = "Zadejte prosím svou e-mailovou adresu"
 relyingPartyRegistrationNotFound = "Nebyla nalezena žádná registrace spoléhající se strany"
 rememberme = "Zapamatovat si mě"
+resetHelp = "Zadejte svůj e-mail a obdržíte zabezpečený odkaz pro obnovení hesla. Pokud odkaz vypršel, požádejte o nový."
+resetYourPassword = "Obnovit heslo"
 saml2RequiresLicense = "Přihlášení pomocí SAML vyžaduje placenou licenci (Server nebo Enterprise). Kontaktujte prosím administrátora kvůli upgradu vašeho plánu."
 sending = "Odesílání…"
 sendMagicLink = "Odeslat magický odkaz"
+sendResetLink = "Odeslat odkaz pro obnovení"
 sessionExpired = "Relace vypršela. Přihlaste se prosím znovu."
 signin = "Přihlásit se"
 signInAnonymously = "Přihlásit se jako host"
+subtitle = "Znovu se přihlaste do Stirling PDF"
 signingIn = "Přihlašování..."
 signinTitle = "Prosím přihlaste se"
 signInWith = "Přihlásit se pomocí"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Přihlásit se přes Single Sign-on"
 title = "Přihlášení"
 toManySessions = "Máte příliš mnoho aktivních relací"
 unexpectedError = "Neočekávaná chyba: {{message}}"
+updatePassword = "Aktualizovat heslo"
 useEmailInstead = "Přihlásit pomocí e-mailu"
 useMagicLink = "Použít místo toho magický odkaz"
 userIsDisabled = "Uživatel je deaktivován, přihlášení je momentálně pro toto uživatelské jméno blokováno. Kontaktujte prosím správce."
@@ -4222,6 +4701,15 @@ viewSwitcher = "Pomocí těchto ovládacích prvků vyberete způsob zobrazení 
 workbench = "Toto je <strong>Pracovní plocha</strong> – hlavní oblast, kde prohlížíte a upravujete svá PDF."
 wrapUp = "Máte hotovo! Seznámili jste se s hlavními oblastmi aplikace a jejich použitím. Kdykoli klikněte na tlačítko <strong>Nápověda</strong> a prohlídku si zobrazíte znovu."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Po skončení zkušebního období budete pokračovat v bezplatném tarifu. Přidejte platební metodu, abyste si zachovali přístup k Pro."
+afterTrialWithPayment = "Vaše předplatné Pro se automaticky spustí po skončení zkušebního období."
+body = "Během zkušebního období máte plný přístup k funkcím Stirling PDF Pro. Užijte si neomezené konverze, větší velikosti souborů a prioritní zpracování."
+daysRemaining = "Zbývá {{days}} dní"
+daysRemainingSingular = "Zbývá {{days}} den"
+title = "Vaše 30denní zkušební verze Pro"
+trialEnds = "Zkušební období končí {{date}}"
+
 [onboarding.buttons]
 back = "Zpět"
 download = "Stáhnout →"
@@ -4372,7 +4860,10 @@ zoomOut = "Oddálit"
 
 [viewer]
 cannotPreviewFile = "Nelze zobrazit náhled souboru"
+disableColorFilter = "Vypnout barevný filtr"
 dualPageView = "Zobrazení dvou stránek"
+enableDarkFilter = "Zapnout tmavý filtr"
+enableSepiaFilter = "Zapnout sépiový filtr"
 firstPage = "První stránka"
 lastPage = "Poslední stránka"
 nextPage = "Další stránka"
@@ -4382,6 +4873,22 @@ singlePageView = "Zobrazení jedné stránky"
 unknownFile = "Neznámý soubor"
 zoomIn = "Přiblížit"
 zoomOut = "Oddálit"
+resetZoom = "Obnovit přiblížení"
+
+[viewer.nonPdf]
+fileTypeBadge = "Soubor {{type}}"
+convertToPdf = "Převést do PDF"
+loading = "Načítání..."
+emptyFile = "Prázdný soubor"
+csvStats = "{{rows}} řádků · {{columns}} sloupců · {{size}}"
+sortedBy = "Seřazeno podle: {{column}}"
+columnDefault = "Sloupec {{index}}"
+htmlPreviewWarning = "Náhled HTML — externí zdroje se nemusí načíst · {{size}}"
+htmlPreview = "Náhled HTML"
+invalidJson = "Neplatný JSON — zobrazen nezpracovaný obsah"
+textStats = "{{lines}} řádků · {{size}}"
+lineNumbers = "Čísla řádků"
+renderMarkdown = "Vykreslit Markdown"
 
 [viewer.attachments]
 title = "Přílohy"
@@ -4391,6 +4898,31 @@ noDocument = "Otevřete PDF a zobrazte jeho přílohy."
 loading = "Načítání příloh..."
 empty = "Tento dokument neobsahuje žádné přílohy"
 noMatch = "Žádné přílohy neodpovídají vašemu hledání"
+
+[viewer.comments]
+title = "Komentáře"
+hint = "Vkládejte komentáře nástroji Komentář, Vložit text nebo Nahradit text. Zobrazí se zde podle stránek."
+placeholder = "Napište svůj komentář..."
+pageLabel = "Stránka {{page}}"
+oneComment = "1 komentář"
+nComments = "{{count}} komentářů"
+addCommentPlaceholder = "Přidat komentář..."
+addLink = "Přidat odkaz"
+goToLink = "Přejít na odkaz"
+addComment = "Přidat komentář"
+viewComment = "Zobrazit komentář"
+addReplyPlaceholder = "Přidat odpověď..."
+saveReply = "Uložit odpověď"
+send = "Odeslat"
+moreActions = "Další akce"
+typeComment = "Komentář"
+typeInsertText = "Vložit text"
+typeReplaceText = "Nahradit text"
+locateAnnotation = "Najít v dokumentu"
+deleteTitle = "Odebrat anotaci z komentářů?"
+deleteDescription = "Tato anotace má připojený komentář. Můžete odebrat pouze komentář z postranního panelu a ponechat anotaci, nebo vše smazat."
+removeCommentOnly = "Odebrat pouze komentář"
+deleteAnnotationAndComment = "Smazat anotaci i komentář"
 
 [viewer.formBar]
 title = "Formulářová pole"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Přepnout zobrazení příloh"
 toggleTheme = "Přepnout motiv"
 language = "Jazyk"
 toggleAnnotations = "Přepnout viditelnost anotací"
+toggleLayers = "Přepnout vrstvy"
 search = "Hledat v PDF"
 panMode = "Režim posunu"
 applyRedactionsFirst = "Nejprve použijte začernění"
@@ -4425,14 +4958,20 @@ rotateLeft = "Otočit doleva"
 rotateRight = "Otočit doprava"
 toggleSidebar = "Přepnout postranní panel"
 toggleBookmarks = "Přepnout záložky"
+toggleComments = "Komentáře"
 print = "Tisk PDF"
 ruler = "Pravítko / Měření"
+readAloud = "Čtení nahlas"
+readAloudSpeed = "Rychlost"
+readAloudLanguage = "Jazyk"
+selectLanguage = "Vyberte jazyk"
 draw = "Kreslit"
 redact = "Začernit"
 exitRedaction = "Opustit režim začernění"
 save = "Uložit"
 downloadAll = "Stáhnout vše"
 saveAll = "Uložit vše"
+saveAs = "Uložit jako"
 
 [textAlign]
 left = "Left"
@@ -4447,21 +4986,132 @@ title = "Extrahovat stránky"
 
 [pageLayout]
 addBorder = "Přidat okraje"
+borderWidth = "Tloušťka rámečku"
+bottom = "Dolní okraj"
+cols = "Sloupce"
 header = "Rozvržení více stránek"
+innerMargin = "Vnitřní okraj"
+left = "Levý okraj"
 pagesPerSheet = "Stránek na list:"
+right = "Pravý okraj"
+rows = "Řádky"
 submit = "Odeslat"
 tags = "sloučit,kompozitní,jedno-zobrazení,uspořádat"
 title = "Rozvržení více stránek"
+top = "Horní okraj"
+
+[pageLayout.mode]
+default = "Výchozí"
+custom = "Vlastní"
+label = "Režim:"
+
+[pageLayout.arrangement]
+byColumns = "Podle sloupců"
+byRows = "Podle řádků"
+label = "Uspořádání stránek:"
 
 [pageLayout.desc]
 16 = "Umístěte 16 stránek na jeden list (mřížka 4 × 4)."
 2 = "Umístěte 2 stránky vedle sebe na jeden list."
-3 = "Umístěte 3 stránky na jeden list v jednom řádku."
 4 = "Umístěte 4 stránky na jeden list (mřížka 2 × 2)."
 9 = "Umístěte 9 stránek na jeden list (mřížka 3 × 3)."
 
 [pageLayout.error]
 failed = "Při vytváření vícestránkového rozvržení došlo k chybě."
+outerVerticalMarginsTooLarge = "Horní/dolní okraje jsou pro tuto velikost stránky příliš velké."
+outerHorizontalMarginsTooLarge = "Levé/pravé okraje jsou pro tuto velikost stránky příliš velké."
+innerMarginTooLarge = "Vnitřní okraj je pro zvolené rozložení příliš velký."
+
+[pageLayout.orientation]
+landscape = "Na šířku"
+portrait = "Na výšku"
+label = "Orientace:"
+
+[pageLayout.readingDirection]
+ltr = "Zleva doprava"
+rtl = "Zprava doleva"
+label = "Směr čtení:"
+
+[pageLayout.tooltip.header]
+title = "Průvodce rozložením stránky"
+
+[pageLayout.tooltip.overview]
+title = "Co je rozložení stránky?"
+text = "Umístěte více stránek na jeden list pro letáky nebo úsporu papíru."
+
+[pageLayout.tooltip.mode]
+title = "Režim"
+text = "Zvolte, jak bude mřížka nastavena:"
+bullet1 = "Výchozí: Vyberte předvolbu a mřížka se vypočítá automaticky."
+bullet2 = "Vlastní: Nastavte řádky a sloupce ručně."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Stránek na list (výchozí režim)"
+text = "Zvolte počet stránek na list (např. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Řádky a sloupce (vlastní režim)"
+text = "Nastavte přesné rozměry mřížky. Celkem stránek na list = řádky × sloupce."
+
+[pageLayout.tooltip.orientation]
+title = "Orientace"
+text = "Nastaví orientaci výstupního listu:"
+bullet1 = "Na výšku: Vyšší než širší."
+bullet2 = "Na šířku: Širší než vyšší."
+
+[pageLayout.tooltip.arrangement]
+title = "Uspořádání stránek"
+text = "Určuje pořadí, v jakém stránky vyplňují mřížku:"
+bullet1 = "Podle řádků: Vyplňovat řádek po řádku (zleva doprava nebo zprava doleva)."
+bullet2 = "Podle sloupců: Vyplňovat shora dolů, sloupec po sloupci."
+
+[pageLayout.tooltip.readingDirection]
+title = "Směr čtení"
+text = "Řídí vodorovné pořadí stránek:"
+bullet1 = "LTR: Zleva doprava."
+bullet2 = "RTL: Zprava doleva."
+
+[pageLayout.tooltip.addBorder]
+title = "Přidat rámečky"
+text = "Kreslí čáry rámečků kolem každé buňky stránky pro vodítka k ořezu nebo vizuální oddělení."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Okraje a rámečky"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Okraje"
+text = "Pomocí horního, dolního, levého a pravého okraje ovládáte mezery kolem celého výsledného listu."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Vnitřní okraj"
+text = "Vnitřní okraj přidává mezery mezi buňkami v mřížce stránky pro lepší oddělení a čitelnost."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Přidat rámečky"
+text = "Povolte rámečky pro kreslení čar kolem každé umístěné stránky. Může to pomoci s vizuálním oddělením nebo ořezem."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Tloušťka rámečku"
+text = "Tloušťka rámečku se uplatní pouze při zapnutých rámečcích. Vyšší hodnoty vytvářejí silnější čáry."
+
+[pageLayout.advanced.tooltip.header]
+title = "Pokročilé možnosti rozložení"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientace"
+text = "Zvolte výslednou orientaci listu. Na výšku je vhodnější pro vysoký obsah, na šířku lépe sedí širšímu rozložení."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Uspořádání stránek"
+text = "Určuje, zda stránky vyplňují mřížku po řádcích nebo po sloupcích."
+bullet1 = "Podle řádků: Vyplnit nejprve každý řádek."
+bullet2 = "Podle sloupců: Vyplnit nejprve každý sloupec."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Směr čtení"
+text = "Nastaví vodorovné pořadí v mřížce, užitečné pro konvence dokumentů zleva doprava i zprava doleva."
+bullet1 = "LTR: Pořadí zleva doprava."
+bullet2 = "RTL: Pořadí zprava doleva."
 
 [pageRemover]
 header = "Odstranění stránek z PDF"
@@ -4977,7 +5627,10 @@ perMonth = "/měsíc"
 perSeat = "/místo"
 popular = "Oblíbené"
 selectPlan = "Vybrat plán"
+selectCredits = "Vyberte množství kreditů"
 showComparison = "Porovnat všechny funkce"
+purchase = "Zakoupit"
+totalCost = "Celková cena"
 upgrade = "Upgradovat"
 withServer = "+ Serverový plán"
 
@@ -5069,6 +5722,30 @@ successMessage = "Your license has been successfully activated. You can now clos
 name = "Team"
 siteLicense = "Site License"
 
+[plan.api]
+large = "5,000 kreditů"
+medium = "1,000 kreditů"
+small = "500 kreditů"
+xsmall = "100 kreditů"
+
+[plan.apiPackages]
+subtitle = "Pořiďte kredity API pro své aplikace"
+title = "Balíčky kreditů API"
+
+[plan.trial]
+badge = "Zkušební"
+continueWithFree = "Pokračovat s bezplatným tarifem"
+daysRemaining = "Vaše zkušební období skončí za {{days}} dní"
+endDate = "Platnost do: {{date}}"
+expired = "Vaše zkušební verze skončila"
+expiredMessage = "Vaše 30denní zkušební verze Pro vypršela. Předplaťte si Pro pro pokračování v přístupu k prémiovým funkcím, nebo pokračujte s bezplatným tarifem."
+freeTierLimitations = "Bezplatný tarif zahrnuje základní nástroje pro PDF s omezeními použití."
+message = ""
+subscribe = "Předplatit Pro"
+subscribeToPro = "Předplatit Pro"
+subscriptionScheduled = "Předplatné naplánováno – začíná {{date}}"
+title = "Aktivní bezplatná zkušební verze"
+
 [credits]
 enableOverageBilling = "Povolit nadlimitní fakturaci"
 maybeLater = "Možná později"
@@ -5150,20 +5827,72 @@ title = "Tisk souboru"
 2 = "Zadejte název tiskárny"
 
 [quickAccess]
+access = "Přístup"
+accessAddPerson = "Přidat další osobu"
+accessBack = "Zpět"
+accessCopyLink = "Kopírovat odkaz"
+accessEmail = "E-mailová adresa"
+accessEmailPlaceholder = "name@company.com"
+accessFileLabel = "Soubor"
+accessGeneral = "Obecný přístup"
+accessInviteTitle = "Pozvat osoby"
+accessOwner = "Vlastník"
+accessPanel = "Přístup k dokumentu"
+accessPeople = "Osoby s přístupem"
+accessRemove = "Odebrat"
+accessRestricted = "Omezeno"
+accessRestrictedHint = "Otevřít mohou pouze osoby s přístupem"
+accessRole = "Role"
+accessRoleCommenter = "Komentující"
+accessRoleEditor = "Editor"
+accessRoleViewer = "Prohlížeč"
+accessSelectedFile = "Vybraný soubor"
+accessSendInvite = "Odeslat pozvánku"
+accessTitle = "Přístup k dokumentu"
+accessYou = "Vy"
 account = "Účet"
+activeSessions = "Aktivní relace"
+activeTab = "Aktivní"
 activity = "Aktivita"
 adminSettings = "Admin nastav."
+allSessions = "Všechny relace"
 allTools = "All Tools"
 automate = "Automat."
+back = "Zpět"
+certSign = "Podepsat certifikátem"
+completedSessions = "Dokončené relace"
+completedTab = "Dokončené"
 config = "Konfig."
+createNew = "Vytvořit nový požadavek"
+createSession = "Vytvořit požadavek na podpis"
+dueDate = "Termín (volitelné)"
 files = "Soubory"
 help = "Nápověda"
+noActiveSessions = "Žádné čekající požadavky na podpis ani aktivní relace"
+noCompletedSessions = "Žádné dokončené relace"
+noFile = "Není vybrán žádný soubor"
 read = "Číst"
 reader = "Čtečka"
+refresh = "Obnovit"
+requestSignatures = "Požádat o podpisy"
+selectSingleFileToRequest = "Vyberte jeden soubor PDF pro vyžádání podpisů"
+selectedFile = "Vybraný soubor"
+selectUsers = "Vyberte uživatele k podpisu"
+selectUsersPlaceholder = "Zvolte účastníky..."
+sendingRequest = "Odesílání..."
 settings = "Nastav."
 showMeAround = "Show me around"
 sign = "Podepsat"
+signatureRequests = "Požadavky na podpis"
+signYourself = "Podepsat se"
+newRequest = "Nový požadavek"
 tours = "Tours"
+wetSign = "Přidat podpis"
+filterMine = "Moje"
+filterOverdue = "Po termínu"
+filterSigned = "Podepsáno"
+filterDeclined = "Odmítnuto"
+searchDocuments = "Hledat dokumenty…"
 
 [quickAccess.helpMenu]
 adminTour = "Prohlídka administrace"
@@ -5631,6 +6360,32 @@ text = "Otočte stránky PDF po nebo proti směru hodinových ručiček v krocí
 [rotate.tooltip.header]
 title = "Přehled nastavení otáčení"
 
+[timestampPdf]
+completed = "PDF bylo úspěšně opatřeno časovým razítkem"
+desc = "Přidejte ke svému PDF časové razítko RFC 3161 pomocí důvěryhodného serveru Time Stamp Authority (TSA)."
+filenamePrefix = "timestamped"
+results = "Výsledky časového razítka"
+submit = "Použít časové razítko"
+title = "Časové razítko PDF"
+
+[timestampPdf.error]
+failed = "Při vytváření časového razítka PDF došlo k chybě."
+generic = "Vytvoření časového razítka selhalo"
+
+[timestampPdf.files]
+placeholder = "Chcete-li začít, vyberte v hlavním zobrazení soubor PDF"
+
+[timestampPdf.options]
+note = "Na server TSA se odesílá pouze hash SHA-256 vašeho dokumentu; samotný soubor PDF se na server TSA nikdy neposílá."
+title = "Server časového razítka (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Vyberte důvěryhodnou autoritu časových razítek"
+label = "Vyberte server TSA"
+
+[timestampPdf.steps]
+settings = "Nastavení"
+
 [sanitize]
 completed = "Vyčištění úspěšně dokončeno"
 desc = "Odstraňte potenciálně škodlivé prvky ze souborů PDF."
@@ -5755,25 +6510,100 @@ placeholder = "Zadejte hledaný výraz..."
 searching = "Vyhledávání..."
 title = "Hledat v PDF"
 
+[selfHosted.offline]
+hideTools = "Skrýt nedostupné nástroje ▴"
+messageNoFallback = "Nástroje nebudou dostupné, dokud se váš server znovu nepřipojí."
+messageWithFallback = "Některé nástroje vyžadují připojení k serveru."
+showTools = "Zobrazit nedostupné nástroje ▾"
+title = "Váš server Stirling-PDF je nedostupný"
+toolNotAvailableLocally = "Váš server Stirling-PDF je offline a \"{{endpoint}}\" není dostupný v místním backendu."
+
 [session]
 expired = "Vaše relace vypršela. Obnovte prosím stránku a zkuste to znovu."
 refreshPage = "Obnovit stránku"
+
+[sessionManagement.tooltip]
+header = "Správa relací podepisování"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Noví účastníci jsou přidáni na konec pořadí podpisů"
+bullet2 = "Po dokončení relace nelze účastníky přidávat"
+bullet3 = "Každý účastník dostane oznámení, když je na řadě"
+description = "Do aktivní relace můžete kdykoli před dokončením přidat další účastníky."
+title = "Přidávání účastníků"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Plné dokončení</b>: Všichni účastníci podepsali"
+bullet2 = "<b>Částečné dokončení</b>: Někteří účastníci ještě nepodepsali"
+bullet3 = "Nepodepsaní účastníci budou z finálního dokumentu vynecháni"
+bullet4 = "Po dokončení můžete načíst podepsané PDF mezi aktivní soubory"
+description = "Dokončení sloučí všechny podpisy do jednoho podepsaného PDF. Tuto akci nelze vrátit."
+title = "Dokončení relace"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Nelze odebrat účastníky, kteří již podepsali"
+bullet2 = "Odebraní účastníci již nebudou dostávat oznámení"
+bullet3 = "Pořadí podpisů se automaticky upraví"
+description = "Účastníky lze z relací odebrat předtím, než podepíší."
+title = "Odebírání účastníků"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Každý podpis je na PDF aplikován postupně"
+bullet2 = "Pozdější podepisující vidí dřívější podpisy"
+bullet3 = "Zásadní pro schvalovací procesy a právní řetězce předání"
+description = "Pořadí, které určíte při vytvoření relace, určuje, kdo podepisuje jako první."
+title = "Pořadí podpisů"
+
+[signatureSettings.tooltip]
+header = "Nastavení vzhledu podpisu"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Příklady: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Není totéž co pozice na stránce"
+bullet3 = "Může být vyžadováno v některých právních jurisdikcích"
+description = "Volitelné geografické místo, kde byl podpis aplikován. Ukládá se do metadat certifikátu."
+title = "Místo podpisu"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Zobrazeno vedle podpisu a textu"
+bullet2 = "Podporuje formáty PNG, JPG"
+bullet3 = "Zvyšuje profesionální dojem"
+description = "Přidejte k viditelným podpisům logo společnosti pro branding a důvěryhodnost."
+title = "Logo společnosti"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Příklady: \"Schválení\", \"Uzavření smlouvy\", \"Kontrola dokončena\""
+bullet2 = "Viditelné ve vlastnostech podpisu PDF"
+bullet3 = "Užitečné pro auditní záznamy a dodržování předpisů"
+description = "Volitelný text vysvětlující, proč je dokument podepisován. Ukládá se do metadat certifikátu."
+title = "Důvod podpisu"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Viditelný</b>: Podpis se zobrazí v PDF s vlastním vzhledem"
+bullet2 = "<b>Neviditelný</b>: Certifikát je vložen bez vizuální značky"
+bullet3 = "Neviditelné podpisy stále poskytují kryptografické ověření"
+description = "Určuje, zda je podpis na dokumentu viditelný, nebo je vložen neviditelně."
+title = "Viditelnost podpisu"
 
 [settings.configuration]
 advanced = "Pokročilé"
 database = "Databáze"
 endpoints = "Endpoints"
 features = "Funkce"
+storageSharing = "Ukládání souborů a sdílení"
 systemSettings = "Systémová nastavení"
 title = "Konfigurace"
 
 [settings.connection]
+localDescription = "Používáte místní backend bez účtu. Některé nástroje vyžadující cloudové zpracování nebo samostatně hostovaný server nejsou dostupné."
 logout = "Odhlásit se"
 server = "Server"
+signIn = "Přihlásit se"
 title = "Režim připojení"
 user = "Přihlášen jako"
 
 [settings.connection.mode]
+local = "Pouze místní"
 saas = "Stirling Cloud"
 selfhosted = "Vlastní hosting"
 
@@ -5931,6 +6761,9 @@ title = "Zásady a soukromí"
 [settings.preferences]
 title = "Předvolby"
 
+[settings.search]
+placeholder = "Hledat na stránkách nastavení..."
+
 [settings.security]
 description = "Update your password to keep your account secure."
 title = "Security"
@@ -5968,6 +6801,18 @@ title = "Pracovní prostor"
 [settings.team]
 title = "Tým"
 
+[localMode]
+toolUnavailable = "Tento nástroj vyžaduje účet. Přihlaste se ke Stirling Cloud nebo se připojte k samostatně hostovanému serveru, abyste jej mohli použít."
+
+[localMode.banner]
+message = "Přihlaste se a odemkněte všechny nástroje."
+signIn = "Přihlásit se"
+title = "Spuštěno lokálně"
+
+[localMode.toolPicker]
+message = "Přihlaste se a odemkněte všechny nástroje."
+signIn = "Přihlásit se"
+
 [setup]
 description = "Začněte výběrem způsobu používání Stirling PDF"
 welcome = "Vítejte ve Stirling PDF"
@@ -5975,6 +6820,7 @@ welcome = "Vítejte ve Stirling PDF"
 [setup.login]
 connectingTo = "Připojuji se k:"
 hideInstructions = "Skrýt pokyny"
+skipSignIn = "Pokračovat bez přihlášení"
 instructions = "Chcete-li povolit přihlášení na vašem serveru Stirling PDF:"
 instructionsEnvVar = "Nastavte proměnnou prostředí:"
 instructionsOrYml = "Nebo v settings.yml:"
@@ -6022,7 +6868,17 @@ title = "Přihlásit se do Stirling"
 [setup.selfhosted]
 link = "nebo se připojte k účtu s vlastním hostováním"
 subtitle = "Zadejte přihlašovací údaje k vašemu serveru"
+changeServerLocked = "Vaše organizace omezila tuto aplikaci na konkrétní server"
+switchToLocal = "Místo toho použít místní nástroje"
 title = "Přihlásit se k serveru"
+
+[setup.selfhosted.unreachable]
+changeServer = "Připojit se k jinému serveru"
+changeServerLocked = "Vaše organizace omezila tuto aplikaci na konkrétní server"
+continueOffline = "Místo toho použít místní nástroje"
+message = "Nelze se připojit k {{url}}. Zkontrolujte, že server běží a je dostupný."
+retry = "Zkusit znovu"
+title = "Nelze se připojit k serveru"
 
 [setup.server]
 subtitle = "Zadejte URL vašeho samohostovaného serveru"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Nepodařilo se načíst konfiguraci serveru. Zkontrolujte prosím URL a zkuste to znovu."
+configFetchError = "Nepodařilo se načíst konfiguraci serveru: {{error}}"
 emptyUrl = "Zadejte URL serveru"
 invalidUrl = "Neplatný formát URL. Zadejte prosím platné URL, například https://your-server.com"
 testFailed = "Test připojení selhal"
@@ -6210,6 +7067,15 @@ image = "Obrázek"
 saved = "Uložené"
 text = "Text"
 title = "Typ podpisu"
+
+[signRequest]
+declined = "Požadavek na podpis byl odmítnut"
+fetchFailed = "Nepodařilo se načíst požadavek na podpis"
+signed = "Dokument byl úspěšně podepsán"
+
+[signSession]
+createFailed = "Nepodařilo se vytvořit požadavek na podpis"
+created = "Požadavek na podpis odeslán"
 
 [signup]
 accountCreatedSuccessfully = "Účet byl úspěšně vytvořen! Nyní se můžete přihlásit."
@@ -6489,6 +7355,106 @@ title = "Rozdělit PDF podle kapitol"
 [splitPdfByChapters]
 tags = "rozdělit,kapitoly,záložky,uspořádat"
 
+[storageShare]
+accessed = "Přístup"
+accessDenied = "K tomuto sdílenému souboru nemáte přístup. Požádejte vlastníka o sdílení."
+accessFailed = "Nelze načíst aktivitu."
+accessDeniedBody = "K tomuto souboru nemáte přístup. Požádejte vlastníka o sdílení."
+accessDeniedTitle = "Bez přístupu"
+accessLimitedCommenter = "Přístup pro komentující bude brzy k dispozici. Pokud potřebujete stahovat, požádejte vlastníka o přístup editora."
+accessLimitedTitle = "Omezený přístup"
+accessLimitedViewer = "Tento odkaz je pouze pro zobrazení. Pokud potřebujete stahovat, požádejte vlastníka o přístup editora."
+createdAt = "Vytvořeno"
+download = "Stáhnout"
+downloadFailed = "Tento soubor nelze stáhnout."
+expiredBody = "Tento odkaz ke sdílení je neplatný nebo vypršel."
+expiredTitle = "Odkaz vypršel"
+goToLogin = "Přejít na přihlášení"
+loadFailed = "Nelze otevřít sdílený soubor."
+loading = "Načítání odkazu ke sdílení..."
+loginPrompt = "Přihlaste se pro přístup k tomuto sdílenému souboru."
+loginRequired = "Vyžadováno přihlášení"
+openInApp = "Otevřít ve Stirling PDF"
+ownerLabel = "Vlastník"
+ownerUnknown = "Neznámý"
+requiresLogin = "Tento sdílený soubor vyžaduje přihlášení."
+roleCommenter = "Komentující"
+roleEditor = "Editor"
+roleViewer = "Prohlížeč"
+shareHeading = "Sdílený soubor"
+titleDefault = "Sdílený soubor"
+tryAgain = "Zkuste to prosím později."
+addUser = "Přidat"
+commenterHint = "Komentování bude brzy k dispozici."
+copied = "Odkaz zkopírován do schránky"
+copy = "Kopírovat"
+copyFailed = "Kopírování se nezdařilo"
+description = "Vytvořte odkaz ke sdílení tohoto souboru. Přihlášení uživatelé s odkazem k němu budou mít přístup."
+downloadsCount = "Stažení: {{count}}"
+emailWarningBody = "Vypadá to jako e-mailová adresa. Pokud tato osoba ještě není uživatelem Stirling PDF, k souboru se nedostane."
+emailWarningConfirm = "Sdílet i tak"
+emailWarningTitle = "E-mailová adresa"
+errorTitle = "Sdílení se nezdařilo"
+failure = "Nelze vygenerovat odkaz ke sdílení. Zkuste to prosím znovu."
+fileLabel = "Soubor"
+generate = "Vygenerovat odkaz"
+generated = "Odkaz ke sdílení vygenerován"
+hideActivity = "Skrýt aktivitu"
+invalidUsername = "Zadejte platné uživatelské jméno nebo e-mailovou adresu."
+lastAccessed = "Poslední přístup"
+linkAccessTitle = "Přístup přes odkaz"
+linkLabel = "Odkaz ke sdílení"
+linksDisabled = "Odkazy ke sdílení jsou zakázány."
+linksDisabledBody = "Odkazy ke sdílení jsou zakázány v nastavení vašeho serveru."
+manage = "Spravovat sdílení"
+manageDescription = "Vytvářejte a spravujte odkazy pro sdílení tohoto souboru."
+manageLoadFailed = "Nelze načíst odkazy ke sdílení."
+manageTitle = "Správa sdílení"
+noActivity = "Zatím žádná aktivita."
+noLinks = "Zatím nejsou žádné aktivní odkazy ke sdílení."
+noSharedUsers = "Zatím nemá přístup žádný uživatel."
+removeLink = "Odebrat odkaz"
+removeUser = "Odebrat"
+revokeFailed = "Odkaz ke sdílení se nepodařilo odstranit."
+revoked = "Odkaz pro sdílení odstraněn"
+roleLabel = "Role"
+sharingDisabled = "Sdílení je zakázáno."
+sharingDisabledBody = "Sdílení bylo zakázáno nastavením vašeho serveru."
+sharedUsersTitle = "Sdíleno s uživateli"
+title = "Sdílet soubor"
+unknownUser = "Neznámý uživatel"
+userAddFailed = "Nelze sdílet s tímto uživatelem."
+userAdded = "Uživatel přidán do seznamu sdílení."
+usernameLabel = "Uživatelské jméno nebo e-mail"
+usernamePlaceholder = "Zadejte uživatelské jméno nebo e-mail"
+userRemoveFailed = "Tohoto uživatele nelze odebrat."
+userRemoved = "Uživatel odebrán ze seznamu sdílení."
+viewActivity = "Zobrazit aktivitu"
+viewed = "Zobrazeno"
+viewsCount = "Zobrazení: {{count}}"
+downloaded = "Staženo"
+bulkDescription = "Vytvořte jeden odkaz pro sdílení všech vybraných souborů s přihlášenými uživateli."
+bulkTitle = "Sdílet vybrané soubory"
+copyLink = "Kopírovat odkaz pro sdílení"
+fileCount = "Vybráno {{count}} souborů"
+ownerOnly = "Sdílení může spravovat pouze vlastník."
+selectSingleFile = "Pro správu sdílení vyberte jeden soubor."
+
+[storageUpload]
+description = "Tímto nahrajete aktuální soubor do úložiště serveru pro svůj přístup."
+errorTitle = "Nahrávání selhalo"
+failure = "Nahrávání selhalo. Zkontrolujte prosím své přihlášení a nastavení úložiště."
+fileLabel = "Soubor"
+hint = "Veřejné odkazy a režimy přístupu jsou řízeny nastavením vašeho serveru."
+success = "Nahráno na server"
+title = "Nahrát na server"
+updateButton = "Aktualizovat na serveru"
+uploadButton = "Nahrát na server"
+bulkDescription = "Tímto nahrajete vybrané soubory do úložiště vašeho serveru."
+bulkTitle = "Nahrát vybrané soubory"
+fileCount = "Vybráno {{count}} souborů"
+more = " +{{count}} navíc"
+
 [storage]
 approximateSize = "Přibližná velikost"
 fileTooLarge = "Soubor je příliš velký. Maximální velikost na soubor je"
@@ -6557,6 +7523,7 @@ favorites = "Oblíbené"
 heading = "Všechny nástroje (zobrazení na celou obrazovku)"
 noResults = "Zkuste upravit hledání nebo přepnout popisy, abyste našli, co potřebujete."
 recommended = "Doporučeno"
+selfHostedOffline = "Vyžaduje váš server Stirling-PDF (aktuálně offline):"
 showDetails = "Zobrazit podrobnosti"
 unavailable = "Zakázáno správcem serveru:"
 unavailableDependency = "Nedostupné – na serveru chybí požadovaný nástroj:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Formátování stránek"
 removal = "Odstranění"
 signing = "Podepisování"
 verification = "Ověření"
+
+[tool]
+endpointUnavailable = "Tento nástroj není na vašem serveru dostupný."
+endpointUnavailableClickable = "V tomto režimu není k dispozici. Kliknutím se přihlaste."
+invalidParams = "Vyplňte požadovaná nastavení."
+noFiles = "Přidejte soubor pro začátek."
 
 [tools]
 noSearchResults = "Nebyly nalezeny žádné nástroje"
@@ -6828,6 +7801,30 @@ title = "Zobrazit/Upravit PDF"
 [warning]
 tooltipTitle = "Upozornění"
 
+[wetSignature.tooltip]
+header = "Způsoby vytvoření podpisu"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Přizpůsobte barvu a tloušťku pera"
+bullet2 = "Vymažte a nakreslete znovu, dokud nebudete spokojeni"
+bullet3 = "Funguje na dotykových zařízeních (tablety, telefony)"
+description = "Vytvořte vlastnoruční podpis pomocí myši nebo dotykové obrazovky. Nejvhodnější pro osobní, autentické podpisy."
+title = "Nakreslit podpis"
+
+[wetSignature.tooltip.type]
+bullet1 = "Vyberte si z několika písem"
+bullet2 = "Přizpůsobte velikost a barvu textu"
+bullet3 = "Ideální pro standardizované podpisy"
+description = "Vygenerujte podpis z napsaného textu. Rychlé a konzistentní, vhodné pro obchodní dokumenty."
+title = "Napsat podpis"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Podporuje PNG, JPG a další obrazové formáty"
+bullet2 = "Pro nejlepší výsledek se doporučuje průhledné pozadí"
+bullet3 = "Obrázek bude velikostně přizpůsoben oblasti podpisu"
+description = "Nahrajte předem vytvořený obrázek podpisu. Ideální, pokud máte naskenovaný podpis nebo firemní logo."
+title = "Nahrát obrázek podpisu"
+
 [watermark]
 completed = "Vodoznak přidán"
 desc = "Přidat textové nebo obrazové vodoznaky do souborů PDF"
@@ -7008,6 +8005,7 @@ activeSession = "Aktivní relace"
 addMembers = "Přidat členy"
 admin = "Administrátor"
 confirmDelete = "Opravdu chcete tohoto uživatele smazat? Tuto akci nelze vrátit."
+confirmUnlock = "Opravdu chcete odemknout tento uživatelský účet?"
 deleteUser = "Smazat uživatele"
 deleteUserError = "Uživatele se nepodařilo smazat"
 deleteUserSuccess = "Uživatel úspěšně smazán"
@@ -7016,6 +8014,8 @@ disable = "Zakázat"
 disabled = "Deaktivován"
 editRole = "Upravit roli"
 enable = "Povolit"
+locked = "uzamčeno"
+lockedBadge = "Uzamčeno"
 loading = "Načítání osob..."
 loginRequired = "Nejprve povolte režim přihlášení"
 member = "Člen"
@@ -7025,6 +8025,9 @@ searchMembers = "Hledat členy..."
 status = "Stav"
 team = "Tým"
 title = "Lidé"
+unlockAccount = "Odemknout účet"
+unlockUserError = "Nepodařilo se odemknout uživatelský účet"
+unlockUserSuccess = "Uživatelský účet byl úspěšně odemknut"
 user = "Uživatel"
 
 [workspace.people.actions]

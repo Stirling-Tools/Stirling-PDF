@@ -583,7 +583,8 @@ public class PdfJsonFallbackFontService {
         return switch (script) {
             // HAN script is used by both Simplified and Traditional Chinese
             // Default to Simplified (mainland China, 1.4B speakers) as it's more common
-            // Traditional Chinese PDFs are detected via font name aliases (MingLiU, PMingLiU, etc.)
+            // Traditional Chinese PDFs are detected via font name aliases (MingLiU, PMingLiU,
+            // etc.)
             case HAN -> FALLBACK_FONT_CJK_ID;
             case HIRAGANA, KATAKANA -> FALLBACK_FONT_JP_ID;
             case HANGUL -> FALLBACK_FONT_KR_ID;

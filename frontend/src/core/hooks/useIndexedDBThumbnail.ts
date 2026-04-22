@@ -4,14 +4,15 @@ import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { FileId } from "@app/types/fileContext";
 
-
 /**
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null): {
+export function useIndexedDBThumbnail(
+  file: StirlingFileStub | undefined | null,
+): {
   thumbnail: string | null;
-  isGenerating: boolean
+  isGenerating: boolean;
 } {
   const [thumb, setThumb] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -42,11 +43,13 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
           if (file.id && indexedDB) {
             const loadedFile = await indexedDB.loadFile(file.id as FileId);
             if (!loadedFile) {
-              throw new Error('File not found in IndexedDB');
+              throw new Error("File not found in IndexedDB");
             }
             fileObject = loadedFile;
           } else {
-            throw new Error('File ID not available or IndexedDB context not available');
+            throw new Error(
+              "File ID not available or IndexedDB context not available",
+            );
           }
 
           // Use the universal thumbnail generator
@@ -59,12 +62,16 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
               try {
                 await indexedDB.updateThumbnail(file.id as FileId, thumbnail);
               } catch (error) {
-                console.warn('Failed to save thumbnail to IndexedDB:', error);
+                console.warn("Failed to save thumbnail to IndexedDB:", error);
               }
             }
           }
         } catch (error) {
-          console.warn('Failed to generate thumbnail for file', file.name, error);
+          console.warn(
+            "Failed to generate thumbnail for file",
+            file.name,
+            error,
+          );
           if (!cancelled) setThumb(null);
         } finally {
           if (!cancelled) setGenerating(false);
@@ -76,7 +83,9 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
     }
 
     loadThumbnail();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [file, file?.thumbnailUrl, file?.id, indexedDB, generating]);
 
   return { thumbnail: thumb, isGenerating: generating };

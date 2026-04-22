@@ -1,88 +1,126 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react-swc';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react-swc";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/core/setupTests.ts'],
+    environment: "jsdom",
+    setupFiles: ["./src/core/setupTests.ts"],
     css: false,
     exclude: [
-      'node_modules/',
-      'src/**/*.spec.ts', // Exclude Playwright E2E tests
-      'src/tests/test-fixtures/**'
+      "node_modules/",
+      "src/**/*.spec.ts", // Exclude Playwright E2E tests
+      "src/tests/test-fixtures/**",
     ],
     testTimeout: 10000,
     hookTimeout: 10000,
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      reporter: ["text", "json", "html"],
       exclude: [
-        'node_modules/',
-        'src/core/setupTests.ts',
-        '**/*.d.ts',
-        'src/tests/test-fixtures/**',
-        'src/**/*.spec.ts'
-      ]
+        "node_modules/",
+        "src/core/setupTests.ts",
+        "src/proprietary/setupTests.ts",
+        "src/saas/setupTests.ts",
+        "**/*.d.ts",
+        "src/tests/test-fixtures/**",
+        "src/**/*.spec.ts",
+      ],
     },
     projects: [
       {
         test: {
-          name: 'core',
-          include: ['src/core/**/*.test.{ts,tsx}'],
-          environment: 'jsdom',
+          name: "core",
+          include: ["src/core/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
           globals: true,
-          setupFiles: ['./src/core/setupTests.ts'],
+          setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ['./tsconfig.core.vite.json'],
+            projects: ["./tsconfig.core.vite.json"],
           }),
         ],
         esbuild: {
-          target: 'es2020'
-        }
+          target: "es2020",
+        },
       },
       {
         test: {
-          name: 'proprietary',
-          include: ['src/proprietary/**/*.test.{ts,tsx}'],
-          environment: 'jsdom',
+          name: "proprietary",
+          include: ["src/proprietary/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
           globals: true,
-          setupFiles: ['./src/core/setupTests.ts'],
+          setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ['./tsconfig.proprietary.vite.json'],
+            projects: ["./tsconfig.proprietary.vite.json"],
           }),
         ],
         esbuild: {
-          target: 'es2020'
-        }
+          target: "es2020",
+        },
       },
       {
         test: {
-          name: 'desktop',
-          include: ['src/desktop/**/*.test.{ts,tsx}'],
-          environment: 'jsdom',
+          name: "desktop",
+          include: ["src/desktop/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
           globals: true,
-          setupFiles: ['./src/core/setupTests.ts'],
+          setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ['./tsconfig.desktop.vite.json'],
+            projects: ["./tsconfig.desktop.vite.json"],
           }),
         ],
         esbuild: {
-          target: 'es2020'
-        }
+          target: "es2020",
+        },
+      },
+      {
+        test: {
+          name: "saas",
+          include: ["src/saas/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/saas/setupTests.ts"],
+        },
+        plugins: [
+          react(),
+          tsconfigPaths({
+            projects: ["./tsconfig.saas.vite.json"],
+          }),
+        ],
+        esbuild: {
+          target: "es2020",
+        },
+      },
+      {
+        test: {
+          name: "prototypes",
+          include: ["src/prototypes/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/core/setupTests.ts"],
+        },
+        plugins: [
+          react(),
+          tsconfigPaths({
+            projects: ["./tsconfig.prototypes.vite.json"],
+          }),
+        ],
+        esbuild: {
+          target: "es2020",
+        },
       },
     ],
   },
   esbuild: {
-    target: 'es2020'
-  }
+    target: "es2020",
+  },
 });

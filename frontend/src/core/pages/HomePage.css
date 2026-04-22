@@ -59,7 +59,9 @@
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .mobile-toggle-button:focus-visible {

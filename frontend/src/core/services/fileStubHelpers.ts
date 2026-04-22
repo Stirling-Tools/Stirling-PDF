@@ -1,7 +1,10 @@
-import { StirlingFile, StirlingFileStub } from '@app/types/fileContext';
-import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
-import { createStirlingFile } from '@app/types/fileContext';
-import { ToolId } from '@app/types/toolId';
+import { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import {
+  createChildStub,
+  generateProcessedFileMetadata,
+} from "@app/contexts/file/fileActions";
+import { createStirlingFile } from "@app/types/fileContext";
+import { ToolId } from "@app/types/toolId";
 
 /**
  * Create StirlingFiles and StirlingFileStubs from exported files
@@ -10,8 +13,8 @@ import { ToolId } from '@app/types/toolId';
 export async function createStirlingFilesAndStubs(
   files: File[],
   parentStub: StirlingFileStub,
-  toolId: ToolId
-): Promise<{ stirlingFiles: StirlingFile[], stubs: StirlingFileStub[] }> {
+  toolId: ToolId,
+): Promise<{ stirlingFiles: StirlingFile[]; stubs: StirlingFileStub[] }> {
   const stirlingFiles: StirlingFile[] = [];
   const stubs: StirlingFileStub[] = [];
 
@@ -22,7 +25,7 @@ export async function createStirlingFilesAndStubs(
       { toolId, timestamp: Date.now() },
       file,
       processedFileMetadata?.thumbnailUrl,
-      processedFileMetadata
+      processedFileMetadata,
     );
 
     const stirlingFile = createStirlingFile(file, childStub.id);

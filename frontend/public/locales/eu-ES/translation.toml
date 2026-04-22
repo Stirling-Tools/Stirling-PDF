@@ -8,6 +8,7 @@ black = "Beltza"
 blue = "Urdina"
 bored = "Itxaroten aspertuta?"
 cancel = "Utzi"
+confirm = "Berretsi"
 changedCredsMessage = "Kredentzialak aldatu dira!"
 chooseFile = "Aukeratu fitxategia"
 close = "Itxi"
@@ -142,6 +143,11 @@ welcome = "Ongi etorria"
 white = "Txuria"
 WorkInProgess = "Lanean ari gara; agian ez dabil edo akatsak ditu. Mesedez, jakinarazi edozein arazo!"
 yes = "Bai"
+insufficientCredits = "Kreditu nahikorik ez. Beharrezkoa: {{requiredCredits}}, Eskuragarri: {{currentBalance}}, Gabezia: {{shortfall}}"
+loadingCredits = "Kredituak egiaztatzen..."
+loadingProStatus = "Harpidetza-egoera egiaztatzen..."
+noticeTopUpOrPlan = "Kreditu nahikorik ez, mesedez kargatu edo eguneratu plan batera"
+accessInvite = "Gonbidatu"
 
 [account]
 accountSettings = "Kontuaren ezarpenak"
@@ -1423,6 +1429,34 @@ title = "Prozesatzea"
 description = "Akatsa jakinarazi aurretik prozesatze-lan baten zain egoteko gehieneko denbora."
 label = "Prozesatzearen denbora-muga (segundoak)"
 
+[admin.settings.storage]
+description = "Kontrolatu zerbitzariaren biltegiratzea eta partekatze aukerak."
+title = "Fitxategi biltegiratzea eta partekatzea"
+
+[admin.settings.storage.enabled]
+description = "Baimendu erabiltzaileei fitxategiak zerbitzarian gordetzea."
+label = "Gaitu zerbitzariaren fitxategi-biltegiratzea"
+
+[admin.settings.storage.sharing.email]
+description = "Baimendu partekatzea helbide elektronikoekin."
+label = "Gaitu posta bidezko partekatzea"
+mailLink = "Konfiguratu posta ezarpenak"
+mailNote = "Posta konfigurazioa behar da. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Baimendu erabiltzaileei gordetako fitxategiak partekatzea."
+label = "Gaitu partekatzea"
+
+[admin.settings.storage.sharing.links]
+description = "Baimendu saioa eskatzen duten esteken bidez partekatzea."
+frontendUrlLink = "Konfiguratu sistema ezarpenetan"
+frontendUrlNote = "Frontend URL behar da. "
+label = "Gaitu partekatzeko estekak"
+
+[admin.settings.storage.signing.enabled]
+description = "Baimendu erabiltzaileei parte-hartzaile anitzeko dokumentu-sinatze saioak sortzea. Zerbitzariaren fitxategi-biltegiratzea gaituta egotea behar da."
+label = "Gaitu taldeko sinadura (Alpha)"
+
 [admin.settings.unsavedChanges]
 cancel = "Editatzen jarraitu"
 discard = "Aldaketak baztertu"
@@ -1513,6 +1547,7 @@ editStampHint = "Irudia aldatzeko, ezabatu zigilu hau eta gehitu beste berri bat
 editSwitchToSelect = "Aldatu 'Hautatu eta editatu' modura oharpen hau editatzeko."
 editText = "Editatu testu-koadroa"
 editTextMarkup = "Editatu testu-markaketa"
+annotationStyle = "Anotazioaren estiloa"
 ellipse = "Elipsea"
 exit = "Irten ohar-modutik"
 fillColor = "Betegarriaren kolorea"
@@ -1523,13 +1558,19 @@ highlight = "Nabarmendu"
 imagePreview = "Aurrebista"
 inkHighlighter = "Eskuzko nabarmentzailea"
 line = "Marra"
+lineArrow = "Gezia"
 noBackground = "Atzeko planorik ez"
 note = "Oharra"
+comment = "Iruzkina"
+comments = "Iruzkinak"
+insertText = "Testua txertatu"
+replaceText = "Testua ordezkatu"
 noteIcon = "Oharraren ikonoa"
 notesStamps = "Oharrak eta zigiluak"
 opacity = "Opakutasuna"
 pen = "Boligrafoa"
 polygon = "Poligonoa"
+polyline = "Polilinea"
 properties = "Propietateak"
 rectangle = "Laukizuzena"
 redo = "Berregin"
@@ -2048,7 +2089,19 @@ numbers = "Zenbakiak/barrutiak: 5, 10-20"
 progressions = "Progresioak: 3n, 4n+1"
 
 [certSign]
+allSigned = "Parte-hartzaile guztiek sinatu dute. Amaitzeko prest."
+awaitingSignatures = "Sinaduren zain"
+signatureProgress = "{{signedCount}}/{{totalCount}} sinadura"
 chooseCertificate = "Aukeratu ziurtagiri-fitxategia"
+declined = "Ukatua"
+fetchFailed = "Ezin izan da sinadura-datuak kargatu"
+finalized = "Amaituta"
+notified = "Jakinarazita"
+partialNote = "Goiz amai dezakezu oraingo sinadurekin. Sinatu gabeko parte-hartzaileak baztertu egingo dira."
+pending = "Zain"
+readyToFinalize = "Amaitzeko prest"
+signed = "Sinatuta"
+viewed = "Ikusita"
 chooseJksFile = "Aukeratu JKS fitxategia"
 chooseP12File = "Aukeratu PKCS12 fitxategia"
 choosePfxFile = "Aukeratu PFX fitxategia"
@@ -2071,6 +2124,7 @@ title = "Ziurtagiriaren sinadura"
 invisible = "Ikusezina"
 stepTitle = "Sinaduraren itxura"
 visible = "Ikusgai"
+visibility = "Ikusgaitasuna"
 
 [certSign.appearance.options]
 title = "Sinaduraren xehetasunak"
@@ -2176,6 +2230,252 @@ bullet3 = "Egiaztatzen du dokumentua sinatu ondoren aldatu den ala ez"
 bullet4 = "Egiaztapenerako ziurtagiri pertsonalizatuak erabil ditzake"
 text = "Sinadurak egiaztatzean, tresnak baliozkoak diren edo ez, nork sinatu duen, noiz sinatu zen, eta dokumentua sinatu ondoren aldatu den ala ez esaten dizu."
 title = "Sinadurak egiaztatzea"
+
+[certSign.collab.finalize]
+button = "Amaitu eta kargatu sinatutako PDFa"
+early = "Amaitu uneko sinadurekin"
+
+[certSign.collab.sessionDetail]
+addButton = "Gehitu parte-hartzaileak"
+addParticipants = "Gehitu parte-hartzaileak"
+addParticipantsError = "Ezin izan da parte-hartzaileak gehitu"
+backToList = "Itzuli saioetara"
+deleteConfirm = "Ziur zaude? Hau ezin da desegin."
+deleteError = "Ezin izan da saioa ezabatu"
+deleted = "Saioa ezabatuta"
+deleteSession = "Ezabatu saioa"
+dueDate = "Epemuga"
+finalizeError = "Ezin izan da saioa amaitu"
+loadPdfError = "Ezin izan da sinatutako PDFa kargatu"
+loadSignedPdf = "Kargatu sinatutako PDFa fitxategi aktiboetan"
+messageLabel = "Mezua"
+noAdditionalInfo = "Ez dago informazio osagarririk"
+owner = "Jabea"
+participantRemoved = "Parte-hartzailea kendu da"
+participants = "Parte-hartzaileak"
+participantsAdded = "Parte-hartzaileak ongi gehitu dira"
+removeParticipant = "Kendu"
+removeParticipantError = "Ezin izan da parte-hartzailea kendu"
+selectUsers = "Hautatu erabiltzaileak..."
+sessionInfo = "Saioaren informazioa"
+workbenchTitle = "Saio-kudeaketa"
+
+[certSign.collab.signRequest]
+addedToFiles = "Dokumentua fitxategi aktiboetara gehitu da"
+addSignature = "Gehitu zure sinadura"
+addToFiles = "Gehitu fitxategi aktiboetara"
+advancedSettings = "Ezarpen aurreratuak"
+backToList = "Itzuli sinadura-eskaeretara"
+certificateChoice = "Hautatu sinatzeko ziurtagiri bat"
+changeSignature = "Aldatu sinadura"
+clearSignature = "Garbitu sinadura"
+completeAndSign = "Osatu eta sinatu"
+createNewSignature = "Sortu sinadura berria"
+declineButton = "Ukatu"
+decline = "Ukatu eskaera"
+deleteSelected = "Ezabatu hautatutako sinadura"
+drawSignature = "Marraztu zure sinadura behean"
+dueDate = "Epemuga"
+fileTooLarge = "Fitxategiaren tamainak 5MB baino txikiagoa izan behar du"
+fontFamily = "Letra-familia"
+fontSize = "Letra-tamaina: {{size}}px"
+fontSizePlaceholder = "Tamaina"
+from = "Nork"
+invalidCertFile = "Hautatu P12 edo PFX ziurtagiri-fitxategi bat"
+invalidFileType = "Hautatu irudi-fitxategi bat"
+location = "Kokapena (aukera)"
+locationPlaceholder = "Nondik sinatzen ari zara?"
+message = "Mezua"
+noCertificate = "Hautatu ziurtagiri-fitxategi bat"
+noSignatures = "Jarri gutxienez sinadura bat PDFan"
+p12File = "P12/PFX ziurtagiri-fitxategia"
+password = "Ziurtagiriaren pasahitza"
+passwordPlaceholder = "Idatzi pasahitza..."
+penColor = "Arkatzaren kolorea"
+penSize = "Arkatzaren tamaina: {{size}}px"
+placementActive = "Egin klik PDFan jartzeko"
+placeSignatureButton = "Jarri sinadura PDFan"
+reason = "Arrazoia (aukera)"
+reasonPlaceholder = "Zergatik sinatzen ari zara?"
+removeImage = "Kendu irudia"
+removeCertFile = "Kendu fitxategia"
+savedSignatures = "Gordetako sinadurak"
+selectFile = "Hautatu irudi-fitxategia"
+selectSignatureTitle = "Hautatu edo sortu sinadura"
+signButton = "Sinatu dokumentua"
+signatureInfo = "Ezarpen hauek dokumentuaren jabeak konfiguratzen ditu"
+signaturePlaced = "Sinadura orrian jarrita"
+signatureSettings = "Sinadura-ezarpenak"
+signatureText = "Sinadura-testua"
+signatureTextPlaceholder = "Idatzi zure izena..."
+signatureTypeLabel = "Sinadura mota"
+signingTitle = "Sinatzea"
+textColor = "Testu-kolorea"
+typeSignature = "Idatzi zure izena sinadura sortzeko"
+uploadCert = "Pertsonalizatutako ziurtagiria"
+uploadCertDesc = "Erabili zure P12/PFX ziurtagiria"
+uploadSignature = "Igo zure sinadura-irudia"
+usePersonalCert = "Ziurtagiri pertsonala"
+usePersonalCertDesc = "Zure konturako automatikoki sortua"
+useServerCert = "Erakundeko ziurtagiria"
+useServerCertDesc = "Erakundeak partekatutako ziurtagiria"
+workbenchTitle = "Sinadura-eskaera"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Aukeratu trazatuaren kolorea"
+continue = "Jarraitu"
+
+[certSign.collab.signRequest.certModal]
+description = "{{count}} sinadura jarri dituzu. Aukeratu zure ziurtagiria sinadura osatzeko."
+sign = "Sinatu dokumentua"
+certValidating = "Ziurtagiria balioztatzen..."
+certValidUntil = "Ziurtagiria baliozkoa: {{date}} arte"
+certInvalid = "Ziurtagiri baliogabea: {{error}}"
+certInvalidFallback = "Ziurtagiri baliogabea"
+certNetworkError = "Ezin izan da ziurtagiria balioztatu"
+title = "Konfiguratu ziurtagiria"
+
+[certSign.collab.signRequest.image]
+hint = "Igo zure sinaduraren PNG edo JPG irudia"
+
+[certSign.collab.signRequest.mode]
+move = "Mugitu sinadura"
+place = "Jarri sinadura"
+title = "Sinatu edo mugitu modua"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Marraztu"
+image = "Igo"
+text = "Idatzi"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Egin klik PDFan zure sinadura jartzeko"
+title = "Jarri sinadura"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Hautatutako sinadura"
+missing = "Aurrebistarik ez"
+textFallback = "Sinadura"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Marraztutako sinadura"
+defaultImageLabel = "Igotako sinadura"
+defaultLabel = "Sinadura"
+defaultTextLabel = "Idatzitako sinadura"
+delete = "Ezabatu sinadura"
+none = "Ez dago gordetako sinadurarik"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Marraztu"
+type = "Idatzi"
+upload = "Igo"
+
+[certSign.collab.signRequest.steps]
+back = "Atzera"
+cancelPlacement = "Utzi kokapena"
+certificate = "Ziurtagiria"
+clickMultipleTimes = "Egin klik PDFan hainbat aldiz sinadurak jartzeko. Arrastatu edozein sinadura mugitzeko edo tamaina aldatzeko."
+clickToPlace = "Egin klik PDFan zure sinadura agertzea nahi duzun tokian."
+continue = "Jarraitu ziurtagiria hautatzera"
+continueToPlacement = "Jarraitu kokapenera"
+continueToReview = "Jarraitu berrikuspenera"
+createSignature = "Sortu sinadura"
+invisible = "Ikusezina"
+location = "Kokapena:"
+multipleSignatures = "{{count}} sinadura aplikatuko dira PDFari"
+oneSignature = "Sinadura 1 aplikatuko da PDFari"
+placeOnPdf = "Jarri PDFan"
+reason = "Arrazoia:"
+reviewTitle = "Berrikusi sinatu aurretik"
+signaturePlaced = "Sinadura {{page}} orrian jarri da. Posizioa doitzeko berriro klik egin edo jarraitu berrikustera."
+visible = "Ikusgai"
+visibility = "Ikusgaitasuna:"
+yourSignatures = "Zure sinadurak ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Kolorea"
+fontLabel = "Letra-tipoa"
+fontSizeLabel = "Tamaina"
+fontSizePlaceholder = "16"
+label = "Sinadura-testua"
+modalHint = "Idatzi zure izena, eta egin klik Jarraitu botoian PDFan jartzeko."
+placeholder = "Idatzi zure izena..."
+
+[certSign.collab.participant]
+certValidating = "Ziurtagiria balioztatzen..."
+certValid = "✓ Ziurtagiria baliozkoa"
+certValidUntil = " {{date}} arte"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Ziurtagiri baliogabea"
+certNetworkError = "Ezin izan da ziurtagiria balioztatu"
+
+[certSign.collab.addParticipants]
+add = "Gehitu {{count}} parte-hartzaile"
+back = "Atzera"
+configureSignatures = "Konfiguratu sinadura-ezarpenak"
+continue = "Jarraitu sinadura-ezarpenetara"
+reasonHelp = "Aurrez ezarri sinatzeko arrazoia parte-hartzaile hauentzat (aukerakoa; sinatzean alda dezakete)"
+reasonPlaceholder = "adib. Onarpena, Berrikuspena..."
+selectUsers = "Hautatu erabiltzaileak"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Sartu sinaduren laburpen orria"
+includeSummaryPageHelp = "Azkenean orri bat gehituko da sinadura metadatu guztiekin. Orri indibidualetako ziurtagiri digitalen sinadura-koadroak ezkutatuko dira (sinadura hezeei ez die eragiten)."
+
+[certSign.collab.sessionList]
+active = "Aktiboak"
+finalized = "Amaituta"
+
+[certSign.collab.signatureSettings]
+description = "Konfiguratu sinaduren itxura parte-hartzaile guztientzat"
+title = "Sinaduraren itxura"
+
+[certSign.collab.userSelector]
+inviteUsers = "Gehitu erabiltzaileak"
+loadError = "Ezin izan da erabiltzaileak kargatu"
+noTeam = "Talderik ez"
+noUsers = "Ez da beste erabiltzailerik aurkitu."
+placeholder = "Hautatu erabiltzaileak..."
+
+[certSign.mobile]
+panelActions = "Ekintzak"
+panelDocument = "Dokumentua"
+panelPeople = "Pertsonak"
+
+[certSign.sessions]
+deleted = "Saioa ezabatuta"
+fetchFailed = "Ezin izan da saioaren xehetasunak kargatu"
+finalized = "Saioa amaituta"
+loaded = "Sinatutako PDFa kargatuta"
+pdfNotReady = "PDF prest ez"
+pdfNotReadyDesc = "Sinatutako PDFa sortzen ari da. Saiatu berriro une batean."
+
+[certificateChoice.tooltip]
+header = "Ziurtagiri motak"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Sistema-administratzaileek kudeatua"
+bullet2 = "Baimendutako erabiltzaileen artean partekatua"
+bullet3 = "Enpresaren nortasuna ordezkatzen du, ez pertsonarena"
+bullet4 = "Egokiena: dokumentu ofizialak, talde-sinadurak"
+description = "Zure erakundeak emandako ziurtagiri partekatua. Enpresa-mailako sinadura-agintaritzarako erabiltzen da."
+title = "Erakundeko ziurtagiria"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Lehen erabileran automatikoki sortua"
+bullet2 = "Zure erabiltzaile-kontuari lotua"
+bullet3 = "Ezin da beste erabiltzaileekin partekatu"
+bullet4 = "Egokiena: dokumentu pertsonalak, erantzukizun indibiduala"
+description = "Zure erabiltzaile-kontuarentzat berez sortutako ziurtagiri bakarra. Sinadura indibidualetarako egokia."
+title = "Ziurtagiri pertsonala"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "P12/PFX fitxategia eta pasahitza behar ditu"
+bullet2 = "Kanpoko Ziurtagiri Agintariek eman dezakete"
+bullet3 = "Fidagarritasun-maila handiagoa agiri juridikoetarako"
+bullet4 = "Egokiena: legez lotesleak diren kontratuak, kanpo-balidazioa"
+description = "Erabili zure PKCS#12 ziurtagiri-fitxategia. Ziurtagiriaren propietateen gaineko kontrol osoa ematen du."
+title = "Igo P12 pertsonalizatua"
 
 [changeCreds]
 changePassword = "Saioa hasteko kredentzial lehenetsiak erabiltzen ari zara. Mesedez, sartu pasahitz berria"
@@ -2574,10 +2874,48 @@ title = "Kalitate-doikuntza"
 [compressPdfs]
 tags = "estutu,txiki,oso-txiki"
 
+[config]
+plan = "Plana"
+
 [config.account.overview]
+confirmDelete = "Nire kontua ezabatu"
+deleteAccount = "Kontua ezabatu"
+deleteAccountTitle = "Kontua ezabatu"
+deleteFailed = "Ezin izan da kontua ezabatu."
+deleteFailedTitle = "Ezin izan da kontua ezabatu"
+deleteWarning = "Ekintza hau iraunkorra da eta ezin da desegin. Zure datu guztiak ezabatuko dira."
+enterEmailConfirm = "Ezabaketa berresteko, idatzi behean zure helbide elektronikoa ({{email}}):"
 guestDescription = "Gonbidatu gisa saioa hasita zaude. Kontuan izan zure kontua goian bertsio-berritzea."
+label = "Ikuspegi orokorra"
 manageAccountPreferences = "Kudeatu zure kontuaren hobespenak"
+signedInAs = "Saioa hasita honela"
 title = "Kontuaren ezarpenak"
+
+[config.account.profilePicture]
+description = "Igo irudi bat zure kontua pertsonalizatzeko."
+help = "PNG, JPG edo WebP 2MB arte."
+remove = "Kendu"
+sizeError = "Hautatu 2MB baino txikiagoa den irudia."
+switchedToCustom = "Irudi pertsonalizatura aldatu da. Orain zurea igo dezakezu."
+title = "Profil-argazkia"
+upload = "Igo"
+useCustom = "Erabili irudi pertsonalizatua"
+usingProvider = "{{provider}}-eko profil-argazkia erabiltzen"
+
+[config.account.profilePicture.cropper]
+cropError = "Ezin izan da irudia moztu. Saiatu berriro."
+invalidImage = "Irudi-fitxategi baliogabea. Hautatu baliozko PNG, JPG edo WebP fitxategi bat."
+processing = "Mozketa prozesatzen..."
+save = "Gorde moztutako irudia"
+sizeErrorAfterCrop = "Moztutako irudia handiegia da. Urrundu edo moztu eremu txikiago bat."
+title = "Moztu profil-argazkia"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Pasahitza aldatu"
+description = "Zure pasahitza eta segurtasun-ezarpenak kudeatu."
+title = "Pasahitzak eta segurtasuna"
+update = "Pasahitza eguneratu"
 
 [config.account.upgrade]
 description = "Estekatu zure kontua zure historia gordetzeko eta funtzio gehiago eskuratzeko!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Bertsio-berritu kontua"
 [config.apiKeys]
 chartAriaLabel = "Kredituen erabilera: barne {{includedUsed}}/{{includedTotal}}, erosiak {{purchasedUsed}}/{{purchasedTotal}}"
 copyKeyAriaLabel = "API gakoa kopiatu"
+creditsRemaining = "Geratzen diren kredituak"
 description = "Stirlingen PDF tresna-multzora sartzeko zure API gakoa. Kopiatu zure proiektuara edo berritu berri bat sortzeko."
 docsDescription = "Ikasi gehiago Stirling PDFrekin integrazioari buruz:"
 docsLink = "API dokumentazioa"
@@ -2643,6 +2982,14 @@ basic = "Oinarrizko konfigurazioa"
 integration = "Integrazio-konfigurazioa"
 security = "Segurtasun-konfigurazioa"
 system = "Sistema-konfigurazioa"
+
+[connectionMode.status]
+localOffline = "Lineaz kanpoko modua martxan"
+localOnline = "Lineaz kanpoko modua martxan"
+saas = "Stirling Cloud-arekin konektatuta"
+selfhostedChecking = "Norberak ostatatutako zerbitzarira konektatuta (egiaztatzen...)"
+selfhostedOffline = "Ezin da atzitu norberak ostatatutako zerbitzaria"
+selfhostedOnline = "Norberak ostatatutako zerbitzarira konektatuta"
 
 [convert]
 autoRotate = "Biraketa automatikoa"
@@ -2728,6 +3075,15 @@ webOptions = "Webetik PDFra aukerak"
 wordDoc = "Word dokumentua"
 wordDocExt = "Word dokumentua (.docx)"
 zoomLevel = "Zoom maila"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-posta → PDF"
+fileToPdf = "Office/Dokumentu → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBooketik PDFra aukerak"
@@ -3175,6 +3531,46 @@ totalSelected = "Guztira hautatuta"
 unsupported = "Ez da onartzen"
 unzip = "Deskonprimitu"
 uploadError = "Zenbait fitxategi igotzeak huts egin du."
+copyCreated = "Kopia gailu honetan gorde da."
+copyFailed = "Ezin izan da kopiarik sortu."
+leaveShare = "Kendu nire zerrendatik"
+leaveShareFailed = "Ezin izan da fitxategi partekatua kendu."
+leaveShareSuccess = "Zure partekatuen zerrendatik kendu da."
+removeBoth = "Kendu bietatik"
+removeFilePrompt = "Fitxategi hau gailu honetan eta zure zerbitzarian gordeta dago. Nondik kendu nahi duzu?"
+removeFileTitle = "Kendu fitxategia"
+removeLocalOnly = "Gailu hau bakarrik"
+removeServerFailed = "Ezin izan da fitxategia zerbitzaritik kendu."
+removeServerOnly = "Zerbitzaria bakarrik"
+removeServerOnlyPrompt = "Fitxategi hau zure zerbitzarian soilik gordeta dago. Zerbitzaritik kendu nahi duzu?"
+removeServerSuccess = "Zerbitzaritik kenduta."
+removeSharedPrompt = "Fitxategi hau zurekin partekatuta dago. Gailu honetatik edo zure partekatuen zerrendatik ken dezakezu."
+removeSharedServerOnlyBlockedPrompt = "Fitxategi hau zurekin partekatuta dago eta zerbitzarian soilik gordeta dago."
+removeSharedServerOnlyPrompt = "Fitxategi hau zurekin partekatuta dago eta zerbitzarian soilik gordeta dago. Zure zerrendatik kendu?"
+changesNotUploaded = "Aldaketak ez dira igo"
+cloudFile = "Hodeiko fitxategia"
+filterAll = "Denak"
+filterLocal = "Lokal"
+filterSharedByMe = "Nik partekatuak"
+filterSharedWithMe = "Nirekin partekatuak"
+lastSynced = "Azken sinkronizazioa"
+localOnly = "Lokal soilik"
+makeCopy = "Egin kopia bat"
+owner = "Jabea"
+ownerUnknown = "Ezezaguna"
+share = "Partekatu"
+shareSelected = "Partekatu hautatutakoak"
+sharedByYou = "Zuk partekatua"
+sharedEditNoticeBody = "Ez duzu zerbitzariko bertsio hau editatzeko baimenik. Egiten dituzun edizioak kopia lokal gisa gordeko dira."
+sharedEditNoticeConfirm = "Ulertuta"
+sharedEditNoticeTitle = "Zerbitzariko kopia irakurtzeko soilik"
+sharedWithYou = "Zurekin partekatua"
+sharing = "Partekatzea"
+storageState = "Biltegiratzea"
+synced = "Sinkronizatuta"
+updateOnServer = "Eguneratu zerbitzarian"
+uploadSelected = "Igo hautatutakoak"
+uploadToServer = "Igo zerbitzarira"
 
 [files]
 addFiles = "Gehitu fitxategiak"
@@ -3299,6 +3695,77 @@ title = "PDFak lautzeaz"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "Taldeko sinadurari buruz"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Sinadura guztiak zehaztu duzun parte-hartzaileen ordenan aplikatuko dira"
+bullet2 = "Beharrezkoa bada, sinadura partzialekin amai dezakezu"
+bullet3 = "Behin amaituta, saioa ezin da aldatu"
+description = "Parte-hartzaile guztiek sinatu dutenean (edo goiz amaitzea aukeratzen duzunean), azken sinatutako PDFa sor dezakezu."
+title = "Amaitzeko prozesua"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Jabea (zu): saioa sortzen du, sinaduraren lehenetsiak konfiguratzen ditu, dokumentua amaitzen du"
+bullet2 = "Parte-hartzaileak: beren sinadura sortu, ziurtagiria aukeratu eta PDFan kokatu"
+bullet3 = "Parte-hartzaileek ezin dituzte aldatu sinaduraren ikusgaitasuna, arrazoia edo kokapen-ezarpenak"
+description = "Parte-hartzaile guztientzako sinadura-itxuraren ezarpenak zuk kontrolatzen dituzu."
+title = "Parte-hartzaileen rolak"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "Lehen parte-hartzaileak sinatu behar du bigarrenak dokumentua atzitu aurretik"
+bullet2 = "Betetzen du sinadura-ordena egokia eskakizun legaletarako"
+bullet3 = "Parte-hartzaileak berrantola ditzakezu zerrendan arrastatuz"
+description = "Parte-hartzaileek zuk zehaztutako ordenan sinatzen dute dokumentua. Sinatzeko txanda dutenean jakinarazpena jasotzen dute."
+title = "Sinadura sekuentziala"
+
+[groupSigning.steps]
+back = "Atzera"
+completed = "Osatuta"
+current = "Unekoa"
+stepLabel = "{{number}}. urratsa"
+
+[groupSigning.steps.configureDefaults]
+continue = "Jarraitu berrikuspenara"
+invisible = "Sinadurak ikusezinak izango dira (metadatuak baino ez)"
+locationLabel = "Kokapena:"
+preview = "Aurrebista"
+reasonLabel = "Arrazoia:"
+title = "Konfiguratu sinadura-ezarpenak"
+visible = "Sinadurak ikusgai izango dira {{page}} orrian"
+
+[groupSigning.steps.review]
+document = "Dokumentua"
+dueDate = "Epemuga (aukerakoa)"
+dueDatePlaceholder = "Hautatu epemuga..."
+invisible = "Ikusezina (metadatuak soilik)"
+location = "Kokapena:"
+logo = "Logotipoa:"
+logoHidden = "Logotiporik ez"
+logoShown = "Stirling PDF logotipoa erakusten da"
+participants = "Parte-hartzaileak"
+reason = "Arrazoia:"
+send = "Bidali sinadura-eskaerak"
+signatureSettings = "Sinadura-ezarpenak"
+title = "Berrikusi saioaren xehetasunak"
+titleShort = "Berrikusi eta bidali"
+visibility = "Ikusgaitasuna:"
+visible = "Ikusgai {{page}} orrian"
+participantCount = "{{count}} parte-hartzailek sinatuko dute ordenean"
+
+[groupSigning.steps.selectDocument]
+continue = "Jarraitu parte-hartzaileak hautatzera"
+noFile = "Hautatu fitxategi aktiboetatik PDF bakar bat sinatze-saioa sortzeko."
+selectedFile = "Hautatutako dokumentua"
+title = "Hautatu dokumentua"
+
+[groupSigning.steps.selectParticipants]
+continue = "Jarraitu sinadura-ezarpenetara"
+count = "{{count}} parte-hartzaile hautatuta"
+label = "Hautatu parte-hartzaileak"
+placeholder = "Aukeratu parte-hartzaileak sinatzeko..."
+title = "Aukeratu parte-hartzaileak"
 
 [getPdfInfo]
 downloadJson = "Deskargatu JSON"
@@ -3718,6 +4185,11 @@ desc = "Gehitu sinadura PDFari marrazki, testu edo irudi bidez"
 tags = "sinadura,autografoa"
 title = "Sinatu"
 
+[home.timestampPdf]
+desc = "Gehitu RFC 3161 dokumentu-denbora-zigilua zure PDFari"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
+title = "Denbora-zigilatu PDFa"
+
 [home.split]
 desc = "Zatitu PDFak zenbait dokumentutan"
 tags = "banatu,bereizi,apurtu"
@@ -3854,6 +4326,7 @@ version = "Bertsioa"
 accountCreatedSuccess = "Kontua ongi sortu da! Orain saioa hasi dezakezu."
 alreadyLoggedIn = "Dagoeneko saioa hasita daukazu "
 alreadyLoggedIn2 = "gailutan. Mesedez, amaitu beste gailuetako saioak eta saiatu berriro."
+backToSignIn = "Itzuli saioa hastera"
 cancel = "Utzi"
 changePasswordWarning = "Mesedez, aldatu pasahitza lehen aldiz saioa hasi ondoren"
 credentialsUpdated = "Zure kredentzialak eguneratu dira. Hasi saioa berriro."
@@ -3895,16 +4368,21 @@ or = "Edo"
 password = "Pasahitza"
 passwordChangedSuccess = "Pasahitza ongi aldatu da! Hasi saioa pasahitz berriarekin."
 passwordResetSent = "Pasahitza berrezartzeko esteka bidali zaio {{email}} helbidera! Egiaztatu zure e-posta eta jarraitu jarraibideak."
+passwordUpdatedSuccess = "Zure pasahitza ongi eguneratu da."
 pleaseEnterBoth = "Mesedez, sartu e-posta eta pasahitza biak"
 pleaseEnterEmail = "Mesedez, sartu zure e-posta helbidea"
 relyingPartyRegistrationNotFound = "Ez da aurkitu fidatzen den alderdiaren erregistroa"
 rememberme = "Oroitu nazazu"
+resetHelp = "Sartu zure helbide elektronikoa pasahitza berrezartzeko esteka segurua jasotzeko. Esteka iraungi bada, eskatu beste bat."
+resetYourPassword = "Berrezarri zure pasahitza"
 saml2RequiresLicense = "SAML bidezko saio-hasierak lizentzia ordaindua behar du (Server edo Enterprise). Mesedez, jarri harremanetan administratzailearekin plana eguneratzeko."
 sending = "Bidaltzen…"
 sendMagicLink = "Bidali esteka magikoa"
+sendResetLink = "Bidali berrezartzeko esteka"
 sessionExpired = "Zure saioa iraungi da. Hasi saioa berriro, mesedez."
 signin = "Saioa hasi"
 signInAnonymously = "Sartu gonbidatu gisa"
+subtitle = "Hasi saioa berriro Stirling PDF-n"
 signingIn = "Saioa hasten..."
 signinTitle = "Mesedez, hasi saioa"
 signInWith = "Hasi saioa honekin"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Hasi saioa Saioa hasteko modu bakarraren bidez"
 title = "Saioa hasi"
 toManySessions = "Saio aktibo gehiegi dituzu"
 unexpectedError = "Ustekabeko errorea: {{message}}"
+updatePassword = "Pasahitza eguneratu"
 useEmailInstead = "Hasi saioa e-postarekin"
 useMagicLink = "Erabili esteka magikoa"
 userIsDisabled = "Erabiltzailea desgaituta dago; erabiltzaile-izen honekin saio-hasiera une honetan blokeatuta dago. Jarri harremanetan administratzailearekin."
@@ -4222,6 +4701,15 @@ viewSwitcher = "Erabili kontrol hauek zure PDFak nola ikusi nahi dituzun hautatz
 workbench = "Hau da <strong>Lan-mahaia</strong> - zure PDFak ikusi eta editatzeko eremu nagusia."
 wrapUp = "Dena prest! Aplikazioaren eremu nagusiak eta nola erabili ikasi dituzu. Egin klik <strong>Laguntza</strong> botoian bira hau berriro ikusteko nahi duzunean."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Proba amaitzean, gure maila doakoarekin jarraituko duzu. Gehitu ordainketa-metodo bat Pro sarbidea mantentzeko."
+afterTrialWithPayment = "Zure Pro harpidetza automatikoki hasiko da proba amaitzean."
+body = "Probaldian Stirling PDF Pro-ren funtzio guztietarako sarbidea duzu. Gozatu bihurketa mugagabeak, fitxategi handiagoak eta lehentasunezko prozesatzea."
+daysRemaining = "{{days}} egun falta"
+daysRemainingSingular = "{{days}} egun falta"
+title = "Zure 30 eguneko Pro proba"
+trialEnds = "Proba amaitzen da: {{date}}"
+
 [onboarding.buttons]
 back = "Atzera"
 download = "Deskargatu →"
@@ -4372,7 +4860,10 @@ zoomOut = "Zoom txikitu"
 
 [viewer]
 cannotPreviewFile = "Ezin da fitxategia aurreikusi"
+disableColorFilter = "Desgaitu kolore-iragazkia"
 dualPageView = "Orri biko ikuspegia"
+enableDarkFilter = "Gaitu iragazki iluna"
+enableSepiaFilter = "Gaitu sepia iragazkia"
 firstPage = "Lehen orria"
 lastPage = "Azken orria"
 nextPage = "Hurrengo orria"
@@ -4382,6 +4873,22 @@ singlePageView = "Orri bakarreko ikuspegia"
 unknownFile = "Fitxategi ezezaguna"
 zoomIn = "Zoom handitu"
 zoomOut = "Zoom txikitu"
+resetZoom = "Berrezarri zooma"
+
+[viewer.nonPdf]
+fileTypeBadge = "{{type}} fitxategia"
+convertToPdf = "Bihurtu PDFra"
+loading = "Kargatzen..."
+emptyFile = "Fitxategi hutsa"
+csvStats = "{{rows}} errenkada · {{columns}} zutabe · {{size}}"
+sortedBy = "Ordenatua: {{column}}"
+columnDefault = "{{index}}. zutabea"
+htmlPreviewWarning = "HTML aurrebista — kanpoko baliabideak agian ez dira kargatuko · {{size}}"
+htmlPreview = "HTML aurrebista"
+invalidJson = "JSON baliogabea — edukia gordinean erakusten"
+textStats = "{{lines}} lerro · {{size}}"
+lineNumbers = "Lerro-zenbakiak"
+renderMarkdown = "Errendatu Markdown"
 
 [viewer.attachments]
 title = "Eranskinak"
@@ -4391,6 +4898,31 @@ noDocument = "Ireki PDF bat bere eranskinak ikusteko."
 loading = "Eranskinak kargatzen..."
 empty = "Ez dago eranskinik dokumentu honetan"
 noMatch = "Ez dago zure bilaketarekin bat datorren eranskinik"
+
+[viewer.comments]
+title = "Iruzkinak"
+hint = "Jarri iruzkinak Iruzkina, Testua txertatu edo Testua ordezkatu tresnekin. Hemen agertuko dira, orrialdeka."
+placeholder = "Idatzi zure iruzkina..."
+pageLabel = "Orrialdea {{page}}"
+oneComment = "Iruzkin 1"
+nComments = "{{count}} iruzkin"
+addCommentPlaceholder = "Gehitu iruzkina..."
+addLink = "Gehitu esteka"
+goToLink = "Joan estekara"
+addComment = "Gehitu iruzkina"
+viewComment = "Ikusi iruzkina"
+addReplyPlaceholder = "Gehitu erantzuna..."
+saveReply = "Gorde erantzuna"
+send = "Bidali"
+moreActions = "Ekintza gehiago"
+typeComment = "Iruzkina"
+typeInsertText = "Testua txertatu"
+typeReplaceText = "Testua ordezkatu"
+locateAnnotation = "Kokatu dokumentuan"
+deleteTitle = "Kendu anotazioa iruzkinenetik?"
+deleteDescription = "Anotazio honek iruzkin bat du erantsita. Alboko barratik iruzkina bakarrik ken dezakezu anotazioa mantenduz, edo dena ezabatu."
+removeCommentOnly = "Kendu iruzkina bakarrik"
+deleteAnnotationAndComment = "Ezabatu anotazioa eta iruzkina"
 
 [viewer.formBar]
 title = "Inprimaki-eremuak"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Eranskinak erakutsi/ezkutatu"
 toggleTheme = "Gaia txandakatu"
 language = "Hizkuntza"
 toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
+toggleLayers = "Txandakatu geruzak"
 search = "Bilatu PDF"
 panMode = "Pan modua"
 applyRedactionsFirst = "Lehenik aplikatu zentsurak"
@@ -4425,14 +4958,20 @@ rotateLeft = "Biratu ezkerrera"
 rotateRight = "Biratu eskuinera"
 toggleSidebar = "Alboko barra txandakatu"
 toggleBookmarks = "Laster-markak txandakatu"
+toggleComments = "Iruzkinak"
 print = "Inprimatu PDFa"
 ruler = "Erregela / Neurketa"
+readAloud = "Ozen irakurri"
+readAloudSpeed = "Abiadura"
+readAloudLanguage = "Hizkuntza"
+selectLanguage = "Hautatu hizkuntza"
 draw = "Marraztu"
 redact = "Zentsuratu"
 exitRedaction = "Irten zentsura modutik"
 save = "Gorde"
 downloadAll = "Deskargatu dena"
 saveAll = "Gorde dena"
+saveAs = "Gorde honela"
 
 [textAlign]
 left = "Ezkerrera"
@@ -4447,21 +4986,132 @@ title = "Atera orriak"
 
 [pageLayout]
 addBorder = "Gehitu ertzak"
+borderWidth = "Ertzaren lodiera"
+bottom = "Beheko marjina"
+cols = "Zutabeak"
 header = "Hainbat orrialderen diseinua"
+innerMargin = "Barne-marjina"
+left = "Ezkerreko marjina"
 pagesPerSheet = "Orrialdeak orriko:"
+right = "Eskuineko marjina"
+rows = "Errenkadak"
 submit = "Entregatu"
 tags = "batu,konposatu,ikuspegi-bakarra,antolatu"
 title = "Hainbat orrialderen diseinua"
+top = "Goiko marjina"
+
+[pageLayout.mode]
+default = "Lehenetsia"
+custom = "Pertsonalizatua"
+label = "Modua:"
+
+[pageLayout.arrangement]
+byColumns = "Zutabez"
+byRows = "Errenkadaz"
+label = "Orrialdeen antolaketa:"
 
 [pageLayout.desc]
 16 = "Jarri 16 orri orri bakarrean (4 × 4 sarea)."
 2 = "Jarri 2 orri orri bakarrean alboz-albo."
-3 = "Jarri 3 orri orri bakarrean ilara bakarrean."
 4 = "Jarri 4 orri orri bakarrean (2 × 2 sarea)."
 9 = "Jarri 9 orri orri bakarrean (3 × 3 sarea)."
 
 [pageLayout.error]
 failed = "Errore bat gertatu da orri-anitzeko diseinua sortzean."
+outerVerticalMarginsTooLarge = "Goiko/Beheko marjinak handiegiak dira orri-tamaina honetarako."
+outerHorizontalMarginsTooLarge = "Ezkerreko/Eskuineko marjinak handiegiak dira orri-tamaina honetarako."
+innerMarginTooLarge = "Barne-marjina handiegia da hautatutako diseinurako."
+
+[pageLayout.orientation]
+landscape = "Horizontala"
+portrait = "Bertikala"
+label = "Orientazioa:"
+
+[pageLayout.readingDirection]
+ltr = "Ezkerretik eskuinera"
+rtl = "Eskuinetik ezkerrera"
+label = "Irakurketa-norabidea:"
+
+[pageLayout.tooltip.header]
+title = "Orrialde-diseinuaren gida"
+
+[pageLayout.tooltip.overview]
+title = "Zer da Orrialde-diseinua?"
+text = "Doitu orrialde anitz orri bakarrean banatzeko edo paperra aurrezteko."
+
+[pageLayout.tooltip.mode]
+title = "Modua"
+text = "Aukeratu sareta nola konfiguratzen den:"
+bullet1 = "Lehenetsia: Aurrezarpena aukeratu eta sareta automatikoki kalkulatzen da."
+bullet2 = "Pertsonalizatua: Ezarri errenkadak eta zutabeak eskuz."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Orrialdeak orri bakoitzeko (Modu lehenetsia)"
+text = "Aukeratu zenbat orrialde orri bakoitzeko (adib. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Errenkadak eta zutabeak (Modu pertsonalizatua)"
+text = "Ezarri sare-dimentsio zehatzak. Guztira orrialdeak orri bakoitzeko = errenkadak × zutabeak."
+
+[pageLayout.tooltip.orientation]
+title = "Orientazioa"
+text = "Ezarri irteera-orriaren orientazioa:"
+bullet1 = "Bertikala: Altuagoa zabal baino."
+bullet2 = "Horizontala: Zabalagoa altu baino."
+
+[pageLayout.tooltip.arrangement]
+title = "Orrialdeen antolaketa"
+text = "Kontrolatzen du orrialdeek nola betetzen duten sareta:"
+bullet1 = "Errenkadaz: Bete errenkada bakoitza (ezkerretik eskuinera edo eskuinetik ezkerrera)."
+bullet2 = "Zutabez: Bete goitik behera, zutabez zutabe."
+
+[pageLayout.tooltip.readingDirection]
+title = "Irakurketa-norabidea"
+text = "Kontrolatzen du orrialdeen ordena horizontala:"
+bullet1 = "LTR: Ezkerretik eskuinera."
+bullet2 = "RTL: Eskuinetik ezkerrera."
+
+[pageLayout.tooltip.addBorder]
+title = "Gehitu ertzak"
+text = "Marraztu ertz-lerroak orri-zelula bakoitzaren inguruan mozketa-gida edo bereizketa bisualerako."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marjinak eta ertzak"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marjinak"
+text = "Erabili goiko, beheko, ezkerreko eta eskuineko marjinak irteerako orri osoaren inguruko tartea kontrolatzeko."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Barne-marjina"
+text = "Barne-marjinak tartea gehitzen du orri-saretako gelaxken artean bereizketa eta irakurgarritasuna hobetzeko."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Gehitu ertzak"
+text = "Gaitu ertzak kokatutako orri bakoitzaren inguruan lerroak marrazteko. Honek lagun dezake bereizketa bisualean edo mozteko gidetan."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Ertzaren lodiera"
+text = "Ertzaren lodiera ertzak gaituta daudenean baino ez da aplikatzen. Balio handiagoek marra lodiagoak sortzen dituzte."
+
+[pageLayout.advanced.tooltip.header]
+title = "Diseinu aurreratuaren aukerak"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientazioa"
+text = "Aukeratu azken orriaren norabidea. Bertikalak hobeto funtzionatzen du eduki altuarentzat; horizontalak, berriz, diseinu zabalagoak egokitzen ditu."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Orrialdeen antolaketa"
+text = "Kontrolatu orrialdeek sareta errenkadaz edo zutabez betetzen duten."
+bullet1 = "Errenkadaz: Bete lehenik errenkada bakoitza."
+bullet2 = "Zutabez: Bete lehenik zutabe bakoitza."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Irakurketa-norabidea"
+text = "Ezarri sareko ordena horizontala, baliagarria ezkerretik-eskuinera eta eskuinetik-ezkerrera ohituretarako."
+bullet1 = "LTR: Ordena ezkerretik eskuinera."
+bullet2 = "RTL: Ordena eskuinetik ezkerrera."
 
 [pageRemover]
 header = "PDF orrialdeen ezabatzailea"
@@ -4977,7 +5627,10 @@ perMonth = "/hilean"
 perSeat = "/eserleku"
 popular = "Ezaguna"
 selectPlan = "Aukeratu plana"
+selectCredits = "Hautatu kreditu kopurua"
 showComparison = "Alderatu ezaugarri guztiak"
+purchase = "Erosi"
+totalCost = "Kostu osoa"
 upgrade = "Bertsio-berritu"
 withServer = "+ Zerbitzari-plana"
 
@@ -5069,6 +5722,30 @@ successMessage = "Zure lizentzia ongi aktibatu da. Orain leiho hau itxi dezakezu
 name = "Taldea"
 siteLicense = "Site License"
 
+[plan.api]
+large = "5.000 kreditu"
+medium = "1.000 kreditu"
+small = "500 kreditu"
+xsmall = "100 kreditu"
+
+[plan.apiPackages]
+subtitle = "Erosi API kredituak zure aplikazioetarako"
+title = "API kreditu paketeak"
+
+[plan.trial]
+badge = "Proba"
+continueWithFree = "Jarraitu doakoarekin"
+daysRemaining = "Zure proba {{days}} egunetan amaituko da"
+endDate = "Iraungitzen da: {{date}}"
+expired = "Zure proba amaitu da"
+expiredMessage = "Zure 30 eguneko Pro proba iraungi da. Harpidetu Pro-ra funtzio aurreratuetara sartzen jarraitzeko, edo jarraitu gure maila doakoarekin."
+freeTierLimitations = "Maila doakoak PDF oinarrizko tresnak ditu erabilera-mugekin."
+message = ""
+subscribe = "Harpidetu Pro-ra"
+subscribeToPro = "Harpidetu Pro-ra"
+subscriptionScheduled = "Harpidetza programatuta - {{date}}-n hasten da"
+title = "Doako proba aktibo"
+
 [credits]
 enableOverageBilling = "Gaitu gain-erabileraren fakturazioa"
 maybeLater = "Agian geroago"
@@ -5150,20 +5827,72 @@ title = "Inprimatu fitxategia"
 2 = "Idatzi inprimagailuaren izena"
 
 [quickAccess]
+access = "Atzipena"
+accessAddPerson = "Gehitu beste pertsona bat"
+accessBack = "Atzera"
+accessCopyLink = "Kopiatu esteka"
+accessEmail = "Helbide elektronikoa"
+accessEmailPlaceholder = "name@company.com"
+accessFileLabel = "Fitxategia"
+accessGeneral = "Atzipen orokorra"
+accessInviteTitle = "Gonbidatu pertsonak"
+accessOwner = "Jabea"
+accessPanel = "Dokumentuaren atzipena"
+accessPeople = "Atzipena duten pertsonak"
+accessRemove = "Kendu"
+accessRestricted = "Mugatua"
+accessRestrictedHint = "Atzipena duten pertsonek soilik ireki dezakete"
+accessRole = "Rola"
+accessRoleCommenter = "Iruzkingilea"
+accessRoleEditor = "Editorea"
+accessRoleViewer = "Ikuslea"
+accessSelectedFile = "Hautatutako fitxategia"
+accessSendInvite = "Bidali gonbidapena"
+accessTitle = "Dokumentuaren atzipena"
+accessYou = "Zu"
 account = "Kontua"
+activeSessions = "Saio aktiboak"
+activeTab = "Aktiboak"
 activity = "Jarduera"
 adminSettings = "Admin aukerak"
+allSessions = "Saio guztiak"
 allTools = "All Tools"
 automate = "Autom."
+back = "Atzera"
+certSign = "Ziurtagiri bidezko sinadura"
+completedSessions = "Amaitutako saioak"
+completedTab = "Amaituta"
 config = "Konfig."
+createNew = "Sortu eskaera berria"
+createSession = "Sortu sinadura-eskaera"
+dueDate = "Epemuga (aukerakoa)"
 files = "Fitx."
 help = "Laguntza"
+noActiveSessions = "Ez dago zain dauden sinadura-eskaerarik edo saio aktiborik"
+noCompletedSessions = "Ez dago amaitutako saiorik"
+noFile = "Ez da fitxategirik hautatu"
 read = "Irakurri"
 reader = "Irakurri"
+refresh = "Freskatu"
+requestSignatures = "Eskatu sinadurak"
+selectSingleFileToRequest = "Hautatu PDF fitxategi bakarra sinadurak eskatzeko"
+selectedFile = "Hautatutako fitxategia"
+selectUsers = "Hautatu sinatuko duten erabiltzaileak"
+selectUsersPlaceholder = "Aukeratu parte-hartzaileak..."
+sendingRequest = "Bidaltzen..."
 settings = "Aukerak"
 showMeAround = "Erakutsi ingurunea"
 sign = "Sinatu"
+signatureRequests = "Sinadura-eskaerak"
+signYourself = "Sinatu zeuk"
+newRequest = "Eskaera berria"
 tours = "Ibilbideak"
+wetSign = "Gehitu sinadura"
+filterMine = "Nireak"
+filterOverdue = "Epea gaindituta"
+filterSigned = "Sinatuta"
+filterDeclined = "Ukatua"
+searchDocuments = "Bilatu dokumentuak…"
 
 [quickAccess.helpMenu]
 adminTour = "Administrazio ibilaldia"
@@ -5631,6 +6360,32 @@ text = "Biratu zure PDF orrialdeak erlojuaren noranzkoan edo kontrakoan 90 gradu
 [rotate.tooltip.header]
 title = "Biraketa ezarpenen ikuspegi orokorra"
 
+[timestampPdf]
+completed = "PDFa denbora-zigilatuta ongi"
+desc = "Gehitu RFC 3161 dokumentuaren denbora-zigilua zure PDFari Denbora-zigiluen Agintaritza (TSA) fidagarri bat erabiliz."
+filenamePrefix = "denbora-zigilatua"
+results = "Denbora-zigiluaren emaitzak"
+submit = "Aplikatu denbora-zigilua"
+title = "Denbora-zigilatu PDFa"
+
+[timestampPdf.error]
+failed = "Errore bat gertatu da PDFa denbora-zigilatzean."
+generic = "Denbora-zigilatzeak huts egin du"
+
+[timestampPdf.files]
+placeholder = "Hasteko, hautatu PDF fitxategi bat ikuspegi nagusian"
+
+[timestampPdf.options]
+note = "Zure dokumentuaren SHA-256 hash-a bakarrik bidaltzen da TSA zerbitzarira; PDF fitxategia bera ez da inoiz TSA zerbitzarira bidaltzen."
+title = "Denbora-zigiluen zerbitzaria (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Aukeratu Denbora-zigiluen Agintaritza fidagarria"
+label = "Hautatu TSA zerbitzari bat"
+
+[timestampPdf.steps]
+settings = "Ezarpenak"
+
 [sanitize]
 completed = "Saneatzea ongi burutu da"
 desc = "Kaltegarriak izan daitezkeen elementuak kendu PDF fitxategietatik."
@@ -5755,25 +6510,100 @@ placeholder = "Idatzi bilaketa-terminoa..."
 searching = "Bilatzen..."
 title = "Bilatu PDF"
 
+[selfHosted.offline]
+hideTools = "Ezkutatu erabilgarri ez dauden tresnak ▴"
+messageNoFallback = "Tresnak ez daude erabilgarri zure zerbitzaria linean egon arte."
+messageWithFallback = "Zenbait tresnek zerbitzariarekiko konexioa behar dute."
+showTools = "Ikusi erabilgarri ez dauden tresnak ▾"
+title = "Ezin da atzitu zure Stirling-PDF zerbitzaria"
+toolNotAvailableLocally = "Zure Stirling-PDF zerbitzaria lineaz kanpo dago eta \"{{endpoint}}\" ez dago erabilgarri tokiko backend-ean."
+
 [session]
 expired = "Zure saioa iraungi da. Freskatu orria eta saiatu berriro."
 refreshPage = "Freskatu orria"
+
+[sessionManagement.tooltip]
+header = "Sinatze-saioen kudeaketa"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Parte-hartzaile berriak sinadura-ordenaren amaieran gehitzen dira"
+bullet2 = "Ezin dira parte-hartzaileak gehitu saioa amaitu ondoren"
+bullet3 = "Parte-hartzaile bakoitzak jakinarazpena jasotzen du bere txanda denean"
+description = "Saio aktibo batera parte-hartzaile gehiago gehi ditzakezu edozein unetan amaitu aurretik."
+title = "Parte-hartzaileak gehitzea"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Amaiera osoa</b>: Parte-hartzaile guztiek sinatu dute"
+bullet2 = "<b>Amaiera partziala</b>: Parte-hartzaile batzuek oraindik ez dute sinatu"
+bullet3 = "Sinatu gabe dauden parte-hartzaileak ez dira azken dokumentuan sartuko"
+bullet4 = "Behin amaituta, sinatutako PDFa fitxategi aktiboetan kargatu dezakezu"
+description = "Amaitzeak sinadura guztiak PDF sinatu bakarrean konbinatzen ditu. Ekintza hau ezin da desegin."
+title = "Saioaren amaiera"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Ezin dira sinatu duten parte-hartzaileak kendu"
+bullet2 = "Kendutako parte-hartzaileek ez dute gehiago jakinarazpenik jasoko"
+bullet3 = "Sinadura-ordena automatikoki doitzen da"
+description = "Parte-hartzaileak ken daitezke sinatu aurretik."
+title = "Parte-hartzaileak kentzea"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Sinadura bakoitza sekuentzialki aplikatzen da PDFari"
+bullet2 = "Beranduago sinatzen dutenek aurreko sinadurak ikus ditzakete"
+bullet3 = "Funtsezkoa da onarpen-fluxuetarako eta zaintza-kate legaletarako"
+description = "Saioa sortzean zehazten duzun ordenak zein sinatuko duen lehenik ezartzen du."
+title = "Sinadura-ordena"
+
+[signatureSettings.tooltip]
+header = "Sinaduraren itxuraren ezarpenak"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Adibideak: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Ez da orri-posizio bera"
+bullet3 = "Lege-eremu jakin batzuetan beharrezkoa izan daiteke"
+description = "Aukerako kokapen geografikoa non sinadura aplikatu den. Ziurtagiriaren metadatuetan gordetzen da."
+title = "Sinaduraren kokapena"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Sinaduraren eta testuaren ondoan bistaratzen da"
+bullet2 = "PNG, JPG formatuak onartzen ditu"
+bullet3 = "Itxura profesionala hobetzen du"
+description = "Gehitu enpresaren logotipoa ikusgai dauden sinadurei branding eta egiazkotasunerako."
+title = "Enpresaren logotipoa"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Adibideak: \"Onarpena\", \"Kontratu-akordioa\", \"Berrikuspena amaituta\""
+bullet2 = "PDFko sinadura-propietateetan ikusgai"
+bullet3 = "Baliagarria auditoretza-arrastoetarako eta araudia betetzeko"
+description = "Dokumentua zergatik sinatzen ari den azaltzen duen aukerako testua. Ziurtagiriaren metadatuetan gordetzen da."
+title = "Sinaduraren arrazoia"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Ikusgai</b>: Sinadura PDFan agertzen da itxura pertsonalizatuarekin"
+bullet2 = "<b>Ikusezina</b>: Ziurtagiria ikusizko markarik gabe kapsulatuta"
+bullet3 = "Sinadura ikusezinek ere baliozkotze kriptografikoa ematen dute"
+description = "Kontrolatzen du sinadura dokumentuan ikusgai den ala modu ikusezinean kapsulatuta."
+title = "Sinaduraren ikusgaitasuna"
 
 [settings.configuration]
 advanced = "Aurreratua"
 database = "Datu-basea"
 endpoints = "Endpoints"
 features = "Eginbideak"
+storageSharing = "Fitxategi biltegiratzea eta partekatzea"
 systemSettings = "Sistemaren ezarpenak"
 title = "Konfigurazioa"
 
 [settings.connection]
+localDescription = "Tokiko backend-a erabiltzen ari zara konturik gabe. Hodei-prozesamendua edo norberak ostatatutako zerbitzaria behar duten tresna batzuk ez daude erabilgarri."
 logout = "Saioa amaitu"
 server = "Zerbitzaria"
+signIn = "Hasi saioa"
 title = "Konexio modua"
 user = "Saioa hasita:"
 
 [settings.connection.mode]
+local = "Tokikoa bakarrik"
 saas = "Stirling Cloud"
 selfhosted = "Auto-ostatua"
 
@@ -5931,6 +6761,9 @@ title = "Politikak eta Pribatutasuna"
 [settings.preferences]
 title = "Hobespenak"
 
+[settings.search]
+placeholder = "Bilatu ezarpen-orrietan..."
+
 [settings.security]
 description = "Eguneratu pasahitza kontua seguru mantentzeko."
 title = "Segurtasuna"
@@ -5968,6 +6801,18 @@ title = "Lan-espazioa"
 [settings.team]
 title = "Taldea"
 
+[localMode]
+toolUnavailable = "Tresna honek kontu bat behar du. Hasi saioa Stirling Cloud-en edo konektatu norberak ostatatutako zerbitzari batera erabiltzeko."
+
+[localMode.banner]
+message = "Hasi saioa tresna guztiak desblokeatzeko."
+signIn = "Hasi saioa"
+title = "Tokian exekutatzen"
+
+[localMode.toolPicker]
+message = "Hasi saioa tresna guztiak desblokeatzeko."
+signIn = "Hasi saioa"
+
 [setup]
 description = "Hasi Stirling PDF nola erabili nahi duzun aukeratuz"
 welcome = "Ongi etorri Stirling PDF-era"
@@ -5975,6 +6820,7 @@ welcome = "Ongi etorri Stirling PDF-era"
 [setup.login]
 connectingTo = "Hona konektatzen:"
 hideInstructions = "Ezkutatu argibideak"
+skipSignIn = "Jarraitu saioa hasi gabe"
 instructions = "Saioa hastea gaitzeko zure Stirling PDF zerbitzarian:"
 instructionsEnvVar = "Ezarri ingurune-aldagaia:"
 instructionsOrYml = "Edo settings.yml fitxategian:"
@@ -6022,7 +6868,17 @@ title = "Hasi saioa Stirlingen"
 [setup.selfhosted]
 link = "edo konektatu autoostatutako kontu batera"
 subtitle = "Sartu zure zerbitzariaren kredentzialak"
+changeServerLocked = "Zure erakundeak aplikazio hau zerbitzari jakin batera mugatu du"
+switchToLocal = "Erabili tokiko tresnak"
 title = "Hasi saioa zerbitzarian"
+
+[setup.selfhosted.unreachable]
+changeServer = "Konektatu beste zerbitzari batera"
+changeServerLocked = "Zure erakundeak aplikazio hau zerbitzari jakin batera mugatu du"
+continueOffline = "Erabili tokiko tresnak"
+message = "Ezin izan da {{url}} atzitu. Egiaztatu zerbitzaria martxan eta atzigarri dagoela."
+retry = "Saiatu berriro"
+title = "Ezin da zerbitzarira konektatu"
 
 [setup.server]
 subtitle = "Sartu zure auto-ostatuko zerbitzariaren URLa"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Ezin izan da zerbitzariaren konfigurazioa eskuratu. Egiaztatu URLa eta saiatu berriro."
+configFetchError = "Ezin izan da zerbitzariaren konfigurazioa eskuratu: {{error}}"
 emptyUrl = "Sartu zerbitzari baten URLa"
 invalidUrl = "URL formatua baliogabea. Sartu baliozko URL bat, adibidez https://your-server.com"
 testFailed = "Konexio proba huts egin du"
@@ -6210,6 +7067,15 @@ image = "Irudia"
 saved = "Gordeta"
 text = "Testua"
 title = "Sinadura mota"
+
+[signRequest]
+declined = "Sinadura-eskaera ukatua"
+fetchFailed = "Ezin izan da sinadura-eskaera kargatu"
+signed = "Dokumentua ongi sinatu da"
+
+[signSession]
+createFailed = "Ezin izan da sinadura-eskaera sortu"
+created = "Sinadura-eskaera bidalita"
 
 [signup]
 accountCreatedSuccessfully = "Kontua ongi sortu da! Orain saioa hasi dezakezu."
@@ -6489,6 +7355,106 @@ title = "Zatikatu PDF kapituluen arabera"
 [splitPdfByChapters]
 tags = "zatikatu,kapituluak,lastermarkak,antolatu"
 
+[storageShare]
+accessed = "Atzituta"
+accessDenied = "Ez duzu fitxategi partekatu honetarako atzipenik. Eskatu jabeari zurekin partekatzeko."
+accessFailed = "Ezin izan da jarduera kargatu."
+accessDeniedBody = "Ez duzu fitxategi honetarako atzipenik. Eskatu jabeari zurekin partekatzeko."
+accessDeniedTitle = "Atzipenik ez"
+accessLimitedCommenter = "Iruzkinetarako atzipena laster egongo da eskuragarri. Deskargatu behar baduzu, eskatu jabeari editore-atzipena."
+accessLimitedTitle = "Atzipen mugatua"
+accessLimitedViewer = "Esteka hau ikuspegi-soilerako da. Deskargatu behar baduzu, eskatu jabeari editore-atzipena."
+createdAt = "Sortua"
+download = "Deskargatu"
+downloadFailed = "Ezin da fitxategi hau deskargatu."
+expiredBody = "Partekatze-esteka hau baliogabea da edo iraungi da."
+expiredTitle = "Esteka iraungita"
+goToLogin = "Joan saioa-hasiera orrira"
+loadFailed = "Ezin da fitxategi partekatua ireki."
+loading = "Partekatze-esteka kargatzen..."
+loginPrompt = "Hasi saioa fitxategi partekatu honetara sartzeko."
+loginRequired = "Saioa behar da"
+openInApp = "Ireki Stirling PDF"
+ownerLabel = "Jabea"
+ownerUnknown = "Ezezaguna"
+requiresLogin = "Fitxategi partekatu honek saioa behar du."
+roleCommenter = "Iruzkingilea"
+roleEditor = "Editorea"
+roleViewer = "Ikuslea"
+shareHeading = "Fitxategi partekatua"
+titleDefault = "Fitxategi partekatua"
+tryAgain = "Saiatu berriro geroago."
+addUser = "Gehitu"
+commenterHint = "Iruzkinak laster egongo dira eskuragarri."
+copied = "Esteka arbelean kopiatu da"
+copy = "Kopiatu"
+copyFailed = "Ezin izan da kopiatu"
+description = "Sortu partekatzeko esteka fitxategi honetarako. Saioa hasita duten erabiltzaileek estekaren bidez atzi dezakete."
+downloadsCount = "Deskargak: {{count}}"
+emailWarningBody = "Honek helbide elektroniko baten itxura du. Pertsona hau Stirling PDF erabiltzailea ez bada, ezin izango du fitxategia atzitu."
+emailWarningConfirm = "Partekatu hala ere"
+emailWarningTitle = "Helbide elektronikoa"
+errorTitle = "Partekatzea huts egin du"
+failure = "Ezin izan da partekatzeko estekarik sortu. Saiatu berriro."
+fileLabel = "Fitxategia"
+generate = "Sortu esteka"
+generated = "Partekatzeko esteka sortu da"
+hideActivity = "Ezkutatu jarduera"
+invalidUsername = "Idatzi erabiltzaile-izen edo helbide elektroniko balioduna."
+lastAccessed = "Azken atzipena"
+linkAccessTitle = "Partekatzeko estekaren atzipena"
+linkLabel = "Partekatzeko esteka"
+linksDisabled = "Partekatzeko estekak desgaituta daude."
+linksDisabledBody = "Partekatzeko estekak zure zerbitzariaren ezarpenek desgaitu dituzte."
+manage = "Kudeatu partekatzea"
+manageDescription = "Sortu eta kudeatu fitxategi hau partekatzeko estekak."
+manageLoadFailed = "Ezin izan dira partekatzeko estekak kargatu."
+manageTitle = "Partekatzea kudeatu"
+noActivity = "Oraindik ez dago jarduerarik."
+noLinks = "Ez dago partekatzeko esteka aktiborik oraindik."
+noSharedUsers = "Oraindik ez du inork atzipenik."
+removeLink = "Kendu esteka"
+removeUser = "Kendu"
+revokeFailed = "Ezin izan da partekatzeko esteka kendu."
+revoked = "Partekatze-esteka kendu da"
+roleLabel = "Rola"
+sharingDisabled = "Partekatzea desgaituta dago."
+sharingDisabledBody = "Zerbitzariaren ezarpenek partekatzea desgaitu dute."
+sharedUsersTitle = "Partekatutako erabiltzaileak"
+title = "Partekatu fitxategia"
+unknownUser = "Erabiltzaile ezezaguna"
+userAddFailed = "Ezin izan da erabiltzaile horrekin partekatu."
+userAdded = "Erabiltzailea partekatutako zerrendan gehitu da."
+usernameLabel = "Erabiltzaile-izena edo helbide elektronikoa"
+usernamePlaceholder = "Sartu erabiltzaile-izen bat edo helbide elektroniko bat"
+userRemoveFailed = "Ezin izan da erabiltzaile hori kendu."
+userRemoved = "Erabiltzailea partekatutako zerrendatik kendu da."
+viewActivity = "Ikusi jarduera"
+viewed = "Ikusita"
+viewsCount = "Ikustaldiak: {{count}}"
+downloaded = "Deskargatuta"
+bulkDescription = "Sortu esteka bakarra hautatutako fitxategi guztiak saioa hasita duten erabiltzaileekin partekatzeko."
+bulkTitle = "Partekatu hautatutako fitxategiak"
+copyLink = "Kopiatu partekatze-esteka"
+fileCount = "{{count}} fitxategi hautatuta"
+ownerOnly = "Jabeak bakarrik kudea dezake partekatzea."
+selectSingleFile = "Hautatu fitxategi bakarra partekatzea kudeatzeko."
+
+[storageUpload]
+description = "Honek uneko fitxategia zerbitzariaren biltegira igotzen du zure sarbiderako."
+errorTitle = "Igoerak huts egin du"
+failure = "Igoerak huts egin du. Egiaztatu zure saio-hasiera eta biltegiratze ezarpenak."
+fileLabel = "Fitxategia"
+hint = "Esteka publikoak eta sarbide-moduak zure zerbitzariaren ezarpenek kontrolatzen dituzte."
+success = "Zerbitzarira igo da"
+title = "Igo zerbitzarira"
+updateButton = "Eguneratu zerbitzarian"
+uploadButton = "Igo zerbitzarira"
+bulkDescription = "Honek hautatutako fitxategiak zure zerbitzariaren biltegira igotzen ditu."
+bulkTitle = "Igo hautatutako fitxategiak"
+fileCount = "{{count}} fitxategi hautatuta"
+more = " +{{count}} gehiago"
+
 [storage]
 approximateSize = "Gutxi gorabeherako tamaina"
 fileTooLarge = "Fitxategia handiegia. Fitxategi bakoitzerako gehienezko tamaina da"
@@ -6557,6 +7523,7 @@ favorites = "Gogokoak"
 heading = "Tresna guztiak (pantaila osoko ikuspegia)"
 noResults = "Saiatu bilaketa moldatzen edo deskribapenak txandakatzen behar duzuna aurkitzeko."
 recommended = "Gomendatua"
+selfHostedOffline = "Zure Stirling-PDF zerbitzaria behar da (unean lineaz kanpo):"
 showDetails = "Erakutsi xehetasunak"
 unavailable = "Zerbitzariaren administratzaileak desgaituta:"
 unavailableDependency = "Ez dago eskuragarri - beharrezko tresna falta da zerbitzarian:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Orri-formatua"
 removal = "Kentzea"
 signing = "Sinatzea"
 verification = "Egiaztapena"
+
+[tool]
+endpointUnavailable = "Tresna hau ez dago erabilgarri zure zerbitzarian."
+endpointUnavailableClickable = "Modu honetan ez dago eskuragarri. Egin klik saioa hasteko."
+invalidParams = "Bete beharrezko ezarpenak."
+noFiles = "Gehitu fitxategi bat hasteko."
 
 [tools]
 noSearchResults = "Ez da tresnarik aurkitu"
@@ -6828,6 +7801,30 @@ title = "Ikusi/Editatu PDF"
 [warning]
 tooltipTitle = "Abisua"
 
+[wetSignature.tooltip]
+header = "Sinadura sortzeko metodoak"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Pertsonalizatu arkatzaren kolorea eta lodiera"
+bullet2 = "Garbitu eta berriz marraztu gustura geratu arte"
+bullet3 = "Ukipen-gailuetan funtzionatzen du (tabletak, telefonuak)"
+description = "Sortu eskuz idatzitako sinadura saguarekin edo ukipen-pantailarekin. Pertsonal eta egiazko sinaduretarako egokiena."
+title = "Marraztu sinadura"
+
+[wetSignature.tooltip.type]
+bullet1 = "Aukeratu letra-tipo anitzen artetik"
+bullet2 = "Pertsonalizatu testuaren tamaina eta kolorea"
+bullet3 = "Estandarizatutako sinaduretarako aproposa"
+description = "Sortu sinadura idatzitako testutik. Azkarra eta koherentea, enpresa-dokumentuetarako egokia."
+title = "Idatzi sinadura"
+
+[wetSignature.tooltip.upload]
+bullet1 = "PNG, JPG eta bestelako irudi-formatuak onartzen ditu"
+bullet2 = "Atzeko plano gardenak gomendatzen dira emaitza onenak lortzeko"
+bullet3 = "Irudia sinadura-eremura egokitzeko tamainaz aldatuko da"
+description = "Igo aldez aurretik sortutako sinadura-irudia. Ideala sinadura eskaneatua edo enpresako logotipoa baduzu."
+title = "Igo sinadura-irudia"
+
 [watermark]
 completed = "Ur‑marka gehituta"
 desc = "Gehitu testu edo irudi ur‑markak PDF fitxategiei"
@@ -7008,6 +8005,7 @@ activeSession = "Saio aktiboa"
 addMembers = "Gehitu kideak"
 admin = "Admin"
 confirmDelete = "Ziur erabiltzaile hau ezabatu nahi duzula? Ekintza hau ezin da desegin."
+confirmUnlock = "Ziur al zaude erabiltzaile-kontu hau desblokeatu nahi duzula?"
 deleteUser = "Ezabatu erabiltzailea"
 deleteUserError = "Ezin izan da erabiltzailea ezabatu"
 deleteUserSuccess = "Erabiltzailea ongi ezabatu da"
@@ -7016,6 +8014,8 @@ disable = "Desgaitu"
 disabled = "Desgaituta"
 editRole = "Rola editatu"
 enable = "Gaitu"
+locked = "blokeatuta"
+lockedBadge = "Blokeatuta"
 loading = "Pertsonak kargatzen..."
 loginRequired = "Gaitu saio-hasiera modua lehenik"
 member = "Kidea"
@@ -7025,6 +8025,9 @@ searchMembers = "Bilatu kideak..."
 status = "Egoera"
 team = "Taldea"
 title = "Pertsonak"
+unlockAccount = "Desblokeatu kontua"
+unlockUserError = "Erabiltzaile-kontua desblokeatzeak huts egin du"
+unlockUserSuccess = "Erabiltzaile-kontua arrakastaz desblokeatu da"
 user = "Erabiltzailea"
 
 [workspace.people.actions]

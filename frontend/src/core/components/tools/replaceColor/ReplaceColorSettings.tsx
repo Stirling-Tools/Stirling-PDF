@@ -5,106 +5,137 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ReplaceColorSettingsProps {
   parameters: ReplaceColorParameters;
-  onParameterChange: <K extends keyof ReplaceColorParameters>(key: K, value: ReplaceColorParameters[K]) => void;
+  onParameterChange: <K extends keyof ReplaceColorParameters>(
+    key: K,
+    value: ReplaceColorParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false }: ReplaceColorSettingsProps) => {
+const ReplaceColorSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ReplaceColorSettingsProps) => {
   const { t } = useTranslation();
 
   const replaceAndInvertOptions = [
     {
-      value: 'HIGH_CONTRAST_COLOR',
-      label: t('replaceColor.options.highContrast', 'High contrast')
+      value: "HIGH_CONTRAST_COLOR",
+      label: t("replaceColor.options.highContrast", "High contrast"),
     },
     {
-      value: 'FULL_INVERSION',
-      label: t('replaceColor.options.invertAll', 'Invert all colours')
+      value: "FULL_INVERSION",
+      label: t("replaceColor.options.invertAll", "Invert all colours"),
     },
     {
-      value: 'CUSTOM_COLOR',
-      label: t('replaceColor.options.custom', 'Custom')
+      value: "CUSTOM_COLOR",
+      label: t("replaceColor.options.custom", "Custom"),
     },
     {
-      value: 'COLOR_SPACE_CONVERSION',
-      label: t('replaceColor.options.cmyk', 'Convert to CMYK')
-    }
+      value: "COLOR_SPACE_CONVERSION",
+      label: t("replaceColor.options.cmyk", "Convert to CMYK"),
+    },
   ];
 
   const highContrastOptions = [
     {
-      value: 'WHITE_TEXT_ON_BLACK',
-      label: t('replace-color.selectText.6', 'White text on black background')
+      value: "WHITE_TEXT_ON_BLACK",
+      label: t("replace-color.selectText.6", "White text on black background"),
     },
     {
-      value: 'BLACK_TEXT_ON_WHITE',
-      label: t('replace-color.selectText.7', 'Black text on white background')
+      value: "BLACK_TEXT_ON_WHITE",
+      label: t("replace-color.selectText.7", "Black text on white background"),
     },
     {
-      value: 'YELLOW_TEXT_ON_BLACK',
-      label: t('replace-color.selectText.8', 'Yellow text on black background')
+      value: "YELLOW_TEXT_ON_BLACK",
+      label: t("replace-color.selectText.8", "Yellow text on black background"),
     },
     {
-      value: 'GREEN_TEXT_ON_BLACK',
-      label: t('replace-color.selectText.9', 'Green text on black background')
-    }
+      value: "GREEN_TEXT_ON_BLACK",
+      label: t("replace-color.selectText.9", "Green text on black background"),
+    },
   ];
 
   return (
     <Stack gap="md">
       <Stack gap="xs">
         <Text size="sm" fw={500}>
-          {t('replaceColor.labels.colourOperation', 'Colour operation')}
+          {t("replaceColor.labels.colourOperation", "Colour operation")}
         </Text>
         <Select
           value={parameters.replaceAndInvertOption}
-          onChange={(value) => value && onParameterChange('replaceAndInvertOption', value as ReplaceColorParameters['replaceAndInvertOption'])}
+          onChange={(value) =>
+            value &&
+            onParameterChange(
+              "replaceAndInvertOption",
+              value as ReplaceColorParameters["replaceAndInvertOption"],
+            )
+          }
           data={replaceAndInvertOptions}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Stack>
 
-      {parameters.replaceAndInvertOption === 'HIGH_CONTRAST_COLOR' && (
+      {parameters.replaceAndInvertOption === "HIGH_CONTRAST_COLOR" && (
         <Stack gap="xs">
           <Text size="sm" fw={500}>
-            {t('replace-color.selectText.5', 'High contrast color options')}
+            {t("replace-color.selectText.5", "High contrast color options")}
           </Text>
           <Select
             value={parameters.highContrastColorCombination}
-            onChange={(value) => value && onParameterChange('highContrastColorCombination', value as ReplaceColorParameters['highContrastColorCombination'])}
+            onChange={(value) =>
+              value &&
+              onParameterChange(
+                "highContrastColorCombination",
+                value as ReplaceColorParameters["highContrastColorCombination"],
+              )
+            }
             data={highContrastOptions}
             disabled={disabled}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+            }}
           />
         </Stack>
       )}
 
-      {parameters.replaceAndInvertOption === 'CUSTOM_COLOR' && (
+      {parameters.replaceAndInvertOption === "CUSTOM_COLOR" && (
         <>
           <Stack gap="xs">
             <Text size="sm" fw={500}>
-              {t('replace-color.selectText.10', 'Choose text Color')}
+              {t("replace-color.selectText.10", "Choose text Color")}
             </Text>
             <ColorInput
               value={parameters.textColor}
-              onChange={(value) => onParameterChange('textColor', value)}
+              onChange={(value) => onParameterChange("textColor", value)}
               format="hex"
               disabled={disabled}
-              popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+              popoverProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+              }}
             />
           </Stack>
 
           <Stack gap="xs">
             <Text size="sm" fw={500}>
-              {t('replace-color.selectText.11', 'Choose background Color')}
+              {t("replace-color.selectText.11", "Choose background Color")}
             </Text>
             <ColorInput
               value={parameters.backGroundColor}
-              onChange={(value) => onParameterChange('backGroundColor', value)}
+              onChange={(value) => onParameterChange("backGroundColor", value)}
               format="hex"
               disabled={disabled}
-              popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+              popoverProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+              }}
             />
           </Stack>
         </>

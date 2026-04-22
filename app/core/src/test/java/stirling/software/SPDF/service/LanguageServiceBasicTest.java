@@ -103,7 +103,9 @@ class LanguageServiceBasicTest {
         // Verify filtering by restrictions
         assertTrue(supportedLanguages.contains("en_US"), "Allowed language should be included");
         assertTrue(supportedLanguages.contains("fr_FR"), "Allowed language should be included");
-        assertFalse(supportedLanguages.contains("en_GB"), "en_GB should NOT be included when not in whitelist");
+        assertFalse(
+                supportedLanguages.contains("en_GB"),
+                "en_GB should NOT be included when not in whitelist");
         assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
     }
 

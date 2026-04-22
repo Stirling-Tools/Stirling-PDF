@@ -8,6 +8,7 @@ black = "Negre"
 blue = "Blau"
 bored = "Avorrit esperant?"
 cancel = "Cancel·la"
+confirm = "Confirmar"
 changedCredsMessage = "Credencials canviades!"
 chooseFile = "Tria fitxer"
 close = "Tanca"
@@ -142,6 +143,11 @@ welcome = "Benvingut"
 white = "Blanc"
 WorkInProgess = "En desenvolupament, pot no funcionar o contenir errors. Si us plau, informa de qualsevol problema!"
 yes = "Si"
+insufficientCredits = "Crèdits insuficients. Necessaris: {{requiredCredits}}, Disponibles: {{currentBalance}}, Falten: {{shortfall}}"
+loadingCredits = "Comprovant els crèdits..."
+loadingProStatus = "Comprovant l’estat de la subscripció..."
+noticeTopUpOrPlan = "No tens prou crèdits; recarrega o passa a un pla"
+accessInvite = "Convida"
 
 [account]
 accountSettings = "Opcions del compte"
@@ -1423,6 +1429,34 @@ title = "Processament"
 description = "Temps màxim d'espera d'una tasca de processament abans d'informar d'un error."
 label = "Temps d'espera del processament (segons)"
 
+[admin.settings.storage]
+description = "Controla les opcions d'emmagatzematge del servidor i de compartició."
+title = "Emmagatzematge i compartició de fitxers"
+
+[admin.settings.storage.enabled]
+description = "Permet als usuaris desar fitxers al servidor."
+label = "Habilita l'emmagatzematge de fitxers al servidor"
+
+[admin.settings.storage.sharing.email]
+description = "Permet compartir amb adreces de correu electrònic."
+label = "Habilita la compartició per correu electrònic"
+mailLink = "Configura els paràmetres de correu"
+mailNote = "Requereix una configuració de correu. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Permet als usuaris compartir fitxers desats."
+label = "Habilita la compartició"
+
+[admin.settings.storage.sharing.links]
+description = "Permet compartir mitjançant enllaços per a usuaris amb sessió iniciada."
+frontendUrlLink = "Configura-ho als paràmetres del sistema"
+frontendUrlNote = "Requereix una Frontend URL. "
+label = "Habilita els enllaços de compartició"
+
+[admin.settings.storage.signing.enabled]
+description = "Permet als usuaris crear sessions de signatura de documents amb múltiples participants. Requereix tenir habilitat l'emmagatzematge de fitxers al servidor."
+label = "Habilita la signatura en grup (Alfa)"
+
 [admin.settings.unsavedChanges]
 cancel = "Continua editant"
 discard = "Descarta els canvis"
@@ -1513,6 +1547,7 @@ editStampHint = "Per canviar la imatge, suprimeix aquest segell i n'afegeix un d
 editSwitchToSelect = "Canvia a Selecciona i edita per editar aquesta anotació."
 editText = "Edita el quadre de text"
 editTextMarkup = "Edita el marcat de text"
+annotationStyle = "Estil d’anotació"
 ellipse = "El·lipse"
 exit = "Surt del mode d'anotació"
 fillColor = "Color de farciment"
@@ -1523,13 +1558,19 @@ highlight = "Ressaltador"
 imagePreview = "Previsualització"
 inkHighlighter = "Ressaltador a mà alçada"
 line = "Línia"
+lineArrow = "Fletxa"
 noBackground = "Sense fons"
 note = "Nota"
+comment = "Comentari"
+comments = "Comentaris"
+insertText = "Insereix text"
+replaceText = "Substitueix el text"
 noteIcon = "Icona de nota"
 notesStamps = "Notes i segells"
 opacity = "Opacitat"
 pen = "Ploma"
 polygon = "Polígon"
+polyline = "Polilínia"
 properties = "Propietats"
 rectangle = "Rectangle"
 redo = "Refés"
@@ -2048,7 +2089,19 @@ numbers = "Números/intervals: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
 
 [certSign]
+allSigned = "Tots els participants han signat. A punt per finalitzar."
+awaitingSignatures = "En espera de signatures"
+signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
 chooseCertificate = "Trieu el fitxer de certificat"
+declined = "Rebutjada"
+fetchFailed = "No s'han pogut carregar les dades de signatura"
+finalized = "Finalitzat"
+notified = "Pendent"
+partialNote = "Pots finalitzar abans amb les signatures actuals. Els participants sense signar s'exclouran."
+pending = "Pendent"
+readyToFinalize = "A punt per finalitzar"
+signed = "Signat"
+viewed = "Vist"
 chooseJksFile = "Trieu el fitxer JKS"
 chooseP12File = "Trieu el fitxer PKCS12"
 choosePfxFile = "Trieu el fitxer PFX"
@@ -2071,6 +2124,7 @@ title = "Signatura amb Certificat"
 invisible = "Invisible"
 stepTitle = "Aparença de la signatura"
 visible = "Visible"
+visibility = "Visibilitat"
 
 [certSign.appearance.options]
 title = "Detalls de la signatura"
@@ -2176,6 +2230,252 @@ bullet3 = "Comprova si el document s'ha modificat després de signar"
 bullet4 = "Pot usar certificats personalitzats per a la verificació"
 text = "Quan comproveu les signatures, l'eina us indica si són vàlides, qui ha signat el document, quan es va signar i si el document s'ha modificat des de la signatura."
 title = "Comprovació de signatures"
+
+[certSign.collab.finalize]
+button = "Finalitza i carrega el PDF signat"
+early = "Finalitza amb les signatures actuals"
+
+[certSign.collab.sessionDetail]
+addButton = "Afegeix participants"
+addParticipants = "Afegeix participants"
+addParticipantsError = "No s'han pogut afegir participants"
+backToList = "Torna a les sessions"
+deleteConfirm = "N'estàs segur? Això no es pot desfer."
+deleteError = "No s'ha pogut eliminar la sessió"
+deleted = "Sessió eliminada"
+deleteSession = "Elimina la sessió"
+dueDate = "Data límit"
+finalizeError = "No s'ha pogut finalitzar la sessió"
+loadPdfError = "No s'ha pogut carregar el PDF signat"
+loadSignedPdf = "Carrega el PDF signat als fitxers actius"
+messageLabel = "Missatge"
+noAdditionalInfo = "Sense informació addicional"
+owner = "Propietari"
+participantRemoved = "Participant eliminat"
+participants = "Participants"
+participantsAdded = "Participants afegits correctament"
+removeParticipant = "Elimina"
+removeParticipantError = "No s'ha pogut eliminar el participant"
+selectUsers = "Selecciona usuaris..."
+sessionInfo = "Informació de la sessió"
+workbenchTitle = "Gestió de la sessió"
+
+[certSign.collab.signRequest]
+addedToFiles = "Document afegit als fitxers actius"
+addSignature = "Afegeix la teva signatura"
+addToFiles = "Afegeix als fitxers actius"
+advancedSettings = "Paràmetres avançats"
+backToList = "Torna a les sol·licituds de signatura"
+certificateChoice = "Selecciona un certificat per signar"
+changeSignature = "Canvia la signatura"
+clearSignature = "Neteja la signatura"
+completeAndSign = "Completa i signa"
+createNewSignature = "Crea una signatura nova"
+declineButton = "Rebutja"
+decline = "Rebutja la sol·licitud"
+deleteSelected = "Elimina la signatura seleccionada"
+drawSignature = "Dibuixa la teva signatura a continuació"
+dueDate = "Data límit"
+fileTooLarge = "La mida del fitxer ha de ser inferior a 5 MB"
+fontFamily = "Família de lletra"
+fontSize = "Mida de lletra: {{size}}px"
+fontSizePlaceholder = "Mida"
+from = "De"
+invalidCertFile = "Selecciona un fitxer de certificat P12 o PFX"
+invalidFileType = "Selecciona un fitxer d'imatge"
+location = "Ubicació (opcional)"
+locationPlaceholder = "Des d'on signes?"
+message = "Missatge"
+noCertificate = "Selecciona un fitxer de certificat"
+noSignatures = "Col·loca almenys una signatura al PDF"
+p12File = "Fitxer de certificat P12/PFX"
+password = "Contrasenya del certificat"
+passwordPlaceholder = "Introdueix la contrasenya..."
+penColor = "Color del llapis"
+penSize = "Gruix del traç: {{size}}px"
+placementActive = "Fes clic al PDF per col·locar"
+placeSignatureButton = "Col·loca la signatura al PDF"
+reason = "Motiu (opcional)"
+reasonPlaceholder = "Per què signes?"
+removeImage = "Elimina la imatge"
+removeCertFile = "Elimina el fitxer"
+savedSignatures = "Signatures desades"
+selectFile = "Selecciona un fitxer d'imatge"
+selectSignatureTitle = "Selecciona o crea una signatura"
+signButton = "Signa el document"
+signatureInfo = "Aquests paràmetres els configura el propietari del document"
+signaturePlaced = "Signatura col·locada a la pàgina"
+signatureSettings = "Paràmetres de la signatura"
+signatureText = "Text de la signatura"
+signatureTextPlaceholder = "Introdueix el teu nom..."
+signatureTypeLabel = "Tipus de signatura"
+signingTitle = "Signatura"
+textColor = "Color del text"
+typeSignature = "Escriu el teu nom per crear una signatura"
+uploadCert = "Certificat personalitzat"
+uploadCertDesc = "Usa el teu certificat P12/PFX"
+uploadSignature = "Puja la imatge de la teva signatura"
+usePersonalCert = "Certificat personal"
+usePersonalCertDesc = "Generat automàticament per al teu compte"
+useServerCert = "Certificat de l'organització"
+useServerCertDesc = "Certificat compartit de l'organització"
+workbenchTitle = "Sol·licitud de signatura"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Tria el color del traç"
+continue = "Continua"
+
+[certSign.collab.signRequest.certModal]
+description = "Has col·locat {{count}} signatura(es). Tria el certificat per completar la signatura."
+sign = "Signa el document"
+certValidating = "S'està validant el certificat..."
+certValidUntil = "Certificat vàlid fins al {{date}}"
+certInvalid = "Certificat no vàlid: {{error}}"
+certInvalidFallback = "Certificat no vàlid"
+certNetworkError = "No s'ha pogut validar el certificat"
+title = "Configura el certificat"
+
+[certSign.collab.signRequest.image]
+hint = "Puja una imatge PNG o JPG de la teva signatura"
+
+[certSign.collab.signRequest.mode]
+move = "Mou la signatura"
+place = "Col·loca la signatura"
+title = "Mode de signatura o de moviment"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Dibuixa"
+image = "Puja"
+text = "Escriu"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Fes clic al PDF per col·locar la teva signatura"
+title = "Col·loca la signatura"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Signatura seleccionada"
+missing = "Sense previsualització"
+textFallback = "Signatura"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Signatura dibuixada"
+defaultImageLabel = "Signatura pujada"
+defaultLabel = "Signatura"
+defaultTextLabel = "Signatura escrita"
+delete = "Elimina la signatura"
+none = "No hi ha signatures desades"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Dibuixa"
+type = "Escriu"
+upload = "Puja"
+
+[certSign.collab.signRequest.steps]
+back = "Enrere"
+cancelPlacement = "Cancel·la la col·locació"
+certificate = "Certificat"
+clickMultipleTimes = "Fes clic al PDF diverses vegades per col·locar signatures. Arrossega qualsevol signatura per moure-la o canviar-ne la mida."
+clickToPlace = "Fes clic al PDF on vulguis que aparegui la teva signatura."
+continue = "Continua a la selecció de certificat"
+continueToPlacement = "Continua a la col·locació"
+continueToReview = "Continua a la revisió"
+createSignature = "Crea la signatura"
+invisible = "Invisible"
+location = "Ubicació:"
+multipleSignatures = "{{count}} signatures s'aplicaran al PDF"
+oneSignature = "S'aplicarà 1 signatura al PDF"
+placeOnPdf = "Col·loca al PDF"
+reason = "Motiu:"
+reviewTitle = "Revisa abans de signar"
+signaturePlaced = "Signatura col·locada a la pàgina {{page}}. Pots ajustar-ne la posició fent-hi clic de nou o continuar a la revisió."
+visible = "Visible"
+visibility = "Visibilitat:"
+yourSignatures = "Les teves signatures ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Color"
+fontLabel = "Tipus de lletra"
+fontSizeLabel = "Mida"
+fontSizePlaceholder = "16"
+label = "Text de la signatura"
+modalHint = "Introdueix el teu nom i fes clic a Continua per col·locar-lo al PDF."
+placeholder = "Introdueix el teu nom..."
+
+[certSign.collab.participant]
+certValidating = "S'està validant el certificat..."
+certValid = "✓ Certificat vàlid"
+certValidUntil = " fins al {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Certificat no vàlid"
+certNetworkError = "No s'ha pogut validar el certificat"
+
+[certSign.collab.addParticipants]
+add = "Afegeix {{count}} participants"
+back = "Enrere"
+configureSignatures = "Configura els paràmetres de la signatura"
+continue = "Continua als paràmetres de la signatura"
+reasonHelp = "Preconfigura un motiu de signatura per a aquests participants (opcional, el poden canviar en signar)"
+reasonPlaceholder = "p. ex. Aprovació, Revisió..."
+selectUsers = "Selecciona usuaris"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Inclou la pàgina de resum de signatures"
+includeSummaryPageHelp = "S'afegirà una pàgina de resum al final amb totes les metadades de les signatures. Les caixes de signatura del certificat digital a les pàgines individuals se suprimiran (les signatures manuscrites no es veuran afectades)."
+
+[certSign.collab.sessionList]
+active = "Activa"
+finalized = "Finalitzada"
+
+[certSign.collab.signatureSettings]
+description = "Configura com apareixeran les signatures per a tots els participants"
+title = "Aparença de la signatura"
+
+[certSign.collab.userSelector]
+inviteUsers = "Afegeix usuaris"
+loadError = "No s'han pogut carregar els usuaris"
+noTeam = "Sense equip"
+noUsers = "No s'han trobat altres usuaris."
+placeholder = "Selecciona usuaris..."
+
+[certSign.mobile]
+panelActions = "Accions"
+panelDocument = "Document"
+panelPeople = "Persones"
+
+[certSign.sessions]
+deleted = "Sessió eliminada"
+fetchFailed = "No s'han pogut carregar els detalls de la sessió"
+finalized = "Sessió finalitzada"
+loaded = "PDF signat carregat"
+pdfNotReady = "El PDF no està llest"
+pdfNotReadyDesc = "S'està generant el PDF signat. Torna-ho a provar d'aquí a un moment."
+
+[certificateChoice.tooltip]
+header = "Tipus de certificat"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Gestionat pels administradors del sistema"
+bullet2 = "Compartit entre els usuaris autoritzats"
+bullet3 = "Representa la identitat de l'empresa, no la individual"
+bullet4 = "Ideal per a: documents oficials, signatures d'equip"
+description = "Un certificat compartit proporcionat per la teva organització. S'utilitza per a la signatura a nivell d'empresa."
+title = "Certificat de l'organització"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Es genera automàticament en el primer ús"
+bullet2 = "Vinculat al teu compte d'usuari"
+bullet3 = "No es pot compartir amb altres usuaris"
+bullet4 = "Ideal per a: documents personals, responsabilitat individual"
+description = "Un certificat generat automàticament i únic per al teu compte d'usuari. Adequat per a signatures individuals."
+title = "Certificat personal"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Requereix fitxer P12/PFX i contrasenya"
+bullet2 = "Pot ser emès per Autoritats de Certificació externes"
+bullet3 = "Nivell de confiança més alt per a documents legals"
+bullet4 = "Ideal per a: contractes legalment vinculants, validació externa"
+description = "Utilitza el teu propi fitxer de certificat PKCS#12. Proporciona control total sobre les propietats del certificat."
+title = "Puja P12 personalitzat"
 
 [changeCreds]
 changePassword = "Estàs utilitzant les credencials d'inici de sessió per defecte. Si us plau, introdueix una nova contrasenya"
@@ -2574,10 +2874,48 @@ title = "Ajust de qualitat"
 [compressPdfs]
 tags = "estrènyer,petit,minúscul"
 
+[config]
+plan = "Pla"
+
 [config.account.overview]
+confirmDelete = "Suprimeix el meu compte"
+deleteAccount = "Suprimeix el compte"
+deleteAccountTitle = "Suprimeix el compte"
+deleteFailed = "No s’ha pogut suprimir el compte."
+deleteFailedTitle = "No es pot suprimir el compte"
+deleteWarning = "Aquesta acció és permanent i no es pot desfer. S’eliminaran totes les teves dades."
+enterEmailConfirm = "Per confirmar la supressió, escriu a continuació la teva adreça de correu ({{email}}):"
 guestDescription = "Heu iniciat sessió com a convidat. Considereu actualitzar el vostre compte."
+label = "Visió general"
 manageAccountPreferences = "Gestiona les preferències del compte"
+signedInAs = "Has iniciat sessió com a"
 title = "Paràmetres del compte"
+
+[config.account.profilePicture]
+description = "Puja una imatge per personalitzar el teu compte."
+help = "PNG, JPG o WebP fins a 2MB."
+remove = "Elimina"
+sizeError = "Selecciona una imatge de menys de 2MB."
+switchedToCustom = "S’ha canviat a imatge personalitzada. Ara pots pujar la teva."
+title = "Imatge de perfil"
+upload = "Puja"
+useCustom = "Utilitza una imatge personalitzada"
+usingProvider = "S’utilitza la imatge de perfil de {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "No s’ha pogut retallar la imatge. Torna-ho a provar."
+invalidImage = "Fitxer d’imatge no vàlid. Selecciona un fitxer PNG, JPG o WebP vàlid."
+processing = "Processant el retall..."
+save = "Desa la imatge retallada"
+sizeErrorAfterCrop = "La imatge retallada és massa gran. Allunya el zoom o retalla una àrea més petita."
+title = "Retalla la imatge de perfil"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Canvia la contrasenya"
+description = "Gestiona la teva contrasenya i la configuració de seguretat."
+title = "Contrasenyes i seguretat"
+update = "Actualitza la contrasenya"
 
 [config.account.upgrade]
 description = "Enllaceu el vostre compte per preservar l’historial i accedir a més funcions!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Actualitza el compte"
 [config.apiKeys]
 chartAriaLabel = "Ús de crèdits: inclosos {{includedUsed}} de {{includedTotal}}, comprats {{purchasedUsed}} de {{purchasedTotal}}"
 copyKeyAriaLabel = "Copia la clau API"
+creditsRemaining = "Crèdits restants"
 description = "La vostra clau API per accedir al conjunt d’eines PDF de Stirling. Copieu-la al vostre projecte o actualitzeu-la per generar-ne una de nova."
 docsDescription = "Més informació sobre la integració amb Stirling PDF:"
 docsLink = "Documentació de l’API"
@@ -2643,6 +2982,14 @@ basic = "Configuració bàsica"
 integration = "Configuració d'integració"
 security = "Configuració de seguretat"
 system = "Configuració del sistema"
+
+[connectionMode.status]
+localOffline = "Mode fora de línia en execució"
+localOnline = "Mode fora de línia en execució"
+saas = "Connectat a Stirling Cloud"
+selfhostedChecking = "Connectat al servidor autoallotjat (comprovant...)"
+selfhostedOffline = "No es pot accedir al servidor autoallotjat"
+selfhostedOnline = "Connectat al servidor autoallotjat"
 
 [convert]
 autoRotate = "Rotació automàtica"
@@ -2728,6 +3075,15 @@ webOptions = "Opcions de web a PDF"
 wordDoc = "Document de Word"
 wordDocExt = "Document de Word (.docx)"
 zoomLevel = "Nivell de zoom"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "Llibre electrònic → PDF"
+emlToPdf = "Correu electrònic → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opcions d'eBook a PDF"
@@ -3175,6 +3531,46 @@ totalSelected = "Total seleccionat"
 unsupported = "No compatible"
 unzip = "Descomprimeix"
 uploadError = "No s'han pogut pujar alguns fitxers."
+copyCreated = "Còpia desada en aquest dispositiu."
+copyFailed = "No s'ha pogut crear una còpia."
+leaveShare = "Elimina de la meva llista"
+leaveShareFailed = "No s'ha pogut eliminar el fitxer compartit."
+leaveShareSuccess = "S'ha eliminat de la teva llista de compartits."
+removeBoth = "Elimina de tots dos llocs"
+removeFilePrompt = "Aquest fitxer està desat en aquest dispositiu i al teu servidor. Des d'on vols eliminar-lo?"
+removeFileTitle = "Elimina el fitxer"
+removeLocalOnly = "Només aquest dispositiu"
+removeServerFailed = "No s'ha pogut eliminar el fitxer del servidor."
+removeServerOnly = "Només del servidor"
+removeServerOnlyPrompt = "Aquest fitxer només està desat al teu servidor. Vols eliminar-lo del servidor?"
+removeServerSuccess = "S'ha eliminat del servidor."
+removeSharedPrompt = "Aquest fitxer està compartit amb tu. Pots eliminar-lo d'aquest dispositiu o de la teva llista de compartits."
+removeSharedServerOnlyBlockedPrompt = "Aquest fitxer està compartit amb tu i només està desat al servidor."
+removeSharedServerOnlyPrompt = "Aquest fitxer està compartit amb tu i només està desat al servidor. Vols eliminar-lo de la teva llista?"
+changesNotUploaded = "Canvis no pujats"
+cloudFile = "Fitxer al núvol"
+filterAll = "Tots"
+filterLocal = "Locals"
+filterSharedByMe = "Compartits per mi"
+filterSharedWithMe = "Compartits amb mi"
+lastSynced = "Última sincronització"
+localOnly = "Només local"
+makeCopy = "Fes-ne una còpia"
+owner = "Propietari"
+ownerUnknown = "Desconegut"
+share = "Comparteix"
+shareSelected = "Comparteix els seleccionats"
+sharedByYou = "Compartits per tu"
+sharedEditNoticeBody = "No tens drets d'edició de la versió al servidor d'aquest fitxer. Qualsevol edició que facis es desarà com a còpia local."
+sharedEditNoticeConfirm = "Entesos"
+sharedEditNoticeTitle = "Còpia al servidor només de lectura"
+sharedWithYou = "Compartits amb tu"
+sharing = "Compartició"
+storageState = "Emmagatzematge"
+synced = "Sincronitzat"
+updateOnServer = "Actualitza al servidor"
+uploadSelected = "Puja els seleccionats"
+uploadToServer = "Puja al servidor"
 
 [files]
 addFiles = "Afegeix fitxers"
@@ -3299,6 +3695,77 @@ title = "Sobre l'aplanament de PDFs"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "Sobre la signatura en grup"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Totes les signatures s'apliquen en l'ordre de participants que hagis especificat"
+bullet2 = "Pots finalitzar amb signatures parcials si cal"
+bullet3 = "Un cop finalitzada, la sessió no es pot modificar"
+description = "Quan tots els participants hagin signat (o decideixis finalitzar abans), pots generar el PDF final signat."
+title = "Procés de finalització"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Propietari (tu): crea la sessió, configura els valors per defecte de la signatura, finalitza el document"
+bullet2 = "Participants: creen la seva signatura, trien el certificat, la col·loquen al PDF"
+bullet3 = "Els participants no poden modificar els paràmetres de visibilitat, motiu o ubicació de la signatura"
+description = "Tu controles els paràmetres d'aparença de la signatura per a tots els participants."
+title = "Rols dels participants"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "El primer participant ha de signar abans que el segon pugui accedir al document"
+bullet2 = "Garanteix l'ordre de signatura adequat per al compliment legal"
+bullet3 = "Pots reordenar els participants arrossegant-los a la llista"
+description = "Els participants signen els documents en l'ordre que especifiquis. Cada signant rep una notificació quan és el seu torn."
+title = "Signatura seqüencial"
+
+[groupSigning.steps]
+back = "Enrere"
+completed = "Completat"
+current = "Actual"
+stepLabel = "Pas {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Continua a la revisió"
+invisible = "Les signatures seran invisibles (només metadades)"
+locationLabel = "Ubicació:"
+preview = "Previsualitza"
+reasonLabel = "Motiu:"
+title = "Configura els paràmetres de la signatura"
+visible = "Les signatures seran visibles a la pàgina {{page}}"
+
+[groupSigning.steps.review]
+document = "Document"
+dueDate = "Data límit (opcional)"
+dueDatePlaceholder = "Selecciona la data límit..."
+invisible = "Invisible (només metadades)"
+location = "Ubicació:"
+logo = "Logotip:"
+logoHidden = "Sense logotip"
+logoShown = "Es mostra el logotip de Stirling PDF"
+participants = "Participants"
+reason = "Motiu:"
+send = "Envia les sol·licituds de signatura"
+signatureSettings = "Paràmetres de la signatura"
+title = "Revisa els detalls de la sessió"
+titleShort = "Revisa i envia"
+visibility = "Visibilitat:"
+visible = "Visible a la pàgina {{page}}"
+participantCount = "Signaran {{count}} participants en ordre"
+
+[groupSigning.steps.selectDocument]
+continue = "Continua a la selecció de participants"
+noFile = "Selecciona un únic fitxer PDF dels teus fitxers actius per crear una sessió de signatura."
+selectedFile = "Document seleccionat"
+title = "Selecciona el document"
+
+[groupSigning.steps.selectParticipants]
+continue = "Continua als paràmetres de la signatura"
+count = "{{count}} participants seleccionats"
+label = "Selecciona participants"
+placeholder = "Tria participants per signar..."
+title = "Tria participants"
 
 [getPdfInfo]
 downloadJson = "Descarrega JSON"
@@ -3718,6 +4185,11 @@ desc = "Afegeix signatura al PDF mitjançant dibuix, text o imatge"
 tags = "signatura,autògraf"
 title = "Signa"
 
+[home.timestampPdf]
+desc = "Afegeix una marca de temps RFC 3161 al document per demostrar quan existia el teu PDF"
+tags = "marca de temps,RFC 3161,TSA,autoritat de marques de temps,marca de temps de document,prova d’existència,testimoni de marca de temps,marca de temps de confiança,signar amb marca de temps,notaritzar"
+title = "Marca de temps al PDF"
+
 [home.split]
 desc = "Divideix PDFs en múltiples documents"
 tags = "divideix,separa,trenca"
@@ -3854,6 +4326,7 @@ version = "Versió"
 accountCreatedSuccess = "Compte creat correctament! Ara podeu iniciar sessió."
 alreadyLoggedIn = "Ja has iniciat sessió a"
 alreadyLoggedIn2 = "dispositius. Si us plau, tanca la sessió en els dispositius i torna-ho a intentar."
+backToSignIn = "Torna a iniciar sessió"
 cancel = "Cancel·la"
 changePasswordWarning = "Canvia la contrasenya després d'iniciar sessió per primera vegada"
 credentialsUpdated = "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
@@ -3895,16 +4368,21 @@ or = "O"
 password = "Contrasenya"
 passwordChangedSuccess = "Contrasenya canviada correctament! Inicieu sessió amb la nova contrasenya."
 passwordResetSent = "Enllaç de restabliment de contrasenya enviat a {{email}}! Reviseu el vostre correu i seguiu les instruccions."
+passwordUpdatedSuccess = "La teva contrasenya s’ha actualitzat correctament."
 pleaseEnterBoth = "Introduïu tant el correu com la contrasenya"
 pleaseEnterEmail = "Introduïu la vostra adreça de correu electrònic"
 relyingPartyRegistrationNotFound = "No s'ha trobat cap registre de la part confiada"
 rememberme = "Recordar"
+resetHelp = "Introdueix el teu correu electrònic per rebre un enllaç segur per restablir la contrasenya. Si l’enllaç ha caducat, sol·licita’n un de nou."
+resetYourPassword = "Restableix la teva contrasenya"
 saml2RequiresLicense = "L'inici de sessió SAML requereix una llicència de pagament (Server o Enterprise). Poseu-vos en contacte amb l'administrador per actualitzar el vostre pla."
 sending = "Enviant…"
 sendMagicLink = "Envia l'enllaç màgic"
+sendResetLink = "Envia l’enllaç de restabliment"
 sessionExpired = "La sessió ha caducat. Torneu a iniciar sessió."
 signin = "Accedir"
 signInAnonymously = "Registra't com a convidat"
+subtitle = "Torna a iniciar sessió a Stirling PDF"
 signingIn = "Iniciant sessió..."
 signinTitle = "Autenticat"
 signInWith = "Inicia sessió amb"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Inicia sessió mitjançant inici de sessió únic"
 title = "Accedir"
 toManySessions = "Tens massa sessions actives"
 unexpectedError = "Error inesperat: {{message}}"
+updatePassword = "Actualitza la contrasenya"
 useEmailInstead = "Inicia sessió amb correu"
 useMagicLink = "Utilitza un enllaç màgic"
 userIsDisabled = "L'usuari està desactivat, l'inici de sessió està actualment bloquejat amb aquest nom d'usuari. Si us plau, contacta amb l'administrador."
@@ -4222,6 +4701,15 @@ viewSwitcher = "Utilitzeu aquests controls per seleccionar com voleu veure els v
 workbench = "Aquesta és la <strong>Taula de treball</strong> - l’àrea principal on visualitzeu i editeu els vostres PDF."
 wrapUp = "Ja està tot! Heu après les àrees principals de l’aplicació i com utilitzar-les. Feu clic al botó <strong>Ajuda</strong> quan vulgueu per tornar a veure aquesta visita."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Quan acabi la prova, continuaràs amb el nostre nivell gratuït. Afegeix un mètode de pagament per mantenir l’accés a Pro."
+afterTrialWithPayment = "La teva subscripció Pro s’iniciarà automàticament quan acabi la prova."
+body = "Durant la prova tens accés complet a les funcions de Stirling PDF Pro. Gaudeix de conversions il·limitades, fitxers de mida més gran i processament prioritari."
+daysRemaining = "{{days}} dies restants"
+daysRemainingSingular = "{{days}} dia restant"
+title = "La teva prova Pro de 30 dies"
+trialEnds = "La prova acaba el {{date}}"
+
 [onboarding.buttons]
 back = "Enrere"
 download = "Baixa →"
@@ -4372,7 +4860,10 @@ zoomOut = "Redueix"
 
 [viewer]
 cannotPreviewFile = "No es pot previsualitzar el fitxer"
+disableColorFilter = "Desactiva el filtre de color"
 dualPageView = "Vista de dues pàgines"
+enableDarkFilter = "Activa el filtre fosc"
+enableSepiaFilter = "Activa el filtre sèpia"
 firstPage = "Primera pàgina"
 lastPage = "Última pàgina"
 nextPage = "Pàgina següent"
@@ -4382,6 +4873,22 @@ singlePageView = "Vista d'una sola pàgina"
 unknownFile = "Fitxer desconegut"
 zoomIn = "Amplia"
 zoomOut = "Redueix"
+resetZoom = "Restableix el zoom"
+
+[viewer.nonPdf]
+fileTypeBadge = "Fitxer {{type}}"
+convertToPdf = "Converteix a PDF"
+loading = "Carregant..."
+emptyFile = "Fitxer buit"
+csvStats = "{{rows}} files · {{columns}} columnes · {{size}}"
+sortedBy = "Ordenat per: {{column}}"
+columnDefault = "Columna {{index}}"
+htmlPreviewWarning = "Previsualització HTML — els recursos externs poden no carregar-se · {{size}}"
+htmlPreview = "Previsualització HTML"
+invalidJson = "JSON no vàlid — es mostra el contingut en brut"
+textStats = "{{lines}} línies · {{size}}"
+lineNumbers = "Números de línia"
+renderMarkdown = "Renderitza Markdown"
 
 [viewer.attachments]
 title = "Adjunts"
@@ -4391,6 +4898,31 @@ noDocument = "Obre un PDF per veure'n els adjunts."
 loading = "Carregant els adjunts..."
 empty = "No hi ha adjunts en aquest document"
 noMatch = "No hi ha adjunts que coincideixin amb la cerca"
+
+[viewer.comments]
+title = "Comentaris"
+hint = "Afegeix comentaris amb les eines Comentari, Insereix text o Substitueix el text. Apareixeran aquí per pàgina."
+placeholder = "Escriu el teu comentari..."
+pageLabel = "Pàgina {{page}}"
+oneComment = "1 comentari"
+nComments = "{{count}} comentaris"
+addCommentPlaceholder = "Afegeix un comentari..."
+addLink = "Afegeix un enllaç"
+goToLink = "Vés a l’enllaç"
+addComment = "Afegeix un comentari"
+viewComment = "Mostra el comentari"
+addReplyPlaceholder = "Afegeix una resposta..."
+saveReply = "Desa la resposta"
+send = "Envia"
+moreActions = "Més accions"
+typeComment = "Comentari"
+typeInsertText = "Insereix text"
+typeReplaceText = "Substitueix el text"
+locateAnnotation = "Localitza al document"
+deleteTitle = "Eliminar l’anotació dels comentaris?"
+deleteDescription = "Aquesta anotació té un comentari adjunt. Pots eliminar només el comentari de la barra lateral i mantenir l’anotació, o bé suprimir-ho tot."
+removeCommentOnly = "Elimina només el comentari"
+deleteAnnotationAndComment = "Suprimeix l’anotació i el comentari"
 
 [viewer.formBar]
 title = "Camps del formulari"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Mostra/amaga els adjunts"
 toggleTheme = "Canvia el tema"
 language = "Idioma"
 toggleAnnotations = "Mostra/oculta les anotacions"
+toggleLayers = "Commuta les capes"
 search = "Cerca al PDF"
 panMode = "Mode de desplaçament"
 applyRedactionsFirst = "Aplica primer les redaccions"
@@ -4425,14 +4958,20 @@ rotateLeft = "Gira a l'esquerra"
 rotateRight = "Gira a la dreta"
 toggleSidebar = "Mostra/oculta la barra lateral"
 toggleBookmarks = "Mostra/amaga marcadors"
+toggleComments = "Comentaris"
 print = "Imprimeix el PDF"
 ruler = "Regle / Mesura"
+readAloud = "Lectura en veu alta"
+readAloudSpeed = "Velocitat"
+readAloudLanguage = "Idioma"
+selectLanguage = "Selecciona l’idioma"
 draw = "Dibuixa"
 redact = "Redacta"
 exitRedaction = "Surt del mode de redacció"
 save = "Desa"
 downloadAll = "Descarrega-ho tot"
 saveAll = "Desa-ho tot"
+saveAs = "Desa com a"
 
 [textAlign]
 left = "Esquerra"
@@ -4447,21 +4986,132 @@ title = "Extreu Pàgines"
 
 [pageLayout]
 addBorder = "Afegeix Marcs"
+borderWidth = "Gruix de la vora"
+bottom = "Marge inferior"
+cols = "Columnes"
 header = "Disposició de Múltiples Pàgines"
+innerMargin = "Marge intern"
+left = "Marge esquerre"
 pagesPerSheet = "Pàgines per full:"
+right = "Marge dret"
+rows = "Files"
 submit = "Envia"
 tags = "fusió,composició,vista única,organitzar"
 title = "Disposició de Múltiples Pàgines"
+top = "Marge superior"
+
+[pageLayout.mode]
+default = "Per defecte"
+custom = "Personalitzat"
+label = "Mode:"
+
+[pageLayout.arrangement]
+byColumns = "Per columnes"
+byRows = "Per files"
+label = "Organització de pàgina:"
 
 [pageLayout.desc]
 16 = "Col·loca 16 pàgines en un sol full (graella de 4 × 4)."
 2 = "Col·loca 2 pàgines de costat en un sol full."
-3 = "Col·loca 3 pàgines en un sol full en una sola fila."
 4 = "Col·loca 4 pàgines en un sol full (graella de 2 × 2)."
 9 = "Col·loca 9 pàgines en un sol full (graella de 3 × 3)."
 
 [pageLayout.error]
 failed = "S'ha produït un error en crear la disposició multipàgina."
+outerVerticalMarginsTooLarge = "Els marges superior/inferior són massa grans per a aquesta mida de pàgina."
+outerHorizontalMarginsTooLarge = "Els marges esquerre/dret són massa grans per a aquesta mida de pàgina."
+innerMarginTooLarge = "El marge intern és massa gran per al disseny seleccionat."
+
+[pageLayout.orientation]
+landscape = "Horitzontal"
+portrait = "Vertical"
+label = "Orientació:"
+
+[pageLayout.readingDirection]
+ltr = "D’esquerra a dreta"
+rtl = "De dreta a esquerra"
+label = "Direcció de lectura:"
+
+[pageLayout.tooltip.header]
+title = "Guia de disposició de pàgina"
+
+[pageLayout.tooltip.overview]
+title = "Què és la disposició de pàgina?"
+text = "Ajusta múltiples pàgines en un sol full per a dossiers o per estalviar paper."
+
+[pageLayout.tooltip.mode]
+title = "Mode"
+text = "Tria com es configura la quadrícula:"
+bullet1 = "Per defecte: Tria un valor predefinit i la quadrícula es calcula automàticament."
+bullet2 = "Personalitzat: Defineix manualment files i columnes."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pàgines per full (Mode per defecte)"
+text = "Tria quantes pàgines per full (p. ex., 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Files i columnes (Mode personalitzat)"
+text = "Defineix les dimensions exactes de la quadrícula. Pàgines totals per full = files × columnes."
+
+[pageLayout.tooltip.orientation]
+title = "Orientació"
+text = "Defineix l’orientació del full de sortida:"
+bullet1 = "Vertical: Més alt que ample."
+bullet2 = "Horitzontal: Més ample que alt."
+
+[pageLayout.tooltip.arrangement]
+title = "Organització de pàgina"
+text = "Controla l’ordre amb què les pàgines omplen la quadrícula:"
+bullet1 = "Per files: Omple fila per fila (d’esquerra a dreta o de dreta a esquerra)."
+bullet2 = "Per columnes: Omple de dalt a baix, columna per columna."
+
+[pageLayout.tooltip.readingDirection]
+title = "Direcció de lectura"
+text = "Controla l’ordre horitzontal de les pàgines:"
+bullet1 = "LTR: d’esquerra a dreta."
+bullet2 = "RTL: de dreta a esquerra."
+
+[pageLayout.tooltip.addBorder]
+title = "Afegeix vores"
+text = "Dibuixa línies de vora al voltant de cada cel·la de pàgina per a guies de tall o separació visual."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marges i vores"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marges"
+text = "Utilitza els marges superior, inferior, esquerre i dret per controlar l’espai al voltant del full complet de sortida."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Marge intern"
+text = "El marge intern afegeix espai entre les cel·les de la quadrícula per millorar la separació i la llegibilitat."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Afegeix vores"
+text = "Activa les vores per dibuixar línies al voltant de cada pàgina col·locada. Això pot ajudar a la separació visual o al retall."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Gruix de la vora"
+text = "El gruix de la vora només s’aplica quan les vores estan activades. Valors més alts generen línies més gruixudes."
+
+[pageLayout.advanced.tooltip.header]
+title = "Opcions avançades de disposició"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientació"
+text = "Tria la direcció final del full. La vertical funciona millor per a contingut alt, mentre que l’horitzontal s’ajusta a dissenys més amples."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Organització de pàgina"
+text = "Controla si les pàgines omplen la quadrícula fila per fila o columna per columna."
+bullet1 = "Per files: Omple primer cada fila."
+bullet2 = "Per columnes: Omple primer cada columna."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Direcció de lectura"
+text = "Defineix l’ordre horitzontal a la quadrícula, útil per a convencions de documents d’esquerra a dreta i de dreta a esquerra."
+bullet1 = "LTR: Ordre d’esquerra a dreta."
+bullet2 = "RTL: Ordre de dreta a esquerra."
 
 [pageRemover]
 header = "Eliminació de Pàgines PDF"
@@ -4977,7 +5627,10 @@ perMonth = "/mes"
 perSeat = "/seient"
 popular = "Popular"
 selectPlan = "Selecciona el pla"
+selectCredits = "Selecciona la quantitat de crèdits"
 showComparison = "Compara totes les funcions"
+purchase = "Compra"
+totalCost = "Cost total"
 upgrade = "Actualitza"
 withServer = "+ Pla Server"
 
@@ -5069,6 +5722,30 @@ successMessage = "La llicència s'ha activat correctament. Ara pots tancar aques
 name = "Equip"
 siteLicense = "Llicència de lloc"
 
+[plan.api]
+large = "5,000 crèdits"
+medium = "1,000 crèdits"
+small = "500 crèdits"
+xsmall = "100 crèdits"
+
+[plan.apiPackages]
+subtitle = "Compra crèdits de l’API per a les teves aplicacions"
+title = "Paquets de crèdits de l’API"
+
+[plan.trial]
+badge = "Prova"
+continueWithFree = "Continua amb el nivell gratuït"
+daysRemaining = "La teva prova acaba d’aquí {{days}} dies"
+endDate = "Caduca: {{date}}"
+expired = "La prova ha finalitzat"
+expiredMessage = "La teva prova Pro de 30 dies ha caducat. Subscriu-te a Pro per continuar accedint a les funcions premium, o continua amb el nostre nivell gratuït."
+freeTierLimitations = "El nivell gratuït inclou eines PDF bàsiques amb límits d’ús."
+message = ""
+subscribe = "Subscriu-te a Pro"
+subscribeToPro = "Subscriu-te a Pro"
+subscriptionScheduled = "Subscripció programada: comença el {{date}}"
+title = "Prova gratuïta activa"
+
 [credits]
 enableOverageBilling = "Habilita la facturació per excés"
 maybeLater = "Potser més tard"
@@ -5150,20 +5827,72 @@ title = "Imprimir Fitxer"
 2 = "Introdueix el Nom de la Impresora"
 
 [quickAccess]
+access = "Accés"
+accessAddPerson = "Afegeix una altra persona"
+accessBack = "Enrere"
+accessCopyLink = "Copia l'enllaç"
+accessEmail = "Adreça de correu electrònic"
+accessEmailPlaceholder = "nom@empresa.com"
+accessFileLabel = "Fitxer"
+accessGeneral = "Accés general"
+accessInviteTitle = "Convida persones"
+accessOwner = "Propietari"
+accessPanel = "Accés al document"
+accessPeople = "Persones amb accés"
+accessRemove = "Elimina"
+accessRestricted = "Restringit"
+accessRestrictedHint = "Només les persones amb accés el poden obrir"
+accessRole = "Rol"
+accessRoleCommenter = "Comentarista"
+accessRoleEditor = "Editor"
+accessRoleViewer = "Lector"
+accessSelectedFile = "Fitxer seleccionat"
+accessSendInvite = "Envia la invitació"
+accessTitle = "Accés al document"
+accessYou = "Tu"
 account = "Compte"
+activeSessions = "Sessions actives"
+activeTab = "Actives"
 activity = "Registre"
 adminSettings = "Ajustos admin"
+allSessions = "Totes les sessions"
 allTools = "All Tools"
 automate = "Auto"
+back = "Enrere"
+certSign = "Signatura amb certificat"
+completedSessions = "Sessions completades"
+completedTab = "Completades"
 config = "Config"
+createNew = "Crea una sol·licitud nova"
+createSession = "Crea una sol·licitud de signatura"
+dueDate = "Data límit (opcional)"
 files = "Fitxers"
 help = "Ajuda"
+noActiveSessions = "No hi ha sol·licituds de signatura pendents ni sessions actives"
+noCompletedSessions = "No hi ha sessions completades"
+noFile = "Cap fitxer seleccionat"
 read = "Llegeix"
 reader = "Lector"
+refresh = "Actualitza"
+requestSignatures = "Sol·licita signatures"
+selectSingleFileToRequest = "Selecciona un únic fitxer PDF per sol·licitar signatures"
+selectedFile = "Fitxer seleccionat"
+selectUsers = "Selecciona usuaris per signar"
+selectUsersPlaceholder = "Tria participants..."
+sendingRequest = "Enviant..."
 settings = "Ajustos"
 showMeAround = "Fes-me una visita guiada"
 sign = "Signa"
+signatureRequests = "Sol·licituds de signatura"
+signYourself = "Signa-ho tu"
+newRequest = "Nova sol·licitud"
 tours = "Visites guiades"
+wetSign = "Afegeix signatura"
+filterMine = "Meves"
+filterOverdue = "Vençudes"
+filterSigned = "Signades"
+filterDeclined = "Rebutjades"
+searchDocuments = "Cerca documents…"
 
 [quickAccess.helpMenu]
 adminTour = "Visita per a administradors"
@@ -5631,6 +6360,32 @@ text = "Gira les pàgines del teu PDF en sentit horari o antihorari en increment
 [rotate.tooltip.header]
 title = "Resum de la configuració de rotació"
 
+[timestampPdf]
+completed = "S’ha aplicat la marca de temps al PDF correctament"
+desc = "Afegeix una marca de temps RFC 3161 al teu PDF amb un servidor d’una autoritat de marques de temps (TSA) de confiança."
+filenamePrefix = "amb-marca-de-temps"
+results = "Resultats de la marca de temps"
+submit = "Aplica la marca de temps"
+title = "Marca de temps al PDF"
+
+[timestampPdf.error]
+failed = "S’ha produït un error en aplicar la marca de temps al PDF."
+generic = "Ha fallat l’aplicació de la marca de temps"
+
+[timestampPdf.files]
+placeholder = "Selecciona un fitxer PDF a la vista principal per començar"
+
+[timestampPdf.options]
+note = "Només s’envia un resum SHA-256 del document al servidor TSA; el fitxer PDF no s’envia mai al servidor TSA."
+title = "Servidor de marques de temps (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Tria una autoritat de marques de temps de confiança"
+label = "Selecciona un servidor TSA"
+
+[timestampPdf.steps]
+settings = "Configuració"
+
 [sanitize]
 completed = "Sanitització completada correctament"
 desc = "Elimina elements potencialment nocius dels fitxers PDF."
@@ -5755,25 +6510,100 @@ placeholder = "Escriu el terme de cerca..."
 searching = "Cercant..."
 title = "Cerca al PDF"
 
+[selfHosted.offline]
+hideTools = "Amaga les eines no disponibles ▴"
+messageNoFallback = "Les eines no estaran disponibles fins que el teu servidor torni en línia."
+messageWithFallback = "Algunes eines requereixen connexió al servidor."
+showTools = "Mostra les eines no disponibles ▾"
+title = "No es pot accedir al teu servidor de Stirling-PDF"
+toolNotAvailableLocally = "El teu servidor de Stirling-PDF és fora de línia i \"{{endpoint}}\" no està disponible al backend local."
+
 [session]
 expired = "La teva sessió ha expirat. Si us plau, actualitza la pàgina i torna a intentar-ho."
 refreshPage = "Actualitza la pàgina"
+
+[sessionManagement.tooltip]
+header = "Gestió de sessions de signatura"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Nous participants afegits al final de l'ordre de signatura"
+bullet2 = "No es poden afegir participants després que la sessió estigui finalitzada"
+bullet3 = "Cada participant rep una notificació quan és el seu torn"
+description = "Pots afegir més participants a una sessió activa en qualsevol moment abans de la finalització."
+title = "Afegir participants"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Finalització completa</b>: Tots els participants han signat"
+bullet2 = "<b>Finalització parcial</b>: Alguns participants encara no han signat"
+bullet3 = "Els participants sense signar s'exclouran del document final"
+bullet4 = "Un cop finalitzada, pots carregar el PDF signat als fitxers actius"
+description = "La finalització combina totes les signatures en un únic PDF signat. Aquesta acció no es pot desfer."
+title = "Finalització de la sessió"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "No es poden eliminar participants que ja hagin signat"
+bullet2 = "Els participants eliminats ja no rebran notificacions"
+bullet3 = "L'ordre de signatura s'ajusta automàticament"
+description = "Els participants es poden eliminar de les sessions abans que signin."
+title = "Eliminació de participants"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Cada signatura s'aplica de manera seqüencial al PDF"
+bullet2 = "Els signants posteriors poden veure les signatures anteriors"
+bullet3 = "Crític per a fluxos d'aprovació i cadenes de custòdia legals"
+description = "L'ordre que especifiquis en crear la sessió determina qui signa primer."
+title = "Ordre de signatura"
+
+[signatureSettings.tooltip]
+header = "Paràmetres d'aparença de la signatura"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Exemples: \"Nova York, EUA\", \"Oficina de Londres\", \"En remot\""
+bullet2 = "No és el mateix que la posició a la pàgina"
+bullet3 = "Pot ser necessari en algunes jurisdiccions legals"
+description = "Ubicació geogràfica opcional on s'ha aplicat la signatura. S'emmagatzema a les metadades del certificat."
+title = "Ubicació de la signatura"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Es mostra junt amb la signatura i el text"
+bullet2 = "Admet formats PNG, JPG"
+bullet3 = "Millora l'aparença professional"
+description = "Afegeix un logotip d'empresa a les signatures visibles per a marca i autenticitat."
+title = "Logotip de l'empresa"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Exemples: \"Aprovació\", \"Acord de contracte\", \"Revisió completada\""
+bullet2 = "Visible a les propietats de la signatura del PDF"
+bullet3 = "Útil per a pistes d'auditoria i compliment"
+description = "Text opcional que explica per què es signa el document. S'emmagatzema a les metadades del certificat."
+title = "Motiu de la signatura"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Visible</b>: La signatura apareix al PDF amb aparença personalitzada"
+bullet2 = "<b>Invisible</b>: Certificat incrustat sense marca visual"
+bullet3 = "Les signatures invisibles encara ofereixen validació criptogràfica"
+description = "Controla si la signatura és visible al document o s'incrusta de manera invisible."
+title = "Visibilitat de la signatura"
 
 [settings.configuration]
 advanced = "Avançat"
 database = "Base de dades"
 endpoints = "Endpoints"
 features = "Funcions"
+storageSharing = "Emmagatzematge i compartició de fitxers"
 systemSettings = "Configuració del sistema"
 title = "Configuració"
 
 [settings.connection]
+localDescription = "Estàs utilitzant el backend local sense cap compte. Algunes eines que requereixen processament al núvol o un servidor autoallotjat no estan disponibles."
 logout = "Tancar sessió"
 server = "Servidor"
+signIn = "Inicia sessió"
 title = "Mode de connexió"
 user = "Sessió iniciada com"
 
 [settings.connection.mode]
+local = "Només local"
 saas = "Stirling Cloud"
 selfhosted = "Autoallotjat"
 
@@ -5931,6 +6761,9 @@ title = "Polítiques i privadesa"
 [settings.preferences]
 title = "Preferències"
 
+[settings.search]
+placeholder = "Cerca a les pàgines de configuració..."
+
 [settings.security]
 description = "Actualitza la contrasenya per mantenir segur el compte."
 title = "Seguretat"
@@ -5968,6 +6801,18 @@ title = "Espai de treball"
 [settings.team]
 title = "Equip"
 
+[localMode]
+toolUnavailable = "Aquesta eina requereix un compte. Inicia sessió a Stirling Cloud o connecta’t a un servidor autoallotjat per utilitzar-la."
+
+[localMode.banner]
+message = "Inicia sessió per desbloquejar totes les eines."
+signIn = "Inicia sessió"
+title = "Executant-se localment"
+
+[localMode.toolPicker]
+message = "Inicia sessió per desbloquejar totes les eines."
+signIn = "Inicia sessió"
+
 [setup]
 description = "Comença triant com vols usar Stirling PDF"
 welcome = "Benvingut a Stirling PDF"
@@ -5975,6 +6820,7 @@ welcome = "Benvingut a Stirling PDF"
 [setup.login]
 connectingTo = "Connectant amb:"
 hideInstructions = "Amagueu les instruccions"
+skipSignIn = "Continua sense iniciar sessió"
 instructions = "Per habilitar l'inici de sessió al vostre servidor de Stirling PDF:"
 instructionsEnvVar = "Establiu la variable d'entorn:"
 instructionsOrYml = "O a settings.yml:"
@@ -6022,7 +6868,17 @@ title = "Inicia sessió a Stirling"
 [setup.selfhosted]
 link = "o connecteu-vos a un compte autoallotjat"
 subtitle = "Introdueix les credencials del servidor"
+changeServerLocked = "La teva organització ha restringit aquesta aplicació a un servidor específic"
+switchToLocal = "Utilitza les eines locals"
 title = "Inicia sessió al servidor"
+
+[setup.selfhosted.unreachable]
+changeServer = "Connecta't a un altre servidor"
+changeServerLocked = "La teva organització ha restringit aquesta aplicació a un servidor específic"
+continueOffline = "Utilitza les eines locals"
+message = "No s’ha pogut accedir a {{url}}. Comprova que el servidor s’està executant i és accessible."
+retry = "Torna-ho a provar"
+title = "No es pot connectar amb el servidor"
 
 [setup.server]
 subtitle = "Introdueix la URL del servidor autoallotjat"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "No s'ha pogut obtenir la configuració del servidor. Comproveu l'URL i torneu-ho a provar."
+configFetchError = "No s’ha pogut obtenir la configuració del servidor: {{error}}"
 emptyUrl = "Introdueix una URL de servidor"
 invalidUrl = "Format d'URL invàlid. Introdueix una URL vàlida com https://your-server.com"
 testFailed = "Ha fallat la prova de connexió"
@@ -6210,6 +7067,15 @@ image = "Imatge"
 saved = "Desades"
 text = "Text"
 title = "Tipus de signatura"
+
+[signRequest]
+declined = "S'ha rebutjat la sol·licitud de signatura"
+fetchFailed = "No s'ha pogut carregar la sol·licitud de signatura"
+signed = "Document signat correctament"
+
+[signSession]
+createFailed = "No s'ha pogut crear la sol·licitud de signatura"
+created = "S'ha enviat la sol·licitud de signatura"
 
 [signup]
 accountCreatedSuccessfully = "Compte creat correctament! Ara podeu iniciar sessió."
@@ -6489,6 +7355,106 @@ title = "Divideix PDF per Capítols"
 [splitPdfByChapters]
 tags = "dividir,capítols,marcadors,organitza"
 
+[storageShare]
+accessed = "Accedit"
+accessDenied = "No tens accés a aquest fitxer compartit. Demana al propietari que el comparteixi amb tu."
+accessFailed = "No s'ha pogut carregar l'activitat."
+accessDeniedBody = "No tens accés a aquest fitxer. Demana al propietari que el comparteixi amb tu."
+accessDeniedTitle = "Sense accés"
+accessLimitedCommenter = "L'accés per comentar arribarà aviat. Demana al propietari accés d'editor si necessites descarregar."
+accessLimitedTitle = "Accés limitat"
+accessLimitedViewer = "Aquest enllaç és només de visualització. Demana al propietari accés d'editor si necessites descarregar."
+createdAt = "Creat"
+download = "Descarrega"
+downloadFailed = "No es pot descarregar aquest fitxer."
+expiredBody = "Aquest enllaç de compartició no és vàlid o ha caducat."
+expiredTitle = "Enllaç caducat"
+goToLogin = "Ves a l'inici de sessió"
+loadFailed = "No es pot obrir el fitxer compartit."
+loading = "Carregant l'enllaç de compartició..."
+loginPrompt = "Inicia sessió per accedir a aquest fitxer compartit."
+loginRequired = "Cal iniciar sessió"
+openInApp = "Obre a Stirling PDF"
+ownerLabel = "Propietari"
+ownerUnknown = "Desconegut"
+requiresLogin = "Aquest fitxer compartit requereix iniciar sessió."
+roleCommenter = "Comentarista"
+roleEditor = "Editor"
+roleViewer = "Lector"
+shareHeading = "Fitxer compartit"
+titleDefault = "Fitxer compartit"
+tryAgain = "Torna-ho a provar més tard."
+addUser = "Afegeix"
+commenterHint = "La funció de comentar arribarà aviat."
+copied = "Enllaç copiat al porta-retalls"
+copy = "Copia"
+copyFailed = "No s'ha pogut copiar"
+description = "Crea un enllaç de compartició per a aquest fitxer. Els usuaris amb sessió iniciada i l'enllaç hi podran accedir."
+downloadsCount = "Descàrregues: {{count}}"
+emailWarningBody = "Això sembla una adreça de correu electrònic. Si aquesta persona no és usuària de Stirling PDF, no podrà accedir al fitxer."
+emailWarningConfirm = "Comparteix igualment"
+emailWarningTitle = "Adreça de correu electrònic"
+errorTitle = "No s'ha pogut compartir"
+failure = "No s'ha pogut generar un enllaç de compartició. Torna-ho a provar."
+fileLabel = "Fitxer"
+generate = "Genera l'enllaç"
+generated = "S'ha generat l'enllaç de compartició"
+hideActivity = "Amaga l'activitat"
+invalidUsername = "Introdueix un nom d'usuari o una adreça de correu electrònic vàlids."
+lastAccessed = "Últim accés"
+linkAccessTitle = "Accés per enllaç"
+linkLabel = "Enllaç de compartició"
+linksDisabled = "Els enllaços de compartició estan desactivats."
+linksDisabledBody = "Els enllaços de compartició estan desactivats per la configuració del teu servidor."
+manage = "Gestiona la compartició"
+manageDescription = "Crea i gestiona enllaços per compartir aquest fitxer."
+manageLoadFailed = "No s'han pogut carregar els enllaços de compartició."
+manageTitle = "Gestiona la compartició"
+noActivity = "Encara no hi ha activitat."
+noLinks = "Encara no hi ha enllaços de compartició actius."
+noSharedUsers = "Encara no hi ha usuaris amb accés."
+removeLink = "Elimina l'enllaç"
+removeUser = "Elimina"
+revokeFailed = "No s'ha pogut eliminar l'enllaç de compartició."
+revoked = "S'ha eliminat l'enllaç de compartició"
+roleLabel = "Rol"
+sharingDisabled = "La compartició està desactivada."
+sharingDisabledBody = "La compartició s'ha desactivat per la configuració del servidor."
+sharedUsersTitle = "Usuaris amb accés compartit"
+title = "Compartir fitxer"
+unknownUser = "Usuari desconegut"
+userAddFailed = "No s'ha pogut compartir amb aquest usuari."
+userAdded = "Usuari afegit a la llista de compartició."
+usernameLabel = "Nom d'usuari o correu electrònic"
+usernamePlaceholder = "Introduïu un nom d'usuari o un correu electrònic"
+userRemoveFailed = "No s'ha pogut eliminar aquest usuari."
+userRemoved = "Usuari eliminat de la llista de compartició."
+viewActivity = "Veure l'activitat"
+viewed = "Vist"
+viewsCount = "Visualitzacions: {{count}}"
+downloaded = "Baixat"
+bulkDescription = "Creeu un enllaç per compartir tots els fitxers seleccionats amb usuaris que han iniciat la sessió."
+bulkTitle = "Compartir fitxers seleccionats"
+copyLink = "Copia l'enllaç per compartir"
+fileCount = "{{count}} fitxers seleccionats"
+ownerOnly = "Només el propietari pot gestionar la compartició."
+selectSingleFile = "Seleccioneu un sol fitxer per gestionar la compartició."
+
+[storageUpload]
+description = "Això puja el fitxer actual a l'emmagatzematge del servidor perquè hi pugueu accedir."
+errorTitle = "La pujada ha fallat"
+failure = "La pujada ha fallat. Comproveu l'inici de sessió i la configuració d'emmagatzematge."
+fileLabel = "Fitxer"
+hint = "Els enllaços públics i els modes d'accés es controlen per la configuració del servidor."
+success = "S'ha pujat al servidor"
+title = "Pujar al servidor"
+updateButton = "Actualitza al servidor"
+uploadButton = "Puja al servidor"
+bulkDescription = "Això puja els fitxers seleccionats a l'emmagatzematge del servidor."
+bulkTitle = "Pujar fitxers seleccionats"
+fileCount = "{{count}} fitxers seleccionats"
+more = " +{{count}} més"
+
 [storage]
 approximateSize = "Mida aproximada"
 fileTooLarge = "Fitxer massa gran. La mida màxima per fitxer és"
@@ -6557,6 +7523,7 @@ favorites = "Preferits"
 heading = "Totes les eines (vista a pantalla completa)"
 noResults = "Prova d'ajustar la cerca o activa/desactiva les descripcions per trobar el que necessites."
 recommended = "Recomanat"
+selfHostedOffline = "Requereix el teu servidor de Stirling-PDF (actualment fora de línia):"
 showDetails = "Mostra els detalls"
 unavailable = "Desactivat per l'administrador del servidor:"
 unavailableDependency = "No disponible: falta l'eina necessària al servidor:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Format de pàgina"
 removal = "Eliminació"
 signing = "Signatura"
 verification = "Verificació"
+
+[tool]
+endpointUnavailable = "Aquesta eina no està disponible al teu servidor."
+endpointUnavailableClickable = "No disponible en aquest mode. Fes clic per iniciar sessió."
+invalidParams = "Omple els paràmetres requerits."
+noFiles = "Afegeix un fitxer per començar."
 
 [tools]
 noSearchResults = "No s’han trobat eines"
@@ -6828,6 +7801,30 @@ title = "Visualitza/edita PDF"
 [warning]
 tooltipTitle = "Avís"
 
+[wetSignature.tooltip]
+header = "Mètodes de creació de signatura"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Personalitzeu el color i el gruix del traç"
+bullet2 = "Esborreu i torneu a dibuixar fins que estigueu satisfets"
+bullet3 = "Funciona en dispositius tàctils (tauletes, telèfons)"
+description = "Creeu una signatura manuscrita amb el ratolí o la pantalla tàctil. Ideal per a signatures personals i autèntiques."
+title = "Dibuixar la signatura"
+
+[wetSignature.tooltip.type]
+bullet1 = "Trieu entre diversos tipus de lletra"
+bullet2 = "Personalitzeu la mida i el color del text"
+bullet3 = "Perfecte per a signatures estandarditzades"
+description = "Genereu una signatura a partir de text teclejat. Ràpid i coherent, adequat per a documents empresarials."
+title = "Escriure la signatura"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Admet PNG, JPG i altres formats d'imatge"
+bullet2 = "Es recomana fons transparents per obtenir els millors resultats"
+bullet3 = "La imatge es redimensionarà per ajustar-se a l'àrea de la signatura"
+description = "Pugeu una imatge de signatura ja creada. Ideal si teniu una signatura escanejada o el logotip de l'empresa."
+title = "Pujar imatge de la signatura"
+
 [watermark]
 completed = "Marca d'aigua afegida"
 desc = "Afegeix marques d'aigua de text o d'imatge als fitxers PDF"
@@ -7008,6 +8005,7 @@ activeSession = "Sessió activa"
 addMembers = "Afegeix membres"
 admin = "Administrador"
 confirmDelete = "Esteu segur que voleu suprimir aquest usuari? Aquesta acció no es pot desfer."
+confirmUnlock = "Segur que voleu desbloquejar aquest compte d'usuari?"
 deleteUser = "Suprimeix l’usuari"
 deleteUserError = "No s’ha pogut suprimir l’usuari"
 deleteUserSuccess = "Usuari suprimit correctament"
@@ -7016,6 +8014,8 @@ disable = "Deshabilita"
 disabled = "Desactivat"
 editRole = "Edita el rol"
 enable = "Habilita"
+locked = "bloquejat"
+lockedBadge = "Bloquejat"
 loading = "Carregant persones..."
 loginRequired = "Habilita primer el mode d'inici de sessió"
 member = "Membre"
@@ -7025,6 +8025,9 @@ searchMembers = "Cerca membres..."
 status = "Estat"
 team = "Equip"
 title = "Persones"
+unlockAccount = "Desbloqueja el compte"
+unlockUserError = "No s'ha pogut desbloquejar el compte d'usuari"
+unlockUserSuccess = "El compte d'usuari s'ha desbloquejat correctament"
 user = "Usuari"
 
 [workspace.people.actions]

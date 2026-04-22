@@ -8,6 +8,9 @@ build/
 **/build/
 out/
 target/
+**/target/
+bin/
+version_builds/
 
 # Gradle caches (local, not what's in the container)
 .gradle/
@@ -16,8 +19,14 @@ target/
 # Node / frontend
 node_modules/
 **/node_modules/
+frontend/node_modules/
+frontend/dist/
 .npm/
 .yarn/
+
+# Tauri/desktop builds
+src-tauri/target/
+src-tauri/dist/
 
 # IDE and editor
 .idea/
@@ -46,7 +55,22 @@ Dockerfile*
 **/test-results/
 **/jacoco/
 
+# Testing and documentation (not needed in build)
+testing/
+docs/
+*.md
+README*
+
 # Local env
 .env
 .env.*
 !.env.example
+!engine/.env
+
+# Misc
+*.swp
+*.swo
+*~
+.DS_Store
+.cache/
+.pytest_cache/

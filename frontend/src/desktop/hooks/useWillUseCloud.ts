@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { operationRouter } from '@app/services/operationRouter';
-import { tauriBackendService } from '@app/services/tauriBackendService';
+import { useState, useEffect } from "react";
+import { operationRouter } from "@app/services/operationRouter";
+import { tauriBackendService } from "@app/services/tauriBackendService";
 
 /**
  * Desktop hook to detect if an operation will use cloud/SaaS backend
@@ -19,7 +19,7 @@ export function useWillUseCloud(endpoint?: string): boolean {
 
       // Don't show cloud badges until backend is healthy
       // This prevents showing incorrect cloud status during startup
-      if (!tauriBackendService.isBackendHealthy()) {
+      if (!tauriBackendService.isOnline) {
         setWillUseCloud(false);
         return;
       }
@@ -29,7 +29,11 @@ export function useWillUseCloud(endpoint?: string): boolean {
         const willRoute = await operationRouter.willRouteToSaaS(endpoint);
         setWillUseCloud(willRoute);
       } catch (error) {
-        console.error('[useWillUseCloud] Failed to check cloud routing for endpoint:', endpoint, error);
+        console.error(
+          "[useWillUseCloud] Failed to check cloud routing for endpoint:",
+          endpoint,
+          error,
+        );
         setWillUseCloud(false);
       }
     };
@@ -39,7 +43,7 @@ export function useWillUseCloud(endpoint?: string): boolean {
 
     // Subscribe to backend status changes to re-check when backend becomes healthy
     const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
-      if (status === 'healthy') {
+      if (status === "healthy") {
         checkCloudRouting();
       }
     });

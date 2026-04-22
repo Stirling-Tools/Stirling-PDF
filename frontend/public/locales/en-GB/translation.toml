@@ -8,6 +8,7 @@ black = "Black"
 blue = "Blue"
 bored = "Bored Waiting?"
 cancel = "Cancel"
+confirm = "Confirm"
 changedCredsMessage = "Credentials changed!"
 chooseFile = "Choose File"
 close = "Close"
@@ -43,6 +44,8 @@ downloadPdf = "Download PDF"
 downloadUnavailable = "Download unavailable for this item"
 edit = "Edit"
 editYourNewFiles = "Edit your new file(s)"
+encryptedFileBlocked = "File is password-protected. Unlock it first."
+encryptedFilesBlocked = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Export & Continue"
 false = "False"
 fileSavedToDisk = "File saved to disk"
@@ -142,6 +145,12 @@ welcome = "Welcome"
 white = "White"
 WorkInProgess = "Work in progress, May not work or be buggy, Please report any problems!"
 yes = "Yes"
+insufficientCredits = "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}"
+loadingCredits = "Checking credits..."
+loadingProStatus = "Checking subscription status..."
+noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
+
+accessInvite = "Invite"
 
 [account]
 accountSettings = "Account Settings"
@@ -1412,6 +1421,34 @@ title = "Processing"
 description = "Maximum time to wait for a processing job before reporting an error."
 label = "Processing Timeout (seconds)"
 
+[admin.settings.storage]
+description = "Control server storage and sharing options."
+title = "File Storage & Sharing"
+
+[admin.settings.storage.enabled]
+description = "Allow users to store files on the server."
+label = "Enable Server File Storage"
+
+[admin.settings.storage.sharing.email]
+description = "Allow sharing with email addresses."
+label = "Enable Email Sharing"
+mailLink = "Configure Mail Settings"
+mailNote = "Requires mail configuration. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Allow users to share stored files."
+label = "Enable Sharing"
+
+[admin.settings.storage.sharing.links]
+description = "Allow sharing via signed-in links."
+frontendUrlLink = "Configure in System Settings"
+frontendUrlNote = "Requires a Frontend URL. "
+label = "Enable Share Links"
+
+[admin.settings.storage.signing.enabled]
+description = "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled."
+label = "Enable Group Signing (Alpha)"
+
 [admin.settings.unsavedChanges]
 cancel = "Keep Editing"
 discard = "Discard Changes"
@@ -1500,8 +1537,9 @@ editSelected = "Edit Annotation"
 editSquare = "Edit Square"
 editStampHint = "To change the image, delete this stamp and add a new one."
 editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
-editText = "Edit Text Box"
+editText = "Edit"
 editTextMarkup = "Edit Text Markup"
+annotationStyle = "Annotation style"
 ellipse = "Ellipse"
 exit = "Exit annotation mode"
 fillColor = "Fill Colour"
@@ -1512,13 +1550,19 @@ highlight = "Highlight"
 imagePreview = "Preview"
 inkHighlighter = "Freehand Highlighter"
 line = "Line"
+lineArrow = "Arrow"
 noBackground = "No background"
 note = "Note"
+comment = "Comment"
+comments = "Comments"
+insertText = "Insert Text"
+replaceText = "Replace Text"
 noteIcon = "Note Icon"
 notesStamps = "Notes & Stamps"
 opacity = "Opacity"
 pen = "Pen"
 polygon = "Polygon"
+polyline = "Polyline"
 properties = "Properties"
 rectangle = "Rectangle"
 redo = "Redo"
@@ -2036,8 +2080,37 @@ keywords = "Keywords: odd, even"
 numbers = "Numbers/ranges: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
 
+[chat.progress]
+thinking = "Thinking..."
+analyzing = "Analysing your request..."
+calling_engine = "AI is thinking..."
+extracting_content = "Extracting content from your documents..."
+executing_tool_single = "Running {{tool}}..."
+executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
+executing_tool_generic = "Running tool..."
+executing_tool_generic_step = "Running tool (step {{step}} of {{total}})..."
+processing = "Processing extracted content..."
+
+[chat.toolsUsed]
+summary_one = "Ran 1 tool"
+summary_other = "Ran {{count}} tools"
+summary = "Ran {{count}} tools"
+unknownTool = "Unknown tool"
+
 [certSign]
+allSigned = "All participants have signed. Ready to finalize."
+awaitingSignatures = "Awaiting signatures"
+signatureProgress = "{{signedCount}}/{{totalCount}} signatures"
 chooseCertificate = "Choose Certificate File"
+declined = "Declined"
+fetchFailed = "Failed to load signing data"
+finalized = "Finalized"
+notified = "Pending"
+partialNote = "You can finalize early with current signatures. Unsigned participants will be excluded."
+pending = "Pending"
+readyToFinalize = "Ready to finalize"
+signed = "Signed"
+viewed = "Viewed"
 chooseJksFile = "Choose JKS File"
 chooseP12File = "Choose PKCS12 File"
 choosePfxFile = "Choose PFX File"
@@ -2060,6 +2133,7 @@ title = "Certificate Signing"
 invisible = "Invisible"
 stepTitle = "Signature Appearance"
 visible = "Visible"
+visibility = "Visibility"
 
 [certSign.appearance.options]
 title = "Signature Details"
@@ -2165,6 +2239,252 @@ bullet3 = "Checks if the document was modified after signing"
 bullet4 = "Can use custom certificates for verification"
 text = "When you check signatures, the tool tells you if they're valid, who signed the document, when it was signed, and whether the document has been changed since signing."
 title = "Checking Signatures"
+
+[certSign.collab.finalize]
+button = "Finalize and Load Signed PDF"
+early = "Finalize with Current Signatures"
+
+[certSign.collab.sessionDetail]
+addButton = "Add Participants"
+addParticipants = "Add Participants"
+addParticipantsError = "Failed to add participants"
+backToList = "Back to Sessions"
+deleteConfirm = "Are you sure? This cannot be undone."
+deleteError = "Failed to delete session"
+deleted = "Session deleted"
+deleteSession = "Delete Session"
+dueDate = "Due Date"
+finalizeError = "Failed to finalize session"
+loadPdfError = "Failed to load signed PDF"
+loadSignedPdf = "Load Signed PDF into Active Files"
+messageLabel = "Message"
+noAdditionalInfo = "No additional information"
+owner = "Owner"
+participantRemoved = "Participant removed"
+participants = "Participants"
+participantsAdded = "Participants added successfully"
+removeParticipant = "Remove"
+removeParticipantError = "Failed to remove participant"
+selectUsers = "Select users..."
+sessionInfo = "Session Info"
+workbenchTitle = "Session Management"
+
+[certSign.collab.signRequest]
+addedToFiles = "Document added to active files"
+addSignature = "Add Your Signature"
+addToFiles = "Add to Active Files"
+advancedSettings = "Advanced Settings"
+backToList = "Back to Sign Requests"
+certificateChoice = "Select a certificate to sign with"
+changeSignature = "Change signature"
+clearSignature = "Clear Signature"
+completeAndSign = "Complete & Sign"
+createNewSignature = "Create New Signature"
+declineButton = "Decline"
+decline = "Decline Request"
+deleteSelected = "Delete selected signature"
+drawSignature = "Draw your signature below"
+dueDate = "Due Date"
+fileTooLarge = "File size must be less than 5MB"
+fontFamily = "Font Family"
+fontSize = "Font Size: {{size}}px"
+fontSizePlaceholder = "Size"
+from = "From"
+invalidCertFile = "Please select a P12 or PFX certificate file"
+invalidFileType = "Please select an image file"
+location = "Location (Optional)"
+locationPlaceholder = "Where are you signing from?"
+message = "Message"
+noCertificate = "Please select a certificate file"
+noSignatures = "Please place at least one signature on the PDF"
+p12File = "P12/PFX Certificate File"
+password = "Certificate Password"
+passwordPlaceholder = "Enter password..."
+penColor = "Pen Color"
+penSize = "Pen Size: {{size}}px"
+placementActive = "Click PDF to place"
+placeSignatureButton = "Place Signature on PDF"
+reason = "Reason (Optional)"
+reasonPlaceholder = "Why are you signing?"
+removeImage = "Remove Image"
+removeCertFile = "Remove File"
+savedSignatures = "Saved Signatures"
+selectFile = "Select Image File"
+selectSignatureTitle = "Select or Create Signature"
+signButton = "Sign Document"
+signatureInfo = "These settings are configured by the document owner"
+signaturePlaced = "Signature placed on page"
+signatureSettings = "Signature Settings"
+signatureText = "Signature Text"
+signatureTextPlaceholder = "Enter your name..."
+signatureTypeLabel = "Signature Type"
+signingTitle = "Signing"
+textColor = "Text Color"
+typeSignature = "Type your name to create a signature"
+uploadCert = "Custom Certificate"
+uploadCertDesc = "Use your own P12/PFX certificate"
+uploadSignature = "Upload your signature image"
+usePersonalCert = "Personal Certificate"
+usePersonalCertDesc = "Auto-generated for your account"
+useServerCert = "Organization Certificate"
+useServerCertDesc = "Shared organization certificate"
+workbenchTitle = "Sign Request"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Choose stroke colour"
+continue = "Continue"
+
+[certSign.collab.signRequest.certModal]
+description = "You have placed {{count}} signature(s). Choose your certificate to complete signing."
+sign = "Sign Document"
+certValidating = "Validating certificate..."
+certValidUntil = "Certificate valid until {{date}}"
+certInvalid = "Certificate invalid: {{error}}"
+certInvalidFallback = "Invalid certificate"
+certNetworkError = "Could not validate certificate"
+title = "Configure Certificate"
+
+[certSign.collab.participant]
+certValidating = "Validating certificate..."
+certValid = "✓ Certificate valid"
+certValidUntil = " until {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Invalid certificate"
+certNetworkError = "Could not validate certificate"
+
+[certSign.collab.signRequest.image]
+hint = "Upload a PNG or JPG image of your signature"
+
+[certSign.collab.signRequest.mode]
+move = "Move Signature"
+place = "Place Signature"
+title = "Sign or move mode"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Draw"
+image = "Upload"
+text = "Type"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Click on the PDF to place your signature"
+title = "Place Signature"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Selected signature"
+missing = "No preview"
+textFallback = "Signature"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Drawing signature"
+defaultImageLabel = "Uploaded signature"
+defaultLabel = "Signature"
+defaultTextLabel = "Typed signature"
+delete = "Delete signature"
+none = "No saved signatures"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Draw"
+type = "Type"
+upload = "Upload"
+
+[certSign.collab.signRequest.steps]
+back = "Back"
+cancelPlacement = "Cancel Placement"
+certificate = "Certificate"
+clickMultipleTimes = "Click on the PDF multiple times to place signatures. Drag any signature to move or resize it."
+clickToPlace = "Click on the PDF where you would like your signature to appear."
+continue = "Continue to Certificate Selection"
+continueToPlacement = "Continue to Placement"
+continueToReview = "Continue to Review"
+createSignature = "Create Signature"
+invisible = "Invisible"
+location = "Location:"
+multipleSignatures = "{{count}} signatures will be applied to the PDF"
+oneSignature = "1 signature will be applied to the PDF"
+placeOnPdf = "Place on PDF"
+reason = "Reason:"
+reviewTitle = "Review Before Signing"
+signaturePlaced = "Signature placed on page {{page}}. You can adjust the position by clicking again or continue to review."
+visible = "Visible"
+visibility = "Visibility:"
+yourSignatures = "Your Signatures ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Color"
+fontLabel = "Font"
+fontSizeLabel = "Size"
+fontSizePlaceholder = "16"
+label = "Signature Text"
+modalHint = "Enter your name, then click Continue to place it on the PDF."
+placeholder = "Enter your name..."
+
+[certSign.collab.addParticipants]
+add = "Add {{count}} Participant(s)"
+back = "Back"
+configureSignatures = "Configure Signature Settings"
+continue = "Continue to Signature Settings"
+reasonHelp = "Pre-set a signing reason for these participants (optional, they can override when signing)"
+reasonPlaceholder = "e.g. Approval, Review..."
+selectUsers = "Select Users"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Include Signature Summary Page"
+includeSummaryPageHelp = "A summary page will be added at the end with all signature metadata. The digital certificate signature boxes on individual pages will be suppressed (wet signatures are unaffected)."
+
+[certSign.collab.sessionList]
+active = "Active"
+finalized = "Finalized"
+
+[certSign.collab.signatureSettings]
+description = "Configure how signatures will appear for all participants"
+title = "Signature Appearance"
+
+[certSign.collab.userSelector]
+inviteUsers = "Add Users"
+loadError = "Failed to load users"
+noTeam = "No Team"
+noUsers = "No other users found."
+placeholder = "Select users..."
+
+[certSign.mobile]
+panelActions = "Actions"
+panelDocument = "Document"
+panelPeople = "People"
+
+[certSign.sessions]
+deleted = "Session deleted"
+fetchFailed = "Failed to load session details"
+finalized = "Session finalized"
+loaded = "Signed PDF loaded"
+pdfNotReady = "PDF Not Ready"
+pdfNotReadyDesc = "The signed PDF is being generated. Please try again in a moment."
+
+[certificateChoice.tooltip]
+header = "Certificate Types"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Managed by system administrators"
+bullet2 = "Shared across authorized users"
+bullet3 = "Represents company identity, not individual"
+bullet4 = "Best for: Official documents, team signatures"
+description = "A shared certificate provided by your organization. Used for company-wide signing authority."
+title = "Organization Certificate"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Generated automatically on first use"
+bullet2 = "Tied to your user account"
+bullet3 = "Cannot be shared with other users"
+bullet4 = "Best for: Personal documents, individual accountability"
+description = "An auto-generated certificate unique to your user account. Suitable for individual signatures."
+title = "Personal Certificate"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Requires P12/PFX file and password"
+bullet2 = "Can be issued by external Certificate Authorities"
+bullet3 = "Higher trust level for legal documents"
+bullet4 = "Best for: Legally binding contracts, external validation"
+description = "Use your own PKCS#12 certificate file. Provides full control over certificate properties."
+title = "Upload Custom P12"
 
 [changeCreds]
 changePassword = "You are using default login credentials. Please enter a new password"
@@ -2491,6 +2811,33 @@ confirmTitle = "Re-run comparison?"
 unlinkedBody = "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
 unlinkedTitle = "Independent scroll & pan enabled"
 
+[compare.mode]
+pixel = "Pixel Comparison"
+text = "Text Comparison"
+
+[compare.pixel]
+base = "Original"
+changed = "changed"
+comparison = "Edited"
+diff = "Differences"
+diffOnly = "Diff only"
+missingInBase = "Missing in original"
+missingInComparison = "Missing in edited"
+overall = "overall"
+overlay = "Overlay"
+pageLabel = "Page"
+pagesChanged = "pages changed"
+sideBySide = "Side-by-side"
+sizeMismatch = "Size mismatch"
+summaryTitle = "Pixel comparison"
+
+[compare.pixel.warnings]
+noPages = "One or both documents have no pages."
+pageCountMismatch = "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added."
+
+[compare.pixel.errors]
+canvasContextUnavailable = "Unable to acquire 2D canvas context for pixel comparison."
+
 [compare.too.dissimilar]
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."
 
@@ -2564,9 +2911,44 @@ title = "Quality Adjustment"
 tags = "squish,small,tiny"
 
 [config.account.overview]
+confirmDelete = "Delete My Account"
+deleteAccount = "Delete Account"
+deleteAccountTitle = "Delete Account"
+deleteFailed = "Failed to delete account."
+deleteFailedTitle = "Unable to delete account"
+deleteWarning = "This action is permanent and cannot be undone. All your data will be deleted."
+enterEmailConfirm = "To confirm deletion, please type your email address ({{email}}) below:"
 guestDescription = "You are signed in as a guest. Consider upgrading your account above."
+label = "Overview"
 manageAccountPreferences = "Manage your account preferences"
+signedInAs = "Signed in as"
 title = "Account Settings"
+
+[config.account.profilePicture]
+description = "Upload an image to personalize your account."
+help = "PNG, JPG, or WebP up to 2MB."
+remove = "Remove"
+sizeError = "Please select an image smaller than 2MB."
+switchedToCustom = "Switched to custom picture. You can now upload your own."
+title = "Profile picture"
+upload = "Upload"
+useCustom = "Use custom picture"
+usingProvider = "Using {{provider}} profile picture"
+
+[config.account.profilePicture.cropper]
+cropError = "Failed to crop image. Please try again."
+invalidImage = "Invalid image file. Please select a valid PNG, JPG, or WebP file."
+processing = "Processing crop..."
+save = "Save Cropped Image"
+sizeErrorAfterCrop = "Cropped image is too large. Please zoom out or crop a smaller area."
+title = "Crop Profile Picture"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Change password"
+description = "Manage your password and security settings."
+title = "Passwords & Security"
+update = "Update password"
 
 [config.account.upgrade]
 description = "Link your account to preserve your history and access more features!"
@@ -2581,9 +2963,13 @@ socialLogin = "Upgrade with Social Account"
 title = "Upgrade Guest Account"
 upgradeButton = "Upgrade Account"
 
+[config]
+plan = "Plan"
+
 [config.apiKeys]
 chartAriaLabel = "Credits usage: included {{includedUsed}} of {{includedTotal}}, purchased {{purchasedUsed}} of {{purchasedTotal}}"
 copyKeyAriaLabel = "Copy API key"
+creditsRemaining = "Credits Remaining"
 description = "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one."
 docsDescription = "Learn more about integrating with Stirling PDF:"
 docsLink = "API Documentation"
@@ -2632,6 +3018,14 @@ basic = "Basic Configuration"
 integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
+
+[connectionMode.status]
+localOffline = "Offline mode running"
+localOnline = "Offline mode running"
+saas = "Connected to Stirling Cloud"
+selfhostedChecking = "Connected to self-hosted server (checking...)"
+selfhostedOffline = "Self-hosted server unreachable"
+selfhostedOnline = "Connected to self-hosted server"
 
 [convert]
 autoRotate = "Auto Rotate"
@@ -2717,6 +3111,15 @@ webOptions = "Web to PDF Options"
 wordDoc = "Word Document"
 wordDocExt = "Word Document (.docx)"
 zoomLevel = "Zoom Level"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "Email → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -2985,6 +3388,9 @@ successBodyWithName = "Password removed from {{fileName}}"
 successTitle = "Password removed"
 title = "Remove password to continue"
 unlock = "Unlock & Continue"
+unlockAll = "Use for all ({{count}})"
+unlockAllPartialFail = "Wrong password for: {{names}}"
+unlockAllSuccess = "Unlocked {{count}} file(s)."
 unlockPrompt = "Unlock PDF to continue"
 
 [encryptedPdfUnlock.password]
@@ -3164,6 +3570,46 @@ totalSelected = "Total Selected"
 unsupported = "Unsupported"
 unzip = "Unzip"
 uploadError = "Failed to upload some files."
+copyCreated = "Copy saved to this device."
+copyFailed = "Could not create a copy."
+leaveShare = "Remove from my list"
+leaveShareFailed = "Could not remove the shared file."
+leaveShareSuccess = "Removed from your shared list."
+removeBoth = "Remove from both"
+removeFilePrompt = "This file is saved on this device and on your server. Where would you like to remove it from?"
+removeFileTitle = "Remove file"
+removeLocalOnly = "This device only"
+removeServerFailed = "Could not remove the file from the server."
+removeServerOnly = "Server only"
+removeServerOnlyPrompt = "This file is stored only on your server. Would you like to remove it from the server?"
+removeServerSuccess = "Removed from server."
+removeSharedPrompt = "This file is shared with you. You can remove it from this device or your shared list."
+removeSharedServerOnlyBlockedPrompt = "This file is shared with you and stored only on the server."
+removeSharedServerOnlyPrompt = "This file is shared with you and stored only on the server. Remove it from your list?"
+changesNotUploaded = "Changes not uploaded"
+cloudFile = "Cloud file"
+filterAll = "All"
+filterLocal = "Local"
+filterSharedByMe = "Shared by me"
+filterSharedWithMe = "Shared with me"
+lastSynced = "Last synced"
+localOnly = "Local only"
+makeCopy = "Make a copy"
+owner = "Owner"
+ownerUnknown = "Unknown"
+share = "Share"
+shareSelected = "Share Selected"
+sharedByYou = "Shared by you"
+sharedEditNoticeBody = "You do not have edit rights to the server version of this file. Any edits you make will be saved as a local copy."
+sharedEditNoticeConfirm = "Got it"
+sharedEditNoticeTitle = "Read-only server copy"
+sharedWithYou = "Shared with you"
+sharing = "Sharing"
+storageState = "Storage"
+synced = "Synced"
+updateOnServer = "Update on Server"
+uploadSelected = "Upload Selected"
+uploadToServer = "Upload to Server"
 
 [files]
 addFiles = "Add files"
@@ -3288,6 +3734,77 @@ title = "About Flattening PDFs"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "About Group Signing"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "All signatures are applied in the participant order you specified"
+bullet2 = "You can finalize with partial signatures if needed"
+bullet3 = "Once finalized, the session cannot be modified"
+description = "Once all participants have signed (or you choose to finalize early), you can generate the final signed PDF."
+title = "Finalization Process"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Owner (you): Creates session, configures signature defaults, finalizes document"
+bullet2 = "Participants: Create their signature, choose certificate, place on PDF"
+bullet3 = "Participants cannot modify signature visibility, reason, or location settings"
+description = "You control the signature appearance settings for all participants."
+title = "Participant Roles"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "First participant must sign before the second can access the document"
+bullet2 = "Ensures proper signing order for legal compliance"
+bullet3 = "You can reorder participants by dragging them in the list"
+description = "Participants sign documents in the order you specify. Each signer receives a notification when it is their turn."
+title = "Sequential Signing"
+
+[groupSigning.steps]
+back = "Back"
+completed = "Completed"
+current = "Current"
+stepLabel = "Step {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Continue to Review"
+invisible = "Signatures will be invisible (metadata only)"
+locationLabel = "Location:"
+preview = "Preview"
+reasonLabel = "Reason:"
+title = "Configure Signature Settings"
+visible = "Signatures will be visible on page {{page}}"
+
+[groupSigning.steps.review]
+document = "Document"
+dueDate = "Due Date (Optional)"
+dueDatePlaceholder = "Select due date..."
+invisible = "Invisible (metadata only)"
+location = "Location:"
+logo = "Logo:"
+logoHidden = "No logo"
+logoShown = "Stirling PDF logo shown"
+participants = "Participants"
+reason = "Reason:"
+send = "Send Signing Requests"
+signatureSettings = "Signature Settings"
+title = "Review Session Details"
+titleShort = "Review & Send"
+visibility = "Visibility:"
+visible = "Visible on page {{page}}"
+participantCount = "{{count}} participant(s) will sign in order"
+
+[groupSigning.steps.selectDocument]
+continue = "Continue to Participant Selection"
+noFile = "Please select a single PDF file from your active files to create a signing session."
+selectedFile = "Selected document"
+title = "Select Document"
+
+[groupSigning.steps.selectParticipants]
+continue = "Continue to Signature Settings"
+count = "{{count}} participant(s) selected"
+label = "Select participants"
+placeholder = "Choose participants to sign..."
+title = "Choose Participants"
 
 [getPdfInfo]
 downloadJson = "Download JSON"
@@ -3707,6 +4224,11 @@ desc = "Adds signature to PDF by drawing, text or image"
 tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 
+[home.timestampPdf]
+desc = "Add an RFC 3161 document timestamp to prove when your PDF existed"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
+title = "Timestamp PDF"
+
 [home.split]
 desc = "Split PDFs into multiple documents"
 tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
@@ -3815,6 +4337,8 @@ welcomeTitle = "You've been invited!"
 
 [landing]
 addFiles = "Add Files"
+heroSubtitle = "Drop in or add an existing PDF to get started."
+heroTitle = "Stirling PDF"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
@@ -3843,6 +4367,7 @@ version = "Version"
 accountCreatedSuccess = "Account created successfully! You can now sign in."
 alreadyLoggedIn = "You are already logged in to"
 alreadyLoggedIn2 = "devices. Please log out of the devices and try again."
+backToSignIn = "Back to sign in"
 cancel = "Cancel"
 changePasswordWarning = "Please change your password after logging in for the first time"
 credentialsUpdated = "Your credentials have been updated. Please sign in again."
@@ -3884,16 +4409,21 @@ or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
 passwordResetSent = "Password reset link sent to {{email}}! Check your email and follow the instructions."
+passwordUpdatedSuccess = "Your password has been updated successfully."
 pleaseEnterBoth = "Please enter both email and password"
 pleaseEnterEmail = "Please enter your email address"
 relyingPartyRegistrationNotFound = "No relying party registration found"
 rememberme = "Remember me"
+resetHelp = "Enter your email to receive a secure link to reset your password. If the link has expired, please request a new one."
+resetYourPassword = "Reset your password"
 saml2RequiresLicense = "SAML login requires an Enterprise license. Please contact the administrator to upgrade your plan."
 sending = "Sending…"
 sendMagicLink = "Send Magic Link"
+sendResetLink = "Send reset link"
 sessionExpired = "Your session has expired. Please sign in again."
 signin = "Sign in"
 signInAnonymously = "Sign Up as a Guest"
+subtitle = "Sign back in to Stirling PDF"
 signingIn = "Signing in..."
 signinTitle = "Please sign in"
 signInWith = "Sign in with"
@@ -3902,6 +4432,7 @@ ssoSignIn = "Login via Single Sign-on"
 title = "Sign in"
 toManySessions = "You have too many active sessions"
 unexpectedError = "Unexpected error: {{message}}"
+updatePassword = "Update password"
 useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 userIsDisabled = "User is deactivated, login is currently blocked with this username. Please contact the administrator."
@@ -3943,6 +4474,8 @@ title = "Markdown To PDF"
 submit = "Merge"
 tags = "merge,Page operations,Back end,server side"
 title = "Merge"
+viewerModeHint = "Merge needs 2 or more files. Head to the file editor to select them."
+goToFileEditor = "Go to file editor"
 
 [merge.error]
 failed = "An error occurred while merging the PDFs."
@@ -4211,6 +4744,15 @@ viewSwitcher = "Use these controls to select how you want to view your PDFs."
 workbench = "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs."
 wrapUp = "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "After your trial ends, you'll continue with our free tier. Add a payment method to keep Pro access."
+afterTrialWithPayment = "Your Pro subscription will start automatically when the trial ends."
+body = "You have full access to Stirling PDF Pro features during your trial. Enjoy unlimited conversions, larger file sizes, and priority processing."
+daysRemaining = "{{days}} days remaining"
+daysRemainingSingular = "{{days}} day remaining"
+title = "Your 30-Day Pro Trial"
+trialEnds = "Trial ends {{date}}"
+
 [onboarding.buttons]
 back = "Back"
 download = "Download →"
@@ -4361,16 +4903,35 @@ zoomOut = "Zoom Out"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
+disableColorFilter = "Disable Colour Filter"
 dualPageView = "Dual Page View"
+enableDarkFilter = "Enable Dark Filter"
+enableSepiaFilter = "Enable Sepia Filter"
 firstPage = "First Page"
 lastPage = "Last Page"
 nextPage = "Next Page"
-onlyPdfSupported = "The viewer only supports PDF files. This file appears to be a different format."
+onlyPdfSupported = "This file format is not supported for preview."
 previousPage = "Previous Page"
 singlePageView = "Single Page View"
 unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
+resetZoom = "Reset zoom"
+
+[viewer.nonPdf]
+fileTypeBadge = "{{type}} File"
+convertToPdf = "Convert to PDF"
+loading = "Loading..."
+emptyFile = "Empty file"
+csvStats = "{{rows}} rows · {{columns}} columns · {{size}}"
+sortedBy = "Sorted by: {{column}}"
+columnDefault = "Column {{index}}"
+htmlPreviewWarning = "HTML preview — external resources may not load · {{size}}"
+htmlPreview = "HTML preview"
+invalidJson = "Invalid JSON — showing raw content"
+textStats = "{{lines}} lines · {{size}}"
+lineNumbers = "Line numbers"
+renderMarkdown = "Render markdown"
 
 [rightRail]
 closeSelected = "Close Selected Files"
@@ -4389,6 +4950,7 @@ toggleAttachments = "Toggle Attachments"
 toggleTheme = "Toggle Theme"
 language = "Language"
 toggleAnnotations = "Toggle Annotations Visibility"
+toggleLayers = "Toggle Layers"
 search = "Search PDF"
 panMode = "Pan Mode"
 applyRedactionsFirst = "Apply redactions first"
@@ -4396,14 +4958,20 @@ rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 toggleSidebar = "Toggle Sidebar"
 toggleBookmarks = "Toggle Bookmarks"
+toggleComments = "Comments"
 print = "Print PDF"
 ruler = "Ruler / Measure"
+readAloud = "Read Aloud"
+readAloudSpeed = "Speed"
+readAloudLanguage = "Language"
+selectLanguage = "Select language"
 draw = "Draw"
 redact = "Redact"
 exitRedaction = "Exit Redaction Mode"
 save = "Save"
 downloadAll = "Download All"
 saveAll = "Save All"
+saveAs = "Save As"
 
 [textAlign]
 left = "Left"
@@ -4418,21 +4986,132 @@ title = "Extract Pages"
 
 [pageLayout]
 addBorder = "Add Borders"
+borderWidth = "Border Thickness"
+bottom = "Bottom Margin"
+cols = "Columns"
 header = "Multi Page Layout"
+innerMargin = "Inner Margin"
+left = "Left Margin"
 pagesPerSheet = "Pages per sheet:"
+right = "Right Margin"
+rows = "Rows"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
+top = "Top Margin"
+
+[pageLayout.mode]
+default = "Default"
+custom = "Custom"
+label = "Mode:"
+
+[pageLayout.arrangement]
+byColumns = "By Columns"
+byRows = "By Rows"
+label = "Page arrangement:"
 
 [pageLayout.desc]
 16 = "Place 16 pages on a single sheet (4 × 4 grid)."
 2 = "Place 2 pages side-by-side on a single sheet."
-3 = "Place 3 pages on a single sheet in a single row."
 4 = "Place 4 pages on a single sheet (2 × 2 grid)."
 9 = "Place 9 pages on a single sheet (3 × 3 grid)."
 
 [pageLayout.error]
 failed = "An error occurred while creating the multi-page layout."
+outerVerticalMarginsTooLarge = "Top/Bottom margins are too large for this page size."
+outerHorizontalMarginsTooLarge = "Left/Right margins are too large for this page size."
+innerMarginTooLarge = "Inner margin is too large for the selected layout."
+
+[pageLayout.orientation]
+landscape = "Landscape"
+portrait = "Portrait"
+label = "Orientation:"
+
+[pageLayout.readingDirection]
+ltr = "Left to Right"
+rtl = "Right to Left"
+label = "Reading Direction:"
+
+[pageLayout.tooltip.header]
+title = "Page Layout Guide"
+
+[pageLayout.tooltip.overview]
+title = "What is Page Layout?"
+text = "Fit multiple pages onto a single sheet for handouts or to save paper."
+
+[pageLayout.tooltip.mode]
+title = "Mode"
+text = "Choose how the grid is configured:"
+bullet1 = "Default: Pick a preset and the grid is calculated automatically."
+bullet2 = "Custom: Set rows and columns manually."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pages per Sheet (Default Mode)"
+text = "Choose how many pages per sheet (e.g. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rows & Columns (Custom Mode)"
+text = "Set exact grid dimensions. Total pages per sheet = rows × columns."
+
+[pageLayout.tooltip.orientation]
+title = "Orientation"
+text = "Sets the output sheet orientation:"
+bullet1 = "Portrait: Taller than wide."
+bullet2 = "Landscape: Wider than tall."
+
+[pageLayout.tooltip.arrangement]
+title = "Page Arrangement"
+text = "Controls the order pages fill the grid:"
+bullet1 = "By Rows: Fill row by row (left-to-right or right-to-left)."
+bullet2 = "By Columns: Fill top-to-bottom, column by column."
+
+[pageLayout.tooltip.readingDirection]
+title = "Reading Direction"
+text = "Controls the horizontal order of pages:"
+bullet1 = "LTR: Left to right."
+bullet2 = "RTL: Right to left."
+
+[pageLayout.tooltip.addBorder]
+title = "Add Borders"
+text = "Draws border lines around each page cell for cutting guides or visual separation."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margins and Borders"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margins"
+text = "Use top, bottom, left, and right margins to control spacing around the full sheet output."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Inner Margin"
+text = "Inner margin adds spacing between cells in the page grid to improve separation and readability."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Add Borders"
+text = "Enable borders to draw lines around each placed page. This can help visual separation or trimming."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Border Thickness"
+text = "Border thickness is only applied when borders are enabled. Higher values produce thicker lines."
+
+[pageLayout.advanced.tooltip.header]
+title = "Advanced Layout Options"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientation"
+text = "Choose the final sheet direction. Portrait works better for tall content, while landscape fits wider layouts."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Page Arrangement"
+text = "Controls whether pages fill the grid row-by-row or column-by-column."
+bullet1 = "By Rows: Fill each row first."
+bullet2 = "By Columns: Fill each column first."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Reading Direction"
+text = "Sets horizontal ordering in the grid, useful for left-to-right and right-to-left document conventions."
+bullet1 = "LTR: Left to right order."
+bullet2 = "RTL: Right to left order."
 
 [pageRemover]
 header = "PDF Page remover"
@@ -4948,7 +5627,10 @@ perMonth = "/month"
 perSeat = "/seat"
 popular = "Popular"
 selectPlan = "Select Plan"
+selectCredits = "Select Credit Amount"
 showComparison = "Compare All Features"
+purchase = "Purchase"
+totalCost = "Total Cost"
 upgrade = "Upgrade"
 withServer = "+ Server Plan"
 
@@ -5040,6 +5722,30 @@ successMessage = "Your license has been successfully activated. You can now clos
 name = "Team"
 siteLicense = "Site License"
 
+[plan.api]
+large = "5,000 Credits"
+medium = "1,000 Credits"
+small = "500 Credits"
+xsmall = "100 Credits"
+
+[plan.apiPackages]
+subtitle = "Purchase API credits for your applications"
+title = "API Credit Packages"
+
+[plan.trial]
+badge = "Trial"
+continueWithFree = "Continue with Free"
+daysRemaining = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+expired = "Your Trial Has Ended"
+expiredMessage = "Your 30-day Pro trial has expired. Subscribe to Pro to continue accessing premium features, or continue with our free tier."
+freeTierLimitations = "Free tier includes basic PDF tools with usage limits."
+message = ""
+subscribe = "Subscribe to Pro"
+subscribeToPro = "Subscribe to Pro"
+subscriptionScheduled = "Subscription scheduled - starts {{date}}"
+title = "Free Trial Active"
+
 [credits]
 enableOverageBilling = "Enable Overage Billing"
 maybeLater = "Maybe later"
@@ -5122,20 +5828,72 @@ title = "Print File"
 2 = "Enter Printer Name"
 
 [quickAccess]
+access = "Access"
+accessAddPerson = "Add another person"
+accessBack = "Back"
+accessCopyLink = "Copy link"
+accessEmail = "Email Address"
+accessEmailPlaceholder = "name@company.com"
+accessFileLabel = "File"
+accessGeneral = "General Access"
+accessInviteTitle = "Invite People"
+accessOwner = "Owner"
+accessPanel = "Document access"
+accessPeople = "People with access"
+accessRemove = "Remove"
+accessRestricted = "Restricted"
+accessRestrictedHint = "Only people with access can open"
+accessRole = "Role"
+accessRoleCommenter = "Commenter"
+accessRoleEditor = "Editor"
+accessRoleViewer = "Viewer"
+accessSelectedFile = "Selected file"
+accessSendInvite = "Send Invite"
+accessTitle = "Document Access"
+accessYou = "You"
 account = "Account"
+activeSessions = "Active Sessions"
+activeTab = "Active"
 activity = "Activity"
 adminSettings = "Admin Settings"
+allSessions = "All Sessions"
 allTools = "Tools"
 automate = "Automate"
+back = "Back"
+certSign = "Certificate Sign"
+completedSessions = "Completed Sessions"
+completedTab = "Completed"
 config = "Config"
+createNew = "Create New Request"
+createSession = "Create Signing Request"
+dueDate = "Due date (optional)"
 files = "Files"
 help = "Help"
+noActiveSessions = "No pending sign requests or active sessions"
+noCompletedSessions = "No completed sessions"
+noFile = "No file selected"
 read = "Read"
 reader = "Reader"
+refresh = "Refresh"
+requestSignatures = "Request Signatures"
+selectSingleFileToRequest = "Select a single PDF file to request signatures"
+selectedFile = "Selected file"
+selectUsers = "Select users to sign"
+selectUsersPlaceholder = "Choose participants..."
+sendingRequest = "Sending..."
 settings = "Settings"
 showMeAround = "Show me around"
 sign = "Sign"
+signatureRequests = "Signature Requests"
+signYourself = "Sign Yourself"
+newRequest = "New Request"
 tours = "Tours"
+wetSign = "Add Signature"
+filterMine = "Mine"
+filterOverdue = "Overdue"
+filterSigned = "Signed"
+filterDeclined = "Declined"
+searchDocuments = "Search documents…"
 
 [quickAccess.helpMenu]
 adminTour = "Admin Tour"
@@ -5603,6 +6361,32 @@ text = "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments
 [rotate.tooltip.header]
 title = "Rotate Settings Overview"
 
+[timestampPdf]
+completed = "PDF timestamped successfully"
+desc = "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server."
+filenamePrefix = "timestamped"
+results = "Timestamp Results"
+submit = "Apply Timestamp"
+title = "Timestamp PDF"
+
+[timestampPdf.error]
+failed = "An error occurred while timestamping the PDF."
+generic = "Timestamping failed"
+
+[timestampPdf.files]
+placeholder = "Select a PDF file in the main view to get started"
+
+[timestampPdf.options]
+note = "Only a SHA-256 hash of your document is sent to the TSA server; the PDF file itself is never sent to the TSA server."
+title = "Timestamp Server (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Pick a trusted Time Stamp Authority"
+label = "Select a TSA server"
+
+[timestampPdf.steps]
+settings = "Settings"
+
 [sanitize]
 completed = "Sanitisation completed successfully"
 desc = "Remove potentially harmful elements from PDF files."
@@ -5727,25 +6511,102 @@ placeholder = "Enter search term..."
 searching = "Searching..."
 title = "Search PDF"
 
+[selfHosted]
+
+[selfHosted.offline]
+hideTools = "Hide unavailable tools ▴"
+messageNoFallback = "Tools are unavailable until your server comes back online."
+messageWithFallback = "Some tools require a server connection."
+showTools = "View unavailable tools ▾"
+title = "Your Stirling-PDF server is unreachable"
+toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
+
 [session]
 expired = "Your session has expired. Please refresh the page and try again."
 refreshPage = "Refresh Page"
+
+[sessionManagement.tooltip]
+header = "Managing Signing Sessions"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "New participants added to the end of signing order"
+bullet2 = "Cannot add participants after session is finalized"
+bullet3 = "Each participant receives a notification when it's their turn"
+description = "You can add more participants to an active session at any time before finalization."
+title = "Adding Participants"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Full finalization</b>: All participants have signed"
+bullet2 = "<b>Partial finalization</b>: Some participants haven't signed yet"
+bullet3 = "Unsigned participants will be excluded from the final document"
+bullet4 = "Once finalized, you can load the signed PDF into active files"
+description = "Finalization combines all signatures into a single signed PDF. This action cannot be undone."
+title = "Session Finalization"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Cannot remove participants who have already signed"
+bullet2 = "Removed participants no longer receive notifications"
+bullet3 = "Signing order adjusts automatically"
+description = "Participants can be removed from sessions before they sign."
+title = "Removing Participants"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Each signature is applied sequentially to the PDF"
+bullet2 = "Later signers can see earlier signatures"
+bullet3 = "Critical for approval workflows and legal chains of custody"
+description = "The order you specify when creating the session determines who signs first."
+title = "Signature Order"
+
+[signatureSettings.tooltip]
+header = "Signature Appearance Settings"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Examples: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Not the same as page position"
+bullet3 = "May be required for certain legal jurisdictions"
+description = "Optional geographic location where the signature was applied. Stored in certificate metadata."
+title = "Signature Location"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Displayed alongside signature and text"
+bullet2 = "Supports PNG, JPG formats"
+bullet3 = "Enhances professional appearance"
+description = "Add a company logo to visible signatures for branding and authenticity."
+title = "Company Logo"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Examples: \"Approval\", \"Contract Agreement\", \"Review Complete\""
+bullet2 = "Visible in PDF signature properties"
+bullet3 = "Useful for audit trails and compliance"
+description = "Optional text explaining why the document is being signed. Stored in certificate metadata."
+title = "Signature Reason"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Visible</b>: Signature appears on PDF with custom appearance"
+bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
+bullet3 = "Invisible signatures still provide cryptographic validation"
+description = "Controls whether the signature is visible on the document or embedded invisibly."
+title = "Signature Visibility"
 
 [settings.configuration]
 advanced = "Advanced"
 database = "Database"
 endpoints = "Endpoints"
 features = "Features"
+storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 title = "Configuration"
 
 [settings.connection]
+localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
 logout = "Log Out"
 server = "Server"
+signIn = "Sign In"
 title = "Connection Mode"
 user = "Logged in as"
 
 [settings.connection.mode]
+local = "Local Only"
 saas = "Stirling Cloud"
 selfhosted = "Self-Hosted"
 
@@ -5829,9 +6690,13 @@ defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
 defaultPdfEditorSet = "Already Default"
+defaultStartupView = "Default view on launch"
+defaultStartupViewDescription = "Choose which tab is active in the left column when the app starts"
 defaultToolPickerMode = "Default tool picker mode"
 defaultToolPickerModeDescription = "Choose whether the tool picker opens in fullscreen or sidebar by default"
 description = "Configure general application preferences."
+defaultViewerZoom = "Default reader zoom"
+defaultViewerZoomDescription = "Set the default zoom level when opening PDFs in the reader"
 hideUnavailableConversions = "Hide unavailable conversions"
 hideUnavailableConversionsDescription = "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
 hideUnavailableTools = "Hide unavailable tools"
@@ -5853,6 +6718,16 @@ title = "For System Administrators"
 [settings.general.mode]
 fullscreen = "Fullscreen"
 sidebar = "Sidebar"
+
+[settings.general.startupView]
+automate = "Automate"
+read = "Reader"
+tools = "Tools"
+
+[settings.general.zoomLevel]
+auto = "Auto"
+fitPage = "Fit page"
+fitWidth = "Fit width"
 
 [settings.general.updates]
 checkForUpdates = "Check for Updates"
@@ -5943,6 +6818,18 @@ title = "Workspace"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
+
+[localMode.banner]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+title = "Running locally"
+
+[localMode.toolPicker]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+
 [setup]
 description = "Get started by choosing how you want to use Stirling PDF"
 welcome = "Welcome to Stirling PDF"
@@ -5950,6 +6837,7 @@ welcome = "Welcome to Stirling PDF"
 [setup.login]
 connectingTo = "Connecting to:"
 hideInstructions = "Hide instructions"
+skipSignIn = "Continue without signing in"
 instructions = "To enable login on your Stirling PDF server:"
 instructionsEnvVar = "Set the environment variable:"
 instructionsOrYml = "Or in settings.yml:"
@@ -5997,7 +6885,17 @@ title = "Sign in to Stirling"
 [setup.selfhosted]
 link = "or connect to a self-hosted account"
 subtitle = "Enter your server credentials"
+changeServerLocked = "Your organisation has restricted this app to a specific server"
+switchToLocal = "Use local tools instead"
 title = "Sign in to Server"
+
+[setup.selfhosted.unreachable]
+changeServer = "Connect to a different server"
+changeServerLocked = "Your organisation has restricted this app to a specific server"
+continueOffline = "Use local tools instead"
+message = "Could not reach {{url}}. Check that the server is running and accessible."
+retry = "Retry"
+title = "Cannot connect to server"
 
 [setup.server]
 subtitle = "Enter your self-hosted server URL"
@@ -6006,7 +6904,8 @@ title = "Connect to Server"
 useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
-configFetch = "Failed to fetch server configuration. Please check the URL and try again."
+configFetch = "Failed to fetch server configuration (status {{status}})"
+configFetchError = "Failed to fetch server configuration: {{error}}"
 emptyUrl = "Please enter a server URL"
 invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 testFailed = "Connection test failed"
@@ -6185,6 +7084,15 @@ image = "Image"
 saved = "Saved"
 text = "Text"
 title = "Signature Type"
+
+[signRequest]
+declined = "Sign request declined"
+fetchFailed = "Failed to load sign request"
+signed = "Document signed successfully"
+
+[signSession]
+createFailed = "Failed to create signing request"
+created = "Signing request sent"
 
 [signup]
 accountCreatedSuccessfully = "Account created successfully! You can now sign in."
@@ -6464,6 +7372,106 @@ title = "Split PDF by Chapters"
 [splitPdfByChapters]
 tags = "split,chapters,bookmarks,organize"
 
+[storageShare]
+accessed = "Accessed"
+accessDenied = "You do not have access to this shared file. Ask the owner to share it with you."
+accessFailed = "Unable to load activity."
+accessDeniedBody = "You do not have access to this file. Ask the owner to share it with you."
+accessDeniedTitle = "No access"
+accessLimitedCommenter = "Comment access is coming soon. Ask the owner for editor access if you need to download."
+accessLimitedTitle = "Limited access"
+accessLimitedViewer = "This link is view-only. Ask the owner for editor access if you need to download."
+createdAt = "Created"
+download = "Download"
+downloadFailed = "Unable to download this file."
+expiredBody = "This share link is invalid or has expired."
+expiredTitle = "Link expired"
+goToLogin = "Go to login"
+loadFailed = "Unable to open shared file."
+loading = "Loading share link..."
+loginPrompt = "Sign in to access this shared file."
+loginRequired = "Login required"
+openInApp = "Open in Stirling PDF"
+ownerLabel = "Owner"
+ownerUnknown = "Unknown"
+requiresLogin = "This shared file requires login."
+roleCommenter = "Commenter"
+roleEditor = "Editor"
+roleViewer = "Viewer"
+shareHeading = "Shared file"
+titleDefault = "Shared file"
+tryAgain = "Please try again later."
+addUser = "Add"
+commenterHint = "Commenting is coming soon."
+copied = "Link copied to clipboard"
+copy = "Copy"
+copyFailed = "Copy failed"
+description = "Create a share link for this file. Signed-in users with the link can access it."
+downloadsCount = "Downloads: {{count}}"
+emailWarningBody = "This looks like an email address. If this person is not already a Stirling PDF user, they will not be able to access the file."
+emailWarningConfirm = "Share anyway"
+emailWarningTitle = "Email address"
+errorTitle = "Share failed"
+failure = "Unable to generate a share link. Please try again."
+fileLabel = "File"
+generate = "Generate Link"
+generated = "Share link generated"
+hideActivity = "Hide activity"
+invalidUsername = "Enter a valid username or email address."
+lastAccessed = "Last accessed"
+linkAccessTitle = "Share link access"
+linkLabel = "Share link"
+linksDisabled = "Share links are disabled."
+linksDisabledBody = "Share links are disabled by your server settings."
+manage = "Manage sharing"
+manageDescription = "Create and manage links to share this file."
+manageLoadFailed = "Unable to load share links."
+manageTitle = "Manage Sharing"
+noActivity = "No activity yet."
+noLinks = "No active share links yet."
+noSharedUsers = "No users have access yet."
+removeLink = "Remove link"
+removeUser = "Remove"
+revokeFailed = "Unable to remove the share link."
+revoked = "Share link removed"
+roleLabel = "Role"
+sharingDisabled = "Sharing is disabled."
+sharingDisabledBody = "Sharing has been disabled by your server settings."
+sharedUsersTitle = "Shared users"
+title = "Share File"
+unknownUser = "Unknown user"
+userAddFailed = "Unable to share with that user."
+userAdded = "User added to shared list."
+usernameLabel = "Username or email"
+usernamePlaceholder = "Enter a username or email"
+userRemoveFailed = "Unable to remove that user."
+userRemoved = "User removed from shared list."
+viewActivity = "View activity"
+viewed = "Viewed"
+viewsCount = "Views: {{count}}"
+downloaded = "Downloaded"
+bulkDescription = "Create one link to share all selected files with signed-in users."
+bulkTitle = "Share selected files"
+copyLink = "Copy share link"
+fileCount = "{{count}} files selected"
+ownerOnly = "Only the owner can manage sharing."
+selectSingleFile = "Select a single file to manage sharing."
+
+[storageUpload]
+description = "This uploads the current file to server storage for your own access."
+errorTitle = "Upload failed"
+failure = "Upload failed. Please check your login and storage settings."
+fileLabel = "File"
+hint = "Public links and access modes are controlled by your server settings."
+success = "Uploaded to server"
+title = "Upload to Server"
+updateButton = "Update on Server"
+uploadButton = "Upload to Server"
+bulkDescription = "This uploads the selected files to your server storage."
+bulkTitle = "Upload selected files"
+fileCount = "{{count}} files selected"
+more = " +{{count}} more"
+
 [storage]
 approximateSize = "Approximate size"
 fileTooLarge = "File too large. Maximum size per file is"
@@ -6532,6 +7540,7 @@ favorites = "Favourites"
 heading = "All tools (fullscreen view)"
 noResults = "Try adjusting your search or toggle descriptions to find what you need."
 recommended = "Recommended"
+selfHostedOffline = "Requires your Stirling-PDF server (currently offline):"
 showDetails = "Show Details"
 unavailable = "Disabled by server administrator:"
 unavailableDependency = "Unavailable - required tool missing on server:"
@@ -6576,6 +7585,17 @@ pageFormatting = "Page Formatting"
 removal = "Removal"
 signing = "Signing"
 verification = "Verification"
+
+[tool]
+endpointUnavailable = "This tool is unavailable on your server."
+endpointUnavailableClickable = "Not available in this mode. Click to sign in."
+invalidParams = "Fill in the required settings."
+noFiles = "Add a file to get started."
+viewerMode = "Switch to the file editor to select multiple files."
+singleFileScope = "Only applying to: {{fileName}}"
+scopeThisFile = "this file"
+scopeFiles = "files"
+selectFilesHint = "Select files in Active Files to run this tool"
 
 [tools]
 noSearchResults = "No tools found"
@@ -6804,6 +7824,31 @@ loading = "Loading attachments..."
 empty = "No attachments in this document"
 noMatch = "No attachments match your search"
 
+[viewer.comments]
+title = "Comments"
+hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
+placeholder = "Type your comment..."
+pageLabel = "Page {{page}}"
+oneComment = "1 comment"
+nComments = "{{count}} comments"
+addCommentPlaceholder = "Add comment..."
+addLink = "Add link"
+goToLink = "Go to link"
+addComment = "Add comment"
+viewComment = "View comment"
+addReplyPlaceholder = "Add reply..."
+saveReply = "Save reply"
+send = "Send"
+moreActions = "More actions"
+typeComment = "Comment"
+typeInsertText = "Insert Text"
+typeReplaceText = "Replace Text"
+locateAnnotation = "Locate in document"
+deleteTitle = "Remove annotation from comments?"
+deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
+removeCommentOnly = "Remove comment only"
+deleteAnnotationAndComment = "Delete annotation & comment"
+
 [viewer.formBar]
 title = "Form Fields"
 unsavedBadge = "Unsaved"
@@ -6820,6 +7865,30 @@ title = "View/Edit PDF"
 
 [warning]
 tooltipTitle = "Warning"
+
+[wetSignature.tooltip]
+header = "Signature Creation Methods"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Customize pen color and thickness"
+bullet2 = "Clear and redraw until satisfied"
+bullet3 = "Works on touch devices (tablets, phones)"
+description = "Create a handwritten signature using your mouse or touchscreen. Best for personal, authentic signatures."
+title = "Draw Signature"
+
+[wetSignature.tooltip.type]
+bullet1 = "Choose from multiple fonts"
+bullet2 = "Customize text size and color"
+bullet3 = "Perfect for standardized signatures"
+description = "Generate a signature from typed text. Fast and consistent, suitable for business documents."
+title = "Type Signature"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Supports PNG, JPG, and other image formats"
+bullet2 = "Transparent backgrounds recommended for best results"
+bullet3 = "Image will be resized to fit signature area"
+description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
+title = "Upload Signature Image"
 
 [watermark]
 completed = "Watermark added"
@@ -7001,6 +8070,7 @@ activeSession = "Active session"
 addMembers = "Add Members"
 admin = "Admin"
 confirmDelete = "Are you sure you want to delete this user? This action cannot be undone."
+confirmUnlock = "Are you sure you want to unlock this user account?"
 deleteUser = "Delete User"
 deleteUserError = "Failed to delete user"
 deleteUserSuccess = "User deleted successfully"
@@ -7009,6 +8079,8 @@ disable = "Disable"
 disabled = "Disabled"
 editRole = "Edit Role"
 enable = "Enable"
+locked = "locked"
+lockedBadge = "Locked"
 loading = "Loading people..."
 loginRequired = "Enable login mode first"
 member = "Member"
@@ -7018,6 +8090,9 @@ searchMembers = "Search members..."
 status = "Status"
 team = "Team"
 title = "People"
+unlockAccount = "Unlock Account"
+unlockUserError = "Failed to unlock user account"
+unlockUserSuccess = "User account unlocked successfully"
 user = "User"
 
 [workspace.people.actions]

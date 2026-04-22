@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { useFileState, useFileActions } from '@app/contexts/FileContext';
-import { downloadFile } from '@app/services/downloadService';
+import { useEffect } from "react";
+import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { downloadFile } from "@app/services/downloadService";
 
 /**
  * Desktop-only keyboard shortcut: Ctrl/Cmd+S to save selected files
@@ -14,17 +14,19 @@ export function useSaveShortcut() {
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
       // Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac)
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
 
         // Get selected files or all files if nothing selected
         const selectedFileIds = state.ui.selectedFileIds;
-        const filesToSave = selectedFileIds.length > 0
-          ? selectors.getFiles(selectedFileIds)
-          : selectors.getFiles();
-        const stubsToSave = selectedFileIds.length > 0
-          ? selectors.getStirlingFileStubs(selectedFileIds)
-          : selectors.getStirlingFileStubs();
+        const filesToSave =
+          selectedFileIds.length > 0
+            ? selectors.getFiles(selectedFileIds)
+            : selectors.getFiles();
+        const stubsToSave =
+          selectedFileIds.length > 0
+            ? selectors.getStirlingFileStubs(selectedFileIds)
+            : selectors.getStirlingFileStubs();
 
         if (filesToSave.length === 0) {
           return;
@@ -40,14 +42,14 @@ export function useSaveShortcut() {
             const result = await downloadFile({
               data: file,
               filename: file.name,
-              localPath: stub.localFilePath
+              localPath: stub.localFilePath,
             });
 
             // Mark file as clean after successful save
             if (result.savedPath) {
               fileActions.updateStirlingFileStub(stub.id, {
                 localFilePath: stub.localFilePath ?? result.savedPath,
-                isDirty: false
+                isDirty: false,
               });
             }
           } catch (error) {
@@ -57,7 +59,7 @@ export function useSaveShortcut() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [selectors, state.ui.selectedFileIds, fileActions]);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Paper,
   Group,
@@ -12,11 +12,14 @@ import {
   NumberInput,
   TagsInput,
   Anchor,
-} from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import EditableSecretField from '@app/components/shared/EditableSecretField';
-import { Provider, ProviderField } from '@app/components/shared/config/configSections/providerDefinitions';
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import EditableSecretField from "@app/components/shared/EditableSecretField";
+import {
+  Provider,
+  ProviderField,
+} from "@app/components/shared/config/configSections/providerDefinitions";
 
 interface ProviderCardProps {
   provider: Provider;
@@ -41,7 +44,8 @@ export default function ProviderCard({
 }: ProviderCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const [localSettings, setLocalSettings] = useState<Record<string, any>>(settings);
+  const [localSettings, setLocalSettings] =
+    useState<Record<string, any>>(settings);
 
   // Keep local settings in sync with incoming settings (values loaded from settings.yml)
   // Update whenever parent settings change, whether expanded or not (important for Discard to work)
@@ -57,7 +61,8 @@ export default function ProviderCard({
       const defaultSettings: Record<string, any> = { ...settings };
       provider.fields.forEach((field) => {
         if (field.defaultValue !== undefined) {
-          defaultSettings[field.key] = defaultSettings[field.key] ?? field.defaultValue;
+          defaultSettings[field.key] =
+            defaultSettings[field.key] ?? field.defaultValue;
         }
       });
       setLocalSettings(defaultSettings);
@@ -83,15 +88,26 @@ export default function ProviderCard({
   };
 
   const renderField = (field: ProviderField) => {
-    const value = localSettings[field.key] ?? field.defaultValue ?? '';
+    const value = localSettings[field.key] ?? field.defaultValue ?? "";
 
     switch (field.type) {
-      case 'switch':
+      case "switch":
         return (
-          <div key={field.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div
+            key={field.key}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
-              <Text fw={500} size="sm">{field.label}</Text>
-              <Text size="xs" c="dimmed" mt={4}>{field.description}</Text>
+              <Text fw={500} size="sm">
+                {field.label}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {field.description}
+              </Text>
             </div>
             <Switch
               checked={value || false}
@@ -101,7 +117,7 @@ export default function ProviderCard({
           </div>
         );
 
-      case 'password':
+      case "password":
         return (
           <EditableSecretField
             key={field.key}
@@ -114,7 +130,7 @@ export default function ProviderCard({
           />
         );
 
-      case 'textarea':
+      case "textarea":
         return (
           <Textarea
             key={field.key}
@@ -127,7 +143,7 @@ export default function ProviderCard({
           />
         );
 
-      case 'number':
+      case "number":
         return (
           <NumberInput
             key={field.key}
@@ -141,8 +157,10 @@ export default function ProviderCard({
           />
         );
 
-      case 'tags': {
-        const tagValue = Array.isArray(value) ? value.map((val) => `${val}`) : [];
+      case "tags": {
+        const tagValue = Array.isArray(value)
+          ? value.map((val) => `${val}`)
+          : [];
 
         return (
           <TagsInput
@@ -174,12 +192,12 @@ export default function ProviderCard({
 
   const renderProviderIcon = () => {
     // If icon starts with '/', it's a path to an SVG file
-    if (provider.icon.startsWith('/')) {
+    if (provider.icon.startsWith("/")) {
       return (
         <img
           src={provider.icon}
           alt={provider.name}
-          style={{ width: '1.5rem', height: '1.5rem' }}
+          style={{ width: "1.5rem", height: "1.5rem" }}
         />
       );
     }
@@ -195,8 +213,12 @@ export default function ProviderCard({
           <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
             {renderProviderIcon()}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={600} size="sm">{provider.name}</Text>
-              <Text size="xs" c="dimmed" truncate>{provider.scope}</Text>
+              <Text fw={600} size="sm">
+                {provider.name}
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                {provider.scope}
+              </Text>
             </div>
           </Group>
 
@@ -204,27 +226,30 @@ export default function ProviderCard({
             <Button
               variant={isConfigured ? "subtle" : "filled"}
               size="xs"
-              onClick={isConfigured ? () => setExpanded(!expanded) : handleConnectToggle}
+              onClick={
+                isConfigured
+                  ? () => setExpanded(!expanded)
+                  : handleConnectToggle
+              }
               rightSection={
                 expanded ? (
-                  <LocalIcon
-                    icon="close-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                ) : (isConfigured ? (
+                  <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+                ) : isConfigured ? (
                   <LocalIcon
                     icon="expand-more-rounded"
                     width="1rem"
                     height="1rem"
                   />
-                ) : undefined)
+                ) : undefined
               }
             >
               {isConfigured
-                ? (expanded ? t('admin.close', 'Close') : t('admin.expand', 'Expand'))
-                : (expanded ? t('admin.close', 'Close') : t('admin.settings.connections.connect', 'Connect'))
-              }
+                ? expanded
+                  ? t("admin.close", "Close")
+                  : t("admin.expand", "Expand")
+                : expanded
+                  ? t("admin.close", "Close")
+                  : t("admin.settings.connections.connect", "Connect")}
             </Button>
           </Group>
         </Group>
@@ -240,7 +265,11 @@ export default function ProviderCard({
                 size="xs"
                 c="blue"
               >
-                {t('admin.settings.connections.documentation', 'View documentation')} ↗
+                {t(
+                  "admin.settings.connections.documentation",
+                  "View documentation",
+                )}{" "}
+                ↗
               </Anchor>
             )}
 
@@ -256,12 +285,12 @@ export default function ProviderCard({
                     onClick={onDisconnect}
                     disabled={disabled}
                   >
-                    {t('admin.settings.connections.disconnect', 'Disconnect')}
+                    {t("admin.settings.connections.disconnect", "Disconnect")}
                   </Button>
                 )}
                 {onSave && (
                   <Button size="sm" onClick={handleSave} disabled={disabled}>
-                    {t('admin.settings.save', 'Save Changes')}
+                    {t("admin.settings.save", "Save Changes")}
                   </Button>
                 )}
               </Group>

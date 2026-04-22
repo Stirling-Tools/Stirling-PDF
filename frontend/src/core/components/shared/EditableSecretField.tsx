@@ -1,7 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { PasswordInput, Group, ActionIcon, Tooltip, TextInput } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import LocalIcon from '@app/components/shared/LocalIcon';
+import { useState, useRef, useEffect } from "react";
+import {
+  PasswordInput,
+  Group,
+  ActionIcon,
+  Tooltip,
+  TextInput,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface EditableSecretFieldProps {
   label?: string;
@@ -26,16 +32,16 @@ export default function EditableSecretField({
   description,
   value,
   onChange,
-  placeholder = 'Enter value',
+  placeholder = "Enter value",
   disabled = false,
   error,
 }: EditableSecretFieldProps) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState('');
+  const [tempValue, setTempValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isMasked = value === '********';
+  const isMasked = value === "********";
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -44,38 +50,50 @@ export default function EditableSecretField({
   }, [isEditing]);
 
   const handleEdit = () => {
-    setTempValue('');
+    setTempValue("");
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    setTempValue('');
+    setTempValue("");
     setIsEditing(false);
   };
 
   const handleSave = () => {
-    if (tempValue.trim() !== '') {
+    if (tempValue.trim() !== "") {
       onChange(tempValue);
     }
-    setTempValue('');
+    setTempValue("");
     setIsEditing(false);
   };
 
   return (
     <div>
-      {label && <label style={{ display: 'block', marginBottom: 4, fontWeight: 500, fontSize: '0.875rem' }}>{label}</label>}
-      {description && <p style={{ margin: '4px 0 12px 0', fontSize: '0.75rem', color: '#666' }}>{description}</p>}
+      {label && (
+        <label
+          style={{
+            display: "block",
+            marginBottom: 4,
+            fontWeight: 500,
+            fontSize: "0.875rem",
+          }}
+        >
+          {label}
+        </label>
+      )}
+      {description && (
+        <p
+          style={{ margin: "4px 0 12px 0", fontSize: "0.75rem", color: "#666" }}
+        >
+          {description}
+        </p>
+      )}
 
       {isMasked && !isEditing ? (
         // Masked value from backend: show display + Edit button
         <Group gap="xs" align="flex-end">
-          <TextInput
-            value="••••••••"
-            disabled
-            style={{ flex: 1 }}
-            readOnly
-          />
-          <Tooltip label={t('editSecret')} withArrow>
+          <TextInput value="••••••••" disabled style={{ flex: 1 }} readOnly />
+          <Tooltip label={t("editSecret")} withArrow>
             <ActionIcon
               variant="light"
               onClick={handleEdit}
@@ -99,7 +117,7 @@ export default function EditableSecretField({
           autoComplete="new-password"
           onBlur={handleSave}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') handleCancel();
+            if (e.key === "Escape") handleCancel();
           }}
         />
       ) : (

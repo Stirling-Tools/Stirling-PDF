@@ -8,6 +8,7 @@ black = "Preto"
 blue = "Azul"
 bored = "Entediado? Clique aqui!"
 cancel = "Cancelar"
+confirm = "Confirmar"
 changedCredsMessage = "Credenciais alteradas!"
 chooseFile = "Escolher arquivo"
 close = "Fechar"
@@ -142,6 +143,11 @@ welcome = "Bem-vindo"
 white = "Branco"
 WorkInProgess = "Trabalho em progresso, talvez não funcione ou apresente erros, Por favor, reporte qualquer problema!"
 yes = "Sim"
+insufficientCredits = "Créditos insuficientes. Necessário: {{requiredCredits}}, Disponível: {{currentBalance}}, Falta: {{shortfall}}"
+loadingCredits = "Verificando créditos..."
+loadingProStatus = "Verificando status da assinatura..."
+noticeTopUpOrPlan = "Créditos insuficientes; recarregue ou atualize para um plano"
+accessInvite = "Convidar"
 
 [account]
 accountSettings = "Configurações da Conta"
@@ -1423,6 +1429,34 @@ title = "Processamento"
 description = "Tempo máximo de espera por um trabalho de processamento antes de informar um erro."
 label = "Tempo limite de processamento (segundos)"
 
+[admin.settings.storage]
+description = "Controla as opções de armazenamento e compartilhamento do servidor."
+title = "Armazenamento e Compartilhamento de Arquivos"
+
+[admin.settings.storage.enabled]
+description = "Permitir que os usuários armazenem arquivos no servidor."
+label = "Ativar armazenamento de arquivos no servidor"
+
+[admin.settings.storage.sharing.email]
+description = "Permitir compartilhamento com endereços de e-mail."
+label = "Ativar compartilhamento por e-mail"
+mailLink = "Configurar e-mail"
+mailNote = "Requer configuração de e-mail. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Permitir que os usuários compartilhem arquivos armazenados."
+label = "Ativar compartilhamento"
+
+[admin.settings.storage.sharing.links]
+description = "Permitir compartilhamento via links autenticados."
+frontendUrlLink = "Configurar nas configurações do sistema"
+frontendUrlNote = "Requer uma URL de Frontend. "
+label = "Ativar links de compartilhamento"
+
+[admin.settings.storage.signing.enabled]
+description = "Permitir que os usuários criem sessões de assinatura de documentos com vários participantes. Requer que o armazenamento de arquivos no servidor esteja ativado."
+label = "Ativar assinatura em grupo (Alpha)"
+
 [admin.settings.unsavedChanges]
 cancel = "Continuar editando"
 discard = "Descartar alterações"
@@ -1513,6 +1547,7 @@ editStampHint = "Para alterar a imagem, exclua este carimbo e adicione um novo."
 editSwitchToSelect = "Mude para Selecionar e Editar para editar esta anotação."
 editText = "Editar caixa de texto"
 editTextMarkup = "Editar marcação de texto"
+annotationStyle = "Estilo de anotação"
 ellipse = "Elipse"
 exit = "Sair do modo de anotação"
 fillColor = "Cor de preenchimento"
@@ -1523,13 +1558,19 @@ highlight = "Realçar"
 imagePreview = "Prévia"
 inkHighlighter = "Marca-texto à mão livre"
 line = "Linha"
+lineArrow = "Seta"
 noBackground = "Sem fundo"
 note = "Nota"
+comment = "Comentário"
+comments = "Comentários"
+insertText = "Inserir texto"
+replaceText = "Substituir texto"
 noteIcon = "Ícone da nota"
 notesStamps = "Notas e carimbos"
 opacity = "Opacidade"
 pen = "Caneta"
 polygon = "Polígono"
+polyline = "Polilinha"
 properties = "Propriedades"
 rectangle = "Retângulo"
 redo = "Refazer"
@@ -2048,7 +2089,19 @@ numbers = "Números/intervalos: 5, 10-20"
 progressions = "Progressões: 3n, 4n+1"
 
 [certSign]
+allSigned = "Todos os participantes assinaram. Pronto para finalizar."
+awaitingSignatures = "Aguardando assinaturas"
+signatureProgress = "{{signedCount}}/{{totalCount}} assinaturas"
 chooseCertificate = "Escolher arquivo de certificado"
+declined = "Recusado"
+fetchFailed = "Falha ao carregar dados de assinatura"
+finalized = "Finalizado"
+notified = "Pendente"
+partialNote = "Você pode finalizar antes com as assinaturas atuais. Participantes que não assinaram serão excluídos."
+pending = "Pendente"
+readyToFinalize = "Pronto para finalizar"
+signed = "Assinado"
+viewed = "Visualizado"
 chooseJksFile = "Escolher arquivo JKS"
 chooseP12File = "Escolher arquivo PKCS12"
 choosePfxFile = "Escolher arquivo PFX"
@@ -2071,6 +2124,7 @@ title = "Assinatura com Certificado"
 invisible = "Invisível"
 stepTitle = "Aparência da assinatura"
 visible = "Visível"
+visibility = "Visibilidade"
 
 [certSign.appearance.options]
 title = "Detalhes da assinatura"
@@ -2176,6 +2230,252 @@ bullet3 = "Verifica se o documento foi modificado após a assinatura"
 bullet4 = "Pode usar certificados personalizados para verificação"
 text = "Ao verificar as assinaturas, a ferramenta informa se são válidas, quem assinou o documento, quando foi assinado e se o documento foi alterado desde a assinatura."
 title = "Verificando assinaturas"
+
+[certSign.collab.finalize]
+button = "Finalizar e carregar PDF assinado"
+early = "Finalizar com as assinaturas atuais"
+
+[certSign.collab.sessionDetail]
+addButton = "Adicionar participantes"
+addParticipants = "Adicionar participantes"
+addParticipantsError = "Falha ao adicionar participantes"
+backToList = "Voltar para sessões"
+deleteConfirm = "Tem certeza? Isso não pode ser desfeito."
+deleteError = "Falha ao excluir sessão"
+deleted = "Sessão excluída"
+deleteSession = "Excluir sessão"
+dueDate = "Data de vencimento"
+finalizeError = "Falha ao finalizar sessão"
+loadPdfError = "Falha ao carregar o PDF assinado"
+loadSignedPdf = "Carregar PDF assinado em arquivos ativos"
+messageLabel = "Mensagem"
+noAdditionalInfo = "Sem informações adicionais"
+owner = "Proprietário"
+participantRemoved = "Participante removido"
+participants = "Participantes"
+participantsAdded = "Participantes adicionados com sucesso"
+removeParticipant = "Remover"
+removeParticipantError = "Falha ao remover participante"
+selectUsers = "Selecionar usuários..."
+sessionInfo = "Informações da sessão"
+workbenchTitle = "Gerenciamento da sessão"
+
+[certSign.collab.signRequest]
+addedToFiles = "Documento adicionado aos arquivos ativos"
+addSignature = "Adicionar sua assinatura"
+addToFiles = "Adicionar aos arquivos ativos"
+advancedSettings = "Configurações avançadas"
+backToList = "Voltar para solicitações de assinatura"
+certificateChoice = "Selecione um certificado para assinar"
+changeSignature = "Alterar assinatura"
+clearSignature = "Limpar assinatura"
+completeAndSign = "Concluir e assinar"
+createNewSignature = "Criar nova assinatura"
+declineButton = "Recusar"
+decline = "Recusar solicitação"
+deleteSelected = "Excluir assinatura selecionada"
+drawSignature = "Desenhe sua assinatura abaixo"
+dueDate = "Data de vencimento"
+fileTooLarge = "O tamanho do arquivo deve ser menor que 5MB"
+fontFamily = "Família da fonte"
+fontSize = "Tamanho da fonte: {{size}}px"
+fontSizePlaceholder = "Tamanho"
+from = "De"
+invalidCertFile = "Selecione um arquivo de certificado P12 ou PFX"
+invalidFileType = "Selecione um arquivo de imagem"
+location = "Localização (opcional)"
+locationPlaceholder = "De onde você está assinando?"
+message = "Mensagem"
+noCertificate = "Selecione um arquivo de certificado"
+noSignatures = "Coloque ao menos uma assinatura no PDF"
+p12File = "Arquivo de certificado P12/PFX"
+password = "Senha do certificado"
+passwordPlaceholder = "Digite a senha..."
+penColor = "Cor da caneta"
+penSize = "Tamanho da caneta: {{size}}px"
+placementActive = "Clique no PDF para posicionar"
+placeSignatureButton = "Colocar assinatura no PDF"
+reason = "Motivo (opcional)"
+reasonPlaceholder = "Por que você está assinando?"
+removeImage = "Remover imagem"
+removeCertFile = "Remover arquivo"
+savedSignatures = "Assinaturas salvas"
+selectFile = "Selecionar arquivo de imagem"
+selectSignatureTitle = "Selecionar ou criar assinatura"
+signButton = "Assinar documento"
+signatureInfo = "Essas configurações são definidas pelo proprietário do documento"
+signaturePlaced = "Assinatura colocada na página"
+signatureSettings = "Configurações de assinatura"
+signatureText = "Texto da assinatura"
+signatureTextPlaceholder = "Digite seu nome..."
+signatureTypeLabel = "Tipo de assinatura"
+signingTitle = "Assinatura"
+textColor = "Cor do texto"
+typeSignature = "Digite seu nome para criar uma assinatura"
+uploadCert = "Certificado personalizado"
+uploadCertDesc = "Use seu próprio certificado P12/PFX"
+uploadSignature = "Enviar imagem da sua assinatura"
+usePersonalCert = "Certificado pessoal"
+usePersonalCertDesc = "Gerado automaticamente para sua conta"
+useServerCert = "Certificado da organização"
+useServerCertDesc = "Certificado compartilhado da organização"
+workbenchTitle = "Solicitação de assinatura"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Escolher cor do traço"
+continue = "Continuar"
+
+[certSign.collab.signRequest.certModal]
+description = "Você colocou {{count}} assinatura(s). Escolha seu certificado para concluir a assinatura."
+sign = "Assinar documento"
+certValidating = "Validando certificado..."
+certValidUntil = "Certificado válido até {{date}}"
+certInvalid = "Certificado inválido: {{error}}"
+certInvalidFallback = "Certificado inválido"
+certNetworkError = "Não foi possível validar o certificado"
+title = "Configurar certificado"
+
+[certSign.collab.signRequest.image]
+hint = "Envie uma imagem PNG ou JPG da sua assinatura"
+
+[certSign.collab.signRequest.mode]
+move = "Mover assinatura"
+place = "Colocar assinatura"
+title = "Modo de assinar ou mover"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Desenhar"
+image = "Enviar"
+text = "Digitar"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Clique no PDF para posicionar sua assinatura"
+title = "Colocar assinatura"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Assinatura selecionada"
+missing = "Sem prévia"
+textFallback = "Assinatura"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Assinatura desenhada"
+defaultImageLabel = "Assinatura enviada"
+defaultLabel = "Assinatura"
+defaultTextLabel = "Assinatura digitada"
+delete = "Excluir assinatura"
+none = "Nenhuma assinatura salva"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Desenhar"
+type = "Digitar"
+upload = "Enviar"
+
+[certSign.collab.signRequest.steps]
+back = "Voltar"
+cancelPlacement = "Cancelar posicionamento"
+certificate = "Certificado"
+clickMultipleTimes = "Clique várias vezes no PDF para posicionar assinaturas. Arraste qualquer assinatura para mover ou redimensionar."
+clickToPlace = "Clique no PDF onde você deseja que sua assinatura apareça."
+continue = "Continuar para seleção de certificado"
+continueToPlacement = "Continuar para posicionamento"
+continueToReview = "Continuar para revisão"
+createSignature = "Criar assinatura"
+invisible = "Invisível"
+location = "Localização:"
+multipleSignatures = "{{count}} assinaturas serão aplicadas ao PDF"
+oneSignature = "1 assinatura será aplicada ao PDF"
+placeOnPdf = "Colocar no PDF"
+reason = "Motivo:"
+reviewTitle = "Revisar antes de assinar"
+signaturePlaced = "Assinatura colocada na página {{page}}. Você pode ajustar a posição clicando novamente ou continuar para a revisão."
+visible = "Visível"
+visibility = "Visibilidade:"
+yourSignatures = "Suas assinaturas ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Cor"
+fontLabel = "Fonte"
+fontSizeLabel = "Tamanho"
+fontSizePlaceholder = "16"
+label = "Texto da assinatura"
+modalHint = "Digite seu nome e clique em Continuar para posicioná-lo no PDF."
+placeholder = "Digite seu nome..."
+
+[certSign.collab.participant]
+certValidating = "Validando certificado..."
+certValid = "✓ Certificado válido"
+certValidUntil = " até {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Certificado inválido"
+certNetworkError = "Não foi possível validar o certificado"
+
+[certSign.collab.addParticipants]
+add = "Adicionar {{count}} participante(s)"
+back = "Voltar"
+configureSignatures = "Configurar as configurações de assinatura"
+continue = "Continuar para configurações de assinatura"
+reasonHelp = "Predefina um motivo de assinatura para estes participantes (opcional; eles podem alterar ao assinar)"
+reasonPlaceholder = "ex.: Aprovação, Revisão..."
+selectUsers = "Selecionar usuários"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Incluir página de resumo de assinaturas"
+includeSummaryPageHelp = "Uma página de resumo será adicionada ao final com todos os metadados de assinatura. As caixas de assinatura do certificado digital nas páginas individuais serão suprimidas (assinaturas manuscritas não são afetadas)."
+
+[certSign.collab.sessionList]
+active = "Ativa"
+finalized = "Finalizada"
+
+[certSign.collab.signatureSettings]
+description = "Configurar como as assinaturas aparecerão para todos os participantes"
+title = "Aparência da assinatura"
+
+[certSign.collab.userSelector]
+inviteUsers = "Adicionar usuários"
+loadError = "Falha ao carregar usuários"
+noTeam = "Sem equipe"
+noUsers = "Nenhum outro usuário encontrado."
+placeholder = "Selecionar usuários..."
+
+[certSign.mobile]
+panelActions = "Ações"
+panelDocument = "Documento"
+panelPeople = "Pessoas"
+
+[certSign.sessions]
+deleted = "Sessão excluída"
+fetchFailed = "Falha ao carregar detalhes da sessão"
+finalized = "Sessão finalizada"
+loaded = "PDF assinado carregado"
+pdfNotReady = "PDF não está pronto"
+pdfNotReadyDesc = "O PDF assinado está sendo gerado. Tente novamente em instantes."
+
+[certificateChoice.tooltip]
+header = "Tipos de certificado"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Gerenciado pelos administradores do sistema"
+bullet2 = "Compartilhado entre usuários autorizados"
+bullet3 = "Representa a identidade da empresa, não do indivíduo"
+bullet4 = "Melhor para: Documentos oficiais, assinaturas de equipe"
+description = "Um certificado compartilhado fornecido pela sua organização. Usado para autoridade de assinatura em nível da empresa."
+title = "Certificado da organização"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Gerado automaticamente no primeiro uso"
+bullet2 = "Vinculado à sua conta de usuário"
+bullet3 = "Não pode ser compartilhado com outros usuários"
+bullet4 = "Melhor para: Documentos pessoais, responsabilidade individual"
+description = "Um certificado gerado automaticamente, exclusivo para sua conta de usuário. Adequado para assinaturas individuais."
+title = "Certificado pessoal"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Requer arquivo P12/PFX e senha"
+bullet2 = "Pode ser emitido por Autoridades Certificadoras externas"
+bullet3 = "Maior nível de confiança para documentos legais"
+bullet4 = "Melhor para: Contratos legalmente vinculantes, validação externa"
+description = "Use seu próprio certificado PKCS#12. Fornece controle total sobre as propriedades do certificado."
+title = "Enviar P12 personalizado"
 
 [changeCreds]
 changePassword = "Você está usando as credenciais padrões. Por favor, insira uma nova senha"
@@ -2574,10 +2874,48 @@ title = "Ajuste de qualidade"
 [compressPdfs]
 tags = "compactar,pequeno,mínimo"
 
+[config]
+plan = "Plano"
+
 [config.account.overview]
+confirmDelete = "Excluir minha conta"
+deleteAccount = "Excluir conta"
+deleteAccountTitle = "Excluir conta"
+deleteFailed = "Falha ao excluir a conta."
+deleteFailedTitle = "Não foi possível excluir a conta"
+deleteWarning = "Esta ação é permanente e não pode ser desfeita. Todos os seus dados serão excluídos."
+enterEmailConfirm = "Para confirmar a exclusão, digite seu endereço de e-mail ({{email}}) abaixo:"
 guestDescription = "Você entrou como convidado. Considere atualizar sua conta acima."
+label = "Visão geral"
 manageAccountPreferences = "Gerencie as preferências da sua conta"
+signedInAs = "Conectado como"
 title = "Configurações da conta"
+
+[config.account.profilePicture]
+description = "Envie uma imagem para personalizar sua conta."
+help = "PNG, JPG ou WebP de até 2 MB."
+remove = "Remover"
+sizeError = "Selecione uma imagem menor que 2 MB."
+switchedToCustom = "Alterado para imagem personalizada. Agora você pode enviar a sua."
+title = "Foto do perfil"
+upload = "Enviar"
+useCustom = "Usar imagem personalizada"
+usingProvider = "Usando a foto do perfil do {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Falha ao cortar a imagem. Tente novamente."
+invalidImage = "Arquivo de imagem inválido. Selecione um arquivo PNG, JPG ou WebP válido."
+processing = "Processando corte..."
+save = "Salvar imagem recortada"
+sizeErrorAfterCrop = "A imagem recortada é muito grande. Reduza o zoom ou recorte uma área menor."
+title = "Recortar foto do perfil"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Alterar senha"
+description = "Gerencie sua senha e as configurações de segurança."
+title = "Senhas e segurança"
+update = "Atualizar senha"
 
 [config.account.upgrade]
 description = "Vincule sua conta para preservar seu histórico e acessar mais recursos!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Atualizar conta"
 [config.apiKeys]
 chartAriaLabel = "Uso de créditos: incluídos {{includedUsed}} de {{includedTotal}}, comprados {{purchasedUsed}} de {{purchasedTotal}}"
 copyKeyAriaLabel = "Copiar chave de API"
+creditsRemaining = "Créditos restantes"
 description = "Sua chave de API para acessar a suíte de ferramentas de PDF do Stirling. Copie-a para seu projeto ou atualize para gerar uma nova."
 docsDescription = "Saiba mais sobre a integração com o Stirling PDF:"
 docsLink = "Documentação da API"
@@ -2643,6 +2982,14 @@ basic = "Configuração básica"
 integration = "Configuração de integração"
 security = "Configuração de segurança"
 system = "Configuração do sistema"
+
+[connectionMode.status]
+localOffline = "Modo offline em execução"
+localOnline = "Modo offline em execução"
+saas = "Conectado ao Stirling Cloud"
+selfhostedChecking = "Conectado ao servidor auto-hospedado (verificando...)"
+selfhostedOffline = "Servidor auto-hospedado inacessível"
+selfhostedOnline = "Conectado ao servidor auto-hospedado"
 
 [convert]
 autoRotate = "Rotação automática"
@@ -2728,6 +3075,15 @@ webOptions = "Opções de Web para PDF"
 wordDoc = "Documento do Word"
 wordDocExt = "Documento do Word (.docx)"
 zoomLevel = "Nível de zoom"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-mail → PDF"
+fileToPdf = "Office/Documento → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opções de eBook para PDF"
@@ -3175,6 +3531,46 @@ totalSelected = "Total selecionado"
 unsupported = "Não suportado"
 unzip = "Descompactar"
 uploadError = "Falha ao fazer upload de alguns arquivos."
+copyCreated = "Cópia salva neste dispositivo."
+copyFailed = "Não foi possível criar uma cópia."
+leaveShare = "Remover da minha lista"
+leaveShareFailed = "Não foi possível remover o arquivo compartilhado."
+leaveShareSuccess = "Removido da sua lista de compartilhados."
+removeBoth = "Remover de ambos"
+removeFilePrompt = "Este arquivo está salvo neste dispositivo e no seu servidor. De onde você deseja removê-lo?"
+removeFileTitle = "Remover arquivo"
+removeLocalOnly = "Apenas neste dispositivo"
+removeServerFailed = "Não foi possível remover o arquivo do servidor."
+removeServerOnly = "Apenas no servidor"
+removeServerOnlyPrompt = "Este arquivo está armazenado apenas no seu servidor. Deseja removê-lo do servidor?"
+removeServerSuccess = "Removido do servidor."
+removeSharedPrompt = "Este arquivo foi compartilhado com você. Você pode removê-lo deste dispositivo ou da sua lista de compartilhados."
+removeSharedServerOnlyBlockedPrompt = "Este arquivo foi compartilhado com você e está armazenado apenas no servidor."
+removeSharedServerOnlyPrompt = "Este arquivo foi compartilhado com você e está armazenado apenas no servidor. Removê-lo da sua lista?"
+changesNotUploaded = "Alterações não enviadas"
+cloudFile = "Arquivo na nuvem"
+filterAll = "Todos"
+filterLocal = "Local"
+filterSharedByMe = "Compartilhados por mim"
+filterSharedWithMe = "Compartilhados comigo"
+lastSynced = "Última sincronização"
+localOnly = "Apenas local"
+makeCopy = "Fazer uma cópia"
+owner = "Proprietário"
+ownerUnknown = "Desconhecido"
+share = "Compartilhar"
+shareSelected = "Compartilhar selecionados"
+sharedByYou = "Compartilhado por você"
+sharedEditNoticeBody = "Você não tem direitos de edição na versão do servidor deste arquivo. Quaisquer edições serão salvas como uma cópia local."
+sharedEditNoticeConfirm = "Entendi"
+sharedEditNoticeTitle = "Cópia somente leitura no servidor"
+sharedWithYou = "Compartilhado com você"
+sharing = "Compartilhamento"
+storageState = "Armazenamento"
+synced = "Sincronizado"
+updateOnServer = "Atualizar no servidor"
+uploadSelected = "Enviar selecionados"
+uploadToServer = "Enviar para o servidor"
 
 [files]
 addFiles = "Adicionar arquivos"
@@ -3299,6 +3695,77 @@ title = "Sobre o achatamento de PDFs"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "Sobre assinatura em grupo"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Todas as assinaturas são aplicadas na ordem de participantes que você especificou"
+bullet2 = "Você pode finalizar com assinaturas parciais, se necessário"
+bullet3 = "Depois de finalizada, a sessão não pode ser modificada"
+description = "Quando todos os participantes tiverem assinado (ou você optar por finalizar antes), você pode gerar o PDF final assinado."
+title = "Processo de finalização"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Proprietário (você): Cria a sessão, configura padrões de assinatura, finaliza o documento"
+bullet2 = "Participantes: Criam sua assinatura, escolhem o certificado, posicionam no PDF"
+bullet3 = "Participantes não podem modificar as configurações de visibilidade, motivo ou localização da assinatura"
+description = "Você controla as configurações de aparência da assinatura para todos os participantes."
+title = "Papéis dos participantes"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "O primeiro participante deve assinar antes que o segundo possa acessar o documento"
+bullet2 = "Garante a ordem de assinatura adequada para conformidade legal"
+bullet3 = "Você pode reordenar os participantes arrastando-os na lista"
+description = "Os participantes assinam os documentos na ordem que você especificar. Cada assinante recebe uma notificação quando é sua vez."
+title = "Assinatura sequencial"
+
+[groupSigning.steps]
+back = "Voltar"
+completed = "Concluído"
+current = "Atual"
+stepLabel = "Etapa {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Continuar para revisão"
+invisible = "As assinaturas serão invisíveis (apenas metadados)"
+locationLabel = "Localização:"
+preview = "Prévia"
+reasonLabel = "Motivo:"
+title = "Configurar configurações de assinatura"
+visible = "As assinaturas serão visíveis na página {{page}}"
+
+[groupSigning.steps.review]
+document = "Documento"
+dueDate = "Data de vencimento (opcional)"
+dueDatePlaceholder = "Selecione a data de vencimento..."
+invisible = "Invisível (apenas metadados)"
+location = "Localização:"
+logo = "Logotipo:"
+logoHidden = "Sem logotipo"
+logoShown = "Logotipo da Stirling PDF exibido"
+participants = "Participantes"
+reason = "Motivo:"
+send = "Enviar solicitações de assinatura"
+signatureSettings = "Configurações de assinatura"
+title = "Revisar detalhes da sessão"
+titleShort = "Revisar e enviar"
+visibility = "Visibilidade:"
+visible = "Visível na página {{page}}"
+participantCount = "{{count}} participante(s) assinará(ão) em ordem"
+
+[groupSigning.steps.selectDocument]
+continue = "Continuar para seleção de participantes"
+noFile = "Selecione um único arquivo PDF dos seus arquivos ativos para criar uma sessão de assinatura."
+selectedFile = "Documento selecionado"
+title = "Selecionar documento"
+
+[groupSigning.steps.selectParticipants]
+continue = "Continuar para configurações de assinatura"
+count = "{{count}} participante(s) selecionado(s)"
+label = "Selecionar participantes"
+placeholder = "Escolha os participantes para assinar..."
+title = "Escolher participantes"
 
 [getPdfInfo]
 downloadJson = "Baixar JSON"
@@ -3718,6 +4185,11 @@ desc = "Adicionar assinatura ao PDF por desenho, texto ou imagem."
 tags = "assinatura,autógrafo"
 title = "Assinar"
 
+[home.timestampPdf]
+desc = "Adicione um carimbo de data e hora RFC 3161 ao documento para comprovar quando seu PDF existiu"
+tags = "carimbo de data e hora,RFC 3161,TSA,autoridade de carimbo do tempo,carimbo de data e hora do documento,prova de existência,token de carimbo de data e hora,carimbo de data e hora confiável,assinar carimbo de data e hora,notarizar"
+title = "Carimbo de data e hora no PDF"
+
 [home.split]
 desc = "Dividir PDFs em vários documentos/arquivos."
 tags = "dividir,separar,quebrar"
@@ -3854,6 +4326,7 @@ version = "Versão"
 accountCreatedSuccess = "Conta criada com sucesso! Você já pode entrar."
 alreadyLoggedIn = "Você já está conectado em"
 alreadyLoggedIn2 = "aparelhos. Por favor saia dos aparelhos e tente novamente."
+backToSignIn = "Voltar para o login"
 cancel = "Cancelar"
 changePasswordWarning = "Altere sua senha após fazer login pela primeira vez"
 credentialsUpdated = "Suas credenciais foram atualizadas. Faça login novamente."
@@ -3895,16 +4368,21 @@ or = "Ou"
 password = "Senha"
 passwordChangedSuccess = "Senha alterada com sucesso! Faça login com sua nova senha."
 passwordResetSent = "Link de redefinição de senha enviado para {{email}}! Verifique seu e-mail e siga as instruções."
+passwordUpdatedSuccess = "Sua senha foi atualizada com sucesso."
 pleaseEnterBoth = "Insira e-mail e senha"
 pleaseEnterEmail = "Insira seu endereço de e-mail"
 relyingPartyRegistrationNotFound = "Nenhum registro de parte confiável (RP) encontrado"
 rememberme = "Lembrar de mim"
+resetHelp = "Digite seu e-mail para receber um link seguro para redefinir sua senha. Se o link expirou, solicite um novo."
+resetYourPassword = "Redefinir sua senha"
 saml2RequiresLicense = "O login via SAML requer uma licença paga (Server ou Enterprise). Entre em contato com o administrador para atualizar seu plano."
 sending = "Enviando…"
 sendMagicLink = "Enviar link mágico"
+sendResetLink = "Enviar link de redefinição"
 sessionExpired = "Sua sessão expirou. Faça login novamente."
 signin = "Iniciar sessão"
 signInAnonymously = "Cadastrar-se como convidado"
+subtitle = "Entre novamente no Stirling PDF"
 signingIn = "Fazendo login..."
 signinTitle = "Por favor, inicie a sessão"
 signInWith = "Entrar com"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Iniciar sessão através de login único (SSO)"
 title = "Iniciar sessão"
 toManySessions = "Você tem muitas sessões ativas"
 unexpectedError = "Erro inesperado: {{message}}"
+updatePassword = "Atualizar senha"
 useEmailInstead = "Login com e-mail"
 useMagicLink = "Usar link mágico"
 userIsDisabled = "O usuário está desativado, o login está atualmente bloqueado com este nome de usuário. Entre em contato com o administrador."
@@ -4222,6 +4701,15 @@ viewSwitcher = "Use estes controles para selecionar como você quer visualizar s
 workbench = "Este é o <strong>Workbench</strong> — a área principal onde você visualiza e edita seus PDFs."
 wrapUp = "Tudo pronto! Você aprendeu sobre as áreas principais do app e como usá-las. Clique no botão <strong>Ajuda</strong> quando quiser para ver este tour novamente."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Após o fim do teste, você continuará no nosso plano gratuito. Adicione um método de pagamento para manter o acesso Pro."
+afterTrialWithPayment = "Sua assinatura Pro começará automaticamente quando o teste terminar."
+body = "Durante o período de teste, você tem acesso completo aos recursos do Stirling PDF Pro. Aproveite conversões ilimitadas, tamanhos de arquivo maiores e processamento prioritário."
+daysRemaining = "Faltam {{days}} dias"
+daysRemainingSingular = "Falta {{days}} dia"
+title = "Seu teste Pro de 30 dias"
+trialEnds = "O teste termina em {{date}}"
+
 [onboarding.buttons]
 back = "Voltar"
 download = "Baixar →"
@@ -4372,7 +4860,10 @@ zoomOut = "Reduzir"
 
 [viewer]
 cannotPreviewFile = "Não é possível visualizar o arquivo"
+disableColorFilter = "Desativar filtro de cor"
 dualPageView = "Visualização de duas páginas"
+enableDarkFilter = "Ativar filtro escuro"
+enableSepiaFilter = "Ativar filtro sépia"
 firstPage = "Primeira página"
 lastPage = "Última página"
 nextPage = "Próxima página"
@@ -4382,6 +4873,22 @@ singlePageView = "Visualização de página única"
 unknownFile = "Arquivo desconhecido"
 zoomIn = "Ampliar"
 zoomOut = "Reduzir"
+resetZoom = "Redefinir zoom"
+
+[viewer.nonPdf]
+fileTypeBadge = "Arquivo {{type}}"
+convertToPdf = "Converter para PDF"
+loading = "Carregando..."
+emptyFile = "Arquivo vazio"
+csvStats = "{{rows}} linhas · {{columns}} colunas · {{size}}"
+sortedBy = "Ordenado por: {{column}}"
+columnDefault = "Coluna {{index}}"
+htmlPreviewWarning = "Prévia de HTML — recursos externos podem não carregar · {{size}}"
+htmlPreview = "Prévia de HTML"
+invalidJson = "JSON inválido — exibindo conteúdo bruto"
+textStats = "{{lines}} linhas · {{size}}"
+lineNumbers = "Números de linha"
+renderMarkdown = "Renderizar markdown"
 
 [viewer.attachments]
 title = "Anexos"
@@ -4391,6 +4898,31 @@ noDocument = "Abra um PDF para ver seus anexos."
 loading = "Carregando anexos..."
 empty = "Não há anexos neste documento"
 noMatch = "Nenhum anexo corresponde à sua pesquisa"
+
+[viewer.comments]
+title = "Comentários"
+hint = "Adicione comentários com as ferramentas Comentário, Inserir texto ou Substituir texto. Eles aparecerão aqui por página."
+placeholder = "Digite seu comentário..."
+pageLabel = "Página {{page}}"
+oneComment = "1 comentário"
+nComments = "{{count}} comentários"
+addCommentPlaceholder = "Adicionar comentário..."
+addLink = "Adicionar link"
+goToLink = "Ir para o link"
+addComment = "Adicionar comentário"
+viewComment = "Ver comentário"
+addReplyPlaceholder = "Adicionar resposta..."
+saveReply = "Salvar resposta"
+send = "Enviar"
+moreActions = "Mais ações"
+typeComment = "Comentário"
+typeInsertText = "Inserir texto"
+typeReplaceText = "Substituir texto"
+locateAnnotation = "Localizar no documento"
+deleteTitle = "Remover anotação dos comentários?"
+deleteDescription = "Esta anotação tem um comentário associado. Você pode remover apenas o comentário da barra lateral, mantendo a anotação, ou excluir tudo."
+removeCommentOnly = "Remover apenas o comentário"
+deleteAnnotationAndComment = "Excluir anotação e comentário"
 
 [viewer.formBar]
 title = "Campos de formulário"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Alternar anexos"
 toggleTheme = "Alternar tema"
 language = "Idioma"
 toggleAnnotations = "Alternar visibilidade das anotações"
+toggleLayers = "Alternar camadas"
 search = "Pesquisar PDF"
 panMode = "Modo de panorâmica"
 applyRedactionsFirst = "Aplicar redações primeiro"
@@ -4425,14 +4958,20 @@ rotateLeft = "Girar à esquerda"
 rotateRight = "Girar à direita"
 toggleSidebar = "Alternar barra lateral"
 toggleBookmarks = "Alternar marcadores"
+toggleComments = "Comentários"
 print = "Imprimir PDF"
 ruler = "Régua / Medir"
+readAloud = "Ler em voz alta"
+readAloudSpeed = "Velocidade"
+readAloudLanguage = "Idioma"
+selectLanguage = "Selecionar idioma"
 draw = "Desenhar"
 redact = "Redigir"
 exitRedaction = "Sair do modo de redação"
 save = "Salvar"
 downloadAll = "Baixar tudo"
 saveAll = "Salvar tudo"
+saveAs = "Salvar como"
 
 [textAlign]
 left = "Esquerda"
@@ -4447,21 +4986,132 @@ title = "Extrair Página(s)"
 
 [pageLayout]
 addBorder = "Adicionar bordas."
+borderWidth = "Espessura da borda"
+bottom = "Margem inferior"
+cols = "Colunas"
 header = "Layout de Múltiplas Páginas"
+innerMargin = "Margem interna"
+left = "Margem esquerda"
 pagesPerSheet = "Páginas por folha:"
+right = "Margem direita"
+rows = "Linhas"
 submit = "Enviar"
 tags = "mesclar,composto,vista-única,organizar"
 title = "Layout de Múltiplas Páginas"
+top = "Margem superior"
+
+[pageLayout.mode]
+default = "Padrão"
+custom = "Personalizado"
+label = "Modo:"
+
+[pageLayout.arrangement]
+byColumns = "Por colunas"
+byRows = "Por linhas"
+label = "Disposição das páginas:"
 
 [pageLayout.desc]
 16 = "Coloque 16 páginas em uma única folha (grade 4 × 4)."
 2 = "Coloque 2 páginas lado a lado em uma única folha."
-3 = "Coloque 3 páginas em uma única folha em uma única linha."
 4 = "Coloque 4 páginas em uma única folha (grade 2 × 2)."
 9 = "Coloque 9 páginas em uma única folha (grade 3 × 3)."
 
 [pageLayout.error]
 failed = "Ocorreu um erro ao criar o layout de várias páginas."
+outerVerticalMarginsTooLarge = "As margens superior/inferior são muito grandes para este tamanho de página."
+outerHorizontalMarginsTooLarge = "As margens esquerda/direita são muito grandes para este tamanho de página."
+innerMarginTooLarge = "A margem interna é muito grande para o layout selecionado."
+
+[pageLayout.orientation]
+landscape = "Paisagem"
+portrait = "Retrato"
+label = "Orientação:"
+
+[pageLayout.readingDirection]
+ltr = "Da esquerda para a direita"
+rtl = "Da direita para a esquerda"
+label = "Direção de leitura:"
+
+[pageLayout.tooltip.header]
+title = "Guia de layout de página"
+
+[pageLayout.tooltip.overview]
+title = "O que é layout de página?"
+text = "Ajuste várias páginas em uma única folha para folhetos ou para economizar papel."
+
+[pageLayout.tooltip.mode]
+title = "Modo"
+text = "Escolha como a grade é configurada:"
+bullet1 = "Padrão: escolha um predefinido e a grade será calculada automaticamente."
+bullet2 = "Personalizado: defina linhas e colunas manualmente."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Páginas por folha (modo padrão)"
+text = "Escolha quantas páginas por folha (ex.: 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Linhas e colunas (modo personalizado)"
+text = "Defina as dimensões exatas da grade. Total de páginas por folha = linhas × colunas."
+
+[pageLayout.tooltip.orientation]
+title = "Orientação"
+text = "Define a orientação da folha de saída:"
+bullet1 = "Retrato: mais alto do que largo."
+bullet2 = "Paisagem: mais largo do que alto."
+
+[pageLayout.tooltip.arrangement]
+title = "Disposição das páginas"
+text = "Controla a ordem em que as páginas preenchem a grade:"
+bullet1 = "Por linhas: preenche linha por linha (da esquerda para a direita ou da direita para a esquerda)."
+bullet2 = "Por colunas: preenche de cima para baixo, coluna por coluna."
+
+[pageLayout.tooltip.readingDirection]
+title = "Direção de leitura"
+text = "Controla a ordem horizontal das páginas:"
+bullet1 = "LTR: da esquerda para a direita."
+bullet2 = "RTL: da direita para a esquerda."
+
+[pageLayout.tooltip.addBorder]
+title = "Adicionar bordas"
+text = "Desenha linhas de borda ao redor de cada célula da página para guias de corte ou separação visual."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margens e bordas"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margens"
+text = "Use as margens superior, inferior, esquerda e direita para controlar o espaçamento ao redor de toda a folha de saída."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Margem interna"
+text = "A margem interna adiciona espaçamento entre as células na grade da página para melhorar a separação e a legibilidade."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Adicionar bordas"
+text = "Ative as bordas para desenhar linhas ao redor de cada página posicionada. Isso pode ajudar na separação visual ou no acabamento."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Espessura da borda"
+text = "A espessura da borda só é aplicada quando as bordas estão ativadas. Valores maiores produzem linhas mais grossas."
+
+[pageLayout.advanced.tooltip.header]
+title = "Opções avançadas de layout"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientação"
+text = "Escolha a orientação final da folha. Retrato funciona melhor para conteúdo alto, enquanto paisagem se ajusta a layouts mais largos."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Disposição das páginas"
+text = "Controla se as páginas preenchem a grade linha por linha ou coluna por coluna."
+bullet1 = "Por linhas: preenche cada linha primeiro."
+bullet2 = "Por colunas: preenche cada coluna primeiro."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Direção de leitura"
+text = "Define a ordenação horizontal na grade, útil para convenções de documentos da esquerda para a direita e da direita para a esquerda."
+bullet1 = "LTR: ordem da esquerda para a direita."
+bullet2 = "RTL: ordem da direita para a esquerda."
 
 [pageRemover]
 header = "Remover Páginas"
@@ -4977,7 +5627,10 @@ perMonth = "/mês"
 perSeat = "/assento"
 popular = "Popular"
 selectPlan = "Selecionar plano"
+selectCredits = "Selecione a quantidade de créditos"
 showComparison = "Comparar todos os recursos"
+purchase = "Comprar"
+totalCost = "Custo total"
 upgrade = "Fazer upgrade"
 withServer = "+ Plano Server"
 
@@ -5069,6 +5722,30 @@ successMessage = "Sua licença foi ativada com sucesso. Agora você pode fechar 
 name = "Equipe"
 siteLicense = "Licença de site"
 
+[plan.api]
+large = "5.000 créditos"
+medium = "1.000 créditos"
+small = "500 créditos"
+xsmall = "100 créditos"
+
+[plan.apiPackages]
+subtitle = "Compre créditos de API para seus aplicativos"
+title = "Pacotes de créditos de API"
+
+[plan.trial]
+badge = "Teste"
+continueWithFree = "Continuar com o plano gratuito"
+daysRemaining = "Seu teste termina em {{days}} dias"
+endDate = "Expira em: {{date}}"
+expired = "Seu teste terminou"
+expiredMessage = "Seu teste Pro de 30 dias expirou. Assine o Pro para continuar acessando recursos premium ou continue com nosso plano gratuito."
+freeTierLimitations = "O plano gratuito inclui ferramentas básicas de PDF com limites de uso."
+message = ""
+subscribe = "Assinar o Pro"
+subscribeToPro = "Assinar o Pro"
+subscriptionScheduled = "Assinatura agendada - começa em {{date}}"
+title = "Teste gratuito ativo"
+
 [credits]
 enableOverageBilling = "Ativar cobrança por excedente"
 maybeLater = "Talvez mais tarde"
@@ -5150,20 +5827,72 @@ title = "Imprimir arquivo"
 2 = "Digite o nome da impressora"
 
 [quickAccess]
+access = "Acesso"
+accessAddPerson = "Adicionar outra pessoa"
+accessBack = "Voltar"
+accessCopyLink = "Copiar link"
+accessEmail = "Endereço de e-mail"
+accessEmailPlaceholder = "nome@empresa.com"
+accessFileLabel = "Arquivo"
+accessGeneral = "Acesso geral"
+accessInviteTitle = "Convidar pessoas"
+accessOwner = "Proprietário"
+accessPanel = "Acesso ao documento"
+accessPeople = "Pessoas com acesso"
+accessRemove = "Remover"
+accessRestricted = "Restrito"
+accessRestrictedHint = "Apenas pessoas com acesso podem abrir"
+accessRole = "Função"
+accessRoleCommenter = "Comentarista"
+accessRoleEditor = "Editor"
+accessRoleViewer = "Visualizador"
+accessSelectedFile = "Arquivo selecionado"
+accessSendInvite = "Enviar convite"
+accessTitle = "Acesso ao documento"
+accessYou = "Você"
 account = "Conta"
+activeSessions = "Sessões ativas"
+activeTab = "Ativas"
 activity = "Ativ."
 adminSettings = "Ajustes admin"
+allSessions = "Todas as sessões"
 allTools = "Ferram."
 automate = "Automat."
+back = "Voltar"
+certSign = "Assinatura com certificado"
+completedSessions = "Sessões concluídas"
+completedTab = "Concluídas"
 config = "Config"
+createNew = "Criar nova solicitação"
+createSession = "Criar solicitação de assinatura"
+dueDate = "Data de vencimento (opcional)"
 files = "Arquivos"
 help = "Ajuda"
+noActiveSessions = "Nenhuma solicitação pendente ou sessão ativa"
+noCompletedSessions = "Nenhuma sessão concluída"
+noFile = "Nenhum arquivo selecionado"
 read = "Ler"
 reader = "Leitor"
+refresh = "Atualizar"
+requestSignatures = "Solicitar assinaturas"
+selectSingleFileToRequest = "Selecione um único arquivo PDF para solicitar assinaturas"
+selectedFile = "Arquivo selecionado"
+selectUsers = "Selecionar usuários para assinar"
+selectUsersPlaceholder = "Escolha os participantes..."
+sendingRequest = "Enviando..."
 settings = "Ajustes"
 showMeAround = "Faça um tour"
 sign = "Assinar"
+signatureRequests = "Solicitações de assinatura"
+signYourself = "Assinar você mesmo"
+newRequest = "Nova solicitação"
 tours = "Tours"
+wetSign = "Adicionar assinatura"
+filterMine = "Meus"
+filterOverdue = "Em atraso"
+filterSigned = "Assinadas"
+filterDeclined = "Recusadas"
+searchDocuments = "Pesquisar documentos…"
 
 [quickAccess.helpMenu]
 adminTour = "Tour do administrador"
@@ -5631,6 +6360,32 @@ text = "Gire as páginas do seu PDF no sentido horário ou anti-horário em incr
 [rotate.tooltip.header]
 title = "Visão geral das configurações de rotação"
 
+[timestampPdf]
+completed = "PDF carimbado com sucesso"
+desc = "Adicione um carimbo de data e hora RFC 3161 ao seu PDF usando um servidor TSA (Autoridade de Carimbo do Tempo) confiável."
+filenamePrefix = "carimbado"
+results = "Resultados do carimbo de data e hora"
+submit = "Aplicar carimbo de data e hora"
+title = "Carimbo de data e hora no PDF"
+
+[timestampPdf.error]
+failed = "Ocorreu um erro ao carimbar o PDF."
+generic = "Falha ao carimbar"
+
+[timestampPdf.files]
+placeholder = "Selecione um arquivo PDF na visualização principal para começar"
+
+[timestampPdf.options]
+note = "Apenas um hash SHA-256 do seu documento é enviado ao servidor TSA; o arquivo PDF em si nunca é enviado ao servidor TSA."
+title = "Servidor de carimbo de data e hora (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Escolha uma Autoridade de Carimbo do Tempo confiável"
+label = "Selecione um servidor TSA"
+
+[timestampPdf.steps]
+settings = "Configurações"
+
 [sanitize]
 completed = "Sanitização concluída com sucesso"
 desc = "Remova elementos potencialmente nocivos de arquivos PDF."
@@ -5755,25 +6510,100 @@ placeholder = "Digite o termo de busca..."
 searching = "Pesquisando..."
 title = "Pesquisar PDF"
 
+[selfHosted.offline]
+hideTools = "Ocultar ferramentas indisponíveis ▴"
+messageNoFallback = "As ferramentas ficarão indisponíveis até que seu servidor volte a ficar online."
+messageWithFallback = "Algumas ferramentas exigem conexão com o servidor."
+showTools = "Ver ferramentas indisponíveis ▾"
+title = "Seu servidor Stirling-PDF está inacessível"
+toolNotAvailableLocally = "Seu servidor Stirling-PDF está offline e \"{{endpoint}}\" não está disponível no backend local."
+
 [session]
 expired = "Sua sessão expirou. Por gentileza atualize a página e tente novamente."
 refreshPage = "Atualizar Página"
+
+[sessionManagement.tooltip]
+header = "Gerenciando sessões de assinatura"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Novos participantes adicionados ao final da ordem de assinatura"
+bullet2 = "Não é possível adicionar participantes após a finalização da sessão"
+bullet3 = "Cada participante recebe uma notificação quando é sua vez"
+description = "Você pode adicionar mais participantes a uma sessão ativa a qualquer momento antes da finalização."
+title = "Adicionando participantes"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Finalização completa</b>: Todos os participantes assinaram"
+bullet2 = "<b>Finalização parcial</b>: Alguns participantes ainda não assinaram"
+bullet3 = "Participantes que não assinaram serão excluídos do documento final"
+bullet4 = "Depois de finalizada, você pode carregar o PDF assinado nos arquivos ativos"
+description = "A finalização combina todas as assinaturas em um único PDF assinado. Essa ação não pode ser desfeita."
+title = "Finalização da sessão"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Não é possível remover participantes que já assinaram"
+bullet2 = "Participantes removidos não recebem mais notificações"
+bullet3 = "A ordem de assinatura é ajustada automaticamente"
+description = "Participantes podem ser removidos das sessões antes de assinarem."
+title = "Removendo participantes"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Cada assinatura é aplicada sequencialmente ao PDF"
+bullet2 = "Assinantes posteriores podem ver assinaturas anteriores"
+bullet3 = "Crítico para fluxos de aprovação e cadeias de custódia legais"
+description = "A ordem que você especifica ao criar a sessão determina quem assina primeiro."
+title = "Ordem de assinatura"
+
+[signatureSettings.tooltip]
+header = "Configurações de aparência da assinatura"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Exemplos: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Não é o mesmo que a posição na página"
+bullet3 = "Pode ser exigido por certas jurisdições legais"
+description = "Localização geográfica opcional onde a assinatura foi aplicada. Armazenada nos metadados do certificado."
+title = "Localização da assinatura"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Exibido junto da assinatura e do texto"
+bullet2 = "Compatível com formatos PNG, JPG"
+bullet3 = "Melhora a aparência profissional"
+description = "Adicione um logotipo da empresa às assinaturas visíveis para branding e autenticidade."
+title = "Logotipo da empresa"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Exemplos: \"Aprovação\", \"Acordo de Contrato\", \"Revisão Concluída\""
+bullet2 = "Visível nas propriedades de assinatura do PDF"
+bullet3 = "Útil para trilhas de auditoria e conformidade"
+description = "Texto opcional explicando por que o documento está sendo assinado. Armazenado nos metadados do certificado."
+title = "Motivo da assinatura"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Visível</b>: A assinatura aparece no PDF com aparência personalizada"
+bullet2 = "<b>Invisível</b>: Certificado incorporado sem marca visual"
+bullet3 = "Assinaturas invisíveis ainda fornecem validação criptográfica"
+description = "Controla se a assinatura é visível no documento ou incorporada de forma invisível."
+title = "Visibilidade da assinatura"
 
 [settings.configuration]
 advanced = "Avançado"
 database = "Banco de dados"
 endpoints = "Endpoints"
 features = "Recursos"
+storageSharing = "Armazenamento e compartilhamento de arquivos"
 systemSettings = "Configurações do sistema"
 title = "Configuração"
 
 [settings.connection]
+localDescription = "Você está usando o backend local sem uma conta. Algumas ferramentas que exigem processamento em nuvem ou um servidor auto-hospedado estão indisponíveis."
 logout = "Sair"
 server = "Servidor"
+signIn = "Entrar"
 title = "Modo de conexão"
 user = "Logado como"
 
 [settings.connection.mode]
+local = "Apenas local"
 saas = "Stirling Cloud"
 selfhosted = "Auto-hospedado"
 
@@ -5931,6 +6761,9 @@ title = "Políticas & Privacidade"
 [settings.preferences]
 title = "Preferências"
 
+[settings.search]
+placeholder = "Pesquisar páginas de configurações..."
+
 [settings.security]
 description = "Atualize sua senha para manter sua conta segura."
 title = "Segurança"
@@ -5968,6 +6801,18 @@ title = "Espaço de trabalho"
 [settings.team]
 title = "Equipe"
 
+[localMode]
+toolUnavailable = "Esta ferramenta requer uma conta. Entre no Stirling Cloud ou conecte-se a um servidor auto-hospedado para usá-la."
+
+[localMode.banner]
+message = "Entre para desbloquear todas as ferramentas."
+signIn = "Entrar"
+title = "Executando localmente"
+
+[localMode.toolPicker]
+message = "Entre para desbloquear todas as ferramentas."
+signIn = "Entrar"
+
 [setup]
 description = "Comece escolhendo como deseja usar o Stirling PDF"
 welcome = "Bem-vindo ao Stirling PDF"
@@ -5975,6 +6820,7 @@ welcome = "Bem-vindo ao Stirling PDF"
 [setup.login]
 connectingTo = "Conectando a:"
 hideInstructions = "Ocultar instruções"
+skipSignIn = "Continuar sem entrar"
 instructions = "Para ativar o login no seu servidor Stirling PDF:"
 instructionsEnvVar = "Defina a variável de ambiente:"
 instructionsOrYml = "Ou em settings.yml:"
@@ -6022,7 +6868,17 @@ title = "Entrar no Stirling"
 [setup.selfhosted]
 link = "ou conecte-se a uma conta auto-hospedada"
 subtitle = "Informe suas credenciais do servidor"
+changeServerLocked = "Sua organização restringiu este aplicativo a um servidor específico"
+switchToLocal = "Usar ferramentas locais em vez disso"
 title = "Entrar no servidor"
+
+[setup.selfhosted.unreachable]
+changeServer = "Conectar a um servidor diferente"
+changeServerLocked = "Sua organização restringiu este aplicativo a um servidor específico"
+continueOffline = "Usar ferramentas locais em vez disso"
+message = "Não foi possível acessar {{url}}. Verifique se o servidor está em execução e acessível."
+retry = "Tentar novamente"
+title = "Não é possível conectar ao servidor"
 
 [setup.server]
 subtitle = "Informe a URL do seu servidor self-hosted"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Falha ao buscar a configuração do servidor. Verifique a URL e tente novamente."
+configFetchError = "Falha ao buscar a configuração do servidor: {{error}}"
 emptyUrl = "Informe uma URL de servidor"
 invalidUrl = "Formato de URL inválido. Insira uma URL válida como https://seu-servidor.com"
 testFailed = "Falha no teste de conexão"
@@ -6210,6 +7067,15 @@ image = "Imagem"
 saved = "Salvas"
 text = "Texto"
 title = "Tipo de assinatura"
+
+[signRequest]
+declined = "Solicitação de assinatura recusada"
+fetchFailed = "Falha ao carregar solicitação de assinatura"
+signed = "Documento assinado com sucesso"
+
+[signSession]
+createFailed = "Falha ao criar solicitação de assinatura"
+created = "Solicitação de assinatura enviada"
 
 [signup]
 accountCreatedSuccessfully = "Conta criada com sucesso! Agora você pode entrar."
@@ -6489,6 +7355,106 @@ title = "Divide PDF por Capítulos"
 [splitPdfByChapters]
 tags = "dividir,capítulos,favoritos,organizar"
 
+[storageShare]
+accessed = "Acessado"
+accessDenied = "Você não tem acesso a este arquivo compartilhado. Peça ao proprietário para compartilhá-lo com você."
+accessFailed = "Não foi possível carregar a atividade."
+accessDeniedBody = "Você não tem acesso a este arquivo. Peça ao proprietário para compartilhá-lo com você."
+accessDeniedTitle = "Sem acesso"
+accessLimitedCommenter = "O acesso de comentarista estará disponível em breve. Peça ao proprietário acesso de editor se precisar baixar."
+accessLimitedTitle = "Acesso limitado"
+accessLimitedViewer = "Este link é somente visualização. Peça ao proprietário acesso de editor se precisar baixar."
+createdAt = "Criado"
+download = "Baixar"
+downloadFailed = "Não foi possível baixar este arquivo."
+expiredBody = "Este link de compartilhamento é inválido ou expirou."
+expiredTitle = "Link expirado"
+goToLogin = "Ir para login"
+loadFailed = "Não foi possível abrir o arquivo compartilhado."
+loading = "Carregando link de compartilhamento..."
+loginPrompt = "Faça login para acessar este arquivo compartilhado."
+loginRequired = "Login necessário"
+openInApp = "Abrir no Stirling PDF"
+ownerLabel = "Proprietário"
+ownerUnknown = "Desconhecido"
+requiresLogin = "Este arquivo compartilhado requer login."
+roleCommenter = "Comentarista"
+roleEditor = "Editor"
+roleViewer = "Visualizador"
+shareHeading = "Arquivo compartilhado"
+titleDefault = "Arquivo compartilhado"
+tryAgain = "Tente novamente mais tarde."
+addUser = "Adicionar"
+commenterHint = "Comentários em breve."
+copied = "Link copiado para a área de transferência"
+copy = "Copiar"
+copyFailed = "Falha ao copiar"
+description = "Crie um link de compartilhamento para este arquivo. Usuários logados com o link podem acessá-lo."
+downloadsCount = "Downloads: {{count}}"
+emailWarningBody = "Isso parece um endereço de e-mail. Se essa pessoa ainda não for usuária do Stirling PDF, ela não conseguirá acessar o arquivo."
+emailWarningConfirm = "Compartilhar mesmo assim"
+emailWarningTitle = "Endereço de e-mail"
+errorTitle = "Falha no compartilhamento"
+failure = "Não foi possível gerar um link de compartilhamento. Tente novamente."
+fileLabel = "Arquivo"
+generate = "Gerar link"
+generated = "Link de compartilhamento gerado"
+hideActivity = "Ocultar atividade"
+invalidUsername = "Insira um nome de usuário ou endereço de e-mail válido."
+lastAccessed = "Último acesso"
+linkAccessTitle = "Acesso via link de compartilhamento"
+linkLabel = "Link de compartilhamento"
+linksDisabled = "Links de compartilhamento desativados."
+linksDisabledBody = "Links de compartilhamento estão desativados pelas configurações do seu servidor."
+manage = "Gerenciar compartilhamento"
+manageDescription = "Criar e gerenciar links para compartilhar este arquivo."
+manageLoadFailed = "Não foi possível carregar os links de compartilhamento."
+manageTitle = "Gerenciar compartilhamento"
+noActivity = "Ainda sem atividade."
+noLinks = "Ainda não há links de compartilhamento ativos."
+noSharedUsers = "Nenhum usuário tem acesso ainda."
+removeLink = "Remover link"
+removeUser = "Remover"
+revokeFailed = "Não foi possível remover o link de compartilhamento."
+revoked = "Link de compartilhamento removido"
+roleLabel = "Função"
+sharingDisabled = "O compartilhamento está desativado."
+sharingDisabledBody = "O compartilhamento foi desativado pelas configurações do seu servidor."
+sharedUsersTitle = "Usuários com acesso"
+title = "Compartilhar arquivo"
+unknownUser = "Usuário desconhecido"
+userAddFailed = "Não foi possível compartilhar com esse usuário."
+userAdded = "Usuário adicionado à lista de compartilhamento."
+usernameLabel = "Nome de usuário ou e-mail"
+usernamePlaceholder = "Insira um nome de usuário ou e-mail"
+userRemoveFailed = "Não foi possível remover esse usuário."
+userRemoved = "Usuário removido da lista de compartilhamento."
+viewActivity = "Ver atividade"
+viewed = "Visualizado"
+viewsCount = "Visualizações: {{count}}"
+downloaded = "Baixado"
+bulkDescription = "Crie um único link para compartilhar todos os arquivos selecionados com usuários autenticados."
+bulkTitle = "Compartilhar arquivos selecionados"
+copyLink = "Copiar link de compartilhamento"
+fileCount = "{{count}} arquivos selecionados"
+ownerOnly = "Apenas o proprietário pode gerenciar o compartilhamento."
+selectSingleFile = "Selecione um único arquivo para gerenciar o compartilhamento."
+
+[storageUpload]
+description = "Isso envia o arquivo atual para o armazenamento do servidor para o seu próprio acesso."
+errorTitle = "Falha no envio"
+failure = "Falha no envio. Verifique seu login e as configurações de armazenamento."
+fileLabel = "Arquivo"
+hint = "Links públicos e modos de acesso são controlados pelas configurações do seu servidor."
+success = "Enviado para o servidor"
+title = "Enviar para o servidor"
+updateButton = "Atualizar no servidor"
+uploadButton = "Enviar para o servidor"
+bulkDescription = "Isso envia os arquivos selecionados para o armazenamento do seu servidor."
+bulkTitle = "Enviar arquivos selecionados"
+fileCount = "{{count}} arquivos selecionados"
+more = " +{{count}} mais"
+
 [storage]
 approximateSize = "Tamanho aproximado"
 fileTooLarge = "Arquivo muito grande. Tamanho máximo por arquivo é"
@@ -6557,6 +7523,7 @@ favorites = "Favoritos"
 heading = "Todas as ferramentas (visualização em tela cheia)"
 noResults = "Tente ajustar sua pesquisa ou alternar descrições para encontrar o que precisa."
 recommended = "Recomendado"
+selfHostedOffline = "Requer seu servidor Stirling-PDF (atualmente offline):"
 showDetails = "Mostrar detalhes"
 unavailable = "Desativado pelo administrador do servidor:"
 unavailableDependency = "Indisponível - ferramenta necessária ausente no servidor:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Formatação de página"
 removal = "Remoção"
 signing = "Assinatura"
 verification = "Verificação"
+
+[tool]
+endpointUnavailable = "Esta ferramenta não está disponível no seu servidor."
+endpointUnavailableClickable = "Não disponível neste modo. Clique para entrar."
+invalidParams = "Preencha as configurações obrigatórias."
+noFiles = "Adicione um arquivo para começar."
 
 [tools]
 noSearchResults = "Nenhuma ferramenta encontrada"
@@ -6828,6 +7801,30 @@ title = "Ver/Editar PDF"
 [warning]
 tooltipTitle = "Aviso"
 
+[wetSignature.tooltip]
+header = "Métodos de criação de assinatura"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Personalize a cor e a espessura da caneta"
+bullet2 = "Limpe e redesenhe até ficar satisfeito"
+bullet3 = "Funciona em dispositivos de toque (tablets, celulares)"
+description = "Crie uma assinatura manuscrita usando o mouse ou a tela sensível ao toque. Ideal para assinaturas pessoais e autênticas."
+title = "Desenhar assinatura"
+
+[wetSignature.tooltip.type]
+bullet1 = "Escolha entre várias fontes"
+bullet2 = "Personalize o tamanho e a cor do texto"
+bullet3 = "Perfeito para assinaturas padronizadas"
+description = "Gere uma assinatura a partir de texto digitado. Rápido e consistente, adequado para documentos comerciais."
+title = "Digitar assinatura"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Compatível com PNG, JPG e outros formatos de imagem"
+bullet2 = "Fundos transparentes são recomendados para melhores resultados"
+bullet3 = "A imagem será redimensionada para caber na área da assinatura"
+description = "Envie uma imagem de assinatura pré-criada. Ideal se você tiver uma assinatura digitalizada ou o logotipo da empresa."
+title = "Enviar imagem da assinatura"
+
 [watermark]
 completed = "Marca d'água adicionada"
 desc = "Adicione marcas d'água de texto ou imagem a arquivos PDF"
@@ -7008,6 +8005,7 @@ activeSession = "Sessão ativa"
 addMembers = "Adicionar membros"
 admin = "Admin"
 confirmDelete = "Tem certeza de que deseja excluir este usuário? Esta ação não pode ser desfeita."
+confirmUnlock = "Tem certeza de que deseja desbloquear esta conta de usuário?"
 deleteUser = "Excluir usuário"
 deleteUserError = "Falha ao excluir usuário"
 deleteUserSuccess = "Usuário excluído com sucesso"
@@ -7016,6 +8014,8 @@ disable = "Desativar"
 disabled = "Desativado"
 editRole = "Editar função"
 enable = "Ativar"
+locked = "bloqueado"
+lockedBadge = "Bloqueado"
 loading = "Carregando pessoas..."
 loginRequired = "Ative o modo de login primeiro"
 member = "Membro"
@@ -7025,6 +8025,9 @@ searchMembers = "Pesquisar membros..."
 status = "Status"
 team = "Equipe"
 title = "Pessoas"
+unlockAccount = "Desbloquear conta"
+unlockUserError = "Falha ao desbloquear a conta do usuário"
+unlockUserSuccess = "Conta do usuário desbloqueada com sucesso"
 user = "Usuário"
 
 [workspace.people.actions]

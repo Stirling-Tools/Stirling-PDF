@@ -1,63 +1,4 @@
-/* Bookmark Sidebar - Modern styling to match AllTools section */
-
-.bookmark-sidebar {
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
-    color-mix(in srgb, var(--bg-background) 90%, transparent)
-  );
-  border-left: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
-  box-shadow: -2px 0 16px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%, transparent);
-  backdrop-filter: blur(12px);
-}
-
-/* Header Section */
-.bookmark-sidebar__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 0.875rem;
-  background: var(--bg-toolbar);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.bookmark-sidebar__header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bookmark-sidebar__header-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--mantine-color-blue-6);
-  font-size: 1.1rem;
-}
-
-/* Search Section */
-.bookmark-sidebar__search {
-  background: var(--tool-panel-search-bg, var(--bg-toolbar));
-  border-bottom: 1px solid var(--tool-panel-search-border-bottom, var(--border-subtle));
-  padding-top: 0.75rem !important;
-}
-
-/* Content Section */
-.bookmark-sidebar__content {
-  padding-top: 0.5rem !important;
-}
-
-.bookmark-sidebar__empty-state,
-.bookmark-sidebar__error {
-  padding: 2rem 1rem;
-  text-align: center;
-}
-
-.bookmark-sidebar__loading {
-  padding: 2rem 1rem !important;
-}
+/* Bookmark Sidebar - Bookmark-specific styles (base styles in SidebarBase.css) */
 
 /* Bookmark List */
 .bookmark-list {
@@ -96,7 +37,11 @@
 
 .bookmark-item--clickable:hover {
   background: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  border-color: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--text-primary) 20%,
+    var(--border-subtle)
+  );
   transform: translateX(2px);
 }
 
@@ -105,7 +50,8 @@
 }
 
 .bookmark-item--clickable:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+  outline: 2px solid
+    color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
   outline-offset: 2px;
 }
 
@@ -193,4 +139,3 @@
     animation: none;
   }
 }
-

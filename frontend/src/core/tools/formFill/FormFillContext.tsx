@@ -28,12 +28,17 @@ import React, {
   useRef,
   useState,
   useSyncExternalStore,
-} from 'react';
-import { useDebouncedCallback } from '@mantine/hooks';
-import type { FormField, FormFillState, WidgetCoordinates } from '@app/tools/formFill/types';
-import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
-import { PdfLibFormProvider, fetchSignatureFieldsWithAppearances } from '@app/tools/formFill/providers/PdfLibFormProvider';
-import { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';
+} from "react";
+import { useDebouncedCallback } from "@mantine/hooks";
+import type {
+  FormField,
+  FormFillState,
+  WidgetCoordinates,
+} from "@app/tools/formFill/types";
+import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
+import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
+import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
+import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
 
 // ---------------------------------------------------------------------------
 // FormValuesStore — external store for field values (outside React state)
@@ -65,7 +70,7 @@ class FormValuesStore {
   }
 
   getValue(fieldName: string): string {
-    return this._values[fieldName] ?? '';
+    return this._values[fieldName] ?? "";
   }
 
   setValue(fieldName: string, value: string): void {
@@ -111,15 +116,15 @@ class FormValuesStore {
 // ---------------------------------------------------------------------------
 
 type Action =
-  | { type: 'FETCH_START' }
-  | { type: 'FETCH_SUCCESS'; fields: FormField[] }
-  | { type: 'FETCH_ERROR'; error: string }
-  | { type: 'MARK_DIRTY' }
-  | { type: 'SET_ACTIVE_FIELD'; fieldName: string | null }
-  | { type: 'SET_VALIDATION_ERRORS'; errors: Record<string, string> }
-  | { type: 'CLEAR_VALIDATION_ERROR'; fieldName: string }
-  | { type: 'MARK_CLEAN' }
-  | { type: 'RESET' };
+  | { type: "FETCH_START" }
+  | { type: "FETCH_SUCCESS"; fields: FormField[] }
+  | { type: "FETCH_ERROR"; error: string }
+  | { type: "MARK_DIRTY" }
+  | { type: "SET_ACTIVE_FIELD"; fieldName: string | null }
+  | { type: "SET_VALIDATION_ERRORS"; errors: Record<string, string> }
+  | { type: "CLEAR_VALIDATION_ERROR"; fieldName: string }
+  | { type: "MARK_CLEAN" }
+  | { type: "RESET" };
 
 const initialState: FormFillState = {
   fields: [],
@@ -133,9 +138,9 @@ const initialState: FormFillState = {
 
 function reducer(state: FormFillState, action: Action): FormFillState {
   switch (action.type) {
-    case 'FETCH_START':
+    case "FETCH_START":
       return { ...state, loading: true, error: null };
-    case 'FETCH_SUCCESS': {
+    case "FETCH_SUCCESS": {
       return {
         ...state,
         fields: action.fields,
@@ -145,23 +150,23 @@ function reducer(state: FormFillState, action: Action): FormFillState {
         isDirty: false,
       };
     }
-    case 'FETCH_ERROR':
+    case "FETCH_ERROR":
       return { ...state, loading: false, error: action.error };
-    case 'MARK_DIRTY':
+    case "MARK_DIRTY":
       if (state.isDirty) return state; // avoid unnecessary re-render
       return { ...state, isDirty: true };
-    case 'SET_ACTIVE_FIELD':
+    case "SET_ACTIVE_FIELD":
       return { ...state, activeFieldName: action.fieldName };
-    case 'SET_VALIDATION_ERRORS':
+    case "SET_VALIDATION_ERRORS":
       return { ...state, validationErrors: action.errors };
-    case 'CLEAR_VALIDATION_ERROR': {
+    case "CLEAR_VALIDATION_ERROR": {
       if (!state.validationErrors[action.fieldName]) return state;
       const { [action.fieldName]: _, ...rest } = state.validationErrors;
       return { ...state, validationErrors: rest };
     }
-    case 'MARK_CLEAN':
+    case "MARK_CLEAN":
       return { ...state, isDirty: false };
-    case 'RESET':
+    case "RESET":
       return initialState;
     default:
       return state;
@@ -177,10 +182,7 @@ export interface FormFillContextValue {
   /** Set the currently focused field */
   setActiveField: (fieldName: string | null) => void;
   /** Submit filled form and return the filled PDF blob */
-  submitForm: (
-    file: File | Blob,
-    flatten?: boolean
-  ) => Promise<Blob>;
+  submitForm: (file: File | Blob, flatten?: boolean) => Promise<Blob>;
   /** Get field by name */
   getField: (fieldName: string) => FormField | undefined;
   /** Get fields for a specific page index */
@@ -200,7 +202,7 @@ export interface FormFillContextValue {
    * Use 'pdflib' for frontend-only pdf-lib, 'pdfbox' for backend PDFBox.
    * Resets form state when switching providers.
    */
-  setProviderMode: (mode: 'pdflib' | 'pdfbox') => void;
+  setProviderMode: (mode: "pdflib" | "pdfbox") => void;
   /** The file ID that the current form fields belong to (null if no fields loaded) */
   forFileId: string | null;
 }
@@ -216,7 +218,7 @@ const FormValuesStoreContext = createContext<FormValuesStore | null>(null);
 export const useFormFill = (): FormFillContextValue => {
   const ctx = useContext(FormFillContext);
   if (!ctx) {
-    throw new Error('useFormFill must be used within a FormFillProvider');
+    throw new Error("useFormFill must be used within a FormFillProvider");
   }
   return ctx;
 };
@@ -230,16 +232,16 @@ export const useFormFill = (): FormFillContextValue => {
 export function useFieldValue(fieldName: string): string {
   const store = useContext(FormValuesStoreContext);
   if (!store) {
-    throw new Error('useFieldValue must be used within a FormFillProvider');
+    throw new Error("useFieldValue must be used within a FormFillProvider");
   }
 
   const subscribe = useCallback(
     (cb: () => void) => store.subscribeField(fieldName, cb),
-    [store, fieldName]
+    [store, fieldName],
   );
   const getSnapshot = useCallback(
     () => store.getValue(fieldName),
-    [store, fieldName]
+    [store, fieldName],
   );
 
   return useSyncExternalStore(subscribe, getSnapshot);
@@ -252,23 +254,20 @@ export function useFieldValue(fieldName: string): string {
 export function useAllFormValues(): Record<string, string> {
   const store = useContext(FormValuesStoreContext);
   if (!store) {
-    throw new Error('useAllFormValues must be used within a FormFillProvider');
+    throw new Error("useAllFormValues must be used within a FormFillProvider");
   }
 
   const subscribe = useCallback(
     (cb: () => void) => store.subscribeGlobal(cb),
-    [store]
+    [store],
   );
-  const getSnapshot = useCallback(
-    () => store.values,
-    [store]
-  );
+  const getSnapshot = useCallback(() => store.values, [store]);
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 /** Singleton provider instances */
-const pdfLibProvider = new PdfLibFormProvider();
+const pdfiumProvider = new PdfiumFormProvider();
 const pdfBoxProvider = new PdfBoxFormProvider();
 
 export function FormFillProvider({
@@ -279,11 +278,15 @@ export function FormFillProvider({
   /** Override the initial provider. If not given, defaults to pdf-lib. */
   provider?: IFormDataProvider;
 }) {
-  const initialMode = providerProp?.name === 'pdfbox' ? 'pdfbox' : 'pdflib';
-  const [providerMode, setProviderModeState] = useState<'pdflib' | 'pdfbox'>(initialMode);
-  const providerModeRef = useRef(initialMode as 'pdflib' | 'pdfbox');
+  const initialMode = providerProp?.name === "pdfbox" ? "pdfbox" : "pdflib";
+  const [providerMode, setProviderModeState] = useState<"pdflib" | "pdfbox">(
+    initialMode,
+  );
+  const providerModeRef = useRef(initialMode as "pdflib" | "pdfbox");
   providerModeRef.current = providerMode;
-  const provider = providerProp ?? (providerMode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider);
+  const provider =
+    providerProp ??
+    (providerMode === "pdfbox" ? pdfBoxProvider : pdfiumProvider);
   const providerRef = useRef(provider);
   providerRef.current = provider;
 
@@ -303,74 +306,88 @@ export function FormFillProvider({
   // This prevents full context re-renders on every keystroke.
   const [valuesStore] = useState(() => new FormValuesStore());
 
-  const fetchFields = useCallback(async (file: File | Blob, fileId?: string) => {
-    // Increment version so any in-flight fetch for a previous file is discarded.
-    // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
-    // in-flight fetches when switching providers. This is intentional — the
-    // fetch started here captures the NEW version, so stale results are
-    // correctly discarded.
-    const version = ++fetchVersionRef.current;
+  const fetchFields = useCallback(
+    async (file: File | Blob, fileId?: string) => {
+      // Increment version so any in-flight fetch for a previous file is discarded.
+      // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
+      // in-flight fetches when switching providers. This is intentional — the
+      // fetch started here captures the NEW version, so stale results are
+      // correctly discarded.
+      const version = ++fetchVersionRef.current;
 
-    // Immediately clear previous state so FormFieldOverlay's stale-file guards
-    // prevent rendering fields from a previous document during the fetch.
-    forFileIdRef.current = null;
-    setForFileId(null);
-    valuesStore.reset({});
-    dispatch({ type: 'RESET' });
-    dispatch({ type: 'FETCH_START' });
-    try {
-      let fields = await providerRef.current.fetchFields(file);
-      // If another fetch or reset happened while we were waiting, discard this result
-      if (fetchVersionRef.current !== version) {
-        console.log('[FormFill] Discarding stale fetch result (version mismatch)');
-        return;
-      }
-
-      // When the pdfbox provider is active the backend doesn't return signature fields
-      // (they're not fillable). Fetch them via pdflib so their appearances still render.
-      if (providerModeRef.current === 'pdfbox') {
-        try {
-          const sigFields = await fetchSignatureFieldsWithAppearances(file);
-          if (fetchVersionRef.current !== version) return; // stale check after async
-          if (sigFields.length > 0) {
-            fields = [...fields, ...sigFields];
-          }
-        } catch (e) {
-          console.warn('[FormFill] Failed to extract signature appearances for pdfbox mode:', e);
+      // Immediately clear previous state so FormFieldOverlay's stale-file guards
+      // prevent rendering fields from a previous document during the fetch.
+      forFileIdRef.current = null;
+      setForFileId(null);
+      valuesStore.reset({});
+      dispatch({ type: "RESET" });
+      dispatch({ type: "FETCH_START" });
+      try {
+        let fields = await providerRef.current.fetchFields(file);
+        // If another fetch or reset happened while we were waiting, discard this result
+        if (fetchVersionRef.current !== version) {
+          console.debug(
+            "[FormFill] Discarding stale fetch result (version mismatch)",
+          );
+          return;
         }
-      }
 
-      // Initialise values in the external store
-      const values: Record<string, string> = {};
-      for (const field of fields) {
-        values[field.name] = field.value ?? '';
+        // When the pdfbox provider is active the backend doesn't return signature fields
+        // (they're not fillable). Fetch them via pdflib so their appearances still render.
+        if (providerModeRef.current === "pdfbox") {
+          try {
+            // Convert File/Blob to ArrayBuffer for pdfiumService
+            const arrayBuffer = await file.arrayBuffer();
+            const sigFields =
+              await fetchSignatureFieldsWithAppearances(arrayBuffer);
+            if (fetchVersionRef.current !== version) return; // stale check after async
+            if (sigFields.length > 0) {
+              fields = [...fields, ...sigFields];
+            }
+          } catch (e) {
+            console.warn(
+              "[FormFill] Failed to extract signature appearances for pdfbox mode:",
+              e,
+            );
+          }
+        }
+
+        // Initialise values in the external store
+        const values: Record<string, string> = {};
+        for (const field of fields) {
+          values[field.name] = field.value ?? "";
+        }
+        valuesStore.reset(values);
+        forFileIdRef.current = fileId ?? null;
+        setForFileId(fileId ?? null);
+        dispatch({ type: "FETCH_SUCCESS", fields });
+      } catch (err: any) {
+        if (fetchVersionRef.current !== version) return; // stale
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to fetch form fields";
+        dispatch({ type: "FETCH_ERROR", error: msg });
       }
-      valuesStore.reset(values);
-      forFileIdRef.current = fileId ?? null;
-      setForFileId(fileId ?? null);
-      dispatch({ type: 'FETCH_SUCCESS', fields });
-    } catch (err: any) {
-      if (fetchVersionRef.current !== version) return; // stale
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Failed to fetch form fields';
-      dispatch({ type: 'FETCH_ERROR', error: msg });
-    }
-  }, [valuesStore]);
+    },
+    [valuesStore],
+  );
 
   const validateFieldDebounced = useDebouncedCallback((fieldName: string) => {
     const field = fieldsRef.current.find((f) => f.name === fieldName);
     if (!field || !field.required) return;
 
     const val = valuesStore.getValue(fieldName);
-    if (!val || val.trim() === '' || val === 'Off') {
+    if (!val || val.trim() === "" || val === "Off") {
       dispatch({
-        type: 'SET_VALIDATION_ERRORS',
-        errors: { ...state.validationErrors, [fieldName]: `${field.label} is required` },
+        type: "SET_VALIDATION_ERRORS",
+        errors: {
+          ...state.validationErrors,
+          [fieldName]: `${field.label} is required`,
+        },
       });
     } else {
-      dispatch({ type: 'CLEAR_VALIDATION_ERROR', fieldName });
+      dispatch({ type: "CLEAR_VALIDATION_ERROR", fieldName });
     }
   }, 300);
 
@@ -378,11 +395,11 @@ export function FormFillProvider({
     const errors: Record<string, string> = {};
     for (const field of fieldsRef.current) {
       const val = valuesStore.getValue(field.name);
-      if (field.required && (!val || val.trim() === '' || val === 'Off')) {
+      if (field.required && (!val || val.trim() === "" || val === "Off")) {
         errors[field.name] = `${field.label} is required`;
       }
     }
-    dispatch({ type: 'SET_VALIDATION_ERRORS', errors });
+    dispatch({ type: "SET_VALIDATION_ERRORS", errors });
     return Object.keys(errors).length === 0;
   }, [valuesStore]);
 
@@ -391,36 +408,37 @@ export function FormFillProvider({
       // Update external store (triggers per-field subscribers only)
       valuesStore.setValue(fieldName, value);
       // Mark form as dirty in React state (only triggers re-render once)
-      dispatch({ type: 'MARK_DIRTY' });
+      dispatch({ type: "MARK_DIRTY" });
       validateFieldDebounced(fieldName);
     },
-    [valuesStore, validateFieldDebounced]
+    [valuesStore, validateFieldDebounced],
   );
 
-  const setActiveField = useCallback(
-    (fieldName: string | null) => {
-      dispatch({ type: 'SET_ACTIVE_FIELD', fieldName });
-    },
-    []
-  );
+  const setActiveField = useCallback((fieldName: string | null) => {
+    dispatch({ type: "SET_ACTIVE_FIELD", fieldName });
+  }, []);
 
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
-      const blob = await providerRef.current.fillForm(file, valuesStore.values, flatten);
-      dispatch({ type: 'MARK_CLEAN' });
+      const blob = await providerRef.current.fillForm(
+        file,
+        valuesStore.values,
+        flatten,
+      );
+      dispatch({ type: "MARK_CLEAN" });
       return blob;
     },
-    [valuesStore]
+    [valuesStore],
   );
 
   const setProviderMode = useCallback(
-    (mode: 'pdflib' | 'pdfbox') => {
+    (mode: "pdflib" | "pdfbox") => {
       // Use the ref to check the current mode synchronously — avoids
       // relying on stale closure state and allows the early return.
       if (providerModeRef.current === mode) return;
 
       // provider (pdfbox vs pdflib).
-      const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider;
+      const newProvider = mode === "pdfbox" ? pdfBoxProvider : pdfiumProvider;
       providerRef.current = newProvider;
       providerModeRef.current = mode;
 
@@ -428,30 +446,29 @@ export function FormFillProvider({
       forFileIdRef.current = null;
       setForFileId(null);
       valuesStore.reset({});
-      dispatch({ type: 'RESET' });
+      dispatch({ type: "RESET" });
 
       setProviderModeState(mode);
     },
-    [valuesStore]
+    [valuesStore],
   );
 
   const getField = useCallback(
-    (fieldName: string) =>
-      fieldsRef.current.find((f) => f.name === fieldName),
-    []
+    (fieldName: string) => fieldsRef.current.find((f) => f.name === fieldName),
+    [],
   );
 
   const getFieldsForPage = useCallback(
     (pageIndex: number) =>
       fieldsRef.current.filter((f) =>
-        f.widgets?.some((w: WidgetCoordinates) => w.pageIndex === pageIndex)
+        f.widgets?.some((w: WidgetCoordinates) => w.pageIndex === pageIndex),
       ),
-    []
+    [],
   );
 
   const getValue = useCallback(
     (fieldName: string) => valuesStore.getValue(fieldName),
-    [valuesStore]
+    [valuesStore],
   );
 
   const reset = useCallback(() => {
@@ -460,7 +477,7 @@ export function FormFillProvider({
     forFileIdRef.current = null;
     setForFileId(null);
     valuesStore.reset({});
-    dispatch({ type: 'RESET' });
+    dispatch({ type: "RESET" });
   }, [valuesStore]);
 
   const fieldsByPage = useMemo(() => {
@@ -507,7 +524,7 @@ export function FormFillProvider({
       providerMode,
       setProviderMode,
       forFileId,
-    ]
+    ],
   );
 
   return (

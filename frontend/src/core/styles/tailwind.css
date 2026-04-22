@@ -1,6 +1,5 @@
-
 /* Import minimal theme variables */
-@import './theme.css';
+@import "./theme.css";
 
 @layer base {
   @tailwind base;
@@ -12,4 +11,14 @@
 
 @layer utilities {
   @tailwind utilities;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }

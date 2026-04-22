@@ -4,11 +4,18 @@ import { FlattenParameters } from "@app/hooks/tools/flatten/useFlattenParameters
 
 interface FlattenSettingsProps {
   parameters: FlattenParameters;
-  onParameterChange: <K extends keyof FlattenParameters>(key: K, value: FlattenParameters[K]) => void;
+  onParameterChange: <K extends keyof FlattenParameters>(
+    key: K,
+    value: FlattenParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const FlattenSettings = ({ parameters, onParameterChange, disabled = false }: FlattenSettingsProps) => {
+const FlattenSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: FlattenSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -16,13 +23,23 @@ const FlattenSettings = ({ parameters, onParameterChange, disabled = false }: Fl
       <Stack gap="sm">
         <Checkbox
           checked={parameters.flattenOnlyForms}
-          onChange={(event) => onParameterChange('flattenOnlyForms', event.currentTarget.checked)}
+          onChange={(event) =>
+            onParameterChange("flattenOnlyForms", event.currentTarget.checked)
+          }
           disabled={disabled}
           label={
             <div>
-              <Text size="sm">{t('flatten.options.flattenOnlyForms.label', 'Flatten only forms')}</Text>
+              <Text size="sm">
+                {t(
+                  "flatten.options.flattenOnlyForms.label",
+                  "Flatten only forms",
+                )}
+              </Text>
               <Text size="xs" c="dimmed">
-                {t('flatten.options.flattenOnlyForms.desc', 'Only flatten form fields, leaving other interactive elements intact')}
+                {t(
+                  "flatten.options.flattenOnlyForms.desc",
+                  "Only flatten form fields, leaving other interactive elements intact",
+                )}
               </Text>
             </div>
           }
@@ -31,11 +48,19 @@ const FlattenSettings = ({ parameters, onParameterChange, disabled = false }: Fl
 
       {!parameters.flattenOnlyForms && (
         <NumberInput
-          label={t('flatten.renderDpi.label', 'Rendering DPI')}
-          description={t('flatten.renderDpi.help', 'Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size.')}
-          placeholder={t('flatten.renderDpi.placeholder', 'e.g. 150')}
+          label={t("flatten.renderDpi.label", "Rendering DPI")}
+          description={t(
+            "flatten.renderDpi.help",
+            "Leave blank to use the system default. Higher DPI sharpens output but increases processing time and file size.",
+          )}
+          placeholder={t("flatten.renderDpi.placeholder", "e.g. 150")}
           value={parameters.renderDpi ?? undefined}
-          onChange={(value) => onParameterChange('renderDpi', value != null && value !== '' ? Number(value) : undefined)}
+          onChange={(value) =>
+            onParameterChange(
+              "renderDpi",
+              value != null && value !== "" ? Number(value) : undefined,
+            )
+          }
           disabled={disabled}
           min={72}
           max={2400}

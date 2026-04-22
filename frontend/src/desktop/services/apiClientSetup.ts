@@ -1,13 +1,17 @@
-import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { alert } from '@app/components/toast';
-import { setupApiInterceptors as coreSetup } from '@core/services/apiClientSetup';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { createBackendNotReadyError } from '@app/constants/backendErrors';
-import { operationRouter } from '@app/services/operationRouter';
-import { authService } from '@app/services/authService';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
-import i18n from '@app/i18n';
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { alert } from "@app/components/toast";
+import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { createBackendNotReadyError } from "@app/constants/backendErrors";
+import { operationRouter } from "@app/services/operationRouter";
+import { authService } from "@app/services/authService";
+import { connectionModeService } from "@app/services/connectionModeService";
+import {
+  STIRLING_SAAS_URL,
+  STIRLING_SAAS_BACKEND_API_URL,
+} from "@app/constants/connection";
+import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
+import i18n from "@app/i18n";
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
@@ -41,18 +45,17 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // Pattern matching in shouldSkipBackendReadyCheck() needs original relative URL
       const originalUrl = extendedConfig.url;
       const skipCheck = extendedConfig.skipBackendReadyCheck === true;
-      const skipForSaaSBackend = await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
+      const skipForSaaSBackend =
+        await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
 
       try {
         // Get the appropriate base URL for this request
         const baseUrl = await operationRouter.getBaseUrl(originalUrl);
 
         // Build the full URL
-        if (extendedConfig.url && !extendedConfig.url.startsWith('http')) {
+        if (extendedConfig.url && !extendedConfig.url.startsWith("http")) {
           extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
         }
-
-        localStorage.setItem('server_url', baseUrl);
 
         // Debug logging
         console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
@@ -68,7 +71,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // Tag request so error handler can identify SaaS backend errors without URL matching
         extendedConfig._isSaaSRequest = isSaaSBackendRequest;
 
-        console.debug(`[apiClientSetup] Auth check: isRemote=${isRemote}, isSaaSBackendRequest=${isSaaSBackendRequest}, needsAuth=${needsAuth}, baseUrl=${baseUrl}`);
+        console.debug(
+          `[apiClientSetup] Auth check: isRemote=${isRemote}, isSaaSBackendRequest=${isSaaSBackendRequest}, needsAuth=${needsAuth}, baseUrl=${baseUrl}`,
+        );
 
         if (needsAuth) {
           // Enable credentials for session management
@@ -80,38 +85,47 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
-            console.debug(`[apiClientSetup] Added auth token for request to: ${extendedConfig.url}`);
+            console.debug(
+              `[apiClientSetup] Added auth token for request to: ${extendedConfig.url}`,
+            );
           } else {
-            console.warn(`[apiClientSetup] No auth token available for: ${extendedConfig.url}`);
+            console.warn(
+              `[apiClientSetup] No auth token available for: ${extendedConfig.url}`,
+            );
           }
         } else {
           // Local bundled backend: disable credentials (security disabled)
           extendedConfig.withCredentials = false;
         }
       } catch (error) {
-        console.error('[apiClientSetup] Error in request interceptor:', error);
+        console.error("[apiClientSetup] Error in request interceptor:", error);
         // Continue with request even if routing/auth logic fails
         // This ensures requests aren't blocked by interceptor errors
       }
 
       // Backend readiness check (for local backend)
       const isSaaS = await operationRouter.isSaaSMode();
-      const backendHealthy = tauriBackendService.isBackendHealthy();
+      const backendHealthy = tauriBackendService.isOnline;
       const backendStatus = tauriBackendService.getBackendStatus();
       const backendPort = tauriBackendService.getBackendPort();
 
-      console.debug(`[apiClientSetup] Backend readiness check for ${extendedConfig.url}: isSaaS=${isSaaS}, skipCheck=${skipCheck}, skipForSaaSBackend=${skipForSaaSBackend}, backendHealthy=${backendHealthy}, backendStatus=${backendStatus}, backendPort=${backendPort}`);
+      console.debug(
+        `[apiClientSetup] Backend readiness check for ${extendedConfig.url}: isSaaS=${isSaaS}, skipCheck=${skipCheck}, skipForSaaSBackend=${skipForSaaSBackend}, backendHealthy=${backendHealthy}, backendStatus=${backendStatus}, backendPort=${backendPort}`,
+      );
 
       if (isSaaS && !skipCheck && !skipForSaaSBackend && !backendHealthy) {
-        const method = (extendedConfig.method || 'get').toLowerCase();
-        if (method !== 'get') {
+        const method = (extendedConfig.method || "get").toLowerCase();
+        if (method !== "get") {
           const now = Date.now();
           if (now - lastBackendToast > BACKEND_TOAST_COOLDOWN_MS) {
             lastBackendToast = now;
             alert({
-              alertType: 'error',
-              title: i18n.t('backendHealth.offline', 'Backend Offline'),
-              body: i18n.t('backendHealth.wait', 'Please wait for the backend to finish launching and try again.'),
+              alertType: "error",
+              title: i18n.t("backendHealth.offline", "Backend Offline"),
+              body: i18n.t(
+                "backendHealth.wait",
+                "Please wait for the backend to finish launching and try again.",
+              ),
               isPersistentPopup: false,
             });
           }
@@ -121,7 +135,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       return extendedConfig;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   // Response interceptor: Handle auth errors and update credits from headers
@@ -129,16 +143,18 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     async (response) => {
       // Check for credit balance update in response headers
       // Backend includes X-Credits-Remaining header after operations that consume credits
-      const creditsHeader = response.headers['x-credits-remaining'];
+      const creditsHeader = response.headers["x-credits-remaining"];
 
       if (creditsHeader !== undefined && creditsHeader !== null) {
         const creditsRemaining = parseInt(creditsHeader, 10);
 
         if (!isNaN(creditsRemaining)) {
           // Dispatch event with new balance for immediate update
-          window.dispatchEvent(new CustomEvent('credits:updated', {
-            detail: { creditsRemaining }
-          }));
+          window.dispatchEvent(
+            new CustomEvent("credits:updated", {
+              detail: { creditsRemaining },
+            }),
+          );
         }
       }
 
@@ -146,8 +162,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
     },
     async (error) => {
       const originalRequest = error.config as ExtendedRequestConfig;
-      const requestUrl = String(originalRequest?.url || '');
-      const isAuthProbeRequest = requestUrl.includes('/api/v1/auth/me');
+      const requestUrl = String(originalRequest?.url || "");
+      const isAuthProbeRequest = requestUrl.includes("/api/v1/auth/me");
 
       // Handle 401 Unauthorized - try to refresh token
       if (error.response?.status === 401 && !originalRequest._retry) {
@@ -156,15 +172,28 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (isAuthProbeRequest) {
           return Promise.reject(error);
         }
-        if (typeof window !== 'undefined') {
-          console.warn('[apiClientSetup] 401 on path:', window.location.pathname, 'url:', originalRequest.url);
+        if (typeof window !== "undefined") {
+          console.warn(
+            "[apiClientSetup] 401 on path:",
+            window.location.pathname,
+            "url:",
+            originalRequest.url,
+          );
         }
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
+        // If no Authorization header was sent, the user was never authenticated —
+        // the 401 is expected (e.g. endpoint availability checks when not signed in).
+        // Don't attempt a refresh or open the sign-in modal in that case.
+        if (!originalRequest.headers.Authorization) {
+          return Promise.reject(error);
+        }
         originalRequest._retry = true;
 
-        console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);
+        console.debug(
+          `[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`,
+        );
 
         const isRemote = await operationRouter.isSelfHostedMode();
         let refreshed = false;
@@ -183,37 +212,41 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (refreshed) {
           // Retry the original request with new token
           const token = await authService.getAuthToken();
-          console.debug(`[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`);
+          console.debug(
+            `[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`,
+          );
 
           if (token) {
             originalRequest.headers.Authorization = `Bearer ${token}`;
           } else {
-            console.error(`[apiClientSetup] No token available after successful refresh!`);
+            console.error(
+              `[apiClientSetup] No token available after successful refresh!`,
+            );
           }
 
           return client.request(originalRequest);
         }
 
-        // Refresh failed - user needs to login again
-        alert({
-          alertType: 'error',
-          title: i18n.t('auth.sessionExpired', 'Session Expired'),
-          body: i18n.t('auth.pleaseLoginAgain', 'Please login again.'),
-          isPersistentPopup: false,
-        });
+        // Refresh failed - prompt for re-authentication via the sign-in modal.
+        window.dispatchEvent(
+          new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
+        );
       }
 
       // Handle 403 Forbidden - unauthorized access
       if (error.response?.status === 403) {
         alert({
-          alertType: 'error',
-          title: i18n.t('auth.accessDenied', 'Access Denied'),
-          body: i18n.t('auth.insufficientPermissions', 'You do not have permission to perform this action.'),
+          alertType: "error",
+          title: i18n.t("auth.accessDenied", "Access Denied"),
+          body: i18n.t(
+            "auth.insufficientPermissions",
+            "You do not have permission to perform this action.",
+          ),
           isPersistentPopup: false,
         });
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 }

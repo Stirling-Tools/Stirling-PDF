@@ -36,7 +36,7 @@ export const usePageSelectionManager = ({
         })
         .filter((num) => num > 0);
     },
-    [displayDocument]
+    [displayDocument],
   );
 
   const getPageIdsFromNumbers = useCallback(
@@ -49,7 +49,7 @@ export const usePageSelectionManager = ({
         })
         .filter((id) => id !== "");
     },
-    [displayDocument]
+    [displayDocument],
   );
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export const usePageSelectionManager = ({
       const pageIds = getPageIdsFromNumbers(pageNumbers);
       setSelectedPageIds(pageIds);
     },
-    [getPageIdsFromNumbers, setSelectedPageIds]
+    [getPageIdsFromNumbers, setSelectedPageIds],
   );
 
   const updatePagesFromCSV = useCallback(
@@ -116,7 +116,7 @@ export const usePageSelectionManager = ({
       const normalized = parseSelection(override ?? csvInput, totalPages);
       handleSetSelectedPages(normalized);
     },
-    [csvInput, totalPages, handleSetSelectedPages]
+    [csvInput, totalPages, handleSetSelectedPages],
   );
 
   return {
