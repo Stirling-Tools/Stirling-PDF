@@ -5,6 +5,7 @@ import {
 } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface ReplaceColorParameters extends BaseParameters {
+  mode: "LEGACY" | "TEXT_COLOR_REPLACEMENT";
   replaceAndInvertOption:
     | "HIGH_CONTRAST_COLOR"
     | "CUSTOM_COLOR"
@@ -17,13 +18,18 @@ export interface ReplaceColorParameters extends BaseParameters {
     | "GREEN_TEXT_ON_BLACK";
   textColor: string;
   backGroundColor: string;
+  sourceColors: string[];
+  targetColor: string;
 }
 
 export const defaultParameters: ReplaceColorParameters = {
+  mode: "TEXT_COLOR_REPLACEMENT",
   replaceAndInvertOption: "HIGH_CONTRAST_COLOR",
   highContrastColorCombination: "WHITE_TEXT_ON_BLACK",
   textColor: "#000000",
   backGroundColor: "#ffffff",
+  sourceColors: [],
+  targetColor: "#000000",
 };
 
 export type ReplaceColorParametersHook =
@@ -33,8 +39,10 @@ export const useReplaceColorParameters = (): ReplaceColorParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "replace-invert-pdf",
-    validateFn: () => {
-      // All parameters are always valid as they have defaults
+    validateFn: (parameters) => {
+      if (parameters.mode === "TEXT_COLOR_REPLACEMENT") {
+        return parameters.sourceColors.length > 0;
+      }
       return true;
     },
   });

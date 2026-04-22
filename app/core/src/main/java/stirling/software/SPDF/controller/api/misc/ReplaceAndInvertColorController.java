@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +17,12 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
+import stirling.software.SPDF.model.api.misc.ReplaceTextColorsRequest;
+import stirling.software.SPDF.model.json.TextColorUsage;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+import stirling.software.SPDF.service.misc.TextColorReplacementService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.util.GeneralUtils;
@@ -29,6 +35,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
+    private final TextColorReplacementService textColorReplacementService;
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -64,5 +71,39 @@ public class ReplaceAndInvertColorController {
         }
 
         return WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/detect-text-colors")
+    @JsonDataResponse
+    @Operation(
+            summary = "Detect text colours in PDF",
+            description =
+                    "Scans text glyphs in the PDF and returns colour usage counts in hex format. Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<List<TextColorUsage>> detectTextColors(@ModelAttribute ReplaceTextColorsRequest request)
+            throws IOException {
+        List<TextColorUsage> usages =
+                textColorReplacementService.detectTextColors(request.getFileInput());
+        return ResponseEntity.ok(usages);
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/replace-text-colors")
+    @Operation(
+            summary = "Replace specific PDF text colours",
+            description =
+                    "Replaces selected source text colours with a single target colour while leaving non-text content unchanged. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<StreamingResponseBody> replaceTextColors(
+            @ModelAttribute ReplaceTextColorsRequest request) throws IOException {
+        PDDocument output =
+                textColorReplacementService.replaceTextColors(
+                        request.getFileInput(), request.getSourceColors(), request.getTargetColor());
+        return WebResponseUtils.pdfDocToWebResponse(
+                output,
+                GeneralUtils.generateFilename(
+                        request.getFileInput().getOriginalFilename(), "_text-colours-replaced.pdf"),
+                tempFileManager);
     }
 }
