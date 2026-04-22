@@ -235,58 +235,6 @@ class AiWorkflowServiceTest {
     }
 
     @Test
-    void planWithAgentToolIdIsTranslatedToEndpointPath() throws IOException {
-        // Python orchestrator emits the bare AgentToolId value ("pdfCommentAgent") in plan steps.
-        // AiWorkflowService must translate that to the registered Spring endpoint path before
-        // dispatching through InternalApiClient, otherwise the dispatch allowlist rejects it.
-        MockMultipartFile input = pdf("input.pdf", "bytes");
-        String agentEndpoint = "/api/v1/ai/pdf-comment-agent";
-        stubOrchestrator(
-                """
-                {
-                  "outcome":"plan",
-                  "summary":"Add AI comments",
-                  "steps":[
-                    {"tool":"pdfCommentAgent","parameters":{"prompt":"flag dates"}}
-                  ]
-                }
-                """);
-        when(toolMetadataService.isMultiInput(agentEndpoint)).thenReturn(false);
-        when(toolMetadataService.shouldUnpackZipResponse(agentEndpoint)).thenReturn(false);
-        stubEndpoint(agentEndpoint, pdfResource("annotated", "input-commented.pdf"));
-        stubFileStorage();
-
-        AiWorkflowResponse result =
-                service.orchestrate(requestFor(input, "add comments to this pdf"));
-
-        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
-        assertEquals(1, result.getResultFiles().size());
-        // InternalApiClient must receive the resolved path, not the bare agent id.
-        verify(internalApiClient, times(1)).post(eq(agentEndpoint), any());
-        verify(internalApiClient, never()).post(eq("pdfCommentAgent"), any());
-    }
-
-    @Test
-    void toolCallWithAgentToolIdIsTranslatedToEndpointPath() throws IOException {
-        // Same translation requirement applies to the TOOL_CALL outcome (single-step agent tool).
-        MockMultipartFile input = pdf("input.pdf", "bytes");
-        String agentEndpoint = "/api/v1/ai/pdf-comment-agent";
-        stubOrchestrator(
-                """
-                {"outcome":"tool_call","tool":"pdfCommentAgent","parameters":{"prompt":"x"},"rationale":"AI comments"}
-                """);
-        when(toolMetadataService.isMultiInput(agentEndpoint)).thenReturn(false);
-        when(toolMetadataService.shouldUnpackZipResponse(agentEndpoint)).thenReturn(false);
-        stubEndpoint(agentEndpoint, pdfResource("annotated", "input-commented.pdf"));
-        stubFileStorage();
-
-        AiWorkflowResponse result = service.orchestrate(requestFor(input, "add comments"));
-
-        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
-        verify(internalApiClient, times(1)).post(eq(agentEndpoint), any());
-    }
-
-    @Test
     void toolCallWithoutEndpointFallsBackToCannotContinue() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator("{\"outcome\":\"tool_call\",\"parameters\":{}}");

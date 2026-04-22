@@ -18,6 +18,39 @@ class AddAttachmentsParams(ApiModel):
     )
 
 
+class CommentSpec(ApiModel):
+    """Absolute-positioned sticky-note comment spec sent to /api/v1/misc/add-comments."""
+
+    page_index: int = Field(description="0-indexed page number.")
+    x: float = Field(description="Bottom-left x coord of the sticky-note icon (PDF user-space).")
+    y: float = Field(description="Bottom-left y coord of the sticky-note icon (PDF user-space).")
+    width: float = Field(description="Width of the sticky-note icon, in user-space units.")
+    height: float = Field(description="Height of the sticky-note icon, in user-space units.")
+    text: str = Field(description="Comment body shown in the popup.")
+    author: str | None = Field(default=None, description="Optional author label; default used when absent.")
+    subject: str | None = Field(default=None, description="Optional subject/title; default used when absent.")
+
+
+class AddCommentsParams(ApiModel):
+    """Parameters for /api/v1/misc/add-comments.
+
+    Java expects ``comments`` as a JSON-encoded string in the multipart form body. We serialise
+    the :class:`CommentSpec` list when emitting the plan step so the wire format matches.
+    """
+
+    comments: str = Field(description="JSON-encoded array of CommentSpec objects.")
+
+
+class PdfCommentAgentParams(ApiModel):
+    """Parameters for /api/v1/misc/pdf-comment-agent (composed AI tool).
+
+    Takes a user prompt; the tool extracts text chunks, calls the engine's
+    :class:`PdfCommentAgent`, resolves chunk ids to absolute positions, and annotates the PDF.
+    """
+
+    prompt: str = Field(description="The end-user prompt describing what the AI should comment on.")
+
+
 class AddImageParams(ApiModel):
     every_page: bool | None = Field(False, description="Whether to overlay the image onto every page of the PDF.")
     x: float | None = Field(0, description="The x-coordinate at which to place the top-left corner of the image.")
@@ -1226,6 +1259,7 @@ type ParamToolModel = (
     | SplitPdfByChaptersParams
     | SplitPdfBySectionsParams
     | AddAttachmentsParams
+    | AddCommentsParams
     | AddImageParams
     | AddPageNumbersParams
     | AddStampParams
@@ -1237,6 +1271,7 @@ type ParamToolModel = (
     | ExtractImagesParams
     | FlattenParams
     | OcrPdfParams
+    | PdfCommentAgentParams
     | RemoveBlanksParams
     | RenameAttachmentParams
     | ReplaceInvertPdfParams
@@ -1292,6 +1327,7 @@ class ToolEndpoint(StrEnum):
     SPLIT_PDF_BY_CHAPTERS = "/api/v1/general/split-pdf-by-chapters"
     SPLIT_PDF_BY_SECTIONS = "/api/v1/general/split-pdf-by-sections"
     ADD_ATTACHMENTS = "/api/v1/misc/add-attachments"
+    ADD_COMMENTS = "/api/v1/misc/add-comments"
     ADD_IMAGE = "/api/v1/misc/add-image"
     ADD_PAGE_NUMBERS = "/api/v1/misc/add-page-numbers"
     ADD_STAMP = "/api/v1/misc/add-stamp"
@@ -1303,6 +1339,7 @@ class ToolEndpoint(StrEnum):
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
+    PDF_COMMENT_AGENT = "/api/v1/misc/pdf-comment-agent"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
@@ -1320,6 +1357,8 @@ class ToolEndpoint(StrEnum):
 
 
 OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
+    ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
+    ToolEndpoint.PDF_COMMENT_AGENT: PdfCommentAgentParams,
     ToolEndpoint.CBR_TO_PDF: CbrToPdfParams,
     ToolEndpoint.CBZ_TO_PDF: CbzToPdfParams,
     ToolEndpoint.EBOOK_TO_PDF: EbookToPdfParams,

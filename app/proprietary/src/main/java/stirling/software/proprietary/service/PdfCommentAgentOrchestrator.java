@@ -2,19 +2,14 @@ package stirling.software.proprietary.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -24,7 +19,10 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.api.comments.AnnotationLocation;
+import stirling.software.common.model.api.comments.StickyNoteSpec;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfAnnotationService;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentEngineRequest;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentEngineResponse;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentInstruction;
@@ -33,21 +31,23 @@ import stirling.software.proprietary.model.api.ai.comments.TextChunk;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Orchestrator for the PDF Comment Agent (pdfCommentAgent).
+ * Composed AI tool for PDF comment generation.
  *
- * <p>Responsibilities:
+ * <p>Runs the full flow:
  *
  * <ol>
  *   <li>Validate inputs (PDF, non-empty prompt within length limit).
  *   <li>Extract positioned text chunks from the PDF.
  *   <li>POST the chunks + prompt to the Python agent at {@code
  *       /api/v1/ai/pdf-comment-agent/generate}.
- *   <li>Apply the returned comment instructions as {@link PDAnnotationText} annotations — using the
- *       chunk's known bounding box so positioning is fully deterministic on the Java side.
- *   <li>Return the annotated PDF bytes + suggested filename as an {@link AnnotatedPdf} record.
+ *   <li>Resolve each returned chunk-id reference to an absolute {@link StickyNoteSpec}.
+ *   <li>Hand the specs to {@link PdfAnnotationService} for deterministic placement.
+ *   <li>Save the annotated PDF, return the bytes + filename.
  * </ol>
  *
- * <p>The raw PDF never leaves Java; Python only sees structured text chunks.
+ * <p>Annotation primitives live in {@link PdfAnnotationService} (shared with {@code
+ * /api/v1/misc/add-comments}). This class owns only the AI-specific bits: chunk extraction and
+ * engine round-trip.
  */
 @Slf4j
 @Service
@@ -59,21 +59,6 @@ public class PdfCommentAgentOrchestrator {
 
     /** Width/height of the sticky-note icon placed on the page, in PDF user-space units. */
     private static final float ANNOTATION_SIZE = 20f;
-
-    /** Yellow sticky-note fill colour (R, G, B in 0..1 range). */
-    private static final float[] STICKY_NOTE_COLOR_RGB = {1f, 0.95f, 0.4f};
-
-    /** Opacity for the sticky-note icon. */
-    private static final float ANNOTATION_OPACITY = 0.9f;
-
-    /** PDF Text-annotation icon name — {@code "Comment"} is one of the standard icons. */
-    private static final String ANNOTATION_ICON_NAME = "Comment";
-
-    /** Default subject shown in the annotation popup when the agent does not supply one. */
-    private static final String DEFAULT_COMMENT_SUBJECT = "Stirling AI Comment";
-
-    /** Default author label shown in the annotation popup when the agent does not supply one. */
-    private static final String DEFAULT_COMMENT_AUTHOR = "Stirling AI";
 
     /** Filename used when the uploaded PDF has no usable original filename. */
     private static final String FALLBACK_OUTPUT_NAME = "document-commented.pdf";
@@ -88,9 +73,10 @@ public class PdfCommentAgentOrchestrator {
     private final PdfTextChunkExtractor pdfTextChunkExtractor;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
+    private final PdfAnnotationService pdfAnnotationService;
 
     /**
-     * Run the full PDF Comment Agent flow.
+     * Run the full PDF comment generation flow.
      *
      * @param pdfFile the uploaded PDF
      * @param prompt the user's natural-language instructions
@@ -131,26 +117,19 @@ public class PdfCommentAgentOrchestrator {
                     chunks.size(),
                     document.getNumberOfPages());
 
-            // Call the Python agent
-            PdfCommentEngineRequest engineRequest =
-                    new PdfCommentEngineRequest(sessionId, trimmedPrompt, chunks);
-            String requestBody = objectMapper.writeValueAsString(engineRequest);
-            String responseBody = aiEngineClient.post(GENERATE_PATH, requestBody);
-            PdfCommentEngineResponse engineResponse =
-                    objectMapper.readValue(responseBody, PdfCommentEngineResponse.class);
-
             List<PdfCommentInstruction> instructions =
-                    engineResponse.comments() == null ? List.of() : engineResponse.comments();
+                    requestComments(sessionId, trimmedPrompt, chunks);
+
+            // Resolve chunk-id-referenced comments to absolute sticky-note specs, then delegate
+            // placement to the shared service (same primitive /api/v1/misc/add-comments uses).
+            List<StickyNoteSpec> specs = resolveSpecs(instructions, chunks, sessionId);
+            int applied = pdfAnnotationService.addStickyNotes(document, specs);
             log.info(
-                    "[pdf-comment-agent] session={} engine returned {} comments: {}",
+                    "[pdf-comment-agent] session={} placed {}/{} sticky notes",
                     sessionId,
-                    instructions.size(),
-                    engineResponse.rationale());
+                    applied,
+                    instructions.size());
 
-            // Apply the annotations
-            applyAnnotations(document, chunks, instructions, sessionId);
-
-            // Save to an in-memory buffer.
             byte[] annotatedBytes;
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 document.save(baos);
@@ -168,28 +147,47 @@ public class PdfCommentAgentOrchestrator {
     }
 
     // -----------------------------------------------------------------------
-    // Annotation application
+    // Engine round-trip
     // -----------------------------------------------------------------------
 
-    private void applyAnnotations(
-            PDDocument document,
-            List<TextChunk> chunks,
-            List<PdfCommentInstruction> instructions,
-            String sessionId)
-            throws IOException {
-        if (instructions.isEmpty()) {
-            return;
-        }
+    private List<PdfCommentInstruction> requestComments(
+            String sessionId, String prompt, List<TextChunk> chunks) throws IOException {
+        PdfCommentEngineRequest engineRequest =
+                new PdfCommentEngineRequest(sessionId, prompt, chunks);
+        String requestBody = objectMapper.writeValueAsString(engineRequest);
+        String responseBody = aiEngineClient.post(GENERATE_PATH, requestBody);
+        PdfCommentEngineResponse engineResponse =
+                objectMapper.readValue(responseBody, PdfCommentEngineResponse.class);
 
+        List<PdfCommentInstruction> instructions =
+                engineResponse.comments() == null ? List.of() : engineResponse.comments();
+        log.info(
+                "[pdf-comment-agent] session={} engine returned {} comments: {}",
+                sessionId,
+                instructions.size(),
+                engineResponse.rationale());
+        return instructions;
+    }
+
+    // -----------------------------------------------------------------------
+    // Chunk-id → StickyNoteSpec resolution
+    // -----------------------------------------------------------------------
+
+    /**
+     * Translate each engine-returned {@link PdfCommentInstruction} (chunk-id-referenced) into an
+     * absolute-positioned {@link StickyNoteSpec}. Unknown or malformed ids are logged and dropped.
+     */
+    private List<StickyNoteSpec> resolveSpecs(
+            List<PdfCommentInstruction> instructions, List<TextChunk> chunks, String sessionId) {
+        if (instructions.isEmpty()) {
+            return List.of();
+        }
         Map<String, TextChunk> chunksById = new HashMap<>();
         for (TextChunk chunk : chunks) {
             chunksById.put(chunk.id(), chunk);
         }
 
-        int totalPages = document.getNumberOfPages();
-        int applied = 0;
-        Calendar now = Calendar.getInstance();
-
+        List<StickyNoteSpec> specs = new ArrayList<>(instructions.size());
         for (PdfCommentInstruction inst : instructions) {
             if (inst == null || inst.chunkId() == null || inst.commentText() == null) {
                 log.warn(
@@ -206,43 +204,16 @@ public class PdfCommentAgentOrchestrator {
                         inst.chunkId());
                 continue;
             }
-            if (chunk.page() < 0 || chunk.page() >= totalPages) {
-                log.warn(
-                        "[pdf-comment-agent] session={} chunkId={} references out-of-range page={}",
-                        sessionId,
-                        inst.chunkId(),
-                        chunk.page());
-                continue;
-            }
 
-            PDAnnotationText annot = new PDAnnotationText();
-            annot.setContents(inst.commentText());
             // Anchor the sticky-note icon at the top-left of the chunk's bbox.
             float iconX = chunk.x();
             float iconY = chunk.y() + chunk.height() - ANNOTATION_SIZE;
-            annot.setRectangle(new PDRectangle(iconX, iconY, ANNOTATION_SIZE, ANNOTATION_SIZE));
-            annot.setSubject(
-                    inst.subject() != null && !inst.subject().isBlank()
-                            ? inst.subject()
-                            : DEFAULT_COMMENT_SUBJECT);
-            annot.setTitlePopup(
-                    inst.author() != null && !inst.author().isBlank()
-                            ? inst.author()
-                            : DEFAULT_COMMENT_AUTHOR);
-            annot.setColor(new PDColor(STICKY_NOTE_COLOR_RGB, PDDeviceRGB.INSTANCE));
-            annot.setCreationDate(now);
-            annot.setConstantOpacity(ANNOTATION_OPACITY);
-            annot.getCOSObject().setName(COSName.NAME, ANNOTATION_ICON_NAME);
-
-            document.getPage(chunk.page()).getAnnotations().add(annot);
-            applied++;
+            AnnotationLocation loc =
+                    new AnnotationLocation(
+                            chunk.page(), iconX, iconY, ANNOTATION_SIZE, ANNOTATION_SIZE);
+            specs.add(new StickyNoteSpec(loc, inst.commentText(), inst.author(), inst.subject()));
         }
-
-        log.info(
-                "[pdf-comment-agent] session={} applied {}/{} annotations",
-                sessionId,
-                applied,
-                instructions.size());
+        return specs;
     }
 
     // -----------------------------------------------------------------------

@@ -27,7 +27,8 @@ from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams, PdfCommentAgentParams
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.models.tool_models import PdfCommentAgentParams, ToolEndpoint
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -69,11 +70,14 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
-                    self.delegate_pdf_comment,
-                    name="delegate_pdf_comment",
+                    self.delegate_pdf_review,
+                    name="delegate_pdf_review",
                     description=(
-                        "Delegate requests to add review comments, notes, or sticky-note "
-                        "annotations to a PDF based on a user prompt."
+                        "Delegate requests to review a PDF and leave review comments, notes, or"
+                        " sticky-note annotations on the document itself. Use this when the user"
+                        " wants the PDF returned with comments attached (e.g. 'review this',"
+                        " 'add review comments', 'flag unclear sentences', 'annotate with"
+                        " feedback')."
                     ),
                 ),
                 ToolOutput(
@@ -91,8 +95,11 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
-                "Use delegate_pdf_comment when the user wants to add comments, notes, "
-                "sticky notes, or review annotations to a PDF. "
+                "Use delegate_pdf_review when the user wants the PDF returned with review"
+                " comments attached — anything like 'review this', 'annotate with comments',"
+                " 'leave feedback on the PDF'. If the user is asking a question about the PDF"
+                " contents (and does NOT want comments written onto the document) use"
+                " delegate_pdf_question instead. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
@@ -184,12 +191,18 @@ class OrchestratorAgent:
             ],
         )
 
-    async def delegate_pdf_comment(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+    async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        """Emit a plan step that dispatches to the composed /api/v1/misc/pdf-comment-agent tool.
+
+        The Java tool handles chunk extraction, engine round-trip (via PdfCommentAgent),
+        chunk-id → absolute position resolution, and annotation placement via the shared
+        PdfAnnotationService primitive. Java then returns the annotated PDF bytes.
+        """
         return EditPlanResponse(
             summary="Add AI-generated review comments to the PDF.",
             steps=[
                 ToolOperationStep(
-                    tool=AgentToolId.PDF_COMMENT_AGENT,
+                    tool=ToolEndpoint.PDF_COMMENT_AGENT,
                     parameters=PdfCommentAgentParams(prompt=ctx.deps.request.user_message),
                 )
             ],

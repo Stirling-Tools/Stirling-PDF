@@ -35,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfAnnotationService;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentEngineResponse;
 import stirling.software.proprietary.model.api.ai.comments.PdfCommentInstruction;
 import stirling.software.proprietary.model.api.ai.comments.TextChunk;
@@ -56,14 +57,22 @@ class PdfCommentAgentOrchestratorTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
     private ObjectMapper objectMapper;
+    private PdfAnnotationService pdfAnnotationService;
     private PdfCommentAgentOrchestrator orchestrator;
 
     @BeforeEach
     void setUp() {
         objectMapper = JsonMapper.builder().build();
+        // Real (not mocked) — it's a pure primitive; exercising it in the test gives us stronger
+        // assertions (the annotated PDF actually has the expected sticky notes).
+        pdfAnnotationService = new PdfAnnotationService();
         orchestrator =
                 new PdfCommentAgentOrchestrator(
-                        aiEngineClient, pdfTextChunkExtractor, pdfDocumentFactory, objectMapper);
+                        aiEngineClient,
+                        pdfTextChunkExtractor,
+                        pdfDocumentFactory,
+                        objectMapper,
+                        pdfAnnotationService);
     }
 
     @Test

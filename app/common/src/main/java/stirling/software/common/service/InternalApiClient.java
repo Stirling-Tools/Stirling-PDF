@@ -144,23 +144,11 @@ public class InternalApiClient {
     }
 
     private void validateUrl(String endpointPath) {
-        if (endpointPath == null) {
-            log.warn("Blocked internal API request to null path");
-            throw new SecurityException("Internal API dispatch not permitted for endpoint: null");
+        if (endpointPath == null || !ALLOWED_ENDPOINT_PATH.matcher(endpointPath).matches()) {
+            log.warn("Blocked internal API request to disallowed path: {}", endpointPath);
+            throw new SecurityException(
+                    "Internal API dispatch not permitted for endpoint: " + endpointPath);
         }
-        // Primary allowlist: regular tool namespaces.
-        if (ALLOWED_ENDPOINT_PATH.matcher(endpointPath).matches()) {
-            return;
-        }
-        // Secondary allowlist: explicit AI-agent tool endpoints registered in AgentTool.
-        // Kept as a membership check (not a regex broadening) so /api/v1/ai/orchestrate and other
-        // non-tool AI endpoints remain off-limits to internal dispatch.
-        if (AgentTool.allPaths().contains(endpointPath)) {
-            return;
-        }
-        log.warn("Blocked internal API request to disallowed path: {}", endpointPath);
-        throw new SecurityException(
-                "Internal API dispatch not permitted for endpoint: " + endpointPath);
     }
 
     /**

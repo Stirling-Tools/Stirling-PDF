@@ -36,9 +36,9 @@ import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.Annotat
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/ai")
+@RequestMapping("/api/v1/misc")
 @RequiredArgsConstructor
-@Tag(name = "AI Engine", description = "AI-powered document analysis endpoints.")
+@Tag(name = "Misc", description = "Miscellaneous PDF operations.")
 public class PdfCommentAgentController {
 
     private final PdfCommentAgentOrchestrator orchestrator;

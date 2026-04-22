@@ -69,7 +69,7 @@ class PdfCommentAgentControllerTest {
                 .thenReturn(stub);
 
         mockMvc.perform(
-                        multipart("/api/v1/ai/pdf-comment-agent")
+                        multipart("/api/v1/misc/pdf-comment-agent")
                                 .file(pdfFile)
                                 .param("prompt", "flag dates"))
                 .andExpect(status().isOk())
@@ -98,7 +98,7 @@ class PdfCommentAgentControllerTest {
                                 "Only application/pdf uploads are supported"));
 
         mockMvc.perform(
-                        multipart("/api/v1/ai/pdf-comment-agent")
+                        multipart("/api/v1/misc/pdf-comment-agent")
                                 .file(notPdf)
                                 .param("prompt", "whatever"))
                 .andExpect(status().isBadRequest());
@@ -108,7 +108,7 @@ class PdfCommentAgentControllerTest {
 
     @Test
     void rejectsMissingFileInput() throws Exception {
-        mockMvc.perform(multipart("/api/v1/ai/pdf-comment-agent").param("prompt", "test"))
+        mockMvc.perform(multipart("/api/v1/misc/pdf-comment-agent").param("prompt", "test"))
                 .andExpect(status().is4xxClientError());
 
         verify(orchestrator, never()).applyComments(any(), anyString());
@@ -123,7 +123,7 @@ class PdfCommentAgentControllerTest {
                         MediaType.APPLICATION_PDF_VALUE,
                         "%PDF-1.4\n%%EOF".getBytes());
 
-        mockMvc.perform(multipart("/api/v1/ai/pdf-comment-agent").file(pdfFile))
+        mockMvc.perform(multipart("/api/v1/misc/pdf-comment-agent").file(pdfFile))
                 .andExpect(status().is4xxClientError());
 
         verify(orchestrator, never()).applyComments(any(), anyString());
