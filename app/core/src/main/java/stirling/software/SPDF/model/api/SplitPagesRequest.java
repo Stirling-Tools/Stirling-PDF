@@ -23,7 +23,7 @@ public class SplitPagesRequest extends PDFFile {
                     "Split points - page numbers after which the PDF will be cut. For example,"
                             + " `\"2\"` produces two documents (pages 1-2 and pages 3+); `\"2,5\"`"
                             + " produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g."
-                            + " `\"1,3,5-9\"` splits after pages 1, 3, 5, 6, 7, 8, 9 — yielding 8"
+                            + " `\"1,3,5-9\"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8"
                             + " documents), `\"all\"` (split after every page), or functions like"
                             + " `\"2n+1\"`, `\"3n\"`, `\"6n-5\"`.",
             defaultValue = "all",
