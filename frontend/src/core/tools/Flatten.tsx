@@ -12,10 +12,10 @@ const Flatten = (props: BaseToolProps) => {
   const flattenTips = useFlattenTips();
 
   const base = useBaseTool(
-    'flatten',
+    "flatten",
     useFlattenParameters,
     useFlattenOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const Flatten = (props: BaseToolProps) => {
       {
         title: t("flatten.options.stepTitle", "Flatten Options"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: flattenTips,
         content: (
           <FlattenSettings

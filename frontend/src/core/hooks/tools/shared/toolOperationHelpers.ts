@@ -1,4 +1,11 @@
-import { StirlingFile, FileId, StirlingFileStub, createStirlingFile, ProcessedFileMetadata, createNewStirlingFileStub } from '@app/types/fileContext';
+import {
+  StirlingFile,
+  FileId,
+  StirlingFileStub,
+  createStirlingFile,
+  ProcessedFileMetadata,
+  createNewStirlingFileStub,
+} from "@app/types/fileContext";
 
 /**
  * Builds parallel inputFileIds and inputStirlingFileStubs arrays from the valid input files.
@@ -7,7 +14,9 @@ import { StirlingFile, FileId, StirlingFileStub, createStirlingFile, ProcessedFi
  */
 export function buildInputTracking(
   validFiles: StirlingFile[],
-  selectors: { getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined }
+  selectors: {
+    getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
+  },
 ): { inputFileIds: FileId[]; inputStirlingFileStubs: StirlingFileStub[] } {
   const inputFileIds: FileId[] = [];
   const inputStirlingFileStubs: StirlingFileStub[] = [];
@@ -34,13 +43,21 @@ export function buildOutputPairs(
   processedFiles: File[],
   thumbnails: string[],
   metadataArray: Array<ProcessedFileMetadata | undefined>,
-  stubFactory: (file: File, thumbnail: string, metadata: ProcessedFileMetadata | undefined, index: number) => StirlingFileStub
-): { outputStirlingFileStubs: StirlingFileStub[]; outputStirlingFiles: StirlingFile[] } {
+  stubFactory: (
+    file: File,
+    thumbnail: string,
+    metadata: ProcessedFileMetadata | undefined,
+    index: number,
+  ) => StirlingFileStub,
+): {
+  outputStirlingFileStubs: StirlingFileStub[];
+  outputStirlingFiles: StirlingFile[];
+} {
   const outputStirlingFileStubs = processedFiles.map((file, index) =>
-    stubFactory(file, thumbnails[index], metadataArray[index], index)
+    stubFactory(file, thumbnails[index], metadataArray[index], index),
   );
   const outputStirlingFiles = processedFiles.map((file, index) =>
-    createStirlingFile(file, outputStirlingFileStubs[index].id)
+    createStirlingFile(file, outputStirlingFileStubs[index].id),
   );
   return { outputStirlingFileStubs, outputStirlingFiles };
 }

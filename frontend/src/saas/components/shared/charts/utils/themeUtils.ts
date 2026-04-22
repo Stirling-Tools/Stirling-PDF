@@ -13,18 +13,20 @@ export interface ThemeInfo {
  * @returns ThemeInfo object with theme detection results
  */
 export function detectTheme(): ThemeInfo {
-  const rootEl = typeof document !== 'undefined' ? document.documentElement : null;
-  const schemeAttr = rootEl?.getAttribute('data-mantine-color-scheme');
-  const prefersDark = typeof window !== 'undefined' && 
-    window.matchMedia && 
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
-  const isDark = schemeAttr ? schemeAttr === 'dark' : prefersDark;
-  
+  const rootEl =
+    typeof document !== "undefined" ? document.documentElement : null;
+  const schemeAttr = rootEl?.getAttribute("data-mantine-color-scheme");
+  const prefersDark =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  const isDark = schemeAttr ? schemeAttr === "dark" : prefersDark;
+
   return {
     isDark,
     schemeAttr,
-    prefersDark
+    prefersDark,
   };
 }
 
@@ -35,12 +37,12 @@ export function detectTheme(): ThemeInfo {
  */
 export function getChartThemeVars(isDark: boolean) {
   return {
-    background: 'var(--bg-surface)',
-    textPrimary: 'var(--text-primary)',
-    border: isDark ? '1px solid var(--border-subtle)' : '1px solid transparent',
-    boxShadow: isDark ? 'none' : 'var(--shadow-md)',
-    inactive: 'var(--usage-inactive)',
-    cardBorder: 'var(--api-keys-card-border)'
+    background: "var(--bg-surface)",
+    textPrimary: "var(--text-primary)",
+    border: isDark ? "1px solid var(--border-subtle)" : "1px solid transparent",
+    boxShadow: isDark ? "none" : "var(--shadow-md)",
+    inactive: "var(--usage-inactive)",
+    cardBorder: "var(--api-keys-card-border)",
   };
 }
 
@@ -49,15 +51,18 @@ export function getChartThemeVars(isDark: boolean) {
  * @param tooltipElement The tooltip DOM element
  * @param isDark Whether the theme is dark
  */
-export function applyTooltipStyles(tooltipElement: HTMLElement, isDark: boolean) {
+export function applyTooltipStyles(
+  tooltipElement: HTMLElement,
+  isDark: boolean,
+) {
   const themeVars = getChartThemeVars(isDark);
-  
+
   tooltipElement.style.background = themeVars.background;
   tooltipElement.style.color = themeVars.textPrimary;
   tooltipElement.style.border = themeVars.border;
   tooltipElement.style.boxShadow = themeVars.boxShadow;
-  tooltipElement.style.padding = '8px 10px';
-  tooltipElement.style.fontSize = '12px';
-  tooltipElement.style.lineHeight = '1.25';
-  tooltipElement.style.borderRadius = '8px';
+  tooltipElement.style.padding = "8px 10px";
+  tooltipElement.style.fontSize = "12px";
+  tooltipElement.style.lineHeight = "1.25";
+  tooltipElement.style.borderRadius = "8px";
 }

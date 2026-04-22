@@ -42,11 +42,13 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 
 ### Prerequisites
 
+- [Task](https://taskfile.dev/installation/) — unified command runner (recommended)
 - Docker
 - Git
 - Java JDK 21 or later (JDK 25 recommended)
 - Node.js 18+ and npm (required for frontend development)
 - Gradle 7.0 or later (Included within the repo)
+- [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)
 
@@ -82,13 +84,29 @@ For local testing, you should generally be testing the full 'Security' version o
 5. **Frontend Setup (Required for Stirling 2.0)**
    Navigate to the frontend directory and install dependencies using npm.
 
+### Verify Setup
+
+Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes.
+
 ## 4. Stirling 2.0 Development Workflow
+
+### Using Taskfile (Recommended)
+
+The fastest way to start developing:
+
+1. **Start developing**: `task dev` (runs backend + frontend concurrently — Ctrl+C to stop)
+2. **Or start services individually** in separate terminals:
+   - `task backend:dev` — Spring Boot on localhost:8080
+   - `task frontend:dev` — Vite on localhost:5173
+   - `task engine:dev` — FastAPI on localhost:5001
+
+Run `task --list` to see all available commands.
 
 ### Frontend Development (React)
 The frontend is a React SPA that runs independently during development:
 
-1. **Start the backend**: Run the Spring Boot application (serves API endpoints on localhost:8080)
-2. **Start the frontend dev server**: Navigate to the frontend directory and run the development server (serves UI on localhost:5173)
+1. **Start the backend**: `task backend:dev` (serves API endpoints on localhost:8080)
+2. **Start the frontend dev server**: `task frontend:dev` (serves UI on localhost:5173)
 3. **Development flow**: The Vite dev server automatically proxies API calls to the backend
 
 ### File Storage Architecture
@@ -99,7 +117,10 @@ Stirling 2.0 uses client-side file storage:
 
 ### Tauri Desktop App Development
 Stirling-PDF can be packaged as a cross-platform desktop application using Tauri with PDF file association support and bundled JRE.
-See [the frontend README](frontend/README.md#tauri) for build instructions.
+
+Using Taskfile: `task desktop:dev` (development) or `task desktop:build` (production build).
+
+See [the frontend README](frontend/README.md#tauri) for detailed build instructions.
 
 ## 5. Project Structure
 
@@ -187,7 +208,7 @@ services:
         limits:
           memory: 4G
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -q 'Please sign in'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -q 'Please sign in'"]
       interval: 5s
       timeout: 10s
       retries: 16
@@ -222,6 +243,20 @@ docker-compose -f exampleYmlFiles/docker-compose-latest-security.yml up
 
 ### Building Docker Images
 
+#### Using Taskfile (Recommended)
+
+```bash
+task docker:build            # standard image
+task docker:build:fat        # fat image (all features)
+task docker:build:ultra-lite # ultra-lite image
+task docker:up               # start standard compose stack
+task docker:up:fat           # start fat compose stack
+task docker:down             # stop all stacks
+task docker:logs             # tail logs
+```
+
+#### Manual Docker Builds
+
 Stirling-PDF uses different Docker images for various configurations. The build process is controlled by environment variables and uses specific Dockerfile variants. Here's how to build the Docker images:
 
 1. Set the security environment variable:
@@ -230,10 +265,10 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
    ```
 
-2. Build the project with Gradle:
+2. Build the project:
 
    ```bash
-   ./gradlew clean build
+   task backend:build
    ```
 
 3. Build the Docker images:
@@ -261,9 +296,18 @@ Note: The `--no-cache` and `--pull` flags ensure that the build process uses the
 
 ## 7. Testing
 
+### Quick Testing with Taskfile
+
+Run all unit/integration tests across all components:
+
+```bash
+task test    # run all tests (backend + frontend + engine)
+task check   # full quality gate: lint + typecheck + test
+```
+
 ### Comprehensive Testing Script
 
-Stirling-PDF provides a `test.sh` script in the root directory. This script builds all versions of Stirling-PDF, checks that each version works, and runs Cucumber tests. It's recommended to run this script before submitting a final pull request.
+Stirling-PDF also provides a `test.sh` script in the root directory for Docker integration tests. This script builds all versions of Stirling-PDF, checks that each version works, and runs Cucumber tests. It's recommended to run this script before submitting a final pull request.
 
 To run the test script:
 
@@ -289,10 +333,11 @@ Note: The `test.sh` script will run automatically when you raise a PR. However, 
 
 For React frontend development:
 
-1. Start the backend: Run the Spring Boot application to serve API endpoints on localhost:8080
-2. Start the frontend dev server: Navigate to the frontend directory and run the development server on localhost:5173
+1. Start the backend: `task backend:dev` (serves API endpoints on localhost:8080)
+2. Start the frontend dev server: `task frontend:dev` (serves UI on localhost:5173)
 3. The Vite dev server automatically proxies API calls to the backend
-4. Test React components, UI interactions, and IndexedDB file operations using browser developer tools
+4. Run frontend tests: `task frontend:test` (or `task frontend:test:watch` for watch mode)
+5. Test React components, UI interactions, and IndexedDB file operations using browser developer tools
 
 ### Local Testing (Java and UI Components)
 
@@ -308,7 +353,7 @@ To run Stirling-PDF locally:
 1. Compile and run the project using built-in IDE methods or by running:
 
    ```bash
-   ./gradlew bootRun
+   task backend:dev
    ```
 
 2. Access the application at `http://localhost:8080` in your web browser.
@@ -329,10 +374,11 @@ Important notes:
 2. Create a new branch for your feature or bug fix.
 3. Make your changes and commit them with clear, descriptive messages and ensure any documentation is updated related to your changes.
 4. Test your changes thoroughly in the Docker environment.
-5. Run the `test.sh` script to ensure all versions build correctly and pass the Cucumber tests:
+5. Run the quality gate and integration tests:
 
    ```bash
-   ./test.sh
+   task check   # lint + typecheck + test across all components
+   ./test.sh    # Docker integration tests (builds all variants + Cucumber)
    ```
 
 6. Push your changes to your fork.

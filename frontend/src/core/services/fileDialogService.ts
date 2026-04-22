@@ -21,7 +21,7 @@ export interface FileDialogOptions {
  * Desktop builds override this with actual Tauri implementation
  */
 export async function openFileDialog(
-  _options?: FileDialogOptions
+  _options?: FileDialogOptions,
 ): Promise<FileWithPath[]> {
   // Web build: no native file dialog support
   return [];

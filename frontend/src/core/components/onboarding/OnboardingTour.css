@@ -18,7 +18,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 0 3px var(--mantine-primary-color-filled),
       0 0 20px var(--mantine-primary-color-filled),
@@ -33,13 +34,13 @@
 }
 
 /* RTL: mirror step indicator and controls in Reactour popovers */
-:root[dir='rtl'] .reactour__popover {
+:root[dir="rtl"] .reactour__popover {
   direction: rtl;
 }
 
 /* Minimal overrides retained for glow only */
 
-:root[dir='rtl'] .reactour__badge {
+:root[dir="rtl"] .reactour__badge {
   left: auto;
   right: 16px;
 }

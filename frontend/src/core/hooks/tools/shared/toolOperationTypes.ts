@@ -1,7 +1,7 @@
-import { StirlingFile } from '@app/types/fileContext';
-import type { ResponseHandler } from '@app/utils/toolResponseProcessor';
-import { ToolId } from '@app/types/toolId';
-import type { ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
+import { StirlingFile } from "@app/types/fileContext";
+import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
+import { ToolId } from "@app/types/toolId";
+import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 
 export type { ProcessingProgress, ResponseHandler };
 
@@ -16,9 +16,10 @@ export enum ToolType {
  * null means the button is enabled.
  */
 export type ExecuteDisabledReason =
-  | 'endpointUnavailable'
-  | 'noFiles'
-  | 'invalidParams'
+  | "endpointUnavailable"
+  | "noFiles"
+  | "invalidParams"
+  | "viewerMode"
   | null;
 
 /**
@@ -77,12 +78,14 @@ interface BaseToolOperationConfig<TParams> {
   consumesAllInputs?: boolean;
 }
 
-export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+export interface SingleFileToolOperationConfig<
+  TParams,
+> extends BaseToolOperationConfig<TParams> {
   /** This tool processes one file at a time. */
   toolType: ToolType.singleFile;
 
   /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, file: File) => FormData);
+  buildFormData: (params: TParams, file: File) => FormData;
 
   /** API endpoint for the operation. Can be static string or function for dynamic routing. */
   endpoint: string | ((params: TParams) => string);
@@ -90,7 +93,9 @@ export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperatio
   customProcessor?: undefined;
 }
 
-export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+export interface MultiFileToolOperationConfig<
+  TParams,
+> extends BaseToolOperationConfig<TParams> {
   /** This tool processes multiple files at once. */
   toolType: ToolType.multiFile;
 
@@ -98,7 +103,7 @@ export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperation
   filePrefix: string;
 
   /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, files: File[]) => FormData);
+  buildFormData: (params: TParams, files: File[]) => FormData;
 
   /** API endpoint for the operation. Can be static string or function for dynamic routing. */
   endpoint: string | ((params: TParams) => string);
@@ -106,7 +111,9 @@ export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperation
   customProcessor?: undefined;
 }
 
-export interface CustomToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
+export interface CustomToolOperationConfig<
+  TParams,
+> extends BaseToolOperationConfig<TParams> {
   /** This tool has custom behaviour. */
   toolType: ToolType.custom;
 
@@ -128,7 +135,10 @@ export interface CustomToolOperationConfig<TParams> extends BaseToolOperationCon
    * - files: Processed output files
    * - consumedAllInputs: true if operation combines N inputs → fewer outputs
    */
-  customProcessor: (params: TParams, files: File[]) => Promise<CustomProcessorResult>;
+  customProcessor: (
+    params: TParams,
+    files: File[],
+  ) => Promise<CustomProcessorResult>;
 }
 
 export type ToolOperationConfig<TParams = void> =
@@ -155,7 +165,10 @@ export interface ToolOperationHook<TParams = void> {
   willUseCloud?: boolean;
 
   // Actions
-  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
+  executeOperation: (
+    params: TParams,
+    selectedFiles: StirlingFile[],
+  ) => Promise<void>;
   resetResults: () => void;
   clearError: () => void;
   cancelOperation: () => void;

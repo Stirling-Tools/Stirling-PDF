@@ -4,7 +4,7 @@ export interface PlanFeature {
 }
 
 export interface LicenseInfo {
-  licenseType: 'NORMAL' | 'SERVER' | 'ENTERPRISE';
+  licenseType: "NORMAL" | "SERVER" | "ENTERPRISE";
   enabled: boolean;
   maxUsers: number;
   hasKey: boolean;

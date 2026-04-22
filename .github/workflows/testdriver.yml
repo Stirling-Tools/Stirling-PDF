@@ -167,9 +167,9 @@ jobs:
         with:
           key: ${{secrets.TESTDRIVER_API_KEY}}
           prerun: |
+            choco install go-task -y
+            task frontend:build
             cd frontend
-            npm install
-            npm run build
             npm install dashcam-chrome --save
             Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "http://${{ secrets.NEW_VPS_HOST }}:1337"
             Start-Sleep -Seconds 20

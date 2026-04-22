@@ -12,6 +12,8 @@ from stirling.agents import (
     PdfQuestionAgent,
     UserSpecAgent,
 )
+from stirling.agents.ledger import MathAuditorAgent
+from stirling.rag import RagService
 from stirling.services import AppRuntime
 
 
@@ -37,6 +39,18 @@ def get_user_spec_agent(request: Request) -> UserSpecAgent:
 
 def get_execution_planning_agent(request: Request) -> ExecutionPlanningAgent:
     return request.app.state.execution_planning_agent
+
+
+def get_rag_service(request: Request) -> RagService:
+    return request.app.state.runtime.rag_service
+
+
+def get_rag_embedding_model(request: Request) -> str:
+    return request.app.state.runtime.settings.rag_embedding_model
+
+
+def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
+    return request.app.state.math_auditor_agent
 
 
 def get_form_analyser_agent(request: Request) -> FormAnalyserAgent:

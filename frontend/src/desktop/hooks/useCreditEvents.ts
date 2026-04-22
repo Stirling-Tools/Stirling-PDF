@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
-import { useSaaSMode } from '@app/hooks/useSaaSMode';
-import { CREDIT_EVENTS } from '@app/constants/creditEvents';
+import { useEffect, useRef } from "react";
+import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
+import { CREDIT_EVENTS } from "@app/constants/creditEvents";
 
 /**
  * Desktop hook that monitors credit balance and dispatches events
@@ -21,8 +21,11 @@ export function useCreditEvents() {
     if (isSaaSMode && creditBalance <= 0 && prevBalance > 0) {
       window.dispatchEvent(
         new CustomEvent(CREDIT_EVENTS.EXHAUSTED, {
-          detail: { previousBalance: prevBalance, currentBalance: creditBalance },
-        })
+          detail: {
+            previousBalance: prevBalance,
+            currentBalance: creditBalance,
+          },
+        }),
       );
     }
 

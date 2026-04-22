@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Stack,
   SegmentedControl,
@@ -8,14 +8,14 @@ import {
   FileInput,
   PasswordInput,
   Divider,
-} from '@mantine/core';
-import { DrawingCanvas } from '@app/components/annotation/shared/DrawingCanvas';
-import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
-import { TextInputWithFont } from '@app/components/annotation/shared/TextInputWithFont';
-import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
+} from "@mantine/core";
+import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
+import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
+import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
+import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 
-type SignatureType = 'canvas' | 'image' | 'text';
-type CertificateType = 'SERVER' | 'USER_CERT' | 'UPLOAD';
+type SignatureType = "canvas" | "image" | "text";
+type CertificateType = "SERVER" | "USER_CERT" | "UPLOAD";
 
 interface WetSignatureInputProps {
   onSignatureDataChange: (data: string | undefined) => void;
@@ -43,23 +43,27 @@ const WetSignatureInput = ({
   const { t } = useTranslation();
 
   // Signature type state
-  const [signatureType, setSignatureType] = useState<SignatureType>('canvas');
+  const [signatureType, setSignatureType] = useState<SignatureType>("canvas");
 
   // Canvas drawing state
-  const [selectedColor, setSelectedColor] = useState('#000000');
+  const [selectedColor, setSelectedColor] = useState("#000000");
   const [penSize, setPenSize] = useState(2);
-  const [penSizeInput, setPenSizeInput] = useState('2');
+  const [penSizeInput, setPenSizeInput] = useState("2");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [canvasSignatureData, setCanvasSignatureData] = useState<string | undefined>();
+  const [canvasSignatureData, setCanvasSignatureData] = useState<
+    string | undefined
+  >();
 
   // Image upload state
-  const [imageSignatureData, setImageSignatureData] = useState<string | undefined>();
+  const [imageSignatureData, setImageSignatureData] = useState<
+    string | undefined
+  >();
 
   // Text signature state
-  const [signerName, setSignerName] = useState('');
+  const [signerName, setSignerName] = useState("");
   const [fontSize, setFontSize] = useState(16);
-  const [fontFamily, setFontFamily] = useState('Helvetica');
-  const [textColor, setTextColor] = useState('#000000');
+  const [fontFamily, setFontFamily] = useState("Helvetica");
+  const [textColor, setTextColor] = useState("#000000");
 
   // Handle signature type change
   const handleSignatureTypeChange = useCallback(
@@ -68,16 +72,22 @@ const WetSignatureInput = ({
       onSignatureTypeChange(type);
 
       // Update signature data based on type
-      if (type === 'canvas') {
+      if (type === "canvas") {
         onSignatureDataChange(canvasSignatureData);
-      } else if (type === 'image') {
+      } else if (type === "image") {
         onSignatureDataChange(imageSignatureData);
-      } else if (type === 'text') {
+      } else if (type === "text") {
         // For text signatures, we pass the signer name
         onSignatureDataChange(signerName || undefined);
       }
     },
-    [canvasSignatureData, imageSignatureData, signerName, onSignatureTypeChange, onSignatureDataChange]
+    [
+      canvasSignatureData,
+      imageSignatureData,
+      signerName,
+      onSignatureTypeChange,
+      onSignatureDataChange,
+    ],
   );
 
   // Handle canvas signature change
@@ -85,11 +95,11 @@ const WetSignatureInput = ({
     (data: string | null) => {
       const nextValue = data ?? undefined;
       setCanvasSignatureData(nextValue);
-      if (signatureType === 'canvas') {
+      if (signatureType === "canvas") {
         onSignatureDataChange(nextValue);
       }
     },
-    [signatureType, onSignatureDataChange]
+    [signatureType, onSignatureDataChange],
   );
 
   // Handle image upload
@@ -103,7 +113,7 @@ const WetSignatureInput = ({
               if (e.target?.result) {
                 resolve(e.target.result as string);
               } else {
-                reject(new Error('Failed to read file'));
+                reject(new Error("Failed to read file"));
               }
             };
             reader.onerror = () => reject(reader.error);
@@ -111,35 +121,38 @@ const WetSignatureInput = ({
           });
 
           setImageSignatureData(result);
-          if (signatureType === 'image') {
+          if (signatureType === "image") {
             onSignatureDataChange(result);
           }
         } catch (error) {
-          console.error('Error reading file:', error);
+          console.error("Error reading file:", error);
         }
       } else if (!file) {
         setImageSignatureData(undefined);
-        if (signatureType === 'image') {
+        if (signatureType === "image") {
           onSignatureDataChange(undefined);
         }
       }
     },
-    [disabled, signatureType, onSignatureDataChange]
+    [disabled, signatureType, onSignatureDataChange],
   );
 
   // Handle text signature changes
   useEffect(() => {
-    if (signatureType === 'text') {
+    if (signatureType === "text") {
       onSignatureDataChange(signerName || undefined);
     }
   }, [signatureType, signerName, onSignatureDataChange]);
 
   const renderSignatureBuilder = () => {
-    if (signatureType === 'canvas') {
+    if (signatureType === "canvas") {
       return (
         <Stack gap="xs">
           <Text size="xs" c="dimmed">
-            {t('certSign.collab.signRequest.drawSignature', 'Draw your signature below')}
+            {t(
+              "certSign.collab.signRequest.drawSignature",
+              "Draw your signature below",
+            )}
           </Text>
           <DrawingCanvas
             selectedColor={selectedColor}
@@ -157,13 +170,19 @@ const WetSignatureInput = ({
       );
     }
 
-    if (signatureType === 'image') {
+    if (signatureType === "image") {
       return (
         <Stack gap="xs">
           <Text size="xs" c="dimmed">
-            {t('certSign.collab.signRequest.uploadSignature', 'Upload your signature image')}
+            {t(
+              "certSign.collab.signRequest.uploadSignature",
+              "Upload your signature image",
+            )}
           </Text>
-          <ImageUploader onImageChange={handleImageChange} disabled={disabled} />
+          <ImageUploader
+            onImageChange={handleImageChange}
+            disabled={disabled}
+          />
         </Stack>
       );
     }
@@ -171,7 +190,10 @@ const WetSignatureInput = ({
     return (
       <Stack gap="xs">
         <Text size="xs" c="dimmed">
-          {t('certSign.collab.signRequest.typeSignature', 'Type your name to create a signature')}
+          {t(
+            "certSign.collab.signRequest.typeSignature",
+            "Type your name to create a signature",
+          )}
         </Text>
         <TextInputWithFont
           text={signerName}
@@ -184,11 +206,20 @@ const WetSignatureInput = ({
           onTextColorChange={setTextColor}
           disabled={disabled}
           onAnyChange={() => {}}
-          label={t('certSign.collab.signRequest.signatureText', 'Signature Text')}
-          placeholder={t('certSign.collab.signRequest.signatureTextPlaceholder', 'Enter your name...')}
-          fontLabel={t('certSign.collab.signRequest.fontFamily', 'Font Family')}
-          fontSizeLabel={t('certSign.collab.signRequest.fontSize', 'Font Size')}
-          fontSizePlaceholder={t('certSign.collab.signRequest.fontSizePlaceholder', 'Size')}
+          label={t(
+            "certSign.collab.signRequest.signatureText",
+            "Signature Text",
+          )}
+          placeholder={t(
+            "certSign.collab.signRequest.signatureTextPlaceholder",
+            "Enter your name...",
+          )}
+          fontLabel={t("certSign.collab.signRequest.fontFamily", "Font Family")}
+          fontSizeLabel={t("certSign.collab.signRequest.fontSize", "Font Size")}
+          fontSizePlaceholder={t(
+            "certSign.collab.signRequest.fontSizePlaceholder",
+            "Size",
+          )}
         />
       </Stack>
     );
@@ -199,16 +230,21 @@ const WetSignatureInput = ({
       {/* Signature Type Selector */}
       <Stack gap="xs">
         <Text size="sm" fw={600}>
-          {t('certSign.collab.signRequest.signatureTypeLabel', 'Signature Type')}
+          {t(
+            "certSign.collab.signRequest.signatureTypeLabel",
+            "Signature Type",
+          )}
         </Text>
         <SegmentedControl
           value={signatureType}
           fullWidth
-          onChange={(value) => handleSignatureTypeChange(value as SignatureType)}
+          onChange={(value) =>
+            handleSignatureTypeChange(value as SignatureType)
+          }
           data={[
-            { label: t('sign.type.canvas', 'Draw'), value: 'canvas' },
-            { label: t('sign.type.image', 'Upload'), value: 'image' },
-            { label: t('sign.type.text', 'Type'), value: 'text' },
+            { label: t("sign.type.canvas", "Draw"), value: "canvas" },
+            { label: t("sign.type.image", "Upload"), value: "image" },
+            { label: t("sign.type.text", "Type"), value: "text" },
           ]}
           disabled={disabled}
         />
@@ -222,7 +258,10 @@ const WetSignatureInput = ({
       {/* Certificate Selection */}
       <Stack gap="xs">
         <Text size="sm" fw={600}>
-          {t('certSign.collab.signRequest.certificateChoice', 'Certificate Choice')}
+          {t(
+            "certSign.collab.signRequest.certificateChoice",
+            "Certificate Choice",
+          )}
         </Text>
         <Radio.Group
           value={certType}
@@ -231,30 +270,54 @@ const WetSignatureInput = ({
           <Stack gap="xs">
             <Radio
               value="USER_CERT"
-              label={t('certSign.collab.signRequest.usePersonalCert', 'Use My Personal Certificate')}
-              description={t('certSign.collab.signRequest.usePersonalCertDesc', 'Auto-generated for your account')}
+              label={t(
+                "certSign.collab.signRequest.usePersonalCert",
+                "Use My Personal Certificate",
+              )}
+              description={t(
+                "certSign.collab.signRequest.usePersonalCertDesc",
+                "Auto-generated for your account",
+              )}
               disabled={disabled}
             />
             <Radio
               value="SERVER"
-              label={t('certSign.collab.signRequest.useServerCert', 'Use Organization Certificate')}
-              description={t('certSign.collab.signRequest.useServerCertDesc', 'Shared organization certificate')}
+              label={t(
+                "certSign.collab.signRequest.useServerCert",
+                "Use Organization Certificate",
+              )}
+              description={t(
+                "certSign.collab.signRequest.useServerCertDesc",
+                "Shared organization certificate",
+              )}
               disabled={disabled}
             />
             <Radio
               value="UPLOAD"
-              label={t('certSign.collab.signRequest.uploadCert', 'Upload Custom Certificate')}
-              description={t('certSign.collab.signRequest.uploadCertDesc', 'Use your own PKCS12 certificate')}
+              label={t(
+                "certSign.collab.signRequest.uploadCert",
+                "Upload Custom Certificate",
+              )}
+              description={t(
+                "certSign.collab.signRequest.uploadCertDesc",
+                "Use your own PKCS12 certificate",
+              )}
               disabled={disabled}
             />
           </Stack>
         </Radio.Group>
 
-        {certType === 'UPLOAD' && (
+        {certType === "UPLOAD" && (
           <Stack gap="xs" mt="xs">
             <FileInput
-              label={t('certSign.collab.signRequest.p12File', 'P12/PFX Certificate File')}
-              placeholder={t('certSign.collab.signRequest.selectFile', 'Select file...')}
+              label={t(
+                "certSign.collab.signRequest.p12File",
+                "P12/PFX Certificate File",
+              )}
+              placeholder={t(
+                "certSign.collab.signRequest.selectFile",
+                "Select file...",
+              )}
               accept=".p12,.pfx"
               value={p12File}
               onChange={onP12FileChange}
@@ -262,7 +325,10 @@ const WetSignatureInput = ({
               disabled={disabled}
             />
             <PasswordInput
-              label={t('certSign.collab.signRequest.password', 'Certificate Password')}
+              label={t(
+                "certSign.collab.signRequest.password",
+                "Certificate Password",
+              )}
               value={password}
               onChange={(event) => onPasswordChange(event.currentTarget.value)}
               size="xs"
@@ -278,7 +344,7 @@ const WetSignatureInput = ({
         onClose={() => setIsColorPickerOpen(false)}
         selectedColor={selectedColor}
         onColorChange={setSelectedColor}
-        title={t('sign.canvas.colorPickerTitle', 'Choose stroke colour')}
+        title={t("sign.canvas.colorPickerTitle", "Choose stroke colour")}
       />
     </Stack>
   );

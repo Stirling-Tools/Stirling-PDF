@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
-import { thumbnailGenerationService } from '@app/services/thumbnailGenerationService';
-import { createQuickKey } from '@app/types/fileContext';
-import { FileId } from '@app/types/file';
+import { useCallback } from "react";
+import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
+import { createQuickKey } from "@app/types/fileContext";
+import { FileId } from "@app/types/file";
 
 // Request queue to handle concurrent thumbnail requests
 interface ThumbnailRequest {
@@ -52,7 +52,9 @@ async function processRequestQueue() {
       const uncachedRequests: ThumbnailRequest[] = [];
 
       for (const request of batch) {
-        const cached = thumbnailGenerationService.getThumbnailFromCache(request.pageId);
+        const cached = thumbnailGenerationService.getThumbnailFromCache(
+          request.pageId,
+        );
         if (cached) {
           request.resolve(cached);
         } else {
@@ -70,7 +72,7 @@ async function processRequestQueue() {
         if (requests.length === 0) continue;
 
         try {
-          const pageNumbers = requests.map(req => req.pageNumber);
+          const pageNumbers = requests.map((req) => req.pageNumber);
 
           // Get or create cached ArrayBuffer to avoid reading file multiple times
           let arrayBuffer = fileArrayBufferCache.get(file);
@@ -89,26 +91,33 @@ async function processRequestQueue() {
             { scale: 1.0, quality: 0.8, batchSize: BATCH_SIZE },
             (_progress) => {
               // Optional: Could emit progress events here for UI feedback
-            }
+            },
           );
 
           // Match results back to requests and resolve
           for (const request of requests) {
-            const result = results.find(r => r.pageNumber === request.pageNumber);
+            const result = results.find(
+              (r) => r.pageNumber === request.pageNumber,
+            );
 
             if (result && result.success && result.thumbnail) {
-              thumbnailGenerationService.addThumbnailToCache(request.pageId, result.thumbnail);
+              thumbnailGenerationService.addThumbnailToCache(
+                request.pageId,
+                result.thumbnail,
+              );
               request.resolve(result.thumbnail);
             } else {
               console.warn(`No result for page ${request.pageNumber}`);
               request.resolve(null);
             }
           }
-
         } catch (error) {
-          console.warn(`Batch thumbnail generation failed for ${requests.length} pages:`, error);
+          console.warn(
+            `Batch thumbnail generation failed for ${requests.length} pages:`,
+            error,
+          );
           // Reject all requests in this batch
-          requests.forEach(request => request.reject(error as Error));
+          requests.forEach((request) => request.reject(error as Error));
         }
       }
     }
@@ -126,30 +135,40 @@ async function processRequestQueue() {
  * Tools can choose whether to include visual features
  */
 export function useThumbnailGeneration() {
-  const generateThumbnails = useCallback(async (
-    fileId: FileId,
-    pdfArrayBuffer: ArrayBuffer,
-    pageNumbers: number[],
-    options: {
-      scale?: number;
-      quality?: number;
-      batchSize?: number;
-      parallelBatches?: number;
-    } = {},
-    onProgress?: (progress: { completed: number; total: number; thumbnails: any[] }) => void
-  ) => {
-    return thumbnailGenerationService.generateThumbnails(
-      fileId,
-      pdfArrayBuffer,
-      pageNumbers,
-      options,
-      onProgress
-    );
-  }, []);
+  const generateThumbnails = useCallback(
+    async (
+      fileId: FileId,
+      pdfArrayBuffer: ArrayBuffer,
+      pageNumbers: number[],
+      options: {
+        scale?: number;
+        quality?: number;
+        batchSize?: number;
+        parallelBatches?: number;
+      } = {},
+      onProgress?: (progress: {
+        completed: number;
+        total: number;
+        thumbnails: any[];
+      }) => void,
+    ) => {
+      return thumbnailGenerationService.generateThumbnails(
+        fileId,
+        pdfArrayBuffer,
+        pageNumbers,
+        options,
+        onProgress,
+      );
+    },
+    [],
+  );
 
-  const addThumbnailToCache = useCallback((pageId: string, thumbnail: string) => {
-    thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail);
-  }, []);
+  const addThumbnailToCache = useCallback(
+    (pageId: string, thumbnail: string) => {
+      thumbnailGenerationService.addThumbnailToCache(pageId, thumbnail);
+    },
+    [],
+  );
 
   const getThumbnailFromCache = useCallback((pageId: string): string | null => {
     return thumbnailGenerationService.getThumbnailFromCache(pageId);
@@ -185,61 +204,66 @@ export function useThumbnailGeneration() {
     thumbnailGenerationService.clearPDFCacheForFile(fileId);
   }, []);
 
-  const requestThumbnail = useCallback(async (
-    pageId: string,
-    file: File,
-    pageNumber: number
-  ): Promise<string | null> => {
-    // Check cache first for immediate return
-    const cached = thumbnailGenerationService.getThumbnailFromCache(pageId);
-    if (cached) {
-      return cached;
-    }
-
-    // Check if this request is already being processed globally
-    const activeRequest = activeRequests.get(pageId);
-    if (activeRequest) {
-      return activeRequest;
-    }
-
-    // Create new request promise and track it globally
-    const requestPromise = new Promise<string | null>((resolve, reject) => {
-      requestQueue.push({
-        pageId,
-        file,
-        pageNumber,
-        resolve: (result: string | null) => {
-          activeRequests.delete(pageId);
-          resolve(result);
-        },
-        reject: (error: Error) => {
-          activeRequests.delete(pageId);
-          reject(error);
-        }
-      });
-
-      // Schedule batch processing with a small delay to collect more requests
-      if (batchTimer) {
-        clearTimeout(batchTimer);
+  const requestThumbnail = useCallback(
+    async (
+      pageId: string,
+      file: File,
+      pageNumber: number,
+    ): Promise<string | null> => {
+      // Check cache first for immediate return
+      const cached = thumbnailGenerationService.getThumbnailFromCache(pageId);
+      if (cached) {
+        return cached;
       }
 
-      // Use shorter delay for the first batch (pages 1-50) to show visible content faster
-      const isFirstBatch = requestQueue.length <= BATCH_SIZE && requestQueue.every(req => req.pageNumber <= BATCH_SIZE);
-      const delay = isFirstBatch ? PRIORITY_BATCH_DELAY : BATCH_DELAY;
+      // Check if this request is already being processed globally
+      const activeRequest = activeRequests.get(pageId);
+      if (activeRequest) {
+        return activeRequest;
+      }
 
-      batchTimer = window.setTimeout(() => {
-        processRequestQueue().catch(error => {
-          console.error('Error processing thumbnail request queue:', error);
+      // Create new request promise and track it globally
+      const requestPromise = new Promise<string | null>((resolve, reject) => {
+        requestQueue.push({
+          pageId,
+          file,
+          pageNumber,
+          resolve: (result: string | null) => {
+            activeRequests.delete(pageId);
+            resolve(result);
+          },
+          reject: (error: Error) => {
+            activeRequests.delete(pageId);
+            reject(error);
+          },
         });
-        batchTimer = null;
-      }, delay);
-    });
 
-    // Track this request to prevent duplicates
-    activeRequests.set(pageId, requestPromise);
+        // Schedule batch processing with a small delay to collect more requests
+        if (batchTimer) {
+          clearTimeout(batchTimer);
+        }
 
-    return requestPromise;
-  }, []);
+        // Use shorter delay for the first batch (pages 1-50) to show visible content faster
+        const isFirstBatch =
+          requestQueue.length <= BATCH_SIZE &&
+          requestQueue.every((req) => req.pageNumber <= BATCH_SIZE);
+        const delay = isFirstBatch ? PRIORITY_BATCH_DELAY : BATCH_DELAY;
+
+        batchTimer = window.setTimeout(() => {
+          processRequestQueue().catch((error) => {
+            console.error("Error processing thumbnail request queue:", error);
+          });
+          batchTimer = null;
+        }, delay);
+      });
+
+      // Track this request to prevent duplicates
+      activeRequests.set(pageId, requestPromise);
+
+      return requestPromise;
+    },
+    [],
+  );
 
   return {
     generateThumbnails,
@@ -249,6 +273,6 @@ export function useThumbnailGeneration() {
     stopGeneration,
     destroyThumbnails,
     clearPDFCacheForFile,
-    requestThumbnail
+    requestThumbnail,
   };
 }

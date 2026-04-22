@@ -10,12 +10,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const Crop = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'crop',
-    useCropParameters,
-    useCropOperation,
-    props
-  );
+  const base = useBaseTool("crop", useCropParameters, useCropOperation, props);
 
   const tooltips = useCropTooltips();
 
@@ -29,7 +24,9 @@ const Crop = (props: BaseToolProps) => {
       {
         title: t("crop.steps.selectArea", "Select Crop Area"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: tooltips,
         content: (
           <CropSettings

@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { message } from '@tauri-apps/plugin-dialog';
-import { useFileState, useFileActions } from '@app/contexts/FileContext';
-import { downloadFile } from '@app/services/downloadService';
-import type { StirlingFileStub } from '@app/types/fileContext';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { message } from "@tauri-apps/plugin-dialog";
+import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { downloadFile } from "@app/services/downloadService";
+import type { StirlingFileStub } from "@app/types/fileContext";
+import { useTranslation } from "react-i18next";
 
 export function useExitWarning() {
   const { t } = useTranslation();
@@ -18,7 +18,9 @@ export function useExitWarning() {
   useEffect(() => {
     const appWindow = getCurrentWindow();
 
-    const handleCloseRequested = async (event: { preventDefault: () => void }) => {
+    const handleCloseRequested = async (event: {
+      preventDefault: () => void;
+    }) => {
       event.preventDefault();
 
       if (isClosingRef.current) {
@@ -26,29 +28,36 @@ export function useExitWarning() {
       }
 
       const allStubs = selectorsRef.current.getStirlingFileStubs();
-      const dirtyStubs = allStubs.filter(stub => stub.isDirty);
+      const dirtyStubs = allStubs.filter((stub) => stub.isDirty);
 
       if (dirtyStubs.length > 0) {
-        const fileList = dirtyStubs.map(f => `• ${f.name}`).join('\n');
-        const saveLabel = t('confirmCloseSave', 'Save and close');
-        const discardLabel = t('confirmCloseDiscard', 'Discard changes and close');
-        const cancelLabel = t('confirmCloseCancel', 'Cancel');
+        const fileList = dirtyStubs.map((f) => `• ${f.name}`).join("\n");
+        const saveLabel = t("confirmCloseSave", "Save and close");
+        const discardLabel = t(
+          "confirmCloseDiscard",
+          "Discard changes and close",
+        );
+        const cancelLabel = t("confirmCloseCancel", "Cancel");
 
         const choice = await message(
           t(
-            'confirmCloseUnsavedList',
-            'You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}',
-            { count: dirtyStubs.length, plural: dirtyStubs.length > 1 ? 's' : '', fileList }
+            "confirmCloseUnsavedList",
+            "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}",
+            {
+              count: dirtyStubs.length,
+              plural: dirtyStubs.length > 1 ? "s" : "",
+              fileList,
+            },
           ),
           {
-            title: t('confirmCloseUnsaved', 'This file has unsaved changes.'),
-            kind: 'warning',
+            title: t("confirmCloseUnsaved", "This file has unsaved changes."),
+            kind: "warning",
             buttons: {
               yes: saveLabel,
               no: discardLabel,
               cancel: cancelLabel,
             },
-          }
+          },
         );
 
         if (choice === cancelLabel) {
@@ -63,11 +72,17 @@ export function useExitWarning() {
           if (failedCount > 0) {
             await message(
               t(
-                'confirmCloseSaveFailed',
-                'Saved with errors. {{count}} file{{plural}} could not be saved.',
-                { count: failedCount, plural: failedCount > 1 ? 's' : '' }
+                "confirmCloseSaveFailed",
+                "Saved with errors. {{count}} file{{plural}} could not be saved.",
+                {
+                  count: failedCount,
+                  plural: failedCount > 1 ? "s" : "",
+                },
               ),
-              { title: t('confirmCloseSaveFailedTitle', 'Save Failed'), kind: 'error' }
+              {
+                title: t("confirmCloseSaveFailedTitle", "Save Failed"),
+                kind: "error",
+              },
             );
             return;
           }
@@ -80,21 +95,23 @@ export function useExitWarning() {
       try {
         await appWindow.destroy();
       } catch (error) {
-        console.error('[exit-warning] destroy failed', error);
+        console.error("[exit-warning] destroy failed", error);
         isClosingRef.current = false;
       }
     };
 
     const unlisten = appWindow.onCloseRequested(handleCloseRequested);
     return () => {
-      unlisten.then(fn => {
+      unlisten.then((fn) => {
         fn();
       });
     };
   }, [fileActions, t]);
 
   const saveDirtyFiles = async (dirtyStubs: StirlingFileStub[]) => {
-    const filesById = new Map(selectorsRef.current.getFiles().map(file => [file.fileId, file]));
+    const filesById = new Map(
+      selectorsRef.current.getFiles().map((file) => [file.fileId, file]),
+    );
     let failedCount = 0;
     let cancelled = false;
 
@@ -122,7 +139,7 @@ export function useExitWarning() {
         if (result.savedPath) {
           fileActions.updateStirlingFileStub(stub.id, {
             localFilePath: stub.localFilePath ?? result.savedPath,
-            isDirty: false
+            isDirty: false,
           });
         }
       } catch {

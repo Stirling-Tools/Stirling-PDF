@@ -1,12 +1,12 @@
-import React from 'react';
-import { Stack, Box, Text, Button, ActionIcon, Center } from '@mantine/core';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useTranslation } from 'react-i18next';
-import { getFileSize } from '@app/utils/fileUtils';
-import { StirlingFileStub } from '@app/types/fileContext';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
+import React from "react";
+import { Stack, Box, Text, Button, ActionIcon, Center } from "@mantine/core";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useTranslation } from "react-i18next";
+import { getFileSize } from "@app/utils/fileUtils";
+import { StirlingFileStub } from "@app/types/fileContext";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
 
 interface CompactFileDetailsProps {
   currentFile: StirlingFileStub | null;
@@ -29,47 +29,63 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
   isAnimating,
   onPrevious,
   onNext,
-  onOpenFiles
+  onOpenFiles,
 }) => {
   const { t } = useTranslation();
   const hasSelection = selectedFiles.length > 0;
   const hasMultipleFiles = numberOfFiles > 1;
   const showOwner = Boolean(
     currentFile &&
-      (currentFile.remoteOwnedByCurrentUser === false || currentFile.remoteSharedViaLink)
+    (currentFile.remoteOwnedByCurrentUser === false ||
+      currentFile.remoteSharedViaLink),
   );
   const ownerLabel = currentFile
-    ? currentFile.remoteOwnerUsername || t('fileManager.ownerUnknown', 'Unknown')
-    : '';
+    ? currentFile.remoteOwnerUsername ||
+      t("fileManager.ownerUnknown", "Unknown")
+    : "";
 
   return (
-    <Stack gap="xs" style={{ height: '100%' }}>
+    <Stack gap="xs" style={{ height: "100%" }}>
       {/* Compact mobile layout */}
-      <Box style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+      <Box style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
         {/* Small preview */}
-        <Box style={{ width: '7.5rem', height: '9.375rem', flexShrink: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box
+          style={{
+            width: "7.5rem",
+            height: "9.375rem",
+            flexShrink: 0,
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           {currentFile && thumbnail ? (
             <PrivateContent>
               <img
                 src={thumbnail}
                 alt={currentFile.name}
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: 'contain',
-                  borderRadius: '0.25rem',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                  borderRadius: "0.25rem",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
                 }}
               />
             </PrivateContent>
           ) : currentFile ? (
-            <Center style={{
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'var(--mantine-color-gray-1)',
-              borderRadius: 4
-            }}>
-              <PictureAsPdfIcon style={{ fontSize: 20, color: 'var(--mantine-color-gray-6)' }} />
+            <Center
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: "var(--mantine-color-gray-1)",
+                borderRadius: 4,
+              }}
+            >
+              <PictureAsPdfIcon
+                style={{ fontSize: 20, color: "var(--mantine-color-gray-6)" }}
+              />
             </Center>
           ) : null}
         </Box>
@@ -77,10 +93,12 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* File info */}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text size="sm" fw={500} truncate>
-            <PrivateContent>{currentFile ? currentFile.name : 'No file selected'}</PrivateContent>
+            <PrivateContent>
+              {currentFile ? currentFile.name : "No file selected"}
+            </PrivateContent>
           </Text>
           <Text size="xs" c="dimmed">
-            {currentFile ? getFileSize(currentFile) : ''}
+            {currentFile ? getFileSize(currentFile) : ""}
             {selectedFiles.length > 1 && ` • ${selectedFiles.length} files`}
             {currentFile && ` • v${currentFile.versionNumber || 1}`}
           </Text>
@@ -92,19 +110,21 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           {/* Compact tool chain for mobile */}
           {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <Text size="xs" c="dimmed">
-              {currentFile.toolHistory.map((tool) => t(`home.${tool.toolId}.title`, tool.toolId)).join(' → ')}
+              {currentFile.toolHistory
+                .map((tool) => t(`home.${tool.toolId}.title`, tool.toolId))
+                .join(" → ")}
             </Text>
           )}
           {currentFile && showOwner && (
             <Text size="xs" c="dimmed">
-              {t('fileManager.owner', 'Owner')}: {ownerLabel}
+              {t("fileManager.owner", "Owner")}: {ownerLabel}
             </Text>
           )}
         </Box>
 
         {/* Navigation arrows for multiple files */}
         {hasMultipleFiles && (
-          <Box style={{ display: 'flex', gap: '0.25rem' }}>
+          <Box style={{ display: "flex", gap: "0.25rem" }}>
             <ActionIcon
               variant="subtle"
               size="sm"
@@ -132,14 +152,15 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         disabled={!hasSelection}
         fullWidth
         style={{
-          backgroundColor: hasSelection ? 'var(--btn-open-file)' : 'var(--mantine-color-gray-4)',
-          color: 'white'
+          backgroundColor: hasSelection
+            ? "var(--btn-open-file)"
+            : "var(--mantine-color-gray-4)",
+          color: "white",
         }}
       >
         {selectedFiles.length > 1
-          ? t('fileManager.openFiles', `Open ${selectedFiles.length} Files`)
-          : t('fileManager.openFile', 'Open File')
-        }
+          ? t("fileManager.openFiles", `Open ${selectedFiles.length} Files`)
+          : t("fileManager.openFile", "Open File")}
       </Button>
     </Stack>
   );

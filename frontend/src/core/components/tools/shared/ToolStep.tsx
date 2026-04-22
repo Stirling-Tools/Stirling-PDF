@@ -1,10 +1,16 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { Text, Stack, Flex, Divider } from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import { TooltipTip } from '@app/types/tips';
-import { createFilesToolStep, FilesToolStepProps } from '@app/components/tools/shared/FilesToolStep';
-import { createReviewToolStep, ReviewToolStepProps } from '@app/components/tools/shared/ReviewToolStep';
+import React, { createContext, useContext, useMemo } from "react";
+import { Text, Stack, Flex, Divider } from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { TooltipTip } from "@app/types/tips";
+import {
+  createFilesToolStep,
+  FilesToolStepProps,
+} from "@app/components/tools/shared/FilesToolStep";
+import {
+  createReviewToolStep,
+  ReviewToolStepProps,
+} from "@app/components/tools/shared/ReviewToolStep";
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -37,9 +43,9 @@ export interface ToolStepProps {
 
 const renderTooltipTitle = (
   title: string,
-  tooltip: ToolStepProps['tooltip'],
+  tooltip: ToolStepProps["tooltip"],
   isCollapsed: boolean,
-  alwaysShowTooltip: boolean = false
+  alwaysShowTooltip: boolean = false,
 ) => {
   if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
@@ -54,7 +60,12 @@ const renderTooltipTitle = (
           <Text fw={400} size="sm">
             {title}
           </Text>
-          <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)' }} />
+          <LocalIcon
+            icon="info-outline-rounded"
+            width="1.25rem"
+            height="1.25rem"
+            style={{ color: "var(--icon-files-color)" }}
+          />
         </Flex>
       </Tooltip>
     );
@@ -78,7 +89,7 @@ const ToolStep = ({
   _stepNumber,
   _noPadding,
   alwaysShowTooltip = false,
-  tooltip
+  tooltip,
 }: ToolStepProps) => {
   const parent = useContext(ToolStepContext);
 
@@ -97,56 +108,68 @@ const ToolStep = ({
     <div>
       <div
         style={{
-          padding: '0.5rem',
+          padding: "0.5rem",
           opacity: isCollapsed ? 0.8 : 1,
-          color: isCollapsed ? 'var(--mantine-color-dimmed)' : 'inherit',
-          transition: 'opacity 0.2s ease, color 0.2s ease'
+          color: isCollapsed ? "var(--mantine-color-dimmed)" : "inherit",
+          transition: "opacity 0.2s ease, color 0.2s ease",
         }}
       >
-      {/* Chevron icon to collapse/expand the step */}
-      <Flex
-        align="center"
-        justify="space-between"
-        mb="sm"
-        style={{
-          cursor: onCollapsedClick ? 'pointer' : 'default'
-        }}
-        onClick={onCollapsedClick}
-      >
-        <Flex align="center" gap="sm">
-          {shouldShowNumber && (
-            <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
-              {stepNumber}
-            </Text>
+        {/* Chevron icon to collapse/expand the step */}
+        <Flex
+          align="center"
+          justify="space-between"
+          mb="sm"
+          style={{
+            cursor: onCollapsedClick ? "pointer" : "default",
+          }}
+          onClick={onCollapsedClick}
+        >
+          <Flex align="center" gap="sm">
+            {shouldShowNumber && (
+              <Text fw={500} size="sm" c="dimmed" mr="0.5rem">
+                {stepNumber}
+              </Text>
+            )}
+            {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
+          </Flex>
+
+          {isCollapsed ? (
+            <LocalIcon
+              icon="chevron-right-rounded"
+              width="1.2rem"
+              height="1.2rem"
+              style={{
+                color: "var(--mantine-color-dimmed)",
+                opacity: onCollapsedClick ? 1 : 0.5,
+              }}
+            />
+          ) : (
+            <LocalIcon
+              icon="expand-more-rounded"
+              width="1.2rem"
+              height="1.2rem"
+              style={{
+                color: "var(--mantine-color-dimmed)",
+                opacity: onCollapsedClick ? 1 : 0.5,
+              }}
+            />
           )}
-          {renderTooltipTitle(title, tooltip, isCollapsed, alwaysShowTooltip)}
         </Flex>
 
-        {isCollapsed ? (
-          <LocalIcon icon="chevron-right-rounded" width="1.2rem" height="1.2rem" style={{
-            color: 'var(--mantine-color-dimmed)',
-            opacity: onCollapsedClick ? 1 : 0.5
-          }} />
-        ) : (
-          <LocalIcon icon="expand-more-rounded" width="1.2rem" height="1.2rem" style={{
-            color: 'var(--mantine-color-dimmed)',
-            opacity: onCollapsedClick ? 1 : 0.5
-          }} />
+        {!isCollapsed && (
+          <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
+            {helpText && (
+              <Text size="sm" c="dimmed">
+                {helpText}
+              </Text>
+            )}
+            {children}
+          </Stack>
         )}
-      </Flex>
-
-      {!isCollapsed && (
-        <Stack gap="sm" pl={_noPadding ? 0 : "sm"}>
-          {helpText && (
-            <Text size="sm" c="dimmed">
-              {helpText}
-            </Text>
-          )}
-          {children}
-        </Stack>
-      )}
       </div>
-      <Divider style={{ color: '#E2E8F0', marginLeft: '1rem', marginRight: '-0.5rem' }} />
+      <Divider
+        style={{ color: "#E2E8F0", marginLeft: "1rem", marginRight: "-0.5rem" }}
+      />
     </div>
   );
 };
@@ -158,8 +181,8 @@ export function createToolSteps() {
 
   const create = (
     title: string,
-    props: Omit<ToolStepProps, 'title' | '_stepNumber'> = {},
-    children?: React.ReactNode
+    props: Omit<ToolStepProps, "title" | "_stepNumber"> = {},
+    children?: React.ReactNode,
   ): React.ReactElement => {
     const isVisible = props.isVisible !== false;
     const currentStepNumber = isVisible ? stepNumber++ : undefined;
@@ -170,9 +193,9 @@ export function createToolSteps() {
         ...props,
         title,
         _stepNumber: currentStepNumber,
-        key: `step-${title.toLowerCase().replace(/\s+/g, '-')}`
+        key: `step-${title.toLowerCase().replace(/\s+/g, "-")}`,
       },
-      children
+      children,
     );
 
     steps.push(step);
@@ -183,12 +206,14 @@ export function createToolSteps() {
     return createFilesToolStep(create, props);
   };
 
-  const createReviewStep = <TParams = unknown>(props: ReviewToolStepProps<TParams>): React.ReactElement => {
+  const createReviewStep = <TParams = unknown,>(
+    props: ReviewToolStepProps<TParams>,
+  ): React.ReactElement => {
     return createReviewToolStep(create, props);
   };
 
   const getVisibleCount = () => {
-    return steps.filter(step => {
+    return steps.filter((step) => {
       const stepProps = step.props as ToolStepProps;
       const isVisible = stepProps.isVisible !== false;
       const excludeFromCount = stepProps._excludeFromCount === true;
@@ -200,7 +225,13 @@ export function createToolSteps() {
 }
 
 // Context provider wrapper for tools using the factory
-export function ToolStepProvider({ children, forceStepNumbers }: { children: React.ReactNode; forceStepNumbers?: boolean }) {
+export function ToolStepProvider({
+  children,
+  forceStepNumbers,
+}: {
+  children: React.ReactNode;
+  forceStepNumbers?: boolean;
+}) {
   // Count visible steps from children that are ToolStep elements
   const visibleStepCount = useMemo(() => {
     let count = 0;
@@ -215,10 +246,13 @@ export function ToolStepProvider({ children, forceStepNumbers }: { children: Rea
     return count;
   }, [children]);
 
-  const contextValue = useMemo(() => ({
-    visibleStepCount,
-    forceStepNumbers
-  }), [visibleStepCount, forceStepNumbers]);
+  const contextValue = useMemo(
+    () => ({
+      visibleStepCount,
+      forceStepNumbers,
+    }),
+    [visibleStepCount, forceStepNumbers],
+  );
 
   return (
     <ToolStepContext.Provider value={contextValue}>
@@ -227,6 +261,6 @@ export function ToolStepProvider({ children, forceStepNumbers }: { children: Rea
   );
 }
 
-export type { FilesToolStepProps } from '@app/components/tools/shared/FilesToolStep';
-export type { ReviewToolStepProps } from '@app/components/tools/shared/ReviewToolStep';
+export type { FilesToolStepProps } from "@app/components/tools/shared/FilesToolStep";
+export type { ReviewToolStepProps } from "@app/components/tools/shared/ReviewToolStep";
 export default ToolStep;

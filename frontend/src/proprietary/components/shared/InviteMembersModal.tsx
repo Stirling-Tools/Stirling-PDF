@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect, useRef } from "react";
+import { isAxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Stack,
@@ -15,14 +16,14 @@ import {
   CloseButton,
   Box,
   Group,
-} from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { alert } from '@app/components/toast';
-import { userManagementService } from '@app/services/userManagementService';
-import { teamService, Team } from '@app/services/teamService';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useNavigate } from 'react-router-dom';
+} from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { alert } from "@app/components/toast";
+import { userManagementService } from "@app/services/userManagementService";
+import { teamService, Team } from "@app/services/teamService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useNavigate } from "react-router-dom";
 
 interface InviteMembersModalProps {
   opened: boolean;
@@ -30,14 +31,22 @@ interface InviteMembersModalProps {
   onSuccess?: () => void;
 }
 
-export default function InviteMembersModal({ opened, onClose, onSuccess }: InviteMembersModalProps) {
+export default function InviteMembersModal({
+  opened,
+  onClose,
+  onSuccess,
+}: InviteMembersModalProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [processing, setProcessing] = useState(false);
-  const [inviteMode, setInviteMode] = useState<'email' | 'direct' | 'link'>('direct');
-  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
+  const [inviteMode, setInviteMode] = useState<"email" | "direct" | "link">(
+    "direct",
+  );
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(
+    null,
+  );
   const actionTakenRef = useRef(false);
 
   // License information
@@ -53,26 +62,26 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
 
   // Form state for direct invite
   const [inviteForm, setInviteForm] = useState({
-    username: '',
-    password: '',
-    role: 'ROLE_USER',
+    username: "",
+    password: "",
+    role: "ROLE_USER",
     teamId: undefined as number | undefined,
-    authType: 'WEB' as 'WEB' | 'OAUTH2' | 'SAML2',
+    authType: "WEB" as "WEB" | "OAUTH2" | "SAML2",
     forceChange: false,
     forceMFA: false,
   });
 
   // Form state for email invite
   const [emailInviteForm, setEmailInviteForm] = useState({
-    emails: '',
-    role: 'ROLE_USER',
+    emails: "",
+    role: "ROLE_USER",
     teamId: undefined as number | undefined,
   });
 
   // Form state for invite link
   const [inviteLinkForm, setInviteLinkForm] = useState({
-    email: '',
-    role: 'ROLE_USER',
+    email: "",
+    role: "ROLE_USER",
     teamId: undefined as number | undefined,
     expiryHours: 72,
     sendEmail: false,
@@ -99,7 +108,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
             totalUsers: adminData.totalUsers,
           });
         } catch (error) {
-          console.error('Failed to fetch data:', error);
+          console.error("Failed to fetch data:", error);
         }
       };
       fetchData();
@@ -108,12 +117,12 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
 
   const roleOptions = [
     {
-      value: 'ROLE_USER',
-      label: t('workspace.people.roleDescriptions.user', 'User'),
+      value: "ROLE_USER",
+      label: t("workspace.people.roleDescriptions.user", "User"),
     },
     {
-      value: 'ROLE_ADMIN',
-      label: t('workspace.people.roleDescriptions.admin', 'Admin'),
+      value: "ROLE_ADMIN",
+      label: t("workspace.people.roleDescriptions.admin", "Admin"),
     },
   ];
 
@@ -124,13 +133,22 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
 
   const handleInviteUser = async () => {
     if (!inviteForm.username) {
-      alert({ alertType: 'error', title: t('workspace.people.addMember.usernameRequired') });
+      alert({
+        alertType: "error",
+        title: t("workspace.people.addMember.usernameRequired"),
+      });
       return;
     }
 
     // Password is only required for WEB auth type
-    if (inviteForm.authType === 'WEB' && !inviteForm.password) {
-      alert({ alertType: 'error', title: t('workspace.people.addMember.passwordRequired', 'Password is required') });
+    if (inviteForm.authType === "WEB" && !inviteForm.password) {
+      alert({
+        alertType: "error",
+        title: t(
+          "workspace.people.addMember.passwordRequired",
+          "Password is required",
+        ),
+      });
       return;
     }
 
@@ -145,23 +163,31 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         forceChange: inviteForm.forceChange,
         forceMFA: inviteForm.forceMFA,
       });
-      alert({ alertType: 'success', title: t('workspace.people.addMember.success') });
+      alert({
+        alertType: "success",
+        title: t("workspace.people.addMember.success"),
+      });
       onClose();
       onSuccess?.();
       // Reset form
       setInviteForm({
-        username: '',
-        password: '',
-        role: 'ROLE_USER',
+        username: "",
+        password: "",
+        role: "ROLE_USER",
         teamId: undefined,
-        authType: 'WEB',
+        authType: "WEB",
         forceChange: false,
         forceMFA: false,
       });
-    } catch (error: any) {
-      console.error('Failed to invite user:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('workspace.people.addMember.error');
-      alert({ alertType: 'error', title: errorMessage });
+    } catch (error: unknown) {
+      console.error("Failed to invite user:", error);
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.people.addMember.error");
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
@@ -169,7 +195,13 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
 
   const handleEmailInvite = async () => {
     if (!emailInviteForm.emails.trim()) {
-      alert({ alertType: 'error', title: t('workspace.people.emailInvite.emailsRequired', 'Email addresses are required') });
+      alert({
+        alertType: "error",
+        title: t(
+          "workspace.people.emailInvite.emailsRequired",
+          "Email addresses are required",
+        ),
+      });
       return;
     }
 
@@ -184,40 +216,51 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       if (response.successCount > 0) {
         // Show success message
         alert({
-          alertType: 'success',
-          title: t('workspace.people.emailInvite.success', { count: response.successCount, defaultValue: `Successfully invited ${response.successCount} user(s)` })
+          alertType: "success",
+          title: t("workspace.people.emailInvite.success", {
+            count: response.successCount,
+            defaultValue: `Successfully invited ${response.successCount} user(s)`,
+          }),
         });
 
         // Show warning if there were partial failures
         if (response.failureCount > 0 && response.errors) {
           alert({
-            alertType: 'warning',
-            title: t('workspace.people.emailInvite.partialFailure', 'Some invites failed'),
-            body: response.errors
+            alertType: "warning",
+            title: t(
+              "workspace.people.emailInvite.partialFailure",
+              "Some invites failed",
+            ),
+            body: response.errors,
           });
         }
 
         onClose();
         onSuccess?.();
         setEmailInviteForm({
-          emails: '',
-          role: 'ROLE_USER',
+          emails: "",
+          role: "ROLE_USER",
           teamId: undefined,
         });
       } else {
         alert({
-          alertType: 'error',
-          title: t('workspace.people.emailInvite.allFailed', 'Failed to invite users'),
-          body: response.errors || response.error
+          alertType: "error",
+          title: t(
+            "workspace.people.emailInvite.allFailed",
+            "Failed to invite users",
+          ),
+          body: response.errors || response.error,
         });
       }
-    } catch (error: any) {
-      console.error('Failed to invite users:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.emailInvite.error', 'Failed to send invites');
-      alert({ alertType: 'error', title: errorMessage });
+    } catch (error: unknown) {
+      console.error("Failed to invite users:", error);
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.people.emailInvite.error", "Failed to send invites");
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
@@ -237,12 +280,26 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       actionTakenRef.current = true;
       setGeneratedInviteLink(response.inviteUrl);
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
-        alert({ alertType: 'success', title: t('workspace.people.inviteLink.emailSent', 'Invite link generated and sent via email') });
+        alert({
+          alertType: "success",
+          title: t(
+            "workspace.people.inviteLink.emailSent",
+            "Invite link generated and sent via email",
+          ),
+        });
       }
-    } catch (error: any) {
-      console.error('Failed to generate invite link:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('workspace.people.inviteLink.error', 'Failed to generate invite link');
-      alert({ alertType: 'error', title: errorMessage });
+    } catch (error: unknown) {
+      console.error("Failed to generate invite link:", error);
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t(
+            "workspace.people.inviteLink.error",
+            "Failed to generate invite link",
+          );
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
@@ -254,24 +311,24 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       actionTakenRef.current = false;
     }
     setGeneratedInviteLink(null);
-    setInviteMode('direct');
+    setInviteMode("direct");
     setInviteForm({
-      username: '',
-      password: '',
-      role: 'ROLE_USER',
+      username: "",
+      password: "",
+      role: "ROLE_USER",
       teamId: undefined,
-      authType: 'WEB',
+      authType: "WEB",
       forceChange: false,
       forceMFA: false,
     });
     setEmailInviteForm({
-      emails: '',
-      role: 'ROLE_USER',
+      emails: "",
+      role: "ROLE_USER",
       teamId: undefined,
     });
     setInviteLinkForm({
-      email: '',
-      role: 'ROLE_USER',
+      email: "",
+      role: "ROLE_USER",
       teamId: undefined,
       expiryHours: 72,
       sendEmail: false,
@@ -281,13 +338,13 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
 
   const handleGoToPlan = () => {
     handleClose();
-    navigate('/settings/adminPlan');
+    navigate("/settings/adminPlan");
   };
 
   const handlePrimaryAction = () => {
-    if (inviteMode === 'email') {
+    if (inviteMode === "email") {
       handleEmailInvite();
-    } else if (inviteMode === 'link') {
+    } else if (inviteMode === "link") {
       handleGenerateInviteLink();
     } else {
       handleInviteUser();
@@ -309,53 +366,76 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
           onClick={handleClose}
           size="lg"
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: -8,
             right: -8,
-            zIndex: 1
+            zIndex: 1,
           }}
         />
         <Stack gap="lg" pt="md">
           {/* Header with Icon */}
           <Stack gap="md" align="center">
-            <LocalIcon icon="person-add" width="3rem" height="3rem" style={{ color: 'var(--mantine-color-gray-6)' }} />
+            <LocalIcon
+              icon="person-add"
+              width="3rem"
+              height="3rem"
+              style={{ color: "var(--mantine-color-gray-6)" }}
+            />
             <Text size="xl" fw={600} ta="center">
-              {t('workspace.people.inviteMembers.label', 'Invite Members')}
+              {t("workspace.people.inviteMembers.label", "Invite Members")}
             </Text>
-            {inviteMode === 'email' && (
+            {inviteMode === "email" && (
               <Text size="sm" c="dimmed" ta="center" px="md">
-                {t('workspace.people.inviteMembers.subtitle', 'Type or paste in emails below, separated by commas. Your workspace will be billed by members.')}
+                {t(
+                  "workspace.people.inviteMembers.subtitle",
+                  "Type or paste in emails below, separated by commas. Your workspace will be billed by members.",
+                )}
               </Text>
             )}
           </Stack>
 
           {/* License Warning/Info */}
           {licenseInfo && (
-            <Paper withBorder p="sm" bg={licenseInfo.availableSlots === 0 ? 'var(--mantine-color-red-light)' : 'var(--mantine-color-blue-light)'}>
+            <Paper
+              withBorder
+              p="sm"
+              bg={
+                licenseInfo.availableSlots === 0
+                  ? "var(--mantine-color-red-light)"
+                  : "var(--mantine-color-blue-light)"
+              }
+            >
               <Stack gap="xs">
                 <Group justify="space-between" align="center" wrap="nowrap">
                   <Group gap="xs" wrap="nowrap">
-                    <LocalIcon icon={licenseInfo.availableSlots > 0 ? 'info' : 'warning'} width="1rem" height="1rem" />
+                    <LocalIcon
+                      icon={licenseInfo.availableSlots > 0 ? "info" : "warning"}
+                      width="1rem"
+                      height="1rem"
+                    />
                     <Text size="sm" fw={500}>
                       {licenseInfo.availableSlots > 0
-                        ? t('workspace.people.license.slotsAvailable', {
+                        ? t("workspace.people.license.slotsAvailable", {
                             count: licenseInfo.availableSlots,
-                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`
+                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`,
                           })
-                        : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+                        : t(
+                            "workspace.people.license.noSlotsAvailable",
+                            "No user slots available",
+                          )}
                     </Text>
                   </Group>
                   {licenseInfo.availableSlots === 0 && (
                     <Button size="xs" variant="light" onClick={handleGoToPlan}>
-                      {t('workspace.people.actions.upgrade', 'Upgrade')}
+                      {t("workspace.people.actions.upgrade", "Upgrade")}
                     </Button>
                   )}
                 </Group>
                 <Text size="xs" c="dimmed">
-                  {t('workspace.people.license.currentUsage', {
+                  {t("workspace.people.license.currentUsage", {
                     current: licenseInfo.totalUsers,
                     max: licenseInfo.maxAllowedUsers,
-                    defaultValue: `Currently using ${licenseInfo.totalUsers} of ${licenseInfo.maxAllowedUsers} user licenses`
+                    defaultValue: `Currently using ${licenseInfo.totalUsers} of ${licenseInfo.maxAllowedUsers} user licenses`,
                   })}
                 </Text>
               </Stack>
@@ -364,7 +444,10 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
 
           {/* Mode Toggle */}
           <Tooltip
-            label={t('workspace.people.inviteMode.emailDisabled', 'Email invites require SMTP configuration and mail.enableInvites=true in settings')}
+            label={t(
+              "workspace.people.inviteMode.emailDisabled",
+              "Email invites require SMTP configuration and mail.enableInvites=true in settings",
+            )}
             disabled={!!config?.enableEmailInvites}
             position="bottom"
             withArrow
@@ -374,21 +457,24 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
               <SegmentedControl
                 value={inviteMode}
                 onChange={(value) => {
-                  setInviteMode(value as 'email' | 'direct' | 'link');
+                  setInviteMode(value as "email" | "direct" | "link");
                   setGeneratedInviteLink(null);
                 }}
                 data={[
                   {
-                    label: t('workspace.people.inviteMode.username', 'Username'),
-                    value: 'direct',
+                    label: t(
+                      "workspace.people.inviteMode.username",
+                      "Username",
+                    ),
+                    value: "direct",
                   },
                   {
-                    label: t('workspace.people.inviteMode.link', 'Link'),
-                    value: 'link',
+                    label: t("workspace.people.inviteMode.link", "Link"),
+                    value: "link",
                   },
                   {
-                    label: t('workspace.people.inviteMode.email', 'Email'),
-                    value: 'email',
+                    label: t("workspace.people.inviteMode.email", "Email"),
+                    value: "email",
                     disabled: !config?.enableEmailInvites,
                   },
                 ]}
@@ -398,45 +484,94 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
           </Tooltip>
 
           {/* Link Mode */}
-          {inviteMode === 'link' && (
+          {inviteMode === "link" && (
             <>
               <TextInput
-                label={t('workspace.people.inviteLink.email', 'Email (optional)')}
-                placeholder={t('workspace.people.inviteLink.emailPlaceholder', 'user@example.com')}
+                label={t(
+                  "workspace.people.inviteLink.email",
+                  "Email (optional)",
+                )}
+                placeholder={t(
+                  "workspace.people.inviteLink.emailPlaceholder",
+                  "user@example.com",
+                )}
                 value={inviteLinkForm.email}
-                onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, email: e.currentTarget.value })}
-                description={t('workspace.people.inviteLink.emailDescription', 'If provided, the link will be tied to this email address')}
+                onChange={(e) =>
+                  setInviteLinkForm({
+                    ...inviteLinkForm,
+                    email: e.currentTarget.value,
+                  })
+                }
+                description={t(
+                  "workspace.people.inviteLink.emailDescription",
+                  "If provided, the link will be tied to this email address",
+                )}
               />
               <Select
-                label={t('workspace.people.addMember.role')}
+                label={t("workspace.people.addMember.role")}
                 data={roleOptions}
                 value={inviteLinkForm.role}
-                onChange={(value) => setInviteLinkForm({ ...inviteLinkForm, role: value || 'ROLE_USER' })}
-                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                onChange={(value) =>
+                  setInviteLinkForm({
+                    ...inviteLinkForm,
+                    role: value || "ROLE_USER",
+                  })
+                }
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
               />
               <Select
-                label={t('workspace.people.addMember.team')}
-                placeholder={t('workspace.people.addMember.teamPlaceholder')}
+                label={t("workspace.people.addMember.team")}
+                placeholder={t("workspace.people.addMember.teamPlaceholder")}
                 data={teamOptions}
                 value={inviteLinkForm.teamId?.toString()}
-                onChange={(value) => setInviteLinkForm({ ...inviteLinkForm, teamId: value ? parseInt(value) : undefined })}
+                onChange={(value) =>
+                  setInviteLinkForm({
+                    ...inviteLinkForm,
+                    teamId: value ? parseInt(value) : undefined,
+                  })
+                }
                 clearable
-                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
               />
               <TextInput
-                label={t('workspace.people.inviteLink.expiryHours', 'Link expires in (hours)')}
+                label={t(
+                  "workspace.people.inviteLink.expiryHours",
+                  "Link expires in (hours)",
+                )}
                 type="number"
                 value={inviteLinkForm.expiryHours}
-                onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, expiryHours: parseInt(e.currentTarget.value) || 72 })}
+                onChange={(e) =>
+                  setInviteLinkForm({
+                    ...inviteLinkForm,
+                    expiryHours: parseInt(e.currentTarget.value) || 72,
+                  })
+                }
                 min={1}
                 max={720}
               />
               {inviteLinkForm.email && (
                 <Checkbox
-                  label={t('workspace.people.inviteLink.sendEmail', 'Send invite link via email')}
-                  description={t('workspace.people.inviteLink.sendEmailDescription', 'Also send the link to the provided email address')}
+                  label={t(
+                    "workspace.people.inviteLink.sendEmail",
+                    "Send invite link via email",
+                  )}
+                  description={t(
+                    "workspace.people.inviteLink.sendEmailDescription",
+                    "Also send the link to the provided email address",
+                  )}
                   checked={inviteLinkForm.sendEmail}
-                  onChange={(e) => setInviteLinkForm({ ...inviteLinkForm, sendEmail: e.currentTarget.checked })}
+                  onChange={(e) =>
+                    setInviteLinkForm({
+                      ...inviteLinkForm,
+                      sendEmail: e.currentTarget.checked,
+                    })
+                  }
                 />
               )}
 
@@ -444,7 +579,12 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
               {generatedInviteLink && (
                 <Paper withBorder p="md" bg="var(--mantine-color-green-light)">
                   <Stack gap="sm">
-                    <Text size="sm" fw={500}>{t('workspace.people.inviteLink.generated', 'Invite Link Generated')}</Text>
+                    <Text size="sm" fw={500}>
+                      {t(
+                        "workspace.people.inviteLink.generated",
+                        "Invite Link Generated",
+                      )}
+                    </Text>
                     <Group gap="xs">
                       <TextInput
                         value={generatedInviteLink}
@@ -455,23 +595,41 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                         variant="light"
                         onClick={async () => {
                           try {
-                            await navigator.clipboard.writeText(generatedInviteLink);
-                            alert({ alertType: 'success', title: t('workspace.people.inviteLink.copied', 'Link copied to clipboard!') });
+                            await navigator.clipboard.writeText(
+                              generatedInviteLink,
+                            );
+                            alert({
+                              alertType: "success",
+                              title: t(
+                                "workspace.people.inviteLink.copied",
+                                "Link copied to clipboard!",
+                              ),
+                            });
                           } catch {
                             // Fallback for browsers without clipboard API
-                            const textArea = document.createElement('textarea');
+                            const textArea = document.createElement("textarea");
                             textArea.value = generatedInviteLink;
-                            textArea.style.position = 'fixed';
-                            textArea.style.opacity = '0';
+                            textArea.style.position = "fixed";
+                            textArea.style.opacity = "0";
                             document.body.appendChild(textArea);
                             textArea.select();
-                            document.execCommand('copy');
+                            document.execCommand("copy");
                             document.body.removeChild(textArea);
-                            alert({ alertType: 'success', title: t('workspace.people.inviteLink.copied', 'Link copied to clipboard!') });
+                            alert({
+                              alertType: "success",
+                              title: t(
+                                "workspace.people.inviteLink.copied",
+                                "Link copied to clipboard!",
+                              ),
+                            });
                           }
                         }}
                       >
-                        <LocalIcon icon="content-copy" width="1rem" height="1rem" />
+                        <LocalIcon
+                          icon="content-copy"
+                          width="1rem"
+                          height="1rem"
+                        />
                       </Button>
                     </Group>
                   </Stack>
@@ -481,101 +639,212 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
           )}
 
           {/* Email Mode */}
-          {inviteMode === 'email' && config?.enableEmailInvites && (
+          {inviteMode === "email" && config?.enableEmailInvites && (
             <>
               <Textarea
-                label={t('workspace.people.emailInvite.emails', 'Email Addresses')}
-                placeholder={t('workspace.people.emailInvite.emailsPlaceholder', 'user1@example.com, user2@example.com')}
+                label={t(
+                  "workspace.people.emailInvite.emails",
+                  "Email Addresses",
+                )}
+                placeholder={t(
+                  "workspace.people.emailInvite.emailsPlaceholder",
+                  "user1@example.com, user2@example.com",
+                )}
                 value={emailInviteForm.emails}
-                onChange={(e) => setEmailInviteForm({ ...emailInviteForm, emails: e.currentTarget.value })}
+                onChange={(e) =>
+                  setEmailInviteForm({
+                    ...emailInviteForm,
+                    emails: e.currentTarget.value,
+                  })
+                }
                 minRows={3}
                 required
               />
               <Select
-                label={t('workspace.people.addMember.role')}
+                label={t("workspace.people.addMember.role")}
                 data={roleOptions}
                 value={emailInviteForm.role}
-                onChange={(value) => setEmailInviteForm({ ...emailInviteForm, role: value || 'ROLE_USER' })}
-                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                onChange={(value) =>
+                  setEmailInviteForm({
+                    ...emailInviteForm,
+                    role: value || "ROLE_USER",
+                  })
+                }
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
               />
               <Select
-                label={t('workspace.people.addMember.team')}
-                placeholder={t('workspace.people.addMember.teamPlaceholder')}
+                label={t("workspace.people.addMember.team")}
+                placeholder={t("workspace.people.addMember.teamPlaceholder")}
                 data={teamOptions}
                 value={emailInviteForm.teamId?.toString()}
-                onChange={(value) => setEmailInviteForm({ ...emailInviteForm, teamId: value ? parseInt(value) : undefined })}
+                onChange={(value) =>
+                  setEmailInviteForm({
+                    ...emailInviteForm,
+                    teamId: value ? parseInt(value) : undefined,
+                  })
+                }
                 clearable
-                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
               />
             </>
           )}
 
           {/* Direct/Username Mode */}
-          {inviteMode === 'direct' && (
+          {inviteMode === "direct" && (
             <>
               <TextInput
-                label={t('workspace.people.addMember.username')}
-                placeholder={t('workspace.people.addMember.usernamePlaceholder')}
+                label={t("workspace.people.addMember.username")}
+                placeholder={t(
+                  "workspace.people.addMember.usernamePlaceholder",
+                )}
                 value={inviteForm.username}
-                onChange={(e) => setInviteForm({ ...inviteForm, username: e.currentTarget.value })}
+                onChange={(e) =>
+                  setInviteForm({
+                    ...inviteForm,
+                    username: e.currentTarget.value,
+                  })
+                }
                 required
               />
 
               {/* Auth Type Selector - only show if SSO is enabled */}
               {(config?.enableOAuth || config?.enableSaml) && (
                 <Select
-                  label={t('workspace.people.addMember.authType', 'Authentication Type')}
+                  label={t(
+                    "workspace.people.addMember.authType",
+                    "Authentication Type",
+                  )}
                   data={[
-                    { value: 'WEB', label: t('workspace.people.authType.password', 'Password') },
-                    ...(config?.enableOAuth ? [{ value: 'OAUTH2', label: t('workspace.people.authType.oauth', 'OAuth2') }] : []),
-                    ...(config?.enableSaml ? [{ value: 'SAML2', label: t('workspace.people.authType.saml', 'SAML2') }] : []),
+                    {
+                      value: "WEB",
+                      label: t(
+                        "workspace.people.authType.password",
+                        "Password",
+                      ),
+                    },
+                    ...(config?.enableOAuth
+                      ? [
+                          {
+                            value: "OAUTH2",
+                            label: t(
+                              "workspace.people.authType.oauth",
+                              "OAuth2",
+                            ),
+                          },
+                        ]
+                      : []),
+                    ...(config?.enableSaml
+                      ? [
+                          {
+                            value: "SAML2",
+                            label: t("workspace.people.authType.saml", "SAML2"),
+                          },
+                        ]
+                      : []),
                   ]}
                   value={inviteForm.authType}
-                  onChange={(value) => setInviteForm({ ...inviteForm, authType: (value as 'WEB' | 'OAUTH2' | 'SAML2') || 'WEB' })}
-                  comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
-                  description={inviteForm.authType !== 'WEB' ? t('workspace.people.authType.ssoDescription', 'User will authenticate via SSO provider') : undefined}
+                  onChange={(value) =>
+                    setInviteForm({
+                      ...inviteForm,
+                      authType: (value as "WEB" | "OAUTH2" | "SAML2") || "WEB",
+                    })
+                  }
+                  comboboxProps={{
+                    withinPortal: true,
+                    zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                  }}
+                  description={
+                    inviteForm.authType !== "WEB"
+                      ? t(
+                          "workspace.people.authType.ssoDescription",
+                          "User will authenticate via SSO provider",
+                        )
+                      : undefined
+                  }
                 />
               )}
 
               {/* Password field - only required for WEB auth type */}
-              {inviteForm.authType === 'WEB' && (
+              {inviteForm.authType === "WEB" && (
                 <>
                   <TextInput
-                    label={t('workspace.people.addMember.password')}
+                    label={t("workspace.people.addMember.password")}
                     type="password"
-                    placeholder={t('workspace.people.addMember.passwordPlaceholder')}
+                    placeholder={t(
+                      "workspace.people.addMember.passwordPlaceholder",
+                    )}
                     value={inviteForm.password}
-                    onChange={(e) => setInviteForm({ ...inviteForm, password: e.currentTarget.value })}
+                    onChange={(e) =>
+                      setInviteForm({
+                        ...inviteForm,
+                        password: e.currentTarget.value,
+                      })
+                    }
                     required
                   />
                   <Checkbox
-                    label={t('workspace.people.addMember.forcePasswordChange', 'Force password change on first login')}
+                    label={t(
+                      "workspace.people.addMember.forcePasswordChange",
+                      "Force password change on first login",
+                    )}
                     checked={inviteForm.forceChange}
-                    onChange={(e) => setInviteForm({ ...inviteForm, forceChange: e.currentTarget.checked })}
+                    onChange={(e) =>
+                      setInviteForm({
+                        ...inviteForm,
+                        forceChange: e.currentTarget.checked,
+                      })
+                    }
                   />
                   <Checkbox
-                    label={t('workspace.people.addMember.forceMFA', 'Force MFA setup on next login')}
+                    label={t(
+                      "workspace.people.addMember.forceMFA",
+                      "Force MFA setup on next login",
+                    )}
                     checked={inviteForm.forceMFA}
-                    onChange={(e) => setInviteForm({ ...inviteForm, forceMFA: e.currentTarget.checked })}
+                    onChange={(e) =>
+                      setInviteForm({
+                        ...inviteForm,
+                        forceMFA: e.currentTarget.checked,
+                      })
+                    }
                   />
                 </>
               )}
 
               <Select
-                label={t('workspace.people.addMember.role')}
+                label={t("workspace.people.addMember.role")}
                 data={roleOptions}
                 value={inviteForm.role}
-                onChange={(value) => setInviteForm({ ...inviteForm, role: value || 'ROLE_USER' })}
-                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                onChange={(value) =>
+                  setInviteForm({ ...inviteForm, role: value || "ROLE_USER" })
+                }
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
               />
               <Select
-                label={t('workspace.people.addMember.team')}
-                placeholder={t('workspace.people.addMember.teamPlaceholder')}
+                label={t("workspace.people.addMember.team")}
+                placeholder={t("workspace.people.addMember.teamPlaceholder")}
                 data={teamOptions}
                 value={inviteForm.teamId?.toString()}
-                onChange={(value) => setInviteForm({ ...inviteForm, teamId: value ? parseInt(value) : undefined })}
+                onChange={(value) =>
+                  setInviteForm({
+                    ...inviteForm,
+                    teamId: value ? parseInt(value) : undefined,
+                  })
+                }
                 clearable
-                comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
               />
             </>
           )}
@@ -588,15 +857,14 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
             size="md"
             mt="md"
           >
-            {inviteMode === 'email'
-              ? t('workspace.people.emailInvite.submit', 'Send Invites')
-              : inviteMode === 'link'
-                ? t('workspace.people.inviteLink.submit', 'Generate Link')
-                : t('workspace.people.addMember.submit')}
+            {inviteMode === "email"
+              ? t("workspace.people.emailInvite.submit", "Send Invites")
+              : inviteMode === "link"
+                ? t("workspace.people.inviteLink.submit", "Generate Link")
+                : t("workspace.people.addMember.submit")}
           </Button>
         </Stack>
       </Box>
     </Modal>
   );
 }
-

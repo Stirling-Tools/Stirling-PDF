@@ -17,9 +17,12 @@ export interface DatabaseData {
 
 const databaseManagementService = {
   async getDatabaseData(): Promise<DatabaseData> {
-    const response = await apiClient.get<DatabaseData>("/api/v1/proprietary/ui-data/database", {
-      suppressErrorToast: true,
-    });
+    const response = await apiClient.get<DatabaseData>(
+      "/api/v1/proprietary/ui-data/database",
+      {
+        suppressErrorToast: true,
+      },
+    );
     return response.data;
   },
 
@@ -28,7 +31,9 @@ const databaseManagementService = {
   },
 
   async importFromFileName(fileName: string): Promise<void> {
-    await apiClient.get(`/api/v1/database/import-database-file/${encodeURIComponent(fileName)}`);
+    await apiClient.get(
+      `/api/v1/database/import-database-file/${encodeURIComponent(fileName)}`,
+    );
   },
 
   async uploadAndImport(file: File): Promise<void> {
@@ -39,13 +44,18 @@ const databaseManagementService = {
   },
 
   async deleteBackup(fileName: string): Promise<void> {
-    await apiClient.get(`/api/v1/database/delete/${encodeURIComponent(fileName)}`);
+    await apiClient.get(
+      `/api/v1/database/delete/${encodeURIComponent(fileName)}`,
+    );
   },
 
   async downloadBackup(fileName: string): Promise<Blob> {
-    const response = await apiClient.get(`/api/v1/database/download/${encodeURIComponent(fileName)}`, {
-      responseType: "blob",
-    });
+    const response = await apiClient.get(
+      `/api/v1/database/download/${encodeURIComponent(fileName)}`,
+      {
+        responseType: "blob",
+      },
+    );
     return response.data;
   },
 };

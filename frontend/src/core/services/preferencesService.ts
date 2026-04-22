@@ -1,14 +1,32 @@
-import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from '@app/constants/toolPanel';
-import { type ThemeMode, getSystemTheme } from '@app/constants/theme';
+import {
+  type ToolPanelMode,
+  DEFAULT_TOOL_PANEL_MODE,
+} from "@app/constants/toolPanel";
+import { type ThemeMode, getSystemTheme } from "@app/constants/theme";
 
-export type LogoVariant = 'modern' | 'classic';
+export type LogoVariant = "modern" | "classic";
 
-export type PdfRenderMode = 'normal' | 'dark' | 'sepia';
+export type PdfRenderMode = "normal" | "dark" | "sepia";
+
+export type StartupView = "tools" | "read" | "automate";
+
+export type ViewerZoomSetting =
+  | "auto"
+  | "fitWidth"
+  | "fitPage"
+  | "50"
+  | "75"
+  | "100"
+  | "125"
+  | "150"
+  | "200";
 
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
   defaultToolPanelMode: ToolPanelMode;
+  defaultStartupView: StartupView;
+  defaultViewerZoom: ViewerZoomSetting;
   theme: ThemeMode;
   toolPanelModePromptSeen: boolean;
   hasSelectedToolPanelMode: boolean;
@@ -26,6 +44,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   autoUnzip: true,
   autoUnzipFileLimit: 4,
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
+  defaultStartupView: "tools",
+  defaultViewerZoom: "auto",
   theme: getSystemTheme(),
   toolPanelModePromptSeen: false,
   hasSelectedToolPanelMode: false,
@@ -36,10 +56,10 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
   logoVariant: null,
-  pdfRenderMode: 'normal',
+  pdfRenderMode: "normal",
 };
 
-const STORAGE_KEY = 'stirlingpdf_preferences';
+const STORAGE_KEY = "stirlingpdf_preferences";
 
 class PreferencesService {
   private serverDefaults: Partial<UserPreferences> = {};
@@ -48,9 +68,7 @@ class PreferencesService {
     this.serverDefaults = defaults;
   }
 
-  getPreference<K extends keyof UserPreferences>(
-    key: K
-  ): UserPreferences[K] {
+  getPreference<K extends keyof UserPreferences>(key: K): UserPreferences[K] {
     // Explicitly re-read every time in case preferences have changed in another tab etc.
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -61,7 +79,7 @@ class PreferencesService {
         }
       }
     } catch (error) {
-      console.error('Error reading preference:', key, error);
+      console.error("Error reading preference:", key, error);
     }
     // Use server defaults if available, otherwise use hardcoded defaults
     if (key in this.serverDefaults && this.serverDefaults[key] !== undefined) {
@@ -72,7 +90,7 @@ class PreferencesService {
 
   setPreference<K extends keyof UserPreferences>(
     key: K,
-    value: UserPreferences[K]
+    value: UserPreferences[K],
   ): void {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -80,7 +98,7 @@ class PreferencesService {
       preferences[key] = value;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
     } catch (error) {
-      console.error('Error writing preference:', key, error);
+      console.error("Error writing preference:", key, error);
     }
   }
 
@@ -97,7 +115,7 @@ class PreferencesService {
         };
       }
     } catch (error) {
-      console.error('Error reading preferences', error);
+      console.error("Error reading preferences", error);
     }
     // Merge server defaults with hardcoded defaults
     return { ...DEFAULT_PREFERENCES, ...this.serverDefaults };
@@ -107,7 +125,7 @@ class PreferencesService {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Error clearing preferences:', error);
+      console.error("Error clearing preferences:", error);
       throw error;
     }
   }

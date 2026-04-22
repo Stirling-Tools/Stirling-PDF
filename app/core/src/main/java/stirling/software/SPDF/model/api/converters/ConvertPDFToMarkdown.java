@@ -4,6 +4,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -28,7 +29,7 @@ public class ConvertPDFToMarkdown {
             summary = "Convert PDF to Markdown",
             description =
                     "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
+    public ResponseEntity<StreamingResponseBody> processPdfToMarkdown(@ModelAttribute PDFFile file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager);

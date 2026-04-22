@@ -1,9 +1,9 @@
-import i18n from '@app/i18n';
-import { alert } from '@app/components/toast';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { operationRouter } from '@app/services/operationRouter';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
+import i18n from "@app/i18n";
+import { alert } from "@app/components/toast";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { operationRouter } from "@app/services/operationRouter";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
@@ -25,30 +25,33 @@ let lastBackendToast = 0;
 export async function ensureBackendReady(endpoint?: string): Promise<boolean> {
   // Skip waiting if endpoint will be routed to SaaS backend
   if (endpoint) {
-    const skipCheck = await operationRouter.shouldSkipBackendReadyCheck(endpoint);
+    const skipCheck =
+      await operationRouter.shouldSkipBackendReadyCheck(endpoint);
     if (skipCheck) {
-      console.debug('[backendReadinessGuard] Skipping backend ready check (SaaS routing)');
+      console.debug(
+        "[backendReadinessGuard] Skipping backend ready check (SaaS routing)",
+      );
       return true;
     }
   }
 
   const mode = await connectionModeService.getCurrentMode();
-  if (mode === 'selfhosted') {
+  if (mode === "selfhosted") {
     let { status } = selfHostedServerMonitor.getSnapshot();
 
     // 'checking' means the first poll hasn't returned yet. Wait briefly (up to
     // 1.5 s) for it to resolve so we don't surface raw network errors during the
     // first few seconds after launch. If it doesn't resolve in time we fall
     // through and allow the operation — the HTTP layer will handle any error.
-    if (status === 'checking') {
+    if (status === "checking") {
       await Promise.race([
         selfHostedServerMonitor.checkNow(),
-        new Promise<void>(resolve => setTimeout(resolve, 1500)),
+        new Promise<void>((resolve) => setTimeout(resolve, 1500)),
       ]);
       status = selfHostedServerMonitor.getSnapshot().status;
     }
 
-    if (status === 'offline') {
+    if (status === "offline") {
       // Server offline: allow through if local backend port is known.
       // operationRouter will route to local for supported endpoints.
       // Suppress the toast — SelfHostedOfflineBanner communicates the outage.
@@ -73,9 +76,9 @@ export async function ensureBackendReady(endpoint?: string): Promise<boolean> {
   if (now - lastBackendToast > BACKEND_TOAST_COOLDOWN_MS) {
     lastBackendToast = now;
     alert({
-      alertType: 'error',
-      title: i18n.t('backendHealth.offline', 'Backend Offline'),
-      body: i18n.t('backendHealth.checking', 'Checking backend status...'),
+      alertType: "error",
+      title: i18n.t("backendHealth.offline", "Backend Offline"),
+      body: i18n.t("backendHealth.checking", "Checking backend status..."),
       isPersistentPopup: false,
     });
   }

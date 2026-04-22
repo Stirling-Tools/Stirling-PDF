@@ -9,10 +9,10 @@ const UnlockPdfForms = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'unlockPdfForms',
+    "unlockPdfForms",
     useUnlockPdfFormsParameters,
     useUnlockPdfFormsOperation,
-    props
+    props,
   );
 
   return createToolFlow({

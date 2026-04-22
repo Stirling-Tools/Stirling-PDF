@@ -1,5 +1,4 @@
-import * as React from 'react';
-
+import * as React from "react";
 
 /**
  Hook to detect if an element's content overflows its container
@@ -31,10 +30,14 @@ import * as React from 'react';
         );
 */
 
-
-export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
+export const useIsOverflowing = (
+  ref: React.RefObject<HTMLElement | null>,
+  callback?: (isOverflow: boolean) => void,
+) => {
   // State to track overflow status
-  const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(undefined);
+  const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(
+    undefined,
+  );
 
   React.useLayoutEffect(() => {
     const { current } = ref;
@@ -42,27 +45,27 @@ export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callb
     // Function to check if element is overflowing
     const trigger = () => {
       if (!current) return;
-      
+
       // Compare scroll height (total content height) vs client height (visible height)
       const hasOverflow = current.scrollHeight > current.clientHeight;
       setIsOverflow(hasOverflow);
-      
+
       // Call optional callback with overflow state
       if (callback) callback(hasOverflow);
     };
 
     if (current) {
       // Use ResizeObserver for modern browsers (real-time detection)
-      if ('ResizeObserver' in window) {
+      if ("ResizeObserver" in window) {
         const resizeObserver = new ResizeObserver(trigger);
         resizeObserver.observe(current);
-        
+
         // Cleanup function to disconnect observer
         return () => {
           resizeObserver.disconnect();
         };
       }
-      
+
       // Fallback for browsers without ResizeObserver support
       // Add a small delay to ensure the element is fully rendered
       setTimeout(trigger, 0);
@@ -70,4 +73,4 @@ export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callb
   }, [callback, ref]);
 
   return isOverflow;
-}; 
+};

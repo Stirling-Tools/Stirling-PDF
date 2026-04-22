@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,6 +47,7 @@ class StampControllerTest {
 
     private Method processStampTextMethod;
     private Method processCustomDateFormatMethod;
+    private Method calculateImagePositionYMethod;
 
     @BeforeEach
     void setUp() throws NoSuchMethodException {
@@ -63,6 +65,26 @@ class StampControllerTest {
                 StampController.class.getDeclaredMethod(
                         "processCustomDateFormat", String.class, LocalDateTime.class);
         processCustomDateFormatMethod.setAccessible(true);
+
+        calculateImagePositionYMethod =
+                StampController.class.getDeclaredMethod(
+                        "calculateImagePositionY",
+                        PDRectangle.class,
+                        int.class,
+                        float.class,
+                        float.class);
+        calculateImagePositionYMethod.setAccessible(true);
+    }
+
+    private float invokeCalculateImagePositionY(
+            PDRectangle pageSize, int position, float imageHeight, float margin) throws Exception {
+        try {
+            return (float)
+                    calculateImagePositionYMethod.invoke(
+                            stampController, pageSize, position, imageHeight, margin);
+        } catch (InvocationTargetException e) {
+            throw (Exception) e.getCause();
+        }
     }
 
     private String invokeProcessStampText(
@@ -83,6 +105,45 @@ class StampControllerTest {
             return (String) processCustomDateFormatMethod.invoke(stampController, format, now);
         } catch (InvocationTargetException e) {
             throw (Exception) e.getCause();
+        }
+    }
+
+    @Nested
+    @DisplayName("Image stamp position (lower-left anchor)")
+    class ImagePositionYTests {
+
+        @Test
+        @DisplayName("Top row: upper edge of image sits below top margin")
+        void topRowUsesUpperRightMinusMarginMinusHeight() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            float y = invokeCalculateImagePositionY(page, 3, 100f, 10f);
+            assertEquals(690f, y, 0.001f);
+        }
+
+        @Test
+        @DisplayName("Middle row: image is vertically centred on page")
+        void middleRowCentresImage() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            float y = invokeCalculateImagePositionY(page, 5, 100f, 10f);
+            assertEquals(350f, y, 0.001f);
+        }
+
+        @Test
+        @DisplayName("Bottom row: lower edge of image sits above bottom margin")
+        void bottomRowUsesLowerLeftPlusMargin() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            float y = invokeCalculateImagePositionY(page, 7, 100f, 10f);
+            assertEquals(10f, y, 0.001f);
+        }
+
+        @Test
+        @DisplayName("Honours non-zero media box origin")
+        void respectsLowerLeftOrigin() throws Exception {
+            PDRectangle page = new PDRectangle(50f, 100f, 400f, 300f);
+            float yMid = invokeCalculateImagePositionY(page, 5, 20f, 5f);
+            assertEquals(240f, yMid, 0.001f);
+            float yTop = invokeCalculateImagePositionY(page, 3, 20f, 5f);
+            assertEquals(375f, yTop, 0.001f);
         }
     }
 

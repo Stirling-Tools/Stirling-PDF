@@ -5,12 +5,17 @@
 FROM gradle:9.3.1-jdk25 AS build
 
 # Install Node.js and npm for frontend build
+ARG TASK_VERSION=3.49.1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm --version \
     && node --version \
+    && ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
+    && dpkg -i /tmp/task.deb \
+    && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -93,7 +98,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     bash \
     curl \
     shadow \
-    su-exec && \
+    util-linux && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     # User permissions

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { alert } from '@app/components/toast';
-import apiClient from '@app/services/apiClient';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { alert } from "@app/components/toast";
+import apiClient from "@app/services/apiClient";
 
 export function useRestartServer() {
   const { t } = useTranslation();
@@ -18,33 +18,34 @@ export function useRestartServer() {
   const restartServer = async () => {
     setRestartModalOpened(false);
 
-    await apiClient.post('/api/v1/admin/settings/restart', undefined, {
-      suppressErrorToast: true,
-    })
-    .then(() => {
-      alert({
-        alertType: 'neutral',
-        title: t('admin.settings.restarting', 'Restarting Server'),
-        body: t(
-          'admin.settings.restartingMessage',
-          'The server is restarting. Please wait a moment...'
-        ),
+    await apiClient
+      .post("/api/v1/admin/settings/restart", undefined, {
+        suppressErrorToast: true,
+      })
+      .then(() => {
+        alert({
+          alertType: "neutral",
+          title: t("admin.settings.restarting", "Restarting Server"),
+          body: t(
+            "admin.settings.restartingMessage",
+            "The server is restarting. Please wait a moment...",
+          ),
+        });
+        // Wait a moment then reload the page
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      })
+      .catch(async (_error) => {
+        alert({
+          alertType: "error",
+          title: t("admin.error", "Error"),
+          body: t(
+            "admin.settings.restartError",
+            "Failed to restart server. Please restart manually.",
+          ),
+        });
       });
-      // Wait a moment then reload the page
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
-    })
-    .catch(async (_error) => {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t(
-          'admin.settings.restartError',
-          'Failed to restart server. Please restart manually.'
-        ),
-      });
-    })
   };
 
   return {

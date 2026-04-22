@@ -1,11 +1,19 @@
-import React, { useState, useMemo } from 'react';
-import { Button, Collapse, Select, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import licenseService, { PlanTier, PlanTierGroup, LicenseInfo, mapLicenseToTier } from '@app/services/licenseService';
-import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard';
-import FeatureComparisonTable from '@app/components/shared/config/configSections/plan/FeatureComparisonTable';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { isCurrentTier as checkIsCurrentTier, isDowngrade as checkIsDowngrade } from '@app/utils/planTierUtils';
+import React, { useState, useMemo } from "react";
+import { Button, Collapse, Select, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import licenseService, {
+  PlanTier,
+  PlanTierGroup,
+  LicenseInfo,
+  mapLicenseToTier,
+} from "@app/services/licenseService";
+import PlanCard from "@app/components/shared/config/configSections/plan/PlanCard";
+import FeatureComparisonTable from "@app/components/shared/config/configSections/plan/FeatureComparisonTable";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import {
+  isCurrentTier as checkIsCurrentTier,
+  isDowngrade as checkIsDowngrade,
+} from "@app/utils/planTierUtils";
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
@@ -56,28 +64,40 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
     <div>
       <Group justify="space-between" align="flex-start" mb="xs">
         <div>
-          <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
-            {t('plan.availablePlans.title', 'Available Plans')}
+          <h3
+            style={{
+              margin: 0,
+              color: "var(--mantine-color-text)",
+              fontSize: "1rem",
+            }}
+          >
+            {t("plan.availablePlans.title", "Available Plans")}
           </h3>
           <p
             style={{
-              margin: '0.25rem 0 0 0',
-              color: 'var(--mantine-color-dimmed)',
-              fontSize: '0.875rem',
+              margin: "0.25rem 0 0 0",
+              color: "var(--mantine-color-dimmed)",
+              fontSize: "0.875rem",
             }}
           >
-            {t('plan.availablePlans.subtitle', 'Choose the plan that fits your needs')}
+            {t(
+              "plan.availablePlans.subtitle",
+              "Choose the plan that fits your needs",
+            )}
           </p>
         </div>
         {currency && onCurrencyChange && currencyOptions && (
           <Select
             value={currency}
-            onChange={(value) => onCurrencyChange(value || 'usd')}
+            onChange={(value) => onCurrencyChange(value || "usd")}
             data={currencyOptions}
             searchable
             clearable={false}
             w={300}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+            }}
             disabled={!loginEnabled}
           />
         )}
@@ -85,10 +105,10 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1rem',
-          marginBottom: '0.1rem',
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "1rem",
+          marginBottom: "0.1rem",
         }}
       >
         {groupedPlans.map((group) => (
@@ -106,16 +126,22 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
         ))}
       </div>
 
-      <div style={{ textAlign: 'center' }}>
-        <Button variant="subtle" onClick={() => setShowComparison(!showComparison)}>
+      <div style={{ textAlign: "center" }}>
+        <Button
+          variant="subtle"
+          onClick={() => setShowComparison(!showComparison)}
+        >
           {showComparison
-            ? t('plan.hideComparison', 'Hide Feature Comparison')
-            : t('plan.showComparison', 'Compare All Features')}
+            ? t("plan.hideComparison", "Hide Feature Comparison")
+            : t("plan.showComparison", "Compare All Features")}
         </Button>
       </div>
 
       <Collapse in={showComparison}>
-        <FeatureComparisonTable plans={groupedPlans} currentTier={currentTier} />
+        <FeatureComparisonTable
+          plans={groupedPlans}
+          currentTier={currentTier}
+        />
       </Collapse>
     </div>
   );

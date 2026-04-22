@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Stack, Text, Group, Badge } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import CheckIcon from '@mui/icons-material/Check';
-import { SelectDocumentStep } from '@app/components/shared/signing/steps/SelectDocumentStep';
-import { SelectParticipantsStep } from '@app/components/shared/signing/steps/SelectParticipantsStep';
-import { ConfigureSignatureDefaultsStep } from '@app/components/shared/signing/steps/ConfigureSignatureDefaultsStep';
-import { ReviewSessionStep } from '@app/components/shared/signing/steps/ReviewSessionStep';
-import { useGroupSigningTips } from '@app/components/tooltips/useGroupSigningTips';
-import { useSignatureSettingsTips } from '@app/components/tooltips/useSignatureSettingsTips';
-import type { SignatureSettings } from '@app/components/tools/certSign/SignatureSettingsInput';
-import type { FileState } from '@app/types/file';
+import { useState } from "react";
+import { Stack, Text, Group, Badge } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import CheckIcon from "@mui/icons-material/Check";
+import { SelectDocumentStep } from "@app/components/shared/signing/steps/SelectDocumentStep";
+import { SelectParticipantsStep } from "@app/components/shared/signing/steps/SelectParticipantsStep";
+import { ConfigureSignatureDefaultsStep } from "@app/components/shared/signing/steps/ConfigureSignatureDefaultsStep";
+import { ReviewSessionStep } from "@app/components/shared/signing/steps/ReviewSessionStep";
+import { useGroupSigningTips } from "@app/components/tooltips/useGroupSigningTips";
+import { useSignatureSettingsTips } from "@app/components/tooltips/useSignatureSettingsTips";
+import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
+import type { FileState } from "@app/types/file";
 
 interface CreateSessionFlowProps {
   selectedFiles: FileState[];
@@ -41,43 +41,43 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
   return (
     <div
       style={{
-        padding: '16px',
+        padding: "16px",
         border: isActive
-          ? '2px solid var(--mantine-color-blue-6)'
-          : '1px solid var(--mantine-color-default-border)',
-        borderRadius: 'var(--mantine-radius-default)',
+          ? "2px solid var(--mantine-color-blue-6)"
+          : "1px solid var(--mantine-color-default-border)",
+        borderRadius: "var(--mantine-radius-default)",
         backgroundColor: isActive
-          ? 'var(--mantine-color-blue-0)'
+          ? "var(--mantine-color-blue-0)"
           : isCompleted
-          ? 'var(--mantine-color-gray-0)'
-          : 'transparent',
+            ? "var(--mantine-color-gray-0)"
+            : "transparent",
         opacity: !isActive && !isCompleted ? 0.6 : 1,
       }}
     >
-      <Group gap="sm" mb={isActive ? 'md' : 0}>
+      <Group gap="sm" mb={isActive ? "md" : 0}>
         <div
           style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             backgroundColor: isCompleted
-              ? 'var(--mantine-color-green-6)'
+              ? "var(--mantine-color-green-6)"
               : isActive
-              ? 'var(--mantine-color-blue-6)'
-              : 'var(--mantine-color-gray-4)',
-            color: 'white',
+                ? "var(--mantine-color-blue-6)"
+                : "var(--mantine-color-gray-4)",
+            color: "white",
             fontWeight: 600,
-            fontSize: '14px',
+            fontSize: "14px",
           }}
         >
           {isCompleted ? <CheckIcon sx={{ fontSize: 18 }} /> : number}
         </div>
         <div style={{ flex: 1 }}>
           <Text size="sm" fw={600}>
-            {t('groupSigning.steps.stepLabel', 'Step {{number}}', { number })}
+            {t("groupSigning.steps.stepLabel", "Step {{number}}", { number })}
           </Text>
           <Text size="sm" c="dimmed">
             {title}
@@ -85,12 +85,12 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
         </div>
         {isActive && (
           <Badge color="blue" variant="light">
-            {t('groupSigning.steps.current', 'Current')}
+            {t("groupSigning.steps.current", "Current")}
           </Badge>
         )}
         {isCompleted && (
           <Badge color="green" variant="light">
-            {t('groupSigning.steps.completed', 'Completed')}
+            {t("groupSigning.steps.completed", "Completed")}
           </Badge>
         )}
       </Group>
@@ -113,14 +113,16 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
   const [currentStep, setCurrentStep] = useState(1);
 
   // Signature settings state
-  const [signatureSettings, setSignatureSettings] = useState<SignatureSettings>({
-    showSignature: false,
-    pageNumber: 1,
-    reason: '',
-    location: '',
-    showLogo: false,
-    includeSummaryPage: false,
-  });
+  const [signatureSettings, setSignatureSettings] = useState<SignatureSettings>(
+    {
+      showSignature: false,
+      pageNumber: 1,
+      reason: "",
+      location: "",
+      showLogo: false,
+      includeSummaryPage: false,
+    },
+  );
 
   const groupSigningTips = useGroupSigningTips();
   const signatureSettingsTips = useSignatureSettingsTips();
@@ -131,22 +133,28 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
   const steps = [
     {
       number: 1,
-      title: t('groupSigning.steps.selectDocument.title', 'Select Document'),
+      title: t("groupSigning.steps.selectDocument.title", "Select Document"),
       tooltip: groupSigningTips,
     },
     {
       number: 2,
-      title: t('groupSigning.steps.selectParticipants.title', 'Choose Participants'),
+      title: t(
+        "groupSigning.steps.selectParticipants.title",
+        "Choose Participants",
+      ),
       tooltip: null,
     },
     {
       number: 3,
-      title: t('groupSigning.steps.configureDefaults.title', 'Configure Signature Settings'),
+      title: t(
+        "groupSigning.steps.configureDefaults.title",
+        "Configure Signature Settings",
+      ),
       tooltip: signatureSettingsTips,
     },
     {
       number: 4,
-      title: t('groupSigning.steps.review.titleShort', 'Review & Send'),
+      title: t("groupSigning.steps.review.titleShort", "Review & Send"),
       tooltip: null,
     },
   ];
@@ -167,11 +175,11 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
               onNext={() => setCurrentStep(2)}
             />
           ) : (
-            <div style={{ padding: '12px 0' }}>
+            <div style={{ padding: "12px 0" }}>
               <Text size="sm" c="dimmed" ta="center">
                 {t(
-                  'groupSigning.steps.selectDocument.noFile',
-                  'Please select a single PDF file from your active files to create a signing session.'
+                  "groupSigning.steps.selectDocument.noFile",
+                  "Please select a single PDF file from your active files to create a signing session.",
                 )}
               </Text>
             </div>

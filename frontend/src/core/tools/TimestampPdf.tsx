@@ -13,7 +13,7 @@ const TimestampPdf = (props: BaseToolProps) => {
     "timestampPdf",
     useTimestampPdfParameters,
     useTimestampPdfOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -25,7 +25,9 @@ const TimestampPdf = (props: BaseToolProps) => {
       {
         title: t("timestampPdf.steps.settings", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: (
           <TimestampPdfSettings
             parameters={base.params.parameters}

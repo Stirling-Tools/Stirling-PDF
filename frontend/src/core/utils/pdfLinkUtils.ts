@@ -13,16 +13,21 @@ import {
   writeUtf16,
   readAnnotRectAdjusted,
   parseRectToCss,
-} from '@app/services/pdfiumService';
+} from "@app/services/pdfiumService";
 import {
   FPDF_ANNOT_LINK,
   PDFACTION_GOTO,
   PDFACTION_URI,
-} from '@app/utils/pdfiumBitmapUtils';
+} from "@app/utils/pdfiumBitmapUtils";
 
-export type LinkType = 'internal' | 'external' | 'unknown';
-export type LinkBorderStyle = 'solid' | 'dashed' | 'beveled' | 'inset' | 'underline';
-export type LinkHighlightMode = 'none' | 'invert' | 'outline' | 'push';
+export type LinkType = "internal" | "external" | "unknown";
+export type LinkBorderStyle =
+  | "solid"
+  | "dashed"
+  | "beveled"
+  | "inset"
+  | "underline";
+export type LinkHighlightMode = "none" | "invert" | "outline" | "push";
 
 export interface PdfLibLink {
   id: string;
@@ -86,13 +91,17 @@ export async function createLinkAnnotation(
   } = options;
 
   if (!url && destinationPage === undefined) {
-    throw new Error('createLinkAnnotation: must provide either url or destinationPage');
+    throw new Error(
+      "createLinkAnnotation: must provide either url or destinationPage",
+    );
   }
   if (url && destinationPage !== undefined) {
-    throw new Error('createLinkAnnotation: url and destinationPage are mutually exclusive');
+    throw new Error(
+      "createLinkAnnotation: url and destinationPage are mutually exclusive",
+    );
   }
   if (rect.width <= 0 || rect.height <= 0) {
-    throw new Error('createLinkAnnotation: rect dimensions must be positive');
+    throw new Error("createLinkAnnotation: rect dimensions must be positive");
   }
 
   const m = await getPdfiumModule();
@@ -100,7 +109,10 @@ export async function createLinkAnnotation(
 
   try {
     const pageCount = m.FPDF_GetPageCount(docPtr);
-    if (destinationPage !== undefined && (destinationPage < 0 || destinationPage >= pageCount)) {
+    if (
+      destinationPage !== undefined &&
+      (destinationPage < 0 || destinationPage >= pageCount)
+    ) {
       throw new RangeError(
         `createLinkAnnotation: destinationPage ${destinationPage} out of range [0, ${pageCount})`,
       );
@@ -114,22 +126,22 @@ export async function createLinkAnnotation(
 
       const annotPtr = m.FPDFPage_CreateAnnot(pagePtr, FPDF_ANNOT_LINK);
       if (!annotPtr) {
-        throw new Error('Failed to create link annotation');
+        throw new Error("Failed to create link annotation");
       }
 
       try {
         // Set rect (convert from CSS top-left to PDF bottom-left origin)
         // FS_RECTF layout: { left, top, right, bottom } where top > bottom in PDF coords
         const pdfLeft = rect.x;
-        const pdfTop = pageHeight - rect.y;                 // CSS y=0 → PDF top
+        const pdfTop = pageHeight - rect.y; // CSS y=0 → PDF top
         const pdfRight = rect.x + rect.width;
-        const pdfBottom = pageHeight - rect.y - rect.height;   // CSS bottom → PDF bottom
+        const pdfBottom = pageHeight - rect.y - rect.height; // CSS bottom → PDF bottom
 
         const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
-        m.pdfium.setValue(rectBuf, pdfLeft, 'float');   // offset 0: left
-        m.pdfium.setValue(rectBuf + 4, pdfTop, 'float');   // offset 4: top  (larger y)
-        m.pdfium.setValue(rectBuf + 8, pdfRight, 'float');   // offset 8: right
-        m.pdfium.setValue(rectBuf + 12, pdfBottom, 'float');   // offset 12: bottom (smaller y)
+        m.pdfium.setValue(rectBuf, pdfLeft, "float"); // offset 0: left
+        m.pdfium.setValue(rectBuf + 4, pdfTop, "float"); // offset 4: top  (larger y)
+        m.pdfium.setValue(rectBuf + 8, pdfRight, "float"); // offset 8: right
+        m.pdfium.setValue(rectBuf + 12, pdfBottom, "float"); // offset 12: bottom (smaller y)
         m.FPDFAnnot_SetRect(annotPtr, rectBuf);
         m.pdfium.wasmExports.free(rectBuf);
 
@@ -157,7 +169,7 @@ export async function createLinkAnnotation(
         // Set title / contents
         if (title) {
           const titlePtr = writeUtf16(m, title);
-          m.FPDFAnnot_SetStringValue(annotPtr, 'Contents', titlePtr);
+          m.FPDFAnnot_SetStringValue(annotPtr, "Contents", titlePtr);
           m.pdfium.wasmExports.free(titlePtr);
         }
       } finally {
@@ -168,7 +180,6 @@ export async function createLinkAnnotation(
     }
 
     return await saveRawDocument(docPtr);
-
   } finally {
     closeDocAndFreeBuffer(m, docPtr);
   }
@@ -207,7 +218,11 @@ export async function extractLinksFromPage(
   data: ArrayBuffer | Uint8Array,
   pageIndex: number,
   password?: string,
-): Promise<{ links: PdfLibLink[]; pdfPageWidth: number; pdfPageHeight: number }> {
+): Promise<{
+  links: PdfLibLink[];
+  pdfPageWidth: number;
+  pdfPageHeight: number;
+}> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
 
@@ -245,7 +260,7 @@ export async function extractLinksFromPage(
 
         // Try to get link object
         const linkPtr = m.FPDFAnnot_GetLink(annotPtr);
-        let linkType: LinkType = 'unknown';
+        let linkType: LinkType = "unknown";
         let targetPage: number | undefined;
         let uri: string | undefined;
 
@@ -261,33 +276,43 @@ export async function extractLinksFromPage(
                 m.FPDFAction_GetURIPath(docPtr, actionPtr, uriBuf, uriLen);
                 uri = m.pdfium.UTF8ToString(uriBuf);
                 m.pdfium.wasmExports.free(uriBuf);
-                linkType = 'external';
+                linkType = "external";
               }
             } else if (actionType === PDFACTION_GOTO) {
               const destPtr = m.FPDFAction_GetDest(docPtr, actionPtr);
               if (destPtr) {
                 targetPage = m.FPDFDest_GetDestPageIndex(docPtr, destPtr);
-                linkType = 'internal';
+                linkType = "internal";
               }
             }
           }
 
           // Check for direct destination
-          if (linkType === 'unknown') {
+          if (linkType === "unknown") {
             const destPtr = m.FPDFLink_GetDest(docPtr, linkPtr);
             if (destPtr) {
               targetPage = m.FPDFDest_GetDestPageIndex(docPtr, destPtr);
-              linkType = 'internal';
+              linkType = "internal";
             }
           }
         }
 
         // Get title from /Contents
         let title: string | undefined;
-        const contentsLen = m.FPDFAnnot_GetStringValue(annotPtr, 'Contents', 0, 0);
+        const contentsLen = m.FPDFAnnot_GetStringValue(
+          annotPtr,
+          "Contents",
+          0,
+          0,
+        );
         if (contentsLen > 2) {
           const contentsBuf = m.pdfium.wasmExports.malloc(contentsLen);
-          m.FPDFAnnot_GetStringValue(annotPtr, 'Contents', contentsBuf, contentsLen);
+          m.FPDFAnnot_GetStringValue(
+            annotPtr,
+            "Contents",
+            contentsBuf,
+            contentsLen,
+          );
           title = readUtf16(m, contentsBuf, contentsLen) || undefined;
           m.pdfium.wasmExports.free(contentsBuf);
         }
@@ -299,12 +324,19 @@ export async function extractLinksFromPage(
         const gPtr = rPtr + 4;
         const bPtr = rPtr + 8;
         const aPtr = rPtr + 12;
-        const hasColor = m.FPDFAnnot_GetColor(annotPtr, 0, rPtr, gPtr, bPtr, aPtr);
+        const hasColor = m.FPDFAnnot_GetColor(
+          annotPtr,
+          0,
+          rPtr,
+          gPtr,
+          bPtr,
+          aPtr,
+        );
         if (hasColor) {
           color = [
-            m.pdfium.getValue(rPtr, 'i32') / 255,
-            m.pdfium.getValue(gPtr, 'i32') / 255,
-            m.pdfium.getValue(bPtr, 'i32') / 255,
+            m.pdfium.getValue(rPtr, "i32") / 255,
+            m.pdfium.getValue(gPtr, "i32") / 255,
+            m.pdfium.getValue(bPtr, "i32") / 255,
           ];
         }
         m.pdfium.wasmExports.free(rPtr);
@@ -322,7 +354,7 @@ export async function extractLinksFromPage(
 
         m.FPDFPage_CloseAnnot(annotPtr);
       } catch (e) {
-        console.warn('[pdfLinkUtils] Failed to parse annotation:', e);
+        console.warn("[pdfLinkUtils] Failed to parse annotation:", e);
       }
     }
 

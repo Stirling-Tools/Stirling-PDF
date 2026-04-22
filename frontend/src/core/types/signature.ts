@@ -1,17 +1,17 @@
-export type SavedSignatureType = 'canvas' | 'image' | 'text';
-export type SignatureScope = 'personal' | 'shared' | 'localStorage';
+export type SavedSignatureType = "canvas" | "image" | "text";
+export type SignatureScope = "personal" | "shared" | "localStorage";
 
 export type SavedSignaturePayload =
   | {
-      type: 'canvas';
+      type: "canvas";
       dataUrl: string;
     }
   | {
-      type: 'image';
+      type: "image";
       dataUrl: string;
     }
   | {
-      type: 'text';
+      type: "text";
       dataUrl: string;
       signerName: string;
       fontFamily: string;

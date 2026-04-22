@@ -1,6 +1,6 @@
-import type { SavedSignature } from '@app/hooks/tools/sign/useSavedSignatures';
+import type { SavedSignature } from "@app/hooks/tools/sign/useSavedSignatures";
 
-export type StorageType = 'backend' | 'localStorage';
+export type StorageType = "backend" | "localStorage";
 
 interface SignatureStorageCapabilities {
   supportsBackend: boolean;
@@ -17,7 +17,7 @@ interface SignatureStorageCapabilities {
 class SignatureStorageService {
   private capabilities: SignatureStorageCapabilities | null = null;
   private blobUrls: Set<string> = new Set();
-  private readonly STORAGE_KEY = 'stirling:saved-signatures:v1';
+  private readonly STORAGE_KEY = "stirling:saved-signatures:v1";
 
   /**
    * Detect capabilities - in SaaS mode, always returns localStorage
@@ -28,10 +28,12 @@ class SignatureStorageService {
     }
 
     // SaaS mode always uses localStorage (no backend signature API available)
-    console.log('[SignatureStorage] SaaS mode - using localStorage (backend not available)');
+    console.log(
+      "[SignatureStorage] SaaS mode - using localStorage (backend not available)",
+    );
     this.capabilities = {
       supportsBackend: false,
-      storageType: 'localStorage',
+      storageType: "localStorage",
     };
 
     return this.capabilities;
@@ -61,7 +63,7 @@ class SignatureStorageService {
    */
   async saveSignature(signature: SavedSignature): Promise<void> {
     // Force scope to localStorage for SaaS mode
-    signature.scope = 'localStorage';
+    signature.scope = "localStorage";
     this._saveToLocalStorage(signature);
   }
 
@@ -88,7 +90,7 @@ class SignatureStorageService {
       // Ensure all localStorage signatures have the correct scope
       return signatures.map((sig: SavedSignature) => ({
         ...sig,
-        scope: 'localStorage' as const,
+        scope: "localStorage" as const,
       }));
     } catch {
       return [];
@@ -97,7 +99,7 @@ class SignatureStorageService {
 
   private _saveToLocalStorage(signature: SavedSignature): void {
     const signatures = this._loadFromLocalStorage();
-    const index = signatures.findIndex(s => s.id === signature.id);
+    const index = signatures.findIndex((s) => s.id === signature.id);
 
     if (index >= 0) {
       signatures[index] = signature;
@@ -110,13 +112,13 @@ class SignatureStorageService {
 
   private _deleteFromLocalStorage(id: string): void {
     const signatures = this._loadFromLocalStorage();
-    const filtered = signatures.filter(s => s.id !== id);
+    const filtered = signatures.filter((s) => s.id !== id);
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtered));
   }
 
   private _updateLabelInLocalStorage(id: string, label: string): void {
     const signatures = this._loadFromLocalStorage();
-    const signature = signatures.find(s => s.id === id);
+    const signature = signatures.find((s) => s.id === id);
     if (signature) {
       signature.label = label;
       signature.updatedAt = Date.now();
@@ -129,7 +131,7 @@ class SignatureStorageService {
    * In SaaS mode, this is a no-op since we don't support backend storage
    */
   async migrateToBackend(): Promise<{ migrated: number; failed: number }> {
-    console.log('[SignatureStorage] Migration not supported in SaaS mode');
+    console.log("[SignatureStorage] Migration not supported in SaaS mode");
     return { migrated: 0, failed: 0 };
   }
 
@@ -137,7 +139,7 @@ class SignatureStorageService {
    * Clean up blob URLs to prevent memory leaks
    */
   cleanup(): void {
-    this.blobUrls.forEach(url => {
+    this.blobUrls.forEach((url) => {
       URL.revokeObjectURL(url);
     });
     this.blobUrls.clear();

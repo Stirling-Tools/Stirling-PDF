@@ -1,11 +1,11 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 export interface AnimatedCircleConfig {
   size: number;
   color: string;
   opacity?: number;
   blur?: number;
-  position: 'bottom-left' | 'top-right';
+  position: "bottom-left" | "top-right";
   amplitude?: number;
   duration?: number;
   delay?: number;

@@ -128,85 +128,15 @@ jobs:
         with:
           gradle-version: 9.3.1
 
-      - name: Build Java backend with JLink
-        working-directory: ./
-        shell: bash
-        run: |
-          chmod +x ./gradlew
-          echo "🔧 Building Stirling-PDF JAR..."
-          # STIRLING_PDF_DESKTOP_UI=false ./gradlew bootJar --no-daemon
-          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
-
-          # Find the built JAR
-          STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
-          echo "✅ Built JAR: $STIRLING_JAR"
-
-          # Create Tauri directories
-          mkdir -p ./frontend/src-tauri/libs
-          mkdir -p ./frontend/src-tauri/runtime
-
-          # Copy JAR to Tauri libs
-          cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
-          echo "✅ JAR copied to Tauri libs"
-
-          # Analyze JAR dependencies for jlink modules
-          echo "🔍 Analyzing JAR dependencies..."
-          if command -v jdeps &> /dev/null; then
-            DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
-            if [ -n "$DETECTED_MODULES" ]; then
-              echo "📋 jdeps detected modules: $DETECTED_MODULES"
-              MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-            else
-              echo "⚠️ jdeps analysis failed, using predefined modules"
-              MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-            fi
-          else
-            echo "⚠️ jdeps not available, using predefined modules"
-            MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-          fi
-
-          # Create custom JRE with jlink (always rebuild)
-          echo "🔧 Creating custom JRE with jlink..."
-          echo "📋 Using modules: $MODULES"
-
-          # Remove any existing JRE
-          rm -rf ./frontend/src-tauri/runtime/jre
-
-          # Create the custom JRE
-          jlink \
-            --add-modules "$MODULES" \
-            --strip-debug \
-            --compress=2 \
-            --no-header-files \
-            --no-man-pages \
-            --output ./frontend/src-tauri/runtime/jre
-
-          if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
-            echo "❌ Failed to create JLink runtime"
-            exit 1
-          fi
-
-          # Test the bundled runtime
-          if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
-            RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
-            echo "✅ Custom JRE created successfully: $RUNTIME_VERSION"
-          else
-            echo "❌ Custom JRE executable not found"
-            exit 1
-          fi
-
-          # Calculate runtime size
-          RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
-          echo "📊 Custom JRE size: $RUNTIME_SIZE"
+      - name: Setup Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Prepare desktop build
+        run: task desktop:prepare
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
-
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
@@ -330,6 +260,58 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
+      - name: Preflight smctl
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          & smctl healthcheck
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          & smctl keypair ls
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
+          & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
+
+      - name: Configure Windows code signing
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: bash
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          {
+            "bundle": {
+              "windows": {
+                "signCommand": {
+                  "cmd": "smctl",
+                  "args": ["sign", "--keypair-alias", "${KEYPAIR_ALIAS}", "--input", "%1", "--verbose"]
+                }
+              }
+            }
+          }
+          EOF
+
+      - name: Import release GPG signing key (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format=long
+
+      - name: Make libjvm discoverable for linuxdeploy (Linux AppImage)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
+          if [ -f "$JAVA_LIBJVM" ]; then
+            sudo ln -sf "$JAVA_LIBJVM" /usr/lib/libjvm.so
+            echo "Linked libjvm from $JAVA_LIBJVM -> /usr/lib/libjvm.so"
+          else
+            echo "libjvm not found at $JAVA_LIBJVM"
+            exit 1
+          fi
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
         env:
@@ -340,178 +322,35 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          # AppImage signing — three env vars work together:
+          #   SIGN=1                        tells linuxdeploy-plugin-appimage to forward --sign to appimagetool
+          #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
+          #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
+          # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
+          SIGN: "1"
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
-          # Only enable Windows signing in Tauri when on main
-          SIGN: ${{ github.ref == 'refs/heads/main' && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
-      # Sign with DigiCert KeyLocker (post-build)
-      - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
-        shell: pwsh
+      - name: Clear release GPG key from runner keyring (Linux)
+        if: always() && matrix.platform == 'ubuntu-22.04'
+        env:
+          RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
         run: |
-          Write-Host "=== DigiCert KeyLocker Signing ==="
-
-          # Test smctl connectivity first
-          Write-Host "Testing smctl connection..."
-          $healthCheck = & smctl healthcheck 2>&1
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "[SUCCESS] Connected to DigiCert KeyLocker"
-          } else {
-            Write-Host "[ERROR] Failed to connect to DigiCert KeyLocker"
-            Write-Host $healthCheck
-            exit 1
-          }
-          Write-Host ""
-
-          # Sync certificates to Windows certificate store
-          Write-Host "Syncing certificates to Windows certificate store..."
-          $syncOutput = & smctl windows certsync 2>&1
-          Write-Host "Cert sync result: $syncOutput"
-          Write-Host ""
-
-          # List available certificates and check if they have certificates attached
-          Write-Host "Checking for available certificates..."
-          $certList = & smctl keypair ls 2>&1
-          Write-Host "Keypair list output:"
-          Write-Host $certList
-          Write-Host ""
-
-          # Parse the output to check certificate status
-          $lines = $certList -split "`n"
-          $foundKeypair = $false
-          $hasCertificate = $false
-
-          foreach ($line in $lines) {
-            if ($line -match "${{ secrets.SM_KEYPAIR_ALIAS }}") {
-              $foundKeypair = $true
-              Write-Host "[SUCCESS] Found keypair in list"
-
-              # Check if this line has certificate info (not just empty spaces after alias)
-              $parts = $line -split "\s+"
-              if ($parts.Count -gt 2 -and $parts[1] -ne "" -and $parts[1] -ne "CERTIFICATE") {
-                $hasCertificate = $true
-                Write-Host "[SUCCESS] Certificate is associated with keypair"
-              }
-            }
-          }
-
-          if (-not $foundKeypair) {
-            Write-Host "[ERROR] Keypair not found: ${{ secrets.SM_KEYPAIR_ALIAS }}"
-            Write-Host "Available keypairs are listed above"
-            Write-Host ""
-            Write-Host "Please verify:"
-            Write-Host "  1. Keypair alias is correct in GitHub secret"
-            Write-Host "  2. API key has access to this keypair"
-            exit 1
-          }
-
-          if (-not $hasCertificate) {
-            Write-Host "[ERROR] No certificate associated with keypair"
-            Write-Host "This usually means:"
-            Write-Host "  1. Certificate not yet synced to KeyLocker (run sync manually)"
-            Write-Host "  2. Certificate is pending approval"
-            Write-Host "  3. Certificate needs to be attached to the keypair"
-            Write-Host ""
-            Write-Host "Try running in DigiCert ONE portal:"
-            Write-Host "  smctl keypair sync"
-            exit 1
-          }
-
-          Write-Host "[SUCCESS] Certificate check passed"
-          Write-Host ""
-
-          # Find only the files we need to sign (not build scripts)
-          $filesToSign = @()
-
-          # Main application executable
-          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
-          if ($mainExe) { $filesToSign += $mainExe }
-
-          # MSI installer
-          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
-          $filesToSign += $msiFiles
-
-          if ($filesToSign.Count -eq 0) {
-            Write-Host "[ERROR] No files found to sign"
-            exit 1
-          }
-
-          Write-Host "Found $($filesToSign.Count) files to sign:"
-          foreach ($f in $filesToSign) { Write-Host "  - $($f.Name)" }
-          Write-Host ""
-
-          $signedCount = 0
-          foreach ($file in $filesToSign) {
-            Write-Host "Signing: $($file.Name)"
-
-            # Get PKCS11 config file path (set by DigiCert action)
-            $pkcs11Config = $env:PKCS11_CONFIG
-            if (-not $pkcs11Config) {
-              Write-Host "[ERROR] PKCS11_CONFIG environment variable not set"
-              Write-Host "DigiCert KeyLocker action may not have run correctly"
-              exit 1
-            }
-
-            Write-Host "Using PKCS11 config: $pkcs11Config"
-
-            # Try signing with certificate fingerprint first (if available)
-            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
-            if ($fingerprint -and $fingerprint -ne "") {
-              Write-Host "Attempting to sign with certificate fingerprint..."
-              $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-              $exitCode = $LASTEXITCODE
-            } else {
-              Write-Host "No fingerprint provided, using keypair alias..."
-              # Use smctl to sign with keypair alias
-              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-              $exitCode = $LASTEXITCODE
-            }
-
-            Write-Host "Exit code: $exitCode"
-            Write-Host "Output: $output"
-
-            # Check if output contains "FAILED" even with exit code 0
-            if ($output -match "FAILED" -or $output -match "error" -or $output -match "Error") {
-              Write-Host ""
-              Write-Host "[ERROR] Signing failed for $($file.Name)"
-              Write-Host "[ERROR] smctl returned success but output indicates failure"
-              Write-Host ""
-              Write-Host "Possible issues:"
-              Write-Host "  1. Certificate not fully synced to KeyLocker (wait a few minutes)"
-              Write-Host "  2. Incorrect keypair alias"
-              Write-Host "  3. API key lacks signing permissions"
-              Write-Host ""
-              Write-Host "Please verify in DigiCert ONE portal:"
-              Write-Host "  - Certificate status is 'Issued' (not Pending)"
-              Write-Host "  - Keypair status is 'Online'"
-              Write-Host "  - 'Can sign' is set to 'Yes'"
-              exit 1
-            }
-
-            if ($exitCode -ne 0) {
-              Write-Host "[ERROR] Failed to sign $($file.Name)"
-              Write-Host "Full error output:"
-              Write-Host $output
-              exit 1
-            }
-
-            $signedCount++
-            Write-Host "[SUCCESS] Signed: $($file.Name)"
-            Write-Host ""
-          }
-
-          Write-Host "=== Summary ==="
-          Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
+          if [ -n "$RELEASE_GPG_FINGERPRINT" ]; then
+            gpg --batch --yes --delete-secret-keys "$RELEASE_GPG_FINGERPRINT" || true
+            gpg --batch --yes --delete-keys "$RELEASE_GPG_FINGERPRINT" || true
+          fi
 
       - name: Verify notarization (macOS only)
         if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
@@ -536,73 +375,80 @@ jobs:
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
-            find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
+            # Only ship the MSI installer. The loose exe and WiX toolset exes
+            # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
+      # Verify the MSI AND the inner exe extracted from it are signed.
+      # The inner exe is what gets installed on users' machines and what AV scans.
       - name: Verify Windows Code Signature
-        if: matrix.platform == 'windows-latest' && github.ref == 'refs/heads/main'
+        if: matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
-          Write-Host "Verifying Windows code signatures..."
-
-          $exePath = "./dist/Stirling-PDF-${{ matrix.name }}.exe"
+          $allSigned = $true
           $msiPath = "./dist/Stirling-PDF-${{ matrix.name }}.msi"
 
-          $allSigned = $true
-          $usingKeyLocker = "${{ env.SM_API_KEY }}" -ne ""
-          $usingPfx = "${{ env.WINDOWS_CERTIFICATE }}" -ne ""
-
-          # Check EXE signature
-          if (Test-Path $exePath) {
-            $exeSig = Get-AuthenticodeSignature -FilePath $exePath
-            Write-Host "EXE Signature Status: $($exeSig.Status)"
-            Write-Host "EXE Signer: $($exeSig.SignerCertificate.Subject)"
-            Write-Host "EXE Timestamp: $($exeSig.TimeStamperCertificate.NotAfter)"
-
-            if ($exeSig.Status -ne "Valid") {
-              Write-Host "[WARNING] EXE is not properly signed (Status: $($exeSig.Status))"
-              if ($usingKeyLocker -or $usingPfx) {
-                Write-Host "[ERROR] Certificate was provided but signing failed"
-                $allSigned = $false
-              } else {
-                Write-Host "[INFO] Building unsigned binary (no certificate provided)"
-              }
-            } else {
-              Write-Host "[SUCCESS] EXE is properly signed"
-            }
-          }
-
-          # Check MSI signature
+          # Check MSI (outer wrapper)
           if (Test-Path $msiPath) {
-            $msiSig = Get-AuthenticodeSignature -FilePath $msiPath
-            Write-Host "MSI Signature Status: $($msiSig.Status)"
-            Write-Host "MSI Signer: $($msiSig.SignerCertificate.Subject)"
-            Write-Host "MSI Timestamp: $($msiSig.TimeStamperCertificate.NotAfter)"
+            $sig = Get-AuthenticodeSignature -FilePath $msiPath
+            Write-Host "MSI: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne "Valid") {
+              Write-Host "[ERROR] MSI is not signed"
+              $allSigned = $false
+            }
 
-            if ($msiSig.Status -ne "Valid") {
-              Write-Host "[WARNING] MSI is not properly signed (Status: $($msiSig.Status))"
-              if ($usingKeyLocker -or $usingPfx) {
-                Write-Host "[ERROR] Certificate was provided but signing failed"
-                $allSigned = $false
+            # Extract MSI and verify inner exe
+            $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
+            if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
+            $proc = Start-Process msiexec.exe -ArgumentList '/a', $msiPath, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
+            if ($proc.ExitCode -eq 0) {
+              $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
+              if ($innerExe) {
+                $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
+                Write-Host "Inner EXE: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+                if ($sig.Status -ne "Valid") {
+                  Write-Host "[ERROR] Inner exe is NOT signed - AV will flag this at runtime"
+                  $allSigned = $false
+                }
               } else {
-                Write-Host "[INFO] Building unsigned binary (no certificate provided)"
+                Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
+                $allSigned = $false
               }
             } else {
-              Write-Host "[SUCCESS] MSI is properly signed"
+              Write-Host "[ERROR] MSI extraction failed (exit code: $($proc.ExitCode))"
+              $allSigned = $false
             }
+          } else {
+            Write-Host "[ERROR] MSI not found at $msiPath"
+            $allSigned = $false
           }
 
-          if (($usingKeyLocker -or $usingPfx) -and -not $allSigned) {
-            Write-Host "[ERROR] Code signing verification failed"
+          if (-not $allSigned) {
+            Write-Host "[ERROR] Signature verification failed"
             exit 1
+          }
+          Write-Host "[SUCCESS] MSI and inner exe are properly signed"
+
+      - name: Dump smctl logs on failure
+        if: ${{ failure() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          $logDir = "$env:USERPROFILE\.signingmanager\logs"
+          if (Test-Path $logDir) {
+            Get-ChildItem $logDir | ForEach-Object {
+              Write-Host "=== $($_.FullName) ==="
+              Get-Content $_.FullName -Tail 200
+              Write-Host ""
+            }
           } else {
-            Write-Host "[SUCCESS] Code signature verification completed"
+            Write-Host "smctl log directory not found at $logDir"
           }
 
       - name: Upload artifacts
@@ -634,8 +480,8 @@ jobs:
             fi
           else
             echo "Checking for Linux artifacts..."
-            find . -name "*.deb" -o -name "*.AppImage" | head -5
-            if [ $(find . -name "*.deb" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
+            find . -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" | head -5
+            if [ $(find . -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
               echo "❌ No Linux artifacts found"
               exit 1
             fi
@@ -648,7 +494,7 @@ jobs:
         run: |
           cd ./frontend/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
-          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
+          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then
               size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "unknown")
               echo "$file: $size bytes"
@@ -692,7 +538,7 @@ jobs:
               'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe, .msi' },
               'Stirling-PDF-macos-aarch64': { icon: '🍎', platform: 'macOS ARM64', files: '.dmg' },
               'Stirling-PDF-macos-x86_64': { icon: '🍎', platform: 'macOS Intel', files: '.dmg' },
-              'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .AppImage' }
+              'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .rpm, .AppImage' }
             };
 
             let commentBody = `## 📦 Tauri Desktop Builds Ready!\n\n`;

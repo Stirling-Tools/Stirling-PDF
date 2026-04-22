@@ -2,18 +2,18 @@
  * FileContext reducer - Pure state management for file operations
  */
 
-import { FileId } from '@app/types/file';
+import { FileId } from "@app/types/file";
 import {
   FileContextState,
   FileContextAction,
-  StirlingFileStub
-} from '@app/types/fileContext';
+  StirlingFileStub,
+} from "@app/types/fileContext";
 
 // Initial state
 export const initialFileContextState: FileContextState = {
   files: {
     ids: [],
-    byId: {}
+    byId: {},
   },
   pinnedFiles: new Set(),
   ui: {
@@ -22,29 +22,33 @@ export const initialFileContextState: FileContextState = {
     isProcessing: false,
     processingProgress: 0,
     hasUnsavedChanges: false,
-    errorFileIds: []
-  }
+    errorFileIds: [],
+  },
 };
 
 // Helper function for consume/undo operations
 function processFileSwap(
   state: FileContextState,
   filesToRemove: FileId[],
-  filesToAdd: StirlingFileStub[]
+  filesToAdd: StirlingFileStub[],
 ): FileContextState {
   // Only remove unpinned files
-  const unpinnedRemoveIds = filesToRemove.filter(id => !state.pinnedFiles.has(id));
-  const remainingIds = state.files.ids.filter(id => !unpinnedRemoveIds.includes(id));
+  const unpinnedRemoveIds = filesToRemove.filter(
+    (id) => !state.pinnedFiles.has(id),
+  );
+  const remainingIds = state.files.ids.filter(
+    (id) => !unpinnedRemoveIds.includes(id),
+  );
 
   // Remove unpinned files from state
   const newById = { ...state.files.byId };
-  unpinnedRemoveIds.forEach(id => {
+  unpinnedRemoveIds.forEach((id) => {
     delete newById[id];
   });
 
   // Add new files
   const addedIds: FileId[] = [];
-  filesToAdd.forEach(record => {
+  filesToAdd.forEach((record) => {
     if (!newById[record.id]) {
       addedIds.push(record.id);
       newById[record.id] = record;
@@ -52,31 +56,36 @@ function processFileSwap(
   });
 
   // Clear selections that reference removed files and add new files to selection
-  const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !unpinnedRemoveIds.includes(id));
+  const validSelectedFileIds = state.ui.selectedFileIds.filter(
+    (id) => !unpinnedRemoveIds.includes(id),
+  );
   const newSelectedFileIds = [...validSelectedFileIds, ...addedIds];
 
   return {
     ...state,
     files: {
       ids: [...addedIds, ...remainingIds],
-      byId: newById
+      byId: newById,
     },
     ui: {
       ...state.ui,
-      selectedFileIds: newSelectedFileIds
-    }
+      selectedFileIds: newSelectedFileIds,
+    },
   };
 }
 
 // Pure reducer function
-export function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
+export function fileContextReducer(
+  state: FileContextState,
+  action: FileContextAction,
+): FileContextState {
   switch (action.type) {
-    case 'ADD_FILES': {
+    case "ADD_FILES": {
       const { stirlingFileStubs } = action.payload;
       const newIds: FileId[] = [];
       const newById: Record<FileId, StirlingFileStub> = { ...state.files.byId };
 
-      stirlingFileStubs.forEach(record => {
+      stirlingFileStubs.forEach((record) => {
         // Only add if not already present (dedupe by stable ID)
         if (!newById[record.id]) {
           newIds.push(record.id);
@@ -88,38 +97,42 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         ...state,
         files: {
           ids: [...state.files.ids, ...newIds],
-          byId: newById
-        }
+          byId: newById,
+        },
       };
     }
 
-    case 'REMOVE_FILES': {
+    case "REMOVE_FILES": {
       const { fileIds } = action.payload;
-      const remainingIds = state.files.ids.filter(id => !fileIds.includes(id));
+      const remainingIds = state.files.ids.filter(
+        (id) => !fileIds.includes(id),
+      );
       const newById = { ...state.files.byId };
 
       // Remove files from state (resource cleanup handled by lifecycle manager)
-      fileIds.forEach(id => {
+      fileIds.forEach((id) => {
         delete newById[id];
       });
 
       // Clear selections that reference removed files
-      const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !fileIds.includes(id));
+      const validSelectedFileIds = state.ui.selectedFileIds.filter(
+        (id) => !fileIds.includes(id),
+      );
 
       return {
         ...state,
         files: {
           ids: remainingIds,
-          byId: newById
+          byId: newById,
         },
         ui: {
           ...state.ui,
-          selectedFileIds: validSelectedFileIds
-        }
+          selectedFileIds: validSelectedFileIds,
+        },
       };
     }
 
-    case 'UPDATE_FILE_RECORD': {
+    case "UPDATE_FILE_RECORD": {
       const { id, updates } = action.payload;
       const existingRecord = state.files.byId[id];
 
@@ -129,7 +142,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
       const updatedRecord = {
         ...existingRecord,
-        ...updates
+        ...updates,
       };
 
       return {
@@ -138,149 +151,153 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
           ...state.files,
           byId: {
             ...state.files.byId,
-            [id]: updatedRecord
-          }
-        }
+            [id]: updatedRecord,
+          },
+        },
       };
     }
 
-    case 'REORDER_FILES': {
+    case "REORDER_FILES": {
       const { orderedFileIds } = action.payload;
 
       // Validate that all IDs exist in current state
-      const validIds = orderedFileIds.filter(id => state.files.byId[id]);
+      const validIds = orderedFileIds.filter((id) => state.files.byId[id]);
 
       // Reorder selected files by passed order
-      const selectedFileIds = orderedFileIds.filter(id => state.ui.selectedFileIds.includes(id));
+      const selectedFileIds = orderedFileIds.filter((id) =>
+        state.ui.selectedFileIds.includes(id),
+      );
 
       return {
         ...state,
         files: {
           ...state.files,
-          ids: validIds
+          ids: validIds,
         },
         ui: {
           ...state.ui,
           selectedFileIds,
-        }
+        },
       };
     }
 
-    case 'SET_SELECTED_FILES': {
+    case "SET_SELECTED_FILES": {
       const { fileIds } = action.payload;
       return {
         ...state,
         ui: {
           ...state.ui,
-          selectedFileIds: fileIds
-        }
+          selectedFileIds: fileIds,
+        },
       };
     }
 
-    case 'SET_SELECTED_PAGES': {
+    case "SET_SELECTED_PAGES": {
       const { pageNumbers } = action.payload;
       return {
         ...state,
         ui: {
           ...state.ui,
-          selectedPageNumbers: pageNumbers
-        }
+          selectedPageNumbers: pageNumbers,
+        },
       };
     }
 
-    case 'CLEAR_SELECTIONS': {
+    case "CLEAR_SELECTIONS": {
       return {
         ...state,
         ui: {
           ...state.ui,
           selectedFileIds: [],
-          selectedPageNumbers: []
-        }
+          selectedPageNumbers: [],
+        },
       };
     }
 
-    case 'SET_PROCESSING': {
+    case "SET_PROCESSING": {
       const { isProcessing, progress } = action.payload;
       return {
         ...state,
         ui: {
           ...state.ui,
           isProcessing,
-          processingProgress: progress
-        }
+          processingProgress: progress,
+        },
       };
     }
 
-    case 'SET_UNSAVED_CHANGES': {
+    case "SET_UNSAVED_CHANGES": {
       return {
         ...state,
         ui: {
           ...state.ui,
-          hasUnsavedChanges: action.payload.hasChanges
-        }
+          hasUnsavedChanges: action.payload.hasChanges,
+        },
       };
     }
 
-    case 'MARK_FILE_ERROR': {
+    case "MARK_FILE_ERROR": {
       const { fileId } = action.payload;
       if (state.ui.errorFileIds.includes(fileId)) return state;
       return {
         ...state,
-        ui: { ...state.ui, errorFileIds: [...state.ui.errorFileIds, fileId] }
+        ui: { ...state.ui, errorFileIds: [...state.ui.errorFileIds, fileId] },
       };
     }
 
-    case 'CLEAR_FILE_ERROR': {
+    case "CLEAR_FILE_ERROR": {
       const { fileId } = action.payload;
       return {
         ...state,
-        ui: { ...state.ui, errorFileIds: state.ui.errorFileIds.filter(id => id !== fileId) }
+        ui: {
+          ...state.ui,
+          errorFileIds: state.ui.errorFileIds.filter((id) => id !== fileId),
+        },
       };
     }
 
-    case 'CLEAR_ALL_FILE_ERRORS': {
+    case "CLEAR_ALL_FILE_ERRORS": {
       return {
         ...state,
-        ui: { ...state.ui, errorFileIds: [] }
+        ui: { ...state.ui, errorFileIds: [] },
       };
     }
 
-    case 'PIN_FILE': {
+    case "PIN_FILE": {
       const { fileId } = action.payload;
       const newPinnedFiles = new Set(state.pinnedFiles);
       newPinnedFiles.add(fileId);
 
       return {
         ...state,
-        pinnedFiles: newPinnedFiles
+        pinnedFiles: newPinnedFiles,
       };
     }
 
-    case 'UNPIN_FILE': {
+    case "UNPIN_FILE": {
       const { fileId } = action.payload;
       const newPinnedFiles = new Set(state.pinnedFiles);
       newPinnedFiles.delete(fileId);
 
       return {
         ...state,
-        pinnedFiles: newPinnedFiles
+        pinnedFiles: newPinnedFiles,
       };
     }
 
-    case 'CONSUME_FILES': {
+    case "CONSUME_FILES": {
       const { inputFileIds, outputStirlingFileStubs } = action.payload;
 
       return processFileSwap(state, inputFileIds, outputStirlingFileStubs);
     }
 
-
-    case 'UNDO_CONSUME_FILES': {
+    case "UNDO_CONSUME_FILES": {
       const { inputStirlingFileStubs, outputFileIds } = action.payload;
 
       return processFileSwap(state, outputFileIds, inputStirlingFileStubs);
     }
 
-    case 'RESET_CONTEXT': {
+    case "RESET_CONTEXT": {
       // Reset UI state to clean slate (resource cleanup handled by lifecycle manager)
       return { ...initialFileContextState };
     }

@@ -4,9 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -34,6 +35,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -43,13 +45,25 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.ProcessExecutor.Processes;
-import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 public class ConvertWebsiteToPdfTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     private static final Pattern PDF_FILENAME_PATTERN = Pattern.compile("[A-Za-z0-9_]+\\.pdf");
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private TempFileManager tempFileManager;
 
     private ApplicationProperties applicationProperties;
     private ConvertWebsiteToPDF sut;
@@ -58,6 +72,18 @@ public class ConvertWebsiteToPdfTest {
     @BeforeEach
     void setUp() throws Exception {
         mocks = MockitoAnnotations.openMocks(this);
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
 
         // Enable feature (adjust structure for your project if necessary)
         applicationProperties = new ApplicationProperties();
@@ -68,7 +94,12 @@ public class ConvertWebsiteToPdfTest {
         when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
 
         // Build SUT
-        sut = new ConvertWebsiteToPDF(pdfDocumentFactory, runtimePathConfig, applicationProperties);
+        sut =
+                new ConvertWebsiteToPDF(
+                        pdfDocumentFactory,
+                        runtimePathConfig,
+                        applicationProperties,
+                        tempFileManager);
 
         // Provide RequestContext for ServletUriComponentsBuilder
         MockHttpServletRequest req = new MockHttpServletRequest();
@@ -172,38 +203,29 @@ public class ConvertWebsiteToPdfTest {
         request.setUrlInput("https://example.com");
 
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
                 MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
 
-            // Force URL checks to be positive
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
+            gu.when(() -> GeneralUtils.convertToFileName(anyString())).thenReturn("example_com");
+            gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
+                    .thenAnswer(inv -> inv.<String>getArgument(0) + inv.<String>getArgument(1));
 
-            // correct ProcessExecutor!
             ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
             pe.when(() -> ProcessExecutor.getInstance(Processes.WEASYPRINT)).thenReturn(mockExec);
 
             @SuppressWarnings("unchecked")
             ArgumentCaptor<List<String>> cmdCaptor = ArgumentCaptor.forClass(List.class);
 
-            // Return value of correct type
             ProcessExecutorResult dummyResult = Mockito.mock(ProcessExecutorResult.class);
             when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenReturn(dummyResult);
 
-            ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
-
-            wr.when(
-                            () ->
-                                    WebResponseUtils.baosToWebResponse(
-                                            any(ByteArrayOutputStream.class), any()))
-                    .thenReturn(fakeResponse);
-
-            // Act
             ResponseEntity<?> resp = sut.urlToPdf(request);
 
-            // Assert – Response OK
+            // Assert
+            assertNotNull(resp);
             assertEquals(HttpStatus.OK, resp.getStatusCode());
 
             // Assert – WeasyPrint command correct
@@ -236,17 +258,19 @@ public class ConvertWebsiteToPdfTest {
 
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
                 MockedStatic<Files> files = Mockito.mockStatic(Files.class);
                 MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
 
-            // Force URL checks to be positive
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
+            gu.when(() -> GeneralUtils.convertToFileName(anyString())).thenReturn("example_com");
+            gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
+                    .thenAnswer(inv -> inv.<String>getArgument(0) + inv.<String>getArgument(1));
 
-            // Force temp files + provoke delete error
             files.when(() -> Files.createTempFile("url_input_", ".html")).thenReturn(htmlTemp);
             files.when(() -> Files.createTempFile("output_", ".pdf")).thenReturn(preCreatedTemp);
+            files.when(() -> Files.createTempFile(eq("test"), anyString()))
+                    .thenReturn(preCreatedTemp);
             files.when(
                             () ->
                                     Files.writeString(
@@ -257,26 +281,20 @@ public class ConvertWebsiteToPdfTest {
             files.when(() -> Files.deleteIfExists(htmlTemp)).thenReturn(true);
             files.when(() -> Files.deleteIfExists(preCreatedTemp))
                     .thenThrow(new IOException("fail delete"));
-            files.when(() -> Files.exists(preCreatedTemp)).thenReturn(true); // for the assert
+            files.when(() -> Files.exists(preCreatedTemp)).thenReturn(true);
+            files.when(() -> Files.size(any(Path.class))).thenReturn(100L);
+            files.when(() -> Files.copy(any(Path.class), any(java.io.OutputStream.class)))
+                    .thenReturn(0L);
+            files.when(() -> Files.newOutputStream(any(Path.class)))
+                    .thenAnswer(inv -> new java.io.ByteArrayOutputStream());
 
-            // ProcessExecutor
             ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
             pe.when(() -> ProcessExecutor.getInstance(Processes.WEASYPRINT)).thenReturn(mockExec);
             ProcessExecutorResult dummy = Mockito.mock(ProcessExecutorResult.class);
             when(mockExec.runCommandWithOutputHandling(Mockito.<List>any())).thenReturn(dummy);
 
-            // WebResponseUtils
-            ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
-            wr.when(
-                            () ->
-                                    WebResponseUtils.baosToWebResponse(
-                                            any(ByteArrayOutputStream.class), any()))
-                    .thenReturn(fakeResponse);
-
-            // Act: should not throw and should return a Response
             ResponseEntity<?> resp = assertDoesNotThrow(() -> sut.urlToPdf(request));
 
-            // Assert
             assertNotNull(resp, "Response should not be null");
             assertEquals(HttpStatus.OK, resp.getStatusCode());
             assertTrue(

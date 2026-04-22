@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface BannerContextType {
   banner: ReactNode;
@@ -20,7 +20,7 @@ export function BannerProvider({ children }: { children: ReactNode }) {
 export function useBanner() {
   const context = useContext(BannerContext);
   if (!context) {
-    throw new Error('useBanner must be used within BannerProvider');
+    throw new Error("useBanner must be used within BannerProvider");
   }
   return context;
 }

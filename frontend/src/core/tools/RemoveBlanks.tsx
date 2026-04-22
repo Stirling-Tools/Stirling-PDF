@@ -12,10 +12,10 @@ const RemoveBlanks = (props: BaseToolProps) => {
   const tooltipContent = useRemoveBlanksTips();
 
   const base = useBaseTool(
-    'remove-blanks',
+    "remove-blanks",
     useRemoveBlanksParameters,
     useRemoveBlanksOperation,
-    props
+    props,
   );
 
   const settingsContent = (
@@ -67,5 +67,3 @@ const RemoveBlanks = (props: BaseToolProps) => {
 RemoveBlanks.tool = () => useRemoveBlanksOperation;
 
 export default RemoveBlanks as ToolComponent;
-
-

@@ -1,12 +1,16 @@
-import { Button } from '@mantine/core';
+import { Button } from "@mantine/core";
 
 interface NavigationLinkProps {
-  onClick: () => void
-  text: string
-  isDisabled?: boolean
+  onClick: () => void;
+  text: string;
+  isDisabled?: boolean;
 }
 
-export default function NavigationLink({ onClick, text, isDisabled = false }: NavigationLinkProps) {
+export default function NavigationLink({
+  onClick,
+  text,
+  isDisabled = false,
+}: NavigationLinkProps) {
   return (
     <div className="navigation-link-container">
       <Button

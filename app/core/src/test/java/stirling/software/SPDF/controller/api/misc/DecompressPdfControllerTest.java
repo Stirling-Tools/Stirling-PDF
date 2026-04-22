@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +16,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,16 +27,46 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class DecompressPdfControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
     @InjectMocks private DecompressPdfController controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     private MockMultipartFile createRealPdf(String content) throws IOException {
         Path path = tempDir.resolve("test.pdf");
@@ -64,12 +97,12 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
         // Verify the result is a valid PDF
-        try (PDDocument result = Loader.loadPDF(response.getBody())) {
+        try (PDDocument result = Loader.loadPDF(drainBody(response))) {
             assertThat(result.getNumberOfPages()).isEqualTo(1);
         }
     }
@@ -83,10 +116,10 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
@@ -114,7 +147,7 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
@@ -150,10 +183,10 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        try (PDDocument result = Loader.loadPDF(response.getBody())) {
+        try (PDDocument result = Loader.loadPDF(drainBody(response))) {
             assertThat(result.getNumberOfPages()).isEqualTo(3);
         }
     }
@@ -167,11 +200,11 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getBody()).isNotNull();
         // Decompressed PDF should generally be larger or equal to compressed
-        assertThat(response.getBody().length).isGreaterThan(0);
+        assertThat(drainBody(response).length).isGreaterThan(0);
     }
 
     @Test
@@ -183,7 +216,7 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

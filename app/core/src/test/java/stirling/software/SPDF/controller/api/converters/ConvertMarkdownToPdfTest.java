@@ -4,10 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.nio.file.Files;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
@@ -25,11 +33,22 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertMarkdownToPdfTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
@@ -37,6 +56,22 @@ class ConvertMarkdownToPdfTest {
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
     @InjectMocks private ConvertMarkdownToPdf controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     @Test
     void markdownToPdf_nullFileInputThrows() {
@@ -71,7 +106,7 @@ class ConvertMarkdownToPdfTest {
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(any(byte[].class)))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(processedPdf);
+        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -92,10 +127,13 @@ class ConvertMarkdownToPdfTest {
             guMock.when(() -> GeneralUtils.generateFilename("readme.md", ".pdf"))
                     .thenReturn("readme.pdf");
 
-            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(processedPdf, "readme.pdf"))
+            wrMock.when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.markdownToPdf(generalFile);
+            ResponseEntity<StreamingResponseBody> response = controller.markdownToPdf(generalFile);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }

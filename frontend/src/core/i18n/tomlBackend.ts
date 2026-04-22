@@ -1,13 +1,13 @@
-import { BackendModule, ReadCallback } from 'i18next';
-import { parse } from 'smol-toml';
+import { BackendModule, ReadCallback } from "i18next";
+import { parse } from "smol-toml";
 
 export interface TomlBackendOptions {
   loadPath: string | ((lngs: string[], namespaces: string[]) => string);
 }
 
 class TomlBackend implements BackendModule<TomlBackendOptions> {
-  static type = 'backend' as const;
-  type = 'backend' as const;
+  static type = "backend" as const;
+  type = "backend" as const;
 
   constructor(services?: unknown, options?: TomlBackendOptions) {
     this.init(services, options);
@@ -21,18 +21,21 @@ class TomlBackend implements BackendModule<TomlBackendOptions> {
     const loadPath = this.options?.loadPath;
 
     if (!loadPath) {
-      callback(new Error('loadPath is not configured'), null);
+      callback(new Error("loadPath is not configured"), null);
       return;
     }
 
-    const url = typeof loadPath === 'function'
-      ? loadPath([language], [namespace])
-      : loadPath.replace('{{lng}}', language).replace('{{ns}}', namespace);
+    const url =
+      typeof loadPath === "function"
+        ? loadPath([language], [namespace])
+        : loadPath.replace("{{lng}}", language).replace("{{ns}}", namespace);
 
     fetch(url)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to load translation file: ${url} (${response.status})`);
+          throw new Error(
+            `Failed to load translation file: ${url} (${response.status})`,
+          );
         }
         return response.text();
       })

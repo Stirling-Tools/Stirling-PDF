@@ -1,7 +1,7 @@
-import React from 'react';
-import { Group, Button, ActionIcon, Tooltip } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
+import React from "react";
+import { Group, Button, ActionIcon, Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
 
 interface DrawingControlsProps {
   onUndo?: () => void;
@@ -35,30 +35,40 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
   return (
     <Group gap="xs" wrap="nowrap" align="center">
       {onUndo && (
-        <Tooltip label={t('sign.undo', 'Undo')}>
+        <Tooltip label={t("sign.undo", "Undo")}>
           <ActionIcon
             variant="subtle"
             size="lg"
-            aria-label={t('sign.undo', 'Undo')}
+            aria-label={t("sign.undo", "Undo")}
             onClick={onUndo}
             disabled={undoDisabled}
-            color={undoDisabled ? 'gray' : 'blue'}
+            color={undoDisabled ? "gray" : "blue"}
           >
-            <LocalIcon icon="undo" width={20} height={20} style={{ color: 'currentColor' }} />
+            <LocalIcon
+              icon="undo"
+              width={20}
+              height={20}
+              style={{ color: "currentColor" }}
+            />
           </ActionIcon>
         </Tooltip>
       )}
       {onRedo && (
-        <Tooltip label={t('sign.redo', 'Redo')}>
+        <Tooltip label={t("sign.redo", "Redo")}>
           <ActionIcon
             variant="subtle"
             size="lg"
-            aria-label={t('sign.redo', 'Redo')}
+            aria-label={t("sign.redo", "Redo")}
             onClick={onRedo}
             disabled={redoDisabled}
-            color={redoDisabled ? 'gray' : 'blue'}
+            color={redoDisabled ? "gray" : "blue"}
           >
-            <LocalIcon icon="redo" width={20} height={20} style={{ color: 'currentColor' }} />
+            <LocalIcon
+              icon="redo"
+              width={20}
+              height={20}
+              style={{ color: "currentColor" }}
+            />
           </ActionIcon>
         </Tooltip>
       )}

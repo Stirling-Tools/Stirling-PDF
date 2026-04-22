@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Text } from '@mantine/core';
-import LoginHeader from '@app/routes/login/LoginHeader';
-import ErrorMessage from '@app/routes/login/ErrorMessage';
-import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
-import DividerWithText from '@app/components/shared/DividerWithText';
-import { DesktopOAuthButtons } from '@app/components/SetupWizard/DesktopOAuthButtons';
-import { UserInfo } from '@app/services/authService';
-import { SSOProviderConfig } from '@app/services/connectionModeService';
-import '@app/routes/authShared/auth.css';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Text } from "@mantine/core";
+import LoginHeader from "@app/routes/login/LoginHeader";
+import ErrorMessage from "@app/routes/login/ErrorMessage";
+import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
+import DividerWithText from "@app/components/shared/DividerWithText";
+import { DesktopOAuthButtons } from "@app/components/SetupWizard/DesktopOAuthButtons";
+import { UserInfo } from "@app/services/authService";
+import { SSOProviderConfig } from "@app/services/connectionModeService";
+import "@app/routes/authShared/auth.css";
 
 interface SelfHostedLoginScreenProps {
   serverUrl: string;
@@ -26,7 +26,7 @@ interface SelfHostedLoginScreenProps {
 export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   serverUrl,
   enabledOAuthProviders,
-  loginMethod = 'all',
+  loginMethod = "all",
   onLogin,
   onOAuthSuccess,
   mfaCode,
@@ -36,35 +36,41 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   error,
 }) => {
   const { t } = useTranslation();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // Check if username/password authentication is allowed
-  const isUserPassAllowed = loginMethod === 'all' || loginMethod === 'normal';
+  const isUserPassAllowed = loginMethod === "all" || loginMethod === "normal";
 
-  console.log('[SelfHostedLoginScreen] Props:', {
+  console.log("[SelfHostedLoginScreen] Props:", {
     serverUrl,
     enabledOAuthProviders,
     loginMethod,
     isUserPassAllowed,
-    shouldShowOAuth: !!(enabledOAuthProviders && enabledOAuthProviders.length > 0)
+    shouldShowOAuth: !!(
+      enabledOAuthProviders && enabledOAuthProviders.length > 0
+    ),
   });
 
   const handleSubmit = async () => {
     // Validation
     if (!username.trim()) {
-      setValidationError(t('setup.login.error.emptyUsername', 'Please enter your username'));
+      setValidationError(
+        t("setup.login.error.emptyUsername", "Please enter your username"),
+      );
       return;
     }
 
     if (!password) {
-      setValidationError(t('setup.login.error.emptyPassword', 'Please enter your password'));
+      setValidationError(
+        t("setup.login.error.emptyPassword", "Please enter your password"),
+      );
       return;
     }
 
     if (requiresMfa && !mfaCode.trim()) {
-      setValidationError(t('login.mfaRequired', 'Two-factor code required'));
+      setValidationError(t("login.mfaRequired", "Two-factor code required"));
       return;
     }
 
@@ -81,14 +87,21 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
   return (
     <>
       <LoginHeader
-        title={t('setup.selfhosted.title', 'Sign in to Server')}
-        subtitle={isUserPassAllowed ? t('setup.selfhosted.subtitle', 'Enter your server credentials') : undefined}
+        title={t("setup.selfhosted.title", "Sign in to Server")}
+        subtitle={
+          isUserPassAllowed
+            ? t("setup.selfhosted.subtitle", "Enter your server credentials")
+            : undefined
+        }
       />
 
       <ErrorMessage error={displayError} />
 
       <Text size="sm" mb="md">
-        {t('setup.login.connectingTo', 'Connecting to:')} <Text span fw="500">{serverUrl}</Text>
+        {t("setup.login.connectingTo", "Connecting to:")}{" "}
+        <Text span fw="500">
+          {serverUrl}
+        </Text>
       </Text>
 
       {/* Show OAuth buttons if providers are available */}
@@ -106,7 +119,7 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
           {/* Only show divider if username/password auth is also allowed */}
           {isUserPassAllowed && (
             <DividerWithText
-              text={t('setup.login.orContinueWith', 'Or continue with email')}
+              text={t("setup.login.orContinueWith", "Or continue with email")}
               respondsToDarkMode={false}
               opacity={0.4}
             />
@@ -136,7 +149,7 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
           requiresMfa={requiresMfa}
           onSubmit={handleSubmit}
           isSubmitting={loading}
-          submitButtonText={t('setup.login.submit', 'Login')}
+          submitButtonText={t("setup.login.submit", "Login")}
         />
       )}
     </>

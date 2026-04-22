@@ -1,40 +1,43 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
-import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
-import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
-import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
-import { DesktopOnboardingModal } from '@app/components/DesktopOnboardingModal';
-import { SignInModal } from '@app/components/SignInModal';
-import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
-import { ToolActionsContext } from '@app/contexts/ToolActionsContext';
-import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
-import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
-import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { authService } from '@app/services/authService';
-import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { isTauri } from '@tauri-apps/api/core';
-import { SaaSTeamProvider } from '@app/contexts/SaaSTeamContext';
-import { SaasBillingProvider } from '@app/contexts/SaasBillingContext';
-import { SaaSCheckoutProvider } from '@app/contexts/SaaSCheckoutContext';
-import { CreditModalBootstrap } from '@app/components/shared/modals/CreditModalBootstrap';
+import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
+import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
+import { SignInModal } from "@app/components/SignInModal";
+import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
+import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
+import { useFirstLaunchCheck } from "@app/hooks/useFirstLaunchCheck";
+import { useBackendInitializer } from "@app/hooks/useBackendInitializer";
+import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
+import {
+  connectionModeService,
+  JWT_EXPIRED_PROMPTED_KEY,
+} from "@app/services/connectionModeService";
+import { STIRLING_SAAS_URL } from "@app/constants/connection";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { authService } from "@app/services/authService";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { isTauri } from "@tauri-apps/api/core";
+import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
+import { SaasBillingProvider } from "@app/contexts/SaasBillingContext";
+import { SaaSCheckoutProvider } from "@app/contexts/SaaSCheckoutContext";
+import { CreditModalBootstrap } from "@app/components/shared/modals/CreditModalBootstrap";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
-  '/api/v1/misc/compress-pdf',
-  '/api/v1/general/merge-pdfs',
-  '/api/v1/general/split-pages',
-  '/api/v1/convert/pdf/img',
-  '/api/v1/convert/img/pdf',
-  '/api/v1/general/rotate-pdf',
-  '/api/v1/misc/add-watermark',
-  '/api/v1/security/add-password',
-  '/api/v1/security/remove-password',
-  '/api/v1/general/extract-pages',
+  "/api/v1/misc/compress-pdf",
+  "/api/v1/general/merge-pdfs",
+  "/api/v1/general/split-pages",
+  "/api/v1/convert/pdf/img",
+  "/api/v1/convert/img/pdf",
+  "/api/v1/general/rotate-pdf",
+  "/api/v1/misc/add-watermark",
+  "/api/v1/security/add-password",
+  "/api/v1/security/remove-password",
+  "/api/v1/general/extract-pages",
 ];
 
 /**
@@ -45,11 +48,11 @@ const COMMON_TOOL_ENDPOINTS = [
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
+  const [connectionMode, setConnectionMode] = useState<
+    "saas" | "selfhosted" | "local" | null
+  >(null);
   const [authChecked, setAuthChecked] = useState(false);
-  // When auth check finds no valid session, record the sign-in detail here so the
-  // dispatch useEffect below can fire it only after SignInModal has mounted.
-  const [pendingSignIn, setPendingSignIn] = useState<{ locked: boolean } | null>(null);
+  const [pendingSignIn, setPendingSignIn] = useState(false);
   // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
   const firstLaunchInitiated = useRef(false);
   // Key incremented on every connection mode change after initial load — forces SaaS provider
@@ -73,8 +76,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
       // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
       // which is intentional — the SaaS provider tree needs fresh state after login.
-      if (hasLoadedInitialMode.current && config.mode !== 'selfhosted') {
-        setAppKey(k => k + 1);
+      if (hasLoadedInitialMode.current && config.mode !== "selfhosted") {
+        setAppKey((k) => k + 1);
       }
     });
     return unsub;
@@ -85,84 +88,99 @@ export function AppProviders({ children }: { children: ReactNode }) {
     if (connectionMode === null) return;
 
     if (!isFirstLaunch && setupComplete) {
-      if (connectionMode === 'local') {
+      if (connectionMode === "local") {
         // Even in local mode, check for a valid JWT — on Windows, the OAuth callback
         // can complete without switchToSaaS() being called (race condition), leaving
         // LOCAL_MODE_STORAGE_KEY set while the user has a valid session. Upgrade to
         // SaaS mode automatically so credits/billing/team features work correctly.
-        authService.isAuthenticated()
+        authService
+          .isAuthenticated()
           .then(async (isAuth) => {
             if (isAuth) {
-              await connectionModeService.switchToSaaS(STIRLING_SAAS_URL).catch(console.error);
-              setConnectionMode('saas');
+              await connectionModeService
+                .switchToSaaS(STIRLING_SAAS_URL)
+                .catch(console.error);
+              setConnectionMode("saas");
             }
           })
           .finally(() => setAuthChecked(true));
       } else {
-        let pendingDetail: { locked: boolean } | null = null;
-        authService.isAuthenticated()
+        authService
+          .isAuthenticated()
           .then(async (isAuth) => {
             if (!isAuth) {
-              const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
-              if (cfg?.lock_connection_mode) {
-                // Provisioned deployment — stay in the configured mode and prompt for credentials.
-                // Don't fall back to local; the admin has locked the connection mode.
-                pendingDetail = { locked: true };
-              } else {
-                // JWT expired — fall back to local so local tools still work, then prompt
-                // for re-authentication via the sign-in modal.
-                await connectionModeService.switchToLocal().catch(console.error);
-                setConnectionMode('local');
-                pendingDetail = { locked: false };
+              const cfg = await connectionModeService
+                .getCurrentConfig()
+                .catch(() => null);
+              if (!cfg?.lock_connection_mode) {
+                // JWT expired — fall back to local so local tools still work.
+                await connectionModeService
+                  .switchToLocal()
+                  .catch(console.error);
+                setConnectionMode("local");
+                // Show sign-in modal once per expiry cycle. If the user dismisses
+                // without signing in the flag stays set and we won't prompt again
+                // until they successfully sign in (which clears the flag).
+                if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
+                  localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
+                  setPendingSignIn(true);
+                }
               }
+              // Locked deployments stay in their configured mode — user can sign in
+              // via Settings when they're ready.
             }
           })
           .catch(async () => {
-            const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
-            if (cfg?.lock_connection_mode) {
-              // Auth check threw (e.g. network error) but mode is locked — still prompt for
-              // credentials so the user can sign in when connectivity is restored.
-              pendingDetail = { locked: true };
-            } else {
+            const cfg = await connectionModeService
+              .getCurrentConfig()
+              .catch(() => null);
+            if (!cfg?.lock_connection_mode) {
               await connectionModeService.switchToLocal().catch(console.error);
-              setConnectionMode('local');
-              pendingDetail = { locked: false };
+              setConnectionMode("local");
+              if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
+                localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
+                setPendingSignIn(true);
+              }
             }
           })
-          .finally(() => {
-            setAuthChecked(true);
-            // Schedule sign-in via state so the dispatch useEffect fires AFTER
-            // SignInModal mounts (children effects run before parent effects).
-            if (pendingDetail) {
-              setPendingSignIn(pendingDetail);
-            }
-          });
+          .finally(() => setAuthChecked(true));
       }
     } else if (isFirstLaunch && !setupComplete) {
-      // Auto-enter local mode on first launch — skip the setup wizard entirely.
-      // The onboarding carousel + sign-in toast will be shown inside the main app.
-      // Start the backend explicitly here because shouldMonitorBackend relies on
-      // setupComplete (still false from the hook), so useBackendInitializer won't fire.
-      // Guard against re-running when setConnectionMode('local') below triggers this effect.
+      // Guard against re-running when setConnectionMode triggers this effect.
       if (firstLaunchInitiated.current) return;
       firstLaunchInitiated.current = true;
-      connectionModeService.switchToLocal()
-        .then(() => tauriBackendService.startBackend())
+      connectionModeService
+        .getCurrentConfig()
+        .then(async (cfg) => {
+          if (cfg.lock_connection_mode && cfg.server_config?.url) {
+            // Locked provisioned deployment — do NOT switch to local (would clear server_config
+            // from the store). Show onboarding normally; the sign-in slide handles locked auth.
+            // Still start the local backend so local tools work while the user signs in.
+            await tauriBackendService.startBackend().catch(console.error);
+            setConnectionMode("selfhosted");
+          } else {
+            // Normal first launch — auto-enter local mode.
+            // The onboarding carousel + sign-in slide will be shown inside the main app.
+            await connectionModeService.switchToLocal();
+            await tauriBackendService.startBackend();
+            setConnectionMode("local");
+          }
+        })
         .catch(console.error)
-        .finally(() => {
-          setConnectionMode('local');
-          setAuthChecked(true);
-        });
+        .finally(() => setAuthChecked(true));
     }
   }, [isFirstLaunch, setupComplete, connectionMode]);
 
   // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
-    if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
+    if (connectionMode !== "selfhosted") {
+      // Stop the monitor whenever we leave selfhosted mode so the dot resets.
+      selfHostedServerMonitor.stop();
+      return;
+    }
+    if (setupComplete && !isFirstLaunch) {
       void tauriBackendService.initializeExternalBackend();
-      // Also start the self-hosted server monitor so the operation router and UI
-      // can detect when the remote server goes offline and fall back to local backend.
-      connectionModeService.getServerConfig().then(cfg => {
+      connectionModeService.getServerConfig().then((cfg) => {
         if (cfg?.url) {
           selfHostedServerMonitor.start(cfg.url);
         }
@@ -175,7 +193,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Initialize monitoring for bundled backend (already started in Rust)
   // This sets up port detection and health checks
-  const shouldMonitorBackend = setupComplete && !isFirstLaunch && (connectionMode === 'saas' || connectionMode === 'local');
+  const shouldMonitorBackend =
+    setupComplete &&
+    !isFirstLaunch &&
+    (connectionMode === "saas" || connectionMode === "local");
   useBackendInitializer(shouldMonitorBackend);
 
   // Preload endpoint availability for the local bundled backend.
@@ -184,9 +205,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   //   (so useSelfHostedToolAvailability can use the cache instead of making
   //   individual requests per-tool when the remote server goes offline).
   const shouldPreloadLocalEndpoints =
-    (setupComplete && !isFirstLaunch && connectionMode === 'saas') ||
-    (setupComplete && !isFirstLaunch && connectionMode === 'local') ||
-    (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted');
+    (setupComplete && !isFirstLaunch && connectionMode === "saas") ||
+    (setupComplete && !isFirstLaunch && connectionMode === "local") ||
+    (setupComplete && !isFirstLaunch && connectionMode === "selfhosted");
   useEffect(() => {
     if (!shouldPreloadLocalEndpoints) return;
 
@@ -196,22 +217,33 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // tauriBackendService.isOnline now always reflects the local backend.
       // Wait for it to be healthy before preloading in both modes.
       if (!tauriBackendService.isOnline) return;
-      console.debug('[AppProviders] Preloading common tool endpoints for local backend');
-      void endpointAvailabilityService.preloadEndpoints(COMMON_TOOL_ENDPOINTS, backendUrl);
+      console.debug(
+        "[AppProviders] Preloading common tool endpoints for local backend",
+      );
+      void endpointAvailabilityService.preloadEndpoints(
+        COMMON_TOOL_ENDPOINTS,
+        backendUrl,
+      );
     };
 
-    const unsubscribe = tauriBackendService.subscribeToStatus(() => tryPreload());
+    const unsubscribe = tauriBackendService.subscribeToStatus(() =>
+      tryPreload(),
+    );
     tryPreload();
     return unsubscribe;
   }, [shouldPreloadLocalEndpoints, connectionMode]);
 
-  // Dispatch sign-in event only after authChecked=true so SignInModal is mounted.
-  // Using useEffect (not setTimeout) guarantees child effects (SignInModal's listener
-  // registration) run before this parent effect fires the event.
+  // Dispatch sign-in modal after authChecked so SignInModal's listener is registered.
+  // (Child effects run before parent effects, so this fires after SignInModal mounts.)
+  // detail.locked is always false here: setPendingSignIn(true) is only called inside
+  // `if (!cfg?.lock_connection_mode)` branches above, so locked deployments never set
+  // pendingSignIn and therefore never reach this dispatch.
   useEffect(() => {
     if (!authChecked || !pendingSignIn) return;
-    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: pendingSignIn }));
-    setPendingSignIn(null);
+    window.dispatchEvent(
+      new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
+    );
+    setPendingSignIn(false);
   }, [authChecked, pendingSignIn]);
 
   useEffect(() => {
@@ -241,11 +273,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
         appConfigProviderProps={{
           initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-          bootstrapMode: 'non-blocking',
+          bootstrapMode: "non-blocking",
           autoFetch: false,
         }}
       >
-        <div style={{ minHeight: '100vh' }} />
+        <div style={{ minHeight: "100vh" }} />
       </ProprietaryAppProviders>
     );
   }
@@ -259,13 +291,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
       }}
       appConfigProviderProps={{
         initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-        bootstrapMode: 'non-blocking',
+        bootstrapMode: "non-blocking",
         autoFetch: false,
       }}
     >
-      <ToolActionsContext.Provider value={{
-        onEndpointUnavailableClick: () => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
-      }}>
+      <ToolActionsContext.Provider
+        value={{
+          onEndpointUnavailableClick: () =>
+            window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
+        }}
+      >
         <SaaSTeamProvider key={appKey}>
           <SaasBillingProvider>
             <SaaSCheckoutProvider>

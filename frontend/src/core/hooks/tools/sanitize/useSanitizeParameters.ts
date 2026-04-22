@@ -1,5 +1,8 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface SanitizeParameters extends BaseParameters {
   removeJavaScript: boolean;
@@ -24,9 +27,9 @@ export type SanitizeParametersHook = BaseParametersHook<SanitizeParameters>;
 export const useSanitizeParameters = (): SanitizeParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'sanitize-pdf',
+    endpointName: "sanitize-pdf",
     validateFn: (params) => {
-      return Object.values(params).some(value => value === true);
+      return Object.values(params).some((value) => value === true);
     },
   });
 };

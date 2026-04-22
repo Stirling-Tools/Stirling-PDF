@@ -5,21 +5,30 @@ import FileUploadButton from "@app/components/shared/FileUploadButton";
 
 interface WatermarkImageFileProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(
+    key: K,
+    value: AddWatermarkParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const WatermarkImageFile = ({ parameters, onParameterChange, disabled = false }: WatermarkImageFileProps) => {
+const WatermarkImageFile = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: WatermarkImageFileProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="sm">
       <FileUploadButton
         file={parameters.watermarkImage}
-        onChange={(file) => onParameterChange('watermarkImage', file || undefined)}
+        onChange={(file) =>
+          onParameterChange("watermarkImage", file || undefined)
+        }
         accept="image/*"
         disabled={disabled}
-        placeholder={t('watermark.settings.image.choose', 'Choose Image')}
+        placeholder={t("watermark.settings.image.choose", "Choose Image")}
       />
     </Stack>
   );

@@ -1,32 +1,50 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier, PlanTier } from '@app/services/licenseService';
-import { StripeCheckout } from '@app/components/shared/stripeCheckout';
-import { userManagementService } from '@app/services/userManagementService';
-import { alert } from '@app/components/toast';
-import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
-import { useLicense } from '@app/contexts/LicenseContext';
-import { isSupabaseConfigured } from '@app/services/supabaseClient';
-import { getPreferredCurrency } from '@app/utils/currencyDetection';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useTranslation } from "react-i18next";
+import licenseService, {
+  PlanTierGroup,
+  LicenseInfo,
+  mapLicenseToTier,
+  PlanTier,
+} from "@app/services/licenseService";
+import { StripeCheckout } from "@app/components/shared/stripeCheckout";
+import { userManagementService } from "@app/services/userManagementService";
+import { alert } from "@app/components/toast";
+import {
+  pollLicenseKeyWithBackoff,
+  activateLicenseKey,
+  resyncExistingLicense,
+} from "@app/utils/licenseCheckoutUtils";
+import { useLicense } from "@app/contexts/LicenseContext";
+import { isSupabaseConfigured } from "@app/services/supabaseClient";
+import { getPreferredCurrency } from "@app/utils/currencyDetection";
 
 export interface CheckoutOptions {
-  minimumSeats?: number;      // Override calculated seats for enterprise
-  currency?: string;          // Optional currency override (auto-detected from locale)
-  onSuccess?: (sessionId: string) => void;  // Callback after successful payment
-  onError?: (error: string) => void;  // Callback on error
+  minimumSeats?: number; // Override calculated seats for enterprise
+  currency?: string; // Optional currency override (auto-detected from locale)
+  onSuccess?: (sessionId: string) => void; // Callback after successful payment
+  onError?: (error: string) => void; // Callback on error
 }
 
 interface CheckoutContextValue {
   openCheckout: (
-    tier: 'server' | 'enterprise',
-    options?: CheckoutOptions
+    tier: "server" | "enterprise",
+    options?: CheckoutOptions,
   ) => Promise<void>;
   closeCheckout: () => void;
   isOpen: boolean;
   isLoading: boolean;
 }
 
-const CheckoutContext = createContext<CheckoutContextValue | undefined>(undefined);
+const CheckoutContext = createContext<CheckoutContextValue | undefined>(
+  undefined,
+);
 
 interface CheckoutProviderProps {
   children: ReactNode;
@@ -35,13 +53,14 @@ interface CheckoutProviderProps {
 
 export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   children,
-  defaultCurrency
+  defaultCurrency,
 }) => {
   const { t, i18n } = useTranslation();
   const { refetchLicense } = useLicense();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
+  const [selectedPlanGroup, setSelectedPlanGroup] =
+    useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
   const [currentCurrency, setCurrentCurrency] = useState(() => {
     // Use provided default or auto-detect from locale
@@ -59,22 +78,25 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   const [plansLoading, setPlansLoading] = useState(false);
 
   // Lazy fetch plans only when needed
-  const fetchPlansIfNeeded = useCallback(async (currency: string) => {
-    // Don't fetch if already loading
-    if (plansLoading) return;
+  const fetchPlansIfNeeded = useCallback(
+    async (currency: string) => {
+      // Don't fetch if already loading
+      if (plansLoading) return;
 
-    try {
-      setPlansLoading(true);
-      const response = await licenseService.getPlans(currency);
-      setPlans(response.plans);
-      setPlansLoaded(true);
-    } catch (error) {
-      console.error('Failed to fetch plans:', error);
-      // Don't block - let components handle the error
-    } finally {
-      setPlansLoading(false);
-    }
-  }, [plansLoading]);
+      try {
+        setPlansLoading(true);
+        const response = await licenseService.getPlans(currency);
+        setPlans(response.plans);
+        setPlansLoaded(true);
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+        // Don't block - let components handle the error
+      } finally {
+        setPlansLoading(false);
+      }
+    },
+    [plansLoading],
+  );
 
   const refetchPlans = useCallback(() => {
     setPlansLoaded(false); // Force refetch
@@ -85,33 +107,35 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   useEffect(() => {
     const handleCheckoutReturn = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const paymentStatus = urlParams.get('payment_status');
-      const sessionId = urlParams.get('session_id');
+      const paymentStatus = urlParams.get("payment_status");
+      const sessionId = urlParams.get("session_id");
 
-      if (paymentStatus === 'success' && sessionId) {
-        console.log('Payment successful via hosted checkout:', sessionId);
+      if (paymentStatus === "success" && sessionId) {
+        console.log("Payment successful via hosted checkout:", sessionId);
 
         // Clear URL parameters
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, "", window.location.pathname);
 
         // Fetch current license info to determine upgrade vs new
         let licenseInfo: LicenseInfo | null = null;
         try {
           licenseInfo = await licenseService.getLicenseInfo();
         } catch (err) {
-          console.warn('Could not fetch license info:', err);
+          console.warn("Could not fetch license info:", err);
         }
 
         // Check if this is an upgrade or new subscription
         // Only treat as upgrade if there's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
-        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL') {
+        if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
           // UPGRADE: Resync existing license with Keygen
-          console.log('Upgrade detected - resyncing existing license');
+          console.log("Upgrade detected - resyncing existing license");
 
           const activation = await resyncExistingLicense();
 
           if (activation.success) {
-            console.log('License synced successfully, refreshing license context');
+            console.log(
+              "License synced successfully, refreshing license context",
+            );
 
             // Ensure plans are loaded before using them
             if (!plansLoaded) {
@@ -123,9 +147,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             await refetchPlans();
 
             // Determine tier from license type
-            const tier = activation.licenseType === 'ENTERPRISE' ? 'enterprise' : 'server';
+            const tier =
+              activation.licenseType === "ENTERPRISE" ? "enterprise" : "server";
             const planGroups = licenseService.groupPlansByTier(plans);
-            const planGroup = planGroups.find(pg => pg.tier === tier);
+            const planGroup = planGroups.find((pg) => pg.tier === tier);
 
             if (planGroup) {
               // Reopen modal to show success
@@ -135,24 +160,30 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             } else {
               // Fallback to toast if plan group not found
               alert({
-                alertType: 'success',
-                title: t('payment.upgradeSuccess'),
+                alertType: "success",
+                title: t("payment.upgradeSuccess"),
               });
             }
           } else {
-            console.error('Failed to sync license after upgrade:', activation.error);
+            console.error(
+              "Failed to sync license after upgrade:",
+              activation.error,
+            );
             alert({
-              alertType: 'error',
-              title: t('payment.syncError'),
+              alertType: "error",
+              title: t("payment.syncError"),
             });
           }
         } else {
           // NEW SUBSCRIPTION: Poll for license key
-          console.log('New subscription - polling for license key');
+          console.log("New subscription - polling for license key");
 
           try {
             const installationId = await licenseService.getInstallationId();
-            console.log('Polling for license key with installation ID:', installationId);
+            console.log(
+              "Polling for license key with installation ID:",
+              installationId,
+            );
 
             // Use shared polling utility
             const result = await pollLicenseKeyWithBackoff(installationId);
@@ -174,77 +205,90 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
                 await refetchPlans();
 
                 // Determine tier from license type
-                const tier = activation.licenseType === 'ENTERPRISE' ? 'enterprise' : 'server';
+                const tier =
+                  activation.licenseType === "ENTERPRISE"
+                    ? "enterprise"
+                    : "server";
                 const planGroups = licenseService.groupPlansByTier(plans);
-                const planGroup = planGroups.find(pg => pg.tier === tier);
+                const planGroup = planGroups.find((pg) => pg.tier === tier);
 
                 if (planGroup) {
                   // Reopen modal to show success with license key
                   setSelectedPlanGroup(planGroup);
                   setHostedCheckoutSuccess({
                     isUpgrade: false,
-                    licenseKey: result.licenseKey
+                    licenseKey: result.licenseKey,
                   });
                   setIsOpen(true);
                 } else {
                   // Fallback to toast if plan group not found
                   alert({
-                    alertType: 'success',
-                    title: t('payment.licenseActivated'),
+                    alertType: "success",
+                    title: t("payment.licenseActivated"),
                   });
                 }
               } else {
-                console.error('Failed to save license key:', activation.error);
+                console.error("Failed to save license key:", activation.error);
                 alert({
-                  alertType: 'error',
-                  title: t('payment.licenseSaveError'),
+                  alertType: "error",
+                  title: t("payment.licenseSaveError"),
                 });
               }
             } else if (result.timedOut) {
-              console.warn('License key polling timed out');
+              console.warn("License key polling timed out");
               alert({
-                alertType: 'warning',
-                title: t('payment.licenseDelayed'),
+                alertType: "warning",
+                title: t("payment.licenseDelayed"),
               });
             } else {
-              console.error('License key polling failed:', result.error);
+              console.error("License key polling failed:", result.error);
               alert({
-                alertType: 'error',
-                title: t('payment.licensePollingError'),
+                alertType: "error",
+                title: t("payment.licensePollingError"),
               });
             }
           } catch (error) {
-            console.error('Failed to poll for license key:', error);
+            console.error("Failed to poll for license key:", error);
             alert({
-              alertType: 'error',
-              title: t('payment.licenseRetrievalError'),
+              alertType: "error",
+              title: t("payment.licenseRetrievalError"),
             });
           }
         }
-      } else if (paymentStatus === 'canceled') {
-        console.log('Payment canceled by user');
+      } else if (paymentStatus === "canceled") {
+        console.log("Payment canceled by user");
 
         // Clear URL parameters
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, "", window.location.pathname);
 
         alert({
-          alertType: 'warning',
-          title: t('payment.paymentCanceled'),
+          alertType: "warning",
+          title: t("payment.paymentCanceled"),
         });
       }
     };
 
     handleCheckoutReturn();
-  }, [t, refetchPlans, refetchLicense, plans, fetchPlansIfNeeded, plansLoaded, currentCurrency]);
+  }, [
+    t,
+    refetchPlans,
+    refetchLicense,
+    plans,
+    fetchPlansIfNeeded,
+    plansLoaded,
+    currentCurrency,
+  ]);
 
   const openCheckout = useCallback(
-    async (tier: 'server' | 'enterprise', options: CheckoutOptions = {}) => {
+    async (tier: "server" | "enterprise", options: CheckoutOptions = {}) => {
       try {
         setIsLoading(true);
 
         // Check if Supabase is configured
         if (!isSupabaseConfigured) {
-          throw new Error('Checkout is not available. Supabase is not configured.');
+          throw new Error(
+            "Checkout is not available. Supabase is not configured.",
+          );
         }
 
         // Update currency if provided
@@ -265,37 +309,44 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         try {
           const [licenseData, userData] = await Promise.all([
             licenseService.getLicenseInfo(),
-            userManagementService.getUsers()
+            userManagementService.getUsers(),
           ]);
 
           licenseInfo = licenseData;
           totalUsers = userData.totalUsers || 0;
         } catch (err) {
-          console.warn('Could not fetch license/user info, proceeding with defaults:', err);
+          console.warn(
+            "Could not fetch license/user info, proceeding with defaults:",
+            err,
+          );
         }
 
         // Calculate minimum seats for enterprise upgrades
         let calculatedMinSeats = options.minimumSeats || 1;
 
-        if (tier === 'enterprise' && !options.minimumSeats) {
+        if (tier === "enterprise" && !options.minimumSeats) {
           const currentTier = mapLicenseToTier(licenseInfo);
 
-          if (currentTier === 'server' || currentTier === 'free') {
+          if (currentTier === "server" || currentTier === "free") {
             // Upgrading from Server (unlimited) to Enterprise (per-seat)
             // Use current total user count as minimum
             calculatedMinSeats = Math.max(totalUsers, 1);
-            console.log(`Setting minimum seats from server user count: ${calculatedMinSeats}`);
-          } else if (currentTier === 'enterprise') {
+            console.log(
+              `Setting minimum seats from server user count: ${calculatedMinSeats}`,
+            );
+          } else if (currentTier === "enterprise") {
             // Upgrading within Enterprise (e.g., monthly to yearly)
             // Use current licensed seat count as minimum
             calculatedMinSeats = Math.max(licenseInfo?.maxUsers || 1, 1);
-            console.log(`Setting minimum seats from current license: ${calculatedMinSeats}`);
+            console.log(
+              `Setting minimum seats from current license: ${calculatedMinSeats}`,
+            );
           }
         }
 
         // Find the plan group for the requested tier
         const planGroups = licenseService.groupPlansByTier(plans);
-        const planGroup = planGroups.find(pg => pg.tier === tier);
+        const planGroup = planGroups.find((pg) => pg.tier === tier);
 
         if (!planGroup) {
           throw new Error(`No ${tier} plan available`);
@@ -306,16 +357,16 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         setMinimumSeats(calculatedMinSeats);
         setSelectedPlanGroup(planGroup);
         setIsOpen(true);
-
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to open checkout';
-        console.error('Error opening checkout:', errorMessage);
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to open checkout";
+        console.error("Error opening checkout:", errorMessage);
         options.onError?.(errorMessage);
       } finally {
         setIsLoading(false);
       }
     },
-    [currentCurrency, plans, plansLoaded, fetchPlansIfNeeded]
+    [currentCurrency, plans, plansLoaded, fetchPlansIfNeeded],
   );
 
   const closeCheckout = useCallback(() => {
@@ -331,30 +382,33 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
   const handlePaymentSuccess = useCallback(
     (sessionId: string) => {
-      console.log('Payment successful, session:', sessionId);
+      console.log("Payment successful, session:", sessionId);
       currentOptions.onSuccess?.(sessionId);
       // Don't close modal - let user view license key and close manually
     },
-    [currentOptions]
+    [currentOptions],
   );
 
   const handlePaymentError = useCallback(
     (error: string) => {
-      console.error('Payment error:', error);
+      console.error("Payment error:", error);
       currentOptions.onError?.(error);
     },
-    [currentOptions]
+    [currentOptions],
   );
 
-  const handleLicenseActivated = useCallback((licenseInfo: {
-    licenseType: string;
-    enabled: boolean;
-    maxUsers: number;
-    hasKey: boolean;
-  }) => {
-    console.log('License activated:', licenseInfo);
-    // Could expose this via context if needed
-  }, []);
+  const handleLicenseActivated = useCallback(
+    (licenseInfo: {
+      licenseType: string;
+      enabled: boolean;
+      maxUsers: number;
+      hasKey: boolean;
+    }) => {
+      console.log("License activated:", licenseInfo);
+      // Could expose this via context if needed
+    },
+    [],
+  );
 
   const contextValue: CheckoutContextValue = {
     openCheckout,
@@ -387,7 +441,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 export const useCheckout = (): CheckoutContextValue => {
   const context = useContext(CheckoutContext);
   if (!context) {
-    throw new Error('useCheckout must be used within CheckoutProvider');
+    throw new Error("useCheckout must be used within CheckoutProvider");
   }
   return context;
 };

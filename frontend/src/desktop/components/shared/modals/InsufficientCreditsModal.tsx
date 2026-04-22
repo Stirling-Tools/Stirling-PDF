@@ -1,11 +1,11 @@
-import { Modal, Stack, Text, Button, Alert, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
-import { useSaaSTeam } from '@app/contexts/SaaSTeamContext';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { useSaaSCheckout } from '@app/contexts/SaaSCheckoutContext';
-import WarningIcon from '@mui/icons-material/Warning';
-import { useEnableMeteredBilling } from '@app/hooks/useEnableMeteredBilling';
+import { Modal, Stack, Text, Button, Alert, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
+import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { useSaaSCheckout } from "@app/contexts/SaaSCheckoutContext";
+import WarningIcon from "@mui/icons-material/Warning";
+import { useEnableMeteredBilling } from "@app/hooks/useEnableMeteredBilling";
 
 interface InsufficientCreditsModalProps {
   opened: boolean;
@@ -25,17 +25,21 @@ export function InsufficientCreditsModal({
   requiredCredits,
 }: InsufficientCreditsModalProps) {
   const { t } = useTranslation();
-  const { creditBalance, tier, refreshBilling, isManagedTeamMember } = useSaaSBilling();
+  const { creditBalance, tier, refreshBilling, isManagedTeamMember } =
+    useSaaSBilling();
   const { isTeamLeader } = useSaaSTeam();
   const { openCheckout } = useSaaSCheckout();
 
-  const { enablingMetering, meteringError, handleEnableMetering } = useEnableMeteredBilling(
-    refreshBilling,
-    onClose,
-    'InsufficientCreditsModal'
-  );
+  const { enablingMetering, meteringError, handleEnableMetering } =
+    useEnableMeteredBilling(
+      refreshBilling,
+      onClose,
+      "InsufficientCreditsModal",
+    );
 
-  const toolName = toolId ? t(`tool.${toolId}.name`, toolId) : t('common.operation', 'this operation');
+  const toolName = toolId
+    ? t(`tool.${toolId}.name`, toolId)
+    : t("common.operation", "this operation");
 
   return (
     <Modal
@@ -47,9 +51,11 @@ export function InsufficientCreditsModal({
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       title={
         <Group gap="xs">
-          <WarningIcon sx={{ fontSize: 24, color: 'var(--mantine-color-orange-6)' }} />
+          <WarningIcon
+            sx={{ fontSize: 24, color: "var(--mantine-color-orange-6)" }}
+          />
           <Text size="lg" fw={500}>
-            {t('credits.insufficient.title', 'Insufficient Credits')}
+            {t("credits.insufficient.title", "Insufficient Credits")}
           </Text>
         </Group>
       }
@@ -59,21 +65,21 @@ export function InsufficientCreditsModal({
           <Text size="sm">
             {requiredCredits
               ? t(
-                  'credits.insufficient.messageWithAmount',
-                  'You need {{required}} credits to run {{tool}}, but you only have {{current}}.',
+                  "credits.insufficient.messageWithAmount",
+                  "You need {{required}} credits to run {{tool}}, but you only have {{current}}.",
                   {
                     required: requiredCredits,
                     tool: toolName,
                     current: creditBalance,
-                  }
+                  },
                 )
               : t(
-                  'credits.insufficient.message',
-                  'You do not have enough credits to run {{tool}}. You currently have {{current}} credits.',
+                  "credits.insufficient.message",
+                  "You do not have enough credits to run {{tool}}. You currently have {{current}} credits.",
                   {
                     tool: toolName,
                     current: creditBalance,
-                  }
+                  },
                 )}
           </Text>
         </Alert>
@@ -82,27 +88,23 @@ export function InsufficientCreditsModal({
           <>
             <Text size="sm" c="dimmed">
               {t(
-                'credits.insufficient.managedMember',
-                'Please contact your team leader for assistance.'
+                "credits.insufficient.managedMember",
+                "Please contact your team leader for assistance.",
               )}
             </Text>
             <Button onClick={onClose} fullWidth>
-              {t('common.close', 'Close')}
+              {t("common.close", "Close")}
             </Button>
           </>
-        ) : tier === 'team' ? (
+        ) : tier === "team" ? (
           <>
             <Text size="sm" c="dimmed">
               {t(
-                'credits.insufficient.teamMember',
-                'Enable overage billing to never run out of credits.'
+                "credits.insufficient.teamMember",
+                "Enable overage billing to never run out of credits.",
               )}
             </Text>
-            {meteringError && (
-              <Alert color="red">
-                {meteringError}
-              </Alert>
-            )}
+            {meteringError && <Alert color="red">{meteringError}</Alert>}
             <Button
               variant="filled"
               color="blue"
@@ -111,23 +113,31 @@ export function InsufficientCreditsModal({
               loading={enablingMetering}
               disabled={!isTeamLeader}
             >
-              {t('credits.enableOverageBilling', 'Enable Overage Billing')}
+              {t("credits.enableOverageBilling", "Enable Overage Billing")}
             </Button>
             {!isTeamLeader && (
               <Text size="xs" c="dimmed" ta="center">
-                {t('credits.modal.teamLeaderOnly', 'Only team leaders can enable overage billing')}
+                {t(
+                  "credits.modal.teamLeaderOnly",
+                  "Only team leaders can enable overage billing",
+                )}
               </Text>
             )}
-            <Button onClick={onClose} variant="subtle" fullWidth disabled={enablingMetering}>
-              {t('common.cancel', 'Cancel')}
+            <Button
+              onClick={onClose}
+              variant="subtle"
+              fullWidth
+              disabled={enablingMetering}
+            >
+              {t("common.cancel", "Cancel")}
             </Button>
           </>
         ) : (
           <>
             <Text size="sm" c="dimmed">
               {t(
-                'credits.insufficient.freeTier',
-                'Upgrade to Team for 10x more credits and unlimited overage billing.'
+                "credits.insufficient.freeTier",
+                "Upgrade to Team for 10x more credits and unlimited overage billing.",
               )}
             </Text>
             <Button
@@ -135,14 +145,14 @@ export function InsufficientCreditsModal({
               color="blue"
               fullWidth
               onClick={() => {
-                openCheckout('pro');
+                openCheckout("pro");
                 onClose();
               }}
             >
-              {t('credits.upgrade', 'Upgrade to Team')}
+              {t("credits.upgrade", "Upgrade to Team")}
             </Button>
             <Button onClick={onClose} variant="subtle" fullWidth>
-              {t('common.cancel', 'Cancel')}
+              {t("common.cancel", "Cancel")}
             </Button>
           </>
         )}

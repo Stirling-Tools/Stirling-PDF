@@ -1,8 +1,8 @@
-import React from 'react';
-import { Trans } from 'react-i18next';
-import { SlideConfig, LicenseNotice } from '@app/types/types';
-import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
-import i18n from '@app/i18n';
+import React from "react";
+import { Trans } from "react-i18next";
+import { SlideConfig, LicenseNotice } from "@app/types/types";
+import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import i18n from "@app/i18n";
 
 interface ServerLicenseSlideProps {
   licenseNotice?: LicenseNotice;
@@ -10,16 +10,19 @@ interface ServerLicenseSlideProps {
 
 const DEFAULT_FREE_TIER_LIMIT = 5;
 
-export default function ServerLicenseSlide({ licenseNotice }: ServerLicenseSlideProps = {}): SlideConfig {
+export default function ServerLicenseSlide({
+  licenseNotice,
+}: ServerLicenseSlideProps = {}): SlideConfig {
   const freeTierLimit = licenseNotice?.freeTierLimit ?? DEFAULT_FREE_TIER_LIMIT;
   const totalUsers = licenseNotice?.totalUsers ?? null;
   const isOverLimit = licenseNotice?.isOverLimit ?? false;
-  const formattedTotalUsers = totalUsers != null ? totalUsers.toLocaleString() : null;
+  const formattedTotalUsers =
+    totalUsers != null ? totalUsers.toLocaleString() : null;
   const overLimitUserCopy = formattedTotalUsers ?? `more than ${freeTierLimit}`;
   const title = isOverLimit
-    ? i18n.t('onboarding.serverLicense.overLimitTitle', 'Server License Needed')
-    : i18n.t('onboarding.serverLicense.freeTitle', 'Server License');
-  const key = isOverLimit ? 'server-license-over-limit' : 'server-license';
+    ? i18n.t("onboarding.serverLicense.overLimitTitle", "Server License Needed")
+    : i18n.t("onboarding.serverLicense.freeTitle", "Server License");
+  const key = isOverLimit ? "server-license-over-limit" : "server-license";
 
   const overLimitBody = (
     <Trans
@@ -50,10 +53,10 @@ export default function ServerLicenseSlide({ licenseNotice }: ServerLicenseSlide
     title,
     body,
     background: {
-      gradientStops: isOverLimit ? ['#F472B6', '#8B5CF6'] : ['#F97316', '#F59E0B'],
+      gradientStops: isOverLimit
+        ? ["#F472B6", "#8B5CF6"]
+        : ["#F97316", "#F59E0B"],
       circles: UNIFIED_CIRCLE_CONFIG,
     },
   };
 }
-
-

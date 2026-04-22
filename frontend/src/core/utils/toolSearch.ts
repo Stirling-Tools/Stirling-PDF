@@ -1,6 +1,10 @@
 import { ToolId } from "@app/types/toolId";
 import { ToolRegistryEntry, ToolRegistry } from "@app/data/toolsTaxonomy";
-import { scoreMatch, minScoreForQuery, normalizeForSearch } from "@app/utils/fuzzySearch";
+import {
+  scoreMatch,
+  minScoreForQuery,
+  normalizeForSearch,
+} from "@app/utils/fuzzySearch";
 
 export interface RankedToolItem {
   item: [ToolId, ToolRegistryEntry];
@@ -9,23 +13,41 @@ export interface RankedToolItem {
 
 export function filterToolRegistryByQuery(
   toolRegistry: Partial<ToolRegistry>,
-  query: string
+  query: string,
 ): RankedToolItem[] {
   const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
   if (!query.trim()) {
-    return entries.map(([id, tool]) => ({ item: [id, tool] as [ToolId, ToolRegistryEntry] }));
+    return entries.map(([id, tool]) => ({
+      item: [id, tool] as [ToolId, ToolRegistryEntry],
+    }));
   }
 
   const nq = normalizeForSearch(query);
   const threshold = minScoreForQuery(query);
 
-  const exactName: Array<{ id: ToolId; tool: ToolRegistryEntry; pos: number }> = [];
-  const exactSyn: Array<{ id: ToolId; tool: ToolRegistryEntry; text: string; pos: number }> = [];
-  const fuzzyName: Array<{ id: ToolId; tool: ToolRegistryEntry; score: number; text: string }> = [];
-  const fuzzySyn: Array<{ id: ToolId; tool: ToolRegistryEntry; score: number; text: string }> = [];
+  const exactName: Array<{ id: ToolId; tool: ToolRegistryEntry; pos: number }> =
+    [];
+  const exactSyn: Array<{
+    id: ToolId;
+    tool: ToolRegistryEntry;
+    text: string;
+    pos: number;
+  }> = [];
+  const fuzzyName: Array<{
+    id: ToolId;
+    tool: ToolRegistryEntry;
+    score: number;
+    text: string;
+  }> = [];
+  const fuzzySyn: Array<{
+    id: ToolId;
+    tool: ToolRegistryEntry;
+    score: number;
+    text: string;
+  }> = [];
 
   for (const [id, tool] of entries) {
-    const nameNorm = normalizeForSearch(tool.name || '');
+    const nameNorm = normalizeForSearch(tool.name || "");
     const pos = nameNorm.indexOf(nq);
     if (pos !== -1) {
       exactName.push({ id, tool, pos });
@@ -43,19 +65,24 @@ export function filterToolRegistryByQuery(
       }
     }
     if (matchedExactSyn) {
-      exactSyn.push({ id, tool, text: matchedExactSyn.text, pos: matchedExactSyn.pos });
+      exactSyn.push({
+        id,
+        tool,
+        text: matchedExactSyn.text,
+        pos: matchedExactSyn.pos,
+      });
       continue;
     }
 
     // Fuzzy name
-    const nameScore = scoreMatch(query, tool.name || '');
+    const nameScore = scoreMatch(query, tool.name || "");
     if (nameScore >= threshold) {
-      fuzzyName.push({ id, tool, score: nameScore, text: tool.name || '' });
+      fuzzyName.push({ id, tool, score: nameScore, text: tool.name || "" });
     }
 
     // Fuzzy synonyms (we'll consider these only if fuzzy name results are weak)
     let bestSynScore = 0;
-    let bestSynText = '';
+    let bestSynText = "";
     for (const s of syns) {
       const synScore = scoreMatch(query, s);
       if (synScore > bestSynScore) {
@@ -70,7 +97,10 @@ export function filterToolRegistryByQuery(
   }
 
   // Sort within buckets
-  exactName.sort((a, b) => a.pos - b.pos || (a.tool.name || '').length - (b.tool.name || '').length);
+  exactName.sort(
+    (a, b) =>
+      a.pos - b.pos || (a.tool.name || "").length - (b.tool.name || "").length,
+  );
   exactSyn.sort((a, b) => a.pos - b.pos || a.text.length - b.text.length);
   fuzzyName.sort((a, b) => b.score - a.score);
   fuzzySyn.sort((a, b) => b.score - a.score);
@@ -93,6 +123,7 @@ export function filterToolRegistryByQuery(
   if (ordered.length > 0) return ordered;
 
   // Fallback: return everything unchanged
-  return entries.map(([id, tool]) => ({ item: [id, tool] as [ToolId, ToolRegistryEntry] }));
+  return entries.map(([id, tool]) => ({
+    item: [id, tool] as [ToolId, ToolRegistryEntry],
+  }));
 }
-

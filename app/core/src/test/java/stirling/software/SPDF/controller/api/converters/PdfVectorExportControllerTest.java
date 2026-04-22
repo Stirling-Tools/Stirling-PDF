@@ -3,11 +3,13 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,11 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +48,18 @@ class PdfVectorExportControllerTest {
 
     @BeforeEach
     void setup() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         when(tempFileManager.createTempFile(any()))
                 .thenAnswer(
                         invocation -> {
@@ -106,7 +122,8 @@ class PdfVectorExportControllerTest {
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
-        ResponseEntity<byte[]> response = controller.convertGhostscriptInputsToPdf(request);
+        ResponseEntity<StreamingResponseBody> response =
+                controller.convertGhostscriptInputsToPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
@@ -123,11 +140,14 @@ class PdfVectorExportControllerTest {
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
-        ResponseEntity<byte[]> response = controller.convertGhostscriptInputsToPdf(request);
+        ResponseEntity<StreamingResponseBody> response =
+                controller.convertGhostscriptInputsToPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
-        assertThat(response.getBody()).contains(content);
+        java.io.ByteArrayOutputStream baosVerify = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baosVerify);
+        assertThat(baosVerify.toByteArray()).contains(content);
     }
 
     @Test

@@ -15,7 +15,7 @@ export const ToolIcon: React.FC<ToolIconProps> = ({
   icon,
   opacity = 1,
   color = "var(--tools-text-and-icon-color)",
-  marginRight = "0.5rem"
+  marginRight = "0.5rem",
 }) => {
   return (
     <div
@@ -25,7 +25,7 @@ export const ToolIcon: React.FC<ToolIconProps> = ({
         marginRight,
         transform: "scale(0.8)",
         transformOrigin: "center",
-        opacity
+        opacity,
       }}
     >
       {icon}

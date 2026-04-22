@@ -4,16 +4,16 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from stirling.models import ApiModel, OperationId
+from stirling.models import ApiModel, ToolEndpoint
 
-from .common import ToolOperationStep
+from .common import StepKind, ToolOperationStep
 
 
 class AiToolAgentStep(ApiModel):
-    kind: Literal["ai_tool"] = "ai_tool"
+    kind: Literal[StepKind.AI_TOOL] = StepKind.AI_TOOL
     title: str
     description: str
-    tool: OperationId
+    tool: ToolEndpoint
     instruction: str
 
 

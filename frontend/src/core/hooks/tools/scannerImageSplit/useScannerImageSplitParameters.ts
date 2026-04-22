@@ -1,5 +1,8 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface ScannerImageSplitParameters extends BaseParameters {
   angle_threshold: number;
@@ -17,15 +20,17 @@ export const defaultParameters: ScannerImageSplitParameters = {
   border_size: 1,
 };
 
-export type ScannerImageSplitParametersHook = BaseParametersHook<ScannerImageSplitParameters>;
+export type ScannerImageSplitParametersHook =
+  BaseParametersHook<ScannerImageSplitParameters>;
 
-export const useScannerImageSplitParameters = (): ScannerImageSplitParametersHook => {
-  return useBaseParameters({
-    defaultParameters,
-    endpointName: 'extract-image-scans',
-    validateFn: () => {
-      // All parameters are numeric with defaults, validation handled by form
-      return true;
-    },
-  });
-};
+export const useScannerImageSplitParameters =
+  (): ScannerImageSplitParametersHook => {
+    return useBaseParameters({
+      defaultParameters,
+      endpointName: "extract-image-scans",
+      validateFn: () => {
+        // All parameters are numeric with defaults, validation handled by form
+        return true;
+      },
+    });
+  };

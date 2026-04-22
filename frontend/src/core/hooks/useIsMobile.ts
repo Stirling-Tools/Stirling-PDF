@@ -1,11 +1,11 @@
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from "@mantine/hooks";
 
 /**
  * Custom hook to detect mobile viewport
  * Uses a consistent breakpoint across the application
  */
 export const useIsMobile = (): boolean => {
-  return useMediaQuery('(max-width: 1024px)') ?? false;
+  return useMediaQuery("(max-width: 1024px)") ?? false;
 };
 
 /**
@@ -13,5 +13,5 @@ export const useIsMobile = (): boolean => {
  * Use for layouts that need a more compact single-column arrangement
  */
 export const useIsPhone = (): boolean => {
-  return useMediaQuery('(max-width: 768px)') ?? false;
+  return useMediaQuery("(max-width: 768px)") ?? false;
 };

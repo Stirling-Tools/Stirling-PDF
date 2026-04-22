@@ -72,6 +72,28 @@ pub async fn set_connection_mode(
 ) -> Result<(), String> {
     log::info!("Setting connection mode: {:?}", mode);
 
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    // If the store is already locked, protect connection_mode, server_config, and the lock
+    // flag from being overwritten by any JS-side call.
+    // Only allow marking setup_completed and updating auth-related fields.
+    let already_locked = store
+        .get(LOCK_CONNECTION_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    if already_locked {
+        log::warn!("set_connection_mode called while lock_connection_mode=true — preserving connection settings, but marking setup as completed");
+        // Still allow setup_completed to be written so the onboarding doesn't repeat.
+        store.set(FIRST_LAUNCH_KEY, serde_json::json!(true));
+        store
+            .save()
+            .map_err(|e| format!("Failed to save store: {}", e))?;
+        return Ok(());
+    }
+
     // Update in-memory state
     if let Ok(mut conn_state) = state.0.lock() {
         conn_state.mode = mode.clone();
@@ -80,11 +102,6 @@ pub async fn set_connection_mode(
             conn_state.lock_connection_mode = lock;
         }
     }
-
-    // Save to store
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
 
     store.set(
         CONNECTION_MODE_KEY,

@@ -97,7 +97,9 @@
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transition: max-height 450ms ease-out, opacity 300ms ease-out;
+  transition:
+    max-height 450ms ease-out,
+    opacity 300ms ease-out;
 }
 
 .right-rail-enter {

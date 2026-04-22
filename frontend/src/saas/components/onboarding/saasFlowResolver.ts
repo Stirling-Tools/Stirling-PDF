@@ -1,8 +1,11 @@
-import { TrialStatus } from '@app/auth/UseSession';
-import { FLOW_SEQUENCES, SlideId } from '@app/components/onboarding/saasOnboardingFlowConfig';
+import { TrialStatus } from "@app/auth/UseSession";
+import {
+  FLOW_SEQUENCES,
+  SlideId,
+} from "@app/components/onboarding/saasOnboardingFlowConfig";
 
 export interface FlowConfig {
-  type: 'saas-trial' | 'saas-paid';
+  type: "saas-trial" | "saas-paid";
   ids: SlideId[];
 }
 
@@ -15,26 +18,25 @@ export interface FlowConfig {
  */
 export function resolveSaasFlow(
   trialStatus: TrialStatus | null,
-  _isPro: boolean | null
+  _isPro: boolean | null,
 ): FlowConfig {
   // Show free trial card if:
   // 1. User has active trial (isTrialing = true)
   // 2. Trial has not expired (daysRemaining > 0)
   // 3. User is not paid Pro (or Pro is from trial)
   const hasActiveTrial =
-    trialStatus?.isTrialing === true &&
-    trialStatus.daysRemaining > 0;
+    trialStatus?.isTrialing === true && trialStatus.daysRemaining > 0;
 
   if (hasActiveTrial) {
     return {
-      type: 'saas-trial',
+      type: "saas-trial",
       ids: FLOW_SEQUENCES.saasTrialUser,
     };
   }
 
   // For paid users, expired trials, or no trial info
   return {
-    type: 'saas-paid',
+    type: "saas-paid",
     ids: FLOW_SEQUENCES.saasPaidUser,
   };
 }

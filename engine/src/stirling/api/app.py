@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
+from pydantic_ai import Agent
+from pydantic_ai.models.instrumented import InstrumentationSettings
 
 from stirling.agents import (
     DocumentExtractorAgent,
@@ -15,17 +17,21 @@ from stirling.agents import (
     PdfQuestionAgent,
     UserSpecAgent,
 )
+from stirling.agents.ledger import MathAuditorAgent
+from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
     form_fill_router,
+    ledger_router,
     orchestrator_router,
     pdf_edit_router,
     pdf_question_router,
+    rag_router,
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
-from stirling.services import build_runtime
+from stirling.services import build_runtime, setup_posthog_tracking
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -46,18 +52,27 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
+    fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
     fast_api.state.form_analyser_agent = FormAnalyserAgent(runtime)
     fast_api.state.form_filler_agent = FormFillerAgent(runtime)
     fast_api.state.document_extractor_agent = DocumentExtractorAgent(runtime)
+    tracer_provider = setup_posthog_tracking(settings)
+    if tracer_provider:
+        Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     yield
+    if tracer_provider:
+        tracer_provider.shutdown()
 
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
+app.add_middleware(UserIdMiddleware)
 app.include_router(orchestrator_router)
 app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
 app.include_router(agent_draft_router)
 app.include_router(execution_router)
+app.include_router(rag_router)
+app.include_router(ledger_router)
 app.include_router(form_fill_router)
 
 

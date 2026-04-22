@@ -1,5 +1,5 @@
 // Re-export all constants from core
-export * from '@core/constants/app';
+export * from "@core/constants/app";
 
 // SaaS-specific overrides
 // Get base URL with fallback (for use outside React components)

@@ -4,7 +4,10 @@ import { useSelectedFiles } from "@app/contexts/file/fileHooks";
 import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 interface MetadataExtractionParams {
-  updateParameter: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
+  updateParameter: <K extends keyof ChangeMetadataParameters>(
+    key: K,
+    value: ChangeMetadataParameters[K],
+  ) => void;
 }
 
 export const useMetadataExtraction = (params: MetadataExtractionParams) => {
@@ -41,20 +44,28 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
         const metadata = result.metadata;
 
         // Pre-populate all fields with extracted metadata
-        params.updateParameter('title', metadata.title);
-        params.updateParameter('author', metadata.author);
-        params.updateParameter('subject', metadata.subject);
-        params.updateParameter('keywords', metadata.keywords);
-        params.updateParameter('creator', metadata.creator);
-        params.updateParameter('producer', metadata.producer);
-        params.updateParameter('creationDate', metadata.creationDate ? new Date(metadata.creationDate) : null);
-        params.updateParameter('modificationDate', metadata.modificationDate ? new Date(metadata.modificationDate) : null);
-        params.updateParameter('trapped', metadata.trapped);
-        params.updateParameter('customMetadata', metadata.customMetadata);
+        params.updateParameter("title", metadata.title);
+        params.updateParameter("author", metadata.author);
+        params.updateParameter("subject", metadata.subject);
+        params.updateParameter("keywords", metadata.keywords);
+        params.updateParameter("creator", metadata.creator);
+        params.updateParameter("producer", metadata.producer);
+        params.updateParameter(
+          "creationDate",
+          metadata.creationDate ? new Date(metadata.creationDate) : null,
+        );
+        params.updateParameter(
+          "modificationDate",
+          metadata.modificationDate
+            ? new Date(metadata.modificationDate)
+            : null,
+        );
+        params.updateParameter("trapped", metadata.trapped);
+        params.updateParameter("customMetadata", metadata.customMetadata);
 
         setHasExtractedMetadata(true);
       } else {
-        console.warn('Failed to extract metadata:', result.error);
+        console.warn("Failed to extract metadata:", result.error);
       }
 
       setIsExtractingMetadata(false);

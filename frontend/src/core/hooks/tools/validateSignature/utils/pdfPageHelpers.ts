@@ -1,6 +1,10 @@
-import { PdfiumDocument, PdfiumFont, PdfiumImage } from '@app/services/pdfiumDocBuilder';
-import type { TFunction } from 'i18next';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import {
+  PdfiumDocument,
+  PdfiumFont,
+  PdfiumImage,
+} from "@app/services/pdfiumDocBuilder";
+import type { TFunction } from "i18next";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface StartPageParams {
   doc: PdfiumDocument;
@@ -13,7 +17,7 @@ interface StartPageParams {
   pageHeight: number;
   title: string;
   isContinuation: boolean;
-  t: TFunction<'translation'>;
+  t: TFunction<"translation">;
 }
 
 export const startReportPage = ({
@@ -32,7 +36,7 @@ export const startReportPage = ({
   let cursorY = pageHeight - marginY;
 
   if (isContinuation) {
-    const heading = `${title} - ${t('validateSignature.report.continued', 'Continued')}`;
+    const heading = `${title} - ${t("validateSignature.report.continued", "Continued")}`;
     page.drawText(heading, {
       x: marginX,
       y: cursorY - 18,
@@ -44,7 +48,7 @@ export const startReportPage = ({
   }
 
   const pageNumber = doc.getPageCount();
-  page.drawText(`${t('validateSignature.report.page', 'Page')} ${pageNumber}`, {
+  page.drawText(`${t("validateSignature.report.page", "Page")} ${pageNumber}`, {
     x: pageWidth - marginX - 80,
     y: marginY / 2,
     size: 9,
@@ -52,13 +56,16 @@ export const startReportPage = ({
     color: colorPalette.textMuted,
   });
 
-  page.drawText(t('validateSignature.report.footer', 'Validated via Stirling PDF'), {
-    x: marginX,
-    y: marginY / 2,
-    size: 9,
-    font,
-    color: colorPalette.textMuted,
-  });
+  page.drawText(
+    t("validateSignature.report.footer", "Validated via Stirling PDF"),
+    {
+      x: marginX,
+      y: marginY / 2,
+      size: 9,
+      font,
+      color: colorPalette.textMuted,
+    },
+  );
 
   return { page, cursorY };
 };
@@ -74,12 +81,12 @@ export const createThumbnailLoader = (doc: PdfiumDocument) => {
     try {
       const response = await fetch(url);
       const bytes = new Uint8Array(await response.arrayBuffer());
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get("content-type") || "";
       let image: PdfiumImage;
 
-      if (contentType.includes('png')) {
+      if (contentType.includes("png")) {
         image = await doc.embedPng(bytes);
-      } else if (contentType.includes('jpeg') || contentType.includes('jpg')) {
+      } else if (contentType.includes("jpeg") || contentType.includes("jpg")) {
         image = await doc.embedJpg(bytes);
       } else {
         try {
@@ -93,7 +100,7 @@ export const createThumbnailLoader = (doc: PdfiumDocument) => {
       cache.set(url, result);
       return result;
     } catch (error) {
-      console.warn('[validateSignature] Failed to load thumbnail', error);
+      console.warn("[validateSignature] Failed to load thumbnail", error);
       cache.set(url, null);
       return null;
     }

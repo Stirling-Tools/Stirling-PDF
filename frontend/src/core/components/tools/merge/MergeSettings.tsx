@@ -1,11 +1,14 @@
-import React from 'react';
-import { Stack, Checkbox } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { MergeParameters } from '@app/hooks/tools/merge/useMergeParameters';
+import React from "react";
+import { Stack, Checkbox } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { MergeParameters } from "@app/hooks/tools/merge/useMergeParameters";
 
 interface MergeSettingsProps {
   parameters: MergeParameters;
-  onParameterChange: <K extends keyof MergeParameters>(key: K, value: MergeParameters[K]) => void;
+  onParameterChange: <K extends keyof MergeParameters>(
+    key: K,
+    value: MergeParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -19,16 +22,32 @@ const MergeSettings: React.FC<MergeSettingsProps> = ({
   return (
     <Stack gap="md">
       <Checkbox
-        label={t('merge.removeDigitalSignature.label', 'Remove digital signature in the merged file?')}
+        label={t(
+          "merge.removeDigitalSignature.label",
+          "Remove digital signature in the merged file?",
+        )}
         checked={parameters.removeDigitalSignature}
-        onChange={(event) => onParameterChange('removeDigitalSignature', event.currentTarget.checked)}
+        onChange={(event) =>
+          onParameterChange(
+            "removeDigitalSignature",
+            event.currentTarget.checked,
+          )
+        }
         disabled={disabled}
       />
 
       <Checkbox
-        label={t('merge.generateTableOfContents.label', 'Generate table of contents in the merged file?')}
+        label={t(
+          "merge.generateTableOfContents.label",
+          "Generate table of contents in the merged file?",
+        )}
         checked={parameters.generateTableOfContents}
-        onChange={(event) => onParameterChange('generateTableOfContents', event.currentTarget.checked)}
+        onChange={(event) =>
+          onParameterChange(
+            "generateTableOfContents",
+            event.currentTarget.checked,
+          )
+        }
         disabled={disabled}
       />
     </Stack>

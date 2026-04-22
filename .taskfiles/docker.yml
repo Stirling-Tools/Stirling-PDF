@@ -1,0 +1,57 @@
+version: '3'
+
+vars:
+  COMPOSE_DIR: docker/compose
+  EMBEDDED_DIR: docker/embedded
+
+tasks:
+  build:
+    desc: "Build standard Docker image"
+    cmds:
+      - docker build -t stirling-pdf -f {{.EMBEDDED_DIR}}/Dockerfile .
+
+  build:fat:
+    desc: "Build fat Docker image (all features)"
+    cmds:
+      - docker build -t stirling-pdf-fat -f {{.EMBEDDED_DIR}}/Dockerfile.fat .
+
+  build:ultra-lite:
+    desc: "Build ultra-lite Docker image"
+    cmds:
+      - docker build -t stirling-pdf-ultra-lite -f {{.EMBEDDED_DIR}}/Dockerfile.ultra-lite .
+
+  build:frontend:
+    desc: "Build frontend-only Docker image"
+    cmds:
+      - docker build -t stirling-pdf-frontend -f docker/frontend/Dockerfile .
+
+  build:engine:
+    desc: "Build engine Docker image"
+    dir: engine
+    cmds:
+      - docker build -t stirling-pdf-engine .
+
+  up:
+    desc: "Start standard docker compose stack"
+    cmds:
+      - docker compose -f {{.COMPOSE_DIR}}/docker-compose.yml up -d
+
+  up:fat:
+    desc: "Start fat docker compose stack"
+    cmds:
+      - docker compose -f {{.COMPOSE_DIR}}/docker-compose.fat.yml up -d
+
+  up:ultra-lite:
+    desc: "Start ultra-lite docker compose stack"
+    cmds:
+      - docker compose -f {{.COMPOSE_DIR}}/docker-compose.ultra-lite.yml up -d
+
+  down:
+    desc: "Stop all running docker compose stacks"
+    cmds:
+      - docker compose -f {{.COMPOSE_DIR}}/docker-compose.yml down
+
+  logs:
+    desc: "Tail docker compose logs"
+    cmds:
+      - docker compose -f {{.COMPOSE_DIR}}/docker-compose.yml logs -f

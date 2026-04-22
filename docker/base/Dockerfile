@@ -385,8 +385,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils fontforge \
-      gosu unpaper pngquant \
+      # ffmpeg disabled due to raised CVEs
+      # ffmpeg \
+      poppler-utils fontforge \
+      unpaper pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
       fonts-liberation2 \
@@ -622,8 +624,7 @@ RUN set -eux; \
         -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser 2>/dev/null \
         || useradd -m -g stirlingpdfgroup \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    fi; \
-    ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
+    fi
 
 # Application directories
 RUN set -eux; \

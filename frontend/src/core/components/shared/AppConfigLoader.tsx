@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { updateSupportedLanguages } from '@app/i18n';
+import { useEffect } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { updateSupportedLanguages } from "@app/i18n";
 
 /**
  * Component that loads app configuration and applies it to the application.

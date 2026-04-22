@@ -65,7 +65,7 @@ security:
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     tokenExpiryMinutes: 1440 # JWT access token lifetime in minutes for web clients (1 day).
-    desktopTokenExpiryMinutes: 43200 # JWT access token lifetime in minutes for desktop clients (30 days). 
+    desktopTokenExpiryMinutes: 43200 # JWT access token lifetime in minutes for desktop clients (30 days).
     allowedClockSkewSeconds: 60 # Allowed JWT validation clock skew in seconds to tolerate small client/server time drift.
     refreshGraceMinutes: 15 # Allow refresh using an expired access token only within this many minutes after expiry.
   validation: # PDF signature validation settings
@@ -84,6 +84,9 @@ security:
     revocation:
       mode: none # Revocation checking mode: 'none' (disabled), 'ocsp' (OCSP only), 'crl' (CRL only), 'ocsp+crl' (OCSP with CRL fallback)
       hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
+  timestamp:
+    defaultTsaUrl: http://timestamp.digicert.com # Default TSA server for RFC 3161 document timestamps
+    customTsaUrls: [] # Admin-configured additional TSA URLs (e.g. ['https://internal-tsa.corp.com/timestamp']). Users can only select from built-in presets and these URLs.
   xFrameOptions: DENY # X-Frame-Options header value. Options: 'DENY' (default, prevents all framing), 'SAMEORIGIN' (allows framing from same domain), 'DISABLED' (no X-Frame-Options header sent). Note: automatically set to DISABLED when login is disabled
 
 premium:
@@ -237,6 +240,30 @@ system:
   databaseBackup:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
+storage:
+  enabled: false # set to 'true' to allow users to store files on the server (requires security.enableLogin) [ALPHA]
+  provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
+  local:
+    basePath: './storage' # base directory for stored files
+  quotas:
+    maxStorageMbPerUser: -1 # Max storage per user in MB; -1 disables per-user cap
+    maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
+    maxFileMb: -1 # Max size per stored file (including history/audit) in MB; -1 disables limit
+  sharing:
+    enabled: false # set to 'true' to enable file sharing features [ALPHA]
+    linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
+    emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
+    linkExpirationDays: 3 # Number of days before share links expire
+  signing:
+    enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+autoPipeline:
+  outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
+  fileReadiness:
+    enabled: true # Set to 'false' to skip all readiness checks and process files immediately (legacy behaviour)
+    settleTimeMillis: 5000 # How long (ms) a file must be unmodified before it is considered fully written and stable. Default: 5000 (5 seconds)
+    sizeCheckDelayMillis: 500 # Pause (ms) between two file-size reads used to detect active writes (Linux/macOS mid-copy detection). Default: 500
+    allowedExtensions: [] # Optional extension allow-list (case-insensitive, without the leading dot). Empty list = accept all extensions. Example: ["pdf", "tiff"]
+
 ui:
   appNameNavbar: "" # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
@@ -258,7 +285,7 @@ metrics:
 AutomaticallyGenerated:
   key: cbb81c0f-50b1-450c-a2b5-89ae527776eb
   UUID: 10dd4fba-01fa-4717-9b78-3dc4f54e398a
-  appVersion: 2.7.2
+  appVersion: 2.9.2
 
 processExecutor:
   autoUnoServer: true # true: use local pool based on libreOfficeSessionLimit; false: use unoServerEndpoints
@@ -297,6 +324,11 @@ processExecutor:
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30
     ocrMyPdfTimeoutMinutes: 30
+
+aiEngine:
+  enabled: false # Set to 'true' to enable the AI engine integration
+  url: http://localhost:5001 # URL of the Python AI engine
+  timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font

@@ -1,3 +1,4 @@
+from conftest import build_app_settings
 from fastapi.testclient import TestClient
 
 from stirling.api import app
@@ -11,7 +12,7 @@ from stirling.api.dependencies import (
     get_pdf_question_agent,
     get_user_spec_agent,
 )
-from stirling.config import AppSettings, load_settings
+from stirling.config import load_settings
 from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,
@@ -19,42 +20,30 @@ from stirling.contracts import (
     AgentExecutionRequest,
     AgentRevisionRequest,
     AgentRevisionResponse,
-    CannotContinueExecutionAction,
-    EditCannotDoResponse,
-    OrchestratorRequest,
-    PdfEditRequest,
-    PdfQuestionNotFoundResponse,
-    PdfQuestionRequest,
-    UnsupportedCapabilityResponse,
-)
-from stirling.contracts.form_fill import (
     AnalysedFileResult,
+    CannotContinueExecutionAction,
     CrossFileRole,
     DetectedRole,
     DocumentExtractionRequest,
+    EditCannotDoResponse,
     FileFillResult,
     FormAnalysisRequest,
     FormAnalysisResponse,
     FormFillBatchRequest,
     FormFillBatchResponse,
     KnowledgeUpdateResponse,
+    OrchestratorRequest,
+    PdfEditRequest,
+    PdfQuestionNeedContentResponse,
+    PdfQuestionNotFoundResponse,
+    PdfQuestionRequest,
 )
-from stirling.models.tool_models import RotateParams
-
-
-class StubSettingsProvider:
-    def __call__(self) -> AppSettings:
-        return AppSettings(
-            smart_model_name="test",
-            fast_model_name="test",
-            smart_model_max_tokens=8192,
-            fast_model_max_tokens=2048,
-        )
+from stirling.models.tool_models import Angle, RotatePdfParams
 
 
 class StubOrchestratorAgent:
-    async def handle(self, request: OrchestratorRequest) -> UnsupportedCapabilityResponse:
-        return UnsupportedCapabilityResponse(capability="pdf_edit", message=request.user_message)
+    async def handle(self, request: OrchestratorRequest) -> PdfQuestionNeedContentResponse:
+        return PdfQuestionNeedContentResponse(reason=request.user_message, files=[], max_pages=1, max_characters=1000)
 
 
 class StubPdfEditAgent:
@@ -127,14 +116,7 @@ class StubExecutionPlanningAgent:
         return CannotContinueExecutionAction(reason=str(request.current_step_index))
 
 
-client: TestClient = TestClient(app)
-
-
-def override_settings() -> AppSettings:
-    return StubSettingsProvider()()
-
-
-app.dependency_overrides[load_settings] = override_settings
+app.dependency_overrides[load_settings] = build_app_settings
 app.dependency_overrides[get_orchestrator_agent] = lambda: StubOrchestratorAgent()
 app.dependency_overrides[get_pdf_edit_agent] = lambda: StubPdfEditAgent()
 app.dependency_overrides[get_pdf_question_agent] = lambda: StubPdfQuestionAgent()
@@ -143,6 +125,8 @@ app.dependency_overrides[get_execution_planning_agent] = lambda: StubExecutionPl
 app.dependency_overrides[get_form_analyser_agent] = lambda: StubFormAnalyserAgent()
 app.dependency_overrides[get_form_filler_agent] = lambda: StubFormFillerAgent()
 app.dependency_overrides[get_document_extractor_agent] = lambda: StubDocumentExtractorAgent()
+
+client: TestClient = TestClient(app)
 
 
 def test_health_route() -> None:
@@ -153,10 +137,10 @@ def test_health_route() -> None:
 
 
 def test_orchestrator_route() -> None:
-    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this"})
+    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this", "fileNames": ["test.pdf"]})
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == "unsupported_capability"
+    assert response.json()["outcome"] == "need_content"
 
 
 def test_pdf_edit_route() -> None:
@@ -167,7 +151,14 @@ def test_pdf_edit_route() -> None:
 
 
 def test_pdf_questions_route() -> None:
-    response = client.post("/api/v1/pdf/questions", json={"question": "what is this?"})
+    response = client.post(
+        "/api/v1/pdf/questions",
+        json={
+            "question": "what is this?",
+            "fileNames": ["test.pdf"],
+            "pageText": [{"fileName": "test.pdf", "pages": [{"pageNumber": 1, "text": "Example"}]}],
+        },
+    )
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "not_found"
@@ -192,8 +183,8 @@ def test_agent_revise_route() -> None:
                 "steps": [
                     {
                         "kind": "tool",
-                        "tool": "rotate",
-                        "parameters": RotateParams(angle=90).model_dump(by_alias=True),
+                        "tool": "/api/v1/general/rotate-pdf",
+                        "parameters": RotatePdfParams(angle=Angle(90)).model_dump(by_alias=True),
                     }
                 ],
             },
@@ -252,8 +243,8 @@ def test_next_action_route() -> None:
                 "steps": [
                     {
                         "kind": "tool",
-                        "tool": "rotate",
-                        "parameters": RotateParams(angle=90).model_dump(by_alias=True),
+                        "tool": "/api/v1/general/rotate-pdf",
+                        "parameters": RotatePdfParams(angle=Angle(90)).model_dump(by_alias=True),
                     }
                 ],
             },

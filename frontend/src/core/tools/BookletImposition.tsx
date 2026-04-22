@@ -11,10 +11,10 @@ const BookletImposition = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'bookletImposition',
+    "bookletImposition",
     useBookletImpositionParameters,
     useBookletImpositionOperation,
-    props
+    props,
   );
 
   const bookletTips = useBookletImpositionTips();
@@ -28,7 +28,9 @@ const BookletImposition = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: bookletTips,
         content: (
           <BookletImpositionSettings

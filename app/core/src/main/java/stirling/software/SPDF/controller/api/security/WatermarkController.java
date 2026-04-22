@@ -30,6 +30,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -45,6 +46,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @SecurityApi
@@ -52,6 +54,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class WatermarkController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -73,8 +76,8 @@ public class WatermarkController {
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
                             + " watermark type (text or image), rotation, opacity, width spacer, and"
                             + " height spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addWatermark(@Valid @ModelAttribute AddWatermarkRequest request)
-            throws IOException, Exception {
+    public ResponseEntity<StreamingResponseBody> addWatermark(
+            @Valid @ModelAttribute AddWatermarkRequest request) throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
@@ -151,14 +154,16 @@ public class WatermarkController {
                     return WebResponseUtils.pdfDocToWebResponse(
                             convertedPdf,
                             GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_watermarked.pdf"));
+                                    pdfFile.getOriginalFilename(), "_watermarked.pdf"),
+                            tempFileManager);
                 }
             } else {
                 // Return the watermarked PDF as a response
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_watermarked.pdf"));
+                                pdfFile.getOriginalFilename(), "_watermarked.pdf"),
+                        tempFileManager);
             }
         }
     }

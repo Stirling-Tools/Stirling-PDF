@@ -25,7 +25,11 @@ async function resolvePdfSource(file?: File | Blob, url?: string | null) {
   return response.blob();
 }
 
-export async function printPdfNatively(file?: File | Blob, url?: string | null, fileName = "document.pdf") {
+export async function printPdfNatively(
+  file?: File | Blob,
+  url?: string | null,
+  fileName = "document.pdf",
+) {
   const source = await resolvePdfSource(file, url);
   if (!source) {
     throw new Error("No PDF source available for native print");

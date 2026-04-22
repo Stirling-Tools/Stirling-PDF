@@ -1,0 +1,313 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install dependencies"
+    run: once
+    cmds:
+      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install{{ end }}'
+    sources:
+      - package-lock.json
+      - package.json
+    status:
+      - test -d node_modules
+    env:
+      CI: '{{ .CI | default "false" }}'
+
+  prepare:env:
+    desc: "Generate .env from example if missing"
+    run: once
+    deps: [install]
+    cmds:
+      - npx tsx scripts/setup-env.ts
+    sources:
+      - scripts/setup-env.ts
+      - config/.env.example
+    generates:
+      - .env
+
+  prepare:env:saas:
+    desc: "Generate .env and .env.saas from examples if missing"
+    run: once
+    deps: [install]
+    cmds:
+      - npx tsx scripts/setup-env.ts --saas
+    sources:
+      - scripts/setup-env.ts
+      - config/.env.example
+      - config/.env.saas.example
+    generates:
+      - .env
+      - .env.saas
+
+  prepare:env:desktop:
+    desc: "Generate .env and .env.desktop from examples if missing"
+    run: once
+    deps: [install]
+    cmds:
+      - npx tsx scripts/setup-env.ts --desktop
+    sources:
+      - scripts/setup-env.ts
+      - config/.env.example
+      - config/.env.desktop.example
+    generates:
+      - .env
+      - .env.desktop
+
+  prepare:icons:
+    desc: "Generate icon bundle from source references"
+    run: once
+    deps: [install]
+    cmds:
+      - node scripts/generate-icons.js
+
+  prepare:
+    desc: "Set up dev environment"
+    run: once
+    deps: [prepare:env, prepare:icons]
+
+  prepare:saas:
+    desc: "Prepare for SaaS mode"
+    run: once
+    deps: [prepare:env:saas, prepare:icons]
+
+  prepare:desktop:
+    desc: "Prepare for desktop mode"
+    run: once
+    deps: [prepare:env:desktop, prepare:icons]
+
+  # ============================================================
+  # Development
+  # ============================================================
+
+  dev:
+    desc: "Start frontend dev server"
+    deps: [prepare]
+    ignore_error: true
+    cmds:
+      - npx vite
+
+  dev:core:
+    desc: "Start frontend dev server in core mode"
+    deps: [prepare]
+    ignore_error: true
+    cmds:
+      - npx vite --mode core
+
+  dev:proprietary:
+    desc: "Start frontend dev server in proprietary mode"
+    deps: [prepare]
+    ignore_error: true
+    cmds:
+      - npx vite --mode proprietary
+
+  dev:saas:
+    desc: "Start frontend dev server in SaaS mode"
+    deps: [prepare:saas]
+    ignore_error: true
+    cmds:
+      - npx vite --mode saas
+
+  dev:desktop:
+    desc: "Start frontend dev server in desktop mode"
+    deps: [prepare:desktop]
+    ignore_error: true
+    cmds:
+      - npx vite --mode desktop
+
+  dev:prototypes:
+    desc: "Start frontend dev server in prototypes mode"
+    deps: [prepare]
+    ignore_error: true
+    cmds:
+      - npx vite --mode prototypes
+
+  # ============================================================
+  # Build
+  # ============================================================
+
+  build:
+    desc: "Production build (default mode)"
+    deps: [prepare]
+    cmds:
+      - npx vite build
+
+  build:core:
+    desc: "Build for core mode"
+    deps: [prepare]
+    cmds:
+      - npx vite build --mode core
+
+  build:proprietary:
+    desc: "Build for proprietary mode"
+    deps: [prepare]
+    cmds:
+      - npx vite build --mode proprietary
+
+  build:saas:
+    desc: "Build for SaaS mode"
+    deps: [prepare:saas]
+    cmds:
+      - npx vite build --mode saas
+
+  build:desktop:
+    desc: "Build for desktop mode"
+    deps: [prepare:desktop]
+    cmds:
+      - npx vite build --mode desktop
+
+  build:prototypes:
+    desc: "Build for prototypes mode"
+    deps: [prepare]
+    cmds:
+      - npx vite build --mode prototypes
+
+  # ============================================================
+  # Code quality
+  # ============================================================
+
+  lint:
+    desc: "Run linting"
+    deps: [install]
+    cmds:
+      - npx eslint --max-warnings=0
+      - npx dpdm src --circular --no-warning --no-tree --exit-code circular:1
+
+  lint:fix:
+    desc: "Auto-fix lint issues"
+    deps: [install]
+    cmds:
+      - npx eslint --fix
+
+  format:
+    desc: "Auto-fix code formatting"
+    deps: [install]
+    cmds:
+      - npx prettier --write .
+
+  format:check:
+    desc: "Check code formatting"
+    deps: [install]
+    cmds:
+      - npx prettier --check .
+
+  fix:
+    desc: "Auto-fix lint and format"
+    cmds:
+      - task: format
+      - task: lint:fix
+
+  typecheck:
+    desc: "Typecheck default build of the app"
+    cmds:
+      - task: typecheck:proprietary
+
+  typecheck:core:
+    desc: "Typecheck core build variant"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project src/core/tsconfig.json
+
+  typecheck:proprietary:
+    desc: "Typecheck proprietary build variant"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project src/proprietary/tsconfig.json
+
+  typecheck:saas:
+    desc: "Typecheck SaaS build variant"
+    deps: [prepare:saas]
+    cmds:
+      - npx tsc --noEmit --project src/saas/tsconfig.json
+
+  typecheck:desktop:
+    desc: "Typecheck desktop build variant"
+    deps: [prepare:desktop]
+    cmds:
+      - npx tsc --noEmit --project src/desktop/tsconfig.json
+
+  typecheck:scripts:
+    desc: "Typecheck scripts"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project scripts/tsconfig.json
+
+  typecheck:prototypes:
+    desc: "Typecheck prototypes build variant"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project src/prototypes/tsconfig.json
+
+  typecheck:all:
+    desc: "Typecheck all build variants"
+    cmds:
+      - task: typecheck:core
+      - task: typecheck:proprietary
+      - task: typecheck:saas
+      - task: typecheck:desktop
+      - task: typecheck:scripts
+
+  # ============================================================
+  # Quality Gate
+  # ============================================================
+
+  check:
+    desc: "Quick quality gate for local development"
+    cmds:
+      - task: typecheck
+      - task: lint
+      - task: format:check
+      - task: test
+
+  check:all:
+    desc: "Full CI quality gate"
+    cmds:
+      - task: typecheck:all
+      - task: lint
+      - task: format:check
+      - task: build
+      - task: test
+
+  # ============================================================
+  # Test
+  # ============================================================
+
+  test:
+    desc: "Run tests"
+    deps: [install]
+    cmds:
+      - npx vitest run
+
+  test:watch:
+    desc: "Run tests in watch mode"
+    deps: [install]
+    cmds:
+      - npx vitest --watch
+
+  test:coverage:
+    desc: "Run tests with coverage"
+    deps: [install]
+    cmds:
+      - npx vitest --coverage
+
+  test:e2e:
+    desc: "Run E2E tests"
+    deps: [prepare]
+    cmds:
+      - npx playwright test {{.CLI_ARGS}}
+
+  test:e2e:install:
+    desc: "Install E2E test browsers"
+    deps: [install]
+    cmds:
+      - npx playwright install {{.CLI_ARGS}} --with-deps
+
+  # ============================================================
+  # Code Generation
+  # ============================================================
+
+  licenses:generate:
+    desc: "Generate frontend license report"
+    deps: [install]
+    cmds:
+      - node scripts/generate-licenses.js

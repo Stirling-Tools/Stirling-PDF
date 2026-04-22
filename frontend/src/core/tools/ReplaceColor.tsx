@@ -12,10 +12,10 @@ const ReplaceColor = (props: BaseToolProps) => {
   const replaceColorTips = useReplaceColorTips();
 
   const base = useBaseTool(
-    'replaceColor',
+    "replaceColor",
     useReplaceColorParameters,
     useReplaceColorOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const ReplaceColor = (props: BaseToolProps) => {
       {
         title: t("replaceColor.labels.settings", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: replaceColorTips,
         content: (
           <ReplaceColorSettings

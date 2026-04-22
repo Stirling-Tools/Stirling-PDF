@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
+import { useEffect, useState, useRef } from "react";
+import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
 
 interface UseSettingsDirtyReturn<T> {
   isDirty: boolean;
@@ -11,16 +11,24 @@ interface UseSettingsDirtyReturn<T> {
  * Hook for managing dirty state in settings sections
  * Handles JSON snapshot comparison and UnsavedChangesContext integration
  */
-export function useSettingsDirty<T>(settings: T, loading: boolean): UseSettingsDirtyReturn<T> {
+export function useSettingsDirty<T>(
+  settings: T,
+  loading: boolean,
+): UseSettingsDirtyReturn<T> {
   const { setIsDirty } = useUnsavedChanges();
-  const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
+  const [originalSettingsSnapshot, setOriginalSettingsSnapshot] =
+    useState<string>("");
   const [isDirty, setLocalIsDirty] = useState(false);
   const isInitialLoad = useRef(true);
   const justSavedRef = useRef(false);
 
   // Snapshot original settings after initial load OR after successful save (when refetch completes)
   useEffect(() => {
-    if (loading || Object.keys(settings as Record<string, unknown>).length === 0) return;
+    if (
+      loading ||
+      Object.keys(settings as Record<string, unknown>).length === 0
+    )
+      return;
 
     // After initial load: set snapshot
     if (isInitialLoad.current) {
@@ -60,7 +68,7 @@ export function useSettingsDirty<T>(settings: T, loading: boolean): UseSettingsD
       try {
         return JSON.parse(originalSettingsSnapshot) as T;
       } catch (e) {
-        console.error('Failed to parse original settings:', e);
+        console.error("Failed to parse original settings:", e);
         return settings;
       }
     }

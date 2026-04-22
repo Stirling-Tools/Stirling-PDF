@@ -1,5 +1,5 @@
 export interface WetSignatureMetadata {
-  type: 'canvas' | 'image' | 'text';
+  type: "canvas" | "image" | "text";
   data: string; // Base64-encoded image data or text content
   page: number; // Zero-indexed page number
   x: number; // X coordinate in PDF points
@@ -34,7 +34,7 @@ export interface ParticipantInfo {
   userId: number;
   email: string;
   name: string;
-  status: 'PENDING' | 'NOTIFIED' | 'VIEWED' | 'SIGNED' | 'DECLINED';
+  status: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
   lastUpdated: string;
   // Signature appearance settings (owner-controlled)
   showSignature?: boolean;
@@ -60,7 +60,7 @@ export interface SignRequestSummary {
   ownerUsername: string;
   createdAt: string;
   dueDate: string;
-  myStatus: 'PENDING' | 'NOTIFIED' | 'VIEWED' | 'SIGNED' | 'DECLINED';
+  myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
 }
 
 export interface SignRequestDetail {
@@ -70,7 +70,7 @@ export interface SignRequestDetail {
   message: string;
   dueDate: string;
   createdAt: string;
-  myStatus: 'PENDING' | 'NOTIFIED' | 'VIEWED' | 'SIGNED' | 'DECLINED';
+  myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
   // Signature appearance settings (read-only, configured by owner)
   showSignature?: boolean;
   pageNumber?: number;

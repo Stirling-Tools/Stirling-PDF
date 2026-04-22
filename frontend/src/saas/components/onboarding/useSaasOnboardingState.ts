@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { useAuth } from '@app/auth/UseSession';
-import { useOs } from '@app/hooks/useOs';
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useAuth } from "@app/auth/UseSession";
+import { useOs } from "@app/hooks/useOs";
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
   type FlowState,
   type SlideId,
-} from '@app/components/onboarding/saasOnboardingFlowConfig';
-import { resolveSaasFlow } from '@app/components/onboarding/saasFlowResolver';
-import { DOWNLOAD_URLS } from '@app/constants/downloads';
+} from "@app/components/onboarding/saasOnboardingFlowConfig";
+import { resolveSaasFlow } from "@app/components/onboarding/saasFlowResolver";
+import { DOWNLOAD_URLS } from "@app/constants/downloads";
 
 interface UseSaasOnboardingStateResult {
   currentStep: number;
   totalSteps: number;
   slideDefinition: (typeof SLIDE_DEFINITIONS)[SlideId];
-  currentSlide: ReturnType<(typeof SLIDE_DEFINITIONS)[SlideId]['createSlide']>;
+  currentSlide: ReturnType<(typeof SLIDE_DEFINITIONS)[SlideId]["createSlide"]>;
   flowState: FlowState;
   handleButtonAction: (action: ButtonAction) => void;
 }
@@ -30,7 +30,7 @@ export function useSaasOnboardingState({
 }: UseSaasOnboardingStateProps): UseSaasOnboardingStateResult | null {
   const { trialStatus, isPro, loading } = useAuth();
   const osType = useOs();
-  const selectedDownloadUrlRef = useRef<string>('');
+  const selectedDownloadUrlRef = useRef<string>("");
 
   const [currentStep, setCurrentStep] = useState<number>(0);
 
@@ -44,28 +44,39 @@ export function useSaasOnboardingState({
   // Determine OS details for desktop download
   const os = useMemo(() => {
     switch (osType) {
-      case 'windows':
-        return { label: 'Windows', url: DOWNLOAD_URLS.WINDOWS };
-      case 'mac-apple':
-        return { label: 'Mac (Apple Silicon)', url: DOWNLOAD_URLS.MAC_APPLE_SILICON };
-      case 'mac-intel':
-        return { label: 'Mac (Intel)', url: DOWNLOAD_URLS.MAC_INTEL };
-      case 'linux-x64':
-      case 'linux-arm64':
-        return { label: 'Linux', url: DOWNLOAD_URLS.LINUX_DOCS };
+      case "windows":
+        return { label: "Windows", url: DOWNLOAD_URLS.WINDOWS };
+      case "mac-apple":
+        return {
+          label: "Mac (Apple Silicon)",
+          url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
+        };
+      case "mac-intel":
+        return { label: "Mac (Intel)", url: DOWNLOAD_URLS.MAC_INTEL };
+      case "linux-x64":
+      case "linux-arm64":
+        return { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS };
       default:
-        return { label: '', url: '' };
+        return { label: "", url: "" };
     }
   }, [osType]);
 
   const osOptions = useMemo(() => {
     const options = [
-      { label: 'Windows', url: DOWNLOAD_URLS.WINDOWS, value: 'windows' },
-      { label: 'Mac (Apple Silicon)', url: DOWNLOAD_URLS.MAC_APPLE_SILICON, value: 'mac-apple' },
-      { label: 'Mac (Intel)', url: DOWNLOAD_URLS.MAC_INTEL, value: 'mac-intel' },
-      { label: 'Linux', url: DOWNLOAD_URLS.LINUX_DOCS, value: 'linux' },
+      { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },
+      {
+        label: "Mac (Apple Silicon)",
+        url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
+        value: "mac-apple",
+      },
+      {
+        label: "Mac (Intel)",
+        url: DOWNLOAD_URLS.MAC_INTEL,
+        value: "mac-intel",
+      },
+      { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS, value: "linux" },
     ];
-    return options.filter(opt => opt.url);
+    return options.filter((opt) => opt.url);
   }, []);
 
   // Store selected download URL
@@ -76,7 +87,7 @@ export function useSaasOnboardingState({
   // Resolve flow based on trial status
   const resolvedFlow = useMemo(
     () => resolveSaasFlow(trialStatus, isPro),
-    [trialStatus, isPro]
+    [trialStatus, isPro],
   );
 
   const flowSlideIds = resolvedFlow.ids;
@@ -90,7 +101,8 @@ export function useSaasOnboardingState({
     }
   }, [flowSlideIds.length, currentStep]);
 
-  const currentSlideId = flowSlideIds[currentStep] ?? flowSlideIds[flowSlideIds.length - 1];
+  const currentSlideId =
+    flowSlideIds[currentStep] ?? flowSlideIds[flowSlideIds.length - 1];
   const slideDefinition = SLIDE_DEFINITIONS[currentSlideId];
 
   // Create slide with appropriate params - must be called before any early returns
@@ -103,7 +115,14 @@ export function useSaasOnboardingState({
       onDownloadUrlChange: handleDownloadUrlChange,
       trialStatus: trialStatus ?? undefined,
     });
-  }, [slideDefinition, os.label, os.url, osOptions, handleDownloadUrlChange, trialStatus]);
+  }, [
+    slideDefinition,
+    os.label,
+    os.url,
+    osOptions,
+    handleDownloadUrlChange,
+    trialStatus,
+  ]);
 
   // Navigation functions
   const goNext = useCallback(() => {
@@ -118,7 +137,7 @@ export function useSaasOnboardingState({
   const handleButtonAction = useCallback(
     (action: ButtonAction) => {
       switch (action) {
-        case 'next':
+        case "next":
           // If on last slide, close modal
           if (currentStep === maxIndex) {
             onClose();
@@ -126,17 +145,17 @@ export function useSaasOnboardingState({
             goNext();
           }
           return;
-        case 'prev':
+        case "prev":
           goPrev();
           return;
-        case 'close':
+        case "close":
           onClose();
           return;
-        case 'download-selected': {
+        case "download-selected": {
           // Open download URL in new tab
           const downloadUrl = selectedDownloadUrlRef.current || os.url;
           if (downloadUrl) {
-            window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
           }
           // Then advance to next slide or close if last
           if (currentStep === maxIndex) {
@@ -151,7 +170,7 @@ export function useSaasOnboardingState({
           return;
       }
     },
-    [currentStep, maxIndex, goNext, goPrev, onClose, os.url]
+    [currentStep, maxIndex, goNext, goPrev, onClose, os.url],
   );
 
   const flowState: FlowState = {};

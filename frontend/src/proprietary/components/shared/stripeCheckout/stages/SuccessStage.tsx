@@ -1,7 +1,16 @@
-import React from 'react';
-import { Alert, Stack, Text, Paper, Code, Button, Group, Loader } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { PollingStatus } from '@app/components/shared/stripeCheckout/types/checkout';
+import React from "react";
+import {
+  Alert,
+  Stack,
+  Text,
+  Paper,
+  Code,
+  Button,
+  Group,
+  Loader,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { PollingStatus } from "@app/components/shared/stripeCheckout/types/checkout";
 
 interface SuccessStageProps {
   pollingStatus: PollingStatus;
@@ -19,32 +28,38 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Alert color="green" title={t('payment.success', 'Payment Successful!')}>
+    <Alert color="green" title={t("payment.success", "Payment Successful!")}>
       <Stack gap="md">
         <Text size="sm">
           {t(
-            'payment.successMessage',
-            'Your subscription has been activated successfully.'
+            "payment.successMessage",
+            "Your subscription has been activated successfully.",
           )}
         </Text>
 
         {/* License Key Polling Status */}
-        {pollingStatus === 'polling' && (
+        {pollingStatus === "polling" && (
           <Group gap="xs">
             <Loader size="sm" />
             <Text size="sm" c="dimmed">
               {currentLicenseKey
-                ? t('payment.syncingLicense', 'Syncing your upgraded license...')
-                : t('payment.generatingLicense', 'Generating your license key...')}
+                ? t(
+                    "payment.syncingLicense",
+                    "Syncing your upgraded license...",
+                  )
+                : t(
+                    "payment.generatingLicense",
+                    "Generating your license key...",
+                  )}
             </Text>
           </Group>
         )}
 
-        {pollingStatus === 'ready' && !currentLicenseKey && licenseKey && (
+        {pollingStatus === "ready" && !currentLicenseKey && licenseKey && (
           <Paper withBorder p="md" radius="md" bg="gray.1">
             <Stack gap="sm">
               <Text size="sm" fw={600}>
-                {t('payment.licenseKey', 'Your License Key')}
+                {t("payment.licenseKey", "Your License Key")}
               </Text>
               <Code block>{licenseKey}</Code>
               <Button
@@ -52,48 +67,54 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
                 size="sm"
                 onClick={() => navigator.clipboard.writeText(licenseKey)}
               >
-                {t('common.copy', 'Copy to Clipboard')}
+                {t("common.copy", "Copy to Clipboard")}
               </Button>
               <Text size="xs" c="dimmed">
                 {t(
-                  'payment.licenseInstructions',
-                  'This has been added to your installation. You will receive a copy in your email as well.'
+                  "payment.licenseInstructions",
+                  "This has been added to your installation. You will receive a copy in your email as well.",
                 )}
               </Text>
             </Stack>
           </Paper>
         )}
 
-        {pollingStatus === 'ready' && currentLicenseKey && (
-          <Alert color="green" title={t('payment.upgradeComplete', 'Upgrade Complete')}>
+        {pollingStatus === "ready" && currentLicenseKey && (
+          <Alert
+            color="green"
+            title={t("payment.upgradeComplete", "Upgrade Complete")}
+          >
             <Text size="sm">
               {t(
-                'payment.upgradeCompleteMessage',
-                'Your subscription has been upgraded successfully. Your existing license key has been updated.'
+                "payment.upgradeCompleteMessage",
+                "Your subscription has been upgraded successfully. Your existing license key has been updated.",
               )}
             </Text>
           </Alert>
         )}
 
-        {pollingStatus === 'timeout' && (
-          <Alert color="yellow" title={t('payment.licenseDelayed', 'License Key Processing')}>
+        {pollingStatus === "timeout" && (
+          <Alert
+            color="yellow"
+            title={t("payment.licenseDelayed", "License Key Processing")}
+          >
             <Text size="sm">
               {t(
-                'payment.licenseDelayedMessage',
-                'Your license key is being generated. Please check your email shortly or contact support.'
+                "payment.licenseDelayedMessage",
+                "Your license key is being generated. Please check your email shortly or contact support.",
               )}
             </Text>
           </Alert>
         )}
 
-        {pollingStatus === 'ready' && (
+        {pollingStatus === "ready" && (
           <Text size="xs" c="dimmed">
-            {t('payment.canCloseWindow', 'You can now close this window.')}
+            {t("payment.canCloseWindow", "You can now close this window.")}
           </Text>
         )}
 
         <Button onClick={onClose} mt="md">
-          {t('common.close', 'Close')}
+          {t("common.close", "Close")}
         </Button>
       </Stack>
     </Alert>

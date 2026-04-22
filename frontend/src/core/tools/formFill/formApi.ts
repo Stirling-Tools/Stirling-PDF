@@ -1,22 +1,22 @@
 /**
  * API service for form-related backend calls.
  */
-import apiClient from '@app/services/apiClient';
-import type { FormField } from '@app/tools/formFill/types';
+import apiClient from "@app/services/apiClient";
+import type { FormField } from "@app/tools/formFill/types";
 
 /**
  * Fetch form fields with coordinates from the backend.
  * Calls POST /api/v1/form/fields-with-coordinates
  */
 export async function fetchFormFieldsWithCoordinates(
-  file: File | Blob
+  file: File | Blob,
 ): Promise<FormField[]> {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
 
   const response = await apiClient.post<FormField[]>(
-    '/api/v1/form/fields-with-coordinates',
-    formData
+    "/api/v1/form/fields-with-coordinates",
+    formData,
   );
   return response.data;
 }
@@ -28,18 +28,18 @@ export async function fetchFormFieldsWithCoordinates(
 export async function fillFormFields(
   file: File | Blob,
   values: Record<string, string>,
-  flatten: boolean = false
+  flatten: boolean = false,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
   formData.append(
-    'data',
-    new Blob([JSON.stringify(values)], { type: 'application/json' })
+    "data",
+    new Blob([JSON.stringify(values)], { type: "application/json" }),
   );
-  formData.append('flatten', String(flatten));
+  formData.append("flatten", String(flatten));
 
-  const response = await apiClient.post('/api/v1/form/fill', formData, {
-    responseType: 'blob',
+  const response = await apiClient.post("/api/v1/form/fill", formData, {
+    responseType: "blob",
   });
   return response.data;
 }
@@ -50,19 +50,19 @@ export async function fillFormFields(
  */
 export async function extractFormFieldsCsv(
   file: File | Blob,
-  values?: Record<string, string>
+  values?: Record<string, string>,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
   if (values) {
     formData.append(
-      'data',
-      new Blob([JSON.stringify(values)], { type: 'application/json' })
+      "data",
+      new Blob([JSON.stringify(values)], { type: "application/json" }),
     );
   }
 
-  const response = await apiClient.post('/api/v1/form/extract-csv', formData, {
-    responseType: 'blob',
+  const response = await apiClient.post("/api/v1/form/extract-csv", formData, {
+    responseType: "blob",
   });
   return response.data;
 }
@@ -73,20 +73,19 @@ export async function extractFormFieldsCsv(
  */
 export async function extractFormFieldsXlsx(
   file: File | Blob,
-  values?: Record<string, string>
+  values?: Record<string, string>,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
   if (values) {
     formData.append(
-      'data',
-      new Blob([JSON.stringify(values)], { type: 'application/json' })
+      "data",
+      new Blob([JSON.stringify(values)], { type: "application/json" }),
     );
   }
 
-  const response = await apiClient.post('/api/v1/form/extract-xlsx', formData, {
-    responseType: 'blob',
+  const response = await apiClient.post("/api/v1/form/extract-xlsx", formData, {
+    responseType: "blob",
   });
   return response.data;
 }
-

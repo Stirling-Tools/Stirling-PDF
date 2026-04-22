@@ -1,5 +1,9 @@
-import { PdfiumFont, PdfiumPage, PdfiumImage } from '@app/services/pdfiumDocBuilder';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import {
+  PdfiumFont,
+  PdfiumPage,
+  PdfiumImage,
+} from "@app/services/pdfiumDocBuilder";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 export const drawThumbnailPlaceholder = (
   page: PdfiumPage,
@@ -7,7 +11,7 @@ export const drawThumbnailPlaceholder = (
   x: number,
   top: number,
   width: number,
-  height: number
+  height: number,
 ) => {
   page.drawRectangle({
     x,
@@ -19,7 +23,7 @@ export const drawThumbnailPlaceholder = (
     borderWidth: 1,
   });
 
-  const label = 'PDF';
+  const label = "PDF";
   const labelSize = 22;
   const labelWidth = fontBold.widthOfTextAtSize(label, labelSize);
   const labelX = x + (width - labelWidth) / 2;
@@ -40,7 +44,7 @@ export const drawThumbnailImage = (
   x: number,
   top: number,
   width: number,
-  height: number
+  height: number,
 ) => {
   const scaled = image.scaleToFit(width - 16, height - 16);
   const offsetX = x + (width - scaled.width) / 2;

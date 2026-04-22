@@ -1,13 +1,21 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Box, ScrollArea, Text, ActionIcon, Loader, Stack, TextInput } from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { PdfAttachmentObject } from '@embedpdf/models';
-import AttachmentIcon from '@mui/icons-material/AttachmentRounded';
-import DownloadIcon from '@mui/icons-material/DownloadRounded';
-import { useTranslation } from 'react-i18next';
-import '@app/components/viewer/SidebarBase.css';
-import '@app/components/viewer/AttachmentSidebar.css';
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import {
+  Box,
+  ScrollArea,
+  Text,
+  ActionIcon,
+  Loader,
+  Stack,
+  TextInput,
+} from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { PdfAttachmentObject } from "@embedpdf/models";
+import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
+import DownloadIcon from "@mui/icons-material/DownloadRounded";
+import { useTranslation } from "react-i18next";
+import "@app/components/viewer/SidebarBase.css";
+import "@app/components/viewer/AttachmentSidebar.css";
 
 interface AttachmentSidebarProps {
   visible: boolean;
@@ -17,29 +25,41 @@ interface AttachmentSidebarProps {
   preloadCacheKeys?: string[];
 }
 
-const SIDEBAR_WIDTH = '15rem';
+const SIDEBAR_WIDTH = "15rem";
 
 interface AttachmentCacheEntry {
-  status: 'idle' | 'loading' | 'success' | 'error';
+  status: "idle" | "loading" | "success" | "error";
   attachments: PdfAttachmentObject[] | null;
   error: string | null;
   lastFetched: number | null;
 }
 
-const createEntry = (overrides: Partial<AttachmentCacheEntry> = {}): AttachmentCacheEntry => ({
-  status: 'idle',
+const createEntry = (
+  overrides: Partial<AttachmentCacheEntry> = {},
+): AttachmentCacheEntry => ({
+  status: "idle",
   attachments: null,
   error: null,
   lastFetched: null,
   ...overrides,
 });
 
-export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, documentCacheKey, preloadCacheKeys = [] }: AttachmentSidebarProps) => {
+export const AttachmentSidebar = ({
+  visible,
+  thumbnailVisible,
+  bookmarkVisible,
+  documentCacheKey,
+  preloadCacheKeys = [],
+}: AttachmentSidebarProps) => {
   const { t } = useTranslation();
   const { attachmentActions, hasAttachmentSupport } = useViewer();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [attachmentSupport, setAttachmentSupport] = useState(() => hasAttachmentSupport());
-  const [activeEntry, setActiveEntry] = useState<AttachmentCacheEntry>(() => createEntry());
+  const [searchTerm, setSearchTerm] = useState("");
+  const [attachmentSupport, setAttachmentSupport] = useState(() =>
+    hasAttachmentSupport(),
+  );
+  const [activeEntry, setActiveEntry] = useState<AttachmentCacheEntry>(() =>
+    createEntry(),
+  );
   const cacheRef = useRef<Map<string, AttachmentCacheEntry>>(new Map());
   const [fetchNonce, setFetchNonce] = useState(0);
   const currentKeyRef = useRef<string | null>(documentCacheKey ?? null);
@@ -67,7 +87,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
 
   // Reset UI and load cached entry (if any) when switching documents
   useEffect(() => {
-    setSearchTerm('');
+    setSearchTerm("");
 
     if (!documentCacheKey) {
       setActiveEntry(createEntry());
@@ -78,10 +98,13 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
     const cached = cacheRef.current.get(documentCacheKey);
     if (cached) {
       setActiveEntry(cached);
-      if (cached.status === 'success') {
+      if (cached.status === "success") {
         attachmentActions.setLocalAttachments(cached.attachments ?? [], null);
-      } else if (cached.status === 'error') {
-        attachmentActions.setLocalAttachments(cached.attachments ?? null, cached.error);
+      } else if (cached.status === "error") {
+        attachmentActions.setLocalAttachments(
+          cached.attachments ?? null,
+          cached.error,
+        );
       } else {
         attachmentActions.clearAttachments();
       }
@@ -97,7 +120,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
     if (documentCacheKey) {
       allowed.add(documentCacheKey);
     }
-    preloadCacheKeys.forEach(key => {
+    preloadCacheKeys.forEach((key) => {
       if (key) {
         allowed.add(key);
       }
@@ -116,7 +139,10 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
 
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
-    if (cached && (cached.status === 'loading' || cached.status === 'success')) {
+    if (
+      cached &&
+      (cached.status === "loading" || cached.status === "success")
+    ) {
       return;
     }
 
@@ -128,11 +154,13 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
       }
     };
 
-    updateEntry(createEntry({
-      status: 'loading',
-      attachments: cached?.attachments ?? null,
-      lastFetched: cached?.lastFetched ?? null,
-    }));
+    updateEntry(
+      createEntry({
+        status: "loading",
+        attachments: cached?.attachments ?? null,
+        lastFetched: cached?.lastFetched ?? null,
+      }),
+    );
 
     const fetchWithRetry = async () => {
       const maxAttempts = 10;
@@ -141,27 +169,30 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           const result = await attachmentActions.getAttachments();
           return Array.isArray(result) ? result : [];
         } catch (error: any) {
-          const message = typeof error?.message === 'string' ? error.message.toLowerCase() : '';
+          const message =
+            typeof error?.message === "string"
+              ? error.message.toLowerCase()
+              : "";
           const notReady =
-            message.includes('document') &&
-            message.includes('not') &&
-            message.includes('open');
+            message.includes("document") &&
+            message.includes("not") &&
+            message.includes("open");
 
           if (!notReady || attempt === maxAttempts - 1) {
             throw error;
           }
 
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
       return [];
     };
 
     fetchWithRetry()
-      .then(attachments => {
+      .then((attachments) => {
         if (cancelled) return;
         const entry = createEntry({
-          status: 'success',
+          status: "success",
           attachments,
           lastFetched: Date.now(),
         });
@@ -170,12 +201,13 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           attachmentActions.setLocalAttachments(attachments, null);
         }
       })
-      .catch(error => {
+      .catch((error) => {
         if (cancelled) return;
-        const message = error instanceof Error ? error.message : 'Failed to load attachments';
+        const message =
+          error instanceof Error ? error.message : "Failed to load attachments";
         const fallback = cacheRef.current.get(key);
         const entry = createEntry({
-          status: 'error',
+          status: "error",
           attachments: fallback?.attachments ?? null,
           error: message,
           lastFetched: fallback?.lastFetched ?? null,
@@ -196,40 +228,48 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
     cacheRef.current.delete(documentCacheKey);
     setActiveEntry(createEntry());
     attachmentActions.clearAttachments();
-    setFetchNonce(value => value + 1);
+    setFetchNonce((value) => value + 1);
   }, [documentCacheKey, attachmentActions]);
 
-  const handleDownload = (attachment: PdfAttachmentObject, event: React.MouseEvent) => {
+  const handleDownload = (
+    attachment: PdfAttachmentObject,
+    event: React.MouseEvent,
+  ) => {
     event.stopPropagation();
     attachmentActions.downloadAttachment(attachment);
   };
 
   const filteredAttachments = useMemo(() => {
-    const attachments = Array.isArray(activeEntry.attachments) ? activeEntry.attachments : [];
+    const attachments = Array.isArray(activeEntry.attachments)
+      ? activeEntry.attachments
+      : [];
     if (!searchTerm.trim()) return attachments;
     const term = searchTerm.trim().toLowerCase();
-    return attachments.filter(a => a.name?.toLowerCase().includes(term));
+    return attachments.filter((a) => a.name?.toLowerCase().includes(term));
   }, [activeEntry.attachments, searchTerm]);
 
   const formatFileSize = (bytes?: number) => {
-    if (bytes === undefined) return '';
-    if (bytes === 0) return '0 B';
+    if (bytes === undefined) return "";
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   const renderAttachments = (attachments: PdfAttachmentObject[]) => {
     return attachments.map((attachment, index) => (
-      <div key={`${attachment.name}-${index}`} className="attachment-item-wrapper">
+      <div
+        key={`${attachment.name}-${index}`}
+        className="attachment-item-wrapper"
+      >
         <div
           className="attachment-item"
           onClick={(event) => handleDownload(attachment, event)}
           role="button"
           tabIndex={0}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
+            if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
               handleDownload(attachment, event as any);
             }
@@ -237,11 +277,13 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
         >
           <div className="attachment-item__content">
             <Text size="sm" fw={500} className="attachment-item__title">
-              {attachment.name || 'Untitled'}
+              {attachment.name || "Untitled"}
             </Text>
             {(attachment.size !== undefined || attachment.description) && (
               <Text size="xs" c="dimmed" className="attachment-item__meta">
-                {[formatFileSize(attachment.size), attachment.description].filter(Boolean).join(' • ')}
+                {[formatFileSize(attachment.size), attachment.description]
+                  .filter(Boolean)
+                  .join(" • ")}
               </Text>
             )}
           </div>
@@ -251,7 +293,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
             className="attachment-item__download-icon"
             onClick={(event) => handleDownload(attachment, event)}
           >
-            <DownloadIcon sx={{ fontSize: '1.2rem' }} />
+            <DownloadIcon sx={{ fontSize: "1.2rem" }} />
           </ActionIcon>
         </div>
       </div>
@@ -263,17 +305,23 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
   }
 
   const isSearchActive = searchTerm.trim().length > 0;
-  const hasAttachments = Array.isArray(activeEntry.attachments) && activeEntry.attachments.length > 0;
-  const isLocalLoading = attachmentSupport && activeEntry.status === 'loading';
-  const currentError = attachmentSupport && activeEntry.status === 'error' ? activeEntry.error : null;
+  const hasAttachments =
+    Array.isArray(activeEntry.attachments) &&
+    activeEntry.attachments.length > 0;
+  const isLocalLoading = attachmentSupport && activeEntry.status === "loading";
+  const currentError =
+    attachmentSupport && activeEntry.status === "error"
+      ? activeEntry.error
+      : null;
 
-  const showAttachmentList = attachmentSupport && documentCacheKey && filteredAttachments.length > 0;
+  const showAttachmentList =
+    attachmentSupport && documentCacheKey && filteredAttachments.length > 0;
   const showEmptyState =
     attachmentSupport &&
     documentCacheKey &&
     !isLocalLoading &&
     !currentError &&
-    activeEntry.status === 'success' &&
+    activeEntry.status === "success" &&
     !hasAttachments;
   const showSearchEmpty =
     attachmentSupport &&
@@ -287,7 +335,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
     <Box
       className="sidebar-base attachment-sidebar"
       style={{
-        position: 'fixed',
+        position: "fixed",
         right: `${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`,
         top: 0,
         bottom: 0,
@@ -301,27 +349,42 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
             <AttachmentIcon />
           </span>
           <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
-            {t('viewer.attachments.title', 'Attachments')}
+            {t("viewer.attachments.title", "Attachments")}
           </Text>
         </div>
       </div>
 
-      <Box px="sm" pb="sm" className="sidebar-base__search attachment-sidebar__search">
+      <Box
+        px="sm"
+        pb="sm"
+        className="sidebar-base__search attachment-sidebar__search"
+      >
         <TextInput
           value={searchTerm}
-          placeholder={t('viewer.attachments.searchPlaceholder', 'Search attachments')}
+          placeholder={t(
+            "viewer.attachments.searchPlaceholder",
+            "Search attachments",
+          )}
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={<LocalIcon icon="search" width="1.1rem" height="1.1rem" />}
+          leftSection={
+            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
+          }
           size="xs"
         />
       </Box>
 
       <ScrollArea style={{ flex: 1 }}>
-        <Box p="sm" className="sidebar-base__content attachment-sidebar__content">
+        <Box
+          p="sm"
+          className="sidebar-base__content attachment-sidebar__content"
+        >
           {!attachmentSupport && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
-                {t('viewer.attachments.noSupport', 'Attachment support is unavailable for this viewer.')}
+                {t(
+                  "viewer.attachments.noSupport",
+                  "Attachment support is unavailable for this viewer.",
+                )}
               </Text>
             </div>
           )}
@@ -329,7 +392,10 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           {attachmentSupport && showNoDocument && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
-                {t('viewer.attachments.noDocument', 'Open a PDF to view its attachments.')}
+                {t(
+                  "viewer.attachments.noDocument",
+                  "Open a PDF to view its attachments.",
+                )}
               </Text>
             </div>
           )}
@@ -346,10 +412,16 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           )}
 
           {attachmentSupport && documentCacheKey && isLocalLoading && (
-            <Stack gap="md" align="center" c="dimmed" py="xl" className="sidebar-base__loading">
+            <Stack
+              gap="md"
+              align="center"
+              c="dimmed"
+              py="xl"
+              className="sidebar-base__loading"
+            >
               <Loader size="md" type="dots" />
               <Text size="sm" ta="center">
-                {t('viewer.attachments.loading', 'Loading attachments...')}
+                {t("viewer.attachments.loading", "Loading attachments...")}
               </Text>
             </Stack>
           )}
@@ -357,7 +429,10 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           {showEmptyState && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
-                {t('viewer.attachments.empty', 'No attachments in this document')}
+                {t(
+                  "viewer.attachments.empty",
+                  "No attachments in this document",
+                )}
               </Text>
             </div>
           )}
@@ -371,7 +446,10 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           {showSearchEmpty && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
-                {t('viewer.attachments.noMatch', 'No attachments match your search')}
+                {t(
+                  "viewer.attachments.noMatch",
+                  "No attachments match your search",
+                )}
               </Text>
             </div>
           )}

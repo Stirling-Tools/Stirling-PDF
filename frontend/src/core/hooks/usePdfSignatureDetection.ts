@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { StirlingFile } from '@app/types/fileContext';
+import { useState, useEffect } from "react";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { StirlingFile } from "@app/types/fileContext";
 
 export interface PdfSignatureDetectionResult {
   hasDigitalSignatures: boolean;
   isChecking: boolean;
 }
 
-export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDetectionResult => {
+export const usePdfSignatureDetection = (
+  files: StirlingFile[],
+): PdfSignatureDetectionResult => {
   const [hasDigitalSignatures, setHasDigitalSignatures] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -22,7 +24,6 @@ export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDet
       let foundSignature = false;
 
       try {
-
         for (const file of files) {
           const arrayBuffer = await file.arrayBuffer();
 
@@ -31,10 +32,15 @@ export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDet
 
             for (let i = 1; i <= pdf.numPages; i++) {
               const page = await pdf.getPage(i);
-              const annotations = await page.getAnnotations({ intent: 'display' });
+              const annotations = await page.getAnnotations({
+                intent: "display",
+              });
 
               annotations.forEach((annotation: any) => {
-                if (annotation.subtype === 'Widget' && annotation.fieldType === 'Sig') {
+                if (
+                  annotation.subtype === "Widget" &&
+                  annotation.fieldType === "Sig"
+                ) {
                   foundSignature = true;
                 }
               });
@@ -45,13 +51,13 @@ export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDet
             // Clean up PDF document using worker manager
             pdfWorkerManager.destroyDocument(pdf);
           } catch (error) {
-            console.warn('Error analyzing PDF for signatures:', error);
+            console.warn("Error analyzing PDF for signatures:", error);
           }
 
           if (foundSignature) break;
         }
       } catch (error) {
-        console.warn('Error checking for digital signatures:', error);
+        console.warn("Error checking for digital signatures:", error);
       }
 
       setHasDigitalSignatures(foundSignature);
@@ -63,6 +69,6 @@ export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDet
 
   return {
     hasDigitalSignatures,
-    isChecking
+    isChecking,
   };
 };

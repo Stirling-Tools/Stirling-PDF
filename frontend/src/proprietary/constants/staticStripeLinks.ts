@@ -20,14 +20,14 @@ export interface StaticStripeLinks {
 // PRODCUTION LINKS FOR LIVE SERVER
 export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
   server: {
-    monthly: 'https://buy.stripe.com/fZu4gB8Nv6ysfAj0ts8Zq03',
-    yearly: 'https://buy.stripe.com/9B68wR6Fn0a40Fpcca8Zq02',
+    monthly: "https://buy.stripe.com/fZu4gB8Nv6ysfAj0ts8Zq03",
+    yearly: "https://buy.stripe.com/9B68wR6Fn0a40Fpcca8Zq02",
   },
   enterprise: {
-    monthly: '',
-    yearly: '',
+    monthly: "",
+    yearly: "",
   },
-  billingPortal: 'https://billing.stripe.com/p/login/5kA6pT6Xa7z59HO4gg',
+  billingPortal: "https://billing.stripe.com/p/login/5kA6pT6Xa7z59HO4gg",
 };
 
 // LINKS FOR TEST SERVER:
@@ -49,7 +49,10 @@ export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
  * @param email - The email address to prefill
  * @returns The complete URL with encoded email parameter
  */
-export function buildStripeUrlWithEmail(baseUrl: string, email: string): string {
+export function buildStripeUrlWithEmail(
+  baseUrl: string,
+  email: string,
+): string {
   const encodedEmail = encodeURIComponent(email);
   return `${baseUrl}?locked_prefilled_email=${encodedEmail}`;
 }

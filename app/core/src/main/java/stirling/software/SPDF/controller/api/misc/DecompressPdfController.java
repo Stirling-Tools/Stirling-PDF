@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
@@ -14,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -26,6 +26,8 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -34,12 +36,13 @@ import stirling.software.common.util.WebResponseUtils;
 public class DecompressPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(value = "/decompress-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")
-    public ResponseEntity<byte[]> decompressPdf(@ModelAttribute PDFFile request)
+    public ResponseEntity<StreamingResponseBody> decompressPdf(@ModelAttribute PDFFile request)
             throws IOException {
 
         MultipartFile file = request.getFileInput();
@@ -48,13 +51,18 @@ public class DecompressPdfController {
             // Process all objects in document
             processAllObjects(document);
 
-            // Save with explicit no compression
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos, CompressParameters.NO_COMPRESSION);
+            // Save with explicit no compression to a temp file
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                document.save(tempOut.getFile(), CompressParameters.NO_COMPRESSION);
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
+            }
 
-            // Return the PDF as a response
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(),
+            // Return the PDF as a streaming response
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOut,
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
         }
     }

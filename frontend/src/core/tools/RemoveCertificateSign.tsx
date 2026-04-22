@@ -9,10 +9,10 @@ const RemoveCertificateSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'removeCertificateSign',
+    "removeCertificateSign",
     useRemoveCertificateSignParameters,
     useRemoveCertificateSignOperation,
-    props
+    props,
   );
 
   return createToolFlow({

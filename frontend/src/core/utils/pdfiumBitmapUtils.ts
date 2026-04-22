@@ -9,7 +9,7 @@
  * the colour-channel swizzle in a plain JS TypedArray and then bulk-
  * copy the result into the WASM heap with a single `HEAPU8.set()`.
  */
-import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 /** FPDF_ANNOT_LINK */
 export const FPDF_ANNOT_LINK = 4;
@@ -51,26 +51,25 @@ export function copyRgbaToBgraHeap(
     // Fast path: no padding — single bulk copy after swizzle
     const bgra = new Uint8Array(rgba.length);
     for (let i = 0; i < rgba.length; i += 4) {
-      bgra[i]     = rgba[i + 2]; // B
+      bgra[i] = rgba[i + 2]; // B
       bgra[i + 1] = rgba[i + 1]; // G
-      bgra[i + 2] = rgba[i];     // R
+      bgra[i + 2] = rgba[i]; // R
       bgra[i + 3] = rgba[i + 3]; // A
     }
-    new Uint8Array(
-      (m.pdfium.wasmExports as any).memory.buffer,
-    ).set(bgra, bufferPtr);
+    new Uint8Array((m.pdfium.wasmExports as any).memory.buffer).set(
+      bgra,
+      bufferPtr,
+    );
   } else {
     // Stride has padding — swizzle + copy row by row
     const rowBuf = new Uint8Array(rowBytes);
-    const heap = new Uint8Array(
-      (m.pdfium.wasmExports as any).memory.buffer,
-    );
+    const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
     for (let y = 0; y < height; y++) {
       const srcRowStart = y * rowBytes;
       for (let x = 0; x < rowBytes; x += 4) {
-        rowBuf[x]     = rgba[srcRowStart + x + 2]; // B
+        rowBuf[x] = rgba[srcRowStart + x + 2]; // B
         rowBuf[x + 1] = rgba[srcRowStart + x + 1]; // G
-        rowBuf[x + 2] = rgba[srcRowStart + x];     // R
+        rowBuf[x + 2] = rgba[srcRowStart + x]; // R
         rowBuf[x + 3] = rgba[srcRowStart + x + 3]; // A
       }
       heap.set(rowBuf, bufferPtr + y * stride);
@@ -107,12 +106,24 @@ export function embedBitmapImageOnPage(
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
     const stride = m.FPDFBitmap_GetStride(bitmapPtr);
 
-    copyRgbaToBgraHeap(m, image.rgba, bufferPtr, image.width, image.height, stride);
+    copyRgbaToBgraHeap(
+      m,
+      image.rgba,
+      bufferPtr,
+      image.width,
+      image.height,
+      stride,
+    );
 
     const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
     if (!imageObjPtr) return false;
 
-    const setBitmapOk = m.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjPtr, bitmapPtr);
+    const setBitmapOk = m.FPDFImageObj_SetBitmap(
+      pagePtr,
+      0,
+      imageObjPtr,
+      bitmapPtr,
+    );
     if (!setBitmapOk) {
       m.FPDFPageObj_Destroy(imageObjPtr);
       return false;
@@ -124,12 +135,12 @@ export function embedBitmapImageOnPage(
     // Set affine transform: [a b c d e f]
     const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
     try {
-      m.pdfium.setValue(matrixPtr,      drawWidth,  'float'); // a — scaleX
-      m.pdfium.setValue(matrixPtr + 4,  0,          'float'); // b
-      m.pdfium.setValue(matrixPtr + 8,  0,          'float'); // c
-      m.pdfium.setValue(matrixPtr + 12, drawHeight, 'float'); // d — scaleY
-      m.pdfium.setValue(matrixPtr + 16, pdfX,       'float'); // e — translateX
-      m.pdfium.setValue(matrixPtr + 20, pdfY,       'float'); // f — translateY
+      m.pdfium.setValue(matrixPtr, drawWidth, "float"); // a — scaleX
+      m.pdfium.setValue(matrixPtr + 4, 0, "float"); // b
+      m.pdfium.setValue(matrixPtr + 8, 0, "float"); // c
+      m.pdfium.setValue(matrixPtr + 12, drawHeight, "float"); // d — scaleY
+      m.pdfium.setValue(matrixPtr + 16, pdfX, "float"); // e — translateX
+      m.pdfium.setValue(matrixPtr + 20, pdfY, "float"); // f — translateY
 
       if (!m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr)) {
         m.FPDFPageObj_Destroy(imageObjPtr);
@@ -146,7 +157,11 @@ export function embedBitmapImageOnPage(
     // builds but guard anyway.  If already destroyed above, the second call
     // is harmless because we allow it to be idempotent.
     // We use a try-catch to be safe across PDFium WASM builds.
-    try { m.FPDFBitmap_Destroy(bitmapPtr); } catch { /* already freed */ }
+    try {
+      m.FPDFBitmap_Destroy(bitmapPtr);
+    } catch {
+      /* already freed */
+    }
   }
 }
 /**
@@ -183,16 +198,21 @@ export function drawPlaceholderRect(
  * Decode an image data URL (e.g. `data:image/png;base64,...`) to raw RGBA
  * pixel data via an offscreen canvas.
  */
-export function decodeImageDataUrl(dataUrl: string): Promise<DecodedImage | null> {
+export function decodeImageDataUrl(
+  dataUrl: string,
+): Promise<DecodedImage | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       try {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) { resolve(null); return; }
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         resolve({
@@ -200,7 +220,9 @@ export function decodeImageDataUrl(dataUrl: string): Promise<DecodedImage | null
           width: canvas.width,
           height: canvas.height,
         });
-      } catch { resolve(null); }
+      } catch {
+        resolve(null);
+      }
     };
     img.onerror = () => resolve(null);
     img.src = dataUrl;

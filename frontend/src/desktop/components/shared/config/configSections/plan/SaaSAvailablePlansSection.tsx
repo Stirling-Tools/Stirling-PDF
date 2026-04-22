@@ -1,10 +1,10 @@
-import React from 'react';
-import { Text, SimpleGrid, Loader, Alert, Center } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { PlanTier } from '@app/hooks/useSaaSPlans';
-import { SaasPlanCard } from '@app/components/shared/config/configSections/plan/SaasPlanCard';
-import { useSaaSCheckout } from '@app/contexts/SaaSCheckoutContext';
-import type { TierLevel } from '@app/types/billing';
+import React from "react";
+import { Text, SimpleGrid, Loader, Alert, Center } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { PlanTier } from "@app/hooks/useSaaSPlans";
+import { SaasPlanCard } from "@app/components/shared/config/configSections/plan/SaasPlanCard";
+import { useSaaSCheckout } from "@app/contexts/SaaSCheckoutContext";
+import type { TierLevel } from "@app/types/billing";
 
 interface SaaSAvailablePlansSectionProps {
   plans: PlanTier[];
@@ -13,12 +13,9 @@ interface SaaSAvailablePlansSectionProps {
   error?: string | null;
 }
 
-export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps> = ({
-  plans,
-  currentTier,
-  loading,
-  error
-}) => {
+export const SaaSAvailablePlansSection: React.FC<
+  SaaSAvailablePlansSectionProps
+> = ({ plans, currentTier, loading, error }) => {
   const { t } = useTranslation();
   const { openCheckout } = useSaaSCheckout();
 
@@ -33,7 +30,10 @@ export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps>
       return;
     }
 
-    console.log('[SaaSAvailablePlansSection] Upgrade clicked for plan:', plan.id);
+    console.log(
+      "[SaaSAvailablePlansSection] Upgrade clicked for plan:",
+      plan.id,
+    );
     openCheckout(plan.id);
   };
 
@@ -49,7 +49,10 @@ export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps>
     return (
       <Alert color="orange" variant="light" mt="md">
         <Text size="sm">
-          {t('plan.availablePlans.loadError', 'Unable to load plan pricing. Using default values.')}
+          {t(
+            "plan.availablePlans.loadError",
+            "Unable to load plan pricing. Using default values.",
+          )}
         </Text>
       </Alert>
     );
@@ -58,10 +61,10 @@ export const SaaSAvailablePlansSection: React.FC<SaaSAvailablePlansSectionProps>
   return (
     <div>
       <Text size="lg" fw={600} mb="md">
-        {t('plan.availablePlans.title', 'Available Plans')}
+        {t("plan.availablePlans.title", "Available Plans")}
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-        {plans.map(plan => (
+        {plans.map((plan) => (
           <SaasPlanCard
             key={plan.id}
             plan={plan}

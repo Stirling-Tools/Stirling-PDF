@@ -1,4 +1,5 @@
-import { handleHttpError as coreHandleHttpError } from '@core/services/httpErrorHandler';
+import { isAxiosError } from "axios";
+import { handleHttpError as coreHandleHttpError } from "@core/services/httpErrorHandler";
 
 /**
  * Desktop override of handleHttpError.
@@ -6,8 +7,8 @@ import { handleHttpError as coreHandleHttpError } from '@core/services/httpError
  * login page must not appear. Instead, open the SignInModal for re-authentication.
  * All other error handling delegates to the core implementation.
  */
-export async function handleHttpError(error: any): Promise<boolean> {
-  const status: number | undefined = error?.response?.status;
+export async function handleHttpError(error: unknown): Promise<boolean> {
+  const status = isAxiosError(error) ? error.response?.status : undefined;
 
   if (status === 401) {
     // In desktop builds, 401s are handled by the auth service (token refresh + toast

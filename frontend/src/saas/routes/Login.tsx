@@ -1,202 +1,238 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase, signInAnonymously } from '@app/auth/supabase'
-import { useAuth } from '@app/auth/UseSession'
-import { useTranslation } from '@app/hooks/useTranslation'
-import { useDocumentMeta } from '@app/hooks/useDocumentMeta'
-import AuthLayout from '@app/routes/authShared/AuthLayout'
-import '@app/routes/authShared/auth.css'
-import '@app/routes/authShared/saas-auth.css'
-import GuestSignInButton from '@app/routes/authShared/GuestSignInButton'
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase, signInAnonymously } from "@app/auth/supabase";
+import { useAuth } from "@app/auth/UseSession";
+import { useTranslation } from "@app/hooks/useTranslation";
+import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
+import AuthLayout from "@app/routes/authShared/AuthLayout";
+import "@app/routes/authShared/auth.css";
+import "@app/routes/authShared/saas-auth.css";
+import GuestSignInButton from "@app/routes/authShared/GuestSignInButton";
 
 // Import login components
-import LoginHeader from '@app/routes/login/LoginHeader'
-import ErrorMessage from '@app/routes/login/ErrorMessage'
-import EmailPasswordForm from '@app/routes/login/EmailPasswordForm'
-import MagicLinkForm from '@app/routes/login/MagicLinkForm'
-import OAuthButtons from '@app/routes/login/OAuthButtons'
-import DividerWithText from '@app/components/shared/DividerWithText'
-import LoggedInState from '@app/routes/login/LoggedInState'
-import { absoluteWithBasePath, getBaseUrl } from '@app/constants/app'
+import LoginHeader from "@app/routes/login/LoginHeader";
+import ErrorMessage from "@app/routes/login/ErrorMessage";
+import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
+import MagicLinkForm from "@app/routes/login/MagicLinkForm";
+import OAuthButtons from "@app/routes/login/OAuthButtons";
+import DividerWithText from "@app/components/shared/DividerWithText";
+import LoggedInState from "@app/routes/login/LoggedInState";
+import { absoluteWithBasePath, getBaseUrl } from "@app/constants/app";
 
 export default function Login() {
-  const navigate = useNavigate()
-  const { session, loading, refreshSession } = useAuth()
-  const { t } = useTranslation()
-  const [isSigningIn, setIsSigningIn] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showMagicLink, setShowMagicLink] = useState(false)
-  const [showEmailForm, setShowEmailForm] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [magicLinkEmail, setMagicLinkEmail] = useState('')
+  const navigate = useNavigate();
+  const { session, loading, refreshSession } = useAuth();
+  const { t } = useTranslation();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
   // Prefill email from query param (e.g. after password reset)
   useEffect(() => {
     try {
-      const url = new URL(window.location.href)
-      const emailFromQuery = url.searchParams.get('email')
+      const url = new URL(window.location.href);
+      const emailFromQuery = url.searchParams.get("email");
       if (emailFromQuery) {
-        setEmail(emailFromQuery)
+        setEmail(emailFromQuery);
       }
     } catch (_) {
       // ignore
     }
-  }, [])
+  }, []);
 
   const baseUrl = getBaseUrl();
 
   // Set document meta
   useDocumentMeta({
-    title: `${t('login.title', 'Sign in')} - Stirling PDF`,
-    description: t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogTitle: `${t('login.title', 'Sign in')} - Stirling PDF`,
-    ogDescription: t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    title: `${t("login.title", "Sign in")} - Stirling PDF`,
+    description: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
+    ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
+    ogDescription: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogImage: `${baseUrl}/og_images/home.png`,
-    ogUrl: `${window.location.origin}${window.location.pathname}`
-  })
+    ogUrl: `${window.location.origin}${window.location.pathname}`,
+  });
 
   // Show logged in state if authenticated
   if (session && !loading) {
-    return <LoggedInState />
+    return <LoggedInState />;
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'apple' | 'azure') => {
+  const signInWithProvider = async (
+    provider: "github" | "google" | "apple" | "azure",
+  ) => {
     try {
-      setIsSigningIn(true)
-      setError(null)
+      setIsSigningIn(true);
+      setError(null);
 
-      const redirectTo = absoluteWithBasePath('/auth/callback')
-      console.log(`[Login] Signing in with ${provider}`)
+      const redirectTo = absoluteWithBasePath("/auth/callback");
+      console.log(`[Login] Signing in with ${provider}`);
 
-      const oauthOptions: { redirectTo: string; queryParams?: Record<string, string> } = { redirectTo }
-      if (provider === 'apple') {
-        oauthOptions.queryParams = { scope: 'email name' }
-      } else if (provider === 'azure') {
-        oauthOptions.queryParams = { scope: 'openid profile email' }
+      const oauthOptions: {
+        redirectTo: string;
+        queryParams?: Record<string, string>;
+      } = { redirectTo };
+      if (provider === "apple") {
+        oauthOptions.queryParams = { scope: "email name" };
+      } else if (provider === "azure") {
+        oauthOptions.queryParams = { scope: "openid profile email" };
       } else {
         oauthOptions.queryParams = {
-          access_type: 'offline',
-          prompt: 'consent',
-        }
+          access_type: "offline",
+          prompt: "consent",
+        };
       }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: oauthOptions
-      })
+        options: oauthOptions,
+      });
 
       if (error) {
-        console.error(`[Login] ${provider} error:`, error)
-        setError(t('login.failedToSignIn', { provider, message: error.message }))
+        console.error(`[Login] ${provider} error:`, error);
+        setError(
+          t("login.failedToSignIn", { provider, message: error.message }),
+        );
       }
     } catch (err) {
-      console.error(`[Login] Unexpected error:`, err)
-      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
+      console.error(`[Login] Unexpected error:`, err);
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
-      setIsSigningIn(false)
+      setIsSigningIn(false);
     }
-  }
+  };
 
   const signInWithEmail = async () => {
     if (!email || !password) {
-      setError(t('login.pleaseEnterBoth'))
-      return
+      setError(t("login.pleaseEnterBoth"));
+      return;
     }
 
     try {
-      setIsSigningIn(true)
-      setError(null)
+      setIsSigningIn(true);
+      setError(null);
 
-      console.log('[Login] Signing in with email:', email)
+      console.log("[Login] Signing in with email:", email);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password
-      })
+        password: password,
+      });
 
       if (error) {
-        console.error('[Login] Email sign in error:', error)
-        setError(error.message)
+        console.error("[Login] Email sign in error:", error);
+        setError(error.message);
       } else if (data.user) {
-        console.log('[Login] Email sign in successful')
+        console.log("[Login] Email sign in successful");
         // User will be redirected by the auth state change
       }
     } catch (err) {
-      console.error('[Login] Unexpected error]:', err)
-      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
+      console.error("[Login] Unexpected error]:", err);
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
-      setIsSigningIn(false)
+      setIsSigningIn(false);
     }
-  }
+  };
 
   const signInWithMagicLink = async () => {
     if (!magicLinkEmail) {
-      setError(t('login.pleaseEnterEmail'))
-      return
+      setError(t("login.pleaseEnterEmail"));
+      return;
     }
 
     try {
-      setIsSigningIn(true)
-      setError(null)
+      setIsSigningIn(true);
+      setError(null);
 
-      console.log('[Login] Sending magic link to:', magicLinkEmail)
+      console.log("[Login] Sending magic link to:", magicLinkEmail);
 
       const { error } = await supabase.auth.signInWithOtp({
         email: magicLinkEmail.trim(),
         options: {
-          emailRedirectTo: absoluteWithBasePath('/auth/callback')
-        }
-      })
+          emailRedirectTo: absoluteWithBasePath("/auth/callback"),
+        },
+      });
 
       if (error) {
-        console.error('[Login] Magic link error:', error)
-        setError(error.message)
+        console.error("[Login] Magic link error:", error);
+        setError(error.message);
       } else {
-        setError(null)
-        alert(t('login.magicLinkSent', { email: magicLinkEmail }))
-        setMagicLinkEmail('')
-        setShowMagicLink(false)
+        setError(null);
+        alert(t("login.magicLinkSent", { email: magicLinkEmail }));
+        setMagicLinkEmail("");
+        setShowMagicLink(false);
       }
     } catch (err) {
-      console.error('[Login] Unexpected error:', err)
-      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
+      console.error("[Login] Unexpected error:", err);
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
-      setIsSigningIn(false)
+      setIsSigningIn(false);
     }
-  }
+  };
 
   const handleForgotPassword = () => {
-    navigate('/auth/reset')
-  }
+    navigate("/auth/reset");
+  };
 
   const handleAnonymousSignIn = async () => {
     try {
-      setIsSigningIn(true)
-      setError(null)
-      console.log('[Login] Signing in anonymously')
+      setIsSigningIn(true);
+      setError(null);
+      console.log("[Login] Signing in anonymously");
 
-      const { data } = await signInAnonymously()
+      const { data } = await signInAnonymously();
 
       if (data.user) {
-        console.log('[Login] Anonymous sign in successful, refreshing session...')
+        console.log(
+          "[Login] Anonymous sign in successful, refreshing session...",
+        );
 
         // Refresh session to ensure backend endpoints are properly synchronized
-        await refreshSession()
+        await refreshSession();
 
-        console.log('[Login] Session refreshed, user will be redirected by auth state change')
+        console.log(
+          "[Login] Session refreshed, user will be redirected by auth state change",
+        );
         // User will be redirected by the auth state change after session refresh
       }
     } catch (err) {
-      console.error('[Login] Unexpected error:', err)
-      setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
+      console.error("[Login] Unexpected error:", err);
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
-      setIsSigningIn(false)
+      setIsSigningIn(false);
     }
-  }
+  };
 
   return (
     <AuthLayout isEmailFormExpanded={showEmailForm}>
-      <LoginHeader title={t('login.login')} subtitle={t('login.subtitle', 'Sign back in to Stirling PDF')} />
+      <LoginHeader
+        title={t("login.login")}
+        subtitle={t("login.subtitle", "Sign back in to Stirling PDF")}
+      />
 
       <ErrorMessage error={error} />
 
@@ -208,7 +244,11 @@ export default function Login() {
       />
 
       {/* Divider between OAuth and Email */}
-      <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+      <DividerWithText
+        text={t("signup.or", "or")}
+        respondsToDarkMode={false}
+        opacity={0.4}
+      />
 
       {/* Sign in with email button (primary color to match signup CTA) */}
       <div className="auth-section">
@@ -218,7 +258,7 @@ export default function Login() {
           disabled={isSigningIn}
           className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
         >
-          {t('login.useEmailInstead', 'Sign in with email')}
+          {t("login.useEmailInstead", "Sign in with email")}
         </button>
       </div>
 
@@ -230,7 +270,9 @@ export default function Login() {
           setPassword={setPassword}
           onSubmit={signInWithEmail}
           isSubmitting={isSigningIn}
-          submitButtonText={isSigningIn ? t('login.loggingIn') : t('login.login')}
+          submitButtonText={
+            isSigningIn ? t("login.loggingIn") : t("login.login")
+          }
         />
       )}
 
@@ -241,18 +283,26 @@ export default function Login() {
             onClick={handleForgotPassword}
             className="auth-link-black"
           >
-            {t('login.forgotPassword', 'Forgot your password?')}
+            {t("login.forgotPassword", "Forgot your password?")}
           </button>
         </div>
       )}
 
       {/* Divider then Guest */}
-      <DividerWithText text={t('signup.or', 'or')} respondsToDarkMode={false} opacity={0.4} />
+      <DividerWithText
+        text={t("signup.or", "or")}
+        respondsToDarkMode={false}
+        opacity={0.4}
+      />
 
       <GuestSignInButton
         onClick={handleAnonymousSignIn}
         disabled={isSigningIn}
-        label={isSigningIn ? t('login.signingIn', 'Signing in...') : t('login.signInAnonymously', 'Sign in as a Guest')}
+        label={
+          isSigningIn
+            ? t("login.signingIn", "Signing in...")
+            : t("login.signInAnonymously", "Sign in as a Guest")
+        }
       />
 
       <div className="auth-bottom-row">
@@ -261,21 +311,21 @@ export default function Login() {
           onClick={() => setShowMagicLink(true)}
           className="auth-link-black"
         >
-          {t('login.useMagicLink', 'Sign in with magic link')}
+          {t("login.useMagicLink", "Sign in with magic link")}
         </button>
 
         <button
           type="button"
-          onClick={() => navigate('/signup')}
+          onClick={() => navigate("/signup")}
           className="auth-link-black"
         >
-          {t('signup.signUp', 'Sign up')}
+          {t("signup.signUp", "Sign up")}
         </button>
       </div>
 
       {/* Magic link form renders on demand */}
       {showMagicLink && (
-        <div style={{ marginTop: '0.5rem' }}>
+        <div style={{ marginTop: "0.5rem" }}>
           <MagicLinkForm
             showMagicLink={showMagicLink}
             magicLinkEmail={magicLinkEmail}
@@ -287,5 +337,5 @@ export default function Login() {
         </div>
       )}
     </AuthLayout>
-  )
+  );
 }
