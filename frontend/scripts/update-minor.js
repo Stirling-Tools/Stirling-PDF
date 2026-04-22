@@ -14,6 +14,8 @@ const beforeDate = date.toISOString().split("T")[0];
 
 console.log(`Updating packages modified before: ${beforeDate}`);
 
+let lastExitCode = 0;
+
 // Run npm outdated first
 const outdated = spawn("npm", ["outdated"], { stdio: "inherit", shell: true });
 
@@ -26,17 +28,27 @@ outdated.on("close", (_code) => {
     shell: true,
   });
 
-  update.on("close", (_updateCode) => {
+  update.on("close", (updateCode) => {
+    // Track update failures
+    if (updateCode !== 0) {
+      lastExitCode = updateCode;
+    }
+
     // Run npm audit fix with before date
     const audit = spawn("npm", ["audit", "fix", `--before=${beforeDate}`], {
       stdio: "inherit",
       shell: true,
     });
 
-    audit.on("close", () => {
-      // Update complete - test script is optional
+    audit.on("close", (auditCode) => {
+      // Track audit failures (but don't override critical update failures)
+      if (auditCode !== 0 && lastExitCode === 0) {
+        lastExitCode = auditCode;
+      }
+
+      // Update complete - report with tracked exit code
       console.log("\nPackage update complete!");
-      process.exit(0);
+      process.exit(lastExitCode);
     });
   });
 });
