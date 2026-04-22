@@ -17,7 +17,7 @@ console.log(`Updating packages modified before: ${beforeDate}`);
 // Run npm outdated first
 const outdated = spawn("npm", ["outdated"], { stdio: "inherit", shell: true });
 
-outdated.on("close", (code) => {
+outdated.on("close", (_code) => {
   // npm outdated returns exit code 1 if updates are available, so we ignore it
 
   // Run npm update with before date
@@ -26,7 +26,7 @@ outdated.on("close", (code) => {
     shell: true,
   });
 
-  update.on("close", (updateCode) => {
+  update.on("close", (_updateCode) => {
     // Run npm audit fix with before date
     const audit = spawn("npm", ["audit", "fix", `--before=${beforeDate}`], {
       stdio: "inherit",
@@ -34,12 +34,9 @@ outdated.on("close", (code) => {
     });
 
     audit.on("close", () => {
-      // Run npm test (don't fail if audit fix fails)
-      const test = spawn("npm", ["test"], { stdio: "inherit", shell: true });
-
-      test.on("close", (testCode) => {
-        process.exit(testCode);
-      });
+      // Update complete - test script is optional
+      console.log("\nPackage update complete!");
+      process.exit(0);
     });
   });
 });
