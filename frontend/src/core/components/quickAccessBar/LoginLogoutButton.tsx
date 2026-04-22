@@ -18,7 +18,11 @@ export function LoginLogoutButton() {
   }, [loginUrl]);
 
   const handleLogout = useCallback(async () => {
-    await accountLogout({ signOut, redirectToLogin });
+    try {
+      await accountLogout({ signOut, redirectToLogin });
+    } catch {
+      redirectToLogin();
+    }
   }, [accountLogout, signOut, redirectToLogin]);
 
   const handleLogin = useCallback(() => {
