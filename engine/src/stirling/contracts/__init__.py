@@ -76,8 +76,11 @@ from .rag import (
     RagSearchResultItem,
     RagStatusResponse,
 )
+from .smart_redaction import AnalyserOutput, ImageBoundingBox, PlannerOutput, TextRange
 
 __all__ = [
+    "AnalyserOutput",
+    "ImageBoundingBox",
     "MAX_INDEX_TEXT_LENGTH",
     "AgentDraft",
     "AgentDraftRequest",
@@ -123,6 +126,8 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
+    "PlannerOutput",
+    "TextRange",
     "PdfTextSelection",
     "RagCollectionsResponse",
     "RagDeleteCollectionResponse",

@@ -129,7 +129,7 @@ class OrchestratorAgent:
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
             case SupportedCapability.SMART_REDACTION_AGENT:
-                return await self._run_smart_redaction(request)
+                return await SmartRedactionWorkflow(self.runtime).handle(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
@@ -193,40 +193,7 @@ class OrchestratorAgent:
     async def smart_redaction_agent(
         self, ctx: RunContext[OrchestratorDeps]
     ) -> EditPlanResponse | NeedContentResponse | EditCannotDoResponse:
-        return await self._run_smart_redaction(ctx.deps.request)
-
-    async def _run_smart_redaction(
-        self, request: OrchestratorRequest
-    ) -> EditPlanResponse | NeedContentResponse | EditCannotDoResponse:
-        workflow = SmartRedactionWorkflow(self.runtime)
-        extracted_text = self._get_extracted_text_artifact(request)
-
-        if extracted_text is None:
-            # First call — run the planner to classify the strategy.
-            planner_output = await workflow.plan(request.user_message)
-
-            if planner_output.strategy in ("literal", "regex", "image_redact"):
-                # No document scan needed — build the plan immediately.
-                plan = workflow.build_immediate_plan(planner_output, request.user_message)
-                if plan is not None:
-                    return plan
-                return EditCannotDoResponse(reason="Could not resolve redaction patterns for the request.")
-
-            # LLM_SCAN or MIXED — need document text.
-            return SmartRedactionWorkflow.need_content_response(request.file_names)
-
-        # Second call — have text artifacts, run the analyser.
-        pages_text = "\n".join(
-            f"--- {('Page ' + str(page.page_number)) if page.page_number is not None else 'Page'}"
-            f" ({file_text.file_name}) ---\n{page.text}"
-            for file_text in extracted_text.files
-            for page in file_text.pages
-        )
-
-        return workflow.build_plan_from_analysis(
-            await workflow.analyse(request.user_message, pages_text),
-            request.user_message,
-        )
+        return await SmartRedactionWorkflow(self.runtime).handle(ctx.deps.request)
 
     async def unsupported_capability(
         self,

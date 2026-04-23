@@ -247,7 +247,6 @@ public class AiWorkflowService {
 
         try {
             List<Resource> currentFiles = toResources(filesByName);
-            String lastStepSummary = null;
 
             for (int i = 0; i < steps.size(); i++) {
                 Map<String, Object> step = steps.get(i);
@@ -267,17 +266,13 @@ public class AiWorkflowService {
                                 endpointPath, i + 1, steps.size(), parameters));
                 StepOutput output = executeStep(endpointPath, parameters, currentFiles);
                 currentFiles = output.files();
-                if (output.summary() != null) {
-                    lastStepSummary = output.summary();
-                }
             }
 
-            // Prefer the tool's own summary (e.g. redaction plan description) over the
-            // orchestrator's generic plan description.
-            String finalSummary = lastStepSummary != null ? lastStepSummary : response.getSummary();
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            finalSummary, currentFiles, new ArrayList<>(filesByName.keySet())));
+                            response.getSummary(),
+                            currentFiles,
+                            new ArrayList<>(filesByName.keySet())));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(

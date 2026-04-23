@@ -13,15 +13,18 @@ from __future__ import annotations
 
 import logging
 
-from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
 from stirling.contracts import (
+    AnalyserOutput,
     EditCannotDoResponse,
     EditPlanResponse,
+    ExtractedTextArtifact,
     NeedContentFileRequest,
     NeedContentResponse,
+    OrchestratorRequest,
     PdfContentType,
+    PlannerOutput,
     SupportedCapability,
     ToolOperationStep,
 )
@@ -32,108 +35,7 @@ from stirling.services import AppRuntime
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Internal models
-# ---------------------------------------------------------------------------
-
-
-class PlannerOutput(BaseModel):
-    """Classifies the redaction strategy from the user's request alone."""
-
-    strategy: str = Field(description="One of: literal, regex, image_redact, llm_scan, mixed")
-    literal_strings: list[str] = Field(
-        default_factory=list,
-        description="Exact strings to redact (LITERAL strategy).",
-    )
-    regex_patterns: list[str] = Field(
-        default_factory=list,
-        description="Java-compatible regex patterns to find and redact (REGEX strategy).",
-    )
-    image_page_numbers: list[int] = Field(
-        default_factory=list,
-        description=("1-based page numbers to scan for images (IMAGE_REDACT strategy). Empty list means all pages."),
-    )
-    redact_color: str | None = Field(
-        default=None,
-        description=(
-            "Hex colour for the redaction fill (e.g. '#ff0000' for red, '#000000' for black). "
-            "Extract from the user's request when they specify a colour. Null means default (black)."
-        ),
-    )
-    rationale: str
-
-
-class ImageBoundingBox(BaseModel):
-    """Identifies a specific image to redact by its PDF user-space bounding box."""
-
-    page_index: int = Field(description="0-based page index.")
-    x1: float = Field(description="Left edge in PDF user-space (origin bottom-left, Y up).")
-    y1: float = Field(description="Bottom edge in PDF user-space.")
-    x2: float = Field(description="Right edge in PDF user-space.")
-    y2: float = Field(description="Top edge in PDF user-space.")
-
-
-class TextRange(BaseModel):
-    """A section to redact, identified by the heading that opens it and the heading that closes it."""
-
-    start_string: str = Field(
-        description=(
-            "The heading or first line that marks the beginning of the section, copied verbatim "
-            "from the document. Everything from this line onward is redacted (inclusive)."
-        )
-    )
-    end_string: str = Field(
-        description=(
-            "The heading or first line of the section that immediately follows the one being "
-            "redacted, copied verbatim. This line marks where redaction stops and is NOT itself "
-            "redacted — it is the exclusive upper boundary. "
-            "Leave empty if the section runs to the end of the document."
-        ),
-        default="",
-    )
-
-
-class AnalyserOutput(BaseModel):
-    """Identifies specific content to redact from extracted document text."""
-
-    strings_to_redact: list[str] = Field(
-        default_factory=list,
-        description=(
-            "Individual values to redact: names, numbers, emails, dates, IDs, addresses, "
-            "and any single-line phrases. Copy each exactly as it appears in the document."
-        ),
-    )
-    sections_to_redact: list[TextRange] = Field(
-        default_factory=list,
-        description=(
-            "Named sections (exercises, questions, chapters, appendices, clauses) that span "
-            "multiple lines or paragraphs. One entry per section. Provide start_string (the "
-            "section heading) and end_string (the heading of the next section — exclusive boundary)."
-        ),
-    )
-    pages_to_redact: list[int] = Field(
-        default_factory=list,
-        description="0-indexed page numbers for whole-page blackout (structural sections only).",
-    )
-    images_to_redact: list[ImageBoundingBox] = Field(
-        default_factory=list,
-        description=(
-            "Images to redact identified by their bounding boxes. "
-            "Copy the bounds exactly from the '--- Images on this page ---' section of the document content. "
-            "Only populate when the user explicitly targets images by spatial position or asks to 'redact all images'."
-        ),
-    )
-    summary: str = Field(description="1-2 sentence summary for the end user.")
-    redact_color: str | None = Field(
-        default=None,
-        description=(
-            "Hex colour for the redaction fill (e.g. '#ff0000' for red, '#000000' for black). "
-            "Extract from the user's request when they specify a colour. Null means default (black)."
-        ),
-    )
-
-
-# ---------------------------------------------------------------------------
-# SmartRedactionWorkflow
+# Prompts
 # ---------------------------------------------------------------------------
 
 _PLANNER_PROMPT = """\
@@ -252,6 +154,11 @@ Rules:
 """
 
 
+# ---------------------------------------------------------------------------
+# SmartRedactionWorkflow
+# ---------------------------------------------------------------------------
+
+
 class SmartRedactionWorkflow:
     """Encapsulates the two-stage planner/analyser pipeline."""
 
@@ -267,6 +174,37 @@ class SmartRedactionWorkflow:
             output_type=AnalyserOutput,
             system_prompt=_ANALYSER_PROMPT,
             model_settings=runtime.fast_model_settings,
+        )
+
+    async def handle(
+        self, request: OrchestratorRequest
+    ) -> EditPlanResponse | NeedContentResponse | EditCannotDoResponse:
+        extracted_text = next(
+            (a for a in request.artifacts if isinstance(a, ExtractedTextArtifact)),
+            None,
+        )
+
+        if extracted_text is None:
+            planner_output = await self.plan(request.user_message)
+
+            if planner_output.strategy in ("literal", "regex", "image_redact"):
+                plan = self.build_immediate_plan(planner_output, request.user_message)
+                if plan is not None:
+                    return plan
+                return EditCannotDoResponse(reason="Could not resolve redaction patterns for the request.")
+
+            return SmartRedactionWorkflow.need_content_response(request.file_names)
+
+        pages_text = "\n".join(
+            f"--- {('Page ' + str(page.page_number)) if page.page_number is not None else 'Page'}"
+            f" ({file_text.file_name}) ---\n{page.text}"
+            for file_text in extracted_text.files
+            for page in file_text.pages
+        )
+
+        return self.build_plan_from_analysis(
+            await self.analyse(request.user_message, pages_text),
+            request.user_message,
         )
 
     async def plan(self, user_message: str) -> PlannerOutput:
@@ -309,7 +247,6 @@ class SmartRedactionWorkflow:
 
     def build_immediate_plan(self, planner_output: PlannerOutput, user_message: str) -> EditPlanResponse | None:
         """Build an EditPlanResponse for LITERAL/REGEX/IMAGE_REDACT (no document scan needed)."""
-        # IMAGE_REDACT: Java detects and redacts images directly — no analyser needed.
         if planner_output.strategy == "image_redact":
             page_nums = planner_output.image_page_numbers or []
             image_pages_str = ",".join(str(p) for p in page_nums) if page_nums else None
@@ -366,10 +303,8 @@ class SmartRedactionWorkflow:
             reason = analyser_output.summary or f'No content matching "{user_message}" was found in the document.'
             return EditCannotDoResponse(reason=reason)
 
-        # Convert 0-indexed page numbers to 1-based for the pageNumbers API field.
         page_nums = ",".join(str(p + 1) for p in sorted(pages)) if pages else None
 
-        # Serialize image bounding boxes as "pageIndex,x1,y1,x2,y2" lines.
         image_boxes_str = (
             "\n".join(f"{img.page_index},{img.x1:.1f},{img.y1:.1f},{img.x2:.1f},{img.y2:.1f}" for img in images)
             if images
