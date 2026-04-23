@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -191,11 +192,22 @@ public class ProcessExecutor {
 
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
             throws IOException, InterruptedException {
-        return runCommandWithOutputHandling(command, null);
+        return runCommandWithOutputHandling(command, null, null);
     }
 
     public ProcessExecutorResult runCommandWithOutputHandling(
             List<String> command, File workingDirectory) throws IOException, InterruptedException {
+        return runCommandWithOutputHandling(command, workingDirectory, null);
+    }
+
+    /**
+     * Run a command with an optional live stderr callback for progress reporting. The callback is
+     * invoked per stderr line as they stream in; exceptions thrown from the callback are caught and
+     * logged so they don't interfere with process execution.
+     */
+    public ProcessExecutorResult runCommandWithOutputHandling(
+            List<String> command, File workingDirectory, Consumer<String> stderrLineCallback)
+            throws IOException, InterruptedException {
         String messages = "";
         int exitCode = 1;
         UnoServerPool.UnoServerLease unoLease = null;
@@ -241,6 +253,15 @@ public class ProcessExecutor {
                                                     != null) {
                                                 errorLines.add(line);
                                                 if (liveUpdates) log.info(line);
+                                                if (stderrLineCallback != null) {
+                                                    try {
+                                                        stderrLineCallback.accept(line);
+                                                    } catch (Exception cbEx) {
+                                                        log.warn(
+                                                                "stderr callback threw: {}",
+                                                                cbEx.getMessage());
+                                                    }
+                                                }
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(

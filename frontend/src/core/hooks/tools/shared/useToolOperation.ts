@@ -5,8 +5,10 @@ import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
+import axios from "axios";
 import {
   useToolApiCalls,
+  submitAsyncJob,
   type ApiCallsConfig,
 } from "@app/hooks/tools/shared/useToolApiCalls";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
@@ -241,6 +243,7 @@ export const useToolOperation = <TParams>(
               filePrefix: config.filePrefix,
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,
+              async: config.async,
             };
             console.debug("[useToolOperation] Multi-file start", {
               count: filesForAPI.length,
@@ -270,9 +273,22 @@ export const useToolOperation = <TParams>(
                 ? config.endpoint(params)
                 : config.endpoint;
 
-            const response = await apiClient.post(endpoint, formData, {
-              responseType: "blob",
-            });
+            let response: { data: Blob; headers: Record<string, any> };
+            if (config.async) {
+              const cancelToken = axios.CancelToken.source();
+              response = await submitAsyncJob(
+                endpoint,
+                formData,
+                cancelToken,
+                actions.setProgress,
+                actions.setStatus,
+                { total: 1 },
+              );
+            } else {
+              response = await apiClient.post(endpoint, formData, {
+                responseType: "blob",
+              });
+            }
 
             // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
             if (config.responseHandler) {

@@ -45,6 +45,7 @@ export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
   endpoint: "/api/v1/general/merge-pdfs",
   filePrefix: "merged_",
   defaultParameters,
+  async: true,
 };
 
 export const useMergeOperation = () => {

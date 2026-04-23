@@ -25,6 +25,7 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -38,6 +39,7 @@ public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final JobProgressService jobProgressService;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/split-pages")
     @MultiFileResponse
@@ -52,6 +54,7 @@ public class SplitPDFController {
             throws IOException {
 
         MultipartFile file = request.getFileInput();
+        jobProgressService.report(1, "Loading PDF");
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
         try {
             try (PDDocument document = pdfDocumentFactory.load(file)) {
@@ -67,10 +70,15 @@ public class SplitPDFController {
                         pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
                 String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
+                int totalSplits = pageNumbers.size();
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                     int previousPageNumber = 0;
-                    for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+                    for (int splitIndex = 0; splitIndex < totalSplits; splitIndex++) {
+                        jobProgressService.report(
+                                splitIndex + 1,
+                                totalSplits,
+                                "Writing split " + (splitIndex + 1) + " of " + totalSplits);
                         int splitPoint = pageNumbers.get(splitIndex);
                         try (PDDocument splitDocument =
                                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {

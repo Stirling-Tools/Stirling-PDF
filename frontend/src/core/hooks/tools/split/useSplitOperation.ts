@@ -117,6 +117,7 @@ export const splitOperationConfig = {
   operationType: "split",
   endpoint: getSplitEndpoint,
   defaultParameters,
+  async: true,
 } as const;
 
 export const useSplitOperation = () => {
