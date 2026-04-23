@@ -315,6 +315,13 @@ class DeleteAttachmentParams(ApiModel):
     attachment_name: str | None = Field(None, description="The name of the attachment to delete")
 
 
+class DetectTextColorsParams(ApiModel):
+    source_colors: list[str] | None = Field(
+        None, description="List of source text colours to replace (hex format, e.g. #FF0000)"
+    )
+    target_color: str | None = Field(None, description="Target text colour in hex format (e.g. #000000)")
+
+
 class EmbedAllFonts(Enum):
     boolean_true = True
     boolean_false = False
@@ -819,6 +826,13 @@ class ReplaceInvertPdfParams(ApiModel):
     )
 
 
+class ReplaceTextColorsParams(ApiModel):
+    source_colors: list[str] | None = Field(
+        None, description="List of source text colours to replace (hex format, e.g. #FF0000)"
+    )
+    target_color: str | None = Field(None, description="Target text colour in hex format (e.g. #000000)")
+
+
 class Angle(IntEnum):
     integer_0 = 0
     integer_90 = 90
@@ -1100,6 +1114,7 @@ class Model(
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
+        | DetectTextColorsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
@@ -1107,6 +1122,7 @@ class Model(
         | RemoveBlanksParams
         | RenameAttachmentParams
         | ReplaceInvertPdfParams
+        | ReplaceTextColorsParams
         | ScannerEffectParams
         | UpdateMetadataParams
         | AddPasswordParams
@@ -1164,6 +1180,7 @@ class Model(
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
+        | DetectTextColorsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
@@ -1171,6 +1188,7 @@ class Model(
         | RemoveBlanksParams
         | RenameAttachmentParams
         | ReplaceInvertPdfParams
+        | ReplaceTextColorsParams
         | ScannerEffectParams
         | UpdateMetadataParams
         | AddPasswordParams
@@ -1229,6 +1247,7 @@ type ParamToolModel = (
     | AutoSplitPdfParams
     | CompressPdfParams
     | DeleteAttachmentParams
+    | DetectTextColorsParams
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
@@ -1236,6 +1255,7 @@ type ParamToolModel = (
     | RemoveBlanksParams
     | RenameAttachmentParams
     | ReplaceInvertPdfParams
+    | ReplaceTextColorsParams
     | ScannerEffectParams
     | UpdateMetadataParams
     | AddPasswordParams
@@ -1295,6 +1315,7 @@ class ToolEndpoint(StrEnum):
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
+    DETECT_TEXT_COLORS = "/api/v1/misc/detect-text-colors"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
@@ -1302,6 +1323,7 @@ class ToolEndpoint(StrEnum):
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
+    REPLACE_TEXT_COLORS = "/api/v1/misc/replace-text-colors"
     SCANNER_EFFECT = "/api/v1/misc/scanner-effect"
     UPDATE_METADATA = "/api/v1/misc/update-metadata"
     ADD_PASSWORD = "/api/v1/security/add-password"
@@ -1359,6 +1381,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
+    ToolEndpoint.DETECT_TEXT_COLORS: DetectTextColorsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
     ToolEndpoint.FLATTEN: FlattenParams,
@@ -1366,6 +1389,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.REMOVE_BLANKS: RemoveBlanksParams,
     ToolEndpoint.RENAME_ATTACHMENT: RenameAttachmentParams,
     ToolEndpoint.REPLACE_INVERT_PDF: ReplaceInvertPdfParams,
+    ToolEndpoint.REPLACE_TEXT_COLORS: ReplaceTextColorsParams,
     ToolEndpoint.SCANNER_EFFECT: ScannerEffectParams,
     ToolEndpoint.UPDATE_METADATA: UpdateMetadataParams,
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,
