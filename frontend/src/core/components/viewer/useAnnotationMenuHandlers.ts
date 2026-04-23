@@ -138,8 +138,13 @@ export function useAnnotationMenuHandlers({
       return "textMarkup";
     if (type === 15)
       return toolId === "inkHighlighter" ? "inkHighlighter" : "ink";
-    if (type === 1 && toolId === "textComment") return "comment";
-    if (type === 14 && (toolId === "insertText" || toolId === "replaceText"))
+    // Type 1 (TEXT) = textComment; type 14 (CARET) = insertText/replaceText.
+    // After save/reload customData.toolId is absent, so fall back to type alone.
+    if (type === 1 && (!toolId || toolId === "textComment")) return "comment";
+    if (
+      type === 14 &&
+      (!toolId || toolId === "insertText" || toolId === "replaceText")
+    )
       return "comment";
     if (type === 3) return "note";
     if (type !== undefined && [5, 6, 7].includes(type)) return "shape";

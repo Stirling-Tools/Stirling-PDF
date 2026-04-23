@@ -1,6 +1,6 @@
 import { Group } from "@mantine/core";
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import {
@@ -47,7 +47,7 @@ function AnnotationSelectionMenuInner({
 }: AnnotationSelectionMenuProps & { documentId: string }) {
   const annotation = context?.annotation;
   const pageIndex = context?.pageIndex;
-  const { provides } = useAnnotation(documentId);
+  const { state, provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState<{
@@ -65,17 +65,48 @@ function AnnotationSelectionMenuInner({
     wrapperRef,
   });
 
+  // Read isInSidebar from live EmbedPDF state rather than annotation.object, which can be
+  // stale after updateAnnotation() is called while the annotation is selected.
+  // Also checks non-empty contents: customData.isComment is not persisted to PDF, but
+  // contents is a standard PDF field and survives save/reload.
+  const freshIsInSidebar = useMemo(() => {
+    const annId = (annotation?.object as AnnotationObject | undefined)?.id;
+    if (!annId) return false;
+    for (const tracked of Object.values(state.byUid)) {
+      const obj = tracked.object;
+      if (obj.id !== annId) continue;
+      const { type } = obj;
+      // TEXT and CARET are standalone comment annotations — they use CommentButton,
+      // not AttachCommentButton, so isInSidebar is irrelevant for them.
+      if (type === PdfAnnotationSubtype.TEXT || type === PdfAnnotationSubtype.CARET)
+        return false;
+      // customData is a runtime field EmbedPDF adds but doesn't declare in its TS types
+      const customData = (obj as unknown as { customData?: Record<string, unknown> })
+        .customData;
+      const isExplicit = customData?.isComment === true;
+      // customData (incl. toolId/isComment) is not persisted to PDF; contents is.
+      // Any non-TEXT/FreeText/CARET annotation with non-empty contents has a comment.
+      const hasContents =
+        type !== PdfAnnotationSubtype.FREETEXT &&
+        !obj.inReplyToId &&
+        (obj.contents ?? "").trim().length > 0;
+      return isExplicit || hasContents;
+    }
+    return false;
+  }, [state, annotation?.object]);
+
   // Auto-open the comments sidebar when a comment annotation is selected
   useEffect(() => {
     const annObj = annotation?.object as AnnotationObject | undefined;
     const annId = annObj?.id;
     if (!selected || !annId || pageIndex === undefined) return;
-    const toolId = annObj?.customData?.toolId;
     const annType = annObj?.type;
+    // TEXT (type 1) = textComment; CARET (type 14) = insertText/replaceText.
+    // These are always comment annotations regardless of toolId (lost after reload).
     const isComment =
-      (annType === PdfAnnotationSubtype.TEXT && toolId === "textComment") ||
-      (annType === PdfAnnotationSubtype.CARET &&
-        (toolId === "insertText" || toolId === "replaceText"));
+      annType === PdfAnnotationSubtype.TEXT ||
+      annType === PdfAnnotationSubtype.CARET ||
+      freshIsInSidebar;
     if (!isComment) return;
     requestCommentFocus(
       documentId,
@@ -83,7 +114,7 @@ function AnnotationSelectionMenuInner({
       annId,
       (annObj?.contents ?? "").trim().length > 0,
     );
-  }, [selected, annotation?.object]);
+  }, [selected, annotation?.object, freshIsInSidebar]);
 
   // Click outside to deselect
   useEffect(() => {
@@ -170,6 +201,7 @@ function AnnotationSelectionMenuInner({
       <Group gap="sm" wrap="nowrap" justify="center">
         <AnnotationTypeButtons
           {...handlers}
+          isInSidebar={freshIsInSidebar}
           annotation={annotation}
           documentId={documentId}
           pageIndex={pageIndex}
