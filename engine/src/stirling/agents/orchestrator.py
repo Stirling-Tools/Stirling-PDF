@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import assert_never
 
@@ -28,6 +29,8 @@ from stirling.contracts import (
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -86,12 +89,20 @@ class OrchestratorAgent:
         )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        logger.info(
+            "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
+            request.file_names,
+            request.resume_with,
+            [type(a).__name__ for a in request.artifacts],
+            request.user_message,
+        )
         if request.resume_with is not None:
             return await self._resume(request, request.resume_with)
         result = await self.agent.run(
             self._build_prompt(request),
             deps=OrchestratorDeps(runtime=self.runtime, request=request),
         )
+        logger.info("[orchestrator] routed -> %s", type(result.output).__name__)
         return result.output
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
@@ -117,11 +128,13 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
+        extracted_text = self._get_extracted_text_artifact(request)
         return await PdfEditAgent(self.runtime).handle(
             PdfEditRequest(
                 user_message=request.user_message,
                 file_names=request.file_names,
                 conversation_history=request.conversation_history,
+                page_text=extracted_text.files if extracted_text is not None else [],
             )
         )
 
