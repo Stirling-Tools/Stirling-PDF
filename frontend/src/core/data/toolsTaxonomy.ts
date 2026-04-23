@@ -22,6 +22,7 @@ import BuildRoundedIcon from "@mui/icons-material/BuildRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { ProprietaryToolId } from "@app/types/proprietaryToolId";
+import { PrototypeToolId } from "@app/types/prototypeToolId";
 
 export enum SubcategoryId {
   SIGNING = "signing",
@@ -79,6 +80,7 @@ export type ProprietaryToolRegistry = Record<
   ProprietaryToolId,
   ToolRegistryEntry
 >;
+export type PrototypeToolRegistry = Record<PrototypeToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,

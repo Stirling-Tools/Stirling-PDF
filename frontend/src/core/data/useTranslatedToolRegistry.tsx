@@ -36,7 +36,6 @@ import Merge from "@app/tools/Merge";
 import EditTableOfContents from "@app/tools/EditTableOfContents";
 import Repair from "@app/tools/Repair";
 import AutoRename from "@app/tools/AutoRename";
-import PdfCommentAgent from "@app/tools/PdfCommentAgent";
 import SingleLargePage from "@app/tools/SingleLargePage";
 import PageLayout from "@app/tools/PageLayout";
 import UnlockPdfForms from "@app/tools/UnlockPdfForms";
@@ -76,7 +75,7 @@ import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposi
 import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
 import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
-import { pdfCommentAgentOperationConfig } from "@app/hooks/tools/pdfCommentAgent/pdfCommentAgentOperationConfig";
+import { usePrototypeToolRegistry } from "@app/data/usePrototypeToolRegistry";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
@@ -151,11 +150,16 @@ export interface TranslatedToolCatalog {
 export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   const { t } = useTranslation();
   const proprietaryTools = useProprietaryToolRegistry();
+  const prototypeTools = usePrototypeToolRegistry();
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
       // Proprietary tools (if any)
       ...proprietaryTools,
+      // Prototype-only tools (empty in the main/core/proprietary/saas/desktop
+      // builds; the prototypes build overlay injects experimental tools here
+      // via src/prototypes/data/usePrototypeToolRegistry.tsx).
+      ...prototypeTools,
       // Recommended Tools in order
       pdfTextEditor: {
         icon: (
@@ -987,24 +991,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "autoRename"),
         automationSettings: null,
       },
-      pdfCommentAgent: {
-        icon: <LocalIcon icon="add-comment" width="1.5rem" height="1.5rem" />,
-        name: t("home.pdfCommentAgent.title", "Add AI comments"),
-        component: PdfCommentAgent,
-        description: t(
-          "home.pdfCommentAgent.desc",
-          "Ask AI to annotate a PDF with sticky-note comments based on your prompt",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
-        maxFiles: 1,
-        endpoints: ["pdf-comment-agent"],
-        operationConfig: pdfCommentAgentOperationConfig,
-        automationSettings: null,
-        synonyms: getSynonyms(t, "pdfCommentAgent"),
-        versionStatus: "beta",
-      },
-
       // Advanced Formatting
 
       adjustContrast: {
@@ -1376,5 +1362,5 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       superTools,
       linkTools,
     };
-  }, [t, proprietaryTools]); // Re-compute when translations or proprietary tools change
+  }, [t, proprietaryTools, prototypeTools]); // Re-compute when translations, proprietary, or prototype tools change
 }
