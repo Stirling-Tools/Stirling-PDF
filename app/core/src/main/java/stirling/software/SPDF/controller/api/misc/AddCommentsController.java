@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -58,8 +58,8 @@ public class AddCommentsController {
                             + " caller-supplied absolute positions. Deterministic — given the same"
                             + " input PDF and comments JSON, the output is bit-identical."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> addComments(
-            @ModelAttribute AddCommentsRequest request) throws IOException {
+    public ResponseEntity<Resource> addComments(@ModelAttribute AddCommentsRequest request)
+            throws IOException {
 
         MultipartFile file = request.getFileInput();
         if (file == null || file.isEmpty()) {

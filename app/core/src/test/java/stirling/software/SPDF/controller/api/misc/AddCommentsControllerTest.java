@@ -26,13 +26,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.AddCommentsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -89,7 +89,7 @@ class AddCommentsControllerTest {
                  {"pageIndex":1,"x":100,"y":650,"width":20,"height":20,"text":"Second"}]
                 """);
 
-        ResponseEntity<StreamingResponseBody> response = controller.addComments(request);
+        ResponseEntity<Resource> response = controller.addComments(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         byte[] result = drainBody(response);
@@ -154,10 +154,11 @@ class AddCommentsControllerTest {
         }
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream is = response.getBody().getInputStream()) {
+            is.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 

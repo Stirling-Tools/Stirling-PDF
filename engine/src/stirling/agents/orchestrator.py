@@ -226,7 +226,7 @@ class OrchestratorAgent:
 
         Math-flavoured prompts: consult math-auditor first, then project the :class:`Verdict`
         into sticky-note specs for ``/api/v1/misc/add-comments``. Other review prompts go
-        through the composed :class:`PdfCommentAgentOrchestrator` (``/api/v1/misc/pdf-comment-agent``)
+        through the composed :class:`PdfCommentAgentOrchestrator` (``/api/v1/ai/tools/pdf-comment-agent``)
         which does its own chunk extraction + AI round-trip.
         """
         if is_math_intent(request.user_message):

@@ -10,7 +10,7 @@ enough to verify the wire contract the orchestrator produces:
 * it returns an ``EditPlanResponse``;
 * with exactly one step;
 * whose ``tool`` is ``ToolEndpoint.PDF_COMMENT_AGENT`` (the composed AI tool
-  under ``/api/v1/misc/pdf-comment-agent``);
+  under ``/api/v1/ai/tools/pdf-comment-agent``);
 * whose ``parameters.prompt`` echoes the user's request.
 """
 
@@ -48,6 +48,6 @@ async def test_delegate_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime
     assert len(response.steps) == 1
     step = response.steps[0]
     assert step.tool == ToolEndpoint.PDF_COMMENT_AGENT
-    assert step.tool.value == "/api/v1/misc/pdf-comment-agent"
+    assert step.tool.value == "/api/v1/ai/tools/pdf-comment-agent"
     assert isinstance(step.parameters, PdfCommentAgentParams)
     assert step.parameters.prompt == request.user_message

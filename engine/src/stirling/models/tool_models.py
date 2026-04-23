@@ -42,7 +42,7 @@ class AddCommentsParams(ApiModel):
 
 
 class PdfCommentAgentParams(ApiModel):
-    """Parameters for /api/v1/misc/pdf-comment-agent (composed AI tool).
+    """Parameters for /api/v1/ai/tools/pdf-comment-agent (composed AI tool).
 
     Takes a user prompt; the tool extracts text chunks, calls the engine's
     :class:`PdfCommentAgent`, resolves chunk ids to absolute positions, and annotates the PDF.
@@ -52,7 +52,7 @@ class PdfCommentAgentParams(ApiModel):
 
 
 class MathAuditorAgentParams(ApiModel):
-    """Parameters for /api/v1/misc/math-auditor-agent.
+    """Parameters for /api/v1/ai/tools/math-auditor-agent.
 
     Always returns a JSON Verdict. Presentation (chat-style summary, PDF annotations, etc.) is
     the caller's responsibility — see ``delegate_pdf_question`` and ``delegate_pdf_review``
@@ -1353,9 +1353,9 @@ class ToolEndpoint(StrEnum):
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
-    MATH_AUDITOR_AGENT = "/api/v1/misc/math-auditor-agent"
+    MATH_AUDITOR_AGENT = "/api/v1/ai/tools/math-auditor-agent"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
-    PDF_COMMENT_AGENT = "/api/v1/misc/pdf-comment-agent"
+    PDF_COMMENT_AGENT = "/api/v1/ai/tools/pdf-comment-agent"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"

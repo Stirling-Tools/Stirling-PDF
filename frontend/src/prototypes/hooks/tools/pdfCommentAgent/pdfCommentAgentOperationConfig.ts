@@ -9,7 +9,7 @@ import {
   defaultParameters,
 } from "@app/hooks/tools/pdfCommentAgent/usePdfCommentAgentParameters";
 
-export const PDF_COMMENT_AGENT_ENDPOINT = "/api/v1/misc/pdf-comment-agent";
+export const PDF_COMMENT_AGENT_ENDPOINT = "/api/v1/ai/tools/pdf-comment-agent";
 
 /** Build the multipart payload Java expects: fileInput + prompt. */
 export const buildPdfCommentAgentFormData = (

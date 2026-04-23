@@ -39,9 +39,9 @@ import tools.jackson.databind.node.ObjectNode;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/misc")
+@RequestMapping("/api/v1/ai/tools")
 @RequiredArgsConstructor
-@Tag(name = "Misc", description = "Miscellaneous PDF operations.")
+@Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class PdfCommentAgentController {
 
     /**
