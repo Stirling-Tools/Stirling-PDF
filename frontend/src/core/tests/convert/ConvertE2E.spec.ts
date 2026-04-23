@@ -100,6 +100,16 @@ async function mockAppApis(page: Page) {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: dismiss the tour tooltip that can intercept clicks on firefox/webkit
+// ---------------------------------------------------------------------------
+async function dismissTourTooltip(page: Page) {
+  const closeBtn = page.getByRole("button", { name: /close tooltip/i }).first();
+  if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    await closeBtn.click();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helper: upload a file through the Files modal
 // Uses the HiddenFileInput (data-testid="file-input") which has the correct
 // onChange handler. Waits for the modal to auto-close after upload.
@@ -192,6 +202,7 @@ test.describe("Convert Tool", () => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
     await selectToFormat(page, "png");
+    await dismissTourTooltip(page);
     await page.getByTestId("convert-button").click();
 
     await expect(page.getByTestId("download-result-button")).toBeVisible({
@@ -211,6 +222,7 @@ test.describe("Convert Tool", () => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
     await selectToFormat(page, "png");
+    await dismissTourTooltip(page);
     await page.getByTestId("convert-button").click();
 
     // Mantine Notification renders as role="alert"
