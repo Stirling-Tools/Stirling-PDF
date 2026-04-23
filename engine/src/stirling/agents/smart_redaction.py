@@ -219,25 +219,10 @@ class SmartRedactionWorkflow:
         )
         return result.output
 
-    async def analyse(self, user_message: str, text_content: str, max_retries: int = 2) -> AnalyserOutput:
+    async def analyse(self, user_message: str, text_content: str) -> AnalyserOutput:
         prompt = f"Redaction request: {user_message}\n\nDocument content:\n{text_content}"
-        output = AnalyserOutput(summary="")
-        for attempt in range(max_retries + 1):
-            result = await self._analyser.run(prompt)
-            output = result.output
-            if (
-                output.strings_to_redact
-                or output.sections_to_redact
-                or output.pages_to_redact
-                or output.images_to_redact
-            ):
-                break
-            if attempt < max_retries:
-                logger.warning(
-                    "[smart-redaction] analyser returned empty output, retrying (attempt %d/%d)",
-                    attempt + 1,
-                    max_retries,
-                )
+        result = await self._analyser.run(prompt)
+        output = result.output
         logger.info(
             "[smart-redaction] analyser strings=%d sections=%d pages=%d images=%d",
             len(output.strings_to_redact),

@@ -14,6 +14,7 @@ import stirling.software.common.model.api.PDFFile;
 public class RedactExecuteRequest extends PDFFile {
 
     public enum RedactionStrategy {
+        AUTO,
         OVERLAY_ONLY,
         IMAGE_FINALIZE
     }
