@@ -169,13 +169,16 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
                   component="a"
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
+                    const homeHref = getHomeNavigation().href;
                     const performNavigation = () => {
                       setActiveButton("tools");
                       handleBackToTools();
-                      // Explicit navigation: the state→URL sync in
-                      // useNavigationUrlSync does not reliably fire on webkit
-                      // when triggered only by selectedTool → null.
-                      navigate("/");
+                      // Mirror the anchor's href via the router. The state→URL
+                      // sync in useNavigationUrlSync (selectedTool → null →
+                      // clearToolRoute) does not fire reliably on webkit; this
+                      // keeps the URL in lockstep with the declared destination
+                      // on every browser.
+                      navigate(homeHref);
                     };
                     if (hasUnsavedChanges) {
                       e.preventDefault();
