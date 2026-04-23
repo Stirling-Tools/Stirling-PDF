@@ -435,11 +435,10 @@ export function CommentsSidebar({
     // Also clear contents: the contents field is the persisted signal for
     // post-reload linked annotations, so clearing it removes the annotation
     // from the sidebar (contents is not visually rendered on ink/shape/markup types).
-    provides.updateAnnotation(
-      pageIndex,
-      id,
-      { customData: rest, contents: "" } as unknown as Partial<PdfAnnotationObject>,
-    );
+    provides.updateAnnotation(pageIndex, id, {
+      customData: rest,
+      contents: "",
+    } as unknown as Partial<PdfAnnotationObject>);
     setDeleteModal(null);
   }, [deleteModal, provides]);
 

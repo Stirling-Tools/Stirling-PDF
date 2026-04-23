@@ -78,11 +78,15 @@ function AnnotationSelectionMenuInner({
       const { type } = obj;
       // TEXT and CARET are standalone comment annotations — they use CommentButton,
       // not AttachCommentButton, so isInSidebar is irrelevant for them.
-      if (type === PdfAnnotationSubtype.TEXT || type === PdfAnnotationSubtype.CARET)
+      if (
+        type === PdfAnnotationSubtype.TEXT ||
+        type === PdfAnnotationSubtype.CARET
+      )
         return false;
       // customData is a runtime field EmbedPDF adds but doesn't declare in its TS types
-      const customData = (obj as unknown as { customData?: Record<string, unknown> })
-        .customData;
+      const customData = (
+        obj as unknown as { customData?: Record<string, unknown> }
+      ).customData;
       const isExplicit = customData?.isComment === true;
       // customData (incl. toolId/isComment) is not persisted to PDF; contents is.
       // Any non-TEXT/FreeText/CARET annotation with non-empty contents has a comment.
