@@ -12,6 +12,7 @@ from stirling.contracts import (
     SummaryAnswerResponse,
     SummaryNotFoundResponse,
     SummaryRequest,
+    SummaryResult,
     SummarySection,
     SummaryTerminalResponse,
     SupportedCapability,
@@ -113,9 +114,11 @@ async def test_summary_agent_returns_structured_summary(runtime_with_stub_rag: A
     agent = StubSummaryAgent(
         runtime_with_stub_rag,
         SummaryAnswerResponse(
-            tldr="Quarterly report summary.",
-            key_points=["Revenue grew.", "Costs held flat.", "Outlook is positive."],
-            sections=[SummarySection(heading="Outlook", summary="Positive.")],
+            summary_result=SummaryResult(
+                tldr="Quarterly report summary.",
+                key_points=["Revenue grew.", "Costs held flat.", "Outlook is positive."],
+                sections=[SummarySection(heading="Outlook", summary="Positive.")],
+            ),
         ),
     )
 
@@ -127,8 +130,8 @@ async def test_summary_agent_returns_structured_summary(runtime_with_stub_rag: A
     )
 
     assert isinstance(response, SummaryAnswerResponse)
-    assert response.tldr == "Quarterly report summary."
-    assert len(response.key_points) == 3
+    assert response.summary_result.tldr == "Quarterly report summary."
+    assert len(response.summary_result.key_points) == 3
 
 
 @pytest.mark.anyio

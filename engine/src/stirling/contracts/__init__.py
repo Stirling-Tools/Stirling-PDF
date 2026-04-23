@@ -79,6 +79,7 @@ from .summary import (
     SummaryNotFoundResponse,
     SummaryRequest,
     SummaryResponse,
+    SummaryResult,
     SummarySection,
     SummaryTerminalResponse,
 )
@@ -143,6 +144,7 @@ __all__ = [
     "SummaryNotFoundResponse",
     "SummaryRequest",
     "SummaryResponse",
+    "SummaryResult",
     "SummarySection",
     "SummaryTerminalResponse",
     "SupportedCapability",

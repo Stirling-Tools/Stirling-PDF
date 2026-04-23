@@ -20,11 +20,15 @@ class SummarySection(ApiModel):
     summary: str
 
 
-class SummaryAnswerResponse(ApiModel):
-    outcome: Literal[WorkflowOutcome.SUMMARY_ANSWER] = WorkflowOutcome.SUMMARY_ANSWER
+class SummaryResult(ApiModel):
     tldr: str
     key_points: list[str] = Field(default_factory=list)
     sections: list[SummarySection] = Field(default_factory=list)
+
+
+class SummaryAnswerResponse(ApiModel):
+    outcome: Literal[WorkflowOutcome.SUMMARY_ANSWER] = WorkflowOutcome.SUMMARY_ANSWER
+    summary_result: SummaryResult
 
 
 class SummaryNotFoundResponse(ApiModel):
