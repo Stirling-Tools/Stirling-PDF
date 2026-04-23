@@ -350,7 +350,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
-    /opt/venv/bin/pip install --no-cache-dir --prefer-binary \
+    /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
       cryptography \
       "unoserver==${UNOSERVER_VERSION}" && \

@@ -57,7 +57,8 @@ jobs:
           cache: "pip" # caching pip dependencies
 
       - name: Install Python dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
 
       - name: Sync translation TOML files
         run: |
