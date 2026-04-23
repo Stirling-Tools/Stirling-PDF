@@ -912,8 +912,14 @@ public class RedactController {
             // --- Text-range redaction (section start → end, inclusive, across pages) ---
             if (hasTextRanges) {
                 List<String> rawRanges = request.getTextRanges();
+                if (rawRanges.size() % 2 != 0) {
+                    log.warn(
+                            "[redact/execute] textRanges has odd element count ({}); expected"
+                                    + " start/end pairs — last element ignored",
+                            rawRanges.size());
+                }
                 log.info("[redact/execute] {} text ranges to redact", rawRanges.size() / 2);
-                for (int ri = 0; ri < rawRanges.size(); ri += 2) {
+                for (int ri = 0; ri + 1 < rawRanges.size(); ri += 2) {
                     String rangeStart = rawRanges.get(ri).trim();
                     String rangeEnd = rawRanges.get(ri + 1).trim();
                     try {
