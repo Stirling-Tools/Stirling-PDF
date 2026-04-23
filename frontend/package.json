@@ -54,7 +54,7 @@
     "@tauri-apps/plugin-notification": "^2.3.3",
     "@tauri-apps/plugin-shell": "^2.3.5",
     "@userback/widget": "^0.3.12",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.5.0",
     "axios": "^1.15.0",
     "d3": "^7.9.0",
     "globals": "^17.1.0",
