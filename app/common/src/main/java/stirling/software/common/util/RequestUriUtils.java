@@ -182,7 +182,9 @@ public class RequestUriUtils {
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints — access controlled by share tokens, not login
-                || trimmedUri.startsWith("/api/v1/workflow/participant/");
+                || trimmedUri.startsWith("/api/v1/workflow/participant/")
+                // Share-link SPA bootstrap; data APIs remain protected
+                || trimmedUri.matches("^/share/[^/]+/?$");
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

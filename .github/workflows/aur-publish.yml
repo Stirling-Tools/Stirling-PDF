@@ -26,7 +26,7 @@ jobs:
       jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -70,12 +70,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
       - name: Checkout repository (for PKGBUILD templates)
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Update stirling-pdf-desktop PKGBUILD
         env:
@@ -118,7 +118,7 @@ jobs:
       # Disabled until we sort out the server packaging story.
       # - name: Publish stirling-pdf-server-bin to AUR
       #   if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
-      #   uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+      #   uses: KSXGitHub/github-actions-deploy-aur@2ac5a4c1d7035885d46b10e3193393be8460b6f1 # v4.1.1
       #   with:
       #     pkgname: stirling-pdf-server-bin
       #     pkgbuild: .github/aur/stirling-pdf-server-bin/PKGBUILD

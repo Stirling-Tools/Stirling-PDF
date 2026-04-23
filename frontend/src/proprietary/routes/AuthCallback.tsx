@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { springAuth } from "@app/auth/springAuthClient";
+import {
+  consumePostLoginRedirectPath,
+  springAuth,
+} from "@app/auth/springAuthClient";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
 import styles from "@app/routes/AuthCallback.module.css";
 
@@ -157,12 +160,11 @@ export default function AuthCallback() {
           `[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`,
         );
 
+        const target = consumePostLoginRedirectPath() ?? "/";
         console.log(
-          `[AuthCallback:${executionId}] Step 7: Navigating to home page`,
+          `[AuthCallback:${executionId}] Step 7: Navigating to ${target}`,
         );
-
-        // Clear the hash from URL and redirect to home page
-        navigate("/", { replace: true });
+        navigate(target, { replace: true });
 
         const duration = performance.now() - startTime;
         console.log(

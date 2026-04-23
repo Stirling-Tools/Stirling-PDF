@@ -34,15 +34,9 @@ from stirling.contracts.ledger import (
 
 class StubSettingsProvider:
     def __call__(self) -> AppSettings:
-        return AppSettings(
-            smart_model_name="test",
-            fast_model_name="test",
-            smart_model_max_tokens=8192,
-            fast_model_max_tokens=2048,
-            posthog_enabled=False,
-            posthog_api_key="",
-            posthog_host="https://eu.i.posthog.com",
-        )
+        from conftest import build_app_settings
+
+        return build_app_settings()
 
 
 class StubLedgerAgent:

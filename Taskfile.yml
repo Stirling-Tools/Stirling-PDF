@@ -44,7 +44,7 @@ tasks:
     desc: "Start backend + frontend + engine concurrently"
     deps:
       - backend:dev
-      - frontend:dev
+      - frontend:dev:prototypes
       - engine:dev
 
   # ============================================================

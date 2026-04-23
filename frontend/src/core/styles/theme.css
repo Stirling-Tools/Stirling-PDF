@@ -1091,3 +1091,12 @@
   fill: #c56565;
   fill-opacity: 1;
 }
+
+/* Snappier View-Transitions for FileEditor card reordering. Each thumbnail
+ * is tagged with `view-transition-name: file-card-<id>` (see
+ * FileEditorThumbnail.tsx); the browser FLIPs it between old and new
+ * positions on reorder. Override the sluggish 250ms default. */
+::view-transition-group(*) {
+  animation-duration: 160ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+}

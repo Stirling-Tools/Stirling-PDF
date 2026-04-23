@@ -1,4 +1,10 @@
-import { useRef, useEffect, useState, type KeyboardEvent } from "react";
+import {
+  useMemo,
+  useRef,
+  useEffect,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -11,19 +17,142 @@ import {
   Transition,
   Loader,
   Group,
+  Collapse,
+  UnstyledButton,
+  List,
 } from "@mantine/core";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
-import { useChat } from "@app/components/chat/ChatContext";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import {
+  useChat,
+  AiWorkflowPhase,
+  type AiWorkflowProgress,
+} from "@app/components/chat/ChatContext";
+import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import "@app/components/chat/ChatPanel.css";
+
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+/** Resolver mapping a tool endpoint path to its translated display name. */
+type ToolNameResolver = (endpoint: string) => string | null;
+
+/**
+ * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
+ * exposes the full API endpoint path for each tool, so we key the lookup on the exact path that
+ * arrives in SSE progress events — no string parsing.
+ */
+function useToolNameResolver(): ToolNameResolver {
+  const { allTools } = useTranslatedToolCatalog();
+  return useMemo(() => {
+    const nameByEndpoint = new Map<string, string>();
+    Object.values(allTools).forEach((tool) => {
+      const endpoint = tool.operationConfig?.endpoint;
+      // Only register tools with a static endpoint. Tools whose endpoint is a function
+      // (dynamic routing, e.g. Convert / Split) need runtime params to resolve, so they fall
+      // through to the generic progress message rather than mis-matching.
+      if (typeof endpoint === "string") {
+        nameByEndpoint.set(endpoint, tool.name);
+      }
+    });
+    return (endpoint: string) => nameByEndpoint.get(endpoint) ?? null;
+  }, [allTools]);
+}
+
+function formatProgress(
+  progress: AiWorkflowProgress,
+  t: TranslateFn,
+  resolveToolName: ToolNameResolver,
+): string {
+  if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL && progress.tool) {
+    const tool = resolveToolName(progress.tool);
+    const hasSteps =
+      progress.stepIndex != null &&
+      progress.stepCount != null &&
+      progress.stepCount > 1;
+    if (tool) {
+      return hasSteps
+        ? t("chat.progress.executing_tool_step", {
+            tool,
+            step: progress.stepIndex,
+            total: progress.stepCount,
+          })
+        : t("chat.progress.executing_tool_single", { tool });
+    }
+    // Unknown tool — fall back to a generic translated message rather than
+    // prettifying the endpoint path by hand.
+    return hasSteps
+      ? t("chat.progress.executing_tool_generic_step", {
+          step: progress.stepIndex,
+          total: progress.stepCount,
+        })
+      : t("chat.progress.executing_tool_generic");
+  }
+  return t(`chat.progress.${progress.phase}`);
+}
+
+function ToolsUsedBlock({
+  tools,
+  resolveToolName,
+  t,
+}: {
+  tools: string[];
+  resolveToolName: ToolNameResolver;
+  t: TranslateFn;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const names = tools.map(
+    (endpoint) => resolveToolName(endpoint) ?? t("chat.toolsUsed.unknownTool"),
+  );
+  const label = t("chat.toolsUsed.summary", { count: tools.length });
+  return (
+    <Box mt={6}>
+      <UnstyledButton
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <Group gap={4} wrap="nowrap">
+          {expanded ? (
+            <ExpandLessIcon sx={{ fontSize: 14 }} />
+          ) : (
+            <ExpandMoreIcon sx={{ fontSize: 14 }} />
+          )}
+          <Text size="xs" c="dimmed">
+            {label}
+          </Text>
+        </Group>
+      </UnstyledButton>
+      <Collapse in={expanded}>
+        <List
+          type="ordered"
+          size="xs"
+          mt={4}
+          pl="lg"
+          styles={{ itemWrapper: { lineHeight: 1.4 } }}
+        >
+          {names.map((name, i) => (
+            <List.Item key={i}>{name}</List.Item>
+          ))}
+        </List>
+      </Collapse>
+    </Box>
+  );
+}
 
 function ChatMessageBubble({
   role,
   content,
+  toolsUsed,
+  resolveToolName,
+  t,
 }: {
   role: "user" | "assistant";
   content: string;
+  toolsUsed?: string[];
+  resolveToolName: ToolNameResolver;
+  t: TranslateFn;
 }) {
   return (
     <div className={`chat-message chat-message-${role}`}>
@@ -31,6 +160,13 @@ function ChatMessageBubble({
         <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
           {content}
         </Text>
+        {toolsUsed && toolsUsed.length > 0 && (
+          <ToolsUsedBlock
+            tools={toolsUsed}
+            resolveToolName={resolveToolName}
+            t={t}
+          />
+        )}
       </Paper>
     </div>
   );
@@ -38,14 +174,9 @@ function ChatMessageBubble({
 
 export function ChatPanel() {
   const { t } = useTranslation();
-  const {
-    messages,
-    isOpen,
-    isLoading,
-    progressPhase,
-    toggleOpen,
-    sendMessage,
-  } = useChat();
+  const { messages, isOpen, isLoading, progress, toggleOpen, sendMessage } =
+    useChat();
+  const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -129,6 +260,9 @@ export function ChatPanel() {
                     key={msg.id}
                     role={msg.role}
                     content={msg.content}
+                    toolsUsed={msg.toolsUsed}
+                    resolveToolName={resolveToolName}
+                    t={t}
                   />
                 ))}
                 {isLoading && (
@@ -141,8 +275,8 @@ export function ChatPanel() {
                       <Group gap="xs" wrap="nowrap">
                         <Loader size="xs" type="dots" />
                         <Text size="sm" c="dimmed">
-                          {progressPhase
-                            ? t(`chat.progress.${progressPhase}`)
+                          {progress
+                            ? formatProgress(progress, t, resolveToolName)
                             : t("chat.progress.thinking")}
                         </Text>
                       </Group>
