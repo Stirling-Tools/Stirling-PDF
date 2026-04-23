@@ -8,12 +8,12 @@ import java.util.Map.Entry;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -64,7 +64,7 @@ public class MetadataController {
                     "This endpoint allows you to update the metadata of a given PDF file. You can"
                             + " add, modify, or delete standard and custom metadata fields. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> metadata(@ModelAttribute MetadataRequest request)
+    public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
         // Extract PDF file from the request object

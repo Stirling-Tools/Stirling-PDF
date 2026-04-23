@@ -6,12 +6,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -45,8 +45,7 @@ public class OverlayImageController {
                             + "SVG files are rendered as vector graphics for crisp output at any resolution. "
                             + "The image can be overlaid on every page of the PDF if specified. "
                             + "Input:PDF/IMAGE/SVG Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> overlayImage(
-            @ModelAttribute OverlayImageRequest request) {
+    public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
         float x = request.getX();

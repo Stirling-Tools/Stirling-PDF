@@ -17,12 +17,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
@@ -34,14 +35,15 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ReplaceAndInvertColorControllerTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -96,7 +98,7 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(
                             () ->
@@ -104,8 +106,7 @@ class ReplaceAndInvertColorControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response =
-                    controller.replaceAndInvertColor(request);
+            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -132,7 +133,7 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(
                             () ->
@@ -140,8 +141,7 @@ class ReplaceAndInvertColorControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response =
-                    controller.replaceAndInvertColor(request);
+            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -166,7 +166,7 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(
                             () ->
@@ -174,8 +174,7 @@ class ReplaceAndInvertColorControllerTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response =
-                    controller.replaceAndInvertColor(request);
+            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -205,7 +204,7 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(
                             () ->
