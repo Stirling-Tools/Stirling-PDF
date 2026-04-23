@@ -11,7 +11,7 @@ from stirling.contracts import (
     IngestDocumentResponse,
     PdfContentType,
 )
-from stirling.rag import RagService
+from stirling.rag import Document, RagService
 
 router = APIRouter(prefix="/api/v1/rag", tags=["rag"])
 
@@ -24,27 +24,30 @@ async def ingest_document(
     """Replace-ingest a document's content under ``document_id``.
 
     Any previously-stored content for this document is removed and the
-    provided content replaces it wholesale.
+    provided content replaces it wholesale. All pages are chunked up front
+    and then embedded in a single batched call so large documents (e.g. a
+    500-page book) don't fan out into hundreds of embedding requests.
     """
     await rag.delete_collection(request.document_id)
 
-    total = 0
+    chunks: list[Document] = []
     if request.page_text:
         for page in request.page_text:
             if not page.text.strip():
                 continue
-            chunks = await rag.index_text(
-                collection=request.document_id,
-                text=page.text,
-                source=f"{request.source}:page:{page.page_number}",
-                metadata={
-                    "page_number": str(page.page_number),
-                    "content_type": PdfContentType.PAGE_TEXT.value,
-                },
+            chunks.extend(
+                rag.chunk_text(
+                    text=page.text,
+                    source=f"{request.source}:page:{page.page_number}",
+                    base_metadata={
+                        "page_number": str(page.page_number),
+                        "content_type": PdfContentType.PAGE_TEXT.value,
+                    },
+                )
             )
-            total += chunks
 
-    return IngestDocumentResponse(document_id=request.document_id, chunks_indexed=total)
+    indexed = await rag.index_documents(request.document_id, chunks) if chunks else 0
+    return IngestDocumentResponse(document_id=request.document_id, chunks_indexed=indexed)
 
 
 @router.delete("/documents/{document_id}", response_model=DeleteDocumentResponse)

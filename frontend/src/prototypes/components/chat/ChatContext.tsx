@@ -29,6 +29,12 @@ export interface ChatMessage {
    * turns that answered without running any tool.
    */
   toolsUsed?: string[];
+  /**
+   * Structured summary payload. Present on assistant messages produced by the summary
+   * agent; when present the bubble renders a headed/sectioned layout rather than plain
+   * text.
+   */
+  summary?: AiSummaryResult;
 }
 
 export enum AiWorkflowPhase {
@@ -59,13 +65,26 @@ type AiWorkflowOutcome =
   | "tool_call"
   | "completed"
   | "unsupported_capability"
-  | "cannot_continue";
+  | "cannot_continue"
+  | "summary_answer"
+  | "summary_not_found";
 
 interface AiWorkflowResultFile {
   /** Stirling file ID — download with /api/v1/general/files/{fileId}. */
   fileId: string;
   fileName: string;
   contentType: string;
+}
+
+export interface AiSummarySection {
+  heading: string;
+  summary: string;
+}
+
+export interface AiSummaryResult {
+  tldr: string;
+  keyPoints: string[];
+  sections: AiSummarySection[];
 }
 
 interface AiWorkflowResponse {
@@ -79,6 +98,8 @@ interface AiWorkflowResponse {
   message?: string;
   evidence?: Array<{ pageNumber: number; text: string }>;
   steps?: Array<Record<string, unknown>>;
+  /** Populated on summary_answer outcomes. */
+  summaryResult?: AiSummaryResult;
   /** Every file produced by the workflow (empty if the outcome has no files). */
   resultFiles?: AiWorkflowResultFile[];
   // Legacy single-file fields — mirror the first entry of resultFiles.
@@ -134,6 +155,15 @@ function formatWorkflowResponse(data: AiWorkflowResponse): string {
       );
     case "cannot_continue":
       return data.reason ?? "Something went wrong and I can't continue.";
+    case "summary_answer":
+      // The structured summary renders via ChatMessage.summary; the content string is
+      // only used as a fallback if the bubble falls back to plain text.
+      return data.summaryResult?.tldr ?? "";
+    case "summary_not_found":
+      return (
+        data.reason ??
+        "I couldn't produce a summary from the provided documents."
+      );
     case "plan":
       return data.rationale
         ? `${data.rationale}\n\n${(data.steps ?? []).map((s, i) => `${i + 1}. ${JSON.stringify(s)}`).join("\n")}`
@@ -393,6 +423,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 content: replyContent,
                 timestamp: Date.now(),
                 toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+                summary:
+                  data.outcome === "summary_answer"
+                    ? data.summaryResult
+                    : undefined,
               },
             });
             if (data.fileId || data.resultFiles?.length) {

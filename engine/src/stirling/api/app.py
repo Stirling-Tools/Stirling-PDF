@@ -57,6 +57,7 @@ async def lifespan(fast_api: FastAPI):
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     yield
+    await runtime.rag_service.close()
     if tracer_provider:
         tracer_provider.shutdown()
 

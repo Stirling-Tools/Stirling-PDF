@@ -29,6 +29,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import {
   useChat,
   AiWorkflowPhase,
+  type AiSummaryResult,
   type AiWorkflowProgress,
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
@@ -141,25 +142,62 @@ function ToolsUsedBlock({
   );
 }
 
+function SummaryBlock({ summary }: { summary: AiSummaryResult }) {
+  return (
+    <Stack gap="xs">
+      <Text size="sm" fw={600}>
+        {summary.tldr}
+      </Text>
+      {summary.keyPoints.length > 0 && (
+        <List size="sm" spacing={2} pl="sm">
+          {summary.keyPoints.map((point, i) => (
+            <List.Item key={i}>{point}</List.Item>
+          ))}
+        </List>
+      )}
+      {summary.sections.length > 0 && (
+        <Stack gap={4} mt="xs">
+          {summary.sections.map((section, i) => (
+            <Box key={i}>
+              <Text size="sm" fw={600}>
+                {section.heading}
+              </Text>
+              <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                {section.summary}
+              </Text>
+            </Box>
+          ))}
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
 function ChatMessageBubble({
   role,
   content,
   toolsUsed,
+  summary,
   resolveToolName,
   t,
 }: {
   role: "user" | "assistant";
   content: string;
   toolsUsed?: string[];
+  summary?: AiSummaryResult;
   resolveToolName: ToolNameResolver;
   t: TranslateFn;
 }) {
   return (
     <div className={`chat-message chat-message-${role}`}>
       <Paper className={`chat-bubble chat-bubble-${role}`} p="xs" radius="md">
-        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-          {content}
-        </Text>
+        {summary ? (
+          <SummaryBlock summary={summary} />
+        ) : (
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {content}
+          </Text>
+        )}
         {toolsUsed && toolsUsed.length > 0 && (
           <ToolsUsedBlock
             tools={toolsUsed}
@@ -261,6 +299,7 @@ export function ChatPanel() {
                     role={msg.role}
                     content={msg.content}
                     toolsUsed={msg.toolsUsed}
+                    summary={msg.summary}
                     resolveToolName={resolveToolName}
                     t={t}
                   />

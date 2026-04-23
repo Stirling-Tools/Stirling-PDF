@@ -271,7 +271,7 @@ public class AiWorkflowService {
         AiRagIngestRequest ingestRequest =
                 new AiRagIngestRequest(file.getId(), file.getName(), pages);
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.post(RAG_DOCUMENTS_ENDPOINT, body);
+        aiEngineClient.postLongRunning(RAG_DOCUMENTS_ENDPOINT, body);
         log.debug(
                 "Ingested file into RAG: id={}, name={}, pages={}",
                 file.getId(),

@@ -289,7 +289,7 @@ class AiWorkflowServiceTest {
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.SUMMARY_ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1)).post(eq("/api/v1/rag/documents"), anyString());
+        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/rag/documents"), anyString());
         verify(aiEngineClient, times(2)).post(eq("/api/v1/orchestrator"), anyString());
     }
 

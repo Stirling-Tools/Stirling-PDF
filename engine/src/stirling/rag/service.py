@@ -39,6 +39,19 @@ class RagService:
         await self._store.add_documents(collection, documents, embeddings)
         return len(documents)
 
+    def chunk_text(
+        self,
+        text: str,
+        source: str = "",
+        base_metadata: dict[str, str] | None = None,
+    ) -> list[Document]:
+        """Chunk text into Document objects ready for indexing. Does NOT embed.
+
+        Exposed so callers that ingest many chunks can accumulate them across calls
+        and then pass the full batch to ``index_documents`` for a single embedding pass.
+        """
+        return self._embedder.chunk_and_prepare(text, source=source, base_metadata=base_metadata)
+
     async def search(
         self,
         query: str,
@@ -82,3 +95,7 @@ class RagService:
     async def list_collections(self) -> list[str]:
         """List all available collections."""
         return await self._store.list_collections()
+
+    async def close(self) -> None:
+        """Release the underlying vector store's resources."""
+        await self._store.close()
