@@ -10,8 +10,11 @@ test.describe('27. Browser Back/Forward Navigation', () => {
       await page.locator('a[href="/merge"]').first().click();
       await expect(page).toHaveURL(/\/merge/);
 
-      // Step 2: Click on the "All Tools" breadcrumb to go back to /
-      await page.locator('a[href="/"]').first().click();
+      // Step 2: Click the sidebar "Tools" link to go back to /.
+      // Prefer the sidebar link to the breadcrumb: the breadcrumb's accessible
+      // name varies (current tool name vs "Back to all tools") and on webkit
+      // the click doesn't always trigger router navigation.
+      await page.getByRole('link', { name: /^Tools$/i }).first().click();
       await expect(page).toHaveURL('/');
 
       // Step 3: Click on "Split" tool to navigate to /split

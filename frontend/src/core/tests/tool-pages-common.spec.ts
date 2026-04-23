@@ -34,8 +34,10 @@ test.describe('4. PDF Tool Pages - Common Patterns', () => {
       await page.goto('/compress');
       await page.waitForLoadState('domcontentloaded');
 
-      // Step 2: Click the breadcrumb link to go back to /
-      const homeLink = page.locator('a[href="/"]').first();
+      // Step 2: Click the sidebar "Tools" link to go back to /.
+      // Prefer the sidebar link to the breadcrumb: on webkit the breadcrumb
+      // click doesn't always trigger router navigation.
+      const homeLink = page.getByRole('link', { name: /^Tools$/i }).first();
       await homeLink.click();
 
       // Step 3: Verify navigation back to the home dashboard
