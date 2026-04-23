@@ -1,8 +1,8 @@
 name: Update Package Manager Manifests
 
 on:
-  # release:
-  #   types: [released]
+  release:
+    types: [released]
   workflow_dispatch:
     inputs:
       version:
@@ -75,7 +75,7 @@ jobs:
           echo "deb_sha256=$DEB_SHA"              >> "$GITHUB_OUTPUT"
           echo "jar_sha256=$JAR_SHA"              >> "$GITHUB_OUTPUT"
 
-  update-homebrew:
+  update-homebrew-and-scoop:
     needs: get-release-info
     runs-on: ubuntu-latest
     permissions:
@@ -86,22 +86,21 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Checkout homebrew tap
+      - name: Checkout homebrew-stirling-pdf tap (also hosts Scoop bucket)
         uses: actions/checkout@v4
         with:
           repository: Stirling-Tools/homebrew-stirling-pdf
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: homebrew-tap
+          path: tap
 
-      - name: Update cask (stirling-pdf.rb)
+      - name: Update Homebrew cask (Casks/stirling-pdf.rb)
         env:
           VERSION: ${{ needs.get-release-info.outputs.version }}
           ARM64_SHA: ${{ needs.get-release-info.outputs.dmg_arm64_sha256 }}
           X64_SHA: ${{ needs.get-release-info.outputs.dmg_x86_64_sha256 }}
         run: |
-          CASK="homebrew-tap/Casks/stirling-pdf.rb"
+          CASK="tap/Casks/stirling-pdf.rb"
           sed -i "s/version \".*\"/version \"${VERSION}\"/" "$CASK"
-          # Update ARM64 sha256 (line following on_arm block)
           awk -v arm="$ARM64_SHA" -v x64="$X64_SHA" '
             /on_arm/     { in_arm=1 }
             /on_intel/   { in_arm=0; in_intel=1 }
@@ -111,87 +110,50 @@ jobs:
             { print }
           ' "$CASK" > tmp && mv tmp "$CASK"
 
-      - name: Update formula (stirling-pdf-server.rb)
+      - name: Update Homebrew formula (Formula/stirling-pdf-server.rb)
         env:
           VERSION: ${{ needs.get-release-info.outputs.version }}
           JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
         run: |
-          FORMULA="homebrew-tap/Formula/stirling-pdf-server.rb"
+          FORMULA="tap/Formula/stirling-pdf-server.rb"
           sed -i "s/version \".*\"/version \"${VERSION}\"/" "$FORMULA"
           sed -i "s/sha256 \".*\"/sha256 \"${JAR_SHA}\"/" "$FORMULA"
 
-      - name: Show homebrew tap diff (for dry-run visibility)
-        working-directory: homebrew-tap
-        run: |
-          echo "--- diff --stat ---"
-          git diff --stat
-          echo "--- full diff ---"
-          git diff
-
-      - name: Commit and push homebrew tap updates
-        if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
-        working-directory: homebrew-tap
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Casks/stirling-pdf.rb Formula/stirling-pdf-server.rb
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "chore: bump Stirling-PDF to v${{ needs.get-release-info.outputs.version }}"
-          git push
-
-  update-scoop:
-    needs: get-release-info
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
-      - name: Checkout Scoop bucket (shared with Homebrew tap)
-        uses: actions/checkout@v4
-        with:
-          repository: Stirling-Tools/homebrew-stirling-pdf
-          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-          path: scoop-bucket
-
-      - name: Update stirling-pdf.json
+      - name: Update Scoop stirling-pdf.json
         env:
           VERSION: ${{ needs.get-release-info.outputs.version }}
           MSI_SHA: ${{ needs.get-release-info.outputs.msi_sha256 }}
         run: |
-          MANIFEST="scoop-bucket/scoop/stirling-pdf.json"
+          MANIFEST="tap/scoop/stirling-pdf.json"
           jq --arg v "$VERSION" --arg h "$MSI_SHA" \
             '.version = $v | .architecture["64bit"].url = "https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v\($v)/Stirling-PDF-windows-x86_64.msi" | .architecture["64bit"].hash = $h' \
             "$MANIFEST" > tmp.json && mv tmp.json "$MANIFEST"
 
-      - name: Update stirling-pdf-server.json
+      - name: Update Scoop stirling-pdf-server.json
         env:
           VERSION: ${{ needs.get-release-info.outputs.version }}
           JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
         run: |
-          MANIFEST="scoop-bucket/scoop/stirling-pdf-server.json"
+          MANIFEST="tap/scoop/stirling-pdf-server.json"
           jq --arg v "$VERSION" --arg h "$JAR_SHA" \
             '.version = $v | .url = "https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v\($v)/Stirling-PDF-with-login.jar" | .hash = $h' \
             "$MANIFEST" > tmp.json && mv tmp.json "$MANIFEST"
 
-      - name: Show Scoop bucket diff (for dry-run visibility)
-        working-directory: scoop-bucket
+      - name: Show tap diff (for dry-run visibility)
+        working-directory: tap
         run: |
           echo "--- diff --stat ---"
           git diff --stat
           echo "--- full diff ---"
           git diff
 
-      - name: Commit and push Scoop bucket updates
+      - name: Commit and push all tap updates
         if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
-        working-directory: scoop-bucket
+        working-directory: tap
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add scoop/stirling-pdf.json scoop/stirling-pdf-server.json
+          git add Casks/stirling-pdf.rb Formula/stirling-pdf-server.rb scoop/stirling-pdf.json scoop/stirling-pdf-server.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: bump Stirling-PDF to v${{ needs.get-release-info.outputs.version }}"
           git push
