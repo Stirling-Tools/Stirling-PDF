@@ -191,6 +191,20 @@ public class DatabaseController {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");
         }
+
+        // Validate that file is a legitimate backup file
+        // Only allow files matching the backup naming pattern
+        if (!fileName.startsWith("backup_") || !fileName.endsWith(".sql")) {
+            log.warn("Attempted download of non-backup file: {}", fileName);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            java.util.Map.of(
+                                    "error",
+                                    "invalidFileName",
+                                    "message",
+                                    "Only backup files are allowed"));
+        }
+
         try {
             Path filePath = databaseService.getBackupFilePath(fileName);
             InputStreamResource resource = new InputStreamResource(Files.newInputStream(filePath));

@@ -1,6 +1,16 @@
 import { useState, useMemo } from "react";
-import { Stack, Text, Group, Button, Box, Popover, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Button,
+  Box,
+  Popover,
+  UnstyledButton,
+  useMantineTheme,
+} from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface FormatOption {
@@ -8,6 +18,7 @@ interface FormatOption {
   label: string;
   group: string;
   enabled?: boolean;
+  usesCloud?: boolean;
 }
 
 interface GroupedFormatDropdownProps {
@@ -31,16 +42,15 @@ const GroupedFormatDropdown = ({
   minWidth = "18.75rem",
   name,
   withinPortal = true,
-  zIndex = Z_INDEX_AUTOMATE_DROPDOWN
+  zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }: GroupedFormatDropdownProps) => {
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
 
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
 
-    options.forEach(option => {
+    options.forEach((option) => {
       if (!groups[option.group]) {
         groups[option.group] = [];
       }
@@ -52,8 +62,10 @@ const GroupedFormatDropdown = ({
 
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
-    const selected = options.find(opt => opt.value === value);
-    return selected ? `${selected.group} (${selected.label})` : value.toUpperCase();
+    const selected = options.find((opt) => opt.value === value);
+    return selected
+      ? `${selected.group} (${selected.label})`
+      : value.toUpperCase();
   }, [value, options, placeholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
@@ -81,31 +93,29 @@ const GroupedFormatDropdown = ({
           onClick={() => setDropdownOpened(!dropdownOpened)}
           disabled={disabled}
           style={{
-            padding: '0.5rem 0.75rem',
+            padding: "0.5rem 0.75rem",
             border: `0.0625rem solid ${theme.colors.gray[4]}`,
             borderRadius: theme.radius.sm,
             backgroundColor: disabled
               ? theme.colors.gray[1]
-              : colorScheme === 'dark'
-                ? theme.colors.dark[6]
-                : theme.white,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            width: '100%',
+              : "var(--dropdown-trigger-bg)",
+            cursor: disabled ? "not-allowed" : "pointer",
+            width: "100%",
             color: disabled
-              ? colorScheme === 'dark' ? theme.colors.dark[1] : theme.colors.dark[7]
-              : colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.dark[9]
+              ? "var(--dropdown-trigger-text-disabled)"
+              : "var(--dropdown-trigger-text)",
           }}
         >
           <Group justify="space-between">
-            <Text size="sm" c={value ? undefined : 'dimmed'}>
+            <Text size="sm" c={value ? undefined : "dimmed"}>
               {selectedLabel}
             </Text>
             <KeyboardArrowDownIcon
               style={{
-                fontSize: '1rem',
-                transform: dropdownOpened ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease',
-                color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]
+                fontSize: "1rem",
+                transform: dropdownOpened ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+                color: "var(--dropdown-trigger-icon)",
               }}
             />
           </Group>
@@ -113,12 +123,12 @@ const GroupedFormatDropdown = ({
       </Popover.Target>
       <Popover.Dropdown
         style={{
-          minWidth: Math.min(350, parseInt(minWidth.replace('rem', '')) * 16),
-          maxWidth: '90vw',
-          maxHeight: '40vh',
-          overflow: 'auto',
-          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
-          border: `0.0625rem solid ${colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[4]}`,
+          minWidth: Math.min(350, parseInt(minWidth.replace("rem", "")) * 16),
+          maxWidth: "90vw",
+          maxHeight: "40vh",
+          overflow: "auto",
+          backgroundColor: "var(--dropdown-panel-bg)",
+          border: `0.0625rem solid var(--dropdown-panel-border)`,
         }}
       >
         <Stack gap="md">
@@ -127,12 +137,12 @@ const GroupedFormatDropdown = ({
               <Text
                 size="sm"
                 fw={600}
-                c={colorScheme === 'dark' ? 'dark.2' : 'gray.6'}
                 mb="xs"
+                style={{ color: "var(--dropdown-group-label)" }}
               >
                 {groupName}
               </Text>
-              <Group gap="xs" style={{ flexWrap: 'wrap' }}>
+              <Group gap="xs" style={{ flexWrap: "wrap" }}>
                 {groupOptions.map((option) => (
                   <Button
                     key={option.value}
@@ -142,13 +152,23 @@ const GroupedFormatDropdown = ({
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.enabled === false}
                     style={{
-                      fontSize: '0.75rem',
-                      height: '2rem',
-                      padding: '0 0.75rem',
-                      flexShrink: 0
+                      fontSize: "0.75rem",
+                      height: "2rem",
+                      padding: "0 0.75rem",
+                      flexShrink: 0,
+                      position: "relative",
                     }}
                   >
                     {option.label}
+                    {option.usesCloud && (
+                      <CloudOutlinedIcon
+                        style={{
+                          fontSize: "0.625rem",
+                          marginLeft: "0.25rem",
+                          opacity: 0.7,
+                        }}
+                      />
+                    )}
                   </Button>
                 ))}
               </Group>

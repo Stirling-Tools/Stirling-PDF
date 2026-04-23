@@ -427,7 +427,8 @@ public class CertificateValidationService {
             try (InputStream certStream =
                     getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
                 if (certStream == null) {
-                    log.warn("Bundled Mozilla CA certificate file not found in resources");
+                    log.debug(
+                            "Bundled Mozilla CA certificate file not found in resources — using Java system trust store only");
                     return;
                 }
 
@@ -611,9 +612,11 @@ public class CertificateValidationService {
      */
     private int parseSecuritySettingsXML(InputStream xmlStream) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
         factory.setXIncludeAware(false);
         factory.setExpandEntityReferences(false);
 
@@ -837,9 +840,11 @@ public class CertificateValidationService {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         // Secure processing hardening
+        factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
         factory.setXIncludeAware(false);
         factory.setExpandEntityReferences(false);
         return factory;

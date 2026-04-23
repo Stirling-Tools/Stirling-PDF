@@ -2,12 +2,12 @@
 .modal-container {
   display: flex;
   gap: 0;
-  height: 37.5rem; /* 600px */
+  height: 45rem; /* 720px */
 }
 
 .modal-nav {
   width: 15rem; /* 240px */
-  height: 37.5rem; /* 600px */
+  height: 45rem; /* 720px */
   border-top-left-radius: 0.75rem; /* 12px */
   border-bottom-left-radius: 0.75rem; /* 12px */
   overflow: hidden;
@@ -108,7 +108,7 @@
 
 .modal-content {
   flex: 1;
-  height: 37.5rem; /* 600px */
+  height: 45rem; /* 720px */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -163,6 +163,16 @@
   padding-top: 1rem;
 }
 
+.settings-search-select {
+  min-width: 10rem;
+}
+
+.settings-search-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
 .confirm-modal-content {
   display: flex;
   flex-direction: column;
@@ -210,7 +220,7 @@
     margin: 0 -1rem;
     margin-bottom: -1rem;
   }
-  
+
   .settings-section-content {
     padding-bottom: 4rem;
   }

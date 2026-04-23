@@ -2,30 +2,28 @@ package stirling.software.common.util;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
-import lombok.extern.slf4j.Slf4j;
+/**
+ * Factory for creating executors backed by virtual threads (Java 21+). Virtual threads are
+ * lightweight, managed by the JVM, and ideal for I/O-bound tasks. They eliminate the need for
+ * thread pool sizing since thousands can run concurrently with minimal overhead.
+ */
+public final class ExecutorFactory {
 
-@Slf4j
-public class ExecutorFactory {
+    private ExecutorFactory() {}
+
+    /** Creates an {@link ExecutorService} that starts a new virtual thread for each task. */
+    public static ExecutorService newVirtualThreadExecutor() {
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
 
     /**
-     * Creates an ExecutorService using virtual threads if available (Java 21+), or falls back to a
-     * cached thread pool on older Java versions.
+     * Creates a {@link ScheduledExecutorService} backed by a single virtual thread. Useful for
+     * periodic/delayed tasks that should not pin a platform thread.
      */
-    public static ExecutorService newVirtualOrCachedThreadExecutor() {
-        try {
-            ExecutorService executor =
-                    (ExecutorService)
-                            Executors.class
-                                    .getMethod("newVirtualThreadPerTaskExecutor")
-                                    .invoke(null);
-            return executor;
-        } catch (NoSuchMethodException e) {
-            log.debug("Virtual threads not available; falling back to cached thread pool.");
-        } catch (Exception e) {
-            log.debug("Error initializing virtual thread executor: {}", e.getMessage(), e);
-        }
-
-        return Executors.newCachedThreadPool();
+    public static ScheduledExecutorService newSingleVirtualThreadScheduledExecutor() {
+        return Executors.newSingleThreadScheduledExecutor(
+                Thread.ofVirtual().name("scheduled-vt-", 0).factory());
     }
 }

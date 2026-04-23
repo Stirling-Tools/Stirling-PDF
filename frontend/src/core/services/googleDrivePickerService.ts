@@ -3,15 +3,22 @@
  * Handles Google Drive file picker integration
  */
 
-import { loadScript } from '@app/utils/scriptLoader';
+import { loadScript } from "@app/utils/scriptLoader";
 
-const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
-const SESSION_STORAGE_ID = 'googleDrivePickerAccessToken';
+const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
+const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
 
 interface GoogleDriveConfig {
   clientId: string;
   apiKey: string;
   appId: string;
+}
+
+interface BackendGoogleDriveConfig {
+  enabled?: boolean;
+  clientId?: string;
+  apiKey?: string;
+  appId?: string;
 }
 
 interface PickerOptions {
@@ -21,20 +28,20 @@ interface PickerOptions {
 
 // Expandable mime types for Google Picker
 const expandableMimeTypes: Record<string, string[]> = {
-  'image/*': ['image/jpeg', 'image/png', 'image/svg+xml'],
+  "image/*": ["image/jpeg", "image/png", "image/svg+xml"],
 };
 
 /**
  * Convert file input accept attribute to Google Picker mime types
  */
 function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
-  if (!accept || accept === '' || accept.includes('*/*')) {
+  if (!accept || accept === "" || accept.includes("*/*")) {
     // Setting null will accept all supported mimetypes
     return null;
   }
 
   const mimeTypes: string[] = [];
-  accept.split(',').forEach((part) => {
+  accept.split(",").forEach((part) => {
     const trimmedPart = part.trim();
     if (!(trimmedPart in expandableMimeTypes)) {
       mimeTypes.push(trimmedPart);
@@ -46,7 +53,7 @@ function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
     });
   });
 
-  return mimeTypes.join(',').replace(/\s+/g, '');
+  return mimeTypes.join(",").replace(/\s+/g, "");
 }
 
 class GoogleDrivePickerService {
@@ -67,10 +74,7 @@ class GoogleDrivePickerService {
     this.config = config;
 
     // Load Google APIs
-    await Promise.all([
-      this.loadGapi(),
-      this.loadGis(),
-    ]);
+    await Promise.all([this.loadGapi(), this.loadGis()]);
   }
 
   /**
@@ -80,13 +84,15 @@ class GoogleDrivePickerService {
     if (this.gapiLoaded) return;
 
     await loadScript({
-      src: 'https://apis.google.com/js/api.js',
-      id: 'gapi-script',
+      src: "https://apis.google.com/js/api.js",
+      id: "gapi-script",
     });
 
     return new Promise((resolve) => {
-      window.gapi.load('client:picker', async () => {
-        await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+      window.gapi.load("client:picker", async () => {
+        await window.gapi.client.load(
+          "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+        );
         this.gapiLoaded = true;
         resolve();
       });
@@ -100,12 +106,12 @@ class GoogleDrivePickerService {
     if (this.gisLoaded) return;
 
     await loadScript({
-      src: 'https://accounts.google.com/gsi/client',
-      id: 'gis-script',
+      src: "https://accounts.google.com/gsi/client",
+      id: "gis-script",
     });
 
     if (!this.config) {
-      throw new Error('Google Drive config not initialized');
+      throw new Error("Google Drive config not initialized");
     }
 
     this.tokenClient = window.google.accounts.oauth2.initTokenClient({
@@ -122,7 +128,7 @@ class GoogleDrivePickerService {
    */
   async openPicker(options: PickerOptions = {}): Promise<File[]> {
     if (!this.config) {
-      throw new Error('Google Drive service not initialized');
+      throw new Error("Google Drive service not initialized");
     }
 
     // Request access token
@@ -138,7 +144,7 @@ class GoogleDrivePickerService {
   private requestAccessToken(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.tokenClient) {
-        reject(new Error('Token client not initialized'));
+        reject(new Error("Token client not initialized"));
         return;
       }
 
@@ -147,7 +153,7 @@ class GoogleDrivePickerService {
           reject(new Error(response.error));
           return;
         }
-        if(response.access_token == null){
+        if (response.access_token == null) {
           reject(new Error("No acces token in response"));
         }
 
@@ -157,7 +163,7 @@ class GoogleDrivePickerService {
       };
 
       this.tokenClient.requestAccessToken({
-        prompt: this.accessToken === null ? 'consent' : '',
+        prompt: this.accessToken === null ? "consent" : "",
       });
     });
   }
@@ -168,11 +174,13 @@ class GoogleDrivePickerService {
   private createPicker(options: PickerOptions): Promise<File[]> {
     return new Promise((resolve, reject) => {
       if (!this.config || !this.accessToken) {
-        reject(new Error('Not initialized or no access token'));
+        reject(new Error("Not initialized or no access token"));
         return;
       }
 
-      const mimeTypes = fileInputToGooglePickerMimeTypes(options.mimeTypes || undefined);
+      const mimeTypes = fileInputToGooglePickerMimeTypes(
+        options.mimeTypes || undefined,
+      );
 
       const view1 = new window.google.picker.DocsView().setIncludeFolders(true);
       if (mimeTypes !== null) {
@@ -209,34 +217,44 @@ class GoogleDrivePickerService {
   private async pickerCallback(
     data: any,
     resolve: (files: File[]) => void,
-    reject: (error: Error) => void
+    reject: (error: Error) => void,
   ): Promise<void> {
     if (data.action === window.google.picker.Action.PICKED) {
       try {
         const files = await Promise.all(
-          data[window.google.picker.Response.DOCUMENTS].map(async (pickedFile: any) => {
-            const fileId = pickedFile[window.google.picker.Document.ID];
-            const res = await window.gapi.client.drive.files.get({
-              fileId: fileId,
-              alt: 'media',
-            });
+          data[window.google.picker.Response.DOCUMENTS].map(
+            async (pickedFile: any) => {
+              const fileId = pickedFile[window.google.picker.Document.ID];
+              const res = await window.gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: "media",
+              });
 
-            // Convert response body to File object
-            const file = new File(
-              [new Uint8Array(res.body.length).map((_: any, i: number) => res.body.charCodeAt(i))],
-              pickedFile.name,
-              {
-                type: pickedFile.mimeType,
-                lastModified: pickedFile.lastModified,
-              }
-            );
-            return file;
-          })
+              // Convert response body to File object
+              const file = new File(
+                [
+                  new Uint8Array(res.body.length).map((_: any, i: number) =>
+                    res.body.charCodeAt(i),
+                  ),
+                ],
+                pickedFile.name,
+                {
+                  type: pickedFile.mimeType,
+                  lastModified: pickedFile.lastModified,
+                },
+              );
+              return file;
+            },
+          ),
         );
 
         resolve(files);
       } catch (error) {
-        reject(error instanceof Error ? error : new Error('Failed to download files'));
+        reject(
+          error instanceof Error
+            ? error
+            : new Error("Failed to download files"),
+        );
       }
     } else if (data.action === window.google.picker.Action.CANCEL) {
       resolve([]); // User cancelled, return empty array
@@ -270,8 +288,27 @@ export function getGoogleDrivePickerService(): GoogleDrivePickerService {
 
 /**
  * Check if Google Drive credentials are configured
+ * Supports both backend settings and environment variables
  */
-export function isGoogleDriveConfigured(): boolean {
+export function isGoogleDriveConfigured(
+  backendConfig?: BackendGoogleDriveConfig,
+): boolean {
+  // If backend config is provided, use it exclusively (don't fall back to env vars)
+  if (backendConfig) {
+    if (backendConfig.enabled === false) {
+      return false; // Admin explicitly disabled it
+    }
+    if (backendConfig.enabled) {
+      return !!(
+        backendConfig.clientId &&
+        backendConfig.apiKey &&
+        backendConfig.appId
+      );
+    }
+    return false; // No backend config provided
+  }
+
+  // Fall back to environment variables only when backend config is not available
   const clientId = import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID;
   const apiKey = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY;
   const appId = import.meta.env.VITE_GOOGLE_DRIVE_APP_ID;
@@ -280,16 +317,59 @@ export function isGoogleDriveConfigured(): boolean {
 }
 
 /**
- * Get Google Drive configuration from environment variables
+ * Get Google Drive configuration from backend settings or environment variables
+ * Backend settings take priority over environment variables
  */
-export function getGoogleDriveConfig(): GoogleDriveConfig | null {
-  if (!isGoogleDriveConfigured()) {
-    return null;
+export function getGoogleDriveConfig(
+  backendConfig?: BackendGoogleDriveConfig,
+): GoogleDriveConfig | null {
+  // If backend config is provided, use it exclusively (don't fall back to env vars)
+  if (backendConfig) {
+    if (backendConfig.enabled === false) {
+      return null; // Admin explicitly disabled it
+    }
+    if (
+      backendConfig.enabled &&
+      backendConfig.clientId &&
+      backendConfig.apiKey &&
+      backendConfig.appId
+    ) {
+      return {
+        clientId: backendConfig.clientId,
+        apiKey: backendConfig.apiKey,
+        appId: backendConfig.appId,
+      };
+    }
+    return null; // Backend config provided but incomplete
   }
 
+  // Fall back to environment variables only when backend config is not available
+  const envClientId = import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID;
+  const envApiKey = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY;
+  const envAppId = import.meta.env.VITE_GOOGLE_DRIVE_APP_ID;
+
+  if (envClientId && envApiKey && envAppId) {
+    return {
+      clientId: envClientId,
+      apiKey: envApiKey,
+      appId: envAppId,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Extract Google Drive backend config from AppConfig object
+ * Eliminates duplicated config construction pattern
+ */
+export function extractGoogleDriveBackendConfig(
+  appConfig: any,
+): BackendGoogleDriveConfig {
   return {
-    clientId: import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID,
-    apiKey: import.meta.env.VITE_GOOGLE_DRIVE_API_KEY,
-    appId: import.meta.env.VITE_GOOGLE_DRIVE_APP_ID,
+    enabled: appConfig?.googleDriveEnabled,
+    clientId: appConfig?.googleDriveClientId,
+    apiKey: appConfig?.googleDriveApiKey,
+    appId: appConfig?.googleDriveAppId,
   };
 }

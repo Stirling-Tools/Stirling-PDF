@@ -1,14 +1,26 @@
-import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, Alert, List } from '@mantine/core';
-import { alert } from '@app/components/toast';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
-import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
-import PendingBadge from '@app/components/shared/config/PendingBadge';
-import { useLoginRequired } from '@app/hooks/useLoginRequired';
-import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  TextInput,
+  Switch,
+  Stack,
+  Paper,
+  Text,
+  Loader,
+  Group,
+  Alert,
+  List,
+} from "@mantine/core";
+import { alert } from "@app/components/toast";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@app/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@app/hooks/useAdminSettings";
+import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
+import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
+import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 
 interface PremiumSettingsData {
   key?: string;
@@ -17,8 +29,14 @@ interface PremiumSettingsData {
 
 export default function AdminPremiumSection() {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
+    useLoginRequired();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
   const {
     settings,
@@ -29,7 +47,7 @@ export default function AdminPremiumSection() {
     saveSettings,
     isFieldPending,
   } = useAdminSettings<PremiumSettingsData>({
-    sectionName: 'premium',
+    sectionName: "premium",
   });
 
   useEffect(() => {
@@ -38,21 +56,31 @@ export default function AdminPremiumSection() {
     }
   }, [loginEnabled]);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
       alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
+        alertType: "error",
+        title: t("admin.error", "Error"),
+        body: t("admin.settings.saveError", "Failed to save settings"),
       });
     }
   };
+
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
 
   const actualLoading = loginEnabled ? loading : false;
 
@@ -65,82 +93,136 @@ export default function AdminPremiumSection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
-      <div>
-        <Text fw={600} size="lg">{t('admin.settings.premium.title', 'Premium & Enterprise')}</Text>
-        <Text size="sm" c="dimmed">
-          {t('admin.settings.premium.description', 'Configure your premium or enterprise license key.')}
-        </Text>
-      </div>
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
+        <div>
+          <Text fw={600} size="lg">
+            {t("admin.settings.premium.title", "Premium & Enterprise")}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {t(
+              "admin.settings.premium.description",
+              "Configure your premium or enterprise license key.",
+            )}
+          </Text>
+        </div>
 
-      {/* Notice about moved features */}
-      <Alert
-        variant="light"
-        color="blue"
-        title={t('admin.settings.premium.movedFeatures.title', 'Premium Features Distributed')}
-        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
-      >
-        <Text size="sm">
-          {t('admin.settings.premium.movedFeatures.message', 'Premium and Enterprise features are now organized in their respective sections:')}
-        </Text>
-        <List mt="xs" size="sm">
-          <List.Item><Text size="sm" component="span"><strong>SSO Auto Login</strong> (PRO) - Connections</Text></List.Item>
-          <List.Item><Text size="sm" component="span"><strong>Custom Metadata</strong> (PRO) - General</Text></List.Item>
-          <List.Item><Text size="sm" component="span"><strong>Audit Logging</strong> (ENTERPRISE) - Security</Text></List.Item>
-          <List.Item><Text size="sm" component="span"><strong>Database Configuration</strong> (ENTERPRISE) - Database</Text></List.Item>
-        </List>
-      </Alert>
-
-      {/* License Configuration */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.premium.license', 'License Configuration')}</Text>
-
-          <div>
-            <TextInput
-              label={
-                <Group gap="xs">
-                  <span>{t('admin.settings.premium.key.label', 'License Key')}</span>
-                  <PendingBadge show={isFieldPending('key')} />
-                </Group>
-              }
-              description={t('admin.settings.premium.key.description', 'Enter your premium or enterprise license key')}
-              value={settings.key || ''}
-              onChange={(e) => setSettings({ ...settings, key: e.target.value })}
-              placeholder="00000000-0000-0000-0000-000000000000"
-              disabled={!loginEnabled}
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.premium.enabled.label', 'Enable Premium Features')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.premium.enabled.description', 'Enable license key checks for pro/enterprise features')}
+        {/* Notice about moved features */}
+        <Alert
+          variant="light"
+          color="blue"
+          title={t(
+            "admin.settings.premium.movedFeatures.title",
+            "Premium Features Distributed",
+          )}
+          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+        >
+          <Text size="sm">
+            {t(
+              "admin.settings.premium.movedFeatures.message",
+              "Premium and Enterprise features are now organized in their respective sections:",
+            )}
+          </Text>
+          <List mt="xs" size="sm">
+            <List.Item>
+              <Text size="sm" component="span">
+                <strong>SSO Auto Login</strong> (PRO) - Connections
               </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings.enabled || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return;
-                  setSettings({ ...settings, enabled: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge show={isFieldPending('enabled')} />
-            </Group>
-          </div>
-        </Stack>
-      </Paper>
+            </List.Item>
+            <List.Item>
+              <Text size="sm" component="span">
+                <strong>Custom Metadata</strong> (PRO) - General
+              </Text>
+            </List.Item>
+            <List.Item>
+              <Text size="sm" component="span">
+                <strong>Audit Logging</strong> (ENTERPRISE) - Security
+              </Text>
+            </List.Item>
+            <List.Item>
+              <Text size="sm" component="span">
+                <strong>Database Configuration</strong> (ENTERPRISE) - Database
+              </Text>
+            </List.Item>
+          </List>
+        </Alert>
 
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+        {/* License Configuration */}
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="md">
+            <Text fw={600} size="sm" mb="xs">
+              {t("admin.settings.premium.license", "License Configuration")}
+            </Text>
+
+            <div>
+              <TextInput
+                label={
+                  <Group gap="xs">
+                    <span>
+                      {t("admin.settings.premium.key.label", "License Key")}
+                    </span>
+                    <PendingBadge show={isFieldPending("key")} />
+                  </Group>
+                }
+                description={t(
+                  "admin.settings.premium.key.description",
+                  "Enter your premium or enterprise license key",
+                )}
+                value={settings.key || ""}
+                onChange={(e) =>
+                  setSettings({ ...settings, key: e.target.value })
+                }
+                placeholder="00000000-0000-0000-0000-000000000000"
+                disabled={!loginEnabled}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <Text fw={500} size="sm">
+                  {t(
+                    "admin.settings.premium.enabled.label",
+                    "Enable Premium Features",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    "admin.settings.premium.enabled.description",
+                    "Enable license key checks for pro/enterprise features",
+                  )}
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Switch
+                  checked={settings.enabled || false}
+                  onChange={(e) => {
+                    if (!loginEnabled) return;
+                    setSettings({ ...settings, enabled: e.target.checked });
+                  }}
+                  disabled={!loginEnabled}
+                  styles={getDisabledStyles()}
+                />
+                <PendingBadge show={isFieldPending("enabled")} />
+              </Group>
+            </div>
+          </Stack>
+        </Paper>
+      </Stack>
+
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -148,6 +230,6 @@ export default function AdminPremiumSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }

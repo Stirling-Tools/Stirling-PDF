@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.json;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -27,13 +25,13 @@ public class PdfJsonAnnotation {
     private String contents;
 
     /** Annotation rectangle [x1, y1, x2, y2] */
-    private List<Float> rect;
+    private float[] rect;
 
     /** Annotation appearance characteristics */
     private String appearanceState;
 
     /** Color components (e.g., [r, g, b] for RGB) */
-    private List<Float> color;
+    private float[] color;
 
     /** Annotation flags (print, hidden, etc.) */
     private Integer flags;

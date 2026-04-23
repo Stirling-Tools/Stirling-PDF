@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from '@app/components/shared/LocalIcon';
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -40,12 +40,14 @@ const ToolSearch = ({
 
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
-    const entries = Object.entries(toolRegistry).filter(([id]) => !(mode === "dropdown" && id === selectedToolKey));
+    const entries = Object.entries(toolRegistry).filter(
+      ([id]) => !(mode === "dropdown" && id === selectedToolKey),
+    );
     const ranked = rankByFuzzy(entries, value, [
       ([key]) => idToWords(key),
       ([, v]) => v.name,
       ([, v]) => v.description,
-      ([, v]) => v.synonyms?.join(' ') || '',
+      ([, v]) => v.synonyms?.join(" ") || "",
     ]).slice(0, 6);
     return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);
@@ -53,7 +55,9 @@ const ToolSearch = ({
   const handleSearchChange = (searchValue: string) => {
     onChange(searchValue);
     if (mode === "dropdown") {
-      setDropdownOpen(searchValue.trim().length > 0 && filteredTools.length > 0);
+      setDropdownOpen(
+        searchValue.trim().length > 0 && filteredTools.length > 0,
+      );
     }
   };
 
@@ -82,17 +86,23 @@ const ToolSearch = ({
   }, [autoFocus]);
 
   const searchInput = (
-      <TextInput
-        id="tool-search-input"
-        name="tool-search-input"
-        ref={searchRef}
-        value={value}
-        onChange={handleSearchChange}
-        placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
-        autoComplete="off"
-        onFocus={onFocus}
-      />
+    <TextInput
+      id="tool-search-input"
+      name="tool-search-input"
+      ref={searchRef}
+      value={value}
+      onChange={handleSearchChange}
+      placeholder={
+        placeholder || t("toolPicker.searchPlaceholder", "Search tools...")
+      }
+      icon={
+        hideIcon ? undefined : (
+          <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />
+        )
+      }
+      autoComplete="off"
+      onFocus={onFocus}
+    />
   );
 
   if (mode === "filter") {
@@ -132,7 +142,11 @@ const ToolSearch = ({
                   onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
                 }}
-                leftSection={<div style={{ color: "var(--tools-text-and-icon-color)" }}>{tool.icon}</div>}
+                leftSection={
+                  <div style={{ color: "var(--tools-text-and-icon-color)" }}>
+                    {tool.icon}
+                  </div>
+                }
                 fullWidth
                 justify="flex-start"
                 style={{

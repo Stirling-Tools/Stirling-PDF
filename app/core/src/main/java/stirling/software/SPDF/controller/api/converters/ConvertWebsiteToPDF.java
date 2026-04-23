@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -39,6 +38,8 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -49,6 +50,7 @@ public class ConvertWebsiteToPDF {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
+    private final TempFileManager tempFileManager;
 
     private static final Pattern FILE_SCHEME_PATTERN =
             Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
@@ -136,14 +138,15 @@ public class ConvertWebsiteToPDF {
                     .runCommandWithOutputHandling(command);
 
             // Load the PDF using pdfDocumentFactory
-            try (PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile());
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                // Convert URL to a safe filename
-                String outputFilename = convertURLToFileName(URL);
-
-                doc.save(baos);
-                return WebResponseUtils.baosToWebResponse(baos, outputFilename);
+            String outputFilename = convertURLToFileName(URL);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try (PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile())) {
+                doc.save(tempOut.getFile());
+            } catch (Exception e) {
+                tempOut.close();
+                throw e;
             }
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
         } finally {
             if (tempHtmlInput != null) {
                 try {
@@ -166,7 +169,7 @@ public class ConvertWebsiteToPDF {
     private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
         HttpClient client =
                 HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .followRedirects(HttpClient.Redirect.NEVER)
                         .connectTimeout(Duration.ofSeconds(10))
                         .build();
 
@@ -180,7 +183,7 @@ public class ConvertWebsiteToPDF {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        if (response.statusCode() >= 400 || response.body() == null) {
+        if (response.statusCode() >= 300 || response.body() == null) {
             throw ExceptionUtils.createIOException(
                     "error.httpRequestFailed",
                     "Failed to retrieve remote HTML. Status: {0}",

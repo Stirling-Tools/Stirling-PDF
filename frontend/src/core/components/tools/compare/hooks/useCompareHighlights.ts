@@ -1,11 +1,11 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 import type {
   CompareFilteredTokenInfo,
   WordHighlightEntry,
   CompareResultData,
   CompareChangeOption,
   PagePreview,
-} from '@app/types/compare';
+} from "@app/types/compare";
 
 interface MetaGroupMap {
   base: Map<number, string>;
@@ -28,7 +28,7 @@ export interface UseCompareHighlightsResult {
 const buildWordChanges = (
   tokens: CompareFilteredTokenInfo[],
   metaIndexToGroupId: Map<number, string>,
-  groupPrefix: string
+  groupPrefix: string,
 ): CompareChangeOption[] => {
   metaIndexToGroupId.clear();
   if (!tokens.length) return [];
@@ -38,7 +38,10 @@ const buildWordChanges = (
 
   const flushRun = () => {
     if (currentRun.length === 0) return;
-    const label = currentRun.map((token) => token.token).join(' ').trim();
+    const label = currentRun
+      .map((token) => token.token)
+      .join(" ")
+      .trim();
     if (label.length === 0) {
       currentRun = [];
       return;
@@ -67,7 +70,7 @@ const buildWordChanges = (
 };
 
 const buildHighlightMap = (
-  tokens: CompareFilteredTokenInfo[]
+  tokens: CompareFilteredTokenInfo[],
 ): Map<number, WordHighlightEntry[]> => {
   const map = new Map<number, WordHighlightEntry[]>();
   for (const token of tokens) {
@@ -85,14 +88,17 @@ export const useCompareHighlights = (
   comparisonPages: PagePreview[],
 ): UseCompareHighlightsResult => {
   const baseMetaIndexToGroupId = useMemo(() => new Map<number, string>(), []);
-  const comparisonMetaIndexToGroupId = useMemo(() => new Map<number, string>(), []);
+  const comparisonMetaIndexToGroupId = useMemo(
+    () => new Map<number, string>(),
+    [],
+  );
 
   const baseWordChanges = useMemo(() => {
     if (!result) return [];
     return buildWordChanges(
       result.filteredTokenData.base,
       baseMetaIndexToGroupId,
-      'base-group'
+      "base-group",
     );
   }, [baseMetaIndexToGroupId, result]);
 
@@ -101,7 +107,7 @@ export const useCompareHighlights = (
     return buildWordChanges(
       result.filteredTokenData.comparison,
       comparisonMetaIndexToGroupId,
-      'comparison-group'
+      "comparison-group",
     );
   }, [comparisonMetaIndexToGroupId, result]);
 
@@ -122,13 +128,15 @@ export const useCompareHighlights = (
   const getRowHeightPx = useCallback(
     (pageNumber: number) => {
       const basePage = basePages.find((page) => page.pageNumber === pageNumber);
-      const comparisonPage = comparisonPages.find((page) => page.pageNumber === pageNumber);
+      const comparisonPage = comparisonPages.find(
+        (page) => page.pageNumber === pageNumber,
+      );
       const baseHeight = basePage ? basePage.height : 0;
       const comparisonHeight = comparisonPage ? comparisonPage.height : 0;
       const rowHeight = Math.max(baseHeight, comparisonHeight);
       return Math.round(rowHeight);
     },
-    [basePages, comparisonPages]
+    [basePages, comparisonPages],
   );
 
   return {

@@ -649,8 +649,10 @@ public class GeneralUtils {
     }
 
     public List<Integer> parsePageList(String[] pages, int totalPages, boolean oneBased) {
-        List<Integer> result = new ArrayList<>();
+        // Use LinkedHashSet to prevent duplicates from inflating size and triggering maxSize guard
+        Set<Integer> result = new LinkedHashSet<>();
         int offset = oneBased ? 1 : 0;
+        int maxSize = Math.max(1000, totalPages * 3);
         for (String page : pages) {
             if ("all".equalsIgnoreCase(page)) {
 
@@ -666,8 +668,12 @@ public class GeneralUtils {
             } else {
                 result.addAll(handlePart(page, totalPages, offset));
             }
+            if (result.size() > maxSize) {
+                throw new IllegalArgumentException(
+                        "Page list exceeds maximum allowed size of " + maxSize);
+            }
         }
-        return result;
+        return new ArrayList<>(result);
     }
 
     /*
@@ -864,6 +870,36 @@ public class GeneralUtils {
         Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
         YamlHelper settingsYaml = new YamlHelper(settingsPath);
         settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
+        settingsYaml.saveOverride(settingsPath);
+    }
+
+    /**
+     * Updates multiple settings in a single transaction. This ensures that nested settings (e.g.,
+     * oauth2.client.google.*) don't lose sibling values when partial updates are made.
+     *
+     * <p>Instead of multiple read-update-write cycles (which could cause race conditions), this
+     * method loads the YAML once, applies all updates, and saves once.
+     *
+     * @param settingsMap Map of dotted-notation keys to values to update
+     * @throws IOException if file read/write fails
+     */
+    public void updateSettingsTransactional(Map<String, Object> settingsMap) throws IOException {
+        if (settingsMap == null || settingsMap.isEmpty()) {
+            return;
+        }
+
+        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        YamlHelper settingsYaml = new YamlHelper(settingsPath);
+
+        // Apply all updates to the same YamlHelper instance
+        for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            String[] keyArray = key.split("\\.");
+            settingsYaml.updateValue(Arrays.asList(keyArray), value);
+        }
+
+        // Save only once after all updates are applied
         settingsYaml.saveOverride(settingsPath);
     }
 
@@ -1146,5 +1182,26 @@ public class GeneralUtils {
                 }
             }
         }
+    }
+
+    public String getLocalNetworkIp() {
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            if (interfaces == null) return null;
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                if (!iface.isUp() || iface.isLoopback() || iface.isVirtual()) continue;
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr instanceof Inet4Address && addr.isSiteLocalAddress()) {
+                        return addr.getHostAddress();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to detect local network IP", e);
+        }
+        return null;
     }
 }

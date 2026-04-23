@@ -21,8 +21,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -30,15 +28,19 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Mock private UserService userService;
     @Mock private SessionPersistentRegistry sessionRegistry;
@@ -46,6 +48,7 @@ class UserControllerTest {
     @Mock private UserRepository userRepository;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
+    @Mock private LoginAttemptService loginAttemptService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -64,7 +67,8 @@ class UserControllerTest {
                         teamRepository,
                         userRepository,
                         Optional.of(emailService),
-                        licenseSettingsService);
+                        licenseSettingsService,
+                        loginAttemptService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -136,5 +140,14 @@ class UserControllerTest {
         mockMvc.perform(post("/api/v1/user/admin/deleteUser/ghost").principal(authentication))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("User not found."));
+    }
+
+    @Test
+    void unlockUserCallsResetAttemptsAndReturnsOk() throws Exception {
+        mockMvc.perform(post("/api/v1/user/admin/unlockUser/lockeduser"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User account unlocked successfully"));
+
+        verify(loginAttemptService).resetAttempts("lockeduser");
     }
 }

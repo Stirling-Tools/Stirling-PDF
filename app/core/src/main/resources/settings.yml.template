@@ -64,7 +64,10 @@ security:
     persistence: true # Set to 'true' to enable JWT key store
     enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
-    keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
+    tokenExpiryMinutes: 1440 # JWT access token lifetime in minutes for web clients (1 day).
+    desktopTokenExpiryMinutes: 43200 # JWT access token lifetime in minutes for desktop clients (30 days).
+    allowedClockSkewSeconds: 60 # Allowed JWT validation clock skew in seconds to tolerate small client/server time drift.
+    refreshGraceMinutes: 15 # Allow refresh using an expired access token only within this many minutes after expiry.
   validation: # PDF signature validation settings
     trust:
       serverAsAnchor: true # Trust server certificate as anchor for PDF signatures (if configured and self-signed or CA)
@@ -81,6 +84,10 @@ security:
     revocation:
       mode: none # Revocation checking mode: 'none' (disabled), 'ocsp' (OCSP only), 'crl' (CRL only), 'ocsp+crl' (OCSP with CRL fallback)
       hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
+  timestamp:
+    defaultTsaUrl: http://timestamp.digicert.com # Default TSA server for RFC 3161 document timestamps
+    customTsaUrls: [] # Admin-configured additional TSA URLs (e.g. ['https://internal-tsa.corp.com/timestamp']). Users can only select from built-in presets and these URLs.
+  xFrameOptions: DENY # X-Frame-Options header value. Options: 'DENY' (default, prevents all framing), 'SAMEORIGIN' (allows framing from same domain), 'DISABLED' (no X-Frame-Options header sent). Note: automatically set to DISABLED when login is disabled
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
@@ -92,11 +99,19 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
+    googleDrive:
+      enabled: false # Enable Google Drive file picker integration
+      clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
+      apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
+      appId: "" # Google Drive app ID
   enterpriseFeatures:
     audit:
-      enabled: true # Enable audit logging
-      level: 2 # Audit logging level: 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
-      retentionDays: 90 # Number of days to retain audit logs
+      enabled: true # Enable audit logging for security and compliance tracking
+      level: 2 # Audit logging level: 0=OFF, 1=BASIC (compress/split/merge/etc and settings), 2=STANDARD (BASIC + user actions, excludes polling), 3=VERBOSE (everything including polling).
+      retentionDays: 90 # Number of days to retain audit logs (0 or negative = infinite retention)
+      captureFileHash: false # Capture SHA-256 hash of uploaded/processed files. Warning: adds 50-200ms per file depending on size. Only enabled independently of audit level.
+      capturePdfAuthor: false # Capture author metadata from PDF documents. Warning: requires PDF parsing which increases processing time. Only enabled independently of audit level.
+      captureOperationResults: false # Capture operation return values and responses in audit log. Warning: not recommended, significantly increases log volume and disk usage. Use only for debugging.
     databaseNotifications:
       backups:
         successful: false # set to 'true' to enable email notifications for successful database backups
@@ -169,7 +184,7 @@ system:
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS. For local development with frontend on port 5173, add 'http://localhost:5173'
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
-  enableMobileScanner: false # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
+  enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
   mobileScannerSettings:
     convertToPdf: true # Automatically convert uploaded images to PDF format. If false, images are kept as-is.
     imageResolution: full # Image resolution for mobile uploads: 'full' (original size) or 'reduced' (max 1200px on longest side). Only applies when convertToPdf is true.
@@ -202,7 +217,9 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
+      pipelineDir: "" # Defaults to /pipeline
       watchedFoldersDir: "" # Defaults to /pipeline/watchedFolders
+      watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
       weasyprint: "" # Defaults to /opt/venv/bin/weasyprint
@@ -223,14 +240,43 @@ system:
   databaseBackup:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
+storage:
+  enabled: false # set to 'true' to allow users to store files on the server (requires security.enableLogin) [ALPHA]
+  provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
+  local:
+    basePath: './storage' # base directory for stored files
+  quotas:
+    maxStorageMbPerUser: -1 # Max storage per user in MB; -1 disables per-user cap
+    maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
+    maxFileMb: -1 # Max size per stored file (including history/audit) in MB; -1 disables limit
+  sharing:
+    enabled: false # set to 'true' to enable file sharing features [ALPHA]
+    linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
+    emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
+    linkExpirationDays: 3 # Number of days before share links expire
+  signing:
+    enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+autoPipeline:
+  outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
+  fileReadiness:
+    enabled: true # Set to 'false' to skip all readiness checks and process files immediately (legacy behaviour)
+    settleTimeMillis: 5000 # How long (ms) a file must be unmodified before it is considered fully written and stable. Default: 5000 (5 seconds)
+    sizeCheckDelayMillis: 500 # Pause (ms) between two file-size reads used to detect active writes (Linux/macOS mid-copy detection). Default: 500
+    allowedExtensions: [] # Optional extension allow-list (case-insensitive, without the leading dot). Empty list = accept all extensions. Example: ["pdf", "tiff"]
+
 ui:
   appNameNavbar: "" # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
-  languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
+  languages: [] # If empty, all languages are enabled. To restrict to specific languages, use a whitelist like ["de_DE", "pl_PL", "sv_SE"]. Empty list or not restricting any languages will enable all available languages.
+  defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
+  defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out
+  hideDisabledTools:
+    googleDrive: false # Hide Google Drive button when not enabled
+    mobileQRScanner: false # Hide mobile QR scanner button when not enabled
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice'])
+  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
@@ -278,6 +324,11 @@ processExecutor:
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30
     ocrMyPdfTimeoutMinutes: 30
+
+aiEngine:
+  enabled: false # Set to 'true' to enable the AI engine integration
+  url: http://localhost:5001 # URL of the Python AI engine
+  timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font

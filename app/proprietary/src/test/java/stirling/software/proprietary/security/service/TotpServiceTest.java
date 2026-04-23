@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.util.Base32Codec;
 
 class TotpServiceTest {
+
+    private static final Pattern PATTERN = Pattern.compile("[A-Z2-7]+");
 
     private TotpService buildService(String appName) {
         ApplicationProperties properties = new ApplicationProperties();
@@ -32,7 +35,7 @@ class TotpServiceTest {
 
         assertNotNull(secret);
         assertEquals(32, secret.length());
-        assertTrue(secret.matches("[A-Z2-7]+"));
+        assertTrue(PATTERN.matcher(secret).matches());
     }
 
     @Test

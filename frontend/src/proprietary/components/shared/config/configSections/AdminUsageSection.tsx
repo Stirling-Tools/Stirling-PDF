@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Stack,
   Group,
@@ -8,59 +8,141 @@ import {
   Loader,
   Alert,
   Card,
-} from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import usageAnalyticsService, { EndpointStatisticsResponse } from '@app/services/usageAnalyticsService';
-import UsageAnalyticsChart from '@app/components/shared/config/configSections/usage/UsageAnalyticsChart';
-import UsageAnalyticsTable from '@app/components/shared/config/configSections/usage/UsageAnalyticsTable';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { useLoginRequired } from '@app/hooks/useLoginRequired';
-import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import EnterpriseRequiredBanner from '@app/components/shared/config/EnterpriseRequiredBanner';
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import usageAnalyticsService, {
+  EndpointStatisticsResponse,
+} from "@app/services/usageAnalyticsService";
+import UsageAnalyticsChart from "@app/components/shared/config/configSections/usage/UsageAnalyticsChart";
+import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { loginEnabled } = useLoginRequired();
   const { config } = useAppConfig();
-  const licenseType = config?.license ?? 'NORMAL';
-  const hasEnterpriseLicense = licenseType === 'ENTERPRISE';
+  const licenseType = config?.license ?? "NORMAL";
+  const hasEnterpriseLicense = licenseType === "ENTERPRISE";
   const showDemoData = !loginEnabled || !hasEnterpriseLicense;
   const [data, setData] = useState<EndpointStatisticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [displayMode, setDisplayMode] = useState<'top10' | 'top20' | 'all'>('top10');
-  const [dataType, setDataType] = useState<'all' | 'api' | 'ui'>('all');
+  const [displayMode, setDisplayMode] = useState<"top10" | "top20" | "all">(
+    "top10",
+  );
+  const [dataType, setDataType] = useState<"all" | "api" | "ui">("api");
 
   const buildDemoUsageData = useCallback((): EndpointStatisticsResponse => {
     const totalVisits = 15847;
     const allEndpoints = [
-      { endpoint: 'merge-pdfs', visits: 3245, percentage: (3245 / totalVisits) * 100 },
-      { endpoint: 'compress-pdf', visits: 2891, percentage: (2891 / totalVisits) * 100 },
-      { endpoint: 'pdf-to-img', visits: 2156, percentage: (2156 / totalVisits) * 100 },
-      { endpoint: 'split-pdf', visits: 1834, percentage: (1834 / totalVisits) * 100 },
-      { endpoint: 'rotate-pdf', visits: 1523, percentage: (1523 / totalVisits) * 100 },
-      { endpoint: 'ocr-pdf', visits: 1287, percentage: (1287 / totalVisits) * 100 },
-      { endpoint: 'add-watermark', visits: 945, percentage: (945 / totalVisits) * 100 },
-      { endpoint: 'extract-images', visits: 782, percentage: (782 / totalVisits) * 100 },
-      { endpoint: 'add-password', visits: 621, percentage: (621 / totalVisits) * 100 },
-      { endpoint: 'html-to-pdf', visits: 563, percentage: (563 / totalVisits) * 100 },
-      { endpoint: 'remove-password', visits: 487, percentage: (487 / totalVisits) * 100 },
-      { endpoint: 'pdf-to-pdfa', visits: 423, percentage: (423 / totalVisits) * 100 },
-      { endpoint: 'extract-pdf-metadata', visits: 356, percentage: (356 / totalVisits) * 100 },
-      { endpoint: 'add-page-numbers', visits: 298, percentage: (298 / totalVisits) * 100 },
-      { endpoint: 'crop', visits: 245, percentage: (245 / totalVisits) * 100 },
-      { endpoint: 'flatten', visits: 187, percentage: (187 / totalVisits) * 100 },
-      { endpoint: 'sanitize-pdf', visits: 134, percentage: (134 / totalVisits) * 100 },
-      { endpoint: 'auto-split-pdf', visits: 98, percentage: (98 / totalVisits) * 100 },
-      { endpoint: 'scale-pages', visits: 76, percentage: (76 / totalVisits) * 100 },
-      { endpoint: 'compare-pdfs', visits: 42, percentage: (42 / totalVisits) * 100 },
+      {
+        endpoint: "merge-pdfs",
+        visits: 3245,
+        percentage: (3245 / totalVisits) * 100,
+      },
+      {
+        endpoint: "compress-pdf",
+        visits: 2891,
+        percentage: (2891 / totalVisits) * 100,
+      },
+      {
+        endpoint: "pdf-to-img",
+        visits: 2156,
+        percentage: (2156 / totalVisits) * 100,
+      },
+      {
+        endpoint: "split-pdf",
+        visits: 1834,
+        percentage: (1834 / totalVisits) * 100,
+      },
+      {
+        endpoint: "rotate-pdf",
+        visits: 1523,
+        percentage: (1523 / totalVisits) * 100,
+      },
+      {
+        endpoint: "ocr-pdf",
+        visits: 1287,
+        percentage: (1287 / totalVisits) * 100,
+      },
+      {
+        endpoint: "add-watermark",
+        visits: 945,
+        percentage: (945 / totalVisits) * 100,
+      },
+      {
+        endpoint: "extract-images",
+        visits: 782,
+        percentage: (782 / totalVisits) * 100,
+      },
+      {
+        endpoint: "add-password",
+        visits: 621,
+        percentage: (621 / totalVisits) * 100,
+      },
+      {
+        endpoint: "html-to-pdf",
+        visits: 563,
+        percentage: (563 / totalVisits) * 100,
+      },
+      {
+        endpoint: "remove-password",
+        visits: 487,
+        percentage: (487 / totalVisits) * 100,
+      },
+      {
+        endpoint: "pdf-to-pdfa",
+        visits: 423,
+        percentage: (423 / totalVisits) * 100,
+      },
+      {
+        endpoint: "extract-pdf-metadata",
+        visits: 356,
+        percentage: (356 / totalVisits) * 100,
+      },
+      {
+        endpoint: "add-page-numbers",
+        visits: 298,
+        percentage: (298 / totalVisits) * 100,
+      },
+      { endpoint: "crop", visits: 245, percentage: (245 / totalVisits) * 100 },
+      {
+        endpoint: "flatten",
+        visits: 187,
+        percentage: (187 / totalVisits) * 100,
+      },
+      {
+        endpoint: "sanitize-pdf",
+        visits: 134,
+        percentage: (134 / totalVisits) * 100,
+      },
+      {
+        endpoint: "auto-split-pdf",
+        visits: 98,
+        percentage: (98 / totalVisits) * 100,
+      },
+      {
+        endpoint: "scale-pages",
+        visits: 76,
+        percentage: (76 / totalVisits) * 100,
+      },
+      {
+        endpoint: "compare-pdfs",
+        visits: 42,
+        percentage: (42 / totalVisits) * 100,
+      },
     ];
 
     let filteredEndpoints = allEndpoints;
-    if (displayMode === 'top10') {
+    if (displayMode === "top10") {
       filteredEndpoints = allEndpoints.slice(0, 10);
-    } else if (displayMode === 'top20') {
+    } else if (displayMode === "top20") {
       filteredEndpoints = allEndpoints.slice(0, 20);
     }
 
@@ -76,12 +158,18 @@ const AdminUsageSection: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const limit = displayMode === 'all' ? undefined : displayMode === 'top10' ? 10 : 20;
-      const response = await usageAnalyticsService.getEndpointStatistics(limit, dataType);
+      const limit =
+        displayMode === "all" ? undefined : displayMode === "top10" ? 10 : 20;
+      const response = await usageAnalyticsService.getEndpointStatistics(
+        limit,
+        dataType,
+      );
 
       setData(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load usage statistics');
+      setError(
+        err instanceof Error ? err.message : "Failed to load usage statistics",
+      );
     } finally {
       setLoading(false);
     }
@@ -110,14 +198,14 @@ const AdminUsageSection: React.FC = () => {
 
   const getDisplayModeLabel = () => {
     switch (displayMode) {
-      case 'top10':
-        return t('usage.showing.top10', 'Top 10');
-      case 'top20':
-        return t('usage.showing.top20', 'Top 20');
-      case 'all':
-        return t('usage.showing.all', 'All');
+      case "top10":
+        return t("usage.showing.top10", "Top 10");
+      case "top20":
+        return t("usage.showing.top20", "Top 20");
+      case "all":
+        return t("usage.showing.all", "All");
       default:
-        return '';
+        return "";
     }
   };
 
@@ -127,7 +215,9 @@ const AdminUsageSection: React.FC = () => {
   // Early returns for loading/error states
   if (actualLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "2rem" }}
+      >
         <Loader size="lg" />
       </div>
     );
@@ -135,7 +225,10 @@ const AdminUsageSection: React.FC = () => {
 
   if (error) {
     return (
-      <Alert color="red" title={t('usage.error', 'Error loading usage statistics')}>
+      <Alert
+        color="red"
+        title={t("usage.error", "Error loading usage statistics")}
+      >
         {error}
       </Alert>
     );
@@ -143,16 +236,22 @@ const AdminUsageSection: React.FC = () => {
 
   if (!data) {
     return (
-      <Alert color="yellow" title={t('usage.noData', 'No data available')}>
-        {t('usage.noDataMessage', 'No usage statistics are currently available.')}
+      <Alert color="yellow" title={t("usage.noData", "No data available")}>
+        {t(
+          "usage.noDataMessage",
+          "No usage statistics are currently available.",
+        )}
       </Alert>
     );
   }
 
   const endpoints = (data?.endpoints ?? []).map((endpoint) => ({
-    endpoint: endpoint.endpoint ?? t('usage.table.unknownEndpoint', 'Unknown endpoint'),
+    endpoint:
+      endpoint.endpoint ?? t("usage.table.unknownEndpoint", "Unknown endpoint"),
     visits: Number.isFinite(endpoint.visits) ? Math.max(0, endpoint.visits) : 0,
-    percentage: Number.isFinite(endpoint.percentage) ? Math.max(0, endpoint.percentage) : 0,
+    percentage: Number.isFinite(endpoint.percentage)
+      ? Math.max(0, endpoint.percentage)
+      : 0,
   }));
 
   const chartData = endpoints.map((e) => ({
@@ -162,23 +261,76 @@ const AdminUsageSection: React.FC = () => {
 
   const displayedVisits = endpoints.reduce((sum, e) => sum + e.visits, 0);
   const totalVisits = Number.isFinite(data?.totalVisits)
-    ? Math.max(0, data?.totalVisits as number)
+    ? Math.max(0, data?.totalVisits ?? 0)
     : displayedVisits;
   const totalEndpoints = Number.isFinite(data?.totalEndpoints)
-    ? Math.max(0, data?.totalEndpoints as number)
+    ? Math.max(0, data?.totalEndpoints ?? 0)
     : endpoints.length;
 
-  const displayedPercentage = totalVisits > 0
-    ? ((displayedVisits / (totalVisits || 1)) * 100).toFixed(1)
-    : '0';
+  const displayedPercentage =
+    totalVisits > 0
+      ? ((displayedVisits / (totalVisits || 1)) * 100).toFixed(1)
+      : "0";
 
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
         show={!hasEnterpriseLicense}
-        featureName={t('settings.licensingAnalytics.usageAnalytics', 'Usage Analytics')}
+        featureName={t(
+          "settings.licensingAnalytics.usageAnalytics",
+          "Usage Analytics",
+        )}
       />
+
+      {/* Info banner about usage analytics and audit relationship */}
+      {loginEnabled && hasEnterpriseLicense && (
+        <Alert
+          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          title={t("usage.aboutUsageAnalytics", "About Usage Analytics")}
+          color="cyan"
+          variant="light"
+        >
+          <Stack gap="xs">
+            <Text size="sm">
+              {t(
+                "usage.usageAnalyticsExplanation",
+                "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events.",
+              )}
+            </Text>
+            <Group gap="sm">
+              <Button
+                variant="light"
+                size="xs"
+                onClick={() => navigate("/settings/adminSecurity")}
+                rightSection={
+                  <LocalIcon
+                    icon="arrow-forward"
+                    width="0.9rem"
+                    height="0.9rem"
+                  />
+                }
+              >
+                {t("usage.configureSettings", "Configure Analytics Settings")}
+              </Button>
+              <Button
+                variant="light"
+                size="xs"
+                onClick={() => navigate("/settings/adminSecurity#auditLogging")}
+                rightSection={
+                  <LocalIcon
+                    icon="arrow-forward"
+                    width="0.9rem"
+                    height="0.9rem"
+                  />
+                }
+              >
+                {t("usage.viewAuditLogs", "View Audit Logs")}
+              </Button>
+            </Group>
+          </Stack>
+        </Alert>
+      )}
 
       {/* Controls */}
       <Card padding="lg" radius="md" withBorder>
@@ -187,65 +339,69 @@ const AdminUsageSection: React.FC = () => {
             <Group>
               <SegmentedControl
                 value={displayMode}
-                onChange={(value) => setDisplayMode(value as 'top10' | 'top20' | 'all')}
+                onChange={(value) =>
+                  setDisplayMode(value as "top10" | "top20" | "all")
+                }
                 disabled={showDemoData}
                 data={[
                   {
-                    value: 'top10',
-                    label: t('usage.controls.top10', 'Top 10'),
+                    value: "top10",
+                    label: t("usage.controls.top10", "Top 10"),
                   },
                   {
-                    value: 'top20',
-                    label: t('usage.controls.top20', 'Top 20'),
+                    value: "top20",
+                    label: t("usage.controls.top20", "Top 20"),
                   },
                   {
-                    value: 'all',
-                    label: t('usage.controls.all', 'All'),
+                    value: "all",
+                    label: t("usage.controls.all", "All"),
                   },
                 ]}
               />
               <Button
                 variant="outline"
-                leftSection={<LocalIcon icon="refresh" width="1rem" height="1rem" />}
+                leftSection={
+                  <LocalIcon icon="refresh" width="1rem" height="1rem" />
+                }
                 onClick={handleRefresh}
                 loading={loading}
                 disabled={showDemoData}
               >
-                {t('usage.controls.refresh', 'Refresh')}
+                {t("usage.controls.refresh", "Refresh")}
               </Button>
             </Group>
           </Group>
 
           <Group>
             <Text size="sm" fw={500}>
-              {t('usage.controls.dataTypeLabel', 'Data Type:')}
+              {t("usage.controls.dataTypeLabel", "Data Type:")}
             </Text>
             <SegmentedControl
               value={dataType}
-              onChange={(value) => setDataType(value as 'all' | 'api' | 'ui')}
+              onChange={(value) => setDataType(value as "all" | "api" | "ui")}
               disabled={showDemoData}
               data={[
                 {
-                  value: 'all',
-                  label: t('usage.controls.dataType.all', 'All'),
+                  value: "all",
+                  label: t("usage.controls.dataType.all", "All"),
                 },
                 {
-                  value: 'api',
-                  label: t('usage.controls.dataType.api', 'API'),
+                  value: "api",
+                  label: t("usage.controls.dataType.api", "API"),
                 },
                 {
-                  value: 'ui',
-                  label: t('usage.controls.dataType.ui', 'UI'),
+                  value: "ui",
+                  label: t("usage.controls.dataType.ui", "UI"),
                 },
               ]}
             />
           </Group>
 
           {/* Statistics Summary */}
-          <Group gap="xl" style={{ flexWrap: 'wrap' }}>
+          <Group gap="xl" style={{ flexWrap: "wrap" }}>
             <div>
               <Text size="sm" c="dimmed">
-                {t('usage.stats.totalEndpoints', 'Total Endpoints')}
+                {t("usage.stats.totalEndpoints", "Total Endpoints")}
               </Text>
               <Text size="lg" fw={600}>
                 {totalEndpoints}
@@ -253,7 +409,7 @@ const AdminUsageSection: React.FC = () => {
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                {t('usage.stats.totalVisits', 'Total Visits')}
+                {t("usage.stats.totalVisits", "Total Visits")}
               </Text>
               <Text size="lg" fw={600}>
                 {totalVisits.toLocaleString()}
@@ -261,7 +417,7 @@ const AdminUsageSection: React.FC = () => {
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                {t('usage.stats.showing', 'Showing')}
+                {t("usage.stats.showing", "Showing")}
               </Text>
               <Text size="lg" fw={600}>
                 {getDisplayModeLabel()}
@@ -269,7 +425,7 @@ const AdminUsageSection: React.FC = () => {
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                {t('usage.stats.selectedVisits', 'Selected Visits')}
+                {t("usage.stats.selectedVisits", "Selected Visits")}
               </Text>
               <Text size="lg" fw={600}>
                 {displayedVisits.toLocaleString()} ({displayedPercentage}%)

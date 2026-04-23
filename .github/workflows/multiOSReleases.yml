@@ -21,8 +21,14 @@ on:
           - windows
           - macos
           - linux
-  push:
-    branches: [main, V2-master]
+      sign:
+        description: "Code sign the binaries (requires signing secrets)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
   release:
     types: [created]
 
@@ -38,28 +44,38 @@ jobs:
       version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+      - name: Cache Gradle dependencies
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
-          gradle-version: 8.14
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Get version number
         id: versionNumber
         run: |
-          echo "Running gradlew printVersion..."
-          ./gradlew printVersion --quiet
           VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "Extracted version: $VERSION"
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
@@ -111,30 +127,33 @@ jobs:
             file_suffix: "-server"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
 
       - name: Setup Node.js
         if: matrix.variant.build_frontend == true
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
       - name: Build JAR
         run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
@@ -154,7 +173,7 @@ jobs:
           cp app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar ./jar-dist/Stirling-PDF${{ matrix.variant.file_suffix }}.jar
 
       - name: Upload JAR artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: jar${{ matrix.variant.file_suffix }}
           path: ./jar-dist/*.jar
@@ -171,12 +190,15 @@ jobs:
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
+          allowed-endpoints: >
+            one.digicert.com:443
+            clientauth.one.digicert.com:443
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -185,113 +207,45 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
           targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
 
-      - name: Build Java backend with JLink
-        working-directory: ./
-        shell: bash
-        run: |
-          chmod +x ./gradlew
-          echo "🔧 Building Stirling-PDF JAR..."
-          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
-          # Find the built JAR
-          STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
-          echo "✅ Built JAR: $STIRLING_JAR"
-
-          # Create Tauri directories
-          mkdir -p ./frontend/src-tauri/libs
-          mkdir -p ./frontend/src-tauri/runtime
-
-          # Copy JAR to Tauri libs
-          cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
-          echo "✅ JAR copied to Tauri libs"
-
-          # Analyze JAR dependencies for jlink modules
-          echo "🔍 Analyzing JAR dependencies..."
-          if command -v jdeps &> /dev/null; then
-            DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
-            if [ -n "$DETECTED_MODULES" ]; then
-              echo "📋 jdeps detected modules: $DETECTED_MODULES"
-              MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-            else
-              echo "⚠️ jdeps analysis failed, using predefined modules"
-              MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-            fi
-          else
-            echo "⚠️ jdeps not available, using predefined modules"
-            MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-          fi
-
-          # Create custom JRE with jlink
-          echo "🔧 Creating custom JRE with jlink..."
-          echo "📋 Using modules: $MODULES"
-
-          # Remove any existing JRE
-          rm -rf ./frontend/src-tauri/runtime/jre
-
-          # Create the custom JRE
-          jlink \
-            --add-modules "$MODULES" \
-            --strip-debug \
-            --compress=2 \
-            --no-header-files \
-            --no-man-pages \
-            --output ./frontend/src-tauri/runtime/jre
-
-          if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
-            echo "❌ Failed to create JLink runtime"
-            exit 1
-          fi
-
-          # Test the bundled runtime
-          if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
-            RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
-            echo "✅ Custom JRE created successfully: $RUNTIME_VERSION"
-          else
-            echo "❌ Custom JRE executable not found"
-            exit 1
-          fi
-
-          # Calculate runtime size
-          RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
-          echo "📊 Custom JRE size: $RUNTIME_SIZE"
+      - name: Prepare desktop build
+        run: task desktop:prepare
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
-        uses: digicert/ssm-code-signing@v1.1.0
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # v1.2.1
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
           SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
@@ -300,7 +254,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
@@ -335,7 +289,7 @@ jobs:
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -366,7 +320,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -387,7 +341,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -398,8 +352,84 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
 
+      # Pre-flight: verify smctl can talk to DigiCert and sync cert before we sign.
+      # Mirrors the setup from working public Tauri+KeyLocker repos (Labric, Meetily).
+      # Without this, signCommand failures are opaque (Tauri captures but drops
+      # smctl's stderr) - running these loudly surfaces auth/env/keypair issues.
+      - name: Preflight smctl
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          & smctl healthcheck
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          & smctl keypair ls
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
+          & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
+          Write-Host "[SUCCESS] smctl preflight passed"
+
+      # Write platform-specific Tauri config that adds signCommand for Windows.
+      # Tauri auto-merges tauri.windows.conf.json with tauri.conf.json (RFC 7396).
+      # Tauri calls this command on every binary BEFORE bundling into the MSI,
+      # substituting %1 with the file path.
+      #
+      # Why OBJECT form (cmd + args) instead of string:
+      # Tauri's string-form parser does a naive split(' ') with no shell/quote handling.
+      # Args with spaces or quote characters get mangled. The object form passes each
+      # arg directly to Rust's Command::arg which handles Windows CreateProcess quoting.
+      #
+      # Why --keypair-alias instead of --fingerprint:
+      # --fingerprint requires smctl windows certsync to have synced the cert to the
+      # Windows cert store first. --keypair-alias goes direct through PKCS11 and works
+      # without certsync. All real-world working Tauri+smctl examples use this flag.
+      #
+      # smctl reads SM_HOST, SM_API_KEY, SM_CLIENT_CERT_FILE, SM_CLIENT_CERT_PASSWORD
+      # from env (set by prior DigiCert setup step). No --config-file needed.
+      - name: Configure Windows code signing
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: bash
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          {
+            "bundle": {
+              "windows": {
+                "signCommand": {
+                  "cmd": "smctl",
+                  "args": ["sign", "--keypair-alias", "${KEYPAIR_ALIAS}", "--input", "%1", "--verbose"]
+                }
+              }
+            }
+          }
+          EOF
+          echo "Generated tauri.windows.conf.json (alias masked):"
+          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
+
+      - name: Import release GPG signing key (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format=long
+
+      - name: Make libjvm discoverable for linuxdeploy (Linux AppImage)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
+          if [ -f "$JAVA_LIBJVM" ]; then
+            sudo ln -sf "$JAVA_LIBJVM" /usr/lib/libjvm.so
+            echo "Linked libjvm from $JAVA_LIBJVM -> /usr/lib/libjvm.so"
+          else
+            echo "libjvm not found at $JAVA_LIBJVM"
+            exit 1
+          fi
+
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -408,113 +438,115 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          # AppImage signing — three env vars work together:
+          #   SIGN=1                        tells linuxdeploy-plugin-appimage to forward --sign to appimagetool
+          #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
+          #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
+          # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
+          SIGN: "1"
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
-          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
-          # Only enable Windows signing in Tauri when on release or V2-master
-          SIGN: ${{ (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+          # DigiCert KeyLocker env vars consumed by smctl during signCommand
+          SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
-      # Sign with DigiCert KeyLocker (post-build)
-      - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+      - name: Clear release GPG key from runner keyring (Linux)
+        if: always() && matrix.platform == 'ubuntu-22.04'
+        env:
+          RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+        run: |
+          if [ -n "$RELEASE_GPG_FINGERPRINT" ]; then
+            gpg --batch --yes --delete-secret-keys "$RELEASE_GPG_FINGERPRINT" || true
+            gpg --batch --yes --delete-keys "$RELEASE_GPG_FINGERPRINT" || true
+          fi
+
+      # Verify the MSI (outer wrapper users download) AND the inner exe extracted
+      # from it (what actually gets installed and what AV scans). We don't check
+      # target/.../release/stirling-pdf.exe - that's Tauri's intermediate build
+      # artifact. Tauri signs a COPY when bundling into the MSI and leaves the raw
+      # cargo output unsigned, so checking it produces false negatives.
+      - name: Verify Windows Code Signature
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
-          Write-Host "=== DigiCert KeyLocker Signing ==="
+          $allSigned = $true
 
-          # Test smctl connectivity first
-          Write-Host "Testing smctl connection..."
-          $healthCheck = & smctl healthcheck 2>&1
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "[SUCCESS] Connected to DigiCert KeyLocker"
-          } else {
-            Write-Host "[ERROR] Failed to connect to DigiCert KeyLocker"
-            Write-Host $healthCheck
-            exit 1
-          }
-          Write-Host ""
-
-          # Sync certificates to Windows certificate store
-          Write-Host "Syncing certificates to Windows certificate store..."
-          $syncOutput = & smctl windows certsync 2>&1
-          Write-Host "Cert sync result: $syncOutput"
-          Write-Host ""
-
-          # Find only the files we need to sign
-          $filesToSign = @()
-
-          # Main application executable
-          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
-          if ($mainExe) { $filesToSign += $mainExe }
-
-          # MSI installer
+          # Check MSI installer (outer wrapper - what users download)
           $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
-          $filesToSign += $msiFiles
-
-          if ($filesToSign.Count -eq 0) {
-            Write-Host "[ERROR] No files found to sign"
+          if ($msiFiles.Count -eq 0) {
+            Write-Host "[ERROR] No MSI found under target/"
             exit 1
           }
-
-          Write-Host "Found $($filesToSign.Count) files to sign:"
-          foreach ($f in $filesToSign) { Write-Host "  - $($f.Name)" }
-          Write-Host ""
-
-          $signedCount = 0
-          foreach ($file in $filesToSign) {
-            Write-Host "Signing: $($file.Name)"
-
-            # Get PKCS11 config file path
-            $pkcs11Config = $env:PKCS11_CONFIG
-            if (-not $pkcs11Config) {
-              Write-Host "[ERROR] PKCS11_CONFIG environment variable not set"
-              exit 1
+          foreach ($msi in $msiFiles) {
+            $sig = Get-AuthenticodeSignature -FilePath $msi.FullName
+            Write-Host "MSI: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne "Valid") {
+              Write-Host "[ERROR] MSI is not signed"
+              $allSigned = $false
             }
-
-            Write-Host "Using PKCS11 config: $pkcs11Config"
-
-            # Try signing with certificate fingerprint first (if available)
-            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
-            if ($fingerprint -and $fingerprint -ne "") {
-              Write-Host "Attempting to sign with certificate fingerprint..."
-              $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-              $exitCode = $LASTEXITCODE
-            } else {
-              Write-Host "No fingerprint provided, using keypair alias..."
-              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-              $exitCode = $LASTEXITCODE
-            }
-
-            Write-Host "Exit code: $exitCode"
-            Write-Host "Output: $output"
-
-            if ($output -match "FAILED" -or $output -match "error" -or $output -match "Error") {
-              Write-Host "[ERROR] Signing failed for $($file.Name)"
-              exit 1
-            }
-
-            if ($exitCode -ne 0) {
-              Write-Host "[ERROR] Failed to sign $($file.Name)"
-              Write-Host "Full error output:"
-              Write-Host $output
-              exit 1
-            }
-
-            $signedCount++
-            Write-Host "[SUCCESS] Signed: $($file.Name)"
-            Write-Host ""
           }
 
-          Write-Host "=== Summary ==="
-          Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
+          # Extract MSI and verify the inner exe (the file that actually gets installed).
+          # This is the critical check - AV flags the installed exe at runtime.
+          $msi = $msiFiles[0].FullName
+          $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
+          if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
+          $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
+          if ($proc.ExitCode -eq 0) {
+            $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
+            if ($innerExe) {
+              $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
+              Write-Host "Inner EXE (from MSI): Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+              if ($sig.Status -ne "Valid") {
+                Write-Host "[ERROR] Inner exe extracted from MSI is NOT signed - AV will flag this at runtime"
+                $allSigned = $false
+              }
+            } else {
+              Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
+              $allSigned = $false
+            }
+          } else {
+            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+            $allSigned = $false
+          }
 
+          if (-not $allSigned) {
+            Write-Host "[ERROR] Signature verification failed"
+            exit 1
+          }
+          Write-Host "[SUCCESS] MSI and installed exe are properly signed"
+
+      # Dump smctl log files on failure. Tauri's signCommand captures smctl output
+      # but drops stderr when the command exits non-zero, making failures opaque.
+      # The real errors live in smctl's log files - surface them here for debugging.
+      - name: Dump smctl logs on failure
+        if: ${{ failure() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          $logDir = "$env:USERPROFILE\.signingmanager\logs"
+          if (Test-Path $logDir) {
+            Get-ChildItem $logDir | ForEach-Object {
+              Write-Host "=== $($_.FullName) ==="
+              Get-Content $_.FullName -Tail 200
+              Write-Host ""
+            }
+          } else {
+            Write-Host "smctl log directory not found at $logDir"
+          }
+
+      # Rename + Upload: use always() so artifacts are still collected when verify
+      # fails - we need them to manually inspect what actually came out of the build.
       - name: Rename artifacts
+        if: always() && steps.digicert-setup.conclusion != 'failure'
         shell: bash
         run: |
           mkdir -p ./dist
@@ -522,18 +554,21 @@ jobs:
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
-            find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
+            # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
+            # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        if: always() && steps.digicert-setup.conclusion != 'failure'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
@@ -547,30 +582,30 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
       - name: Download all Tauri artifacts
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: Stirling-PDF-*
           path: ./artifacts/tauri
 
       - name: Download JAR artifact (default)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: jar
           path: ./artifacts/jars
 
       - name: Download JAR artifact (with login)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: jar-with-login
           path: ./artifacts/jars
 
       - name: Download JAR artifact (server only)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: jar-server
           path: ./artifacts/jars
@@ -579,7 +614,7 @@ jobs:
         run: ls -R ./artifacts
 
       - name: Upload binaries to Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           generate_release_notes: true
@@ -588,6 +623,7 @@ jobs:
             ./artifacts/**/*.msi
             ./artifacts/**/*.dmg
             ./artifacts/**/*.deb
+            ./artifacts/**/*.rpm
             ./artifacts/**/*.AppImage
           draft: false
           prerelease: false

@@ -1,20 +1,13 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-  Box,
-  Button,
-  Card,
-  Divider,
-  Group,
-  Stack,
-  Text,
-} from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { BookmarkNode } from '@app/utils/editTableOfContents';
-import ErrorNotification from '@app/components/tools/shared/ErrorNotification';
-import ResultsPreview from '@app/components/tools/shared/ResultsPreview';
-import BookmarkEditor from '@app/components/tools/editTableOfContents/BookmarkEditor';
-import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { Box, Button, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { BookmarkNode } from "@app/utils/editTableOfContents";
+import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
+import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
+import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEditor";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { downloadFromUrl } from "@app/services/downloadService";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -39,18 +32,38 @@ interface EditTableOfContentsWorkbenchViewProps {
   data: EditTableOfContentsWorkbenchViewData | null;
 }
 
-const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbenchViewProps) => {
+const EditTableOfContentsWorkbenchView = ({
+  data,
+}: EditTableOfContentsWorkbenchViewProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
+  const files = data?.files ?? [];
+  const thumbnails = data?.thumbnails ?? [];
+  const previewFiles = useMemo(
+    () =>
+      files.map((file, index) => ({
+        file,
+        thumbnail: thumbnails[index],
+      })),
+    [files, thumbnails],
+  );
 
   if (!data) {
     return (
       <Box p="xl">
         <Card withBorder radius="md">
           <Stack gap="sm">
-            <Text fw={600}>{t('editTableOfContents.workbench.empty.title', 'Open the tool to start editing')}</Text>
+            <Text fw={600}>
+              {t(
+                "editTableOfContents.workbench.empty.title",
+                "Open the tool to start editing",
+              )}
+            </Text>
             <Text size="sm" c="dimmed">
-              {t('editTableOfContents.workbench.empty.description', 'Select the Edit Table of Contents tool to load its workspace.')}
+              {t(
+                "editTableOfContents.workbench.empty.description",
+                "Select the Edit Table of Contents tool to load its workspace.",
+              )}
             </Text>
           </Stack>
         </Card>
@@ -62,8 +75,6 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     bookmarks,
     selectedFileName,
     disabled,
-    files,
-    thumbnails,
     downloadUrl,
     downloadFilename,
     errorMessage,
@@ -77,36 +88,30 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     onFileClick,
   } = data;
 
-  const previewFiles = useMemo(
-    () =>
-      files?.map((file, index) => ({
-        file,
-        thumbnail: thumbnails[index],
-      })) ?? [],
-    [files, thumbnails]
-  );
-
   const showResults = Boolean(
-    previewFiles.length > 0 || downloadUrl || errorMessage
+    previewFiles.length > 0 || downloadUrl || errorMessage,
   );
 
   return (
     <Box
       p="lg"
       style={{
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto',
-        background: 'var(--bg-raised)',
+        width: "100%",
+        height: "100%",
+        overflowY: "auto",
+        background: "var(--bg-raised)",
       }}
     >
       <Stack gap="xl" maw={1200} mx="auto">
         <Stack gap={4}>
           <Text size="xl" fw={700}>
-            {t('home.editTableOfContents.title', 'Edit Table of Contents')}
+            {t("home.editTableOfContents.title", "Edit Table of Contents")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t('editTableOfContents.workbench.subtitle', 'Import bookmarks, build hierarchies, and apply the outline without cramped side panels.')}
+            {t(
+              "editTableOfContents.workbench.subtitle",
+              "Import bookmarks, build hierarchies, and apply the outline without cramped side panels.",
+            )}
           </Text>
         </Stack>
 
@@ -115,21 +120,32 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
           radius="md"
           p="xl"
           style={{
-            backgroundColor: 'var(--bg-surface)',
-            borderColor: 'var(--border-default)',
-            boxShadow: 'var(--shadow-md)',
+            backgroundColor: "var(--bg-surface)",
+            borderColor: "var(--border-default)",
+            boxShadow: "var(--shadow-md)",
           }}
         >
           <Stack gap="md">
             <Stack gap={2}>
-              <Text fw={600}>{t('editTableOfContents.editor.heading', 'Bookmark editor')}</Text>
+              <Text fw={600}>
+                {t("editTableOfContents.editor.heading", "Bookmark editor")}
+              </Text>
               <Text size="sm" c="dimmed">
                 {selectedFileName
-                  ? t('editTableOfContents.actions.selectedFile', { file: selectedFileName })
-                  : t('editTableOfContents.workbench.filePrompt', 'Select a PDF from your library or upload a new one to begin.')}
+                  ? t("editTableOfContents.actions.selectedFile", {
+                      file: selectedFileName,
+                    })
+                  : t(
+                      "editTableOfContents.workbench.filePrompt",
+                      "Select a PDF from your library or upload a new one to begin.",
+                    )}
               </Text>
             </Stack>
-            <BookmarkEditor bookmarks={bookmarks} onChange={onBookmarksChange} disabled={disabled} />
+            <BookmarkEditor
+              bookmarks={bookmarks}
+              onChange={onBookmarksChange}
+              disabled={disabled}
+            />
             <Divider />
             <Group justify="flex-end">
               <Button
@@ -139,7 +155,7 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
                 disabled={isExecuteDisabled}
                 loading={isExecuting}
               >
-                {t('editTableOfContents.submit', 'Apply table of contents')}
+                {t("editTableOfContents.submit", "Apply table of contents")}
               </Button>
             </Group>
           </Stack>
@@ -151,16 +167,24 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
             radius="md"
             p="xl"
             style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-default)',
-              boxShadow: 'var(--shadow-md)',
+              backgroundColor: "var(--bg-surface)",
+              borderColor: "var(--border-default)",
+              boxShadow: "var(--shadow-md)",
             }}
           >
             <Stack gap="md">
               <Stack gap={4}>
-                <Text fw={600}>{t('editTableOfContents.results.title', 'Updated PDF with bookmarks')}</Text>
+                <Text fw={600}>
+                  {t(
+                    "editTableOfContents.results.title",
+                    "Updated PDF with bookmarks",
+                  )}
+                </Text>
                 <Text size="sm" c="dimmed">
-                  {t('editTableOfContents.results.subtitle', 'Download the processed file or undo the operation below.')}
+                  {t(
+                    "editTableOfContents.results.subtitle",
+                    "Download the processed file or undo the operation below.",
+                  )}
                 </Text>
               </Stack>
 
@@ -177,10 +201,13 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
               <Group justify="flex-end" gap="sm">
                 {downloadUrl && (
                   <Button
-                    component="a"
-                    href={downloadUrl}
-                    download={downloadFilename ?? undefined}
-                    leftSection={<LocalIcon icon='download-rounded' />}
+                    leftSection={<LocalIcon icon="download-rounded" />}
+                    onClick={() =>
+                      downloadFromUrl(
+                        downloadUrl,
+                        downloadFilename ?? "download",
+                      )
+                    }
                   >
                     {terminology.download}
                   </Button>
@@ -191,7 +218,7 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
                   onClick={onUndo}
                   disabled={isExecuting}
                 >
-                  {t('undo', 'Undo')}
+                  {t("undo", "Undo")}
                 </Button>
               </Group>
             </Stack>

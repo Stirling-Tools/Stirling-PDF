@@ -11,36 +11,26 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-import io.github.pixee.security.ZipSecurity;
-
-import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
-import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.TempFile;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.ZipExtractionUtils;
 
 @Service
 @Slf4j
@@ -48,26 +38,22 @@ public class PipelineProcessor {
 
     private final ApiDocService apiDocService;
 
-    private final UserServiceInterface userService;
-
-    private final ServletContext servletContext;
+    private final InternalApiClient internalApiClient;
 
     private final TempFileManager tempFileManager;
 
     public PipelineProcessor(
             ApiDocService apiDocService,
-            @Autowired(required = false) UserServiceInterface userService,
-            ServletContext servletContext,
+            InternalApiClient internalApiClient,
             TempFileManager tempFileManager) {
         this.apiDocService = apiDocService;
-        this.userService = userService;
-        this.servletContext = servletContext;
+        this.internalApiClient = internalApiClient;
         this.tempFileManager = tempFileManager;
     }
 
     public static String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
-        int dotIndex = filename.lastIndexOf(".");
+        int dotIndex = filename.lastIndexOf('.');
         if (dotIndex == -1) {
             // No extension found
             return filename;
@@ -75,24 +61,13 @@ public class PipelineProcessor {
         String name = filename.substring(0, dotIndex);
         String extension = filename.substring(dotIndex);
         // Finding the last underscore
-        int underscoreIndex = name.lastIndexOf("_");
+        int underscoreIndex = name.lastIndexOf('_');
         if (underscoreIndex == -1) {
             // No underscore found
             return filename;
         }
         // Removing the last part and reattaching the extension
         return name.substring(0, underscoreIndex) + extension;
-    }
-
-    private String getApiKeyForUser() {
-        if (userService == null) return "";
-        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
-    }
-
-    private String getBaseUrl() {
-        String contextPath = servletContext.getContextPath();
-        String port = SPDFApplication.getStaticPort();
-        return "http://localhost:" + port + contextPath + "/";
     }
 
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
@@ -122,7 +97,6 @@ public class PipelineProcessor {
                         "Invalid operation: " + operation + " with parameters: " + parameters);
             }
 
-            String url = getBaseUrl() + operation;
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
                 for (Resource file : outputFiles) {
@@ -144,12 +118,15 @@ public class PipelineProcessor {
                                     body.add(entry.getKey(), entry.getValue());
                                 }
                             }
-                            ResponseEntity<Resource> response = sendWebRequest(url, body);
+                            ResponseEntity<Resource> response =
+                                    internalApiClient.post(operation, body);
                             // If the operation is filter and the response body is null or empty,
                             // skip
                             // this
                             // file
-                            if (response.getBody() instanceof TempFileResource tempFileResource) {
+                            if (response.getBody()
+                                    instanceof
+                                    InternalApiClient.TempFileResource tempFileResource) {
                                 result.addTempFile(tempFileResource.getTempFile());
                             }
 
@@ -173,7 +150,7 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf("."))
+                                    filename.substring(filename.lastIndexOf('.'))
                                             .toLowerCase(Locale.ROOT);
                         }
 
@@ -226,8 +203,9 @@ public class PipelineProcessor {
                             body.add(entry.getKey(), entry.getValue());
                         }
                     }
-                    ResponseEntity<Resource> response = sendWebRequest(url, body);
-                    if (response.getBody() instanceof TempFileResource tempFileResource) {
+                    ResponseEntity<Resource> response = internalApiClient.post(operation, body);
+                    if (response.getBody()
+                            instanceof InternalApiClient.TempFileResource tempFileResource) {
                         result.addTempFile(tempFileResource.getTempFile());
                     }
                     // Handle the response
@@ -248,7 +226,7 @@ public class PipelineProcessor {
                                                 String filename = file.getFilename();
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
-                                                                    filename.lastIndexOf("."))
+                                                                    filename.lastIndexOf('.'))
                                                             .toLowerCase(Locale.ROOT);
                                                 }
                                                 return "no extension";
@@ -281,42 +259,6 @@ public class PipelineProcessor {
         return result;
     }
 
-    /* package */ ResponseEntity<Resource> sendWebRequest(
-            String url, MultiValueMap<String, Object> body) {
-        RestTemplate restTemplate = new RestTemplate();
-        // Set up headers, including API key
-        HttpHeaders headers = new HttpHeaders();
-        String apiKey = getApiKeyForUser();
-        if (apiKey != null && !apiKey.isEmpty()) {
-            headers.add("X-API-KEY", apiKey);
-        }
-
-        // Let the message converter set the multipart boundary/content type
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        RequestCallback requestCallback =
-                restTemplate.httpEntityCallback(entity, Resource.class /* response type hint */);
-        return restTemplate.execute(
-                url,
-                HttpMethod.POST,
-                requestCallback,
-                response -> {
-                    try {
-                        TempFile tempFile = tempFileManager.createManagedTempFile("pipeline");
-                        Files.copy(
-                                response.getBody(),
-                                tempFile.getPath(),
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        TempFileResource resource = new TempFileResource(tempFile);
-                        return ResponseEntity.status(response.getStatusCode())
-                                .headers(response.getHeaders())
-                                .body(resource);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
-    }
-
     private List<Resource> processOutputFiles(
             String operation,
             ResponseEntity<Resource> response,
@@ -335,13 +277,15 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody(), newFilename)) {
+        if (ZipExtractionUtils.isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files
-            newOutputFiles.addAll(unzip(response.getBody(), result));
+            newOutputFiles.addAll(
+                    ZipExtractionUtils.extractZip(
+                            response.getBody(), tempFileManager, result::addTempFile));
         } else {
             final Resource tempResource = response.getBody();
-            if (tempResource instanceof TempFileResource) {
-                result.addTempFile(((TempFileResource) tempResource).getTempFile());
+            if (tempResource instanceof InternalApiClient.TempFileResource tfr) {
+                result.addTempFile(tfr.getTempFile());
             }
             Resource outputResource =
                     new FileSystemResource(tempResource.getFile()) {
@@ -423,84 +367,5 @@ public class PipelineProcessor {
         }
         log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
-    }
-
-    private boolean isZip(Resource data, String filename) throws IOException {
-        if (data == null || data.contentLength() < 4) {
-            return false;
-        }
-        if (filename != null) {
-            String lower = filename.toLowerCase();
-            if (lower.endsWith(".cbz")) {
-                // Treat CBZ as non-zip for our unzipping purposes
-                return false;
-            }
-        }
-        // Check the first four bytes of the data against the standard zip magic number
-        try (InputStream is = data.getInputStream()) {
-            byte[] header = new byte[4];
-            if (is.read(header) < 4) {
-                return false;
-            }
-            return header[0] == 0x50 && header[1] == 0x4B && header[2] == 0x03 && header[3] == 0x04;
-        }
-    }
-
-    private boolean isZip(Resource data) throws IOException {
-        return isZip(data, null);
-    }
-
-    private List<Resource> unzip(Resource data, PipelineResult result) throws IOException {
-        log.info("Unzipping data of length: {}", data.contentLength());
-        List<Resource> unzippedFiles = new ArrayList<>();
-        try (InputStream bais = data.getInputStream();
-                ZipInputStream zis = ZipSecurity.createHardenedInputStream(bais)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                TempFile tempFile = tempFileManager.createManagedTempFile("unzip");
-                result.addTempFile(tempFile);
-                try (OutputStream os = Files.newOutputStream(tempFile.getPath())) {
-                    byte[] buffer = new byte[4096];
-                    int count;
-                    while ((count = zis.read(buffer)) != -1) {
-                        os.write(buffer, 0, count);
-                    }
-                }
-                final String filename = entry.getName();
-                Resource fileResource =
-                        new FileSystemResource(tempFile.getFile()) {
-
-                            @Override
-                            public String getFilename() {
-                                return filename;
-                            }
-                        };
-                // If the unzipped file is a zip file, unzip it
-                if (isZip(fileResource, filename)) {
-                    log.info("File {} is a zip file. Unzipping...", filename);
-                    unzippedFiles.addAll(unzip(fileResource, result));
-                } else {
-                    unzippedFiles.add(fileResource);
-                }
-            }
-        }
-        log.info("Unzipping completed. {} files were unzipped.", unzippedFiles.size());
-        return unzippedFiles;
-    }
-
-    private static class TempFileResource extends FileSystemResource {
-        private final TempFile tempFile;
-
-        public TempFileResource(TempFile tempFile) {
-            super(tempFile.getFile());
-            this.tempFile = tempFile;
-        }
-
-        public TempFile getTempFile() {
-            return tempFile;
-        }
     }
 }

@@ -47,6 +47,7 @@ public class SvgSanitizer {
     private static final Pattern DATA_SCRIPT_PATTERN =
             Pattern.compile(
                     "^\\s*data\\s*:[^,]*(?:script|javascript|vbscript)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NULL_BYTE_PATTERN = Pattern.compile("\u0000");
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
 
@@ -85,7 +86,7 @@ public class SvgSanitizer {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
         factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -210,7 +211,7 @@ public class SvgSanitizer {
 
         String result = url.trim();
 
-        result = result.replaceAll("\u0000", "");
+        result = NULL_BYTE_PATTERN.matcher(result).replaceAll("");
 
         for (int i = 0; i < 3; i++) {
             try {

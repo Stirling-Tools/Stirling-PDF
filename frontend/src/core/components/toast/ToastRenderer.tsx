@@ -1,14 +1,14 @@
-import { useToast } from '@app/components/toast/ToastContext';
-import { ToastInstance, ToastLocation } from '@app/components/toast/types';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
-import '@app/components/toast/ToastRenderer.css';
+import { useToast } from "@app/components/toast/ToastContext";
+import { ToastInstance, ToastLocation } from "@app/components/toast/types";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
+import "@app/components/toast/ToastRenderer.css";
 
 const locationToClass: Record<ToastLocation, string> = {
-  'top-left': 'toast-container--top-left',
-  'top-right': 'toast-container--top-right',
-  'bottom-left': 'toast-container--bottom-left',
-  'bottom-right': 'toast-container--bottom-right',
-  'bottom-center': 'toast-container--bottom-center',
+  "top-left": "toast-container--top-left",
+  "top-right": "toast-container--top-right",
+  "bottom-left": "toast-container--bottom-left",
+  "bottom-right": "toast-container--bottom-right",
+  "bottom-center": "toast-container--bottom-center",
 };
 
 function getToastItemClass(t: ToastInstance): string {
@@ -25,52 +25,61 @@ function getActionButtonClass(t: ToastInstance): string {
 
 function getDefaultIconName(t: ToastInstance): string {
   switch (t.alertType) {
-    case 'success':
-      return 'check-circle-rounded';
-    case 'error':
-      return 'cancel';
-    case 'warning':
-      return 'warning';
-    case 'neutral':
+    case "success":
+      return "check-circle-rounded";
+    case "error":
+      return "cancel";
+    case "warning":
+      return "warning";
+    case "neutral":
     default:
-      return 'info';
+      return "info";
   }
 }
 
 export default function ToastRenderer() {
   const { toasts, dismiss } = useToast();
 
-  const grouped = toasts.reduce<Record<ToastLocation, ToastInstance[]>>((acc, t) => {
-    const key = t.location;
-    if (!acc[key]) acc[key] = [] as ToastInstance[];
-    acc[key].push(t);
-    return acc;
-  }, { 'top-left': [], 'top-right': [], 'bottom-left': [], 'bottom-right': [], 'bottom-center': [] });
+  const grouped = toasts.reduce<Record<ToastLocation, ToastInstance[]>>(
+    (acc, t) => {
+      const key = t.location;
+      if (!acc[key]) acc[key] = [] as ToastInstance[];
+      acc[key].push(t);
+      return acc;
+    },
+    {
+      "top-left": [],
+      "top-right": [],
+      "bottom-left": [],
+      "bottom-right": [],
+      "bottom-center": [],
+    },
+  );
 
   return (
     <>
       {(Object.keys(grouped) as ToastLocation[]).map((loc) => (
         <div key={loc} className={`toast-container ${locationToClass[loc]}`}>
-          {grouped[loc].map(t => {
+          {grouped[loc].map((t) => {
             return (
-              <div
-                key={t.id}
-                role="status"
-                className={getToastItemClass(t)}
-              >
+              <div key={t.id} role="status" className={getToastItemClass(t)}>
                 {/* Top row: Icon + Title + Controls */}
                 <div className="toast-header">
                   {/* Icon */}
                   <div className="toast-icon">
                     {t.icon ?? (
-                      <LocalIcon icon={getDefaultIconName(t)} width={20} height={20} />
+                      <LocalIcon
+                        icon={getDefaultIconName(t)}
+                        width={20}
+                        height={20}
+                      />
                     )}
                   </div>
 
                   {/* Title + count badge */}
                   <div className="toast-title-container">
                     <span>{t.title}</span>
-                    {typeof t.count === 'number' && t.count > 1 && (
+                    {typeof t.count === "number" && t.count > 1 && (
                       <span className="toast-count-badge">{t.count}</span>
                     )}
                   </div>
@@ -81,10 +90,12 @@ export default function ToastRenderer() {
                       <button
                         aria-label="Toggle details"
                         onClick={() => {
-                          const evt = new CustomEvent('toast:toggle', { detail: { id: t.id } });
+                          const evt = new CustomEvent("toast:toggle", {
+                            detail: { id: t.id },
+                          });
                           window.dispatchEvent(evt);
                         }}
-                        className={`toast-button toast-expand-button ${t.isExpanded ? 'toast-expand-button--expanded' : ''}`}
+                        className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
                       >
                         <LocalIcon icon="expand-more-rounded" />
                       </button>
@@ -99,7 +110,7 @@ export default function ToastRenderer() {
                   </div>
                 </div>
                 {/* Progress bar - always show when present */}
-                {typeof t.progress === 'number' && (
+                {typeof t.progress === "number" && (
                   <div className="toast-progress-container">
                     <div
                       className={getProgressBarClass(t)}
@@ -110,9 +121,7 @@ export default function ToastRenderer() {
 
                 {/* Body content - only show when expanded */}
                 {(t.isExpanded || !t.expandable) && (
-                  <div className="toast-body">
-                    {t.body}
-                  </div>
+                  <div className="toast-body">{t.body}</div>
                 )}
 
                 {/* Button - always show when present, positioned below body */}
@@ -134,5 +143,3 @@ export default function ToastRenderer() {
     </>
   );
 }
-
-

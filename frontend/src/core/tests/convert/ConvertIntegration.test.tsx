@@ -9,34 +9,44 @@
  * 5. FileContext integration works correctly
  */
 
-import React from 'react';
-import { describe, test, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useConvertOperation } from '@app/hooks/tools/convert/useConvertOperation';
-import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
-import { FileContextProvider } from '@app/contexts/FileContext';
-import { PreferencesProvider } from '@app/contexts/PreferencesContext';
-import { I18nextProvider } from 'react-i18next';
-import i18n from '@app/i18n/config';
-import { createTestStirlingFile } from '@app/tests/utils/testFileHelpers';
-import { StirlingFile } from '@app/types/fileContext';
-import { MantineProvider } from '@mantine/core';
+import React from "react";
+import {
+  describe,
+  test,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  Mock,
+} from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
+import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { FileContextProvider } from "@app/contexts/FileContext";
+import { NavigationProvider } from "@app/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@app/i18n/config";
+import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
+import { StirlingFile } from "@app/types/fileContext";
+import { MantineProvider } from "@mantine/core";
 
 // Mock axios (for static methods like CancelToken, isCancel)
-vi.mock('axios', () => ({
+vi.mock("axios", () => ({
   default: {
     CancelToken: {
       source: vi.fn(() => ({
-        token: 'mock-cancel-token',
-        cancel: vi.fn()
-      }))
+        token: "mock-cancel-token",
+        cancel: vi.fn(),
+      })),
     },
     isCancel: vi.fn(() => false),
-  }
+  },
 }));
 
 // Mock our apiClient service
-vi.mock('../../services/apiClient', () => ({
+vi.mock("../../services/apiClient", () => ({
   default: {
     post: vi.fn(),
     get: vi.fn(),
@@ -44,18 +54,18 @@ vi.mock('../../services/apiClient', () => ({
     delete: vi.fn(),
     interceptors: {
       response: {
-        use: vi.fn()
-      }
-    }
-  }
+        use: vi.fn(),
+      },
+    },
+  },
 }));
 
 // Import the mocked apiClient
-import apiClient from '@app/services/apiClient';
+import apiClient from "@app/services/apiClient";
 const mockedApiClient = vi.mocked(apiClient);
 
 // Mock only essential services that are actually called by the tests
-vi.mock('../../services/fileStorage', () => ({
+vi.mock("../../services/fileStorage", () => ({
   fileStorage: {
     init: vi.fn().mockResolvedValue(undefined),
     storeFile: vi.fn().mockImplementation((file, thumbnail) => {
@@ -65,26 +75,29 @@ vi.mock('../../services/fileStorage', () => ({
         size: file.size,
         type: file.type,
         lastModified: file.lastModified,
-        thumbnail: thumbnail
+        thumbnail: thumbnail,
       });
     }),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
-    cleanup: vi.fn().mockResolvedValue(undefined)
-  }
+    cleanup: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
-vi.mock('../../services/thumbnailGenerationService', () => ({
+vi.mock("../../services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: {
-    generateThumbnail: vi.fn().mockResolvedValue('data:image/png;base64,fake-thumbnail'),
+    generateThumbnail: vi
+      .fn()
+      .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
-    destroy: vi.fn()
-  }
+    destroy: vi.fn(),
+  },
 }));
 
 // Create realistic test files
 const createPDFFile = (): StirlingFile => {
-  const pdfContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\ntrailer\n<<\n/Size 2\n/Root 1 0 R\n>>\nstartxref\n0\n%%EOF';
-  return createTestStirlingFile('test.pdf', pdfContent, 'application/pdf');
+  const pdfContent =
+    "%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\ntrailer\n<<\n/Size 2\n/Root 1 0 R\n>>\nstartxref\n0\n%%EOF";
+  return createTestStirlingFile("test.pdf", pdfContent, "application/pdf");
 };
 
 // Test wrapper component
@@ -92,81 +105,82 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <MantineProvider>
     <I18nextProvider i18n={i18n}>
       <PreferencesProvider>
-        <FileContextProvider>
-          {children}
-        </FileContextProvider>
+        <ToolRegistryProvider>
+          <NavigationProvider>
+            <FileContextProvider>{children}</FileContextProvider>
+          </NavigationProvider>
+        </ToolRegistryProvider>
       </PreferencesProvider>
     </I18nextProvider>
   </MantineProvider>
 );
 
-describe('Convert Tool Integration Tests', () => {
-
+describe("Convert Tool Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default apiClient mock
-    mockedApiClient.post = vi.fn();
+    mockedApiClient.post = vi.fn() as any;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe('useConvertOperation Integration', () => {
-
-    test('should make correct API call for PDF to PNG conversion', async () => {
-      const mockBlob = new Blob(['fake-image-data'], { type: 'image/png' });
+  describe("useConvertOperation Integration", () => {
+    test("should make correct API call for PDF to PNG conversion", async () => {
+      const mockBlob = new Blob(["fake-image-data"], { type: "image/png" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
-        statusText: 'OK'
+        statusText: "OK",
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -175,80 +189,88 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify axios was called with correct parameters
       expect(mockedApiClient.post).toHaveBeenCalledWith(
-        '/api/v1/convert/pdf/img',
+        "/api/v1/convert/pdf/img",
         expect.any(FormData),
-        { responseType: 'blob' }
+        {
+          responseType: "blob",
+        },
       );
 
       // Verify FormData contains correct parameters
-      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
-      expect(formDataCall.get('imageFormat')).toBe('png');
-      expect(formDataCall.get('colorType')).toBe('color');
-      expect(formDataCall.get('dpi')).toBe('300');
-      expect(formDataCall.get('singleOrMultiple')).toBe('multiple');
+      const formDataCall = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
+      expect(formDataCall.get("imageFormat")).toBe("png");
+      expect(formDataCall.get("colorType")).toBe("color");
+      expect(formDataCall.get("dpi")).toBe("300");
+      expect(formDataCall.get("singleOrMultiple")).toBe("multiple");
 
       // Verify hook state updates
       expect(result.current.downloadUrl).toBeTruthy();
-      expect(result.current.downloadFilename).toBe('test.png');
+      expect(result.current.downloadFilename).toBe("test.png");
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.errorMessage).not.toBe(null);
+      expect(result.current.errorMessage).toBe(null);
     });
 
-    test('should handle API error responses correctly', async () => {
-      const errorMessage = 'Invalid file format';
+    test("should handle API error responses correctly", async () => {
+      const errorMessage = "Invalid file format";
       (mockedApiClient.post as Mock).mockRejectedValueOnce({
         response: {
           status: 400,
-          data: errorMessage
+          data: errorMessage,
         },
-        message: errorMessage
+        message: errorMessage,
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
-      const testFile = createTestStirlingFile('invalid.txt', 'not a pdf', 'text/plain');
+      const testFile = createTestStirlingFile(
+        "invalid.txt",
+        "not a pdf",
+        "text/plain",
+      );
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -261,123 +283,126 @@ describe('Convert Tool Integration Tests', () => {
       expect(result.current.downloadUrl).toBe(null);
     });
 
-    test('should handle network errors gracefully', async () => {
-      (mockedApiClient.post as Mock).mockRejectedValueOnce(new Error('Network error'));
+    test("should handle network errors gracefully", async () => {
+      (mockedApiClient.post as Mock).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
         await result.current.executeOperation(parameters, [testFile]);
       });
 
-      expect(result.current.errorMessage).toBe('Network error');
+      expect(result.current.errorMessage).toBe("Network error");
       expect(result.current.isLoading).toBe(false);
     });
   });
 
-  describe('API and Hook Integration', () => {
-
-    test('should correctly map image conversion parameters to API call', async () => {
-      const mockBlob = new Blob(['fake-data'], { type: 'image/jpeg' });
+  describe("API and Hook Integration", () => {
+    test("should correctly map image conversion parameters to API call", async () => {
+      const mockBlob = new Blob(["fake-data"], { type: "image/jpeg" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         headers: {
-          'content-type': 'image/jpeg',
-          'content-disposition': 'attachment; filename="test_converted.jpg"'
-        }
+          "content-type": "image/jpeg",
+          "content-disposition": 'attachment; filename="test_converted.jpg"',
+        },
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'jpg',
+        fromExtension: "pdf",
+        toExtension: "jpg",
         imageOptions: {
-          colorType: 'grayscale',
+          colorType: "grayscale",
           dpi: 150,
-          singleOrMultiple: 'single',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "single",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -385,72 +410,74 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       // Verify integration: hook parameters → FormData → axios call → hook state
-      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
-      expect(formDataCall.get('imageFormat')).toBe('jpg');
-      expect(formDataCall.get('colorType')).toBe('grayscale');
-      expect(formDataCall.get('dpi')).toBe('150');
-      expect(formDataCall.get('singleOrMultiple')).toBe('single');
+      const formDataCall = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
+      expect(formDataCall.get("imageFormat")).toBe("jpg");
+      expect(formDataCall.get("colorType")).toBe("grayscale");
+      expect(formDataCall.get("dpi")).toBe("150");
+      expect(formDataCall.get("singleOrMultiple")).toBe("single");
 
       // Verify complete workflow: API response → hook state → FileContext integration
       expect(result.current.downloadUrl).toBeTruthy();
       expect(result.current.files).toHaveLength(1);
-      expect(result.current.files[0].name).toBe('test_converted.jpg');
+      expect(result.current.files[0].name).toBe("test_converted.jpg");
       expect(result.current.isLoading).toBe(false);
     });
 
-    test('should make correct API call for PDF to CSV conversion with simplified workflow', async () => {
-      const mockBlob = new Blob(['fake-csv-data'], { type: 'text/csv' });
+    test("should make correct API call for PDF to CSV conversion with simplified workflow", async () => {
+      const mockBlob = new Blob(["fake-csv-data"], { type: "text/csv" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
-        statusText: 'OK'
+        statusText: "OK",
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'csv',
+        fromExtension: "pdf",
+        toExtension: "csv",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -459,69 +486,73 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify correct endpoint is called
       expect(mockedApiClient.post).toHaveBeenCalledWith(
-        '/api/v1/convert/pdf/csv',
+        "/api/v1/convert/pdf/csv",
         expect.any(FormData),
-        { responseType: 'blob' }
+        {
+          responseType: "blob",
+        },
       );
 
       // Verify FormData contains correct parameters for simplified CSV conversion
-      const formDataCall = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
-      expect(formDataCall.get('pageNumbers')).toBe('all'); // Always "all" for simplified workflow
-      expect(formDataCall.get('fileInput')).toBe(testFile);
+      const formDataCall = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
+      expect(formDataCall.get("pageNumbers")).toBe("all"); // Always "all" for simplified workflow
+      expect(formDataCall.get("fileInput")).toBe(testFile);
 
       // Verify hook state updates correctly
       expect(result.current.downloadUrl).toBeTruthy();
-      expect(result.current.downloadFilename).toBe('test.csv');
+      expect(result.current.downloadFilename).toBe("test.csv");
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.errorMessage).not.toBe(null);
+      expect(result.current.errorMessage).toBe(null);
     });
 
-    test('should handle complete unsupported conversion workflow', async () => {
+    test("should handle complete unsupported conversion workflow", async () => {
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'unsupported',
+        fromExtension: "pdf",
+        toExtension: "unsupported",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -530,65 +561,67 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify integration: utils validation prevents API call, hook shows error
       expect(mockedApiClient.post).not.toHaveBeenCalled();
-      expect(result.current.errorMessage).toContain('Unsupported conversion format');
+      expect(result.current.errorMessage).toContain(
+        "Unsupported conversion format",
+      );
       expect(result.current.isLoading).toBe(false);
       expect(result.current.downloadUrl).toBe(null);
     });
   });
 
-  describe('File Upload Integration', () => {
-
-    test('should handle multiple file uploads correctly', async () => {
-      const mockBlob = new Blob(['zip-content'], { type: 'application/zip' });
+  describe("File Upload Integration", () => {
+    test("should handle multiple file uploads correctly", async () => {
+      const mockBlob = new Blob(["zip-content"], { type: "application/zip" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
       const files = [
         createPDFFile(),
-        createTestStirlingFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
+        createTestStirlingFile("test2.pdf", "%PDF-1.4...", "application/pdf"),
       ];
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -600,59 +633,59 @@ describe('Convert Tool Integration Tests', () => {
 
       for (let i = 0; i < calls.length; i++) {
         const formData = calls[i][1] as FormData;
-        const fileInputs = formData.getAll('fileInput');
+        const fileInputs = formData.getAll("fileInput");
         expect(fileInputs).toHaveLength(1);
         expect(fileInputs[0]).toBeInstanceOf(File);
         expect((fileInputs[0] as File).name).toBe(files[i].name);
       }
-
     });
 
-    test('should handle no files selected', async () => {
+    test("should handle no files selected", async () => {
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -660,197 +693,202 @@ describe('Convert Tool Integration Tests', () => {
       });
 
       expect(mockedApiClient.post).not.toHaveBeenCalled();
-      expect(result.current.errorMessage).toContain('noFileSelected');
+      expect(result.current.errorMessage).toContain("noFileSelected");
     });
   });
 
-  describe('Error Boundary Integration', () => {
-
-    test('should handle corrupted file gracefully', async () => {
+  describe("Error Boundary Integration", () => {
+    test("should handle corrupted file gracefully", async () => {
       (mockedApiClient.post as Mock).mockRejectedValueOnce({
         response: {
           status: 422,
-          data: 'Processing failed'
-        }
+          data: "Processing failed",
+        },
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
-      const corruptedFile = createTestStirlingFile('corrupted.pdf', 'not-a-pdf', 'application/pdf');
+      const corruptedFile = createTestStirlingFile(
+        "corrupted.pdf",
+        "not-a-pdf",
+        "application/pdf",
+      );
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
         await result.current.executeOperation(parameters, [corruptedFile]);
       });
 
-      expect(result.current.errorMessage).toBe('Processing failed');
+      expect(result.current.errorMessage).toBe("Processing failed");
       expect(result.current.isLoading).toBe(false);
     });
 
-    test('should handle backend service unavailable', async () => {
+    test("should handle backend service unavailable", async () => {
       (mockedApiClient.post as Mock).mockRejectedValueOnce({
         response: {
           status: 503,
-          data: 'Service unavailable'
-        }
+          data: "Service unavailable",
+        },
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
         await result.current.executeOperation(parameters, [testFile]);
       });
 
-      expect(result.current.errorMessage).toBe('Service unavailable');
+      expect(result.current.errorMessage).toBe("Service unavailable");
       expect(result.current.isLoading).toBe(false);
     });
   });
 
-  describe('FileContext Integration', () => {
-
-    test('should record operation in FileContext', async () => {
-      const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
+  describe("FileContext Integration", () => {
+    test("should record operation in FileContext", async () => {
+      const mockBlob = new Blob(["fake-data"], { type: "image/png" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         headers: {
-          'content-type': 'image/png',
-          'content-disposition': 'attachment; filename="test_converted.png"'
-        }
+          "content-type": "image/png",
+          "content-disposition": 'attachment; filename="test_converted.png"',
+        },
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {
@@ -859,66 +897,67 @@ describe('Convert Tool Integration Tests', () => {
 
       // Verify operation was successful and files were processed
       expect(result.current.files).toHaveLength(1);
-      expect(result.current.files[0].name).toBe('test_converted.png');
+      expect(result.current.files[0].name).toBe("test_converted.png");
       expect(result.current.downloadUrl).toBeTruthy();
     });
 
-    test('should clean up blob URLs on reset', async () => {
-      const mockBlob = new Blob(['fake-data'], { type: 'image/png' });
+    test("should clean up blob URLs on reset", async () => {
+      const mockBlob = new Blob(["fake-data"], { type: "image/png" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({
         data: mockBlob,
         status: 200,
         headers: {
-          'content-type': 'image/png',
-          'content-disposition': 'attachment; filename="test_converted.png"'
-        }
+          "content-type": "image/png",
+          "content-disposition": 'attachment; filename="test_converted.png"',
+        },
       });
 
       const { result } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper
+        wrapper: TestWrapper,
       });
 
       const testFile = createPDFFile();
       const parameters: ConvertParameters = {
-        fromExtension: 'pdf',
-        toExtension: 'png',
+        fromExtension: "pdf",
+        toExtension: "png",
         imageOptions: {
-          colorType: 'color',
+          colorType: "color",
           dpi: 300,
-          singleOrMultiple: 'multiple',
-          fitOption: 'maintainAspectRatio',
+          singleOrMultiple: "multiple",
+          fitOption: "maintainAspectRatio",
           autoRotate: true,
-          combineImages: true
+          combineImages: true,
         },
         isSmartDetection: false,
-        smartDetectionType: 'none',
+        smartDetectionType: "none",
         htmlOptions: {
-          zoomLevel: 0
+          zoomLevel: 0,
         },
         emailOptions: {
           includeAttachments: false,
           maxAttachmentSizeMB: 0,
           downloadHtml: false,
-          includeAllRecipients: false
+          includeAllRecipients: false,
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: "",
+          strict: false,
         },
         pdfxOptions: {
-          outputFormat: 'pdfx'
+          outputFormat: "pdfx",
         },
         cbrOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         pdfToCbrOptions: {
-          dpi: 150
+          dpi: 150,
         },
         cbzOptions: {
-          optimizeForEbook: false
+          optimizeForEbook: false,
         },
         cbzOutputOptions: {
-          dpi: 150
-        }
+          dpi: 150,
+        },
       };
 
       await act(async () => {

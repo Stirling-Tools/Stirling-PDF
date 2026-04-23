@@ -33,7 +33,7 @@ export const useUndoManagerState = ({
       undoManagerRef.current.executeCommand(command);
       setHasUnsavedChanges(true);
     },
-    [setHasUnsavedChanges]
+    [setHasUnsavedChanges],
   );
 
   const handleUndo = useCallback(() => {

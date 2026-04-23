@@ -42,7 +42,7 @@ public enum Role {
         // Using the fromString method to get the Role enum based on the roleId
         Role role = fromString(roleId);
         // Return the roleName of the found Role enum
-        return role.getRoleName();
+        return role.roleName;
     }
 
     // Method to retrieve all role IDs and role names
@@ -50,14 +50,14 @@ public enum Role {
         // Using LinkedHashMap to preserve order
         Map<String, String> roleDetails = new LinkedHashMap<>();
         for (Role role : Role.values()) {
-            roleDetails.put(role.getRoleId(), role.getRoleName());
+            roleDetails.put(role.roleId, role.roleName);
         }
         return roleDetails;
     }
 
     public static Role fromString(String roleId) {
         for (Role role : Role.values()) {
-            if (role.getRoleId().equalsIgnoreCase(roleId)) {
+            if (role.roleId.equalsIgnoreCase(roleId)) {
                 return role;
             }
         }

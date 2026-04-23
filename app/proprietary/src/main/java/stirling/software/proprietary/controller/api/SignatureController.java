@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +39,9 @@ import stirling.software.proprietary.service.SignatureService;
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
+@Tag(
+        name = "Saved Signatures",
+        description = "Manage saved signature templates for authenticated users")
 public class SignatureController {
 
     private final SignatureService signatureService;
@@ -48,10 +53,18 @@ public class SignatureController {
      * requirements.
      */
     @PostMapping
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<SavedSignatureResponse> saveSignature(
             @RequestBody SavedSignatureRequest request) {
         try {
             String username = userService.getCurrentUsername();
+
+            if ("shared".equals(request.getScope()) && !userService.isCurrentUserAdmin()) {
+                log.warn(
+                        "User {} attempted to create shared signature without admin role",
+                        username);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
 
             // Validate request
             if (request.getDataUrl() == null || request.getDataUrl().isEmpty()) {
@@ -76,6 +89,7 @@ public class SignatureController {
      * signatures.
      */
     @GetMapping
+    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<List<SavedSignatureResponse>> listSignatures() {
         try {
             String username = userService.getCurrentUsername();
@@ -98,10 +112,19 @@ public class SignatureController {
         try {
             String username = userService.getCurrentUsername();
             String newLabel = body.get("label");
+            boolean isAdmin = userService.isCurrentUserAdmin();
 
             if (newLabel == null || newLabel.trim().isEmpty()) {
                 log.warn("Invalid label update request");
                 return ResponseEntity.badRequest().build();
+            }
+
+            if (signatureService.isSharedSignature(signatureId) && !isAdmin) {
+                log.warn(
+                        "User {} attempted to update shared signature {} without admin role",
+                        username,
+                        signatureId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             signatureService.updateSignatureLabel(username, signatureId, newLabel);

@@ -1,6 +1,5 @@
 package stirling.software.common.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -44,9 +43,7 @@ public class FileToPdf {
                             sanitizeHtmlContent(
                                     new String(fileBytes, StandardCharsets.UTF_8),
                                     customHtmlSanitizer);
-                    Files.write(
-                            tempInputFile.getPath(),
-                            sanitizedHtml.getBytes(StandardCharsets.UTF_8));
+                    Files.writeString(tempInputFile.getPath(), sanitizedHtml);
                 } else if (fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
@@ -68,16 +65,7 @@ public class FileToPdf {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
                                 .runCommandWithOutputHandling(command);
 
-                byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-                try {
-                    return pdfBytes;
-                } catch (Exception e) {
-                    pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-                    if (pdfBytes.length < 1) {
-                        throw e;
-                    }
-                    return pdfBytes;
-                }
+                return Files.readAllBytes(tempOutputFile.getPath());
             } // tempInputFile auto-closed
         } // tempOutputFile auto-closed
     }
@@ -94,12 +82,18 @@ public class FileToPdf {
             throws IOException {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
             try (ZipInputStream zipIn =
-                    ZipSecurity.createHardenedInputStream(
-                            new ByteArrayInputStream(Files.readAllBytes(zipFilePath)))) {
+                    ZipSecurity.createHardenedInputStream(Files.newInputStream(zipFilePath))) {
                 ZipEntry entry = zipIn.getNextEntry();
                 while (entry != null) {
                     Path filePath =
                             tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
+                    Path normalizedTargetDir =
+                            tempUnzippedDir.getPath().toAbsolutePath().normalize();
+                    Path normalizedFilePath = filePath.toAbsolutePath().normalize();
+                    if (!normalizedFilePath.startsWith(normalizedTargetDir)) {
+                        throw new IOException(
+                                "Zip entry path escapes target directory: " + entry.getName());
+                    }
                     if (!entry.isDirectory()) {
                         Files.createDirectories(filePath.getParent());
                         if (entry.getName().toLowerCase(Locale.ROOT).endsWith(".html")
@@ -108,8 +102,7 @@ public class FileToPdf {
                                     new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
                             String sanitizedContent =
                                     sanitizeHtmlContent(content, customHtmlSanitizer);
-                            Files.write(
-                                    filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));
+                            Files.writeString(filePath, sanitizedContent);
                         } else {
                             Files.copy(zipIn, filePath);
                         }

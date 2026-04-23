@@ -2,7 +2,7 @@
  * React hooks for tool parameter management (URL logic removed)
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 
 type ToolParameterValues = Record<string, any>;
 
@@ -11,9 +11,8 @@ type ToolParameterValues = Record<string, any>;
  */
 export function useToolParameters(
   _toolName: string,
-  _parameters: Record<string, any>
+  _parameters: Record<string, any>,
 ): [ToolParameterValues, (updates: Partial<ToolParameterValues>) => void] {
-
   // Return empty values and noop updater
   const currentValues = useMemo(() => ({}), []);
   const updateParameters = useCallback(() => {}, []);
@@ -27,15 +26,20 @@ export function useToolParameters(
 export function useToolParameter<T = any>(
   toolName: string,
   paramName: string,
-  definition: any
+  definition: any,
 ): [T, (value: T) => void] {
-  const [allParams, updateParams] = useToolParameters(toolName, { [paramName]: definition });
+  const [allParams, updateParams] = useToolParameters(toolName, {
+    [paramName]: definition,
+  });
 
   const value = allParams[paramName] as T;
 
-  const setValue = useCallback((newValue: T) => {
-    updateParams({ [paramName]: newValue });
-  }, [paramName, updateParams]);
+  const setValue = useCallback(
+    (newValue: T) => {
+      updateParams({ [paramName]: newValue });
+    },
+    [paramName, updateParams],
+  );
 
   return [value, setValue];
 }

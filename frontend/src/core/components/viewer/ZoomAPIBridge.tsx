@@ -1,19 +1,40 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useZoom, ZoomMode } from '@embedpdf/plugin-zoom/react';
-import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useFileState } from '@app/contexts/FileContext';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useZoom, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useFileState } from "@app/contexts/FileContext";
 import {
   determineAutoZoom,
   DEFAULT_FALLBACK_ZOOM,
   DEFAULT_VISIBILITY_THRESHOLD,
   useFitWidthResize,
-} from '@app/utils/viewerZoom';
-import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
+} from "@app/utils/viewerZoom";
+import { getFirstPageAspectRatioFromStub } from "@app/utils/pageMetadata";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import {
+  preferencesService,
+  type ViewerZoomSetting,
+} from "@app/services/preferencesService";
 
+/**
+ * Connects the PDF zoom plugin to the shared ViewerContext.
+ */
 export function ZoomAPIBridge() {
-  const { provides: zoom, state: zoomState } = useZoom();
-  const { spreadMode } = useSpread();
+  const activeDocumentId = useActiveDocumentId();
+  const documentReady = useDocumentReady();
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
+    return null;
+  }
+
+  return <ZoomAPIBridgeInner documentId={activeDocumentId} />;
+}
+
+function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
+  const { provides: zoom, state: zoomState } = useZoom(documentId);
+  const { spreadMode } = useSpread(documentId);
   const { registerBridge, triggerImmediateZoomUpdate } = useViewer();
   const { selectors } = useFileState();
 
@@ -21,7 +42,13 @@ export function ZoomAPIBridge() {
   const lastSpreadMode = useRef(spreadMode ?? SpreadMode.None);
   const lastFileId = useRef<string | undefined>(undefined);
   const lastAppliedZoom = useRef<number | null>(null);
+  const zoomRef = useRef(zoom);
   const [autoZoomTick, setAutoZoomTick] = useState(0);
+
+  // Keep zoom ref updated
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   const scheduleAutoZoom = useCallback(() => {
     hasSetInitialZoom.current = false;
@@ -30,14 +57,21 @@ export function ZoomAPIBridge() {
   }, []);
 
   const requestFitWidth = useCallback(() => {
-    if (zoom) {
-      zoom.requestZoom(ZoomMode.FitWidth, { vx: 0.5, vy: 0 });
+    if (zoomRef.current) {
+      zoomRef.current.requestZoom(ZoomMode.FitWidth, { vx: 0.5, vy: 0 });
     }
-  }, [zoom]);
+  }, []);
 
   const stubs = selectors.getStirlingFileStubs();
   const firstFileStub = stubs[0];
   const firstFileId = firstFileStub?.id;
+
+  // Extract primitive values from zoomState for dependency arrays
+  const zoomLevel = zoomState?.zoomLevel;
+  const currentZoomLevel = zoomState?.currentZoomLevel;
+
+  // Extract metadata aspect ratio as a primitive to avoid object reference issues
+  const metadataAspectRatio = getFirstPageAspectRatioFromStub(firstFileStub);
 
   useEffect(() => {
     if (!firstFileId) {
@@ -59,7 +93,6 @@ export function ZoomAPIBridge() {
       lastSpreadMode.current = currentSpreadMode;
 
       const hadTrackedAutoZoom = lastAppliedZoom.current !== null;
-      const zoomLevel = zoomState?.zoomLevel;
       if (
         zoomLevel === ZoomMode.FitWidth ||
         zoomLevel === ZoomMode.Automatic ||
@@ -69,13 +102,12 @@ export function ZoomAPIBridge() {
         scheduleAutoZoom();
       }
     }
-  }, [spreadMode, zoomState?.zoomLevel, scheduleAutoZoom, requestFitWidth]);
-
+  }, [spreadMode, zoomLevel, scheduleAutoZoom, requestFitWidth]);
 
   const isManagedZoom =
     !!zoom &&
-    (zoomState?.zoomLevel === ZoomMode.FitWidth ||
-      zoomState?.zoomLevel === ZoomMode.Automatic ||
+    (zoomLevel === ZoomMode.FitWidth ||
+      zoomLevel === ZoomMode.Automatic ||
       lastAppliedZoom.current !== null);
 
   useFitWidthResize({
@@ -85,7 +117,7 @@ export function ZoomAPIBridge() {
   });
 
   useEffect(() => {
-    if (!zoom || !zoomState) {
+    if (!zoom || zoomLevel === undefined || currentZoomLevel === undefined) {
       return;
     }
 
@@ -97,19 +129,22 @@ export function ZoomAPIBridge() {
       return;
     }
 
-    if (zoomState.zoomLevel !== ZoomMode.FitWidth) {
-      if (zoomState.zoomLevel === ZoomMode.Automatic) {
+    if (zoomLevel !== ZoomMode.FitWidth) {
+      if (zoomLevel === ZoomMode.Automatic) {
         requestFitWidth();
       }
       return;
     }
 
-    const fitWidthZoom = zoomState.currentZoomLevel;
+    const fitWidthZoom = currentZoomLevel;
     if (!fitWidthZoom || fitWidthZoom <= 0 || fitWidthZoom === 1) {
       return;
     }
 
-    const applyTrackedZoom = (level: number | ZoomMode, effectiveZoom: number) => {
+    const applyTrackedZoom = (
+      level: number | ZoomMode,
+      effectiveZoom: number,
+    ) => {
       zoom.requestZoom(level, { vx: 0.5, vy: 0 });
       lastAppliedZoom.current = effectiveZoom;
       triggerImmediateZoomUpdate(Math.round(effectiveZoom * 100));
@@ -121,9 +156,24 @@ export function ZoomAPIBridge() {
     const applyAutoZoom = async () => {
       const currentSpreadMode = spreadMode ?? SpreadMode.None;
       const pagesPerSpread = currentSpreadMode !== SpreadMode.None ? 2 : 1;
-      const metadataAspectRatio = getFirstPageAspectRatioFromStub(firstFileStub);
 
       if (cancelled) {
+        return;
+      }
+
+      // Check user preference for default viewer zoom
+      const zoomPref: ViewerZoomSetting =
+        preferencesService.getPreference("defaultViewerZoom");
+      if (zoomPref !== "auto") {
+        if (zoomPref === "fitWidth") {
+          applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
+        } else if (zoomPref === "fitPage") {
+          applyTrackedZoom(ZoomMode.FitPage, fitWidthZoom);
+        } else {
+          // Numeric zoom: '50', '75', '100', '125', '150', '200'
+          const numericZoom = parseInt(zoomPref, 10) / 100;
+          applyTrackedZoom(numericZoom, numericZoom);
+        }
         return;
       }
 
@@ -145,12 +195,12 @@ export function ZoomAPIBridge() {
         fallbackZoom: DEFAULT_FALLBACK_ZOOM,
       });
 
-      if (decision.type === 'fallback') {
+      if (decision.type === "fallback") {
         applyTrackedZoom(decision.zoom, decision.zoom);
         return;
       }
 
-      if (decision.type === 'fitWidth') {
+      if (decision.type === "fitWidth") {
         applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
         return;
       }
@@ -165,40 +215,60 @@ export function ZoomAPIBridge() {
     };
   }, [
     zoom,
-    zoomState,
+    zoomLevel,
+    currentZoomLevel,
     firstFileId,
-    firstFileStub,
+    metadataAspectRatio,
     requestFitWidth,
     autoZoomTick,
     spreadMode,
     triggerImmediateZoomUpdate,
   ]);
 
+  // Subscribe to zoom changes - use ref to avoid re-subscribing when zoom reference changes
+  const zoomSubscriptionRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
+    // Cleanup previous subscription if any
+    if (zoomSubscriptionRef.current) {
+      zoomSubscriptionRef.current();
+      zoomSubscriptionRef.current = null;
+    }
+
     if (!zoom) {
       return;
     }
 
-    const unsubscribe = zoom.onZoomChange((event: { newZoom?: number }) => {
-      if (typeof event?.newZoom !== 'number') {
-        return;
-      }
-      lastAppliedZoom.current = event.newZoom;
-      triggerImmediateZoomUpdate(Math.round(event.newZoom * 100));
-    });
+    zoomSubscriptionRef.current = zoom.onZoomChange(
+      (event: { newZoom?: number }) => {
+        if (typeof event?.newZoom !== "number") {
+          return;
+        }
+        lastAppliedZoom.current = event.newZoom;
+        triggerImmediateZoomUpdate(Math.round(event.newZoom * 100));
+      },
+    );
 
     return () => {
-      unsubscribe();
+      if (zoomSubscriptionRef.current) {
+        zoomSubscriptionRef.current();
+        zoomSubscriptionRef.current = null;
+      }
     };
   }, [zoom, triggerImmediateZoomUpdate]);
 
+  // Extract primitive values to avoid dependency on object reference
+  const zoomStateCurrentZoomLevel = zoomState?.currentZoomLevel;
+
+  // Register bridge - only re-run when actual values change
   useEffect(() => {
-    if (!zoom || !zoomState) {
+    const currentZoom = zoomRef.current;
+    if (!currentZoom || zoomStateCurrentZoomLevel === undefined) {
       return;
     }
 
     const currentZoomLevel =
-      lastAppliedZoom.current ?? zoomState.currentZoomLevel ?? 1;
+      lastAppliedZoom.current ?? zoomStateCurrentZoomLevel ?? 1;
 
     const newState = {
       currentZoom: currentZoomLevel,
@@ -207,11 +277,11 @@ export function ZoomAPIBridge() {
 
     triggerImmediateZoomUpdate(newState.zoomPercent);
 
-    registerBridge('zoom', {
+    registerBridge("zoom", {
       state: newState,
-      api: zoom,
+      api: currentZoom,
     });
-  }, [zoom, zoomState, registerBridge, triggerImmediateZoomUpdate]);
+  }, [zoomStateCurrentZoomLevel, registerBridge, triggerImmediateZoomUpdate]);
 
   return null;
 }

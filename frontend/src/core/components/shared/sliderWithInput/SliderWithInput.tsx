@@ -1,4 +1,4 @@
-import { Slider, Text, Group, NumberInput } from '@mantine/core';
+import { Slider, Text, Group, NumberInput } from "@mantine/core";
 
 interface Props {
   label: string;
@@ -19,14 +19,23 @@ export default function SliderWithInput({
   min = 0,
   max = 200,
   step = 1,
-  suffix = '%',
+  suffix = "%",
 }: Props) {
   return (
     <div>
-      <Text size="sm" fw={500} mb={8}>{label}</Text>
+      <Text size="sm" fw={500} mb={8}>
+        {label}
+      </Text>
       <Group gap="md" align="center">
         <div style={{ flex: 1 }}>
-          <Slider min={min} max={max} step={step} value={value} onChange={onChange} disabled={disabled} />
+          <Slider
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+          />
         </div>
         <NumberInput
           value={value}
@@ -42,5 +51,3 @@ export default function SliderWithInput({
     </div>
   );
 }
-
-

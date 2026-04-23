@@ -1,7 +1,7 @@
 :root {
   /* Compare highlight colors (same in light/dark) */
   --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45); /* #ff6b6b @ 0.45 */
-  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35);  /* #51cf66 @ 0.35 */
+  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35); /* #51cf66 @ 0.35 */
 
   /* Badge colors for dropdowns */
   --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
@@ -14,10 +14,25 @@
   --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
 
   /* File Manager active file colors */
-  --file-active-bg: rgba(59, 130, 246, 0.1); /* Transparent blue for active file background */
-  --file-active-badge-bg: rgba(34, 197, 94, 0.15); /* Transparent green for active badge */
+  --file-active-bg: rgba(
+    59,
+    130,
+    246,
+    0.1
+  ); /* Transparent blue for active file background */
+  --file-active-badge-bg: rgba(
+    34,
+    197,
+    94,
+    0.15
+  ); /* Transparent green for active badge */
   --file-active-badge-fg: #15803d; /* Green text for active badge */
-  --file-active-badge-border: rgba(34, 197, 94, 0.3); /* Green border for active badge */
+  --file-active-badge-border: rgba(
+    34,
+    197,
+    94,
+    0.3
+  ); /* Green border for active badge */
 }
 
 /* CSS variables for Tailwind + Mantine integration */
@@ -83,20 +98,20 @@
   --color-yellow-400: #facc15;
 
   /* Category colors - consistent across light and dark modes */
-  --category-color-removal: #ef4444;        /* Red for removal tools */
-  --category-color-security: #f59e0b;       /* Orange for security tools */
-  --category-color-formatting: #8b5cf6;     /* Purple for formatting tools */
-  --category-color-extraction: #06b6d4;      /* Cyan for extraction tools */
-  --category-color-signing: #10b981;        /* Green for signing tools */
-  --category-color-general: #3b82f6;        /* Blue for general tools */
-  --category-color-verification: #f97316;    /* Orange for verification tools */
-  --category-color-automation: #ec4899;     /* Pink for automation tools */
-  --category-color-developer: #6b7280;      /* Gray for developer tools */
-  --category-color-default: #6b7280;        /* Default gray */
+  --category-color-removal: #ef4444; /* Red for removal tools */
+  --category-color-security: #f59e0b; /* Orange for security tools */
+  --category-color-formatting: #8b5cf6; /* Purple for formatting tools */
+  --category-color-extraction: #06b6d4; /* Cyan for extraction tools */
+  --category-color-signing: #10b981; /* Green for signing tools */
+  --category-color-general: #3b82f6; /* Blue for general tools */
+  --category-color-verification: #f97316; /* Orange for verification tools */
+  --category-color-automation: #ec4899; /* Pink for automation tools */
+  --category-color-developer: #6b7280; /* Gray for developer tools */
+  --category-color-default: #6b7280; /* Default gray */
 
   /* Special section colors - consistent across light and dark modes */
-  --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
-  --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
+  --special-color-favorites: #ffc107; /* Yellow/gold for favorites */
+  --special-color-recommended: #1bb1d4; /* Cyan for recommended */
   --color-yellow-500: #eab308;
   --color-yellow-600: #ca8a04;
   --color-yellow-700: #a16207;
@@ -158,9 +173,9 @@
   --bg-muted: #f3f4f6;
   --bg-background: #f9fafb;
   --bg-toolbar: #ffffff;
-  --bg-file-manager: #F5F6F8;
+  --bg-file-manager: #f5f6f8;
   --bg-file-list: #ffffff;
-  --btn-open-file: #0A8BFF;
+  --btn-open-file: #0a8bff;
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
@@ -168,107 +183,147 @@
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
   --border-subtle: #e5e7eb;
-  --border-default: #E2E8F0;
+  --border-default: #e2e8f0;
   --border-strong: #9ca3af;
   --hover-bg: #f9fafb;
   --active-bg: #f3f4f6;
   --automation-entry-hover-bg: var(--color-gray-100);
 
   /* Icon colors for light mode */
-  --icon-user-bg: #9CA3AF;
-  --icon-user-color: #FFFFFF;
-  --icon-notifications-bg: #9CA3AF;
-  --icon-notifications-color: #FFFFFF;
-  --icon-tools-bg: #1E88E5;
-  --icon-tools-color: #FFFFFF;
-  --icon-read-bg: #4CAF50;
-  --icon-read-color: #FFFFFF;
-  --icon-sign-bg: #3BA99C;
-  --icon-sign-color: #FFFFFF;
-  --icon-automate-bg: #A576E3;
-  --icon-automate-color: #FFFFFF;
-  --icon-files-bg: #D3E7F7;
-  --icon-files-color: #0A8BFF;
-  --icon-activity-bg: #D3E7F7;
-  --icon-activity-color: #0A8BFF;
-  --icon-config-bg: #9CA3AF;
-  --icon-config-color: #FFFFFF;
+  --icon-user-bg: #9ca3af;
+  --icon-user-color: #ffffff;
+  --icon-notifications-bg: #9ca3af;
+  --icon-notifications-color: #ffffff;
+  --icon-tools-bg: #1e88e5;
+  --icon-tools-color: #ffffff;
+  --icon-read-bg: #4caf50;
+  --icon-read-color: #ffffff;
+  --icon-sign-bg: #3ba99c;
+  --icon-sign-color: #ffffff;
+  --icon-automate-bg: #a576e3;
+  --icon-automate-color: #ffffff;
+  --icon-files-bg: #d3e7f7;
+  --icon-files-color: #0a8bff;
+  --icon-activity-bg: #d3e7f7;
+  --icon-activity-color: #0a8bff;
+  --icon-config-bg: #9ca3af;
+  --icon-config-color: #ffffff;
 
   /* RightRail (light) */
-  --right-rail-bg: #F5F6F8;           /* light background */
-  --right-rail-foreground: #E3E4E5;   /* panel behind custom tool icons */
-  --right-rail-icon: #4B5563;         /* icon color */
-  --right-rail-icon-disabled: #CECECE;/* disabled icon */
-  --right-rail-pan-active-bg: #EAEAEA;
+  --right-rail-bg: #f5f6f8; /* light background */
+  --right-rail-foreground: #e3e4e5; /* panel behind custom tool icons */
+  --right-rail-icon: #4b5563; /* icon color */
+  --right-rail-icon-disabled: #cecece; /* disabled icon */
+  --right-rail-pan-active-bg: #eaeaea;
 
   /* Colors for tooltips */
-  --tooltip-title-bg: #DBEFFF;
-  --tooltip-title-color: #31528E;
-  --tooltip-header-bg: #31528E;
+  --tooltip-title-bg: #dbefff;
+  --tooltip-title-color: #31528e;
+  --tooltip-header-bg: #31528e;
   --tooltip-header-color: white;
   --tooltip-border: var(--border-default);
 
   /* Inactive icon colors for light mode */
-  --icon-inactive-bg: #9CA3AF;
-  --icon-inactive-color: #FFFFFF;
+  --icon-inactive-bg: #9ca3af;
+  --icon-inactive-color: #ffffff;
 
   /* New theme colors for text and icons */
   --tools-text-and-icon-color: #374151;
 
   /* Tool picker sticky header variables (light mode) */
-  --tool-header-bg: #DBEFFF;
-  --tool-header-border: #BEE2FF;
-  --tool-header-text: #1E88E5;
-  --tool-header-badge-bg: #C0DDFF;
-  --tool-header-badge-text: #004E99;
+  --tool-header-bg: #dbefff;
+  --tool-header-border: #bee2ff;
+  --tool-header-text: #1e88e5;
+  --tool-header-badge-bg: #c0ddff;
+  --tool-header-badge-text: #004e99;
 
   /* Subcategory title styling (light mode) */
-  --tool-subcategory-text-color: #9CA3AF; /* lighter text */
-  --tool-subcategory-rule-color: #E5E7EB; /* doubly lighter rule line */
-  --accent-interactive: #4A90E2;
-  --text-instruction: #4A90E2;
+  --tool-subcategory-text-color: #9ca3af; /* lighter text */
+  --tool-subcategory-rule-color: #e5e7eb; /* doubly lighter rule line */
+  --accent-interactive: #4a90e2;
+  --text-instruction: #4a90e2;
   --text-brand: var(--color-gray-700);
-  --text-brand-accent: #DC2626;
+  --text-brand-accent: #dc2626;
 
+  /* PDF text selection colors */
+  --pdf-selection-bg: rgba(59, 130, 246, 0.2);
+  --pdf-selection-ring: rgba(59, 130, 246, 0.18);
 
   /* Placeholder text colors */
-  --search-text-and-icon-color: #6B7382;
+  --search-text-and-icon-color: #6b7382;
 
   /* Tool panel search bar background colors */
-  --tool-panel-search-bg: #EFF1F4;
-  --tool-panel-search-border-bottom: #EFF1F4;
+  --tool-panel-search-bg: #eff1f4;
+  --tool-panel-search-border-bottom: #eff1f4;
 
   /* container */
   --landing-paper-bg: var(--bg-surface);
-  --landing-inner-paper-bg: #EEF8FF;
-  --landing-inner-paper-border: #CDEAFF;
+  --landing-inner-paper-bg: #eef8ff;
+  --landing-inner-paper-border: #cdeaff;
   --landing-button-bg: var(--bg-surface);
   --landing-button-color: var(--icon-tools-bg);
-  --landing-button-border: #E0F2F7;
+  --landing-button-border: #e0f2f7;
   --landing-button-hover-bg: rgb(251, 251, 251);
 
   /* drop state */
-  --landing-drop-paper-bg: #E3F2FD;
-  --landing-drop-inner-paper-bg: #BBDEFB;
-  --landing-drop-inner-paper-border: #90CAF9;
+  --landing-drop-paper-bg: #e3f2fd;
+  --landing-drop-inner-paper-bg: #bbdefb;
+  --landing-drop-inner-paper-border: #90caf9;
+
+  /* landing hero & stack */
+  --landing-hero-gradient: linear-gradient(135deg, #4c8bf5 0%, #3a7be8 100%);
+  --landing-stack-w: 224px;
+  --landing-stack-h: 176px;
+  --landing-stack-glow-bg: radial-gradient(
+    circle,
+    rgba(74, 144, 226, 0.18) 0%,
+    transparent 70%
+  );
+
+  /* landing doc stack shadows */
+  --landing-doc-shadow-back-idle:
+    0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --landing-doc-shadow-back-hover:
+    0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --landing-doc-shadow-front-idle:
+    0 8px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
+  --landing-doc-shadow-front-hover:
+    0 18px 48px rgba(0, 0, 0, 0.18), 0 8px 20px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  /* landing action button shadows */
+  --landing-action-transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  --landing-action-shadow-idle:
+    0 6px 18px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
+  --landing-action-shadow-hover:
+    0 6px 18px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --landing-action-primary-shadow-idle:
+    0 10px 26px rgba(58, 123, 232, 0), 0 4px 12px rgba(0, 0, 0, 0);
+  --landing-action-primary-shadow-hover:
+    0 10px 26px rgba(58, 123, 232, 0.42), 0 4px 12px rgba(0, 0, 0, 0.1);
 
   /* selected file header colors */
-  --header-selected-bg: #1E88E5; /* light mode selected header matches dark */
-  --header-selected-fg: #FFFFFF;
-  --file-card-bg: #FFFFFF;  /* file card background (light/dark paired) */
-  --accordion-item-bg: #E8EAED;  /* accordion item background - more distinguishable */
+  --header-selected-bg: #1e88e5; /* light mode selected header matches dark */
+  --header-selected-fg: #ffffff;
+  --file-card-bg: #ffffff; /* file card background (light/dark paired) */
+  --accordion-item-bg: #e8eaed; /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(0, 0, 0, 0.08);
   --drop-shadow-color-strong: rgba(0, 0, 0, 0.04);
-  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06)) drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.04));
+  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.08))
+    drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.06))
+    drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.04));
 
   /* Light mode card hover and selection */
-  --header-hover-bg: #3B4B6E; /* same family as selected, a touch muted for hover */
-  --card-selected-border: #3FAFFF; /* slightly more blue than dark mode header */
-  --checkbox-border: #2F83BF;
-  --checkbox-checked-bg: #3FAFFF;
-  --checkbox-tick: #FFFFFF;
+  --header-hover-bg: #3b4b6e; /* same family as selected, a touch muted for hover */
+  --card-selected-border: #3fafff; /* slightly more blue than dark mode header */
+  --checkbox-border: #2f83bf;
+  --checkbox-checked-bg: #3fafff;
+  --checkbox-tick: #ffffff;
 
   --information-text-bg: #eaeaea;
   --information-text-color: #5e5e5e;
@@ -278,13 +333,13 @@
   --bulk-card-border: #e5e7eb; /* light gray border for cards and buttons */
   --bulk-card-hover-border: #d1d5db; /* slightly darker on hover */
   --unsupported-bar-bg: #5a616e;
-  --unsupported-bar-border: #6B7280;
+  --unsupported-bar-border: #6b7280;
 
   /* Config Modal colors (light mode) */
-  --modal-nav-bg: #F5F6F8;
-  --modal-nav-section-title: #6B7280;
+  --modal-nav-bg: #f5f6f8;
+  --modal-nav-section-title: #6b7280;
   --modal-nav-item: #374151;
-  --modal-nav-item-active: #0A8BFF;
+  --modal-nav-item-active: #0a8bff;
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.08);
   --modal-content-bg: #ffffff;
   --modal-header-border: rgba(0, 0, 0, 0.06);
@@ -322,10 +377,10 @@
   --pdf-light-simulated-page-text: 15 23 42;
 
   /* Code token colors (light mode) */
-  --code-kw-color: #1d4ed8;   /* blue-700 */
-  --code-str-color: #16a34a;  /* green-600 */
-  --code-num-color: #4338ca;  /* indigo-700 */
-  --code-com-color: #6b7280;  /* gray-500 */
+  --code-kw-color: #1d4ed8; /* blue-700 */
+  --code-str-color: #16a34a; /* green-600 */
+  --code-num-color: #4338ca; /* indigo-700 */
+  --code-com-color: #6b7280; /* gray-500 */
   /* Compare tool specific colors - only for colors that don't have existing theme pairs */
   --compare-upload-dropzone-bg: rgba(241, 245, 249, 0.45);
   --compare-upload-dropzone-border: rgba(148, 163, 184, 0.6);
@@ -336,19 +391,38 @@
   /* Compare page label chip (light mode): slightly lighter than surrounding rows */
   --compare-page-label-bg: var(--bg-muted);
   --compare-page-label-fg: var(--text-secondary);
+
+  /* Status indicator dot ring shadow */
+  --status-dot-ring: 0 0 0 2px rgba(0, 0, 0, 0.08);
+
+  /* Input element styling */
+  --input-bg: #ffffff;
+
+  /* Select/dropdown placeholder state */
+  --select-placeholder-bg: var(--mantine-color-gray-1);
+  --select-placeholder-text: var(--mantine-color-gray-6);
+
+  /* Grouped format dropdown */
+  --dropdown-trigger-bg: var(--mantine-color-white);
+  --dropdown-trigger-text: var(--mantine-color-dark-9);
+  --dropdown-trigger-text-disabled: var(--mantine-color-dark-7);
+  --dropdown-trigger-icon: var(--mantine-color-gray-6);
+  --dropdown-panel-bg: var(--mantine-color-white);
+  --dropdown-panel-border: var(--mantine-color-gray-4);
+  --dropdown-group-label: var(--mantine-color-gray-6);
 }
 
 /* Onboarding (light mode) */
 :root {
-  --onboarding-title: #0A0A0A;
-  --onboarding-body: #4A5565;
+  --onboarding-title: #0a0a0a;
+  --onboarding-body: #4a5565;
   --onboarding-primary-button-bg: #101828;
-  --onboarding-primary-button-text: #FFFFFF;
-  --onboarding-secondary-button-bg: #FFFFFF;
-  --onboarding-secondary-button-text: #6A7282;
-  --onboarding-secondary-button-border: #E5E5E5;
-  --onboarding-step-active: #1E2939;
-  --onboarding-step-inactive: #D1D5DC;
+  --onboarding-primary-button-text: #ffffff;
+  --onboarding-secondary-button-bg: #ffffff;
+  --onboarding-secondary-button-text: #6a7282;
+  --onboarding-secondary-button-border: #e5e5e5;
+  --onboarding-step-active: #1e2939;
+  --onboarding-step-inactive: #d1d5dc;
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -382,8 +456,8 @@
   --color-red-900: #7f1d1d;
 
   --color-gray-50: #111827;
-  --color-gray-100: #1F2329;
-  --color-gray-200: #2A2F36;
+  --color-gray-100: #1f2329;
+  --color-gray-200: #2a2f36;
   --color-gray-300: #374151;
   --color-gray-400: #4b5563;
   --color-gray-500: #6b7280;
@@ -393,20 +467,20 @@
   --color-gray-900: #f3f4f6;
 
   /* Category colors - same as light mode for consistency */
-  --category-color-removal: #ef4444;        /* Red for removal tools */
-  --category-color-security: #f59e0b;       /* Orange for security tools */
-  --category-color-formatting: #8b5cf6;     /* Purple for formatting tools */
-  --category-color-extraction: #06b6d4;      /* Cyan for extraction tools */
-  --category-color-signing: #10b981;        /* Green for signing tools */
-  --category-color-general: #3b82f6;        /* Blue for general tools */
-  --category-color-verification: #f97316;    /* Orange for verification tools */
-  --category-color-automation: #ec4899;     /* Pink for automation tools */
-  --category-color-developer: #6b7280;      /* Gray for developer tools */
-  --category-color-default: #6b7280;        /* Default gray */
+  --category-color-removal: #ef4444; /* Red for removal tools */
+  --category-color-security: #f59e0b; /* Orange for security tools */
+  --category-color-formatting: #8b5cf6; /* Purple for formatting tools */
+  --category-color-extraction: #06b6d4; /* Cyan for extraction tools */
+  --category-color-signing: #10b981; /* Green for signing tools */
+  --category-color-general: #3b82f6; /* Blue for general tools */
+  --category-color-verification: #f97316; /* Orange for verification tools */
+  --category-color-automation: #ec4899; /* Pink for automation tools */
+  --category-color-developer: #6b7280; /* Gray for developer tools */
+  --category-color-default: #6b7280; /* Default gray */
 
   /* Special section colors - same as light mode for consistency */
-  --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
-  --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
+  --special-color-favorites: #ffc107; /* Yellow/gold for favorites */
+  --special-color-recommended: #1bb1d4; /* Cyan for recommended */
 
   /* Success (green) - dark */
   --color-green-50: #052e16;
@@ -433,60 +507,60 @@
   --color-yellow-900: #fef9c3;
 
   /* Dark theme semantic colors */
-  --bg-surface: #2A2F36;
-  --bg-raised: #1F2329;
-  --bg-muted: #1F2329;
-  --bg-background: #2A2F36;
-  --bg-toolbar: #1F2329;
-  --bg-file-manager: #1F2329;
-  --bg-file-list: #2A2F36;
-  --btn-open-file: #0A8BFF;
+  --bg-surface: #2a2f36;
+  --bg-raised: #1f2329;
+  --bg-muted: #1f2329;
+  --bg-background: #2a2f36;
+  --bg-toolbar: #1f2329;
+  --bg-file-manager: #1f2329;
+  --bg-file-list: #2a2f36;
+  --btn-open-file: #0a8bff;
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2A2F36;
-  --border-default: #3A4047;
+  --border-subtle: #2a2f36;
+  --border-default: #3a4047;
   --border-strong: #4b5563;
   --hover-bg: #374151;
   --active-bg: #4b5563;
   --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
-  --icon-user-bg: #2A2F36;
-  --icon-user-color: #6E7581;
-  --icon-notifications-bg: #2A2F36;
-  --icon-notifications-color: #6E7581;
-  --icon-tools-bg: #4B525A;
-  --icon-tools-color: #EAEAEA;
-  --icon-read-bg: #4B525A;
-  --icon-read-color: #EAEAEA;
-  --icon-sign-bg: #4B525A;
-  --icon-sign-color: #EAEAEA;
-  --icon-automate-bg: #4B525A;
-  --icon-automate-color: #EAEAEA;
-  --icon-files-bg: #4B525A;
-  --icon-files-color: #EAEAEA;
-  --icon-activity-bg: #4B525A;
-  --icon-activity-color: #EAEAEA;
-  --icon-config-bg: #4B525A;
-  --icon-config-color: #EAEAEA;
+  --icon-user-bg: #2a2f36;
+  --icon-user-color: #6e7581;
+  --icon-notifications-bg: #2a2f36;
+  --icon-notifications-color: #6e7581;
+  --icon-tools-bg: #4b525a;
+  --icon-tools-color: #eaeaea;
+  --icon-read-bg: #4b525a;
+  --icon-read-color: #eaeaea;
+  --icon-sign-bg: #4b525a;
+  --icon-sign-color: #eaeaea;
+  --icon-automate-bg: #4b525a;
+  --icon-automate-color: #eaeaea;
+  --icon-files-bg: #4b525a;
+  --icon-files-color: #eaeaea;
+  --icon-activity-bg: #4b525a;
+  --icon-activity-color: #eaeaea;
+  --icon-config-bg: #4b525a;
+  --icon-config-color: #eaeaea;
 
   /* Inactive icon colors for dark mode */
-  --icon-inactive-bg: #2A2F36;
-  --icon-inactive-color: #6E7581;
+  --icon-inactive-bg: #2a2f36;
+  --icon-inactive-color: #6e7581;
 
   /* RightRail (dark) */
-  --right-rail-bg: #1F2329;           /* dark background */
-  --right-rail-foreground: #2A2F36;   /* panel behind custom tool icons */
-  --right-rail-icon: #BCBEBF;         /* icon color */
-  --right-rail-icon-disabled: #43464B;/* disabled icon */
-  --right-rail-pan-active-bg: #EAEAEA;
+  --right-rail-bg: #1f2329; /* dark background */
+  --right-rail-foreground: #2a2f36; /* panel behind custom tool icons */
+  --right-rail-icon: #bcbebf; /* icon color */
+  --right-rail-icon-disabled: #43464b; /* disabled icon */
+  --right-rail-pan-active-bg: #eaeaea;
 
   /* Dark mode tooltip colors */
-  --tooltip-title-bg: #4B525A;
+  --tooltip-title-bg: #4b525a;
   --tooltip-title-color: #fff;
   --tooltip-header-bg: var(--bg-raised);
   --tooltip-header-color: var(--text-primary);
@@ -495,37 +569,49 @@
   --accent-interactive: #ffffff;
   --text-instruction: #ffffff;
   --text-brand: var(--color-gray-800);
-  --text-brand-accent: #EF4444;
+  --text-brand-accent: #ef4444;
 
   /* Compare badge text colors (dark mode): lighter for readability */
   --spdf-compare-removed-badge-fg: var(--color-red-500);
   --spdf-compare-added-badge-fg: var(--color-green-500);
 
   /* container */
-  --landing-paper-bg: #171A1F;
+  --landing-paper-bg: #171a1f;
   --landing-inner-paper-bg: var(--bg-raised);
-  --landing-inner-paper-border: #2D3237;
-  --landing-button-bg: #2B3037;
-  --landing-button-color: #ffffff;
-  --landing-button-border: #2D3237;
-  --landing-button-hover-bg: #4c525b;
+  --landing-inner-paper-border: #2d3237;
 
-  /* drop state */
-  --landing-drop-paper-bg: #1A2332;
-  --landing-drop-inner-paper-bg: #2A3441;
-  --landing-drop-inner-paper-border: #3A4451;
+  /* landing dark overrides */
+  --landing-stack-glow-bg: radial-gradient(
+    circle,
+    rgba(30, 136, 229, 0.22) 0%,
+    transparent 70%
+  );
+  --landing-doc-shadow-back-idle:
+    0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --landing-doc-shadow-back-hover:
+    0 14px 44px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.35);
+  --landing-doc-shadow-front-idle:
+    0 8px 30px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  --landing-doc-shadow-front-hover:
+    0 20px 52px rgba(0, 0, 0, 0.6), 0 10px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  --landing-button-color: #ffffff;
+  --landing-button-hover-bg: var(--bg-raised);
 
   /* selected file header colors for dark */
-  --header-selected-bg: #1E88E5;
-  --header-selected-fg: #FFFFFF;
+  --header-selected-bg: #1e88e5;
+  --header-selected-fg: #ffffff;
   /* file card background (dark) */
-  --file-card-bg: #1F2329;
-  --accordion-item-bg: #373D45;  /* accordion item background - more distinguishable */
+  --file-card-bg: #1f2329;
+  --accordion-item-bg: #373d45; /* accordion item background - more distinguishable */
 
   /* shadows */
   --drop-shadow-color: rgba(255, 255, 255, 0.08);
   --drop-shadow-color-strong: rgba(255, 255, 255, 0.04);
-  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(200, 200, 200, 0.08)) drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06)) drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
+  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(200, 200, 200, 0.08))
+    drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06))
+    drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
 
   /* Adjust shadows for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -534,26 +620,29 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
 
-  --tools-text-and-icon-color: #D0D6DC;
+  --tools-text-and-icon-color: #d0d6dc;
 
   /* Tool picker sticky header variables (dark mode) */
-  --tool-header-bg: #2A2F36;
-  --tool-header-border: #3A4047;
-  --tool-header-text: #D0D6DC;
-  --tool-header-badge-bg: #4B525A;
-  --tool-header-badge-text: #FFFFFF;
+  --tool-header-bg: #2a2f36;
+  --tool-header-border: #3a4047;
+  --tool-header-text: #d0d6dc;
+  --tool-header-badge-bg: #4b525a;
+  --tool-header-badge-text: #ffffff;
 
   /* Subcategory title styling (dark mode) */
-  --tool-subcategory-text-color: #9CA3AF; /* lighter text in dark mode as well */
-  --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
+  --tool-subcategory-text-color: #9ca3af; /* lighter text in dark mode as well */
+  --tool-subcategory-rule-color: #3a4047; /* doubly lighter (relative) line in dark */
 
+  /* PDF text selection colors (dark mode) */
+  --pdf-selection-bg: rgba(96, 165, 250, 0.25);
+  --pdf-selection-ring: rgba(96, 165, 250, 0.28);
 
   /* Placeholder text colors (dark mode) */
-  --search-text-and-icon-color: #FFFFFF !important;
+  --search-text-and-icon-color: #ffffff !important;
 
   /* Tool panel search bar background colors (dark mode) */
-  --tool-panel-search-bg: #1F2329;
-  --tool-panel-search-border-bottom: #4B525A;
+  --tool-panel-search-bg: #1f2329;
+  --tool-panel-search-border-bottom: #4b525a;
 
   --information-text-bg: #292e34;
   --information-text-color: #ececec;
@@ -561,44 +650,46 @@
   /* Bulk selection panel specific colors (dark mode) */
   --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */
   --bulk-card-bg: var(--bg-raised); /* dark background for cards */
-  --bulk-card-border: var(--border-default); /* default border for cards and buttons */
+  --bulk-card-border: var(
+    --border-default
+  ); /* default border for cards and buttons */
   --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
-  --unsupported-bar-bg: #1F2329;
-  --unsupported-bar-border: #4B525A;
+  --unsupported-bar-bg: #1f2329;
+  --unsupported-bar-border: #4b525a;
 
   /* Config Modal colors (dark mode) */
-  --modal-nav-bg: #1F2329;
-  --modal-nav-section-title: #9CA3AF;
-  --modal-nav-item: #D0D6DC;
-  --modal-nav-item-active: #0A8BFF;
+  --modal-nav-bg: #1f2329;
+  --modal-nav-section-title: #9ca3af;
+  --modal-nav-item: #d0d6dc;
+  --modal-nav-item-active: #0a8bff;
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
-  --modal-content-bg: #2A2F36;
+  --modal-content-bg: #2a2f36;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
   /* Onboarding (dark mode) */
-  --onboarding-title: #F9FAFB;
-  --onboarding-body: #D1D5DB;
-  --onboarding-primary-button-bg: #FFFFFF;
-  --onboarding-primary-button-text: #0B1220;
+  --onboarding-title: #f9fafb;
+  --onboarding-body: #d1d5db;
+  --onboarding-primary-button-bg: #ffffff;
+  --onboarding-primary-button-text: #0b1220;
   --onboarding-secondary-button-bg: transparent;
-  --onboarding-secondary-button-text: #E5E7EB;
-  --onboarding-secondary-button-border: #3A4047;
-  --onboarding-step-active: #E5E7EB;
-  --onboarding-step-inactive: #4B5563;
+  --onboarding-secondary-button-text: #e5e7eb;
+  --onboarding-secondary-button-border: #3a4047;
+  --onboarding-step-active: #e5e7eb;
+  --onboarding-step-inactive: #4b5563;
   /* API Keys section colors (dark mode) */
-  --api-keys-card-bg: #2A2F36;
-  --api-keys-card-border: #3A4047;
+  --api-keys-card-bg: #2a2f36;
+  --api-keys-card-border: #3a4047;
   --api-keys-card-shadow: none;
-  --api-keys-input-bg: #1F2329;
-  --api-keys-input-border: #3A4047;
-  --api-keys-button-bg: #3A4047;
-  --api-keys-button-color: #D0D6DC;
-  
+  --api-keys-input-bg: #1f2329;
+  --api-keys-input-border: #3a4047;
+  --api-keys-button-bg: #3a4047;
+  --api-keys-button-color: #d0d6dc;
+
   /* Code token colors (dark mode - Cursor-like) */
-  --code-kw-color: #C792EA;   /* purple */
-  --code-str-color: #C3E88D;  /* green */
-  --code-num-color: #F78C6C;  /* orange */
-  --code-com-color: #697098;  /* muted gray-blue */
+  --code-kw-color: #c792ea; /* purple */
+  --code-str-color: #c3e88d; /* green */
+  --code-num-color: #f78c6c; /* orange */
+  --code-com-color: #697098; /* muted gray-blue */
   /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
   --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
   --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
@@ -607,8 +698,27 @@
   --compare-upload-divider: rgba(75, 85, 99, 0.5);
 
   /* Compare page label chip (dark mode): slightly darker than surrounding rows */
-  --compare-page-label-bg: #1F2329;
+  --compare-page-label-bg: #1f2329;
   --compare-page-label-fg: var(--text-secondary);
+
+  /* Status indicator dot ring shadow (dark) */
+  --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.18);
+
+  /* Input element styling (dark) */
+  --input-bg: #4b525a;
+
+  /* Select/dropdown placeholder state (dark) */
+  --select-placeholder-bg: var(--mantine-color-dark-5);
+  --select-placeholder-text: var(--mantine-color-dark-2);
+
+  /* Grouped format dropdown (dark) */
+  --dropdown-trigger-bg: var(--mantine-color-dark-6);
+  --dropdown-trigger-text: var(--mantine-color-dark-0);
+  --dropdown-trigger-text-disabled: var(--mantine-color-dark-1);
+  --dropdown-trigger-icon: var(--mantine-color-dark-2);
+  --dropdown-panel-bg: var(--mantine-color-dark-7);
+  --dropdown-panel-border: var(--mantine-color-dark-4);
+  --dropdown-group-label: var(--mantine-color-dark-2);
 }
 
 /* Dropzone drop state styling */
@@ -633,11 +743,12 @@
 
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #0A8BFF !important;
+  background-color: #0a8bff !important;
 }
 
-[data-mantine-color-scheme="dark"] .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #1C598E !important;
+[data-mantine-color-scheme="dark"]
+  .plan-button:not(:disabled):not([data-disabled]) {
+  background-color: #1c598e !important;
 }
 
 /* Lighter grey for disabled plan buttons */
@@ -652,14 +763,340 @@
   background-color: #6b7280 !important;
 }
 
+/* Override the flat multiply blend for a clean, modern semi-transparent overlay */
+.pdf-selection-layer > div:first-child {
+  mix-blend-mode: normal !important;
+}
+
+/* Individual selection highlight rectangles */
+.pdf-selection-layer > div:first-child > div {
+  border-radius: 3px !important;
+  box-shadow: 0 0 0 0.5px var(--pdf-selection-ring);
+}
+
+/* Flash highlight for comment card (e.g. "View comment" from annotation menu) */
+@keyframes comment-card-flash {
+  0% {
+    background-color: rgba(255, 235, 59, 0);
+    box-shadow: none;
+  }
+  20% {
+    background-color: rgba(255, 235, 59, 0.35);
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+  }
+  50% {
+    background-color: rgba(255, 235, 59, 0.25);
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+  }
+  100% {
+    background-color: rgba(255, 235, 59, 0);
+    box-shadow: none;
+  }
+}
+
+.comment-card-flash-highlight {
+  animation: comment-card-flash 1.5s ease-out;
+  border-radius: 8px;
+}
+
 /* Smooth transitions for theme switching */
 * {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
+/* ── PDF Link Overlay (viewer) ── */
+:root {
+  --link-hover-bg: rgba(10, 139, 255, 0.04);
+  --link-hover-border: rgba(10, 139, 255, 0.15);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(10, 139, 255, 0.05), 0 1px 3px rgba(10, 139, 255, 0.04);
+  --link-focus-ring: rgba(10, 139, 255, 0.25);
+  --link-toolbar-bg: rgba(15, 23, 42, 0.88);
+  --link-toolbar-border: rgba(255, 255, 255, 0.1);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --link-hover-bg: rgba(10, 139, 255, 0.06);
+  --link-hover-border: rgba(59, 170, 255, 0.2);
+  --link-hover-shadow:
+    0 0 0 0.5px rgba(59, 170, 255, 0.1), 0 1px 3px rgba(10, 139, 255, 0.08);
+  --link-focus-ring: rgba(59, 170, 255, 0.3);
+  --link-toolbar-bg: rgba(15, 23, 42, 0.92);
+  --link-toolbar-border: rgba(255, 255, 255, 0.08);
+  --link-toolbar-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04);
+}
+
+/* ── Link hit-area ── */
+.pdf-link-overlay {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  z-index: 11;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  box-shadow: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.pdf-link-overlay:hover,
+.pdf-link-overlay--active {
+  background: var(--link-hover-bg);
+  border-bottom: 2px solid var(--color-primary-500);
+  box-shadow: var(--link-hover-shadow);
+}
+
+.pdf-link-overlay:focus-visible {
+  background: var(--link-hover-bg);
+  border-color: var(--link-hover-border);
+  box-shadow:
+    var(--link-hover-shadow),
+    0 0 0 2.5px var(--link-focus-ring);
+}
+
+/* ── Floating toolbar ── */
+@keyframes pdf-link-toolbar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(3px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes pdf-link-toolbar-enter-below {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-3px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+.pdf-link-toolbar {
+  position: absolute;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+  pointer-events: auto;
+  white-space: nowrap;
+  user-select: none;
+
+  background: var(--link-toolbar-bg);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid var(--link-toolbar-border);
+  border-radius: 9999px;
+  box-shadow: var(--link-toolbar-shadow);
+
+  transform: translateX(-50%);
+  animation: pdf-link-toolbar-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center bottom;
+}
+
+.pdf-link-toolbar--below {
+  animation-name: pdf-link-toolbar-enter-below;
+  transform-origin: center top;
+}
+
+/* ── Toolbar buttons ── */
+.pdf-link-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  line-height: 1;
+  border-radius: 9999px;
+}
+
+.pdf-link-toolbar-label {
+  transition: color 0.12s ease;
+}
+
+.pdf-link-toolbar-btn:hover .pdf-link-toolbar-label {
+  color: #60a5fa; /* Modern blue accent */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pdf-link-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pdf-link-toolbar-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.pdf-link-toolbar-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+}
+
+.pdf-link-toolbar-btn:last-child {
+  border-radius: 0 9px 9px 0;
+}
+
+.pdf-link-toolbar-btn:hover {
+  color: #fff;
+}
+
+.pdf-link-toolbar-btn--delete {
+  padding: 0 10px;
+}
+
+.pdf-link-toolbar-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.pdf-link-toolbar-btn--go:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pdf-link-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
 :root {
   --shadow-color: rgba(15, 23, 42, 0.55);
 }
 
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Theme-aware image display utilities */
+/* Use .theme-img-light-only for images to show in light mode only */
+/* Use .theme-img-dark-only for images to show in dark mode only */
+.theme-img-light-only {
+  display: inline;
+}
+.theme-img-dark-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .theme-img-light-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .theme-img-dark-only {
+  display: inline;
+}
+
+/* Modern logo icon */
+.logo-icon-modern__path1 {
+  fill: #acacac;
+  fill-opacity: 0.3;
+}
+.logo-icon-modern__path2 {
+  fill: #fc9999;
+  fill-opacity: 0.5;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-modern__path1 {
+  fill: #e6e6e6;
+  fill-opacity: 0.4;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-modern__path2 {
+  fill: #e6e6e6;
+  fill-opacity: 0.7;
+}
+
+/* Classic logo icon — single path structure, colors change per theme */
+.logo-icon-classic__group {
+  opacity: 0.2;
+}
+.logo-icon-classic__body {
+  fill: #ff4b4b;
+}
+.logo-icon-classic__flap {
+  fill: #545454;
+}
+.logo-icon-classic__triangle {
+  fill: #d0dbdc;
+}
+.logo-icon-classic__s {
+  fill: white;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__group {
+  opacity: 1;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__body {
+  fill: white;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__flap {
+  fill: #d3d3d3;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__triangle {
+  fill: #d0dbdc;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__s {
+  fill: var(--mantine-color-body);
+}
+
+/* Wordmark muted variant (used in empty/placeholder states) */
+/* Stirling text: 30% opacity in light mode, full opacity in dark */
+.wordmark__text--muted {
+  fill-opacity: 0.3;
+}
+[data-mantine-color-scheme="dark"] .wordmark__text--muted {
+  fill-opacity: 1;
+}
+/* PDF text: dimmed red in light mode, standard red in dark */
+.wordmark__pdf--muted {
+  fill: #d62626;
+  fill-opacity: 0.7;
+}
+[data-mantine-color-scheme="dark"] .wordmark__pdf--muted {
+  fill: #c56565;
+  fill-opacity: 1;
+}
+
+/* Snappier View-Transitions for FileEditor card reordering. Each thumbnail
+ * is tagged with `view-transition-name: file-card-<id>` (see
+ * FileEditorThumbnail.tsx); the browser FLIPs it between old and new
+ * positions on reorder. Override the sluggish 250ms default. */
+::view-transition-group(*) {
+  animation-duration: 160ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
 }

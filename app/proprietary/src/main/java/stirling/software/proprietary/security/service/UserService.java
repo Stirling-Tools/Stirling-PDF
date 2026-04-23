@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,6 +41,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
+import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
@@ -47,6 +49,16 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.storage.model.FileShare;
+import stirling.software.proprietary.storage.model.StorageCleanupEntry;
+import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
+import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
+import stirling.software.proprietary.workflow.service.UserServerCertificateService;
 
 @Service
 @Slf4j
@@ -67,6 +79,16 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
+    private final PersistentLoginRepository persistentLoginRepository;
+    private final UserServerCertificateService userServerCertificateService;
+    private final WorkflowParticipantRepository workflowParticipantRepository;
+    private final WorkflowSessionRepository workflowSessionRepository;
+    private final StoredFileRepository storedFileRepository;
+    private final StorageCleanupEntryRepository storageCleanupEntryRepository;
+    private final FileShareRepository fileShareRepository;
+    private final FileShareAccessRepository fileShareAccessRepository;
+
+    @Transactional
     public void processSSOPostLogin(
             String username,
             String ssoProviderId,
@@ -176,6 +198,15 @@ public class UserService implements UserServiceInterface {
         return user.getApiKey();
     }
 
+    @Override
+    public String getCurrentUserApiKey() {
+        String username = getCurrentUsername();
+        if (username == null || username.isEmpty()) {
+            throw new IllegalStateException("Cannot determine calling user for API key lookup");
+        }
+        return getApiKeyForUser(username);
+    }
+
     public boolean isValidApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey).isPresent();
     }
@@ -198,17 +229,76 @@ public class UserService implements UserServiceInterface {
         return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
+    @Transactional
     public void deleteUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
-            for (Authority authority : userOpt.get().getAuthorities()) {
+            User user = userOpt.get();
+            for (Authority authority : user.getAuthorities()) {
                 if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
                     return;
                 }
             }
-            userRepository.delete(userOpt.get());
+            deleteUserRelatedData(user);
+            userRepository.delete(user);
+            persistentLoginRepository.deleteByUsername(username);
         }
         invalidateUserSessions(username);
+    }
+
+    private void deleteUserRelatedData(User user) {
+        log.info("Deleting all associated data for user: {}", user.getUsername());
+
+        // Delete server certificate (non-nullable OneToOne → User)
+        userServerCertificateService.deleteUserCertificate(user.getId());
+
+        // Delete FileShareAccess records where this user is the accessor
+        fileShareAccessRepository.deleteByUser(user);
+
+        // Delete FileShare records where this user is the recipient (shared with them by others).
+        // FileShareAccess for those shares must be cleared first (no cascade from FileShare side).
+        List<FileShare> sharesTargetingUser = fileShareRepository.findBySharedWithUser(user);
+        sharesTargetingUser.forEach(fileShareAccessRepository::deleteByFileShare);
+        fileShareRepository.deleteAll(sharesTargetingUser);
+
+        // Null out WorkflowParticipant.user for sessions this user participates in but does not
+        // own.
+        // The participant record is retained to preserve the workflow audit trail.
+        workflowParticipantRepository.clearUserReferences(user);
+
+        // Break circular FK: null out stored_files.workflow_session_id before deleting sessions
+        storedFileRepository.clearWorkflowSessionReferencesByOwner(user);
+
+        // Delete WorkflowSessions (CascadeType.ALL cascades to WorkflowParticipant)
+        workflowSessionRepository.deleteAll(
+                workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
+
+        // Collect storage keys for physical cleanup before deleting DB records
+        List<StoredFile> files = storedFileRepository.findAllByOwner(user);
+        List<String> storageKeys =
+                files.stream()
+                        .flatMap(
+                                f ->
+                                        java.util.stream.Stream.of(
+                                                f.getStorageKey(),
+                                                f.getHistoryStorageKey(),
+                                                f.getAuditLogStorageKey()))
+                        .filter(k -> k != null && !k.isBlank())
+                        .toList();
+
+        // Clear FileShareAccess per share (no cascade from FileShare), then delete StoredFiles
+        // (CascadeType.ALL on StoredFile.shares cascades to FileShare)
+        for (StoredFile file : files) {
+            file.getShares().forEach(fileShareAccessRepository::deleteByFileShare);
+        }
+        storedFileRepository.deleteAll(files);
+
+        // Schedule physical deletion of all storage blobs; StorageCleanupService handles retry
+        for (String key : storageKeys) {
+            StorageCleanupEntry entry = new StorageCleanupEntry();
+            entry.setStorageKey(key);
+            storageCleanupEntryRepository.save(entry);
+        }
     }
 
     public boolean usernameExists(String username) {
@@ -521,19 +611,35 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Try SecurityContext first (normal request context)
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                Object principal = auth.getPrincipal();
 
-        if (principal instanceof UserDetails detailsUser) {
-            return detailsUser.getUsername();
-        } else if (principal instanceof User domainUser) {
-            return domainUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            return saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            return stringUser;
+                if (principal instanceof UserDetails detailsUser) {
+                    return detailsUser.getUsername();
+                } else if (principal instanceof User domainUser) {
+                    return domainUser.getUsername();
+                } else if (principal instanceof OAuth2User oAuth2User) {
+                    return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                    return saml2User.name();
+                } else if (principal instanceof String stringUser) {
+                    return stringUser;
+                }
+            }
+        } catch (Exception e) {
+            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
         }
+
+        // Fallback to MDC for async contexts (e.g., when called from async job threads)
+        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it
+        String mdcPrincipal = MDC.get("auditPrincipal");
+        if (mdcPrincipal != null && !mdcPrincipal.isEmpty()) {
+            return mdcPrincipal;
+        }
+
         return null;
     }
 

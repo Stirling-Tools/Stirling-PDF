@@ -92,7 +92,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-toolbar);  
+  background: var(--bg-toolbar);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-default);
   padding: 0.5rem;
@@ -154,7 +154,9 @@
   padding: 0 !important;
 }
 
-.compare-dropdown-scrollwrap { margin: 0; }
+.compare-dropdown-scrollwrap {
+  margin: 0;
+}
 
 /* Ensure search field sits flush and does not overflow */
 .compare-changes-dropdown .mantine-Combobox-search {
@@ -195,25 +197,30 @@
   border-radius: 3px !important;
 }
 
-.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+.compare-changes-select
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted) !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar {
   width: 6px !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
   background: var(--bg-muted) !important;
   border-radius: 3px !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
   background: var(--border-strong) !important;
   border-radius: 3px !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted) !important;
 }
 
@@ -267,17 +274,17 @@
 /* Flash/pulse highlight for navigated change */
 @keyframes compare-flash {
   0% {
-    outline: 4px solid rgba(255, 235, 59, 0.0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
+    outline: 4px solid rgba(255, 235, 59, 0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
     background-color: rgba(255, 235, 59, 0.2) !important;
   }
   25% {
-    outline: 4px solid rgba(255, 235, 59, 1.0);
+    outline: 4px solid rgba(255, 235, 59, 1);
     box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
     background-color: rgba(255, 235, 59, 0.4) !important;
   }
   50% {
-    outline: 4px solid rgba(255, 235, 59, 1.0);
+    outline: 4px solid rgba(255, 235, 59, 1);
     box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
     background-color: rgba(255, 235, 59, 0.5) !important;
   }
@@ -287,9 +294,9 @@
     background-color: rgba(255, 235, 59, 0.3) !important;
   }
   100% {
-    outline: 4px solid rgba(255, 235, 59, 0.0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
-    background-color: rgba(255, 235, 59, 0.0) !important;
+    outline: 4px solid rgba(255, 235, 59, 0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
+    background-color: rgba(255, 235, 59, 0) !important;
   }
 }
 
@@ -415,7 +422,7 @@
 .compare-diff-highlight {
   position: absolute;
   pointer-events: none;
-  mix-blend-mode: normal; 
+  mix-blend-mode: normal;
 }
 
 /* Compare dropdown option formatting (page + clamped text) */
@@ -512,5 +519,60 @@
   .compare-diff-page__inner {
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+}
+
+/* Pixel compare mode */
+.compare-pixel-workbench {
+  padding: 16px 24px 32px;
+  overflow-y: auto;
+}
+.compare-pixel-list {
+  padding-bottom: 32px;
+}
+.compare-pixel-page {
+  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--mantine-color-body, #fff);
+}
+.compare-pixel-triptych {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.compare-pixel-triptych figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.compare-pixel-triptych figure img {
+  display: block;
+  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  background: #fff;
+}
+.compare-pixel-triptych figcaption {
+  font-size: 11px;
+  text-align: center;
+  color: var(--mantine-color-dimmed, #868e96);
+}
+.compare-pixel-overlay {
+  position: relative;
+  width: 100%;
+}
+.compare-pixel-overlay-img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+}
+.compare-pixel-overlay-top {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: normal;
+}
+@media (max-width: 768px) {
+  .compare-pixel-triptych {
+    grid-template-columns: 1fr;
   }
 }

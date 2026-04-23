@@ -1,45 +1,52 @@
-import { ProcessedFile, CacheConfig, CacheEntry, CacheStats } from '@app/types/processing';
+import {
+  ProcessedFile,
+  CacheConfig,
+  CacheEntry,
+  CacheStats,
+} from "@app/types/processing";
 
 export class ProcessingCache {
   private cache = new Map<string, CacheEntry>();
   private totalSize = 0;
-  
-  constructor(private config: CacheConfig = {
-    maxFiles: 20,
-    maxSizeBytes: 2 * 1024 * 1024 * 1024, // 2GB
-    ttlMs: 30 * 60 * 1000 // 30 minutes
-  }) {}
+
+  constructor(
+    private config: CacheConfig = {
+      maxFiles: 20,
+      maxSizeBytes: 2 * 1024 * 1024 * 1024, // 2GB
+      ttlMs: 30 * 60 * 1000, // 30 minutes
+    },
+  ) {}
 
   set(key: string, data: ProcessedFile): void {
     // Remove expired entries first
     this.cleanup();
-    
+
     // Calculate entry size (rough estimate)
     const size = this.calculateSize(data);
-    
+
     // Make room if needed
     this.makeRoom(size);
-    
+
     this.cache.set(key, {
       data,
       size,
       lastAccessed: Date.now(),
-      createdAt: Date.now()
+      createdAt: Date.now(),
     });
-    
+
     this.totalSize += size;
   }
 
   get(key: string): ProcessedFile | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
-    
+
     // Check TTL
     if (Date.now() - entry.createdAt > this.config.ttlMs) {
       this.delete(key);
       return null;
     }
-    
+
     // Update last accessed
     entry.lastAccessed = Date.now();
     return entry.data;
@@ -48,13 +55,13 @@ export class ProcessingCache {
   has(key: string): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     // Check TTL
     if (Date.now() - entry.createdAt > this.config.ttlMs) {
       this.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -73,13 +80,13 @@ export class ProcessingCache {
 
   private findOldestEntry(): string | null {
     let oldest: { key: string; lastAccessed: number } | null = null;
-    
+
     for (const [key, entry] of this.cache) {
       if (!oldest || entry.lastAccessed < oldest.lastAccessed) {
         oldest = { key, lastAccessed: entry.lastAccessed };
       }
     }
-    
+
     return oldest?.key || null;
   }
 
@@ -95,18 +102,18 @@ export class ProcessingCache {
   private calculateSize(data: ProcessedFile): number {
     // Rough size estimation
     let size = 0;
-    
+
     // Estimate size of thumbnails (main memory consumer)
-    data.pages.forEach(page => {
+    data.pages.forEach((page) => {
       if (page.thumbnail) {
         // Base64 thumbnail is roughly 50KB each
         size += 50 * 1024;
       }
     });
-    
+
     // Add some overhead for other data
     size += 10 * 1024; // 10KB overhead
-    
+
     return size;
   }
 
@@ -127,7 +134,7 @@ export class ProcessingCache {
     return {
       entries: this.cache.size,
       totalSizeBytes: this.totalSize,
-      maxSizeBytes: this.config.maxSizeBytes
+      maxSizeBytes: this.config.maxSizeBytes,
     };
   }
 

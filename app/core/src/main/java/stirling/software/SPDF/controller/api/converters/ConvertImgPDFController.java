@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -51,6 +52,7 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -78,7 +80,7 @@ public class ConvertImgPDFController {
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
                             + " color type, and DPI. Users can choose to get a single image or multiple"
                             + " images.  Input:PDF Output:Image Type:SI-Conditional")
-    public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
+    public ResponseEntity<?> convertToImage(@ModelAttribute ConvertToImageRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
@@ -180,28 +182,33 @@ public class ConvertImgPDFController {
                             "No WebP files were created. " + resultProcess.getMessages());
                 }
 
-                byte[] bodyBytes = new byte[0];
-
                 if (webpFiles.size() == 1) {
-                    // Return the single WebP file directly
                     Path webpFilePath = webpFiles.get(0);
-                    bodyBytes = Files.readAllBytes(webpFilePath);
+                    byte[] webpBytes = Files.readAllBytes(webpFilePath);
+                    Files.deleteIfExists(tempFile);
+                    tempFile = null;
+                    FileUtils.deleteDirectory(tempOutputDir.toFile());
+                    tempOutputDir = null;
+                    String docName = filename + "." + imageFormat;
+                    MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
+                    return WebResponseUtils.bytesToWebResponse(webpBytes, docName, mediaType);
                 } else {
-                    // Create a ZIP file containing all WebP images
-                    try (ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
-                            ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
+                    ByteArrayOutputStream zipBAOS = new ByteArrayOutputStream();
+                    try (ZipOutputStream zos = new ZipOutputStream(zipBAOS)) {
                         for (Path webpFile : webpFiles) {
                             zos.putNextEntry(new ZipEntry(webpFile.getFileName().toString()));
                             Files.copy(webpFile, zos);
                             zos.closeEntry();
                         }
-                        bodyBytes = zipOutputStream.toByteArray();
                     }
+                    Files.deleteIfExists(tempFile);
+                    tempFile = null;
+                    FileUtils.deleteDirectory(tempOutputDir.toFile());
+                    tempOutputDir = null;
+                    String zipFilename = filename + "_convertedToImages.zip";
+                    return WebResponseUtils.bytesToWebResponse(
+                            zipBAOS.toByteArray(), zipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 }
-                // Clean up the temporary files
-                Files.deleteIfExists(tempFile);
-                if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
-                result = bodyBytes;
             }
 
             if (singleImage) {
@@ -267,8 +274,8 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. "
                             + "Input:CBZ Output:PDF Type:SISO")
-    public ResponseEntity<?> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> convertCbzToPdf(
+            @ModelAttribute ConvertCbzToPdfRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
@@ -278,13 +285,13 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        byte[] pdfBytes =
+        TempFile pdfFile =
                 CbzUtils.convertCbzToPdf(
                         file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
-        return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
+        return WebResponseUtils.pdfFileToWebResponse(pdfFile, filename);
     }
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/cbz")
@@ -293,8 +300,8 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive. "
                             + "Input:PDF Output:CBZ Type:SISO")
-    public ResponseEntity<?> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> convertPdfToCbz(
+            @ModelAttribute ConvertPdfToCbzRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
 
@@ -302,12 +309,12 @@ public class ConvertImgPDFController {
             dpi = 300;
         }
 
-        byte[] cbzBytes = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory);
+        TempFile cbzFile =
+                PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory, tempFileManager);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
 
-        return WebResponseUtils.bytesToWebResponse(
-                cbzBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.zipFileToWebResponse(cbzFile, filename);
     }
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/cbr/pdf")

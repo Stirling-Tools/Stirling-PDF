@@ -12,11 +12,12 @@ configurations {
 spotless {
     java {
         target 'src/**/java/**/*.java'
-        targetExclude 'src/main/resources/static/**'
+        targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
+        suppressLintsFor { setStep('google-java-format') }
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -46,12 +47,28 @@ dependencies {
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
-    implementation 'com.posthog.java:posthog:1.2.0'
-    implementation 'org.telegram:telegrambots:6.9.7.1'
+    implementation 'org.eclipse.jetty.http2:jetty-http2-server'
+    implementation 'org.eclipse.jetty:jetty-alpn-java-server'
+    implementation ('org.telegram:telegrambots:6.9.7.1') {
+        // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
+        // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
+        exclude group: 'org.glassfish.jersey.inject'
+        exclude group: 'org.glassfish.jersey.media'
+        exclude group: 'org.glassfish.jersey.containers'
+        exclude group: 'org.glassfish.jersey.core'
+        exclude group: 'org.glassfish.jersey.ext'
+        exclude group: 'org.glassfish.grizzly'
+        exclude group: 'org.glassfish.hk2'
+        exclude group: 'org.glassfish.hk2.external'
+        exclude group: 'org.javassist', module: 'javassist'
+        // Old javax JAX-RS Jackson bindings (not needed, project uses jakarta)
+        exclude group: 'com.fasterxml.jackson.jaxrs'
+        exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
+    }
     implementation 'commons-io:commons-io:2.21.0'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation 'io.micrometer:micrometer-core:1.16.2'
+    implementation 'io.micrometer:micrometer-core'
     implementation 'com.google.zxing:core:3.5.4'
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
@@ -61,11 +78,14 @@ dependencies {
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 
     implementation 'org.verapdf:validation-model:1.28.2'
+    // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
+    implementation 'org.mozilla:rhino:1.9.1'
 
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
@@ -73,11 +93,17 @@ dependencies {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         exclude group: 'com.google.code.gson', module: 'gson'
     }
+    // CVE-2022-25647: Explicit gson 2.13.2 to prevent unsafe deserialization (tabula would pull 2.8.7)
+    implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
     implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
-    // Batik
-    implementation 'org.apache.xmlgraphics:batik-all:1.19'
+    // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
+    // Replaces batik-all which included unused codec, svggen, transcoder, script modules
+    implementation 'org.apache.xmlgraphics:batik-bridge:1.19'
+    // Required by TwelveMonkeys imageio-batik SPI (SVGImageReaderSpi) during ImageIO init
+    runtimeOnly 'org.apache.xmlgraphics:batik-transcoder:1.19'
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
@@ -152,6 +178,7 @@ springBoot {
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
+def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
 def frontendDir = file('../../frontend')
 def frontendDistDir = file('../../frontend/dist')
 def resourcesStaticDir = file('src/main/resources/static')
@@ -168,6 +195,7 @@ def generatedFrontendPaths = [
 ]
 
 tasks.register('npmInstall', Exec) {
+    doNotTrackState("node_modules contains symlinks that Gradle cannot snapshot on Windows/WSL")
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Install frontend dependencies'
@@ -214,13 +242,14 @@ tasks.register('npmInstall', Exec) {
 }
 
 tasks.register('npmBuild', Exec) {
+    doNotTrackState("Frontend build depends on untracked npmInstall task")
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Build frontend application'
-    workingDir frontendDir
-    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build']
-    dependsOn npmInstall
+    workingDir file('../..')
+    commandLine = buildPrototypes ? ['task', 'frontend:build:prototypes'] : ['task', 'frontend:build']
     inputs.dir(new File(frontendDir, 'src'))
+    inputs.dir(new File(frontendDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
     outputs.dir(frontendDistDir)
 

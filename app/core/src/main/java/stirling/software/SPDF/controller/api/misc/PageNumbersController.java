@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.Color;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +28,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -35,6 +37,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(value = "/add-page-numbers", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
@@ -43,8 +46,8 @@ public class PageNumbersController {
             description =
                     "This operation takes an input PDF file and adds page numbers to it. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addPageNumbers(@ModelAttribute AddPageNumbersRequest request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> addPageNumbers(
+            @ModelAttribute AddPageNumbersRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();
@@ -52,9 +55,17 @@ public class PageNumbersController {
         int pageNumber = request.getStartingNumber();
         String pagesToNumber = request.getPagesToNumber();
         String customText = request.getCustomText();
+        int zeroPad = request.getZeroPad();
         float fontSize = request.getFontSize();
         String fontType = request.getFontType();
         String fontColor = request.getFontColor();
+        // compute padded number string where requested
+        String formatN;
+        if (zeroPad > 0) {
+            formatN = String.format("%%0%dd", Math.max(0, zeroPad));
+        } else {
+            formatN = "%d";
+        }
 
         Color color = Color.BLACK;
         if (fontColor != null && !fontColor.trim().isEmpty()) {
@@ -93,9 +104,10 @@ public class PageNumbersController {
                 PDPage page = document.getPage(i);
                 PDRectangle pageSize = page.getMediaBox();
 
+                String nFormatted = String.format(formatN, pageNumber);
                 String text =
                         customText
-                                .replace("{n}", String.valueOf(pageNumber))
+                                .replace("{n}", nFormatted)
                                 .replace("{total}", String.valueOf(document.getNumberOfPages()))
                                 .replace(
                                         "{filename}",
@@ -166,11 +178,16 @@ public class PageNumbersController {
                 pageNumber++;
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                document.save(tempOut.getFile());
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
+            }
 
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(),
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOut,
                     GeneralUtils.generateFilename(
                             file.getOriginalFilename(), "_page_numbers_added.pdf"));
         }

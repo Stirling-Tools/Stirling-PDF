@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, Button, ActionIcon } from '@mantine/core';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import { useTranslation } from 'react-i18next';
-import { supportedLanguages } from '@app/i18n';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import styles from '@app/components/shared/LanguageSelector.module.css';
-import { Z_INDEX_CONFIG_MODAL } from '@app/styles/zIndex';
+import React, { useState, useEffect } from "react";
+import { Menu, Button, ActionIcon } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { useTranslation } from "react-i18next";
+import { supportedLanguages, setUserLanguage } from "@app/i18n";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import styles from "@app/components/shared/LanguageSelector.module.css";
+import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
 
 // Types
 interface LanguageSelectorProps {
-  position?: React.ComponentProps<typeof Menu>['position'];
+  position?: React.ComponentProps<typeof Menu>["position"];
   offset?: number;
   compact?: boolean; // icon-only trigger
   tooltip?: string; // tooltip text for compact mode
@@ -48,16 +48,19 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
   rippleEffect,
   pendingLanguage,
   compact,
-  disabled = false
+  disabled = false,
 }) => {
   const { t } = useTranslation();
 
+  const labelText = option.label;
+  const comingSoonText = t("comingSoon", "Coming soon");
+
   const label = disabled ? (
-    <Tooltip content={t('comingSoon', 'Coming soon')} position="left" arrow>
-      <p>{option.label}</p>
+    <Tooltip content={comingSoonText} position="left" arrow>
+      <p>{labelText}</p>
     </Tooltip>
   ) : (
-    <p>{option.label}</p>
+    <p>{labelText}</p>
   );
 
   return (
@@ -65,7 +68,7 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
       className={styles.languageItem}
       style={{
         opacity: animationTriggered ? 1 : 0,
-        transform: animationTriggered ? 'translateY(0px)' : 'translateY(8px)',
+        transform: animationTriggered ? "translateY(0px)" : "translateY(8px)",
         transition: `opacity 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.01}s, transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 0.01}s`,
       }}
     >
@@ -78,40 +81,42 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
         disabled={disabled}
         styles={{
           root: {
-            borderRadius: '4px',
-            minHeight: '32px',
-            padding: '4px 8px',
-            justifyContent: 'flex-start',
-            position: 'relative',
-            overflow: 'hidden',
+            borderRadius: "4px",
+            minHeight: "32px",
+            padding: "4px 8px",
+            justifyContent: "flex-start",
+            position: "relative",
+            overflow: "hidden",
             backgroundColor: isSelected
-              ? 'light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))'
-              : 'transparent',
+              ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
+              : "transparent",
             color: disabled
-              ? 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3))'
+              ? "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3))"
               : isSelected
-              ? 'light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))'
-              : 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-white))',
-            transition: 'all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            '&:hover': !disabled ? {
-              backgroundColor: isSelected
-                ? 'light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-7))'
-                : 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
-              transform: 'translateY(-1px)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            } : {}
+                ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))"
+                : "light-dark(var(--mantine-color-gray-7), var(--mantine-color-white))",
+            transition: "all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+            cursor: disabled ? "not-allowed" : "pointer",
+            "&:hover": !disabled
+              ? {
+                  backgroundColor: isSelected
+                    ? "light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-7))"
+                    : "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                }
+              : {},
           },
           label: {
-            fontSize: '13px',
+            fontSize: "13px",
             fontWeight: isSelected ? 600 : 400,
-            textAlign: 'left',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            position: 'relative',
+            textAlign: "left",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            position: "relative",
             zIndex: 2,
-          }
+          },
         }}
       >
         {label}
@@ -119,16 +124,17 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
           <div
             key={rippleEffect.key}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: rippleEffect.x,
               top: rippleEffect.y,
               width: 0,
               height: 0,
-              borderRadius: '50%',
-              backgroundColor: 'var(--mantine-color-blue-4)',
+              borderRadius: "50%",
+              backgroundColor: "var(--mantine-color-blue-4)",
               opacity: 0.6,
-              transform: 'translate(-50%, -50%)',
-              animation: 'ripple-expand 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              transform: "translate(-50%, -50%)",
+              animation:
+                "ripple-expand 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
               zIndex: 1,
             }}
           />
@@ -152,45 +158,56 @@ const RippleStyles: React.FC = () => (
 
 // Main component
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
-  position = 'bottom-start',
+  position = "bottom-start",
   offset = 8,
   compact = false,
-  tooltip
+  tooltip,
 }) => {
-  const { i18n } = useTranslation();
+  const { i18n, ready } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [animationTriggered, setAnimationTriggered] = useState(false);
   const [pendingLanguage, setPendingLanguage] = useState<string | null>(null);
   const [rippleEffect, setRippleEffect] = useState<RippleEffect | null>(null);
 
+  // Trigger animation when dropdown opens
+  useEffect(() => {
+    if (opened) {
+      setAnimationTriggered(false);
+      // Small delay to ensure DOM is ready
+      setTimeout(() => setAnimationTriggered(true), 20);
+    }
+  }, [opened]);
+
+  // Don't render until i18n is ready to prevent race condition
+  // during SAML auth where components render before i18n initializes
+  if (!ready || !i18n.language) {
+    return null;
+  }
+
   // Get the filtered list of supported languages from i18n
   // This respects server config (ui.languages) applied by AppConfigLoader
-  const allowedLanguages = (i18n.options.supportedLngs as string[] || [])
-    .filter(lang => lang !== 'cimode'); // Exclude i18next debug language
+  const allowedLanguages = (
+    (i18n.options.supportedLngs as string[]) || []
+  ).filter((lang) => lang !== "cimode"); // Exclude i18next debug language
 
   const languageOptions: LanguageOption[] = Object.entries(supportedLanguages)
-    .filter(([code]) => allowedLanguages.length === 0 || allowedLanguages.includes(code))
+    .filter(
+      ([code]) =>
+        allowedLanguages.length === 0 || allowedLanguages.includes(code),
+    )
     .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
     .map(([code, name]) => ({
       value: code,
       label: name,
     }));
 
-  // Hide the language selector if there's only one language option
-  // (no point showing a selector when there's nothing to select)
-  if (languageOptions.length <= 1) {
-    return null;
-  }
-
   // Calculate dropdown width and grid columns based on number of languages
   // 2-4: 300px/2 cols, 5-9: 400px/3 cols, 10+: 600px/4 cols
-  const dropdownWidth = languageOptions.length <= 4 ? 300
-    : languageOptions.length <= 9 ? 400
-    : 600;
+  const dropdownWidth =
+    languageOptions.length <= 4 ? 300 : languageOptions.length <= 9 ? 400 : 600;
 
-  const gridColumns = languageOptions.length <= 4 ? 2
-    : languageOptions.length <= 9 ? 3
-    : 4;
+  const gridColumns =
+    languageOptions.length <= 4 ? 2 : languageOptions.length <= 9 ? 3 : 4;
 
   const handleLanguageChange = (value: string, event: React.MouseEvent) => {
     // Create ripple effect at click position (only for button mode)
@@ -206,7 +223,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
     // Simulate processing time for smooth transition
     setTimeout(() => {
-      i18n.changeLanguage(value);
+      // Use setUserLanguage to properly set priority (ensures user choice persists across sessions)
+      setUserLanguage(value);
 
       setTimeout(() => {
         setPendingLanguage(null);
@@ -216,24 +234,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         setTimeout(() => setRippleEffect(null), 50);
 
         // Force a full reload so RTL/LTR layout and tooltips re-evaluate correctly
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           window.location.reload();
         }
       }, 150);
     }, 100);
   };
 
-  const currentLanguage = supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
-                         supportedLanguages['en-GB'];
+  const currentLanguage =
+    supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
+    supportedLanguages["en-GB"] ||
+    "English"; // Fallback if supportedLanguages lookup fails
 
-  // Trigger animation when dropdown opens
-  useEffect(() => {
-    if (opened) {
-      setAnimationTriggered(false);
-      // Small delay to ensure DOM is ready
-      setTimeout(() => setAnimationTriggered(true), 20);
-    }
-  }, [opened]);
+  // Hide the language selector if there's only one language option
+  // (no point showing a selector when there's nothing to select)
+  if (languageOptions.length <= 1) {
+    return null;
+  }
 
   return (
     <>
@@ -247,9 +264,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         zIndex={Z_INDEX_CONFIG_MODAL}
         withinPortal
         transitionProps={{
-          transition: 'scale-y',
+          transition: "scale-y",
           duration: 120,
-          timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+          timingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
         <Menu.Target>
@@ -261,11 +278,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               title={!opened && tooltip ? tooltip : undefined}
               styles={{
                 root: {
-                  color: 'var(--right-rail-icon)',
-                  '&:hover': {
-                    backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
-                  }
-                }
+                  color: "var(--right-rail-icon)",
+                  "&:hover": {
+                    backgroundColor:
+                      "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
+                  },
+                },
               }}
             >
               <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
@@ -274,53 +292,58 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <Button
               variant="subtle"
               size="sm"
-              leftSection={<LocalIcon icon="language" width="1.5rem" height="1.5rem" />}
+              leftSection={
+                <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
+              }
               styles={{
                 root: {
-                  border: 'none',
-                  color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))',
-                  transition: 'background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                  '&:hover': {
-                    backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
-                  }
+                  border: "none",
+                  color:
+                    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))",
+                  transition:
+                    "background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                  "&:hover": {
+                    backgroundColor:
+                      "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
+                  },
                 },
-                label: { fontSize: '12px', fontWeight: 500 }
+                label: { fontSize: "12px", fontWeight: 500 },
               }}
             >
-              <span className={styles.languageText}>
-                {currentLanguage}
-              </span>
+              <span className={styles.languageText}>{currentLanguage}</span>
             </Button>
           )}
         </Menu.Target>
 
         <Menu.Dropdown
           style={{
-            padding: '12px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            backgroundColor: 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
-            border: 'light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))',
+            padding: "12px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            backgroundColor:
+              "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+            border:
+              "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
           }}
         >
           <div
             className={styles.languageGrid}
             style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
           >
-              {languageOptions.map((option, index) => (
-                  <LanguageItem
-                    key={option.value}
-                    option={option}
-                    index={index}
-                    animationTriggered={animationTriggered}
-                    isSelected={option.value === i18n.language}
-                    onClick={(event) => handleLanguageChange(option.value, event)}
-                    rippleEffect={rippleEffect}
-                    pendingLanguage={pendingLanguage}
-                    compact={compact}
-                    disabled={false}
-                  />
-                ))}
+            {languageOptions.map((option, index) => (
+              <LanguageItem
+                key={option.value}
+                option={option}
+                index={index}
+                animationTriggered={animationTriggered}
+                isSelected={option.value === i18n.language}
+                onClick={(event) => handleLanguageChange(option.value, event)}
+                rippleEffect={rippleEffect}
+                pendingLanguage={pendingLanguage}
+                compact={compact}
+                disabled={false}
+              />
+            ))}
           </div>
         </Menu.Dropdown>
       </Menu>

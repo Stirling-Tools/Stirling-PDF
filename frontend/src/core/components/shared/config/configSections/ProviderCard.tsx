@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Paper,
   Group,
@@ -9,13 +9,17 @@ import {
   TextInput,
   Textarea,
   Switch,
-  PasswordInput,
   NumberInput,
   TagsInput,
-} from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { Provider, ProviderField } from '@app/components/shared/config/configSections/providerDefinitions';
+  Anchor,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import EditableSecretField from "@app/components/shared/EditableSecretField";
+import {
+  Provider,
+  ProviderField,
+} from "@app/components/shared/config/configSections/providerDefinitions";
 
 interface ProviderCardProps {
   provider: Provider;
@@ -23,7 +27,9 @@ interface ProviderCardProps {
   settings?: Record<string, any>;
   onSave?: (settings: Record<string, any>) => void;
   onDisconnect?: () => void;
+  onChange?: (settings: Record<string, any>) => void;
   disabled?: boolean;
+  readOnly?: boolean;
 }
 
 export default function ProviderCard({
@@ -32,18 +38,20 @@ export default function ProviderCard({
   settings = {},
   onSave,
   onDisconnect,
+  onChange,
   disabled = false,
+  readOnly = false,
 }: ProviderCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const [localSettings, setLocalSettings] = useState<Record<string, any>>(settings);
+  const [localSettings, setLocalSettings] =
+    useState<Record<string, any>>(settings);
 
   // Keep local settings in sync with incoming settings (values loaded from settings.yml)
+  // Update whenever parent settings change, whether expanded or not (important for Discard to work)
   useEffect(() => {
-    if (!expanded) {
-      setLocalSettings(settings);
-    }
-  }, [settings, expanded]);
+    setLocalSettings(settings);
+  }, [settings]);
 
   // Initialize local settings with defaults when opening an unconfigured provider
   const handleConnectToggle = () => {
@@ -53,7 +61,8 @@ export default function ProviderCard({
       const defaultSettings: Record<string, any> = { ...settings };
       provider.fields.forEach((field) => {
         if (field.defaultValue !== undefined) {
-          defaultSettings[field.key] = defaultSettings[field.key] ?? field.defaultValue;
+          defaultSettings[field.key] =
+            defaultSettings[field.key] ?? field.defaultValue;
         }
       });
       setLocalSettings(defaultSettings);
@@ -63,7 +72,12 @@ export default function ProviderCard({
 
   const handleFieldChange = (key: string, value: any) => {
     if (disabled) return; // Block changes when disabled
-    setLocalSettings((prev) => ({ ...prev, [key]: value }));
+    const updated = { ...localSettings, [key]: value };
+    setLocalSettings(updated);
+    // Notify parent of changes if onChange callback provided
+    if (onChange) {
+      onChange(updated);
+    }
   };
 
   const handleSave = () => {
@@ -74,15 +88,26 @@ export default function ProviderCard({
   };
 
   const renderField = (field: ProviderField) => {
-    const value = localSettings[field.key] ?? field.defaultValue ?? '';
+    const value = localSettings[field.key] ?? field.defaultValue ?? "";
 
     switch (field.type) {
-      case 'switch':
+      case "switch":
         return (
-          <div key={field.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div
+            key={field.key}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
-              <Text fw={500} size="sm">{field.label}</Text>
-              <Text size="xs" c="dimmed" mt={4}>{field.description}</Text>
+              <Text fw={500} size="sm">
+                {field.label}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {field.description}
+              </Text>
             </div>
             <Switch
               checked={value || false}
@@ -92,20 +117,20 @@ export default function ProviderCard({
           </div>
         );
 
-      case 'password':
+      case "password":
         return (
-          <PasswordInput
+          <EditableSecretField
             key={field.key}
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
             value={value}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            onChange={(newValue) => handleFieldChange(field.key, newValue)}
             disabled={disabled}
           />
         );
 
-      case 'textarea':
+      case "textarea":
         return (
           <Textarea
             key={field.key}
@@ -118,7 +143,7 @@ export default function ProviderCard({
           />
         );
 
-      case 'number':
+      case "number":
         return (
           <NumberInput
             key={field.key}
@@ -132,8 +157,10 @@ export default function ProviderCard({
           />
         );
 
-      case 'tags': {
-        const tagValue = Array.isArray(value) ? value.map((val) => `${val}`) : [];
+      case "tags": {
+        const tagValue = Array.isArray(value)
+          ? value.map((val) => `${val}`)
+          : [];
 
         return (
           <TagsInput
@@ -165,12 +192,12 @@ export default function ProviderCard({
 
   const renderProviderIcon = () => {
     // If icon starts with '/', it's a path to an SVG file
-    if (provider.icon.startsWith('/')) {
+    if (provider.icon.startsWith("/")) {
       return (
         <img
           src={provider.icon}
           alt={provider.name}
-          style={{ width: '1.5rem', height: '1.5rem' }}
+          style={{ width: "1.5rem", height: "1.5rem" }}
         />
       );
     }
@@ -186,8 +213,12 @@ export default function ProviderCard({
           <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
             {renderProviderIcon()}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={600} size="sm">{provider.name}</Text>
-              <Text size="xs" c="dimmed" truncate>{provider.scope}</Text>
+              <Text fw={600} size="sm">
+                {provider.name}
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                {provider.scope}
+              </Text>
             </div>
           </Group>
 
@@ -195,27 +226,30 @@ export default function ProviderCard({
             <Button
               variant={isConfigured ? "subtle" : "filled"}
               size="xs"
-              onClick={isConfigured ? () => setExpanded(!expanded) : handleConnectToggle}
+              onClick={
+                isConfigured
+                  ? () => setExpanded(!expanded)
+                  : handleConnectToggle
+              }
               rightSection={
                 expanded ? (
-                  <LocalIcon
-                    icon="close-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                ) : (isConfigured ? (
+                  <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+                ) : isConfigured ? (
                   <LocalIcon
                     icon="expand-more-rounded"
                     width="1rem"
                     height="1rem"
                   />
-                ) : undefined)
+                ) : undefined
               }
             >
               {isConfigured
-                ? (expanded ? t('admin.close', 'Close') : t('admin.expand', 'Expand'))
-                : (expanded ? t('admin.close', 'Close') : t('admin.settings.connections.connect', 'Connect'))
-              }
+                ? expanded
+                  ? t("admin.close", "Close")
+                  : t("admin.expand", "Expand")
+                : expanded
+                  ? t("admin.close", "Close")
+                  : t("admin.settings.connections.connect", "Connect")}
             </Button>
           </Group>
         </Group>
@@ -223,24 +257,44 @@ export default function ProviderCard({
         {/* Expandable Settings */}
         <Collapse in={expanded}>
           <Stack gap="md" mt="xs">
+            {/* Documentation Link */}
+            {provider.documentationUrl && (
+              <Anchor
+                href={provider.documentationUrl}
+                target="_blank"
+                size="xs"
+                c="blue"
+              >
+                {t(
+                  "admin.settings.connections.documentation",
+                  "View documentation",
+                )}{" "}
+                ↗
+              </Anchor>
+            )}
+
             {provider.fields.map((field) => renderField(field))}
 
-            <Group justify="flex-end" mt="sm">
-              {onDisconnect && (
-                <Button
-                  variant="outline"
-                  color="red"
-                  size="sm"
-                  onClick={onDisconnect}
-                  disabled={disabled}
-                >
-                  {t('admin.settings.connections.disconnect', 'Disconnect')}
-                </Button>
-              )}
-              <Button size="sm" onClick={handleSave} disabled={disabled}>
-                {t('admin.settings.save', 'Save Changes')}
-              </Button>
-            </Group>
+            {!readOnly && (onSave || onDisconnect) && (
+              <Group justify="flex-end" mt="sm">
+                {onDisconnect && (
+                  <Button
+                    variant="outline"
+                    color="red"
+                    size="sm"
+                    onClick={onDisconnect}
+                    disabled={disabled}
+                  >
+                    {t("admin.settings.connections.disconnect", "Disconnect")}
+                  </Button>
+                )}
+                {onSave && (
+                  <Button size="sm" onClick={handleSave} disabled={disabled}>
+                    {t("admin.settings.save", "Save Changes")}
+                  </Button>
+                )}
+              </Group>
+            )}
           </Stack>
         </Collapse>
       </Stack>

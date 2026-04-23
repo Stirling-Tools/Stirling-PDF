@@ -9,8 +9,8 @@
  * @returns true if key exists and has valid format
  */
 export function isStripeConfigured(): boolean {
-  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51Q56W2P9mY5IAnSnp3kcxG50uyFMLuhM4fFs774DAP3t88KmlwUrUo31CecpnAZ9FHsNp8xJyOnYNYNVVP6z4oi500q5sFYPEp';
-  return !!stripeKey && stripeKey.startsWith('pk_');
+  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  return !!stripeKey && stripeKey.startsWith("pk_");
 }
 
 /**
@@ -19,7 +19,7 @@ export function isStripeConfigured(): boolean {
  */
 export function isSecureContext(): boolean {
   // Allow localhost for development (works with both HTTP and HTTPS)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const protocol = window.location.protocol;
 
     // Localhost is considered secure for development
@@ -29,7 +29,7 @@ export function isSecureContext(): boolean {
     // }
 
     // Check if HTTPS
-    return protocol === 'https:';
+    return protocol === "https:";
   }
 
   // Default to false if window is not available (SSR context)
@@ -40,15 +40,15 @@ export function isSecureContext(): boolean {
  * Get the appropriate Stripe checkout UI mode based on current context
  * @returns 'embedded' for HTTPS with key, 'hosted' for HTTP or missing key
  */
-export function getCheckoutMode(): 'embedded' | 'hosted' {
+export function getCheckoutMode(): "embedded" | "hosted" {
   // Force hosted checkout if no publishable key (regardless of protocol)
   // Hosted checkout works without the key - it just redirects to Stripe
   if (!isStripeConfigured()) {
-    return 'hosted';
+    return "hosted";
   }
 
   // Normal protocol-based detection if key is available
-  return isSecureContext() ? 'embedded' : 'hosted';
+  return isSecureContext() ? "embedded" : "hosted";
 }
 
 /**

@@ -93,7 +93,7 @@ class LanguageServiceBasicTest {
         // Configure the test service
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
 
-        // Allow only specific languages (en_GB is always included)
+        // Allow only specific languages - strict whitelist
         when(applicationProperties.getUi().getLanguages())
                 .thenReturn(Arrays.asList("en_US", "fr_FR"));
 
@@ -103,7 +103,9 @@ class LanguageServiceBasicTest {
         // Verify filtering by restrictions
         assertTrue(supportedLanguages.contains("en_US"), "Allowed language should be included");
         assertTrue(supportedLanguages.contains("fr_FR"), "Allowed language should be included");
-        assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
+        assertFalse(
+                supportedLanguages.contains("en_GB"),
+                "en_GB should NOT be included when not in whitelist");
         assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
     }
 

@@ -13,7 +13,7 @@ RUN npm ci
 COPY frontend .
 
 # Build the application
-RUN npm run build
+RUN npx vite build
 
 # Production stage
 FROM nginx:alpine@sha256:b0f7830b6bfaa1258f45d94c240ab668ced1b3651c8a222aefe6683447c7bf55

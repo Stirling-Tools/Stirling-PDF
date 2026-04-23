@@ -1,8 +1,8 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -39,6 +40,8 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -49,6 +52,7 @@ public class ExtractImageScansController {
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -61,19 +65,18 @@ public class ExtractImageScansController {
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
-    public ResponseEntity<byte[]> extractImageScans(
+    public ResponseEntity<StreamingResponseBody> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
         List<String> images = new ArrayList<>();
 
-        List<Path> tempImageFiles = new ArrayList<>();
-        Path tempInputFile;
-        Path tempZipFile = null;
+        List<TempFile> tempImageFiles = new ArrayList<>();
+        TempFile tempInputFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
         if (!CheckProgramInstall.isPythonAvailable()) {
@@ -83,6 +86,8 @@ public class ExtractImageScansController {
 
         String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
         Path splitPhotosScript = GeneralUtils.extractScript("split_photos.py");
+        TempFile finalOutput = null;
+        boolean finalOutputOwnershipTransferred = false;
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -96,7 +101,8 @@ public class ExtractImageScansController {
                     // Create images of all pages
                     for (int i = 0; i < pageCount; i++) {
                         // Create temp file to save the image
-                        Path tempFile = Files.createTempFile("image_", ".png");
+                        TempFile tempImage = tempFileManager.createManagedTempFile(".png");
+                        tempImageFiles.add(tempImage);
 
                         // Render image and save as temp file
                         BufferedImage image;
@@ -116,18 +122,17 @@ public class ExtractImageScansController {
                                         pageIndex + 1,
                                         dpi,
                                         () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
-                        ImageIO.write(image, "png", tempFile.toFile());
+                        ImageIO.write(image, "png", tempImage.getFile());
 
                         // Add temp file path to images list
-                        images.add(tempFile.toString());
-                        tempImageFiles.add(tempFile);
+                        images.add(tempImage.getAbsolutePath());
                     }
                 }
             } else {
-                tempInputFile = Files.createTempFile("input_", "." + extension);
-                inputFile.transferTo(tempInputFile);
+                tempInputFile = tempFileManager.createManagedTempFile("." + extension);
+                inputFile.transferTo(tempInputFile.getFile());
                 // Add input file path to images list
-                images.add(tempInputFile.toString());
+                images.add(tempInputFile.getAbsolutePath());
             }
 
             List<byte[]> processedImageBytes = new ArrayList<>();
@@ -177,10 +182,10 @@ public class ExtractImageScansController {
             if (processedImageBytes.size() > 1) {
                 String outputZipFilename =
                         GeneralUtils.generateFilename(fileName, "_processed.zip");
-                tempZipFile = Files.createTempFile("output_", ".zip");
+                finalOutput = tempFileManager.createManagedTempFile(".zip");
 
                 try (ZipOutputStream zipOut =
-                        new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
+                        new ZipOutputStream(Files.newOutputStream(finalOutput.getPath()))) {
                     // Add processed images to the zip
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
@@ -193,13 +198,10 @@ public class ExtractImageScansController {
                     }
                 }
 
-                byte[] zipBytes = Files.readAllBytes(tempZipFile);
-
-                // Clean up the temporary zip file
-                Files.deleteIfExists(tempZipFile);
-
-                return WebResponseUtils.bytesToWebResponse(
-                        zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                ResponseEntity<StreamingResponseBody> response =
+                        WebResponseUtils.zipFileToWebResponse(finalOutput, outputZipFilename);
+                finalOutputOwnershipTransferred = true;
+                return response;
             }
             if (processedImageBytes.isEmpty()) {
                 throw ExceptionUtils.createIllegalArgumentException(
@@ -208,28 +210,28 @@ public class ExtractImageScansController {
 
                 // Return the processed image as a response
                 byte[] imageBytes = processedImageBytes.get(0);
-                return WebResponseUtils.bytesToWebResponse(
-                        imageBytes,
-                        GeneralUtils.generateFilename(fileName, ".png"),
-                        MediaType.IMAGE_PNG);
+                finalOutput = tempFileManager.createManagedTempFile(".png");
+                try (OutputStream out = Files.newOutputStream(finalOutput.getPath())) {
+                    out.write(imageBytes);
+                }
+
+                ResponseEntity<StreamingResponseBody> response =
+                        WebResponseUtils.fileToWebResponse(
+                                finalOutput,
+                                GeneralUtils.generateFilename(fileName, ".png"),
+                                MediaType.IMAGE_PNG);
+                finalOutputOwnershipTransferred = true;
+                return response;
             }
         } finally {
+            if (finalOutput != null && !finalOutputOwnershipTransferred) {
+                finalOutput.close();
+            }
             // Cleanup logic for all temporary files and directories
-            tempImageFiles.forEach(
-                    path -> {
-                        try {
-                            Files.deleteIfExists(path);
-                        } catch (IOException e) {
-                            log.error("Failed to delete temporary image file: {}", path, e);
-                        }
-                    });
+            tempImageFiles.forEach(TempFile::close);
 
-            if (tempZipFile != null && Files.exists(tempZipFile)) {
-                try {
-                    Files.deleteIfExists(tempZipFile);
-                } catch (IOException e) {
-                    log.error("Failed to delete temporary zip file: {}", tempZipFile, e);
-                }
+            if (tempInputFile != null) {
+                tempInputFile.close();
             }
 
             tempDirs.forEach(

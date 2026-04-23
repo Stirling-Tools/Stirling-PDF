@@ -71,10 +71,13 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -90,6 +93,8 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -99,6 +104,8 @@ public class ConvertPDFToPDFA {
 
     private static final Pattern NON_PRINTABLE_ASCII = Pattern.compile("[^\\x20-\\x7E]");
     private final RuntimePathConfig runtimePathConfig;
+    private final stirling.software.SPDF.service.VeraPDFService veraPDFService;
+    private final TempFileManager tempFileManager;
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
     private static final int PDFA_COMPATIBILITY_POLICY = 1;
@@ -570,7 +577,7 @@ public class ConvertPDFToPDFA {
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
                     "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+    public ResponseEntity<StreamingResponseBody> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -587,7 +594,8 @@ public class ConvertPDFToPDFA {
         if (isPdfX) {
             return handlePdfXConversion(inputFile, outputFormat);
         } else {
-            return handlePdfAConversion(inputFile, outputFormat);
+            return handlePdfAConversion(
+                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
         }
     }
 
@@ -605,7 +613,7 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
-    private ResponseEntity<byte[]> handlePdfXConversion(
+    private ResponseEntity<StreamingResponseBody> handlePdfXConversion(
             MultipartFile inputFile, String outputFormat) throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
@@ -636,8 +644,14 @@ public class ConvertPDFToPDFA {
 
             log.info("PDF/X conversion completed successfully to {}", profile.getDisplayName());
 
-            return WebResponseUtils.bytesToWebResponse(
-                    converted, outputFilename, MediaType.APPLICATION_PDF);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                Files.write(tempOut.getPath(), converted);
+            } catch (Exception ex) {
+                tempOut.close();
+                throw ex;
+            }
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
 
         } catch (IOException | InterruptedException e) {
             log.error("PDF/X conversion failed", e);
@@ -1792,8 +1806,8 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
-    private ResponseEntity<byte[]> handlePdfAConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+    private ResponseEntity<StreamingResponseBody> handlePdfAConversion(
+            MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
         // Get the original filename without extension
@@ -1822,8 +1836,18 @@ public class ConvertPDFToPDFA {
 
                     validateAndWarnPdfA(converted, profile, "Ghostscript");
 
-                    return WebResponseUtils.bytesToWebResponse(
-                            converted, outputFilename, MediaType.APPLICATION_PDF);
+                    if (strict) {
+                        verifyStrictCompliance(converted);
+                    }
+
+                    TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+                    try {
+                        Files.write(tempOut.getPath(), converted);
+                    } catch (Exception ex) {
+                        tempOut.close();
+                        throw ex;
+                    }
+                    return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
                 } catch (IOException | InterruptedException e) {
                     log.warn(
                             "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
@@ -1839,11 +1863,45 @@ public class ConvertPDFToPDFA {
             // Validate with PDFBox preflight and warn if issues found
             validateAndWarnPdfA(converted, profile, "PDFBox/LibreOffice");
 
-            return WebResponseUtils.bytesToWebResponse(
-                    converted, outputFilename, MediaType.APPLICATION_PDF);
+            if (strict) {
+                verifyStrictCompliance(converted);
+            }
 
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                Files.write(tempOut.getPath(), converted);
+            } catch (Exception ex) {
+                tempOut.close();
+                throw ex;
+            }
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
         } finally {
             deleteQuietly(workingDir);
+        }
+    }
+
+    private void verifyStrictCompliance(byte[] pdfBytes) throws IOException {
+        try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
+            List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
+                    veraPDFService.validatePDF(is);
+            boolean isCompliant = results.stream().anyMatch(result -> result.isCompliant());
+            if (!isCompliant) {
+                String details =
+                        results.stream()
+                                .map(r -> r.getStandard() + ": " + r.getComplianceSummary())
+                                .collect(Collectors.joining("; "));
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Strict PDF/A mode enabled: Conversion is not perfectly compliant. Details: "
+                                + details);
+            }
+        } catch (Exception e) {
+            if (e instanceof ResponseStatusException) {
+                throw (ResponseStatusException) e;
+            }
+            log.error("Error during strict PDF/A verification", e);
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Error during strict PDF/A verification");
         }
     }
 

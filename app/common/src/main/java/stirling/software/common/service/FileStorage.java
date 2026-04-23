@@ -1,6 +1,10 @@
 package stirling.software.common.service;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -8,6 +12,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class FileStorage {
+
+    /** Holds the result of a stream-to-disk store operation: the file ID and the bytes written. */
+    public record StoredFile(String fileId, long size) {}
 
     @Value("${stirling.tempDir:/tmp/stirling-files}")
     private String tempDirPath;
@@ -102,6 +110,58 @@ public class FileStorage {
         }
 
         return Files.readAllBytes(filePath);
+    }
+
+    /**
+     * Retrieve a file by its ID as a streaming InputStream. The caller is responsible for closing
+     * the returned stream.
+     *
+     * @param fileId The ID of the file to retrieve
+     * @return A buffered InputStream for the file
+     * @throws IOException If the file doesn't exist or can't be read
+     */
+    public InputStream retrieveInputStream(String fileId) throws IOException {
+        Path filePath = getFilePath(fileId);
+        // Let Files.newInputStream throw NoSuchFileException naturally — avoids TOCTOU race
+        // between exists-check and open when another thread may delete concurrently.
+        return new BufferedInputStream(Files.newInputStream(filePath));
+    }
+
+    /**
+     * Store data from an InputStream as a file and return its unique ID and byte count. Streams
+     * directly to disk without buffering the entire content in heap.
+     *
+     * @param inputStream The input stream to read from
+     * @param originalName The original name of the file (unused, kept for API symmetry)
+     * @return A {@link StoredFile} containing the file ID and the number of bytes written
+     * @throws IOException If there is an error storing the file
+     */
+    public StoredFile storeInputStream(InputStream inputStream, String originalName)
+            throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        long size = Files.copy(inputStream, filePath);
+        log.debug("Stored input stream with ID: {}", fileId);
+        return new StoredFile(fileId, size);
+    }
+
+    public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
+            throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        boolean success = false;
+        try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(filePath))) {
+            body.writeTo(os);
+            success = true;
+        } finally {
+            if (!success) {
+                Files.deleteIfExists(filePath);
+            }
+        }
+        log.debug("Stored StreamingResponseBody with ID: {}", fileId);
+        return fileId;
     }
 
     /**

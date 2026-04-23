@@ -1,16 +1,24 @@
-import { PDFFont, PDFPage, rgb } from 'pdf-lib';
+import { PdfiumFont, PdfiumPage, rgb } from "@app/services/pdfiumDocBuilder";
 
 interface StatusBadgeOptions {
-  page: PDFPage;
-  font: PDFFont;
-  fontBold: PDFFont;
+  page: PdfiumPage;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   text: string;
   x: number;
   y: number;
   color: ReturnType<typeof rgb>;
 }
 
-export const drawStatusBadge = ({ page, font, fontBold, text, x, y, color }: StatusBadgeOptions): number => {
+export const drawStatusBadge = ({
+  page,
+  font,
+  fontBold,
+  text,
+  x,
+  y,
+  color,
+}: StatusBadgeOptions): number => {
   const paddingX = 14;
   const paddingY = 6;
   const fontSize = 10;

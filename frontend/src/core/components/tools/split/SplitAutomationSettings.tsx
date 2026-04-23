@@ -14,11 +14,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface SplitAutomationSettingsProps {
   parameters: SplitParameters;
-  onParameterChange: <K extends keyof SplitParameters>(key: K, value: SplitParameters[K]) => void;
+  onParameterChange: <K extends keyof SplitParameters>(
+    key: K,
+    value: SplitParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const SplitAutomationSettings = ({ parameters, onParameterChange, disabled = false }: SplitAutomationSettingsProps) => {
+const SplitAutomationSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: SplitAutomationSettingsProps) => {
   const { t } = useTranslation();
 
   // Convert METHOD_OPTIONS to Select data format
@@ -38,10 +45,15 @@ const SplitAutomationSettings = ({ parameters, onParameterChange, disabled = fal
         label={t("split.steps.chooseMethod", "Choose Method")}
         placeholder={t("split.selectMethod", "Select a split method")}
         value={parameters.method}
-        onChange={(value) => onParameterChange('method', value as (SplitMethod | '') || '')}
+        onChange={(value) =>
+          onParameterChange("method", value as SplitMethod | null)
+        }
         data={methodSelectOptions}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       {/* Method-Specific Settings */}

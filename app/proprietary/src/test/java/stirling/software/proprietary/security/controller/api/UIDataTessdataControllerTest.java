@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 
+import tools.jackson.databind.json.JsonMapper;
+
 class UIDataTessdataControllerTest {
 
     @Test
@@ -27,7 +29,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn("ignored/path");
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -49,7 +51,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -77,7 +79,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -100,7 +102,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng", "fra");
@@ -139,7 +141,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -164,7 +166,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected boolean isWritableDirectory(Path dir) {
                         return false;
@@ -186,7 +188,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -217,7 +219,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -258,7 +260,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng", "fra");
@@ -282,7 +284,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -307,7 +309,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -330,7 +332,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(missingDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -352,7 +354,7 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig) {
+                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected boolean isWritableDirectory(Path dir) {
                         return false;

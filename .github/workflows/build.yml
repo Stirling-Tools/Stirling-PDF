@@ -30,16 +30,17 @@ jobs:
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      docker-base: ${{ steps.changes.outputs.docker-base }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: changes
         with:
           filters: .github/config/.files.yaml
@@ -49,32 +50,112 @@ jobs:
     permissions:
       actions: read
       security-events: write
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
-        jdk-version: [17, 21]
+        jdk-version: [21, 25]
         spring-security: [true, false]
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
-          gradle-version: 8.14
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Check Java formatting (Spotless)
+        if: matrix.jdk-version == 25 && matrix.spring-security == false
+        id: spotless-check
+        run: task backend:format:check
+        continue-on-error: true
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Comment on Java formatting failure
+        if: steps.spotless-check.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const marker = '<!-- java-formatting-check -->';
+            const body = [
+              marker,
+              '### Java Formatting Check Failed',
+              '',
+              'Your code has formatting issues. Run the following command to fix them:',
+              '',
+              '```bash',
+              'task backend:format',
+              '```',
+              '',
+              'Then commit and push the changes.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if Java formatting issues found
+        if: steps.spotless-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Java Formatting Check Failed"
+          echo "============================================"
+          echo ""
+          echo "Your code has formatting issues."
+          echo "Run the following command to fix them:"
+          echo ""
+          echo "  task backend:format"
+          echo ""
+          echo "Then commit and push the changes."
+          echo "============================================"
+          exit 1
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew build -PnoSpotless
+        run: task backend:build:ci
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -101,7 +182,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
@@ -130,26 +211,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
-          gradle-version: 8.14
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: task backend:swagger
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -157,7 +250,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: openapi-docs
           path: ./SwaggerDoc.json
@@ -166,133 +259,116 @@ jobs:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: files-changed
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-      - name: Type-check frontend
-        run: cd frontend && npm run prebuild && npm run typecheck:all
-      - name: Lint frontend
-        run: cd frontend && npm run lint
-      - name: Build frontend
-        run: cd frontend && npm run build
-      - name: Run frontend tests
-        run: cd frontend && npm run test -- --run
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Quality-check frontend
+        id: frontend-check
+        run: task frontend:check:all
+        continue-on-error: true
+      - name: Comment on frontend check failure
+        if: steps.frontend-check.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const marker = '<!-- frontend-check -->';
+            const body = [
+              marker,
+              '### Frontend Check Failed',
+              '',
+              'There are issues with your frontend code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task frontend:fix` to auto-fix what can be fixed automatically, then run `task frontend:check:all` to see what still needs fixing manually.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+      - name: Fail if frontend check failed
+        if: steps.frontend-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Frontend Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your frontend code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task frontend:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task frontend:check:all'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1
       - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: frontend-build
           path: frontend/dist/
           retention-days: 3
 
-  sync-versions:
-    if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, build]
+  playwright-e2e:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: files-changed
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
-
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          fetch-depth: 0
-
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Install Playwright (chromium only)
+        run: task frontend:test:e2e:install -- chromium
+      - name: Run E2E tests (chromium)
+        run: task frontend:test:e2e -- --project=chromium
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: 8.14
-
-      - name: Run version sync
-        run: ./gradlew syncAppVersion --build-cache
-
-      - name: Check if version files have changed
-        id: git-check
-        run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Post comment on PR
-        if: steps.git-check.outputs.changes == 'true' && github.event_name != 'workflow_dispatch'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
-          script: |
-            const { GITHUB_REPOSITORY } = process.env;
-            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
-            const issueNumber = context.issue.number;
-
-            // Find existing comment
-            const comments = await github.rest.issues.listComments({
-              owner: repoOwner,
-              repo: repoName,
-              issue_number: issueNumber
-            });
-
-            const comment = comments.data.find(c => c.body.includes("## ⚠️ Version Differences"));
-
-            const commentBody = `## ⚠️ Version Differences
-
-            The versions in the following files do not match the version defined in \`build.gradle\`.
-
-            Running \`./gradlew syncAppVersion\` or \`./gradlew build\` will automatically update these files:
-
-            \`frontend/src-tauri/tauri.conf.json\`, \`frontend/src/proprietary/testing/serverExperienceSimulations.ts\`, \`frontend/src/core/testing/serverExperienceSimulations.ts\`
-
-            Please run \`./gradlew syncAppVersion\` or \`./gradlew build\`!`;
-
-            // Only update or create comments by the action user
-            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
-
-            if (comment && comment.user.login === expectedActor) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: repoOwner,
-                repo: repoName,
-                comment_id: comment.id,
-                body: commentBody
-              });
-              console.log("Updated existing comment.");
-            } else if (!comment) {
-              // Create new comment if no existing comment is found
-              await github.rest.issues.createComment({
-                owner: repoOwner,
-                repo: repoName,
-                issue_number: issueNumber,
-                body: commentBody
-              });
-            } else {
-              console.log("Comment update attempt denied. Actor does not match.");
-            }
+          name: playwright-report-pr-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 7
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
@@ -300,26 +376,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
-          gradle-version: 8.14
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
-      - name: check the licenses for compatibility
-        run: ./gradlew checkLicense
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Check licenses for compatibility
+        run: task backend:licenses:check
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -327,7 +415,7 @@ jobs:
 
       - name: FAILED - check the licenses for compatibility
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dependencies-without-allowed-license.json
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
@@ -351,29 +439,47 @@ jobs:
     #     )
 
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      checks: write
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
       - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
-          gradle-version: 8.14
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
+      - name: Expose GitHub runtime for Buildx cache
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Install Docker Compose
         run: |
@@ -381,7 +487,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
@@ -390,6 +496,7 @@ jobs:
       - name: Pip requirements
         run: |
           pip install --require-hashes -r ./testing/cucumber/requirements.txt
+          pip install behave-html-formatter
 
       - name: Run Docker Compose Tests
         run: |
@@ -401,6 +508,34 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DOCKER_BASE_CHANGED: ${{ needs.files-changed.outputs.docker-base }}
+
+      - name: Upload Cucumber Report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: cucumber-report
+          path: testing/cucumber/report.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: docker-compose-test-reports
+          path: testing/reports/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Cucumber Test Report
+        if: always()
+        uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
+        with:
+          name: Cucumber Tests
+          path: testing/cucumber/junit/*.xml
+          reporter: java-junit
+          fail-on-error: false
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
@@ -412,18 +547,32 @@ jobs:
         include:
           - docker-rev: docker/embedded/Dockerfile
             artifact-suffix: Dockerfile
+            cache-scope: stirling-pdf-latest
           - docker-rev: docker/embedded/Dockerfile.ultra-lite
             artifact-suffix: Dockerfile.ultra-lite
+            cache-scope: stirling-pdf-ultra-lite
           - docker-rev: docker/embedded/Dockerfile.fat
             artifact-suffix: Dockerfile.fat
+            cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
       - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
       - name: Free disk space on runner
         run: |
@@ -432,19 +581,31 @@ jobs:
           docker system prune -af || true
           echo "Disk space after cleanup:" && df -h
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
-          gradle-version: 8.14
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Build application
-        run: ./gradlew build
+        run: task backend:build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -453,11 +614,27 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Build base image locally (PR base change only)
+        if: github.event_name == 'pull_request' && needs.files-changed.outputs.docker-base == 'true'
+        run: |
+          docker build -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
+
+      - name: Set base image and platform for this build
+        id: build-params
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ needs.files-changed.outputs.docker-base }}" == "true" ]; then
+            echo "base_image=stirling-pdf-base:pr-test" >> $GITHUB_OUTPUT
+            echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
+          else
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
+            echo "platforms=linux/amd64,linux/arm64/v8" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build ${{ matrix.docker-rev }}
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -466,15 +643,17 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          cache-from: type=gha,scope=${{ matrix.artifact-suffix }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.artifact-suffix }}
-          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
+          platforms: ${{ steps.build-params.outputs.platforms }}
+          build-args: |
+            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
           provenance: true
           sbom: true
 
       - name: Upload Reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: reports-docker-${{ matrix.artifact-suffix }}
           path: |

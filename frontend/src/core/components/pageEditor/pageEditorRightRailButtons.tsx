@@ -1,8 +1,11 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import PageSelectByNumberButton from '@app/components/pageEditor/PageSelectByNumberButton';
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  useRightRailButtons,
+  RightRailButtonWithAction,
+} from "@app/hooks/useRightRailButtons";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import PageSelectByNumberButton from "@app/components/pageEditor/PageSelectByNumberButton";
 
 interface PageEditorRightRailButtonsParams {
   totalPages: number;
@@ -22,7 +25,9 @@ interface PageEditorRightRailButtonsParams {
   closePdf: () => void;
 }
 
-export function usePageEditorRightRailButtons(params: PageEditorRightRailButtonsParams) {
+export function usePageEditorRightRailButtons(
+  params: PageEditorRightRailButtonsParams,
+) {
   const {
     totalPages,
     selectedPageCount,
@@ -44,43 +49,58 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
   const { t, i18n } = useTranslation();
 
   // Lift i18n labels out of memo for clarity
-  const selectAllLabel = t('rightRail.selectAll', 'Select All');
-  const deselectAllLabel = t('rightRail.deselectAll', 'Deselect All');
-  const selectByNumberLabel = t('rightRail.selectByNumber', 'Select by Page Numbers');
-  const deleteSelectedLabel = t('rightRail.deleteSelected', 'Delete Selected Pages');
-  const exportSelectedLabel = t('rightRail.exportSelected', 'Export Selected Pages');
-  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
-  const closePdfLabel = t('rightRail.closePdf', 'Close PDF');
+  const selectAllLabel = t("rightRail.selectAll", "Select All");
+  const deselectAllLabel = t("rightRail.deselectAll", "Deselect All");
+  const selectByNumberLabel = t(
+    "rightRail.selectByNumber",
+    "Select by Page Numbers",
+  );
+  const deleteSelectedLabel = t(
+    "rightRail.deleteSelected",
+    "Delete Selected Pages",
+  );
+  const exportSelectedLabel = t(
+    "rightRail.exportSelected",
+    "Export Selected Pages",
+  );
+  const saveChangesLabel = t("rightRail.saveChanges", "Save Changes");
+  const closePdfLabel = t("rightRail.closePdf", "Close PDF");
 
   const buttons = useMemo<RightRailButtonWithAction[]>(() => {
     return [
       {
-        id: 'page-select-all',
+        id: "page-select-all",
         icon: <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />,
         tooltip: selectAllLabel,
         ariaLabel: selectAllLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 10,
         disabled: totalPages === 0 || selectedPageCount === totalPages,
         visible: totalPages > 0,
         onClick: handleSelectAll,
       },
       {
-        id: 'page-deselect-all',
-        icon: <LocalIcon icon="crop-square-outline" width="1.5rem" height="1.5rem" />,
+        id: "page-deselect-all",
+        icon: (
+          <LocalIcon
+            icon="crop-square-outline"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
         tooltip: deselectAllLabel,
         ariaLabel: deselectAllLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 20,
         disabled: selectedPageCount === 0,
         visible: totalPages > 0,
         onClick: handleDeselectAll,
       },
       {
-        id: 'page-select-by-number',
+        id: "page-select-by-number",
         tooltip: selectByNumberLabel,
         ariaLabel: selectByNumberLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 30,
         disabled: totalPages === 0,
         visible: totalPages > 0,
@@ -98,44 +118,50 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
         ),
       },
       {
-        id: 'page-delete-selected',
-        icon: <LocalIcon icon="delete-outline-rounded" width="1.5rem" height="1.5rem" />,
+        id: "page-delete-selected",
+        icon: (
+          <LocalIcon
+            icon="delete-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
         tooltip: deleteSelectedLabel,
         ariaLabel: deleteSelectedLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 40,
         disabled: selectedPageCount === 0,
         visible: totalPages > 0,
         onClick: handleDelete,
       },
       {
-        id: 'page-export-selected',
+        id: "page-export-selected",
         icon: <LocalIcon icon="download" width="1.5rem" height="1.5rem" />,
         tooltip: exportSelectedLabel,
         ariaLabel: exportSelectedLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 50,
         disabled: selectedPageCount === 0 || exportLoading,
         visible: totalPages > 0,
         onClick: onExportSelected,
       },
       {
-        id: 'page-save-changes',
+        id: "page-save-changes",
         icon: <LocalIcon icon="save" width="1.5rem" height="1.5rem" />,
         tooltip: saveChangesLabel,
         ariaLabel: saveChangesLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 55,
         disabled: totalPages === 0 || exportLoading,
         visible: totalPages > 0,
         onClick: onSaveChanges,
       },
       {
-        id: 'page-close-pdf',
+        id: "page-close-pdf",
         icon: <LocalIcon icon="close-rounded" width="1.5rem" height="1.5rem" />,
         tooltip: closePdfLabel,
         ariaLabel: closePdfLabel,
-        section: 'top' as const,
+        section: "top" as const,
         order: 60,
         disabled: activeFileCount === 0,
         visible: activeFileCount > 0,

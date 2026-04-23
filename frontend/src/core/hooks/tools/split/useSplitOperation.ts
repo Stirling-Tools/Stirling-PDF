@@ -1,18 +1,31 @@
-import { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation, ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { SplitParameters, defaultParameters } from '@app/hooks/tools/split/useSplitParameters';
-import { SPLIT_METHODS } from '@app/constants/splitConstants';
-import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ToolType,
+  useToolOperation,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import {
+  SplitParameters,
+  defaultParameters,
+} from "@app/hooks/tools/split/useSplitParameters";
+import { SPLIT_METHODS } from "@app/constants/splitConstants";
+import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
 // Static functions that can be used by both the hook and automation executor
-export const buildSplitFormData = (parameters: SplitParameters, file: File): FormData => {
+export const buildSplitFormData = (
+  parameters: SplitParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
 
   formData.append("fileInput", file);
 
-  switch (parameters.method) {
+  // Use BY_PAGES as default if no method is selected
+  const method = parameters.method || SPLIT_METHODS.BY_PAGES;
+
+  switch (method) {
     case SPLIT_METHODS.BY_PAGES:
       formData.append("pageNumbers", parameters.pages);
       break;
@@ -20,8 +33,8 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       formData.append("horizontalDivisions", parameters.hDiv);
       formData.append("verticalDivisions", parameters.vDiv);
       formData.append("merge", (parameters.merge ?? false).toString());
-      formData.append("splitMode", parameters.splitMode || 'SPLIT_ALL');
-      if (parameters.splitMode === 'CUSTOM' && parameters.customPages) {
+      formData.append("splitMode", parameters.splitMode || "SPLIT_ALL");
+      if (parameters.splitMode === "CUSTOM" && parameters.customPages) {
         formData.append("pageNumbers", parameters.customPages);
       }
       break;
@@ -39,21 +52,45 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       break;
     case SPLIT_METHODS.BY_CHAPTERS:
       formData.append("bookmarkLevel", parameters.bookmarkLevel);
-      formData.append("includeMetadata", (parameters.includeMetadata ?? false).toString());
-      formData.append("allowDuplicates", (parameters.allowDuplicates ?? false).toString());
+      formData.append(
+        "includeMetadata",
+        (parameters.includeMetadata ?? false).toString(),
+      );
+      formData.append(
+        "allowDuplicates",
+        (parameters.allowDuplicates ?? false).toString(),
+      );
       break;
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
-      formData.append("duplexMode", (parameters.duplexMode ?? false).toString());
+      formData.append(
+        "duplexMode",
+        (parameters.duplexMode ?? false).toString(),
+      );
+      break;
+    case SPLIT_METHODS.BY_POSTER:
+      formData.append("pageSize", parameters.pageSize || "A4");
+      formData.append("xFactor", parameters.xFactor || "2");
+      formData.append("yFactor", parameters.yFactor || "2");
+      formData.append(
+        "rightToLeft",
+        (parameters.rightToLeft ?? false).toString(),
+      );
       break;
     default:
-      throw new Error(`Unknown split method: ${parameters.method}`);
+      throw new Error(`Unknown split method: ${method}`);
   }
 
   return formData;
 };
 
 export const getSplitEndpoint = (parameters: SplitParameters): string => {
+  // Default to BY_PAGES endpoint if no method selected yet
+  if (!parameters.method) {
+    return "/api/v1/general/split-pages";
+  }
+
   switch (parameters.method) {
+    case null:
     case SPLIT_METHODS.BY_PAGES:
       return "/api/v1/general/split-pages";
     case SPLIT_METHODS.BY_SECTIONS:
@@ -66,6 +103,8 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
       return "/api/v1/general/split-pdf-by-chapters";
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
       return "/api/v1/misc/auto-split-pdf";
+    case SPLIT_METHODS.BY_POSTER:
+      return "/api/v1/general/split-for-poster-print";
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);
   }
@@ -75,7 +114,7 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
 export const splitOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildSplitFormData,
-  operationType: 'split',
+  operationType: "split",
   endpoint: getSplitEndpoint,
   defaultParameters,
 } as const;
@@ -86,15 +125,20 @@ export const useSplitOperation = () => {
 
   // Custom response handler that extracts ZIP files
   // Can't add to exported config because it requires access to the zip code so must be part of the hook
-  const responseHandler = useCallback(async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
-    // Split operations return ZIP files with multiple PDF pages
-    return await extractZipFiles(blob);
-  }, [extractZipFiles]);
+  const responseHandler = useCallback(
+    async (blob: Blob, _originalFiles: File[]): Promise<File[]> => {
+      // Split operations return ZIP files with multiple PDF pages
+      return await extractZipFiles(blob);
+    },
+    [extractZipFiles],
+  );
 
   const splitConfig: ToolOperationConfig<SplitParameters> = {
     ...splitOperationConfig,
     responseHandler,
-    getErrorMessage: createStandardErrorHandler(t('split.error.failed', 'An error occurred while splitting the PDF.'))
+    getErrorMessage: createStandardErrorHandler(
+      t("split.error.failed", "An error occurred while splitting the PDF."),
+    ),
   };
 
   return useToolOperation(splitConfig);

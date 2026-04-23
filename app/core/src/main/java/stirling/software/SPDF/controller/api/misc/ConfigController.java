@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,19 +12,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
+import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.GeneralUtils;
 
 @ConfigApi
 @Hidden
@@ -35,6 +35,7 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final UserServiceInterface userService;
+    private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
     public ConfigController(
@@ -45,13 +46,64 @@ public class ConfigController {
                     ServerCertificateServiceInterface serverCertificateService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     UserServiceInterface userService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    stirling.software.common.service.LicenseServiceInterface licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
+    }
+
+    /**
+     * Get current license type dynamically instead of from cached bean. This ensures the frontend
+     * sees updated license status after admin changes the license key.
+     */
+    private String getCurrentLicenseType() {
+        // Use LicenseService for fresh license status if available
+        if (licenseService != null) {
+            return licenseService.getLicenseTypeName();
+        }
+
+        // Fallback to cached bean if service not available
+        if (applicationContext.containsBean("license")) {
+            return applicationContext.getBean("license", String.class);
+        }
+
+        return null;
+    }
+
+    /** Check if running Pro or higher (SERVER or ENTERPRISE license) dynamically. */
+    private Boolean isRunningProOrHigher() {
+        // Use LicenseService for fresh license status if available
+        if (licenseService != null) {
+            return licenseService.isRunningProOrHigher();
+        }
+
+        // Fallback to cached bean
+        if (applicationContext.containsBean("runningProOrHigher")) {
+            return applicationContext.getBean("runningProOrHigher", Boolean.class);
+        }
+
+        return null;
+    }
+
+    /** Check if running Enterprise edition dynamically. */
+    private Boolean isRunningEE() {
+        // Use LicenseService for fresh license status if available
+        if (licenseService != null) {
+            return licenseService.isRunningEE();
+        }
+
+        // Fallback to cached bean
+        if (applicationContext.containsBean("runningEE")) {
+            return applicationContext.getBean("runningEE", Boolean.class);
+        }
+
+        return null;
     }
 
     @GetMapping("/app-config")
@@ -71,8 +123,17 @@ public class ConfigController {
             configData.put("contextPath", appConfig.getContextPath());
             configData.put("serverPort", appConfig.getServerPort());
 
-            // Add frontendUrl for mobile scanner QR codes
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            if ((frontendUrl == null || frontendUrl.isBlank())
+                    && Boolean.parseBoolean(
+                            System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
+                String localIp = GeneralUtils.getLocalNetworkIp();
+                if (localIp != null) {
+                    String scheme =
+                            appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
+                    frontendUrl = scheme + "://" + localIp + ":" + appConfig.getServerPort();
+                }
+            }
             configData.put("frontendUrl", frontendUrl != null ? frontendUrl : "");
 
             // Add mobile scanner settings
@@ -101,6 +162,32 @@ public class ConfigController {
             configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
+            // User preference defaults
+            configData.put(
+                    "defaultHideUnavailableTools",
+                    applicationProperties.getUi().isDefaultHideUnavailableTools());
+            configData.put(
+                    "defaultHideUnavailableConversions",
+                    applicationProperties.getUi().isDefaultHideUnavailableConversions());
+
+            // Hide disabled tools settings
+            configData.put(
+                    "hideDisabledToolsGoogleDrive",
+                    applicationProperties.getUi().getHideDisabledTools().isGoogleDrive());
+            configData.put(
+                    "hideDisabledToolsMobileQRScanner",
+                    applicationProperties.getUi().getHideDisabledTools().isMobileQRScanner());
+
+            // Google Drive backend settings (only if enabled)
+            ApplicationProperties.Premium.ProFeatures.GoogleDrive googleDrive =
+                    applicationProperties.getPremium().getProFeatures().getGoogleDrive();
+            if (googleDrive.isEnabled()) {
+                configData.put("googleDriveEnabled", true);
+                configData.put("googleDriveClientId", googleDrive.getClientId());
+                configData.put("googleDriveApiKey", googleDrive.getApiKey());
+                configData.put("googleDriveAppId", googleDrive.getAppId());
+            }
+
             // Security settings
             // enableLogin requires both the config flag AND proprietary features to be loaded
             // If userService is null, proprietary module isn't loaded
@@ -126,6 +213,27 @@ public class ConfigController {
             boolean smtpEnabled = applicationProperties.getMail().isEnabled();
             boolean invitesEnabled = applicationProperties.getMail().isEnableInvites();
             configData.put("enableEmailInvites", smtpEnabled && invitesEnabled);
+
+            // Storage settings
+            boolean storageEnabled = enableLogin && applicationProperties.getStorage().isEnabled();
+            boolean sharingEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSharing().isEnabled();
+            boolean frontendUrlConfigured = frontendUrl != null && !frontendUrl.trim().isEmpty();
+            boolean shareLinksEnabled =
+                    sharingEnabled
+                            && applicationProperties.getStorage().getSharing().isLinkEnabled()
+                            && frontendUrlConfigured;
+            boolean shareEmailEnabled =
+                    sharingEnabled
+                            && applicationProperties.getStorage().getSharing().isEmailEnabled()
+                            && applicationProperties.getMail().isEnabled();
+            boolean groupSigningEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
+            configData.put("storageEnabled", storageEnabled);
+            configData.put("storageSharingEnabled", sharingEnabled);
+            configData.put("storageShareLinksEnabled", shareLinksEnabled);
+            configData.put("storageShareEmailEnabled", shareEmailEnabled);
+            configData.put("storageGroupSigningEnabled", groupSigningEnabled);
 
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
@@ -169,6 +277,13 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // Timestamp TSA settings — single source of truth for presets + admin URLs
+            ApplicationProperties.Security.Timestamp tsConfig =
+                    applicationProperties.getSecurity().getTimestamp();
+            configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
+            configData.put("timestampCustomTsaUrls", tsConfig.getCustomTsaUrls());
+            configData.put("timestampTsaPresets", TimestampController.TSA_PRESETS);
+
             // Server certificate settings
             configData.put(
                     "serverCertificateEnabled",
@@ -185,19 +300,23 @@ public class ConfigController {
                     applicationProperties.getLegal().getAccessibilityStatement());
 
             // Try to get EEAppConfig values if available
+            // Get these dynamically to reflect current license status (not cached at startup)
             try {
-                if (applicationContext.containsBean("runningProOrHigher")) {
-                    configData.put(
-                            "runningProOrHigher",
-                            applicationContext.getBean("runningProOrHigher", Boolean.class));
+                Boolean runningProOrHigher = isRunningProOrHigher();
+                if (runningProOrHigher != null) {
+                    configData.put("runningProOrHigher", runningProOrHigher);
                 }
-                if (applicationContext.containsBean("runningEE")) {
-                    configData.put(
-                            "runningEE", applicationContext.getBean("runningEE", Boolean.class));
+
+                Boolean runningEE = isRunningEE();
+                if (runningEE != null) {
+                    configData.put("runningEE", runningEE);
                 }
-                if (applicationContext.containsBean("license")) {
-                    configData.put("license", applicationContext.getBean("license", String.class));
+
+                String licenseType = getCurrentLicenseType();
+                if (licenseType != null) {
+                    configData.put("license", licenseType);
                 }
+
                 if (applicationContext.containsBean("SSOAutoLogin")) {
                     configData.put(
                             "SSOAutoLogin",
@@ -256,11 +375,13 @@ public class ConfigController {
 
     @GetMapping("/endpoints-availability")
     public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
-            @RequestParam(name = "endpoints")
-                    @Size(min = 1, max = 100, message = "Must provide between 1 and 100 endpoints")
-                    List<@NotBlank String> endpoints) {
+            @RequestParam(name = "endpoints", required = false) List<String> endpoints) {
+        Collection<String> toCheck =
+                (endpoints == null || endpoints.isEmpty())
+                        ? endpointConfiguration.getAllEndpoints()
+                        : endpoints;
         Map<String, EndpointAvailability> result = new HashMap<>();
-        for (String endpoint : endpoints) {
+        for (String endpoint : toCheck) {
             String trimmedEndpoint = endpoint.trim();
             result.put(
                     trimmedEndpoint,

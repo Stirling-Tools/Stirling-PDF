@@ -169,7 +169,10 @@ public class PdfMetadataService {
                             .getAuthor();
 
             if (userService != null) {
-                author = author.replace("username", userService.getCurrentUsername());
+                String username = userService.getCurrentUsername();
+                if (username != null) {
+                    author = author.replace("username", username);
+                }
             }
         }
         pdf.getDocumentInformation().setAuthor(author);

@@ -1,20 +1,26 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Divider, Loader, Alert } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { usePlans } from '@app/hooks/usePlans';
-import licenseService, { PlanTierGroup, mapLicenseToTier } from '@app/services/licenseService';
-import { useCheckout } from '@app/contexts/CheckoutContext';
-import { useLicense } from '@app/contexts/LicenseContext';
-import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
-import StaticPlanSection from '@app/components/shared/config/configSections/plan/StaticPlanSection';
-import LicenseKeySection from '@app/components/shared/config/configSections/plan/LicenseKeySection';
-import { alert } from '@app/components/toast';
-import { InfoBanner } from '@app/components/shared/InfoBanner';
-import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
-import { getPreferredCurrency, setCachedCurrency } from '@app/utils/currencyDetection';
-import { useLoginRequired } from '@app/hooks/useLoginRequired';
-import LoginRequiredBanner from '@core/components/shared/config/LoginRequiredBanner';
-import { isSupabaseConfigured } from '@app/services/supabaseClient';
+import React, { useState, useCallback, useEffect, useMemo } from "react";
+import { Divider, Loader, Alert } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { usePlans } from "@app/hooks/usePlans";
+import licenseService, {
+  PlanTierGroup,
+  mapLicenseToTier,
+} from "@app/services/licenseService";
+import { useCheckout } from "@app/contexts/CheckoutContext";
+import { useLicense } from "@app/contexts/LicenseContext";
+import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
+import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
+import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
+import { alert } from "@app/components/toast";
+import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
+import {
+  getPreferredCurrency,
+  setCachedCurrency,
+} from "@app/utils/currencyDetection";
+import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
+import { isSupabaseConfigured } from "@app/services/supabaseClient";
 
 const AdminPlanSection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -39,13 +45,13 @@ const AdminPlanSection: React.FC = () => {
   }, [error]);
 
   const currencyOptions = [
-    { value: 'gbp', label: 'British pound (GBP, £)' },
-    { value: 'usd', label: 'US dollar (USD, $)' },
-    { value: 'eur', label: 'Euro (EUR, €)' },
-    { value: 'cny', label: 'Chinese yuan (CNY, ¥)' },
-    { value: 'inr', label: 'Indian rupee (INR, ₹)' },
-    { value: 'brl', label: 'Brazilian real (BRL, R$)' },
-    { value: 'idr', label: 'Indonesian rupiah (IDR, Rp)' },
+    { value: "gbp", label: "British pound (GBP, £)" },
+    { value: "usd", label: "US dollar (USD, $)" },
+    { value: "eur", label: "Euro (EUR, €)" },
+    { value: "cny", label: "Chinese yuan (CNY, ¥)" },
+    { value: "inr", label: "Indian rupee (INR, ₹)" },
+    { value: "brl", label: "Brazilian real (BRL, R$)" },
+    { value: "idr", label: "Indonesian rupiah (IDR, Rp)" },
   ];
 
   const handleManageClick = useCallback(async () => {
@@ -56,28 +62,32 @@ const AdminPlanSection: React.FC = () => {
 
     try {
       // Only allow PRO or ENTERPRISE licenses to access billing portal
-      if (!licenseInfo?.licenseType || licenseInfo.licenseType === 'NORMAL') {
-        throw new Error('No valid license found. Please purchase a license before accessing the billing portal.');
+      if (!licenseInfo?.licenseType || licenseInfo.licenseType === "NORMAL") {
+        throw new Error(
+          "No valid license found. Please purchase a license before accessing the billing portal.",
+        );
       }
 
       if (!licenseInfo?.licenseKey) {
-        throw new Error('License key missing. Please contact support.');
+        throw new Error("License key missing. Please contact support.");
       }
 
       // Create billing portal session with license key
       const response = await licenseService.createBillingPortalSession(
         window.location.href,
-        licenseInfo.licenseKey
+        licenseInfo.licenseKey,
       );
 
       // Open billing portal in new tab
-      window.open(response.url, '_blank');
-    } catch (error: any) {
-      console.error('Failed to open billing portal:', error);
+      window.open(response.url, "_blank");
+    } catch (error: unknown) {
+      console.error("Failed to open billing portal:", error);
       alert({
-        alertType: 'error',
-        title: t('billing.portal.error', 'Failed to open billing portal'),
-        body: error.message || 'Please try again or contact support.',
+        alertType: "error",
+        title: t("billing.portal.error", "Failed to open billing portal"),
+        body:
+          (error instanceof Error ? error.message : undefined) ||
+          "Please try again or contact support.",
       });
     }
   }, [licenseInfo, t, validateLoginEnabled]);
@@ -96,19 +106,19 @@ const AdminPlanSection: React.FC = () => {
       }
 
       // Only allow upgrades for server and enterprise tiers
-      if (planGroup.tier === 'free') {
+      if (planGroup.tier === "free") {
         return;
       }
 
       // Prevent free tier users from directly accessing enterprise (must have server first)
       const currentTier = mapLicenseToTier(licenseInfo);
-      if (currentTier === 'free' && planGroup.tier === 'enterprise') {
+      if (currentTier === "free" && planGroup.tier === "enterprise") {
         alert({
-          alertType: 'warning',
-          title: t('plan.enterprise.requiresServer', 'Server Plan Required'),
+          alertType: "warning",
+          title: t("plan.enterprise.requiresServer", "Server Plan Required"),
           body: t(
-            'plan.enterprise.requiresServerMessage',
-            'Please upgrade to the Server plan first before upgrading to Enterprise.'
+            "plan.enterprise.requiresServerMessage",
+            "Please upgrade to the Server plan first before upgrading to Enterprise.",
           ),
         });
         return;
@@ -124,13 +134,14 @@ const AdminPlanSection: React.FC = () => {
         },
       });
     },
-    [openCheckout, currency, refetch, licenseInfo, t, validateLoginEnabled]
+    [openCheckout, currency, refetch, licenseInfo, t, validateLoginEnabled],
   );
 
-  const shouldShowLicenseWarning = licenseAlert.active && licenseAlert.audience === 'admin';
+  const shouldShowLicenseWarning =
+    licenseAlert.active && licenseAlert.audience === "admin";
   const formattedUserCount = useMemo(() => {
     if (licenseAlert.totalUsers == null) {
-      return t('plan.licenseWarning.overLimit', 'more than {{limit}}', {
+      return t("plan.licenseWarning.overLimit", "more than {{limit}}", {
         limit: licenseAlert.freeTierLimit,
       });
     }
@@ -138,9 +149,9 @@ const AdminPlanSection: React.FC = () => {
   }, [licenseAlert.totalUsers, licenseAlert.freeTierLimit, t]);
 
   const scrollToPlans = useCallback(() => {
-    const el = document.getElementById('available-plans-section');
+    const el = document.getElementById("available-plans-section");
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, []);
 
@@ -152,7 +163,14 @@ const AdminPlanSection: React.FC = () => {
   // Early returns after all hooks are called
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem 0' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "2rem 0",
+        }}
+      >
         <Loader size="lg" />
       </div>
     );
@@ -172,19 +190,22 @@ const AdminPlanSection: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       <LoginRequiredBanner show={!loginEnabled} />
 
       {shouldShowLicenseWarning && (
         <InfoBanner
           icon="warning-rounded"
           tone="warning"
-          title={t('plan.licenseWarning.title', 'Free self-hosted limit reached')}
-          message={t('plan.licenseWarning.body', {
+          title={t(
+            "plan.licenseWarning.title",
+            "Free self-hosted limit reached",
+          )}
+          message={t("plan.licenseWarning.body", {
             total: formattedUserCount,
             limit: licenseAlert.freeTierLimit,
           })}
-          buttonText={t('plan.licenseWarning.cta', 'See plans')}
+          buttonText={t("plan.licenseWarning.cta", "See plans")}
           buttonIcon="upgrade-rounded"
           onButtonClick={scrollToPlans}
           dismissible={false}

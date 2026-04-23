@@ -1,26 +1,42 @@
-import { useState, useEffect } from 'react';
-import { fileOpenService } from '@app/services/fileOpenService';
-import { listen } from '@tauri-apps/api/event';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { fileOpenService } from "@app/services/fileOpenService";
+import { listen } from "@tauri-apps/api/event";
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const openedFilePathsRef = useRef<string[]>([]);
+
+  const clearOpenedFilePaths = useCallback(() => {
+    openedFilePathsRef.current = [];
+    setOpenedFilePaths([]);
+  }, []);
+
+  const consumeOpenedFilePaths = useCallback(() => {
+    const current = openedFilePathsRef.current;
+    openedFilePathsRef.current = [];
+    setOpenedFilePaths([]);
+    return current;
+  }, []);
 
   useEffect(() => {
     // Function to read and process files from storage
     const readFilesFromStorage = async () => {
-      console.log('🔍 Reading files from storage...');
+      console.log("🔍 Reading files from storage...");
       try {
         const filePaths = await fileOpenService.getOpenedFiles();
-        console.log('🔍 fileOpenService.getOpenedFiles() returned:', filePaths);
+        console.log("🔍 fileOpenService.getOpenedFiles() returned:", filePaths);
 
         if (filePaths.length > 0) {
-          console.log(`✅ Found ${filePaths.length} file(s) in storage:`, filePaths);
+          console.log(
+            `✅ Found ${filePaths.length} file(s) in storage:`,
+            filePaths,
+          );
+          openedFilePathsRef.current = filePaths;
           setOpenedFilePaths(filePaths);
-          await fileOpenService.clearOpenedFiles();
         }
       } catch (error) {
-        console.error('❌ Failed to read files from storage:', error);
+        console.error("❌ Failed to read files from storage:", error);
       } finally {
         setLoading(false);
       }
@@ -31,10 +47,10 @@ export function useOpenedFile() {
 
     // Listen for files-changed events (when new files are added to storage)
     let unlisten: (() => void) | undefined;
-    listen('files-changed', async () => {
-      console.log('📂 files-changed event received, re-reading storage...');
+    listen("files-changed", async () => {
+      console.log("📂 files-changed event received, re-reading storage...");
       await readFilesFromStorage();
-    }).then(unlistenFn => {
+    }).then((unlistenFn) => {
       unlisten = unlistenFn;
     });
 
@@ -44,5 +60,10 @@ export function useOpenedFile() {
     };
   }, []);
 
-  return { openedFilePaths, loading };
+  return {
+    openedFilePaths,
+    loading,
+    clearOpenedFilePaths,
+    consumeOpenedFilePaths,
+  };
 }

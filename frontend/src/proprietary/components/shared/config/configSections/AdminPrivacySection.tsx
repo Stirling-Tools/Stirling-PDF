@@ -1,14 +1,16 @@
-import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Switch, Button, Stack, Paper, Text, Loader, Group } from '@mantine/core';
-import { alert } from '@app/components/toast';
-import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
-import { useRestartServer } from '@app/components/shared/config/useRestartServer';
-import { useAdminSettings } from '@app/hooks/useAdminSettings';
-import PendingBadge from '@app/components/shared/config/PendingBadge';
-import { useLoginRequired } from '@app/hooks/useLoginRequired';
-import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
-import apiClient from '@app/services/apiClient';
+import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { Switch, Stack, Paper, Text, Loader, Group } from "@mantine/core";
+import { alert } from "@app/components/toast";
+import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@app/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@app/hooks/useAdminSettings";
+import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
+import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
+import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import apiClient from "@app/services/apiClient";
 
 interface PrivacySettingsData {
   enableAnalytics?: boolean;
@@ -18,8 +20,14 @@ interface PrivacySettingsData {
 
 export default function AdminPrivacySection() {
   const { t } = useTranslation();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
+    useLoginRequired();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
   const {
     settings,
@@ -30,24 +38,28 @@ export default function AdminPrivacySection() {
     saveSettings,
     isFieldPending,
   } = useAdminSettings<PrivacySettingsData>({
-    sectionName: 'privacy',
-    fetchTransformer: async () => {
+    sectionName: "privacy",
+    fetchTransformer: async (): Promise<
+      PrivacySettingsData & { _pending?: Record<string, unknown> }
+    > => {
       const [metricsResponse, systemResponse] = await Promise.all([
-        apiClient.get('/api/v1/admin/settings/section/metrics'),
-        apiClient.get('/api/v1/admin/settings/section/system')
+        apiClient.get("/api/v1/admin/settings/section/metrics"),
+        apiClient.get("/api/v1/admin/settings/section/system"),
       ]);
 
       const metrics = metricsResponse.data;
       const system = systemResponse.data;
 
-      const result: any = {
+      const result: PrivacySettingsData & {
+        _pending?: Record<string, unknown>;
+      } = {
         enableAnalytics: system.enableAnalytics || false,
         googleVisibility: system.googlevisibility || false,
-        metricsEnabled: metrics.enabled || false
+        metricsEnabled: metrics.enabled || false,
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Record<string, unknown> = {};
       if (system._pending?.enableAnalytics !== undefined) {
         pendingBlock.enableAnalytics = system._pending.enableAnalytics;
       }
@@ -64,18 +76,18 @@ export default function AdminPrivacySection() {
 
       return result;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: PrivacySettingsData) => {
       const deltaSettings = {
-        'system.enableAnalytics': settings.enableAnalytics,
-        'system.googlevisibility': settings.googleVisibility,
-        'metrics.enabled': settings.metricsEnabled
+        "system.enableAnalytics": settings.enableAnalytics,
+        "system.googlevisibility": settings.googleVisibility,
+        "metrics.enabled": settings.metricsEnabled,
       };
 
       return {
         sectionData: {},
-        deltaSettings
+        deltaSettings,
       };
-    }
+    },
   });
 
   useEffect(() => {
@@ -84,19 +96,29 @@ export default function AdminPrivacySection() {
     }
   }, [loginEnabled, fetchSettings]);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
+
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
 
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
       alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
+        alertType: "error",
+        title: t("admin.error", "Error"),
+        body: t("admin.settings.saveError", "Failed to save settings"),
       });
     }
   };
@@ -113,99 +135,165 @@ export default function AdminPrivacySection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
-      <div>
-        <Text fw={600} size="lg">{t('admin.settings.privacy.title', 'Privacy')}</Text>
-        <Text size="sm" c="dimmed">
-          {t('admin.settings.privacy.description', 'Configure privacy and data collection settings.')}
-        </Text>
-      </div>
+        <div>
+          <Text fw={600} size="lg">
+            {t("admin.settings.privacy.title", "Privacy")}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {t(
+              "admin.settings.privacy.description",
+              "Configure privacy and data collection settings.",
+            )}
+          </Text>
+        </div>
 
-      {/* Analytics & Tracking */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.privacy.analytics', 'Analytics & Tracking')}</Text>
+        {/* Analytics & Tracking */}
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="md">
+            <Text fw={600} size="sm" mb="xs">
+              {t("admin.settings.privacy.analytics", "Analytics & Tracking")}
+            </Text>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.privacy.enableAnalytics.label', 'Enable Analytics')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.privacy.enableAnalytics.description', 'Collect anonymous usage analytics to help improve the application')}
-              </Text>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <Text fw={500} size="sm">
+                  {t(
+                    "admin.settings.privacy.enableAnalytics.label",
+                    "Enable Analytics",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    "admin.settings.privacy.enableAnalytics.description",
+                    "Collect anonymous usage analytics to help improve the application",
+                  )}
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Switch
+                  checked={settings?.enableAnalytics || false}
+                  onChange={(e) => {
+                    if (!loginEnabled) return;
+                    setSettings({
+                      ...settings,
+                      enableAnalytics: e.target.checked,
+                    });
+                  }}
+                  disabled={!loginEnabled}
+                  styles={getDisabledStyles()}
+                />
+                <PendingBadge show={isFieldPending("enableAnalytics")} />
+              </Group>
             </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings?.enableAnalytics || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return;
-                  setSettings({ ...settings, enableAnalytics: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge show={isFieldPending('enableAnalytics')} />
-            </Group>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.privacy.metricsEnabled.label', 'Enable Metrics')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.privacy.metricsEnabled.description', 'Enable collection of performance and usage metrics')}
-              </Text>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <Text fw={500} size="sm">
+                  {t(
+                    "admin.settings.privacy.metricsEnabled.label",
+                    "Enable Metrics",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    "admin.settings.privacy.metricsEnabled.description",
+                    "Enable collection of performance and usage metrics",
+                  )}
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Switch
+                  checked={settings?.metricsEnabled || false}
+                  onChange={(e) => {
+                    if (!loginEnabled) return;
+                    setSettings({
+                      ...settings,
+                      metricsEnabled: e.target.checked,
+                    });
+                  }}
+                  disabled={!loginEnabled}
+                  styles={getDisabledStyles()}
+                />
+                <PendingBadge show={isFieldPending("metricsEnabled")} />
+              </Group>
             </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings?.metricsEnabled || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return;
-                  setSettings({ ...settings, metricsEnabled: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge show={isFieldPending('metricsEnabled')} />
-            </Group>
-          </div>
-        </Stack>
-      </Paper>
+          </Stack>
+        </Paper>
 
-      {/* Search Engine Visibility */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">{t('admin.settings.privacy.searchEngine', 'Search Engine Visibility')}</Text>
+        {/* Search Engine Visibility */}
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="md">
+            <Text fw={600} size="sm" mb="xs">
+              {t(
+                "admin.settings.privacy.searchEngine",
+                "Search Engine Visibility",
+              )}
+            </Text>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.privacy.googleVisibility.label', 'Google Visibility')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.privacy.googleVisibility.description', 'Allow search engines to index this application')}
-              </Text>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <Text fw={500} size="sm">
+                  {t(
+                    "admin.settings.privacy.googleVisibility.label",
+                    "Google Visibility",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t(
+                    "admin.settings.privacy.googleVisibility.description",
+                    "Allow search engines to index this application",
+                  )}
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Switch
+                  checked={settings?.googleVisibility || false}
+                  onChange={(e) => {
+                    if (!loginEnabled) return;
+                    setSettings({
+                      ...settings,
+                      googleVisibility: e.target.checked,
+                    });
+                  }}
+                  disabled={!loginEnabled}
+                  styles={getDisabledStyles()}
+                />
+                <PendingBadge show={isFieldPending("googleVisibility")} />
+              </Group>
             </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings?.googleVisibility || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return;
-                  setSettings({ ...settings, googleVisibility: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge show={isFieldPending('googleVisibility')} />
-            </Group>
-          </div>
-        </Stack>
-      </Paper>
+          </Stack>
+        </Paper>
+      </Stack>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -213,6 +301,6 @@ export default function AdminPrivacySection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }

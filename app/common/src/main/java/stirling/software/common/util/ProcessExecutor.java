@@ -226,50 +226,54 @@ public class ProcessExecutor {
             List<String> outputLines = new ArrayList<>();
 
             Thread errorReaderThread =
-                    new Thread(
-                            () -> {
-                                try (BufferedReader errorReader =
-                                        new BufferedReader(
-                                                new InputStreamReader(
-                                                        process.getErrorStream(),
-                                                        StandardCharsets.UTF_8))) {
-                                    String line;
-                                    while ((line =
-                                                    BoundedLineReader.readLine(
-                                                            errorReader, 5_000_000))
-                                            != null) {
-                                        errorLines.add(line);
-                                        if (liveUpdates) log.info(line);
-                                    }
-                                } catch (InterruptedIOException e) {
-                                    log.warn("Error reader thread was interrupted due to timeout.");
-                                } catch (IOException e) {
-                                    log.error("exception", e);
-                                }
-                            });
+                    Thread.ofVirtual()
+                            .unstarted(
+                                    () -> {
+                                        try (BufferedReader errorReader =
+                                                new BufferedReader(
+                                                        new InputStreamReader(
+                                                                process.getErrorStream(),
+                                                                StandardCharsets.UTF_8))) {
+                                            String line;
+                                            while ((line =
+                                                            BoundedLineReader.readLine(
+                                                                    errorReader, 5_000_000))
+                                                    != null) {
+                                                errorLines.add(line);
+                                                if (liveUpdates) log.info(line);
+                                            }
+                                        } catch (InterruptedIOException e) {
+                                            log.warn(
+                                                    "Error reader thread was interrupted due to timeout.");
+                                        } catch (IOException e) {
+                                            log.error("exception", e);
+                                        }
+                                    });
 
             Thread outputReaderThread =
-                    new Thread(
-                            () -> {
-                                try (BufferedReader outputReader =
-                                        new BufferedReader(
-                                                new InputStreamReader(
-                                                        process.getInputStream(),
-                                                        StandardCharsets.UTF_8))) {
-                                    String line;
-                                    while ((line =
-                                                    BoundedLineReader.readLine(
-                                                            outputReader, 5_000_000))
-                                            != null) {
-                                        outputLines.add(line);
-                                        if (liveUpdates) log.info(line);
-                                    }
-                                } catch (InterruptedIOException e) {
-                                    log.warn("Error reader thread was interrupted due to timeout.");
-                                } catch (IOException e) {
-                                    log.error("exception", e);
-                                }
-                            });
+                    Thread.ofVirtual()
+                            .unstarted(
+                                    () -> {
+                                        try (BufferedReader outputReader =
+                                                new BufferedReader(
+                                                        new InputStreamReader(
+                                                                process.getInputStream(),
+                                                                StandardCharsets.UTF_8))) {
+                                            String line;
+                                            while ((line =
+                                                            BoundedLineReader.readLine(
+                                                                    outputReader, 5_000_000))
+                                                    != null) {
+                                                outputLines.add(line);
+                                                if (liveUpdates) log.info(line);
+                                            }
+                                        } catch (InterruptedIOException e) {
+                                            log.warn(
+                                                    "Error reader thread was interrupted due to timeout.");
+                                        } catch (IOException e) {
+                                            log.error("exception", e);
+                                        }
+                                    });
 
             errorReaderThread.start();
             outputReaderThread.start();
@@ -278,8 +282,9 @@ public class ProcessExecutor {
             boolean finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
 
             if (!finished) {
-                // Terminate the process
-                process.destroy();
+                // Kill the entire process tree (descendants first, then the process itself)
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
+                process.destroyForcibly();
                 // Interrupt the reader threads
                 errorReaderThread.interrupt();
                 outputReaderThread.interrupt();
@@ -370,7 +375,7 @@ public class ProcessExecutor {
             }
             // Match common unoconvert variants (but NOT soffice)
             String lowerBasename = basename.toLowerCase(java.util.Locale.ROOT);
-            if (lowerBasename.contains("unoconvert") || lowerBasename.equals("unoconv")) {
+            if (lowerBasename.contains("unoconvert") || "unoconv".equals(lowerBasename)) {
                 return true;
             }
         }

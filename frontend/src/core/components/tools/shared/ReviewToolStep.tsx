@@ -9,6 +9,10 @@ import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
+import { saveOperationResults } from "@app/services/operationResultsSaveService";
+import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { FileId } from "@app/types/fileContext";
+import i18n from "@app/i18n";
 
 export interface ReviewToolStepProps<TParams = unknown> {
   isVisible: boolean;
@@ -34,6 +38,8 @@ function ReviewStepContent<TParams = unknown>({
   const icons = useFileActionIcons();
   const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
+  const { actions: fileActions } = useFileActions();
+  const { selectors } = useFileState();
 
   const handleUndo = async () => {
     try {
@@ -50,10 +56,42 @@ function ReviewStepContent<TParams = unknown>({
       thumbnail: operation.thumbnails[index],
     })) || [];
 
+  const handleDownload = async () => {
+    if (!operation.downloadUrl) return;
+    try {
+      await saveOperationResults({
+        downloadUrl: operation.downloadUrl,
+        downloadFilename: operation.downloadFilename || "download",
+        downloadLocalPath: operation.downloadLocalPath,
+        outputFileIds: operation.outputFileIds,
+        getFile: (fileId) => selectors.getFile(fileId as FileId),
+        getStub: (fileId) => selectors.getStirlingFileStub(fileId as FileId),
+        markSaved: (fileId, savedPath) => {
+          const stub = selectors.getStirlingFileStub(fileId as FileId);
+          fileActions.updateStirlingFileStub(fileId as FileId, {
+            localFilePath: stub?.localFilePath ?? savedPath,
+            isDirty: false,
+          });
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[ReviewToolStep] Failed to download file:", message);
+      alert(`Failed to download file: ${message}`);
+    }
+  };
+
   // Auto-scroll to bottom when content appears
   useEffect(() => {
-    if (stepRef.current && (previewFiles.length > 0 || operation.downloadUrl || operation.errorMessage)) {
-      const scrollableContainer = stepRef.current.closest('[style*="overflow: auto"]') as HTMLElement;
+    if (
+      stepRef.current &&
+      (previewFiles.length > 0 ||
+        operation.downloadUrl ||
+        operation.errorMessage)
+    ) {
+      const scrollableContainer = stepRef.current.closest(
+        '[style*="overflow: auto"]',
+      ) as HTMLElement;
       if (scrollableContainer) {
         setTimeout(() => {
           scrollableContainer.scrollTo({
@@ -67,7 +105,10 @@ function ReviewStepContent<TParams = unknown>({
 
   return (
     <Stack gap="sm" ref={stepRef}>
-      <ErrorNotification error={operation.errorMessage} onClose={operation.clearError} />
+      <ErrorNotification
+        error={operation.errorMessage}
+        onClose={operation.clearError}
+      />
 
       {previewFiles.length > 0 && (
         <ResultsPreview
@@ -78,7 +119,12 @@ function ReviewStepContent<TParams = unknown>({
       )}
 
       {onUndo && (
-        <Tooltip content={t("undoOperationTooltip", "Click to undo the last operation and restore the original files")}>
+        <Tooltip
+          content={t(
+            "undoOperationTooltip",
+            "Click to undo the last operation and restore the original files",
+          )}
+        >
           <Button
             leftSection={<UndoIcon />}
             variant="outline"
@@ -92,13 +138,12 @@ function ReviewStepContent<TParams = unknown>({
       )}
       {operation.downloadUrl && (
         <Button
-          component="a"
-          href={operation.downloadUrl}
-          download={operation.downloadFilename}
+          data-testid="download-result-button"
           leftSection={<DownloadIcon />}
           color="blue"
           fullWidth
           mb="md"
+          onClick={handleDownload}
         >
           {terminology.download}
         </Button>
@@ -119,14 +164,12 @@ export function createReviewToolStep<TParams = unknown>(
       _excludeFromCount?: boolean;
       _noPadding?: boolean;
     },
-    children?: React.ReactNode
+    children?: React.ReactNode,
   ) => React.ReactElement,
-  props: ReviewToolStepProps<TParams>
+  props: ReviewToolStepProps<TParams>,
 ): React.ReactElement {
-  const { t } = useTranslation();
-
   return createStep(
-    t("review", "Review"),
+    i18n.t("review", "Review"),
     {
       isVisible: props.isVisible,
       isCollapsed: props.isCollapsed,
@@ -134,6 +177,10 @@ export function createReviewToolStep<TParams = unknown>(
       _excludeFromCount: true,
       _noPadding: true,
     },
-    <ReviewStepContent operation={props.operation} onFileClick={props.onFileClick} onUndo={props.onUndo} />
+    <ReviewStepContent
+      operation={props.operation}
+      onFileClick={props.onFileClick}
+      onUndo={props.onUndo}
+    />,
   );
 }

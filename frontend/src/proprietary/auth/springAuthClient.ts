@@ -7,42 +7,68 @@
  * - No email confirmation flow (auto-confirmed on registration)
  */
 
-import apiClient from '@app/services/apiClient';
-import { AxiosError } from 'axios';
-import { BASE_PATH } from '@app/constants/app';
-import { type OAuthProvider } from '@app/auth/oauthTypes';
-import { resetOAuthState } from '@app/auth/oauthStorage';
-import { clearPlatformAuthAfterSignOut } from '@app/extensions/authSessionCleanup';
-import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
+import apiClient from "@app/services/apiClient";
+import { AxiosError } from "axios";
+import { BASE_PATH } from "@app/constants/app";
+import { type OAuthProvider } from "@app/auth/oauthTypes";
+import { resetOAuthState } from "@app/auth/oauthStorage";
+import { clearPlatformAuthAfterSignOut } from "@app/extensions/authSessionCleanup";
+import {
+  getPlatformSessionUser,
+  isDesktopSaaSAuthMode,
+  refreshPlatformSession,
+  savePlatformToken,
+} from "@app/extensions/platformSessionBridge";
+import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
+
+function getHttpStatus(error: unknown): number | undefined {
+  if (error instanceof AxiosError) {
+    return error.response?.status;
+  }
+
+  if (error && typeof error === "object" && "response" in error) {
+    const response = (error as { response?: { status?: unknown } }).response;
+    if (response && typeof response.status === "number") {
+      return response.status;
+    }
+  }
+
+  return undefined;
+}
 
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
-    return error.response?.data?.error || error.response?.data?.message || error.message || fallback;
+    return (
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      fallback
+    );
   }
   return error instanceof Error ? error.message : fallback;
 }
 
-const OAUTH_REDIRECT_COOKIE = 'stirling_redirect_path';
+const OAUTH_REDIRECT_COOKIE = "stirling_redirect_path";
 const OAUTH_REDIRECT_COOKIE_MAX_AGE = 60 * 5; // 5 minutes
-const DEFAULT_REDIRECT_PATH = `${BASE_PATH || ''}/auth/callback`;
+const DEFAULT_REDIRECT_PATH = `${BASE_PATH || ""}/auth/callback`;
 
 function normalizeRedirectPath(target?: string): string {
-  if (!target || typeof target !== 'string') {
+  if (!target || typeof target !== "string") {
     return DEFAULT_REDIRECT_PATH;
   }
 
   try {
     const parsed = new URL(target, window.location.origin);
-    const path = parsed.pathname || '/';
-    const query = parsed.search || '';
+    const path = parsed.pathname || "/";
+    const query = parsed.search || "";
     return `${path}${query}`;
   } catch {
     const trimmed = target.trim();
     if (!trimmed) {
       return DEFAULT_REDIRECT_PATH;
     }
-    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   }
 }
 
@@ -64,7 +90,7 @@ export interface User {
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
   authenticationType?: string;
-  app_metadata?: Record<string, any>;
+  app_metadata?: Record<string, unknown>;
 }
 
 export interface Session {
@@ -88,18 +114,26 @@ export interface AuthResponse {
 }
 
 export type AuthChangeEvent =
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'TOKEN_REFRESHED'
-  | 'USER_UPDATED';
+  | "SIGNED_IN"
+  | "SIGNED_OUT"
+  | "TOKEN_REFRESHED"
+  | "USER_UPDATED";
 
-type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
+type AuthChangeCallback = (
+  event: AuthChangeEvent,
+  session: Session | null,
+) => void;
 
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
   private sessionCheckInterval: NodeJS.Timeout | null = null;
-  private readonly SESSION_CHECK_INTERVAL = 60000; // 1 minute
-  private readonly TOKEN_REFRESH_THRESHOLD = 300000; // 5 minutes before expiry
+
+  // Adaptive intervals - calculated based on actual JWT token lifetime
+  // Defaults for initial startup (will be recalculated on first token)
+  private sessionCheckIntervalMs = 10000; // 10 seconds default
+  private tokenRefreshThresholdMs = 30000; // 30 seconds default
+
+  private readonly DESKTOP_SAAS_REFRESH_EARLY_SECONDS = 60;
 
   constructor() {
     // Start periodic session validation
@@ -107,13 +141,114 @@ class SpringAuthClient {
   }
 
   /**
+   * Calculate optimal check interval and refresh threshold based on token lifetime.
+   * - Check interval: token lifetime / 6 (check 6 times during token life)
+   * - Refresh threshold: token lifetime / 4 (refresh when 25% remaining)
+   * - Applies min/max bounds for sanity
+   */
+  private calculateAdaptiveIntervals(token: string): void {
+    try {
+      const payload = this.decodeJwtPayload(token);
+      if (!payload) {
+        console.warn(
+          "[SpringAuth] Cannot decode token for adaptive intervals, using defaults",
+        );
+        return;
+      }
+
+      const expSeconds = typeof payload?.exp === "number" ? payload.exp : 0;
+      const iatSeconds = typeof payload?.iat === "number" ? payload.iat : 0;
+
+      if (expSeconds <= 0 || iatSeconds <= 0) {
+        console.warn(
+          "[SpringAuth] Token missing exp/iat claims, using default intervals",
+        );
+        return;
+      }
+
+      const tokenLifetimeMs = (expSeconds - iatSeconds) * 1000;
+
+      // Check interval: check 6 times during token lifetime
+      // Min: 5 seconds (for very short tokens)
+      // Max: 60 seconds (don't check too infrequently)
+      this.sessionCheckIntervalMs = Math.max(
+        5000,
+        Math.min(60000, tokenLifetimeMs / 6),
+      );
+
+      // Refresh threshold: refresh when 25% of lifetime remaining
+      // Min: 30 seconds (give buffer for refresh to complete)
+      // Max: 5 minutes (don't wait too long for long-lived tokens)
+      this.tokenRefreshThresholdMs = Math.max(
+        30000,
+        Math.min(300000, tokenLifetimeMs / 4),
+      );
+
+      console.log("[SpringAuth] 📊 Adaptive intervals calculated:", {
+        tokenLifetime: Math.floor(tokenLifetimeMs / 1000) + "s",
+        checkInterval: Math.floor(this.sessionCheckIntervalMs / 1000) + "s",
+        refreshThreshold: Math.floor(this.tokenRefreshThresholdMs / 1000) + "s",
+      });
+
+      // Restart monitoring with new interval
+      this.restartSessionMonitoring();
+    } catch (error) {
+      console.warn(
+        "[SpringAuth] Failed to calculate adaptive intervals:",
+        error,
+      );
+    }
+  }
+
+  private decodeJwtPayload(token: string): Record<string, unknown> | null {
+    const parts = token.split(".");
+    if (parts.length < 2) {
+      return null;
+    }
+
+    const base64Url = parts[1];
+    const base64 = base64Url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(base64Url.length / 4) * 4, "=");
+
+    return JSON.parse(atob(base64));
+  }
+
+  private getTokenExpiry(token: string): {
+    expiresIn: number;
+    expiresAt: number;
+  } {
+    try {
+      const payload = this.decodeJwtPayload(token);
+      if (!payload) {
+        throw new Error("Token payload missing");
+      }
+
+      const expSeconds = typeof payload?.exp === "number" ? payload.exp : 0;
+      const expiresAt =
+        expSeconds > 0 ? expSeconds * 1000 : Date.now() + 3600 * 1000;
+      const expiresIn = Math.max(
+        0,
+        Math.floor((expiresAt - Date.now()) / 1000),
+      );
+
+      return { expiresIn, expiresAt };
+    } catch {
+      // Fallback for non-JWT or malformed tokens.
+      const expiresAt = Date.now() + 3600 * 1000;
+      return { expiresIn: 3600, expiresAt };
+    }
+  }
+
+  /**
    * Helper to get CSRF token from cookie
    */
   private getCsrfToken(): string | null {
-    const cookies = document.cookie.split(';');
+    const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'XSRF-TOKEN') {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "XSRF-TOKEN") {
         return decodeURIComponent(value);
       }
     }
@@ -124,24 +259,73 @@ class SpringAuthClient {
    * Get current session
    * JWT is stored in localStorage and sent via Authorization header
    */
-  async getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
+  async getSession(): Promise<{
+    data: { session: Session | null };
+    error: AuthError | null;
+  }> {
     try {
       // Get JWT from localStorage
-      const token = localStorage.getItem('stirling_jwt');
+      let token = localStorage.getItem("stirling_jwt");
 
       if (!token) {
         // console.debug('[SpringAuth] getSession: No JWT in localStorage');
         return { data: { session: null }, error: null };
       }
 
+      if (await isDesktopSaaSAuthMode()) {
+        let tokenExpiry = this.getTokenExpiry(token);
+        if (tokenExpiry.expiresIn <= this.DESKTOP_SAAS_REFRESH_EARLY_SECONDS) {
+          const refreshed = await refreshPlatformSession();
+          if (!refreshed) {
+            localStorage.removeItem("stirling_jwt");
+            return { data: { session: null }, error: null };
+          }
+
+          const refreshedToken = localStorage.getItem("stirling_jwt");
+          if (!refreshedToken) {
+            localStorage.removeItem("stirling_jwt");
+            return { data: { session: null }, error: null };
+          }
+
+          token = refreshedToken;
+          tokenExpiry = this.getTokenExpiry(token);
+        }
+
+        if (tokenExpiry.expiresIn <= 0) {
+          localStorage.removeItem("stirling_jwt");
+          return { data: { session: null }, error: null };
+        }
+
+        const platformUser = await getPlatformSessionUser();
+
+        const session: Session = {
+          user: {
+            id:
+              platformUser?.email ||
+              platformUser?.username ||
+              "desktop-saas-user",
+            email: platformUser?.email || "",
+            username: platformUser?.username || platformUser?.email || "User",
+            role: "USER",
+          },
+          access_token: token,
+          expires_in: tokenExpiry.expiresIn,
+          expires_at: tokenExpiry.expiresAt,
+        };
+
+        return { data: { session }, error: null };
+      }
+
       // Verify with backend
       // Note: We pass the token explicitly here, overriding the interceptor's default
       // console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
-      const response = await apiClient.get('/api/v1/auth/me', {
+      const response = await apiClient.get("/api/v1/auth/me", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
+        // Session bootstrap should not trigger global 401 refresh/redirect loops.
+        skipAuthRedirect: true,
       });
 
       // console.debug('[SpringAuth] /me response status:', response.status);
@@ -149,22 +333,30 @@ class SpringAuthClient {
       // console.debug('[SpringAuth] /me response data:', data);
 
       // Create session object
+      const tokenExpiry = this.getTokenExpiry(token);
       const session: Session = {
         user: data.user,
         access_token: token,
-        expires_in: 3600,
-        expires_at: Date.now() + 3600 * 1000,
+        expires_in: tokenExpiry.expiresIn,
+        expires_at: tokenExpiry.expiresAt,
       };
 
       // console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      console.error('[SpringAuth] getSession error:', error);
+      console.error("[SpringAuth] getSession error:", error);
 
-      // If 401/403, token is invalid - clear it
-      if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {
-        localStorage.removeItem('stirling_jwt');
-        console.debug('[SpringAuth] getSession: Not authenticated');
+      // If 401/403, token is invalid - try explicit refresh
+      const status = getHttpStatus(error);
+      if (status === 401 || status === 403) {
+        // A 401 during startup can be a race with a concurrent refresh. Try one
+        // explicit refresh before treating the session as invalid.
+        const refreshResult = await this.refreshSession();
+        if (!refreshResult.error && refreshResult.data.session) {
+          return refreshResult;
+        }
+        localStorage.removeItem("stirling_jwt");
+        console.debug("[SpringAuth] getSession: Not authenticated");
         return { data: { session: null }, error: null };
       }
 
@@ -172,7 +364,7 @@ class SpringAuthClient {
       // The token is still valid, just can't verify it right now
       return {
         data: { session: null },
-        error: { message: getErrorMessage(error, 'Unknown error') },
+        error: { message: getErrorMessage(error, "Unknown error") },
       };
     }
   }
@@ -186,23 +378,33 @@ class SpringAuthClient {
     mfaCode?: string;
   }): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post('/api/v1/auth/login', {
-        username: credentials.email,
-        password: credentials.password,
-        mfaCode: credentials.mfaCode,
-      }, {
-        withCredentials: true, // Include cookies for CSRF
-      });
+      const response = await apiClient.post(
+        "/api/v1/auth/login",
+        {
+          username: credentials.email,
+          password: credentials.password,
+          mfaCode: credentials.mfaCode,
+        },
+        {
+          withCredentials: true, // Include cookies for CSRF
+        },
+      );
 
       const data = response.data;
       const token = data.session.access_token;
 
       // Store JWT in localStorage
-      localStorage.setItem('stirling_jwt', token);
+      localStorage.setItem("stirling_jwt", token);
       // console.log('[SpringAuth] JWT stored in localStorage');
 
+      // Sync token to platform-specific storage (Tauri store for desktop)
+      await savePlatformToken(token);
+
+      // Calculate adaptive monitoring intervals based on token lifetime
+      this.calculateAdaptiveIntervals(token);
+
       // Dispatch custom event for other components to react to JWT availability
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      window.dispatchEvent(new CustomEvent("jwt-available"));
 
       const session: Session = {
         user: data.user,
@@ -212,18 +414,18 @@ class SpringAuthClient {
       };
 
       // Notify listeners
-      this.notifyListeners('SIGNED_IN', session);
+      this.notifyListeners("SIGNED_IN", session);
 
       return { user: data.user, session, error: null };
     } catch (error: unknown) {
-      console.error('[SpringAuth] signInWithPassword error:', error);
+      console.error("[SpringAuth] signInWithPassword error:", error);
       if (error instanceof AxiosError) {
         const errorCode = error.response?.data?.error as string | undefined;
         const errorMessage =
           error.response?.data?.message ||
           error.response?.data?.error ||
           error.message ||
-          'Login failed';
+          "Login failed";
         return {
           user: null,
           session: null,
@@ -231,14 +433,14 @@ class SpringAuthClient {
             message: errorMessage,
             status: error.response?.status,
             code: errorCode,
-            mfaRequired: errorCode === 'mfa_required',
+            mfaRequired: errorCode === "mfa_required",
           },
         };
       }
       return {
         user: null,
         session: null,
-        error: { message: getErrorMessage(error, 'Login failed') },
+        error: { message: getErrorMessage(error, "Login failed") },
       };
     }
   }
@@ -252,12 +454,16 @@ class SpringAuthClient {
     options?: { data?: { full_name?: string }; emailRedirectTo?: string };
   }): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post('/api/v1/user/register', {
-        username: credentials.email,
-        password: credentials.password,
-      }, {
-        withCredentials: true,
-      });
+      const response = await apiClient.post(
+        "/api/v1/user/register",
+        {
+          username: credentials.email,
+          password: credentials.password,
+        },
+        {
+          withCredentials: true,
+        },
+      );
 
       const data = response.data;
 
@@ -265,11 +471,11 @@ class SpringAuthClient {
       // Return user but no session (user needs to login)
       return { user: data.user, session: null, error: null };
     } catch (error: unknown) {
-      console.error('[SpringAuth] signUp error:', error);
+      console.error("[SpringAuth] signUp error:", error);
       return {
         user: null,
         session: null,
-        error: { message: getErrorMessage(error, 'Registration failed') },
+        error: { message: getErrorMessage(error, "Registration failed") },
       };
     }
   }
@@ -283,7 +489,7 @@ class SpringAuthClient {
    */
   async signInWithOAuth(params: {
     provider: OAuthProvider;
-    options?: { redirectTo?: string; queryParams?: Record<string, any> };
+    options?: { redirectTo?: string; queryParams?: Record<string, string> };
   }): Promise<{ error: AuthError | null }> {
     try {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
@@ -302,7 +508,10 @@ class SpringAuthClient {
       return { error: null };
     } catch (error) {
       return {
-        error: { message: error instanceof Error ? error.message : 'SSO redirect failed' },
+        error: {
+          message:
+            error instanceof Error ? error.message : "SSO redirect failed",
+        },
       };
     }
   }
@@ -312,9 +521,15 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      const response = await apiClient.post('/api/v1/auth/logout', null, {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(
+          "stirling_sso_auto_login_logged_out",
+          "1",
+        );
+      }
+      const response = await apiClient.post("/api/v1/auth/logout", null, {
         headers: {
-          'X-XSRF-TOKEN': this.getCsrfToken() || '',
+          "X-XSRF-TOKEN": this.getCsrfToken() || "",
         },
         withCredentials: true,
       });
@@ -324,52 +539,62 @@ class SpringAuthClient {
       }
 
       // Clean up local storage
-      localStorage.removeItem('stirling_jwt');
+      localStorage.removeItem("stirling_jwt");
       try {
         Object.keys(localStorage)
-          .filter((key) => key.startsWith('sb-') || key.includes('supabase'))
+          .filter((key) => key.startsWith("sb-") || key.includes("supabase"))
           .forEach((key) => localStorage.removeItem(key));
 
         // Clear any cached OAuth redirect/session state
         resetOAuthState();
       } catch (err) {
-        console.warn('[SpringAuth] Failed to clear Supabase/local auth tokens', err);
+        console.warn(
+          "[SpringAuth] Failed to clear Supabase/local auth tokens",
+          err,
+        );
       }
 
       // Clear cookies that might hold refresh/session tokens
       try {
-        document.cookie.split(';').forEach(cookie => {
-          const eqPos = cookie.indexOf('=');
-          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        document.cookie.split(";").forEach((cookie) => {
+          const eqPos = cookie.indexOf("=");
+          const name =
+            eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
           if (name) {
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
           }
         });
       } catch (err) {
-        console.warn('[SpringAuth] Failed to clear cookies on sign out', err);
+        console.warn("[SpringAuth] Failed to clear cookies on sign out", err);
       }
 
       try {
         await clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
-        console.warn('[SpringAuth] Failed to run platform auth cleanup', cleanupError);
+        console.warn(
+          "[SpringAuth] Failed to run platform auth cleanup",
+          cleanupError,
+        );
       }
 
       // Notify listeners
-      this.notifyListeners('SIGNED_OUT', null);
+      this.notifyListeners("SIGNED_OUT", null);
 
       return { error: null };
     } catch (error: unknown) {
-      console.error('[SpringAuth] signOut error:', error);
+      console.error("[SpringAuth] signOut error:", error);
       // Still remove token even if backend call fails
-      localStorage.removeItem('stirling_jwt');
+      localStorage.removeItem("stirling_jwt");
       try {
         await clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
-        console.warn('[SpringAuth] Failed to run platform auth cleanup after error', cleanupError);
+        console.warn(
+          "[SpringAuth] Failed to run platform auth cleanup after error",
+          cleanupError,
+        );
       }
       return {
-        error: { message: getErrorMessage(error, 'Logout failed') },
+        error: { message: getErrorMessage(error, "Logout failed") },
       };
     }
   }
@@ -377,11 +602,44 @@ class SpringAuthClient {
   /**
    * Refresh JWT token
    */
-  async refreshSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
+  async refreshSession(): Promise<{
+    data: { session: Session | null };
+    error: AuthError | null;
+  }> {
     try {
-      const response = await apiClient.post('/api/v1/auth/refresh', null, {
+      if (await isDesktopSaaSAuthMode()) {
+        const refreshed = await refreshPlatformSession();
+        if (!refreshed) {
+          localStorage.removeItem("stirling_jwt");
+          return {
+            data: { session: null },
+            error: { message: "Token refresh failed - please log in again" },
+          };
+        }
+
+        const { data, error } = await this.getSession();
+        if (error || !data.session) {
+          return {
+            data: { session: null },
+            error: error || {
+              message: "Token refresh failed - please log in again",
+            },
+          };
+        }
+
+        // Calculate adaptive intervals for desktop SaaS mode
+        const token = localStorage.getItem("stirling_jwt");
+        if (token) {
+          this.calculateAdaptiveIntervals(token);
+        }
+
+        this.notifyListeners("TOKEN_REFRESHED", data.session);
+        return { data, error: null };
+      }
+
+      const response = await apiClient.post("/api/v1/auth/refresh", null, {
         headers: {
-          'X-XSRF-TOKEN': this.getCsrfToken() || '',
+          "X-XSRF-TOKEN": this.getCsrfToken() || "",
         },
         withCredentials: true,
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
@@ -391,10 +649,13 @@ class SpringAuthClient {
       const token = data.session.access_token;
 
       // Update local storage with new token
-      localStorage.setItem('stirling_jwt', token);
+      localStorage.setItem("stirling_jwt", token);
 
-      // Dispatch custom event for other components to react to JWT availability
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      // Sync token to platform-specific storage (Tauri store for desktop)
+      await savePlatformToken(token);
+
+      // Calculate adaptive monitoring intervals based on token lifetime
+      this.calculateAdaptiveIntervals(token);
 
       const session: Session = {
         user: data.user,
@@ -404,21 +665,27 @@ class SpringAuthClient {
       };
 
       // Notify listeners
-      this.notifyListeners('TOKEN_REFRESHED', session);
+      this.notifyListeners("TOKEN_REFRESHED", session);
+
+      console.debug("[SpringAuth] Token refreshed successfully");
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      console.error('[SpringAuth] refreshSession error:', error);
-      localStorage.removeItem('stirling_jwt');
+      console.error("[SpringAuth] refreshSession error:", error);
+      localStorage.removeItem("stirling_jwt");
 
       // Handle different error statuses
-      if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 403)) {
-        return { data: { session: null }, error: { message: 'Token refresh failed - please log in again' } };
+      const status = getHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return {
+          data: { session: null },
+          error: { message: "Token refresh failed - please log in again" },
+        };
       }
 
       return {
         data: { session: null },
-        error: { message: getErrorMessage(error, 'Token refresh failed') },
+        error: { message: getErrorMessage(error, "Token refresh failed") },
       };
     }
   }
@@ -426,7 +693,9 @@ class SpringAuthClient {
   /**
    * Listen to auth state changes
    */
-  onAuthStateChange(callback: AuthChangeCallback): { data: { subscription: { unsubscribe: () => void } } } {
+  onAuthStateChange(callback: AuthChangeCallback): {
+    data: { subscription: { unsubscribe: () => void } };
+  } {
     this.listeners.push(callback);
 
     return {
@@ -449,7 +718,10 @@ class SpringAuthClient {
         try {
           callback(event, session);
         } catch (error) {
-          console.error('[SpringAuth] Error in auth state change listener:', error);
+          console.error(
+            "[SpringAuth] Error in auth state change listener:",
+            error,
+          );
         }
       });
     }, 0);
@@ -457,27 +729,43 @@ class SpringAuthClient {
 
   private startSessionMonitoring() {
     // Periodically check session validity
-    // Since we use HttpOnly cookies, we just need to check with the server
+    // Interval is adaptive based on token lifetime (calculated when token is received)
     this.sessionCheckInterval = setInterval(async () => {
       try {
         // Try to get current session
         const { data } = await this.getSession();
 
         // If we have a session, proactively refresh if needed
-        // (The server will handle token expiry, but we can be proactive)
         if (data.session) {
           const timeUntilExpiry = (data.session.expires_at || 0) - Date.now();
 
-          // Refresh if token expires soon
-          if (timeUntilExpiry > 0 && timeUntilExpiry < this.TOKEN_REFRESH_THRESHOLD) {
-            // console.log('[SpringAuth] Proactively refreshing token');
+          // Refresh if token expires soon (threshold is adaptive)
+          if (
+            timeUntilExpiry > 0 &&
+            timeUntilExpiry < this.tokenRefreshThresholdMs
+          ) {
+            console.log(
+              "[SpringAuth] 🔄 Proactively refreshing token (expires in " +
+                Math.floor(timeUntilExpiry / 1000) +
+                "s)",
+            );
             await this.refreshSession();
           }
         }
       } catch (error) {
-        console.error('[SpringAuth] Session monitoring error:', error);
+        console.error("[SpringAuth] Session monitoring error:", error);
       }
-    }, this.SESSION_CHECK_INTERVAL);
+    }, this.sessionCheckIntervalMs);
+  }
+
+  private restartSessionMonitoring() {
+    // Stop existing interval
+    if (this.sessionCheckInterval) {
+      clearInterval(this.sessionCheckInterval);
+      this.sessionCheckInterval = null;
+    }
+    // Start with new interval
+    this.startSessionMonitoring();
   }
 
   public destroy() {
@@ -510,14 +798,14 @@ export const isUserAnonymous = (user: User | null) => {
  */
 export const createAnonymousUser = (): User => {
   return {
-    id: 'anonymous',
-    email: 'anonymous@local',
-    username: 'Anonymous User',
-    role: 'USER',
+    id: "anonymous",
+    email: "anonymous@local",
+    username: "Anonymous User",
+    role: "USER",
     enabled: true,
     is_anonymous: true,
     app_metadata: {
-      provider: 'anonymous',
+      provider: "anonymous",
     },
   };
 };
@@ -528,7 +816,7 @@ export const createAnonymousUser = (): User => {
 export const createAnonymousSession = (): Session => {
   return {
     user: createAnonymousUser(),
-    access_token: '',
+    access_token: "",
     expires_in: Number.MAX_SAFE_INTEGER,
     expires_at: Number.MAX_SAFE_INTEGER,
   };

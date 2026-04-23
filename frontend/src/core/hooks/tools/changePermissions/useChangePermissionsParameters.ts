@@ -1,5 +1,8 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface ChangePermissionsParameters extends BaseParameters {
   preventAssembly: boolean;
@@ -23,11 +26,13 @@ export const defaultParameters: ChangePermissionsParameters = {
   preventPrintingFaithful: false,
 };
 
-export type ChangePermissionsParametersHook = BaseParametersHook<ChangePermissionsParameters>;
+export type ChangePermissionsParametersHook =
+  BaseParametersHook<ChangePermissionsParameters>;
 
-export const useChangePermissionsParameters = (): ChangePermissionsParametersHook => {
-  return useBaseParameters({
-    defaultParameters,
-    endpointName: 'add-password', // Change Permissions is a fake endpoint for the Add Password tool
-  });
-};
+export const useChangePermissionsParameters =
+  (): ChangePermissionsParametersHook => {
+    return useBaseParameters({
+      defaultParameters,
+      endpointName: "add-password", // Change Permissions is a fake endpoint for the Add Password tool
+    });
+  };

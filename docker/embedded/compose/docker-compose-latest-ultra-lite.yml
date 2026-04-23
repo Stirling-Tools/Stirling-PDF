@@ -2,12 +2,15 @@ services:
   stirling-pdf:
     container_name: Stirling-PDF-Ultra-Lite
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite
+    build:
+      context: ../../../
+      dockerfile: docker/embedded/Dockerfile.ultra-lite
     deploy:
       resources:
         limits:
           memory: 1G
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"]
       interval: 5s
       timeout: 10s
       retries: 16
@@ -18,6 +21,8 @@ services:
       - ../../../stirling/latest/logs:/logs:rw
     environment:
       SECURITY_ENABLELOGIN: "false"
+      # STIRLING_JVM_PROFILE: "balanced"  # Options: balanced (G1GC, default), performance (Shenandoah)
+      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active profile
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF-Ultra-lite
       UI_HOMEDESCRIPTION: Demo site for Stirling-PDF-Ultra-lite Latest

@@ -1,83 +1,16 @@
 // frontend/src/services/httpErrorHandler.ts
-import axios from 'axios';
-import { alert } from '@app/components/toast';
-import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from '@app/services/errorUtils';
-import { showSpecialErrorToast } from '@app/services/specialErrorToasts';
-
-const FRIENDLY_FALLBACK = 'There was an error processing your request.';
-const MAX_TOAST_BODY_CHARS = 400; // avoid massive, unreadable toasts
-
-function clampText(s: string, max = MAX_TOAST_BODY_CHARS): string {
-  return s && s.length > max ? `${s.slice(0, max)}…` : s;
-}
-
-function isUnhelpfulMessage(msg: string | null | undefined): boolean {
-  const s = (msg || '').trim();
-  if (!s) return true;
-  // Common unhelpful payloads we see
-  if (s === '{}' || s === '[]') return true;
-  if (/^request failed/i.test(s)) return true;
-  if (/^network error/i.test(s)) return true;
-  if (/^[45]\d\d\b/.test(s)) return true; // "500 Server Error" etc.
-  return false;
-}
-
-function titleForStatus(status?: number): string {
-  if (!status) return 'Network error';
-  if (status >= 500) return 'Server error';
-  if (status >= 400) return 'Request error';
-  return 'Request failed';
-}
-
-function extractAxiosErrorMessage(error: any): { title: string; body: string } {
-  if (axios.isAxiosError(error)) {
-    const status = error.response?.status;
-    const _statusText = error.response?.statusText || '';
-    let parsed: any = undefined;
-    const raw = error.response?.data;
-    if (typeof raw === 'string') {
-      try { parsed = JSON.parse(raw); } catch { /* keep as string */ }
-    } else {
-      parsed = raw;
-    }
-    const extractIds = (): string[] | undefined => {
-      if (Array.isArray(parsed?.errorFileIds)) return parsed.errorFileIds as string[];
-      const rawText = typeof raw === 'string' ? raw : '';
-      const uuidMatches = rawText.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
-      return uuidMatches && uuidMatches.length > 0 ? Array.from(new Set(uuidMatches)) : undefined;
-    };
-
-    const body = ((): string => {
-      const data = parsed;
-      if (!data) return typeof raw === 'string' ? raw : '';
-      const ids = extractIds();
-      if (ids && ids.length > 0) return `Failed files: ${ids.join(', ')}`;
-      if (data?.message) return data.message as string;
-      if (typeof raw === 'string') return raw;
-      try { return JSON.stringify(data); } catch { return ''; }
-    })();
-    const ids = extractIds();
-    const title = titleForStatus(status);
-    if (ids && ids.length > 0) {
-      return { title, body: 'Process failed due to invalid/corrupted file(s)' };
-    }
-    if (status === 422) {
-      const fallbackMsg = 'Process failed due to invalid/corrupted file(s)';
-      const bodyMsg = isUnhelpfulMessage(body) ? fallbackMsg : body;
-      return { title, body: bodyMsg };
-    }
-    const bodyMsg = isUnhelpfulMessage(body) ? FRIENDLY_FALLBACK : body;
-    return { title, body: bodyMsg };
-  }
-  try {
-    const msg = (error?.message || String(error)) as string;
-    return { title: 'Network error', body: isUnhelpfulMessage(msg) ? FRIENDLY_FALLBACK : msg };
-  } catch (e) {
-    // ignore extraction errors
-    console.debug('extractAxiosErrorMessage', e);
-    return { title: 'Network error', body: FRIENDLY_FALLBACK };
-  }
-}
+import { alert } from "@app/components/toast";
+import {
+  broadcastErroredFiles,
+  extractErrorFileIds,
+  normalizeAxiosErrorData,
+} from "@app/services/errorUtils";
+import { showSpecialErrorToast } from "@app/services/specialErrorToasts";
+import { handleSaaSError } from "@app/services/saasErrorInterceptor";
+import {
+  clampText,
+  extractAxiosErrorMessage,
+} from "@app/services/httpErrorUtils";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -100,39 +33,47 @@ export async function handleHttpError(error: any): Promise<boolean> {
     const pathname = window.location.pathname;
 
     // Check if we're already on an auth page
-    const isAuthPage = pathname.includes('/login') ||
-                      pathname.includes('/signup') ||
-                      pathname.includes('/auth/') ||
-                      pathname.includes('/invite/');
+    const isAuthPage =
+      pathname.includes("/login") ||
+      pathname.includes("/signup") ||
+      pathname.includes("/auth/") ||
+      pathname.includes("/invite/");
 
     // If not on auth page, redirect to login with expired session message
     if (!isAuthPage && !skipAuthRedirect) {
-      console.debug('[httpErrorHandler] 401 detected, redirecting to login');
+      console.debug("[httpErrorHandler] 401 detected, redirecting to login");
       // Store the current location so we can redirect back after login
       const currentLocation = window.location.pathname + window.location.search;
       // Redirect to login with state (only show expired when a JWT existed)
       let hadStoredJwt = false;
       try {
-        hadStoredJwt = Boolean(localStorage.getItem('stirling_jwt'));
+        hadStoredJwt = Boolean(localStorage.getItem("stirling_jwt"));
       } catch {
         // ignore storage access failures
       }
-      const expiredPrefix = hadStoredJwt ? 'expired=true&' : '';
+      const expiredPrefix = hadStoredJwt ? "expired=true&" : "";
       window.location.href = `/login?${expiredPrefix}from=${encodeURIComponent(currentLocation)}`;
       return true; // Suppress toast since we're redirecting
     }
 
     // On auth pages, suppress the toast (user is already trying to authenticate)
-    console.debug('[httpErrorHandler] Suppressing 401 on auth page:', pathname);
+    console.debug("[httpErrorHandler] Suppressing 401 on auth page:", pathname);
     return true;
   }
+
+  if (handleSaaSError(error)) return true;
+
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);
 
   // Normalize response data ONCE, reuse for both ID extraction and special-toast matching
-  const raw = (error?.response?.data) as any;
+  const raw = error?.response?.data as any;
   let normalized: unknown = raw;
-  try { normalized = await normalizeAxiosErrorData(raw); } catch (e) { console.debug('normalizeAxiosErrorData', e); }
+  try {
+    normalized = await normalizeAxiosErrorData(raw);
+  } catch (e) {
+    console.debug("normalizeAxiosErrorData", e);
+  }
 
   // 1) If server sends structured file IDs for failures, also mark them errored in UI
   try {
@@ -141,7 +82,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
       broadcastErroredFiles(ids);
     }
   } catch (e) {
-    console.debug('extractErrorFileIds', e);
+    console.debug("extractErrorFileIds", e);
   }
 
   // 2) Generic-vs-special dedupe by endpoint
@@ -167,17 +108,21 @@ export async function handleHttpError(error: any): Promise<boolean> {
   let rawString: string | undefined;
   try {
     rawString =
-      typeof normalized === 'string'
-        ? normalized
-        : JSON.stringify(normalized);
+      typeof normalized === "string" ? normalized : JSON.stringify(normalized);
   } catch (e) {
-    console.debug('extractErrorFileIds', e);
+    console.debug("extractErrorFileIds", e);
   }
 
   const handled = showSpecialErrorToast(rawString, { status });
   if (!handled) {
     const displayBody = clampText(body);
-    alert({ alertType: 'error', title, body: displayBody, expandable: true, isPersistentPopup: false });
+    alert({
+      alertType: "error",
+      title,
+      body: displayBody,
+      expandable: true,
+      isPersistentPopup: false,
+    });
   }
 
   return false; // Error was handled with toast, continue normal rejection

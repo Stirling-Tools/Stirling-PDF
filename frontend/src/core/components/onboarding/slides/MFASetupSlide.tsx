@@ -1,10 +1,25 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Alert, Box, Button, Group, Loader, Stack, Text, TextInput } from "@mantine/core";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { QRCodeSVG } from "qrcode.react";
 import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import { accountService } from "@app/services/accountService";
-import { useAccountLogout } from '@app/extensions/accountLogout';
+import { useAccountLogout } from "@app/extensions/accountLogout";
 import { useAuth } from "@app/auth/UseSession";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BASE_PATH } from "@app/constants/app";
@@ -16,7 +31,9 @@ interface MFASetupSlideProps {
 }
 
 function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
-  const [mfaSetupData, setMfaSetupData] = useState<MfaSetupResponse | null>(null);
+  const [mfaSetupData, setMfaSetupData] = useState<MfaSetupResponse | null>(
+    null,
+  );
   const [mfaSetupCode, setMfaSetupCode] = useState("");
   const [mfaError, setMfaError] = useState("");
   const [mfaLoading, setMfaLoading] = useState(false);
@@ -27,7 +44,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   const accountLogout = useAccountLogout();
   const qrLogoSrc = `${BASE_PATH}/modern-logo/StirlingPDFLogoNoTextDark.svg`;
 
-  const normalizeMfaCode = useCallback((value: string) => value.replace(/\D/g, "").slice(0, 6), []);
+  const normalizeMfaCode = useCallback(
+    (value: string) => value.replace(/\D/g, "").slice(0, 6),
+    [],
+  );
 
   const fetchMfaSetup = useCallback(async () => {
     try {
@@ -38,7 +58,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       setMfaSetupData(data);
     } catch (err) {
       const axiosError = err as { response?: { data?: { error?: string } } };
-      setMfaError(axiosError.response?.data?.error || "Unable to start two-factor setup. Please try again.");
+      setMfaError(
+        axiosError.response?.data?.error ||
+          "Unable to start two-factor setup. Please try again.",
+      );
     } finally {
       setMfaLoading(false);
     }
@@ -59,10 +82,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   }, [fetchMfaSetup]);
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign('/login');
+    window.location.assign("/login");
   }, []);
 
-  const onLogout = useCallback(async() => {
+  const onLogout = useCallback(async () => {
     await accountLogout({ signOut, redirectToLogin });
   }, [accountLogout, redirectToLogin, signOut]);
 
@@ -84,13 +107,14 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       } catch (err) {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setMfaError(
-          axiosError.response?.data?.error || "Unable to enable two-factor authentication. Check the code and try again."
+          axiosError.response?.data?.error ||
+            "Unable to enable two-factor authentication. Check the code and try again.",
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [mfaSetupCode, onMfaSetupComplete]
+    [mfaSetupCode, onMfaSetupComplete],
   );
 
   const isReady = Boolean(mfaSetupData);
@@ -137,12 +161,17 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       <div className={styles.mfaCard}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the
-            6-digit code to finish.
+            Secure your account by linking an authenticator app. Scan the QR
+            code or enter the setup key, then confirm the 6-digit code to
+            finish.
           </Text>
 
           {mfaError && (
-            <Alert icon={<LocalIcon icon="error" width={16} height={16} />} color="red" variant="light">
+            <Alert
+              icon={<LocalIcon icon="error" width={16} height={16} />}
+              color="red"
+              variant="light"
+            >
               {mfaError}
             </Alert>
           )}
@@ -163,7 +192,9 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                 label="Authentication code"
                 placeholder="123456"
                 value={mfaSetupCode}
-                onChange={(event) => setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))}
+                onChange={(event) =>
+                  setMfaSetupCode(normalizeMfaCode(event.currentTarget.value))
+                }
                 inputMode="numeric"
                 maxLength={6}
                 minLength={6}
@@ -182,15 +213,13 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                 <Button
                   type="submit"
                   loading={submitting}
-                  disabled={!isReady || setupComplete || mfaSetupCode.length < 6}
+                  disabled={
+                    !isReady || setupComplete || mfaSetupCode.length < 6
+                  }
                 >
                   Enable MFA
                 </Button>
-                <Button
-                  type="button"
-                  variant="light"
-                  onClick={onLogout}
-                >
+                <Button type="button" variant="light" onClick={onLogout}>
                   Logout
                 </Button>
               </Group>
@@ -208,7 +237,9 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   );
 }
 
-export default function MFASetupSlide({ onMfaSetupComplete }: MFASetupSlideProps = {}): SlideConfig {
+export default function MFASetupSlide({
+  onMfaSetupComplete,
+}: MFASetupSlideProps = {}): SlideConfig {
   return {
     key: "mfa-setup-slide",
     title: "Multi-Factor Authentication Setup",

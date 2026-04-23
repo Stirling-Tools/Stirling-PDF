@@ -9,10 +9,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -38,6 +39,10 @@ import stirling.software.common.model.ApplicationProperties;
         })
 public class SPDFApplication {
 
+    private static final Pattern PORT_SUFFIX_PATTERN = Pattern.compile(".+:\\d+$");
+    private static final Pattern URL_SCHEME_PATTERN =
+            Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+    private static final Pattern TRAILING_SLASH_PATTERN = Pattern.compile("/+$");
     private static String serverPortStatic;
     private static String baseUrlStatic;
     private static String contextPathStatic;
@@ -129,7 +134,7 @@ public class SPDFApplication {
         baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
+        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -171,16 +176,19 @@ public class SPDFApplication {
     }
 
     @EventListener
-    public void onWebServerInitialized(WebServerInitializedEvent event) {
-        int actualPort = event.getWebServer().getPort();
-        serverPortStatic = String.valueOf(actualPort);
+    public void onApplicationReady(ApplicationReadyEvent event) {
+        String port =
+                event.getApplicationContext().getEnvironment().getProperty("local.server.port");
+        if (port != null) {
+            serverPortStatic = port;
+        }
         // Log the actual runtime port for Tauri to parse
-        log.info("Stirling-PDF running on port: {}", actualPort);
+        log.info("Stirling-PDF running on port: {}", serverPortStatic);
     }
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
+        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
         log.info("Navigate to {}", url);
     }
 
@@ -244,8 +252,8 @@ public class SPDFApplication {
         String trimmedBase =
                 (backendUrl == null || backendUrl.isBlank())
                         ? "http://localhost"
-                        : backendUrl.trim().replaceAll("/+$", "");
-        boolean hasScheme = trimmedBase.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+                        : TRAILING_SLASH_PATTERN.matcher(backendUrl.trim()).replaceAll("");
+        boolean hasScheme = URL_SCHEME_PATTERN.matcher(trimmedBase).matches();
         String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
         Integer parsedPort = parsePort(port);
 
@@ -298,7 +306,7 @@ public class SPDFApplication {
         if (port == null) {
             return trimmedBase;
         }
-        if (trimmedBase.matches(".+:\\d+$")) {
+        if (PORT_SUFFIX_PATTERN.matcher(trimmedBase).matches()) {
             return trimmedBase;
         }
         return trimmedBase + ":" + port;
