@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect } from "@playwright/test";
 
 /**
  * Custom test fixture that auto-dismisses the cookie consent banner
@@ -14,17 +14,17 @@ export const test = base.extend({
     // reads this cookie on init and skips the banner if consent exists.
     await page.context().addCookies([
       {
-        name: 'cc_cookie',
+        name: "cc_cookie",
         value: JSON.stringify({
-          categories: ['necessary'],
+          categories: ["necessary"],
           revision: 0,
           data: null,
           rfc_cookie: false,
           consentTimestamp: new Date().toISOString(),
-          consentId: 'playwright-test',
+          consentId: "playwright-test",
         }),
-        domain: 'localhost',
-        path: '/',
+        domain: "localhost",
+        path: "/",
       },
     ]);
 

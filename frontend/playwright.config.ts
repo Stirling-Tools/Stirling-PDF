@@ -24,10 +24,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : "50%",
 
   /* Reporter to use */
-  reporter: [
-    ["html", { open: "never" }],
-    ["list"],
-  ],
+  reporter: [["html", { open: "never" }], ["list"]],
 
   /* Global timeout per test */
   timeout: 60_000,
@@ -66,7 +63,6 @@ export default defineConfig({
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
     },
-
   ],
 
   /* Run your local dev server before starting the tests */

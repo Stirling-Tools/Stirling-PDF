@@ -1,20 +1,27 @@
-import { test, expect } from '@app/tests/helpers/test-base';
-import { loginAndSetup } from '@app/tests/helpers/login';
+import { test, expect } from "@app/tests/helpers/test-base";
+import { loginAndSetup } from "@app/tests/helpers/login";
 
-test.describe('25. Settings Toggle Behavior', () => {
+test.describe("25. Settings Toggle Behavior", () => {
   test.beforeEach(async ({ page }) => {
     await loginAndSetup(page);
   });
 
-  test.describe('25.1 Toggle Switches Persist', () => {
-    test('should persist toggle state across dialog open/close', async ({ page }) => {
+  test.describe("25.1 Toggle Switches Persist", () => {
+    test("should persist toggle state across dialog open/close", async ({
+      page,
+    }) => {
       // Open settings dialog
-      await page.getByRole('button', { name: /settings/i }).first().click();
-      const settingsDialog = page.locator('.mantine-Modal-content').first();
+      await page
+        .getByRole("button", { name: /settings/i })
+        .first()
+        .click();
+      const settingsDialog = page.locator(".mantine-Modal-content").first();
       await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
       // Step 1: Find a toggle (Switch) in the General section
-      const toggle = settingsDialog.locator('input[type="checkbox"][role="switch"], input[role="switch"]').first();
+      const toggle = settingsDialog
+        .locator('input[type="checkbox"][role="switch"], input[role="switch"]')
+        .first();
 
       if (await toggle.isVisible({ timeout: 3000 }).catch(() => false)) {
         const initialState = await toggle.isChecked();
@@ -30,7 +37,10 @@ test.describe('25. Settings Toggle Behavior', () => {
         await expect(settingsDialog).not.toBeVisible({ timeout: 5000 });
 
         // Step 4: Reopen the settings dialog
-        await page.getByRole('button', { name: /settings/i }).first().click();
+        await page
+          .getByRole("button", { name: /settings/i })
+          .first()
+          .click();
         await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
         // Step 5: Verify the toggle retains the changed state
@@ -45,20 +55,29 @@ test.describe('25. Settings Toggle Behavior', () => {
     });
   });
 
-  test.describe('25.2 Tool Picker Mode Toggle', () => {
-    test('should apply tool picker mode preference immediately', async ({ page }) => {
+  test.describe("25.2 Tool Picker Mode Toggle", () => {
+    test("should apply tool picker mode preference immediately", async ({
+      page,
+    }) => {
       // Open settings dialog
-      await page.getByRole('button', { name: /settings/i }).first().click();
-      const settingsDialog = page.locator('.mantine-Modal-content').first();
+      await page
+        .getByRole("button", { name: /settings/i })
+        .first()
+        .click();
+      const settingsDialog = page.locator(".mantine-Modal-content").first();
       await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
       // Step 1: Look for a SegmentedControl or radio-like control for tool picker mode
       // The General section uses SegmentedControl for tool panel mode (Sidebar/Fullscreen)
-      const segmentedControl = settingsDialog.locator('.mantine-SegmentedControl-root').first();
+      const segmentedControl = settingsDialog
+        .locator(".mantine-SegmentedControl-root")
+        .first();
 
-      if (await segmentedControl.isVisible({ timeout: 3000 }).catch(() => false)) {
+      if (
+        await segmentedControl.isVisible({ timeout: 3000 }).catch(() => false)
+      ) {
         // Step 2: Click a different segment option
-        const labels = segmentedControl.locator('label');
+        const labels = segmentedControl.locator("label");
         const count = await labels.count();
         if (count >= 2) {
           // Click the second option to change the mode
@@ -71,11 +90,14 @@ test.describe('25. Settings Toggle Behavior', () => {
           await expect(settingsDialog).not.toBeVisible({ timeout: 5000 });
 
           // Step 4: Reopen settings and verify the selection persisted
-          await page.getByRole('button', { name: /settings/i }).first().click();
+          await page
+            .getByRole("button", { name: /settings/i })
+            .first()
+            .click();
           await expect(settingsDialog).toBeVisible({ timeout: 5000 });
 
           // Restore by clicking the first option
-          const restoredLabels = segmentedControl.locator('label');
+          const restoredLabels = segmentedControl.locator("label");
           await restoredLabels.nth(0).click();
         }
       }

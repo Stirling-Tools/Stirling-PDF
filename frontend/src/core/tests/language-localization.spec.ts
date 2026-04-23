@@ -1,16 +1,19 @@
-import { test, expect } from '@app/tests/helpers/test-base';
-import { loginAndSetup } from '@app/tests/helpers/login';
+import { test, expect } from "@app/tests/helpers/test-base";
+import { loginAndSetup } from "@app/tests/helpers/login";
 
-test.describe('13. Language / Localization', () => {
+test.describe("13. Language / Localization", () => {
   test.beforeEach(async ({ page }) => {
     await loginAndSetup(page);
   });
 
-  test.describe('13.1 Language Switcher', () => {
-    test('should switch UI text when language is changed', async ({ page }) => {
+  test.describe("13.1 Language Switcher", () => {
+    test("should switch UI text when language is changed", async ({ page }) => {
       // Step 1: Locate the Language selector in the right rail
       // The LanguageSelector uses an ActionIcon with a "language" icon and optional title="Language"
-      const languageButton = page.locator('.right-rail-icon').filter({ has: page.locator('[class*="language"]') }).first()
+      const languageButton = page
+        .locator(".right-rail-icon")
+        .filter({ has: page.locator('[class*="language"]') })
+        .first()
         .or(page.locator('button[title="Language"]').first())
         .or(page.locator('[data-tour="right-rail-settings"] button').nth(1));
 
@@ -19,7 +22,7 @@ test.describe('13. Language / Localization', () => {
       await languageButton.click();
 
       // Step 3: Verify a language selection menu opens
-      const languageMenu = page.locator('.mantine-Menu-dropdown').first();
+      const languageMenu = page.locator(".mantine-Menu-dropdown").first();
       await expect(languageMenu).toBeVisible({ timeout: 5000 });
 
       // Step 4: Select English
@@ -28,10 +31,12 @@ test.describe('13. Language / Localization', () => {
         await englishOption.click();
 
         // Step 5: Wait for page reload (language change triggers window.location.reload())
-        await page.waitForLoadState('domcontentloaded');
+        await page.waitForLoadState("domcontentloaded");
 
         // Step 6: Verify the UI text is in English
-        await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({ timeout: 10000 });
+        await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({
+          timeout: 10000,
+        });
       }
     });
   });

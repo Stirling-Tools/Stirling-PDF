@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Page } from "@playwright/test";
 
 /**
  * Ensure the cookie consent banner doesn't appear by setting the consent cookie.
@@ -7,15 +7,15 @@ import { Page } from '@playwright/test';
 export async function ensureCookieConsent(page: Page): Promise<void> {
   await page.context().addCookies([
     {
-      name: 'cc_cookie',
+      name: "cc_cookie",
       value: JSON.stringify({
-        categories: ['necessary'],
+        categories: ["necessary"],
         revision: 0,
         data: null,
         rfc_cookie: false,
       }),
-      domain: 'localhost',
-      path: '/',
+      domain: "localhost",
+      path: "/",
     },
   ]);
 }
@@ -29,8 +29,8 @@ export async function ensureCookieConsent(page: Page): Promise<void> {
  */
 export async function skipOnboarding(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    localStorage.setItem('onboarding::completed', 'true');
-    localStorage.setItem('onboarding::tours-tooltip-shown', 'true');
+    localStorage.setItem("onboarding::completed", "true");
+    localStorage.setItem("onboarding::tours-tooltip-shown", "true");
   });
 }
 
@@ -40,26 +40,26 @@ export async function skipOnboarding(page: Page): Promise<void> {
  */
 export async function login(
   page: Page,
-  username = 'admin',
-  password = 'admin'
+  username = "admin",
+  password = "admin",
 ): Promise<void> {
   await ensureCookieConsent(page);
   // Skip onboarding before navigating so the modal never appears
   await skipOnboarding(page);
-  await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
 
   // Wait for the login form to render (React SPA may take a moment)
-  await page.locator('#email').waitFor({ state: 'visible', timeout: 15000 });
+  await page.locator("#email").waitFor({ state: "visible", timeout: 15000 });
 
   // Fill in credentials (use input IDs — labels are localized and may not match)
-  await page.locator('#email').fill(username);
-  await page.locator('#password').fill(password);
+  await page.locator("#email").fill(username);
+  await page.locator("#password").fill(password);
 
   // Click Sign In (the submit button inside the auth form)
   await page.locator('button[type="submit"]').click();
 
   // Wait for redirect to home
-  await page.waitForURL('/', { timeout: 15000 });
+  await page.waitForURL("/", { timeout: 15000 });
 }
 
 /**
@@ -72,10 +72,14 @@ export async function dismissWelcomeDialog(page: Page): Promise<void> {
 
   // Try up to 5 times to dismiss all overlays via Escape
   for (let i = 0; i < 5; i++) {
-    const hasOverlay = await page.locator('.mantine-Modal-overlay, .mantine-Overlay-root').first().isVisible().catch(() => false);
+    const hasOverlay = await page
+      .locator(".mantine-Modal-overlay, .mantine-Overlay-root")
+      .first()
+      .isVisible()
+      .catch(() => false);
     if (!hasOverlay) break;
 
-    await page.keyboard.press('Escape');
+    await page.keyboard.press("Escape");
     await page.waitForTimeout(500);
   }
 }
@@ -87,8 +91,12 @@ export async function dismissWelcomeDialog(page: Page): Promise<void> {
 export async function dismissCookieConsent(page: Page): Promise<void> {
   try {
     // Target buttons specifically inside the cookie consent container
-    const ccMain = page.locator('#cc-main');
-    const dismissBtn = ccMain.locator('button:has-text("Tidak, terima kasih"), button:has-text("No Thanks"), button:has-text("Oke"), button:has-text("OK")').first();
+    const ccMain = page.locator("#cc-main");
+    const dismissBtn = ccMain
+      .locator(
+        'button:has-text("Tidak, terima kasih"), button:has-text("No Thanks"), button:has-text("Oke"), button:has-text("OK")',
+      )
+      .first();
     if (await dismissBtn.isVisible({ timeout: 2000 })) {
       await dismissBtn.click({ force: true });
       await page.waitForTimeout(500);
@@ -103,8 +111,8 @@ export async function dismissCookieConsent(page: Page): Promise<void> {
  */
 export async function loginAndSetup(
   page: Page,
-  username = 'admin',
-  password = 'admin'
+  username = "admin",
+  password = "admin",
 ): Promise<void> {
   await login(page, username, password);
   // Cookie consent may appear on top, dismiss it first
