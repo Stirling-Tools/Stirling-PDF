@@ -76,7 +76,7 @@ from .rag import (
     RagSearchResultItem,
     RagStatusResponse,
 )
-from .smart_redaction import AnalyserOutput, ImageBoundingBox, PlannerOutput, TextRange
+from .smart_redaction import AnalyserOutput, ImageBoundingBox, PlannerOutput, RedactionStrategy, TextRange
 
 __all__ = [
     "AnalyserOutput",
@@ -127,6 +127,7 @@ __all__ = [
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
     "PlannerOutput",
+    "RedactionStrategy",
     "TextRange",
     "PdfTextSelection",
     "RagCollectionsResponse",

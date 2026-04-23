@@ -1,14 +1,24 @@
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pydantic import Field
 
 from stirling.models import ApiModel
 
 
+class RedactionStrategy(StrEnum):
+    LITERAL = "literal"
+    REGEX = "regex"
+    IMAGE_REDACT = "image_redact"
+    LLM_SCAN = "llm_scan"
+    MIXED = "mixed"
+
+
 class PlannerOutput(ApiModel):
     """Classifies the redaction strategy from the user's request alone."""
 
-    strategy: str = Field(description="One of: literal, regex, image_redact, llm_scan, mixed")
+    strategy: RedactionStrategy
     literal_strings: list[str] = Field(
         default_factory=list,
         description="Exact strings to redact (LITERAL strategy).",

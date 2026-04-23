@@ -25,6 +25,7 @@ from stirling.contracts import (
     OrchestratorRequest,
     PdfContentType,
     PlannerOutput,
+    RedactionStrategy,
     SupportedCapability,
     ToolOperationStep,
 )
@@ -187,7 +188,8 @@ class SmartRedactionWorkflow:
         if extracted_text is None:
             planner_output = await self.plan(request.user_message)
 
-            if planner_output.strategy in ("literal", "regex", "image_redact"):
+            no_scan_needed = {RedactionStrategy.LITERAL, RedactionStrategy.REGEX, RedactionStrategy.IMAGE_REDACT}
+            if planner_output.strategy in no_scan_needed:
                 plan = self.build_immediate_plan(planner_output, request.user_message)
                 if plan is not None:
                     return plan
@@ -247,7 +249,7 @@ class SmartRedactionWorkflow:
 
     def build_immediate_plan(self, planner_output: PlannerOutput, user_message: str) -> EditPlanResponse | None:
         """Build an EditPlanResponse for LITERAL/REGEX/IMAGE_REDACT (no document scan needed)."""
-        if planner_output.strategy == "image_redact":
+        if planner_output.strategy == RedactionStrategy.IMAGE_REDACT:
             page_nums = planner_output.image_page_numbers or []
             image_pages_str = ",".join(str(p) for p in page_nums) if page_nums else None
             return EditPlanResponse(
