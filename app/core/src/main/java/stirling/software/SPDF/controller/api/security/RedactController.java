@@ -40,13 +40,13 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -116,8 +116,8 @@ public class RedactController {
                     "This endpoint redacts content from a PDF file based on manually specified areas. "
                             + "Users can specify areas to redact and optionally convert the PDF to an image. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> redactPDF(
-            @ModelAttribute ManualRedactPdfRequest request) throws IOException {
+    public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+            throws IOException {
 
         MultipartFile file = request.getFileInput();
         List<RedactionArea> redactionAreas = request.getRedactions();
@@ -550,8 +550,7 @@ public class RedactController {
                     "This endpoint automatically redacts text from a PDF file based on specified patterns. "
                             + "Users can provide text patterns to redact, with options for regex and whole word matching. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> redactPdf(
-            @ModelAttribute RedactPdfRequest request) {
+    public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
         String[] listOfText = request.getListOfText().split("\n");
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());

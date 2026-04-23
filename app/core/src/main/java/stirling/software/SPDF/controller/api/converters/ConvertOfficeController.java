@@ -13,11 +13,11 @@ import java.util.Locale;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -206,8 +206,8 @@ public class ConvertOfficeController {
             description =
                     "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> processFileToPDF(
-            @ModelAttribute GeneralFile generalFile) throws Exception {
+    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
+            throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
@@ -223,7 +223,7 @@ public class ConvertOfficeController {
             String filename =
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
             tempOut = null;
             return response;
