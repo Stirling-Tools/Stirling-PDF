@@ -17,10 +17,13 @@ class IngestDocumentRequest(ApiModel):
     stored content with whatever is provided. To add a content type later, call again
     with all content types the document should have (incremental-add-without-replace
     will be a separate endpoint if/when we need it).
+
+    ``source`` is a human-readable label (typically the original filename) that flows
+    into chunk metadata so search results are readable when document_id is a hash.
     """
 
     document_id: str = Field(min_length=1)
-    source: str | None = None
+    source: str = Field(min_length=1)
     page_text: list[IngestedPageText] | None = None
 
 

@@ -56,11 +56,7 @@ class StubSummaryAgent(SummaryAgent):
         super().__init__(runtime)
         self._response = response
 
-    async def _run_summary_agent(
-        self,
-        request: SummaryRequest,
-        collections: list[str],
-    ) -> SummaryTerminalResponse:
+    async def _run_summary_agent(self, request: SummaryRequest) -> SummaryTerminalResponse:
         return self._response
 
 

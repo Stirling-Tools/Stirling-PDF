@@ -11,7 +11,7 @@ from stirling.rag import Document, RagService, SqliteVecStore
 
 
 class StubEmbedder:
-    """Deterministic embeddings for route tests — no network, no provider needed."""
+    """Deterministic embeddings for route tests: no network, no provider needed."""
 
     def __init__(self, dim: int = 8) -> None:
         self._dim = dim
@@ -91,6 +91,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
         "/api/v1/rag/documents",
         json={
             "documentId": "replace-me",
+            "source": "replace-me.pdf",
             "pageText": [{"pageNumber": 1, "text": "Original content that existed before."}],
         },
     )
@@ -99,6 +100,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
         "/api/v1/rag/documents",
         json={
             "documentId": "replace-me",
+            "source": "replace-me.pdf",
             "pageText": [{"pageNumber": 1, "text": "New content that replaced the old."}],
         },
     )
@@ -115,6 +117,7 @@ def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
         "/api/v1/rag/documents",
         json={
             "documentId": "mixed",
+            "source": "mixed.pdf",
             "pageText": [
                 {"pageNumber": 1, "text": "  "},
                 {"pageNumber": 2, "text": "Real content on page 2."},
@@ -126,7 +129,7 @@ def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
 
 
 def test_ingest_document_with_no_content_returns_zero(client: TestClient) -> None:
-    response = client.post("/api/v1/rag/documents", json={"documentId": "empty"})
+    response = client.post("/api/v1/rag/documents", json={"documentId": "empty", "source": "empty.pdf"})
     assert response.status_code == 200
     assert response.json()["chunksIndexed"] == 0
 
@@ -134,7 +137,23 @@ def test_ingest_document_with_no_content_returns_zero(client: TestClient) -> Non
 def test_ingest_document_rejects_empty_id(client: TestClient) -> None:
     response = client.post(
         "/api/v1/rag/documents",
-        json={"documentId": "", "pageText": [{"pageNumber": 1, "text": "something"}]},
+        json={"documentId": "", "source": "x.pdf", "pageText": [{"pageNumber": 1, "text": "something"}]},
+    )
+    assert response.status_code == 422
+
+
+def test_ingest_document_rejects_missing_source(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/rag/documents",
+        json={"documentId": "doc-1", "pageText": [{"pageNumber": 1, "text": "something"}]},
+    )
+    assert response.status_code == 422
+
+
+def test_ingest_document_rejects_empty_source(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/rag/documents",
+        json={"documentId": "doc-1", "source": "", "pageText": [{"pageNumber": 1, "text": "something"}]},
     )
     assert response.status_code == 422
 
@@ -142,7 +161,11 @@ def test_ingest_document_rejects_empty_id(client: TestClient) -> None:
 def test_ingest_document_rejects_non_positive_page_number(client: TestClient) -> None:
     response = client.post(
         "/api/v1/rag/documents",
-        json={"documentId": "bad-page", "pageText": [{"pageNumber": 0, "text": "something"}]},
+        json={
+            "documentId": "bad-page",
+            "source": "bad-page.pdf",
+            "pageText": [{"pageNumber": 0, "text": "something"}],
+        },
     )
     assert response.status_code == 422
 
@@ -153,7 +176,11 @@ def test_ingest_document_rejects_non_positive_page_number(client: TestClient) ->
 def test_delete_document_reports_deleted_true_when_existed(client: TestClient) -> None:
     client.post(
         "/api/v1/rag/documents",
-        json={"documentId": "to-delete", "pageText": [{"pageNumber": 1, "text": "Text."}]},
+        json={
+            "documentId": "to-delete",
+            "source": "to-delete.pdf",
+            "pageText": [{"pageNumber": 1, "text": "Text."}],
+        },
     )
     response = client.delete("/api/v1/rag/documents/to-delete")
     assert response.status_code == 200
@@ -170,7 +197,7 @@ def test_delete_document_is_idempotent(client: TestClient) -> None:
 async def test_delete_document_removes_collection(client: TestClient, service: RagService) -> None:
     client.post(
         "/api/v1/rag/documents",
-        json={"documentId": "gone", "pageText": [{"pageNumber": 1, "text": "Text."}]},
+        json={"documentId": "gone", "source": "gone.pdf", "pageText": [{"pageNumber": 1, "text": "Text."}]},
     )
     assert await service.has_collection("gone")
     client.delete("/api/v1/rag/documents/gone")
