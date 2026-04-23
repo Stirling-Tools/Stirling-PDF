@@ -16,7 +16,13 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "docker"
-    directory: "/" # Location of Dockerfile
+    directories: 
+      - "/" # Location of Dockerfile
+      - "/docker/backend"
+      - "/docker/embedded"
+      - "/docker/frontend"
+      - "/docker/base"
+      - "/docker/engine"
     schedule:
       interval: "weekly"
     rebase-strategy: "auto"
@@ -28,37 +34,18 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: npm
-    directory: /devTools
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: docker
-    directory: /docker/backend
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: docker
-    directory: /docker/embedded
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: docker
-    directory: /docker/frontend
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: npm
-    directory: /frontend
+    directories:
+      - /devTools
+      - /frontend
     schedule:
       interval: "weekly"
     rebase-strategy: "auto"
 
   - package-ecosystem: cargo
-    directory: /frontend/src-tauri
+    directories:
+      - /frontend/src-tauri
+      - /frontend/src-tauri/thumbnail-handler
+      - /frontend/src-tauri/provisioner
     schedule:
       interval: "weekly"
     rebase-strategy: "auto"
@@ -68,8 +55,3 @@ updates:
     schedule:
       interval: "weekly"
     rebase-strategy: "auto"
-
-  - package-ecosystem: cargo
-    directory: /frontend/src-tauri/provisioner
-    schedule:
-      interval: daily
