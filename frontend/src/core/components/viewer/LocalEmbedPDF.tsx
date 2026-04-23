@@ -174,9 +174,9 @@ export function LocalEmbedPDF({
     } else if (url) {
       setPdfUrl(url);
     }
-    // `url` omitted intentionally — file presence takes priority; URL changes trigger
-    // remount via fileStableKey anyway.
-  }, [fileStableKey]);
+    // When file is present, use the stable key to avoid blob URL churn from FileContext
+    // re-renders. When only url is provided, depend on url directly so changes are picked up.
+  }, [file ? fileStableKey : url]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {

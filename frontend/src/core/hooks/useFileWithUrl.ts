@@ -36,7 +36,7 @@ export function useFileWithUrl(
     }
     // When stableKey is provided, only recreate when the file identity changes — not
     // when getFiles() returns a new object reference for the same underlying file.
-  }, [stableKey !== undefined ? stableKey : file]);
+  }, [stableKey != null ? stableKey : file]);
 
   useEffect(() => {
     const url = result?.url;
