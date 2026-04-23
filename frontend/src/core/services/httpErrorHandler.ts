@@ -16,6 +16,35 @@ import {
 const recentSpecialByEndpoint: Record<string, number> = {};
 const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate after special toast
 
+// Mirrors the key in proprietary/auth/springAuthClient.ts; AuthCallback consumes it.
+const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
+
+function isSafePostLoginPath(path: string): boolean {
+  if (
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.startsWith("/\\")
+  ) {
+    return false;
+  }
+  const lowered = path.toLowerCase();
+  return (
+    !lowered.startsWith("/login") &&
+    !lowered.startsWith("/auth/") &&
+    !lowered.startsWith("/oauth2") &&
+    !lowered.startsWith("/saml2")
+  );
+}
+
+function stashPostLoginRedirect(path: string): void {
+  try {
+    if (typeof window === "undefined" || !isSafePostLoginPath(path)) return;
+    window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
+  } catch {
+    // sessionStorage unavailable (private mode) — fail open
+  }
+}
+
 /**
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise
@@ -42,9 +71,10 @@ export async function handleHttpError(error: any): Promise<boolean> {
     // If not on auth page, redirect to login with expired session message
     if (!isAuthPage && !skipAuthRedirect) {
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
-      // Store the current location so we can redirect back after login
+      // Spring 302-strips the ?from= query from /login, so stash the return
+      // path in sessionStorage (AuthCallback reads it after SSO round-trip).
       const currentLocation = window.location.pathname + window.location.search;
-      // Redirect to login with state (only show expired when a JWT existed)
+      stashPostLoginRedirect(currentLocation);
       let hadStoredJwt = false;
       try {
         hadStoredJwt = Boolean(localStorage.getItem("stirling_jwt"));
