@@ -36,6 +36,23 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 
 const SIDEBAR_WIDTH = "18rem";
 
+/** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
+const STANDALONE_COMMENT_SUBTYPES = new Set([
+  PdfAnnotationSubtype.TEXT,
+  PdfAnnotationSubtype.FREETEXT,
+  PdfAnnotationSubtype.CARET,
+]);
+
+function isStandaloneCommentType(type: number | undefined): boolean {
+  return (
+    type !== undefined &&
+    STANDALONE_COMMENT_SUBTYPES.has(type as PdfAnnotationSubtype)
+  );
+}
+
+const ANNOTATE_PANEL_ID = "annotate" as const;
+const TEXT_COMMENT_TOOL_ID = "textComment" as const;
+
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
 function formatCommentDate(obj: any): string {
   const raw =
@@ -150,19 +167,16 @@ function isCommentAnnotation(ann: any): boolean {
     return true;
   // Any annotation explicitly added to comments via the "Add comment" button
   if (ann?.customData?.isComment === true) return true;
-  // CARET (type 14) = insertText/replaceText; TEXT (type 1) = textComment
-  if (!toolId && (ann?.type === 14 || ann?.type === 1)) return true;
-  // Non-comment-type annotations (ink, shapes, markup, stamp…) whose contents field is
-  // non-empty: customData (including isComment and toolId) is NOT persisted to PDF, but
-  // `contents` is a standard PDF field and survives save/reload. Exclude TEXT (1),
-  // FreeText (3), and CARET (14) which use `contents` for their own annotation text.
-  // Exclude replies. Do NOT require toolId — it is absent after reload.
   const type = ann?.type;
+  // Standalone comment types (TEXT, FREETEXT, CARET) without a toolId are always comments
+  if (!toolId && isStandaloneCommentType(type)) return true;
+  // Non-standalone annotations with non-empty contents: customData (including isComment and
+  // toolId) is NOT persisted to PDF, but `contents` is a standard PDF field and survives
+  // save/reload. Exclude standalone comment types (TEXT, FREETEXT, CARET) which use
+  // `contents` for their own annotation text. Exclude replies.
   if (
     type !== undefined &&
-    type !== 1 &&
-    type !== 3 &&
-    type !== 14 &&
+    !isStandaloneCommentType(type) &&
     !ann?.inReplyToId &&
     (ann?.contents ?? "").trim().length > 0
   )
@@ -407,8 +421,7 @@ export function CommentsSidebar({
 
   const isLinkedAnnotation = (ann: any) => {
     const type = ann?.type;
-    // TEXT (1), FreeText (3), and CARET (14) are standalone comment annotations, not linked ones
-    if (type === 1 || type === 3 || type === 14) return false;
+    if (isStandaloneCommentType(type)) return false;
     if (ann?.inReplyToId) return false;
     return (
       ann?.customData?.isComment === true ||
@@ -508,9 +521,9 @@ export function CommentsSidebar({
   );
 
   const handleAddComment = useCallback(() => {
-    handleToolSelectForced("annotate");
+    handleToolSelectForced(ANNOTATE_PANEL_ID);
     requestAnimationFrame(() => {
-      activateAnnotationToolRef.current?.("textComment");
+      activateAnnotationToolRef.current?.(TEXT_COMMENT_TOOL_ID);
     });
   }, [handleToolSelectForced, activateAnnotationToolRef]);
 

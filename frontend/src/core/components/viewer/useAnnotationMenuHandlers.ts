@@ -27,6 +27,32 @@ export type AnnotationType =
   | "stamp"
   | "unknown";
 
+const TEXT_MARKUP_SUBTYPES = [
+  PdfAnnotationSubtype.HIGHLIGHT,
+  PdfAnnotationSubtype.UNDERLINE,
+  PdfAnnotationSubtype.SQUIGGLY,
+  PdfAnnotationSubtype.STRIKEOUT,
+];
+
+const SHAPE_SUBTYPES = [
+  PdfAnnotationSubtype.SQUARE,
+  PdfAnnotationSubtype.CIRCLE,
+  PdfAnnotationSubtype.POLYGON,
+];
+
+const LINE_SUBTYPES = [
+  PdfAnnotationSubtype.LINE,
+  PdfAnnotationSubtype.POLYLINE,
+];
+
+const STROKE_COLOR_SUBTYPES = [
+  PdfAnnotationSubtype.LINE,
+  PdfAnnotationSubtype.SQUARE,
+  PdfAnnotationSubtype.CIRCLE,
+  PdfAnnotationSubtype.POLYGON,
+  PdfAnnotationSubtype.POLYLINE,
+];
+
 export type FirstLinkTarget =
   | { type: "uri"; uri: string }
   | { type: "goto"; pageIndex: number };
@@ -134,22 +160,36 @@ export function useAnnotationMenuHandlers({
     const toolId = (annotation?.object as AnnotationObject | undefined)
       ?.customData?.toolId;
 
-    if (type !== undefined && [9, 10, 11, 12].includes(type))
-      return "textMarkup";
-    if (type === 15)
-      return toolId === "inkHighlighter" ? "inkHighlighter" : "ink";
-    // Type 1 (TEXT) = textComment; type 14 (CARET) = insertText/replaceText.
-    // After save/reload customData.toolId is absent, so fall back to type alone.
-    if (type === 1 && (!toolId || toolId === "textComment")) return "comment";
     if (
-      type === 14 &&
+      type !== undefined &&
+      TEXT_MARKUP_SUBTYPES.includes(type as PdfAnnotationSubtype)
+    )
+      return "textMarkup";
+    if (type === PdfAnnotationSubtype.INK)
+      return toolId === "inkHighlighter" ? "inkHighlighter" : "ink";
+    // TEXT and CARET fall back to type alone after save/reload (customData.toolId is absent).
+    if (
+      type === PdfAnnotationSubtype.TEXT &&
+      (!toolId || toolId === "textComment")
+    )
+      return "comment";
+    if (
+      type === PdfAnnotationSubtype.CARET &&
       (!toolId || toolId === "insertText" || toolId === "replaceText")
     )
       return "comment";
-    if (type === 3) return "note";
-    if (type !== undefined && [5, 6, 7].includes(type)) return "shape";
-    if (type !== undefined && [4, 8].includes(type)) return "line";
-    if (type === 13) return "stamp";
+    if (type === PdfAnnotationSubtype.FREETEXT) return "note";
+    if (
+      type !== undefined &&
+      SHAPE_SUBTYPES.includes(type as PdfAnnotationSubtype)
+    )
+      return "shape";
+    if (
+      type !== undefined &&
+      LINE_SUBTYPES.includes(type as PdfAnnotationSubtype)
+    )
+      return "line";
+    if (type === PdfAnnotationSubtype.STAMP) return "stamp";
     return "unknown";
   }, [annotation]);
 
@@ -179,8 +219,12 @@ export function useAnnotationMenuHandlers({
   const currentColor = (() => {
     if (!obj) return "#000000";
     const type = obj.type;
-    if (type === 3) return obj.textColor || obj.color || "#000000";
-    if (type !== undefined && [4, 5, 6, 7, 8].includes(type))
+    if (type === PdfAnnotationSubtype.FREETEXT)
+      return obj.textColor || obj.color || "#000000";
+    if (
+      type !== undefined &&
+      STROKE_COLOR_SUBTYPES.includes(type as PdfAnnotationSubtype)
+    )
       return obj.strokeColor || obj.color || "#000000";
     return obj.color || obj.strokeColor || "#000000";
   })();
@@ -252,17 +296,23 @@ export function useAnnotationMenuHandlers({
         patch.contents = obj?.contents ?? "";
       } else {
         patch.color = color;
-        if (type !== undefined && [9, 10, 11, 12].includes(type)) {
+        if (
+          type !== undefined &&
+          TEXT_MARKUP_SUBTYPES.includes(type as PdfAnnotationSubtype)
+        ) {
           patch.strokeColor = color;
           patch.fillColor = color;
           patch.opacity = obj?.opacity ?? 1;
         }
-        if (type !== undefined && [4, 8].includes(type)) {
+        if (
+          type !== undefined &&
+          LINE_SUBTYPES.includes(type as PdfAnnotationSubtype)
+        ) {
           patch.strokeColor = color;
           patch.strokeWidth = obj?.strokeWidth ?? obj?.lineWidth ?? 2;
           patch.lineWidth = obj?.lineWidth ?? obj?.strokeWidth ?? 2;
         }
-        if (type === 15) {
+        if (type === PdfAnnotationSubtype.INK) {
           patch.strokeColor = color;
           patch.strokeWidth = obj?.strokeWidth ?? obj?.thickness ?? 2;
           patch.opacity = obj?.opacity ?? 1;

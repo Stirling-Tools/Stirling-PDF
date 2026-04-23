@@ -69,7 +69,7 @@ function AnnotationSelectionMenuInner({
   // stale after updateAnnotation() is called while the annotation is selected.
   // Also checks non-empty contents: customData.isComment is not persisted to PDF, but
   // contents is a standard PDF field and survives save/reload.
-  const freshIsInSidebar = useMemo(() => {
+  const isInSidebar = useMemo(() => {
     const annId = (annotation?.object as AnnotationObject | undefined)?.id;
     if (!annId) return false;
     for (const tracked of Object.values(state.byUid)) {
@@ -110,7 +110,7 @@ function AnnotationSelectionMenuInner({
     const isComment =
       annType === PdfAnnotationSubtype.TEXT ||
       annType === PdfAnnotationSubtype.CARET ||
-      freshIsInSidebar;
+      isInSidebar;
     if (!isComment) return;
     requestCommentFocus(
       documentId,
@@ -118,7 +118,7 @@ function AnnotationSelectionMenuInner({
       annId,
       (annObj?.contents ?? "").trim().length > 0,
     );
-  }, [selected, annotation?.object, freshIsInSidebar]);
+  }, [selected, annotation?.object, isInSidebar]);
 
   // Click outside to deselect
   useEffect(() => {
@@ -205,7 +205,7 @@ function AnnotationSelectionMenuInner({
       <Group gap="sm" wrap="nowrap" justify="center">
         <AnnotationTypeButtons
           {...handlers}
-          isInSidebar={freshIsInSidebar}
+          isInSidebar={isInSidebar}
           annotation={annotation}
           documentId={documentId}
           pageIndex={pageIndex}
