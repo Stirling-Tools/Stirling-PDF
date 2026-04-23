@@ -130,8 +130,9 @@ def _discrepancy_one_liner(d: Discrepancy) -> str:
 # Verdict → CommentSpec list (pdf_review path)
 # ---------------------------------------------------------------------------
 
-# Right-margin anchor placement — same layout rules the Java projector used
-# before we moved this into Python. A4/Letter portrait assumed.
+# Fallback right-margin placement — used only when the discrepancy has no
+# usable anchor text (empty stated/context) or when the server fails to
+# locate the anchor on the page. A4/Letter portrait assumed.
 _ICON_X = 520.0
 _ICON_Y_TOP = 770.0
 _ICON_Y_STRIDE = 28.0
@@ -143,9 +144,9 @@ _DEFAULT_AUTHOR = "Stirling Math Auditor"
 def verdict_to_comment_specs(verdict: Verdict) -> list[CommentSpec]:
     """Project the verdict's discrepancies onto the source PDF as sticky-note specs.
 
-    Each discrepancy becomes one sticky note at a fixed right-margin position
-    on its page; multiple notes on the same page stack vertically so they
-    don't overlap.
+    Each discrepancy becomes one sticky note anchored at the line that contains the
+    discrepancy's ``stated`` value (or ``context`` when no stated value is available).
+    Falls back to a stacked right-margin position when no anchor text is usable.
     """
     specs: list[CommentSpec] = []
     per_page_index: dict[int, int] = {}
@@ -165,9 +166,24 @@ def verdict_to_comment_specs(verdict: Verdict) -> list[CommentSpec]:
                 text=_comment_body(d),
                 author=_DEFAULT_AUTHOR,
                 subject=_comment_subject(d),
+                anchor_text=_anchor_text_for(d),
             )
         )
     return specs
+
+
+def _anchor_text_for(d: Discrepancy) -> str | None:
+    """Pick the best snippet for the server to locate on the page.
+
+    Prefer ``stated`` (the literal value we flagged) since it's the most
+    distinctive short string on the line. Fall back to ``context`` (which
+    often quotes the surrounding phrase) when stated is absent.
+    """
+    stated = (d.stated or "").strip()
+    if stated:
+        return stated
+    context = (d.context or "").strip()
+    return context or None
 
 
 def verdict_to_add_comments_payload(verdict: Verdict) -> str:

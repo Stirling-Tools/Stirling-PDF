@@ -19,7 +19,13 @@ class AddAttachmentsParams(ApiModel):
 
 
 class CommentSpec(ApiModel):
-    """Absolute-positioned sticky-note comment spec sent to /api/v1/misc/add-comments."""
+    """Sticky-note comment spec sent to /api/v1/misc/add-comments.
+
+    Supply either absolute ``x/y/width/height`` coordinates or an ``anchor_text`` hint. When
+    ``anchor_text`` is provided the server locates the first line on ``page_index`` whose text
+    contains it (tolerant match) and anchors the icon at that line's bounding box; the absolute
+    coordinates then serve only as a fallback if no match is found.
+    """
 
     page_index: int = Field(description="0-indexed page number.")
     x: float = Field(description="Bottom-left x coord of the sticky-note icon (PDF user-space).")
@@ -29,6 +35,13 @@ class CommentSpec(ApiModel):
     text: str = Field(description="Comment body shown in the popup.")
     author: str | None = Field(default=None, description="Optional author label; default used when absent.")
     subject: str | None = Field(default=None, description="Optional subject/title; default used when absent.")
+    anchor_text: str | None = Field(
+        default=None,
+        description=(
+            "Optional text snippet to locate on the page; when set, the server anchors the icon"
+            " at the first matching line and ignores the x/y coords (fallback if no match)."
+        ),
+    )
 
 
 class AddCommentsParams(ApiModel):
