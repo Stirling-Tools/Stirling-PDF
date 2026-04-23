@@ -14,17 +14,23 @@ from stirling.models.tool_models import ParamToolModel, ToolEndpoint
 
 class AgentToolId(StrEnum):
     MATH_AUDITOR_AGENT = "mathAuditorAgent"
+    AI_FORM_FILL = "aiFormFill"
 
 
 class MathAuditorAgentParams(ApiModel):
     tolerance: str = "0.01"
 
 
-type AgentParamModel = MathAuditorAgentParams
+class AiFormFillParams(ApiModel):
+    pass
+
+
+type AgentParamModel = MathAuditorAgentParams | AiFormFillParams
 
 type AnyToolId = ToolEndpoint | AgentToolId
 type AnyParamModel = ParamToolModel | AgentParamModel
 
 AGENT_OPERATIONS: dict[AgentToolId, type[AgentParamModel]] = {
     AgentToolId.MATH_AUDITOR_AGENT: MathAuditorAgentParams,
+    AgentToolId.AI_FORM_FILL: AiFormFillParams,
 }

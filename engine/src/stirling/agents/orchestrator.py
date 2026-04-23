@@ -26,7 +26,7 @@ from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.models.agent_tool_models import AgentToolId, AiFormFillParams, MathAuditorAgentParams
 from stirling.services import AppRuntime
 
 
@@ -66,6 +66,15 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
+                    self.delegate_form_fill,
+                    name="delegate_form_fill",
+                    description=(
+                        "Delegate requests to auto-fill PDF form fields with the user's saved "
+                        "personal information, or to extract personal details from uploaded documents "
+                        "(CVs, IDs, utility bills) for later form filling."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -80,6 +89,9 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
+                "Use delegate_form_fill for requests to auto-fill PDF form fields using the "
+                "user's saved personal information, or to extract personal information from "
+                "documents (CVs, IDs, utility bills) for form filling. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
@@ -157,6 +169,17 @@ class OrchestratorAgent:
                 ToolOperationStep(
                     tool=AgentToolId.MATH_AUDITOR_AGENT,
                     parameters=MathAuditorAgentParams(),
+                )
+            ],
+        )
+
+    async def delegate_form_fill(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        return EditPlanResponse(
+            summary="Analyse the form and fill its fields with the user's saved information.",
+            steps=[
+                ToolOperationStep(
+                    tool=AgentToolId.AI_FORM_FILL,
+                    parameters=AiFormFillParams(),
                 )
             ],
         )

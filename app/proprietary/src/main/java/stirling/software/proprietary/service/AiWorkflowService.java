@@ -125,7 +125,10 @@ public class AiWorkflowService {
                     DRAFT,
                     COMPLETED,
                     UNSUPPORTED_CAPABILITY,
-                    CANNOT_CONTINUE ->
+                    CANNOT_CONTINUE,
+                    KNOWLEDGE_UPDATE,
+                    MULTI_PROFILE_EXTRACTION,
+                    BATCH_FILL_RESULT ->
                     new WorkflowState.Terminal(response);
         };
     }
