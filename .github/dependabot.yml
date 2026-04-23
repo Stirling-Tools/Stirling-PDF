@@ -16,7 +16,7 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "docker"
-    directories: 
+    directories:
       - "/" # Location of Dockerfile
       - "/docker/backend"
       - "/docker/embedded"
