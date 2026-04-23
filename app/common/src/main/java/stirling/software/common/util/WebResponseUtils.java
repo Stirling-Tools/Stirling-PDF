@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -10,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,9 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class WebResponseUtils {
 
     public static ResponseEntity<byte[]> baosToWebResponse(
@@ -125,12 +120,12 @@ public class WebResponseUtils {
     /**
      * Convert a {@link TempFile} into a web response with an explicit media type.
      *
-     * <p>The returned {@link ResponseEntity} carries a {@link ManagedTempFileResource} as its body.
-     * Spring's {@code ResourceHttpMessageConverter} calls {@link Resource#getInputStream()} once
-     * and closes the returned stream after writing — at which point the underlying {@link TempFile}
-     * is deleted. Everything runs synchronously on the request thread, so write failures propagate
-     * through normal Spring error handling and are logged, rather than silently truncating the
-     * response.
+     * <p>The returned {@link ResponseEntity} carries a {@link TempFileBackedResource} (managed
+     * flavour) as its body. Spring's {@code ResourceHttpMessageConverter} calls {@link
+     * Resource#getInputStream()} once and closes the returned stream after writing — at which point
+     * the underlying {@link TempFile} is deleted. Everything runs synchronously on the request
+     * thread, so write failures propagate through normal Spring error handling and are logged,
+     * rather than silently truncating the response.
      *
      * @param outputTempFile The temporary file to be sent as a response.
      * @param docName The name of the document.
@@ -148,7 +143,7 @@ public class WebResponseUtils {
             headers.setContentLength(len);
             headers.setContentDispositionFormData("attachment", encodeAttachmentName(docName));
 
-            Resource body = new ManagedTempFileResource(outputTempFile);
+            Resource body = TempFileBackedResource.managed(outputTempFile);
             return new ResponseEntity<>(body, headers, HttpStatus.OK);
         } catch (IOException | RuntimeException e) {
             try {
@@ -165,109 +160,5 @@ public class WebResponseUtils {
                 .getPlusSignPattern()
                 .matcher(URLEncoder.encode(docName, StandardCharsets.UTF_8))
                 .replaceAll("%20");
-    }
-
-    /**
-     * {@link Resource} backed by a {@link TempFile}. The underlying temp file is deleted when the
-     * response {@code InputStream} is closed — i.e. after Spring has finished writing the body. Any
-     * {@link IOException} during the copy is logged via {@link ClosingInputStream} and propagates
-     * through Spring's normal error path. Since response headers are committed before the body
-     * transfer begins, a mid-body failure manifests as a server-side log entry plus an aborted
-     * connection rather than a silently-truncated success — which is the behaviour this class was
-     * added to restore.
-     *
-     * <p><b>Single-use contract:</b> {@link #getInputStream()} is intended to be called once by
-     * Spring's {@code ResourceHttpMessageConverter} on the normal write path. After the returned
-     * stream is closed the backing temp file is deleted, so subsequent {@code getInputStream()}
-     * calls will either see a deleted file (tests that mock {@link TempFile#close()} are an
-     * exception) or fail at read time. Callers that need to re-read the body must copy it first.
-     */
-    public static final class ManagedTempFileResource extends FileSystemResource {
-
-        private final TempFile tempFile;
-
-        public ManagedTempFileResource(TempFile tempFile) {
-            super(tempFile.getFile());
-            this.tempFile = tempFile;
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            InputStream source;
-            try {
-                source = super.getInputStream();
-            } catch (IOException e) {
-                // Opening the input stream already failed; make sure we don't leak the temp file.
-                try {
-                    tempFile.close();
-                } catch (Exception closeEx) {
-                    e.addSuppressed(closeEx);
-                }
-                throw e;
-            }
-            return new ClosingInputStream(source, tempFile);
-        }
-    }
-
-    /**
-     * Stream wrapper that deletes its backing {@link TempFile} on close. Logs — but does not
-     * swallow — any IOException that happens while reading the body, so upstream handlers can
-     * surface the failure to the client.
-     */
-    private static final class ClosingInputStream extends FilterInputStream {
-
-        private final TempFile tempFile;
-        private boolean closed;
-
-        ClosingInputStream(InputStream delegate, TempFile tempFile) {
-            super(delegate);
-            this.tempFile = tempFile;
-        }
-
-        @Override
-        public int read() throws IOException {
-            try {
-                return super.read();
-            } catch (IOException e) {
-                log.error(
-                        "Failed to read temp response body {} while streaming to client",
-                        tempFile.getAbsolutePath(),
-                        e);
-                throw e;
-            }
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            try {
-                return super.read(b, off, len);
-            } catch (IOException e) {
-                log.error(
-                        "Failed to read temp response body {} while streaming to client",
-                        tempFile.getAbsolutePath(),
-                        e);
-                throw e;
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (closed) {
-                return;
-            }
-            closed = true;
-            try {
-                super.close();
-            } finally {
-                try {
-                    tempFile.close();
-                } catch (Exception closeEx) {
-                    log.warn(
-                            "Failed to clean up temp file {} after streaming response",
-                            tempFile.getAbsolutePath(),
-                            closeEx);
-                }
-            }
-        }
     }
 }

@@ -37,6 +37,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileBackedResource;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -156,7 +157,7 @@ public class ConvertPdfJsonController {
                     .header("X-Job-Id", scopedJobKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .contentLength(Files.size(tempOut.getPath()))
-                    .body(new WebResponseUtils.ManagedTempFileResource(tempOut));
+                    .body(TempFileBackedResource.managed(tempOut));
         } catch (IOException | RuntimeException e) {
             tempOut.close();
             throw e;

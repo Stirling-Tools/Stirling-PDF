@@ -29,6 +29,7 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.util.TempFileBackedResource;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 
@@ -125,8 +126,7 @@ public class PipelineProcessor {
                             // this
                             // file
                             if (response.getBody()
-                                    instanceof
-                                    InternalApiClient.TempFileResource tempFileResource) {
+                                    instanceof TempFileBackedResource tempFileResource) {
                                 result.addTempFile(tempFileResource.getTempFile());
                             }
 
@@ -204,8 +204,7 @@ public class PipelineProcessor {
                         }
                     }
                     ResponseEntity<Resource> response = internalApiClient.post(operation, body);
-                    if (response.getBody()
-                            instanceof InternalApiClient.TempFileResource tempFileResource) {
+                    if (response.getBody() instanceof TempFileBackedResource tempFileResource) {
                         result.addTempFile(tempFileResource.getTempFile());
                     }
                     // Handle the response
@@ -284,7 +283,7 @@ public class PipelineProcessor {
                             response.getBody(), tempFileManager, result::addTempFile));
         } else {
             final Resource tempResource = response.getBody();
-            if (tempResource instanceof InternalApiClient.TempFileResource tfr) {
+            if (tempResource instanceof TempFileBackedResource tfr) {
                 result.addTempFile(tfr.getTempFile());
             }
             Resource outputResource =
