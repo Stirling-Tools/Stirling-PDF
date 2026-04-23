@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
-import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.model.api.SplitPagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -48,7 +48,7 @@ public class SplitPDFController {
                             + " specified page numbers or ranges. Users can specify pages using"
                             + " individual numbers, ranges, or 'all' for every page. Input:PDF"
                             + " Output:PDF Type:SIMO")
-    public ResponseEntity<Resource> splitPdf(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPagesRequest request)
             throws IOException {
 
         MultipartFile file = request.getFileInput();

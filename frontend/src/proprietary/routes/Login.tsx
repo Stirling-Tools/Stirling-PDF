@@ -6,7 +6,10 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Text, Stack, Alert } from "@mantine/core";
-import { springAuth } from "@app/auth/springAuthClient";
+import {
+  setPostLoginRedirectPath,
+  springAuth,
+} from "@app/auth/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
@@ -34,6 +37,19 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
+  const resolveReturnPath = (): string | null => {
+    const fromState = (
+      location.state as { from?: { pathname?: string } } | null
+    )?.from?.pathname;
+    if (fromState) return fromState;
+    const fromQuery = searchParams.get("from");
+    if (!fromQuery) return null;
+    try {
+      return decodeURIComponent(fromQuery);
+    } catch {
+      return fromQuery;
+    }
+  };
   const { refetch } = useAppConfig();
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -166,15 +182,13 @@ export default function Login() {
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (!loading && session) {
-      const returnPath = (
-        location.state as { from?: { pathname?: string } } | null
-      )?.from?.pathname;
+      const returnPath = resolveReturnPath();
       console.debug("[Login] User already authenticated, redirecting to home", {
         returnPath,
       });
       navigate(returnPath || "/", { replace: true });
     }
-  }, [session, loading, navigate, location.state]);
+  }, [session, loading, navigate, location.state, searchParams]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {
@@ -266,6 +280,12 @@ export default function Login() {
       setIsSigningIn(true);
       setError(null);
       clearLogoutBlock();
+
+      // Don't overwrite a path already stashed by httpErrorHandler on a prior 401.
+      const returnPath = resolveReturnPath();
+      if (returnPath) {
+        setPostLoginRedirectPath(returnPath);
+      }
 
       console.log(`[Login] Signing in with provider: ${provider}`);
 

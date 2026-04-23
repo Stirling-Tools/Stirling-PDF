@@ -91,6 +91,12 @@ class ConversationMessage(ApiModel):
     content: str
 
 
+def format_conversation_history(conversation_history: list[ConversationMessage]) -> str:
+    if not conversation_history:
+        return "None"
+    return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
+
+
 class PdfTextSelection(ApiModel):
     page_number: int | None = None
     text: str
@@ -99,6 +105,21 @@ class PdfTextSelection(ApiModel):
 class ExtractedFileText(ApiModel):
     file_name: str
     pages: list[PdfTextSelection] = Field(default_factory=list)
+
+
+class NeedContentFileRequest(ApiModel):
+    file_name: str
+    page_numbers: list[int] = Field(default_factory=list)
+    content_types: list[PdfContentType]
+
+
+class NeedContentResponse(ApiModel):
+    outcome: Literal[WorkflowOutcome.NEED_CONTENT] = WorkflowOutcome.NEED_CONTENT
+    resume_with: SupportedCapability
+    reason: str
+    files: list[NeedContentFileRequest] = Field(default_factory=list)
+    max_pages: int
+    max_characters: int
 
 
 class ToolOperationStep(ApiModel):

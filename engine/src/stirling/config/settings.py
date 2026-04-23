@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENGINE_ROOT = Path(__file__).resolve().parents[3]
 ENV_FILE = ENGINE_ROOT / ".env"
+ENV_LOCAL_FILE = ENGINE_ROOT / ".env.local"
 
 
 class RagBackend(StrEnum):
@@ -20,7 +21,7 @@ class RagBackend(StrEnum):
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore", populate_by_name=True)
+    model_config = SettingsConfigDict(env_file=(ENV_FILE, ENV_LOCAL_FILE), extra="ignore", populate_by_name=True)
 
     smart_model_name: str = Field(validation_alias="STIRLING_SMART_MODEL")
     fast_model_name: str = Field(validation_alias="STIRLING_FAST_MODEL")
@@ -35,6 +36,9 @@ class AppSettings(BaseSettings):
     rag_chunk_size: int = Field(validation_alias="STIRLING_RAG_CHUNK_SIZE")
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
+
+    max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
+    max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
 
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
@@ -56,6 +60,14 @@ def _configure_logging(level_name: str, log_file: str) -> None:
 
     root = logging.getLogger("stirling")
     root.setLevel(level)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s")
+
+    if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        sh.setLevel(level)
+        root.addHandler(sh)
+        root.propagate = False
 
     if log_file:
         log_path = Path(log_file)
@@ -66,7 +78,7 @@ def _configure_logging(level_name: str, log_file: str) -> None:
             backupCount=1,
             encoding="utf-8",
         )
-        fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s"))
+        fh.setFormatter(formatter)
         fh.setLevel(level)
         root.addHandler(fh)
 
@@ -74,6 +86,7 @@ def _configure_logging(level_name: str, log_file: str) -> None:
 @lru_cache(maxsize=1)
 def load_settings() -> AppSettings:
     load_dotenv(ENV_FILE)
+    load_dotenv(ENV_LOCAL_FILE, override=True)
     settings = AppSettings.model_validate({})
     _configure_logging(settings.log_level, settings.log_file)
     return settings
