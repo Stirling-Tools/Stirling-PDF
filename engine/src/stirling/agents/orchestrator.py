@@ -8,6 +8,12 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
+from stirling.agents.math_presentation import (
+    extract_math_verdict,
+    is_math_intent,
+    verdict_to_add_comments_payload,
+    verdict_to_prose,
+)
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.user_spec import UserSpecAgent
@@ -27,8 +33,13 @@ from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
-from stirling.models.tool_models import PdfCommentAgentParams, ToolEndpoint
+from stirling.contracts.pdf_questions import PdfQuestionAnswerResponse
+from stirling.models.tool_models import (
+    AddCommentsParams,
+    MathAuditorAgentParams,
+    PdfCommentAgentParams,
+    ToolEndpoint,
+)
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -62,14 +73,6 @@ class OrchestratorAgent:
                     description="Delegate requests to create or revise a user agent spec and return the draft result.",
                 ),
                 ToolOutput(
-                    self.math_auditor_agent,
-                    name="math_auditor_agent",
-                    description=(
-                        "Delegate requests to check arithmetic, validate table totals, "
-                        "audit financial calculations, or verify mathematical accuracy in PDFs."
-                    ),
-                ),
-                ToolOutput(
                     self.delegate_pdf_review,
                     name="delegate_pdf_review",
                     description=(
@@ -93,8 +96,6 @@ class OrchestratorAgent:
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
                 "Use delegate_pdf_question for questions about PDF contents. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
-                "Use math_auditor_agent for requests to check arithmetic, validate "
-                "table totals, audit financial calculations, or verify math in PDFs. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. If the user is asking a question about the PDF"
@@ -123,10 +124,17 @@ class OrchestratorAgent:
         return result.output
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
-        """Fast-path to get back to the correct endpoint without having to call AI."""
+        """Fast-path to get back to the correct endpoint without having to call AI.
+
+        Also the entry point for the *multi-turn* flow where a delegate emits a plan with
+        ``resume_with`` set — Java runs the plan, captures any tool reports as artifacts, and
+        re-enters via this method so the delegate can digest the reports.
+        """
         match capability:
             case SupportedCapability.PDF_QUESTION:
                 return await self._run_pdf_question(request)
+            case SupportedCapability.PDF_REVIEW:
+                return await self._run_pdf_review(request)
             case SupportedCapability.PDF_EDIT:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
@@ -155,10 +163,40 @@ class OrchestratorAgent:
             )
         )
 
-    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
+    async def delegate_pdf_question(
+        self, ctx: RunContext[OrchestratorDeps]
+    ) -> PdfQuestionResponse | EditPlanResponse:
         return await self._run_pdf_question(ctx.deps.request)
 
-    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse:
+    async def _run_pdf_question(
+        self, request: OrchestratorRequest
+    ) -> PdfQuestionResponse | EditPlanResponse:
+        """Answer a question about a PDF.
+
+        When the prompt smells like math, consults the math-auditor specialist first (via a
+        plan step + resume), then digests the :class:`Verdict` into a prose answer. All other
+        prompts go through the general :class:`PdfQuestionAgent`.
+        """
+        if is_math_intent(request.user_message):
+            verdict = extract_math_verdict(request)
+            if verdict is None:
+                # First turn — ask Java to run the math specialist and come back.
+                return EditPlanResponse(
+                    summary="Consulting the math auditor to answer the question...",
+                    steps=[
+                        ToolOperationStep(
+                            tool=ToolEndpoint.MATH_AUDITOR_AGENT,
+                            parameters=MathAuditorAgentParams(),
+                        )
+                    ],
+                    resume_with=SupportedCapability.PDF_QUESTION,
+                )
+            # Second turn — Verdict in hand, render as a prose answer.
+            return PdfQuestionAnswerResponse(
+                answer=verdict_to_prose(verdict),
+                evidence=[],
+            )
+
         extracted_text = self._get_extracted_text_artifact(request)
         return await PdfQuestionAgent(self.runtime).handle(
             PdfQuestionRequest(
@@ -180,30 +218,52 @@ class OrchestratorAgent:
             )
         )
 
-    async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
-        return EditPlanResponse(
-            summary="Validate mathematical calculations in the document.",
-            steps=[
-                ToolOperationStep(
-                    tool=AgentToolId.MATH_AUDITOR_AGENT,
-                    parameters=MathAuditorAgentParams(),
-                )
-            ],
-        )
-
     async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
-        """Emit a plan step that dispatches to the composed /api/v1/misc/pdf-comment-agent tool.
+        return await self._run_pdf_review(ctx.deps.request)
 
-        The Java tool handles chunk extraction, engine round-trip (via PdfCommentAgent),
-        chunk-id → absolute position resolution, and annotation placement via the shared
-        PdfAnnotationService primitive. Java then returns the annotated PDF bytes.
+    async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse:
+        """Produce an annotated PDF with review comments.
+
+        Math-flavoured prompts: consult math-auditor first, then project the :class:`Verdict`
+        into sticky-note specs for ``/api/v1/misc/add-comments``. Other review prompts go
+        through the composed :class:`PdfCommentAgentOrchestrator` (``/api/v1/misc/pdf-comment-agent``)
+        which does its own chunk extraction + AI round-trip.
         """
+        if is_math_intent(request.user_message):
+            verdict = extract_math_verdict(request)
+            if verdict is None:
+                return EditPlanResponse(
+                    summary="Consulting the math auditor to flag errors on the PDF...",
+                    steps=[
+                        ToolOperationStep(
+                            tool=ToolEndpoint.MATH_AUDITOR_AGENT,
+                            parameters=MathAuditorAgentParams(),
+                        )
+                    ],
+                    resume_with=SupportedCapability.PDF_REVIEW,
+                )
+            # Verdict in hand — project to comment specs and emit the annotate step.
+            comments_json = verdict_to_add_comments_payload(verdict)
+            discrepancy_count = len(verdict.discrepancies or [])
+            return EditPlanResponse(
+                summary=(
+                    f"Flagging {discrepancy_count} math issue"
+                    f"{'s' if discrepancy_count != 1 else ''} on the PDF."
+                ),
+                steps=[
+                    ToolOperationStep(
+                        tool=ToolEndpoint.ADD_COMMENTS,
+                        parameters=AddCommentsParams(comments=comments_json),
+                    )
+                ],
+            )
+
         return EditPlanResponse(
             summary="Add AI-generated review comments to the PDF.",
             steps=[
                 ToolOperationStep(
                     tool=ToolEndpoint.PDF_COMMENT_AGENT,
-                    parameters=PdfCommentAgentParams(prompt=ctx.deps.request.user_message),
+                    parameters=PdfCommentAgentParams(prompt=request.user_message),
                 )
             ],
         )

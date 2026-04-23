@@ -51,6 +51,20 @@ class PdfCommentAgentParams(ApiModel):
     prompt: str = Field(description="The end-user prompt describing what the AI should comment on.")
 
 
+class MathAuditorAgentParams(ApiModel):
+    """Parameters for /api/v1/misc/math-auditor-agent.
+
+    Always returns a JSON Verdict. Presentation (chat-style summary, PDF annotations, etc.) is
+    the caller's responsibility — see ``delegate_pdf_question`` and ``delegate_pdf_review``
+    in the orchestrator.
+    """
+
+    tolerance: str = Field(
+        default="0.01",
+        description="Arithmetic tolerance; differences smaller than this are ignored.",
+    )
+
+
 class AddImageParams(ApiModel):
     every_page: bool | None = Field(False, description="Whether to overlay the image onto every page of the PDF.")
     x: float | None = Field(0, description="The x-coordinate at which to place the top-left corner of the image.")
@@ -1270,6 +1284,7 @@ type ParamToolModel = (
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
+    | MathAuditorAgentParams
     | OcrPdfParams
     | PdfCommentAgentParams
     | RemoveBlanksParams
@@ -1338,6 +1353,7 @@ class ToolEndpoint(StrEnum):
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
+    MATH_AUDITOR_AGENT = "/api/v1/misc/math-auditor-agent"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
     PDF_COMMENT_AGENT = "/api/v1/misc/pdf-comment-agent"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
@@ -1358,6 +1374,7 @@ class ToolEndpoint(StrEnum):
 
 OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
+    ToolEndpoint.MATH_AUDITOR_AGENT: MathAuditorAgentParams,
     ToolEndpoint.PDF_COMMENT_AGENT: PdfCommentAgentParams,
     ToolEndpoint.CBR_TO_PDF: CbrToPdfParams,
     ToolEndpoint.CBZ_TO_PDF: CbzToPdfParams,

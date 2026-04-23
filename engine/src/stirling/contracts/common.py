@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal, assert_never
+from typing import Any, Literal
 
 from pydantic import Field, model_validator
 
 from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
-from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
+from stirling.models.tool_models import ParamToolModel
 
 
 class PdfContentType(StrEnum):
@@ -67,6 +67,7 @@ class ArtifactKind(StrEnum):
     """
 
     EXTRACTED_TEXT = "extracted_text"
+    TOOL_REPORT = "tool_report"
 
 
 class StepKind(StrEnum):
@@ -80,6 +81,7 @@ class SupportedCapability(StrEnum):
     ORCHESTRATE = "orchestrate"
     PDF_EDIT = "pdf_edit"
     PDF_QUESTION = "pdf_question"
+    PDF_REVIEW = "pdf_review"
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
@@ -122,20 +124,34 @@ class NeedContentResponse(ApiModel):
     max_characters: int
 
 
+class ToolReportArtifact(ApiModel):
+    """A structured report produced by a specialist tool on a previous orchestrator turn.
+
+    Meta-agents (e.g. ``delegate_pdf_review``, ``delegate_pdf_question``) receive these
+    artifacts when they emit a plan with ``resume_with`` set — Java runs the plan, captures
+    any JSON body / ``X-Stirling-Tool-Report`` headers, and re-enters the orchestrator with
+    the captured payload attached as a ``ToolReportArtifact``.
+
+    Java counterpart: {@code PdfContentExtractor.ToolReportArtifact}.
+    """
+
+    kind: Literal[ArtifactKind.TOOL_REPORT] = ArtifactKind.TOOL_REPORT
+    source_tool: ToolEndpoint = Field(
+        description="Endpoint path of the tool that produced this report.",
+    )
+    report: dict[str, Any] = Field(
+        description="Free-form JSON payload as returned by the tool (Verdict, summary, etc.).",
+    )
+
+
 class ToolOperationStep(ApiModel):
     kind: Literal[StepKind.TOOL] = StepKind.TOOL
-    tool: AnyToolId
-    parameters: AnyParamModel
+    tool: ToolEndpoint
+    parameters: ParamToolModel
 
     @model_validator(mode="after")
     def validate_tool_parameter_pairing(self) -> ToolOperationStep:
-        if isinstance(self.tool, AgentToolId):
-            expected_type = AGENT_OPERATIONS[self.tool]
-        elif isinstance(self.tool, ToolEndpoint):
-            expected_type = OPERATIONS[self.tool]
-        else:
-            assert_never(self.tool)
-
+        expected_type = OPERATIONS[self.tool]
         if not isinstance(self.parameters, expected_type):
             actual_type = type(self.parameters).__name__
             raise ValueError(f"Parameters for tool {self.tool} must be {expected_type.__name__}, got {actual_type}.")

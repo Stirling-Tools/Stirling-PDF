@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 
+import tools.jackson.databind.JsonNode;
+
 @Data
 @Schema(description = "Structured AI workflow result")
 public class AiWorkflowResponse {
@@ -79,4 +81,12 @@ public class AiWorkflowResponse {
 
     @Schema(description = "AI engine capability to resume with on the next turn")
     private String resumeWith;
+
+    @Schema(
+            description =
+                    "Optional structured report from the tool (e.g. math-auditor Verdict, PDF"
+                            + " comment-agent summary). Tools surface this either via a JSON response"
+                            + " body or via the X-Stirling-Tool-Report header. May be null for tools"
+                            + " that produce only a file.")
+    private JsonNode report;
 }

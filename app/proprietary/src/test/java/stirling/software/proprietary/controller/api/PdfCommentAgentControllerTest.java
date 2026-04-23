@@ -29,6 +29,8 @@ import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolv
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
 
+import tools.jackson.databind.json.JsonMapper;
+
 /**
  * Controller tests for {@link PdfCommentAgentController}. The orchestrator is mocked so the test
  * never hits the engine or real filesystem.
@@ -42,7 +44,8 @@ class PdfCommentAgentControllerTest {
 
     @BeforeEach
     void setUp() {
-        PdfCommentAgentController controller = new PdfCommentAgentController(orchestrator);
+        PdfCommentAgentController controller =
+                new PdfCommentAgentController(orchestrator, JsonMapper.builder().build());
         mockMvc =
                 MockMvcBuilders.standaloneSetup(controller)
                         // standaloneSetup's defaults don't handle ResponseStatusException; wire up
@@ -64,7 +67,7 @@ class PdfCommentAgentControllerTest {
                         "%PDF-1.4\n%%EOF".getBytes());
 
         byte[] annotatedBytes = "%PDF-1.4\n<annotated>\n%%EOF".getBytes();
-        AnnotatedPdf stub = new AnnotatedPdf(annotatedBytes, "input-commented.pdf");
+        AnnotatedPdf stub = new AnnotatedPdf(annotatedBytes, "input-commented.pdf", 2, 2, "ok");
         when(orchestrator.applyComments(any(MultipartFile.class), eq("flag dates")))
                 .thenReturn(stub);
 

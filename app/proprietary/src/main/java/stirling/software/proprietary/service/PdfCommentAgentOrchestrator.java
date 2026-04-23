@@ -64,10 +64,17 @@ public class PdfCommentAgentOrchestrator {
     private static final String FALLBACK_OUTPUT_NAME = "document-commented.pdf";
 
     /**
-     * Small value record returned to the controller: the annotated PDF bytes plus the suggested
-     * download filename (used in the {@code Content-Disposition} header).
+     * Small value record returned to the controller: the annotated PDF bytes, the suggested
+     * download filename (used in the {@code Content-Disposition} header), and metadata the
+     * controller emits in the {@code X-Stirling-Tool-Report} header so callers (frontend,
+     * orchestrator) can surface a chat-style summary alongside the file.
      */
-    public record AnnotatedPdf(byte[] bytes, String fileName) {}
+    public record AnnotatedPdf(
+            byte[] bytes,
+            String fileName,
+            int annotationsApplied,
+            int instructionsReceived,
+            String rationale) {}
 
     private final AiEngineClient aiEngineClient;
     private final PdfTextChunkExtractor pdfTextChunkExtractor;
@@ -117,8 +124,10 @@ public class PdfCommentAgentOrchestrator {
                     chunks.size(),
                     document.getNumberOfPages());
 
-            List<PdfCommentInstruction> instructions =
+            PdfCommentEngineResponse engineResponse =
                     requestComments(sessionId, trimmedPrompt, chunks);
+            List<PdfCommentInstruction> instructions =
+                    engineResponse.comments() == null ? List.of() : engineResponse.comments();
 
             // Resolve chunk-id-referenced comments to absolute sticky-note specs, then delegate
             // placement to the shared service (same primitive /api/v1/misc/add-comments uses).
@@ -142,7 +151,12 @@ public class PdfCommentAgentOrchestrator {
                     sessionId,
                     outputName,
                     annotatedBytes.length);
-            return new AnnotatedPdf(annotatedBytes, outputName);
+            return new AnnotatedPdf(
+                    annotatedBytes,
+                    outputName,
+                    applied,
+                    instructions.size(),
+                    engineResponse.rationale());
         }
     }
 
@@ -150,7 +164,7 @@ public class PdfCommentAgentOrchestrator {
     // Engine round-trip
     // -----------------------------------------------------------------------
 
-    private List<PdfCommentInstruction> requestComments(
+    private PdfCommentEngineResponse requestComments(
             String sessionId, String prompt, List<TextChunk> chunks) throws IOException {
         PdfCommentEngineRequest engineRequest =
                 new PdfCommentEngineRequest(sessionId, prompt, chunks);
@@ -166,7 +180,7 @@ public class PdfCommentAgentOrchestrator {
                 sessionId,
                 instructions.size(),
                 engineResponse.rationale());
-        return instructions;
+        return engineResponse;
     }
 
     // -----------------------------------------------------------------------

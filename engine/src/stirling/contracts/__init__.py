@@ -19,6 +19,7 @@ from .common import (
     StepKind,
     SupportedCapability,
     ToolOperationStep,
+    ToolReportArtifact,
     WorkflowOutcome,
     format_conversation_history,
 )
@@ -148,6 +149,7 @@ __all__ = [
     "TextChunk",
     "ToolCallExecutionAction",
     "ToolOperationStep",
+    "ToolReportArtifact",
     "UnsupportedCapabilityResponse",
     "Verdict",
     "WorkflowArtifact",

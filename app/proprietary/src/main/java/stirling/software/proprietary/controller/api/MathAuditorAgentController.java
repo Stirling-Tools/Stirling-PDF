@@ -26,15 +26,23 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
  * Public entry point for the Math Auditor Agent (mathAuditorAgent).
  *
  * <p>Accepts a PDF from the client, hands it to the {@link MathAuditorOrchestrator} which runs the
- * multi-round Java-Python negotiation, and returns the Auditor's {@link Verdict}.
+ * multi-round Java-Python negotiation, and returns the Auditor's {@link Verdict} as JSON.
+ *
+ * <p>This endpoint is a pure specialist — it produces the structured finding and nothing more.
+ * Presentation (rendering as a chat answer, projecting to PDF comments, etc.) is the responsibility
+ * of the caller (e.g. the orchestrator's {@code delegate_pdf_question} or {@code
+ * delegate_pdf_review} meta-agents).
+ *
+ * <p>Lives under {@code /api/v1/misc/} so it is dispatchable by the AI orchestrator via the
+ * standard {@code InternalApiClient} allowlist — no special-case plumbing needed.
  *
  * <p>The raw PDF never leaves Java. Python receives only structured text and CSV data.
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/ai")
+@RequestMapping("/api/v1/misc")
 @RequiredArgsConstructor
-@Tag(name = "AI Engine", description = "AI-powered document analysis endpoints.")
+@Tag(name = "Misc", description = "Miscellaneous PDF operations.")
 public class MathAuditorAgentController {
 
     private final MathAuditorOrchestrator orchestrator;
@@ -49,11 +57,12 @@ public class MathAuditorAgentController {
                     The auditor checks:
                     - Table row and column totals (tally errors)
                     - Inline arithmetic expressions (e.g. "100 + 200 = 300")
-                    - Cross-page figure consistency (same figure cited differently on different pages)
+                    - Cross-page figure consistency
                     - Prose claims about percentages, growth rates, and comparisons
 
-                    The PDF is processed entirely on the Java side; only extracted text and table data
-                    are sent to the AI engine.
+                    Returns a JSON Verdict describing every discrepancy found. How the Verdict is
+                    presented to the end user (chat answer, PDF annotations, etc.) is up to the
+                    caller.
 
                     Input: PDF  Output: JSON  Type: SISO
                     """)
@@ -69,10 +78,9 @@ public class MathAuditorAgentController {
                     BigDecimal tolerance) {
 
         String contentType = fileInput.getContentType();
-        if (contentType == null || !contentType.equals("application/pdf")) {
+        if (contentType == null || !contentType.equals(MediaType.APPLICATION_PDF_VALUE)) {
             return ResponseEntity.badRequest().build();
         }
-
         if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().build();
         }
@@ -88,9 +96,6 @@ public class MathAuditorAgentController {
             return ResponseEntity.ok(verdict);
         } catch (IOException e) {
             log.error("[math-auditor-agent] IO error during audit", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            log.error("[math-auditor-agent] unexpected error during audit", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

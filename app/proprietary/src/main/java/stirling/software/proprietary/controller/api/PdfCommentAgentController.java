@@ -23,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
+
 /**
  * Public entry point for the PDF Comment Agent (pdfCommentAgent).
  *
@@ -41,7 +44,14 @@ import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.Annotat
 @Tag(name = "Misc", description = "Miscellaneous PDF operations.")
 public class PdfCommentAgentController {
 
+    /**
+     * Response header tools use to surface structured metadata alongside a file body. Must stay in
+     * sync with the value in {@code AiWorkflowService}.
+     */
+    private static final String REPORT_HEADER = "X-Stirling-Tool-Report";
+
     private final PdfCommentAgentOrchestrator orchestrator;
+    private final ObjectMapper objectMapper;
 
     @PostMapping(
             value = "/pdf-comment-agent",
@@ -89,6 +99,27 @@ public class PdfCommentAgentController {
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", annotated.fileName());
         headers.setContentLength(annotated.bytes().length);
+        headers.set(REPORT_HEADER, buildReportHeader(annotated));
         return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(annotated.bytes()));
+    }
+
+    /**
+     * Build the metadata JSON surfaced in {@link #REPORT_HEADER} alongside the annotated PDF. Kept
+     * small (fits comfortably in a header): counts and the agent's rationale so a chat UI can show
+     * "Added 3 comments: <rationale>" alongside the downloaded file.
+     */
+    private String buildReportHeader(AnnotatedPdf annotated) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("annotationsApplied", annotated.annotationsApplied());
+        node.put("instructionsReceived", annotated.instructionsReceived());
+        if (annotated.rationale() != null) {
+            node.put("rationale", annotated.rationale());
+        }
+        try {
+            return objectMapper.writeValueAsString(node);
+        } catch (Exception e) {
+            log.warn("Failed to serialise pdf-comment-agent report header: {}", e.getMessage());
+            return "{\"annotationsApplied\":" + annotated.annotationsApplied() + "}";
+        }
     }
 }
