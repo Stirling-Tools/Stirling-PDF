@@ -2,7 +2,7 @@ name: Update Package Manager Manifests
 
 on:
   release:
-    types: [released]
+    types: [ released ]
   workflow_dispatch:
     inputs:
       version:
