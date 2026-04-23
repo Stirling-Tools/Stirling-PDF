@@ -81,8 +81,8 @@ public class ReplaceAndInvertColorController {
             summary = "Detect text colours in PDF",
             description =
                     "Scans text glyphs in the PDF and returns colour usage counts in hex format. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<List<TextColorUsage>> detectTextColors(@ModelAttribute ReplaceTextColorsRequest request)
-            throws IOException {
+    public ResponseEntity<List<TextColorUsage>> detectTextColors(
+            @ModelAttribute ReplaceTextColorsRequest request) throws IOException {
         List<TextColorUsage> usages =
                 textColorReplacementService.detectTextColors(request.getFileInput());
         return ResponseEntity.ok(usages);
@@ -99,7 +99,9 @@ public class ReplaceAndInvertColorController {
             @ModelAttribute ReplaceTextColorsRequest request) throws IOException {
         PDDocument output =
                 textColorReplacementService.replaceTextColors(
-                        request.getFileInput(), request.getSourceColors(), request.getTargetColor());
+                        request.getFileInput(),
+                        request.getSourceColors(),
+                        request.getTargetColor());
         return WebResponseUtils.pdfDocToWebResponse(
                 output,
                 GeneralUtils.generateFilename(

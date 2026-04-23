@@ -36,8 +36,8 @@ public class TextColorReplacementService {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    public List<TextColorUsage> detectTextColors(org.springframework.web.multipart.MultipartFile file)
-            throws IOException {
+    public List<TextColorUsage> detectTextColors(
+            org.springframework.web.multipart.MultipartFile file) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             List<TextGlyphOccurrence> glyphs = collectGlyphs(document);
             Map<String, Long> counts = new HashMap<>();
@@ -92,7 +92,11 @@ public class TextColorReplacementService {
 
                 try (PDPageContentStream contentStream =
                         new PDPageContentStream(
-                                document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                                document,
+                                page,
+                                PDPageContentStream.AppendMode.APPEND,
+                                true,
+                                true)) {
                     for (TextGlyphOccurrence glyph : entry.getValue()) {
                         drawReplacementGlyph(contentStream, glyph, pageHeight, targetColor);
                     }
@@ -115,6 +119,12 @@ public class TextColorReplacementService {
             float pageHeight,
             Color targetColor)
             throws IOException {
+        PDFont writableFont = resolveWritableFont(glyph.font(), glyph.unicode());
+        if (writableFont == null) {
+            log.debug("Skipping glyph replacement because no writable font was found");
+            return;
+        }
+
         float x = glyph.x();
         float y = glyph.y();
         float width = Math.max(0.5f, glyph.width());
@@ -129,7 +139,7 @@ public class TextColorReplacementService {
         contentStream.beginText();
         contentStream.setNonStrokingColor(targetColor);
         contentStream.newLineAtOffset(x, top);
-        contentStream.setFont(resolveWritableFont(glyph.font(), glyph.unicode()), glyph.fontSize());
+        contentStream.setFont(writableFont, glyph.fontSize());
         contentStream.showText(glyph.unicode());
         contentStream.endText();
     }
@@ -142,7 +152,7 @@ public class TextColorReplacementService {
         if (canEncode(fallback, text)) {
             return fallback;
         }
-        return fallback;
+        return null;
     }
 
     private boolean canEncode(PDFont font, String text) {
