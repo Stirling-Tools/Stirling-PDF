@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,8 +54,8 @@ public class AttachmentController {
             summary = "Add attachments to PDF",
             description =
                     "This endpoint adds attachments to a PDF. Input:PDF, Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> addAttachments(
-            @ModelAttribute AddAttachmentRequest request) throws Exception {
+    public ResponseEntity<Resource> addAttachments(@ModelAttribute AddAttachmentRequest request)
+            throws Exception {
         MultipartFile fileInput = request.getFileInput();
         List<MultipartFile> attachments = request.getAttachments();
         boolean convertToPdfA3b = request.isConvertToPdfA3b();
@@ -143,7 +143,7 @@ public class AttachmentController {
             description =
                     "This endpoint extracts all embedded attachments from a PDF into a ZIP archive."
                             + " Input:PDF Output:ZIP Type:SISO")
-    public ResponseEntity<StreamingResponseBody> extractAttachments(
+    public ResponseEntity<Resource> extractAttachments(
             @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
             Optional<byte[]> extracted = pdfAttachmentService.extractAttachments(document);
@@ -195,7 +195,7 @@ public class AttachmentController {
             summary = "Rename attachment in PDF",
             description =
                     "This endpoint renames an embedded attachment in a PDF. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> renameAttachment(
+    public ResponseEntity<Resource> renameAttachment(
             @ModelAttribute RenameAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
@@ -230,7 +230,7 @@ public class AttachmentController {
             summary = "Delete attachment from PDF",
             description =
                     "This endpoint deletes an embedded attachment from a PDF. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<StreamingResponseBody> deleteAttachment(
+    public ResponseEntity<Resource> deleteAttachment(
             @ModelAttribute DeleteAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();

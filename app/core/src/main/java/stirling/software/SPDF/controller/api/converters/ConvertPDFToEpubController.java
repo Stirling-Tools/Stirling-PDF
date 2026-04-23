@@ -9,11 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,7 +87,7 @@ public class ConvertPDFToEpubController {
             description =
                     "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF"
                             + " Output:EPUB/AZW3 Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertPdfToEpub(
+    public ResponseEntity<Resource> convertPdfToEpub(
             @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
 
         if (!endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
