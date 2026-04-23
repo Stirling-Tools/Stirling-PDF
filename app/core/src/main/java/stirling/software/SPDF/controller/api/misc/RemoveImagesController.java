@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,6 +29,8 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -37,6 +39,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class RemoveImagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-image-pdf")
     @Operation(
@@ -44,7 +47,8 @@ public class RemoveImagesController {
             description =
                     "This endpoint removes all embedded images from a PDF file and returns the"
                             + " modified document. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile request) throws IOException {
+    public ResponseEntity<Resource> removeImages(@ModelAttribute PDFFile request)
+            throws IOException {
 
         MultipartFile inputFile = request.getFileInput();
 
@@ -60,12 +64,16 @@ public class RemoveImagesController {
 
             log.info("Removed {} images from PDF with {} pages", imagesRemoved, totalPages);
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            pdfDoc.save(baos);
-            byte[] pdfContent = baos.toByteArray();
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                pdfDoc.save(tempOut.getFile());
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
+            }
 
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOut,
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_images_removed.pdf"));
 

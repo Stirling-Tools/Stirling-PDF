@@ -7,7 +7,7 @@
  * - Shared FieldInput component (no duplication)
  * - Better visual hierarchy and spacing
  */
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   Box,
   Text,
@@ -15,25 +15,25 @@ import {
   Badge,
   Tooltip,
   ActionIcon,
-} from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useFormFill } from '@app/tools/formFill/FormFillContext';
-import { FieldInput } from '@app/tools/formFill/FieldInput';
-import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
-import type { FormField } from '@app/tools/formFill/types';
-import CloseIcon from '@mui/icons-material/Close';
-import TextFieldsIcon from '@mui/icons-material/TextFields';
-import styles from '@app/tools/formFill/FormFill.module.css';
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { FieldInput } from "@app/tools/formFill/FieldInput";
+import {
+  FIELD_TYPE_ICON,
+  FIELD_TYPE_COLOR,
+} from "@app/tools/formFill/fieldMeta";
+import type { FormField } from "@app/tools/formFill/types";
+import CloseIcon from "@mui/icons-material/Close";
+import TextFieldsIcon from "@mui/icons-material/TextFields";
+import styles from "@app/tools/formFill/FormFill.module.css";
 
 interface FormFieldSidebarProps {
   visible: boolean;
   onToggle: () => void;
 }
 
-export function FormFieldSidebar({
-  visible,
-  onToggle,
-}: FormFieldSidebarProps) {
+export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
   useTranslation();
   const { state, setValue, setActiveField } = useFormFill();
   const { fields, activeFieldName, loading } = state;
@@ -42,8 +42,8 @@ export function FormFieldSidebar({
   useEffect(() => {
     if (activeFieldName && activeFieldRef.current) {
       activeFieldRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
+        behavior: "smooth",
+        block: "center",
       });
     }
   }, [activeFieldName]);
@@ -52,14 +52,14 @@ export function FormFieldSidebar({
     (fieldName: string) => {
       setActiveField(fieldName);
     },
-    [setActiveField]
+    [setActiveField],
   );
 
   const handleValueChange = useCallback(
     (fieldName: string, value: string) => {
       setValue(fieldName, value);
     },
-    [setValue]
+    [setValue],
   );
 
   if (!visible) return null;
@@ -67,7 +67,9 @@ export function FormFieldSidebar({
   const fieldsByPage = new Map<number, FormField[]>();
   for (const field of fields) {
     const pageIndex =
-      field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
+      field.widgets && field.widgets.length > 0
+        ? field.widgets[0].pageIndex
+        : 0;
     if (!fieldsByPage.has(pageIndex)) {
       fieldsByPage.set(pageIndex, []);
     }
@@ -78,31 +80,33 @@ export function FormFieldSidebar({
   return (
     <Box
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         right: 0,
-        width: '18.5rem',
-        height: '100%',
+        width: "18.5rem",
+        height: "100%",
         zIndex: 999,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--bg-toolbar, var(--mantine-color-body))',
-        borderLeft: '1px solid var(--border-subtle, var(--mantine-color-default-border))',
-        boxShadow: '-4px 0 16px rgba(0,0,0,0.08)',
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--bg-toolbar, var(--mantine-color-body))",
+        borderLeft:
+          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+        boxShadow: "-4px 0 16px rgba(0,0,0,0.08)",
       }}
     >
       {/* Header */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0.625rem 0.75rem',
-          borderBottom: '1px solid var(--border-subtle, var(--mantine-color-default-border))',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0.625rem 0.75rem",
+          borderBottom:
+            "1px solid var(--border-subtle, var(--mantine-color-default-border))",
           flexShrink: 0,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <TextFieldsIcon sx={{ fontSize: 18, opacity: 0.7 }} />
           <Text fw={600} size="sm">
             Form Fields
@@ -111,7 +115,12 @@ export function FormFieldSidebar({
             {fields.length}
           </Badge>
         </div>
-        <ActionIcon variant="subtle" size="sm" onClick={onToggle} aria-label="Close sidebar">
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={onToggle}
+          aria-label="Close sidebar"
+        >
           <CloseIcon sx={{ fontSize: 16 }} />
         </ActionIcon>
       </div>
@@ -154,9 +163,7 @@ export function FormFieldSidebar({
                     <div
                       key={field.name}
                       ref={isActive ? activeFieldRef : undefined}
-                      className={`${styles.fieldCard} ${
-                        isActive ? styles.fieldCardActive : ''
-                      }`}
+                      className={`${styles.fieldCard} ${isActive ? styles.fieldCardActive : ""}`}
                       onClick={() => handleFieldClick(field.name)}
                     >
                       <div className={styles.fieldHeader}>
@@ -165,7 +172,7 @@ export function FormFieldSidebar({
                             className={styles.fieldTypeIcon}
                             style={{
                               color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                              fontSize: '0.875rem',
+                              fontSize: "0.875rem",
                             }}
                           >
                             {FIELD_TYPE_ICON[field.type]}
@@ -179,21 +186,18 @@ export function FormFieldSidebar({
                         )}
                       </div>
 
-                      {field.type !== 'button' && field.type !== 'signature' && (
-                        <div
-                          className={styles.fieldInputWrap}
-                        >
-                          <FieldInput
-                            field={field}
-                            onValueChange={handleValueChange}
-                          />
-                        </div>
-                      )}
+                      {field.type !== "button" &&
+                        field.type !== "signature" && (
+                          <div className={styles.fieldInputWrap}>
+                            <FieldInput
+                              field={field}
+                              onValueChange={handleValueChange}
+                            />
+                          </div>
+                        )}
 
                       {field.tooltip && (
-                        <div className={styles.fieldHint}>
-                          {field.tooltip}
-                        </div>
+                        <div className={styles.fieldHint}>{field.tooltip}</div>
                       )}
                     </div>
                   );

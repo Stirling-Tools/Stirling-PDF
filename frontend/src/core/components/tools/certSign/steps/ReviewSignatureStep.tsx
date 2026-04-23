@@ -1,13 +1,16 @@
-import { Button, Stack, Text, Group, Divider, Paper } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import DrawIcon from '@mui/icons-material/Draw';
-import SecurityIcon from '@mui/icons-material/Security';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import { CertificateType, UploadFormat } from '@app/components/tools/certSign/CertificateSelector';
-import type { SignRequestDetail } from '@app/types/signingSession';
+import { Button, Stack, Text, Group, Divider, Paper } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DrawIcon from "@mui/icons-material/Draw";
+import SecurityIcon from "@mui/icons-material/Security";
+import SettingsIcon from "@mui/icons-material/Settings";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import {
+  CertificateType,
+  UploadFormat,
+} from "@app/components/tools/certSign/CertificateSelector";
+import type { SignRequestDetail } from "@app/types/signingSession";
 
 interface ReviewSignatureStepProps {
   signatureCount: number;
@@ -36,21 +39,30 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
 
   const getCertTypeName = () => {
     switch (certType) {
-      case 'USER_CERT':
-        return t('certSign.collab.signRequest.usePersonalCert', 'Personal Certificate');
-      case 'SERVER':
-        return t('certSign.collab.signRequest.useServerCert', 'Organization Certificate');
-      case 'UPLOAD':
-        return `${uploadFormat} — ${p12File?.name || t('certSign.collab.signRequest.uploadCert', 'Custom Certificate')}`;
+      case "USER_CERT":
+        return t(
+          "certSign.collab.signRequest.usePersonalCert",
+          "Personal Certificate",
+        );
+      case "SERVER":
+        return t(
+          "certSign.collab.signRequest.useServerCert",
+          "Organization Certificate",
+        );
+      case "UPLOAD":
+        return `${uploadFormat} — ${p12File?.name || t("certSign.collab.signRequest.uploadCert", "Custom Certificate")}`;
       default:
-        return '';
+        return "";
     }
   };
 
   return (
     <Stack gap="md">
       <Text size="sm" fw={600} c="dimmed">
-        {t('certSign.collab.signRequest.steps.reviewTitle', 'Review Before Signing')}
+        {t(
+          "certSign.collab.signRequest.steps.reviewTitle",
+          "Review Before Signing",
+        )}
       </Text>
 
       {/* Signatures Summary */}
@@ -58,18 +70,29 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
         <Group gap="xs" mb="xs">
           <DrawIcon sx={{ fontSize: 18 }} />
           <Text size="sm" fw={600}>
-            {t('certSign.collab.signRequest.steps.yourSignatures', 'Your Signatures ({{count}})', {
-              count: signatureCount,
-            })}
+            {t(
+              "certSign.collab.signRequest.steps.yourSignatures",
+              "Your Signatures ({{count}})",
+              {
+                count: signatureCount,
+              },
+            )}
           </Text>
         </Group>
         <Paper p="sm" withBorder>
           <Text size="sm">
             {signatureCount === 1
-              ? t('certSign.collab.signRequest.steps.oneSignature', '1 signature will be applied to the PDF')
-              : t('certSign.collab.signRequest.steps.multipleSignatures', '{{count}} signatures will be applied to the PDF', {
-                  count: signatureCount,
-                })}
+              ? t(
+                  "certSign.collab.signRequest.steps.oneSignature",
+                  "1 signature will be applied to the PDF",
+                )
+              : t(
+                  "certSign.collab.signRequest.steps.multipleSignatures",
+                  "{{count}} signatures will be applied to the PDF",
+                  {
+                    count: signatureCount,
+                  },
+                )}
           </Text>
         </Paper>
       </div>
@@ -81,7 +104,7 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
         <Group gap="xs" mb="xs">
           <SecurityIcon sx={{ fontSize: 18 }} />
           <Text size="sm" fw={600}>
-            {t('certSign.collab.signRequest.steps.certificate', 'Certificate')}
+            {t("certSign.collab.signRequest.steps.certificate", "Certificate")}
           </Text>
         </Group>
         <Text size="sm">{getCertTypeName()}</Text>
@@ -94,28 +117,44 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
         <Group gap="xs" mb="xs">
           <SettingsIcon sx={{ fontSize: 18 }} />
           <Text size="sm" fw={600}>
-            {t('certSign.collab.signRequest.signatureSettings', 'Signature Settings')}
+            {t(
+              "certSign.collab.signRequest.signatureSettings",
+              "Signature Settings",
+            )}
           </Text>
         </Group>
         <Paper p="sm" withBorder>
           <Text size="xs" c="dimmed" mb="xs">
-            {t('certSign.collab.signRequest.signatureInfo', 'These settings are configured by the document owner')}
+            {t(
+              "certSign.collab.signRequest.signatureInfo",
+              "These settings are configured by the document owner",
+            )}
           </Text>
           <Stack gap="xs">
             <Text size="sm">
-              <strong>{t('certSign.collab.signRequest.steps.visibility', 'Visibility:')}</strong>{' '}
+              <strong>
+                {t(
+                  "certSign.collab.signRequest.steps.visibility",
+                  "Visibility:",
+                )}
+              </strong>{" "}
               {signRequest.showSignature
-                ? t('certSign.collab.signRequest.steps.visible', 'Visible')
-                : t('certSign.collab.signRequest.steps.invisible', 'Invisible')}
+                ? t("certSign.collab.signRequest.steps.visible", "Visible")
+                : t("certSign.collab.signRequest.steps.invisible", "Invisible")}
             </Text>
             {signRequest.reason && (
               <Text size="sm">
-                <strong>{t('certSign.collab.signRequest.steps.reason', 'Reason:')}</strong> {signRequest.reason}
+                <strong>
+                  {t("certSign.collab.signRequest.steps.reason", "Reason:")}
+                </strong>{" "}
+                {signRequest.reason}
               </Text>
             )}
             {signRequest.location && (
               <Text size="sm">
-                <strong>{t('certSign.collab.signRequest.steps.location', 'Location:')}</strong>{' '}
+                <strong>
+                  {t("certSign.collab.signRequest.steps.location", "Location:")}
+                </strong>{" "}
                 {signRequest.location}
               </Text>
             )}
@@ -127,8 +166,12 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
 
       {/* Action Buttons */}
       <Group gap="sm" mt="md">
-        <Button variant="default" onClick={onBack} leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}>
-          {t('certSign.collab.signRequest.steps.back', 'Back')}
+        <Button
+          variant="default"
+          onClick={onBack}
+          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+        >
+          {t("certSign.collab.signRequest.steps.back", "Back")}
         </Button>
         <Button
           variant="light"
@@ -137,7 +180,7 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
           disabled={disabled}
           leftSection={<CancelIcon sx={{ fontSize: 16 }} />}
         >
-          {t('certSign.collab.signRequest.declineButton', 'Decline')}
+          {t("certSign.collab.signRequest.declineButton", "Decline")}
         </Button>
         <Button
           onClick={onSign}
@@ -146,7 +189,7 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
           color="green"
           leftSection={<CheckCircleIcon sx={{ fontSize: 16 }} />}
         >
-          {t('certSign.collab.signRequest.signButton', 'Sign Document')}
+          {t("certSign.collab.signRequest.signButton", "Sign Document")}
         </Button>
       </Group>
     </Stack>

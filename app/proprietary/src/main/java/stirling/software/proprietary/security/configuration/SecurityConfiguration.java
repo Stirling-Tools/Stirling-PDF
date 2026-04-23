@@ -159,10 +159,12 @@ public class SecurityConfiguration {
         firewall.setAllowedHeaderValues(
                 headerValue -> headerValue != null && allowedChars.matcher(headerValue).matches());
 
-        // Apply the same rules to parameter values for consistency.
+        // Allow non-ASCII characters and newlines in parameter values.
+        Pattern allowedParamChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]\\r\\n]*");
         firewall.setAllowedParameterValues(
                 parameterValue ->
-                        parameterValue != null && allowedChars.matcher(parameterValue).matches());
+                        parameterValue != null
+                                && allowedParamChars.matcher(parameterValue).matches());
         return firewall;
     }
 
@@ -291,7 +293,12 @@ public class SecurityConfiguration {
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    // TODO: IPRateLimitingFilter disabled — limit is 1M (no-op) and raw Filter
+                    // impl causes Spring Security async dispatch bug (response already committed
+                    // errors on StreamingResponseBody endpoints). Re-enable once converted to
+                    // OncePerRequestFilter with proper config-driven limits.
+                    // .addFilterBefore(rateLimitingFilter,
+                    // UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(

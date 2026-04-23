@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
@@ -28,6 +29,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 
@@ -37,6 +39,7 @@ import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 public class MetadataController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     private String checkUndefined(String entry) {
         // Check if the string is "undefined"
@@ -61,7 +64,7 @@ public class MetadataController {
                     "This endpoint allows you to update the metadata of a given PDF file. You can"
                             + " add, modify, or delete standard and custom metadata fields. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> metadata(@ModelAttribute MetadataRequest request)
+    public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
         // Extract PDF file from the request object
@@ -179,7 +182,8 @@ public class MetadataController {
                     document,
                     GeneralUtils.removeExtension(
                                     Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
-                            + "_metadata.pdf");
+                            + "_metadata.pdf",
+                    tempFileManager);
         }
     }
 }

@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +27,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 import tools.jackson.core.type.TypeReference;
@@ -39,6 +40,7 @@ public class EditTableOfContentsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             value = "/extract-bookmarks",
@@ -149,12 +151,11 @@ public class EditTableOfContentsController {
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
-    public ResponseEntity<byte[]> editTableOfContents(
+    public ResponseEntity<Resource> editTableOfContents(
             @ModelAttribute EditTableOfContentsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        try (PDDocument document = pdfDocumentFactory.load(file);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
 
             // Parse the bookmark data from JSON
             List<BookmarkItem> bookmarks =
@@ -168,13 +169,10 @@ public class EditTableOfContentsController {
             // Add bookmarks to the outline
             addBookmarksToOutline(document, outline, bookmarks);
 
-            // Save the document to a byte array
-            document.save(baos);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(),
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
-                    MediaType.APPLICATION_PDF);
+                    tempFileManager);
         }
     }
 

@@ -11,12 +11,12 @@
  * For widgets without an appearance stream (unsigned fields, or fields whose
  * PDF writer didn't embed one), we fall back to a translucent badge overlay.
  */
-import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
+import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   renderSignatureFieldAppearances,
   extractSignatures,
   type SignatureFieldAppearance,
-} from '@app/services/pdfiumService';
+} from "@app/services/pdfiumService";
 
 interface SignatureFieldOverlayProps {
   pageIndex: number;
@@ -69,7 +69,6 @@ async function resolveFields(
         time: matchedSig?.time,
       };
     });
-
   })();
 
   _cachedFields = await _cachePromise;
@@ -92,7 +91,7 @@ function SignatureBitmapCanvas({
     if (!canvas) return;
     canvas.width = imageData.width;
     canvas.height = imageData.height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (ctx) ctx.putImageData(imageData, 0, 0);
   }, [imageData]);
 
@@ -102,7 +101,7 @@ function SignatureBitmapCanvas({
       style={{
         width: cssWidth,
         height: cssHeight,
-        display: 'block',
+        display: "block",
       }}
     />
   );
@@ -123,12 +122,16 @@ function SignatureFieldOverlayInner({
       return;
     }
     let cancelled = false;
-    resolveFields(pdfSource).then((res) => {
-      if (!cancelled) setFields(res);
-    }).catch(() => {
-      if (!cancelled) setFields([]);
-    });
-    return () => { cancelled = true; };
+    resolveFields(pdfSource)
+      .then((res) => {
+        if (!cancelled) setFields(res);
+      })
+      .catch(() => {
+        if (!cancelled) setFields([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [pdfSource]);
 
   const pageFields = useMemo(
@@ -141,12 +144,12 @@ function SignatureFieldOverlayInner({
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
         zIndex: 6,
       }}
       data-signature-overlay-page={pageIndex}
@@ -155,8 +158,10 @@ function SignatureFieldOverlayInner({
         // Use the source PDF page dimensions that the extraction used for
         // coordinate computation. This avoids mismatches with pdfPage.size
         // from EmbedPDF which may report different dimensions.
-        const sx = field.sourcePageWidth  > 0 ? pageWidth  / field.sourcePageWidth  : 1;
-        const sy = field.sourcePageHeight > 0 ? pageHeight / field.sourcePageHeight : 1;
+        const sx =
+          field.sourcePageWidth > 0 ? pageWidth / field.sourcePageWidth : 1;
+        const sy =
+          field.sourcePageHeight > 0 ? pageHeight / field.sourcePageHeight : 1;
         const left = field.x * sx;
         const top = field.y * sy;
         const width = field.width * sx;
@@ -168,18 +173,18 @@ function SignatureFieldOverlayInner({
             <div
               key={`sig-${field.fieldName}-${idx}`}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left,
                 top,
                 width,
                 height,
-                overflow: 'hidden',
-                pointerEvents: 'auto',
-                cursor: 'default',
+                overflow: "hidden",
+                pointerEvents: "auto",
+                cursor: "default",
               }}
               title={
                 field.isSigned
-                  ? `Signed${field.reason ? `: ${field.reason}` : ''}${field.time ? ` (${field.time})` : ''}`
+                  ? `Signed${field.reason ? `: ${field.reason}` : ""}${field.time ? ` (${field.time})` : ""}`
                   : `Signature field: ${field.fieldName}`
               }
             >
@@ -197,47 +202,49 @@ function SignatureFieldOverlayInner({
           <div
             key={`sig-${field.fieldName}-${idx}`}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left,
               top,
               width,
               height,
               border: field.isSigned
-                ? '2px solid rgba(34, 139, 34, 0.7)'
-                : '2px dashed rgba(180, 180, 180, 0.7)',
+                ? "2px solid rgba(34, 139, 34, 0.7)"
+                : "2px dashed rgba(180, 180, 180, 0.7)",
               borderRadius: 4,
               background: field.isSigned
-                ? 'rgba(34, 139, 34, 0.08)'
-                : 'rgba(200, 200, 200, 0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              pointerEvents: 'auto',
-              cursor: 'default',
+                ? "rgba(34, 139, 34, 0.08)"
+                : "rgba(200, 200, 200, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              pointerEvents: "auto",
+              cursor: "default",
             }}
             title={
               field.isSigned
-                ? `Signed${field.reason ? `: ${field.reason}` : ''}${field.time ? ` (${field.time})` : ''}`
+                ? `Signed${field.reason ? `: ${field.reason}` : ""}${field.time ? ` (${field.time})` : ""}`
                 : `Unsigned signature field: ${field.fieldName}`
             }
           >
             <span
               style={{
                 fontSize: Math.min(height * 0.35, 14),
-                color: field.isSigned ? 'rgba(34, 139, 34, 0.85)' : 'rgba(120, 120, 120, 0.85)',
+                color: field.isSigned
+                  ? "rgba(34, 139, 34, 0.85)"
+                  : "rgba(120, 120, 120, 0.85)",
                 fontWeight: 600,
-                textAlign: 'center',
+                textAlign: "center",
                 lineHeight: 1.2,
-                padding: '2px 4px',
-                userSelect: 'none',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-                maxWidth: '100%',
+                padding: "2px 4px",
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                maxWidth: "100%",
               }}
             >
-              {field.isSigned ? '🔒 Signed' : '✎ Signature'}
+              {field.isSigned ? "🔒 Signed" : "✎ Signature"}
             </span>
           </div>
         );

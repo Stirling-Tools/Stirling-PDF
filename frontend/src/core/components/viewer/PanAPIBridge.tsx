@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { usePan } from '@embedpdf/plugin-pan/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect, useRef } from "react";
+import { usePan } from "@embedpdf/plugin-pan/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF pan (hand tool) plugin to the shared ViewerContext.
@@ -36,11 +36,11 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
     const currentPan = panRef.current;
     if (currentPan) {
       const newState = {
-        isPanning
+        isPanning,
       };
 
       // Register this bridge with ViewerContext
-      registerBridge('pan', {
+      registerBridge("pan", {
         state: newState,
         api: {
           enable: () => {
@@ -54,13 +54,16 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
           },
           makePanDefault: () => {
             // v2.5.0: makePanDefault may not exist, enable pan as fallback
-            if ('makePanDefault' in currentPan && typeof (currentPan as any).makePanDefault === 'function') {
+            if (
+              "makePanDefault" in currentPan &&
+              typeof (currentPan as any).makePanDefault === "function"
+            ) {
               (currentPan as any).makePanDefault();
             } else {
               currentPan.enablePan();
             }
           },
-        }
+        },
       });
 
       if (prevIsPanningRef.current !== isPanning) {
@@ -70,7 +73,7 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
     }
 
     return () => {
-      registerBridge('pan', null);
+      registerBridge("pan", null);
     };
   }, [isPanning, registerBridge, triggerImmediatePanUpdate]);
 

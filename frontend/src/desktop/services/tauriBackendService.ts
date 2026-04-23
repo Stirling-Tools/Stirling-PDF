@@ -1,13 +1,13 @@
-import { invoke } from '@tauri-apps/api/core';
-import { fetch } from '@tauri-apps/plugin-http';
-import { alert } from '@app/components/toast';
+import { invoke } from "@tauri-apps/api/core";
+import { fetch } from "@tauri-apps/plugin-http";
+import { alert } from "@app/components/toast";
 
-export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
+export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";
 
 export class TauriBackendService {
   private static instance: TauriBackendService;
   private backendStarted = false;
-  private backendStatus: BackendStatus = 'stopped';
+  private backendStatus: BackendStatus = "stopped";
   private backendPort: number | null = null;
   private healthMonitor: Promise<void> | null = null;
   private startPromise: Promise<void> | null = null;
@@ -35,7 +35,7 @@ export class TauriBackendService {
   }
 
   get isOnline(): boolean {
-    return this.backendStatus === 'healthy';
+    return this.backendStatus === "healthy";
   }
 
   getBackendPort(): number | null {
@@ -58,16 +58,16 @@ export class TauriBackendService {
       return;
     }
     this.backendStatus = status;
-    this.statusListeners.forEach(listener => listener(status));
+    this.statusListeners.forEach((listener) => listener(status));
 
-    if (status === 'healthy') {
+    if (status === "healthy") {
       // Reset restart counter on successful recovery so future failures get a full retry budget.
       this.restartAttempts = 0;
     }
 
     // Auto-recovery: when our own backend goes unhealthy, try restarting it
     // before reporting as permanently offline.
-    if (status === 'unhealthy' && this.isLocalBackend && !this.isRecovering) {
+    if (status === "unhealthy" && this.isLocalBackend && !this.isRecovering) {
       this.scheduleRecovery();
     }
   }
@@ -78,7 +78,7 @@ export class TauriBackendService {
     // should resolve on their own before we attempt a full restart.
     this.recoveryTimer = setTimeout(() => {
       this.recoveryTimer = null;
-      if (this.backendStatus !== 'unhealthy') return; // Recovered on its own
+      if (this.backendStatus !== "unhealthy") return; // Recovered on its own
       void this.attemptRestart();
     }, 2000);
   }
@@ -86,20 +86,24 @@ export class TauriBackendService {
   async attemptRestart(): Promise<void> {
     if (this.isRecovering) return;
     if (this.restartAttempts >= TauriBackendService.MAX_RESTART_ATTEMPTS) {
-      console.error(`[TauriBackendService] Backend failed after ${TauriBackendService.MAX_RESTART_ATTEMPTS} restart attempts, giving up.`);
+      console.error(
+        `[TauriBackendService] Backend failed after ${TauriBackendService.MAX_RESTART_ATTEMPTS} restart attempts, giving up.`,
+      );
       alert({
-        alertType: 'error',
-        title: 'Backend failed to restart',
-        body: 'The local backend could not be recovered. Please restart the app.',
+        alertType: "error",
+        title: "Backend failed to restart",
+        body: "The local backend could not be recovered. Please restart the app.",
         isPersistentPopup: true,
       });
       return;
     }
     this.restartAttempts++;
-    console.log(`[TauriBackendService] Backend unhealthy, attempting restart (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})...`);
+    console.log(
+      `[TauriBackendService] Backend unhealthy, attempting restart (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})...`,
+    );
     alert({
-      alertType: 'warning',
-      title: 'Backend stopped unexpectedly',
+      alertType: "warning",
+      title: "Backend stopped unexpectedly",
       body: `Attempting to restart... (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})`,
       durationMs: 5000,
     });
@@ -107,29 +111,31 @@ export class TauriBackendService {
     // Reset started flag so startBackend() will run again
     this.backendStarted = false;
     this.startPromise = null;
-    this.setStatus('starting');
+    this.setStatus("starting");
     try {
       await this.startBackend();
       this.restartAttempts = 0; // Reset on successful restart
       this.isRecovering = false;
-      console.log('[TauriBackendService] Backend restarted successfully.');
+      console.log("[TauriBackendService] Backend restarted successfully.");
       alert({
-        alertType: 'success',
-        title: 'Backend restarted',
-        body: 'The local backend is back online.',
+        alertType: "success",
+        title: "Backend restarted",
+        body: "The local backend is back online.",
         durationMs: 4000,
       });
     } catch (err) {
-      console.error('[TauriBackendService] Restart failed:', err);
+      console.error("[TauriBackendService] Restart failed:", err);
       // Set isRecovering = false BEFORE setStatus to prevent re-triggering scheduleRecovery
       // if the max attempts check above doesn't catch it next time.
       this.isRecovering = false;
       if (this.restartAttempts < TauriBackendService.MAX_RESTART_ATTEMPTS) {
-        this.setStatus('unhealthy'); // Will trigger another scheduleRecovery
+        this.setStatus("unhealthy"); // Will trigger another scheduleRecovery
       } else {
         // Don't call setStatus('unhealthy') — the status is already unhealthy and calling it
         // again would bypass the dedup check and re-trigger scheduleRecovery.
-        console.error('[TauriBackendService] Max restart attempts reached, backend is permanently unhealthy.');
+        console.error(
+          "[TauriBackendService] Max restart attempts reached, backend is permanently unhealthy.",
+        );
       }
     }
   }
@@ -146,7 +152,7 @@ export class TauriBackendService {
     }
 
     this.backendStarted = true; // Mark as active for health checks
-    this.setStatus('starting');
+    this.setStatus("starting");
     this.beginHealthMonitoring();
 
     // Discover the local bundled backend port in the background.
@@ -166,20 +172,20 @@ export class TauriBackendService {
       return this.startPromise;
     }
 
-    this.setStatus('starting');
+    this.setStatus("starting");
 
-    this.startPromise = invoke('start_backend', { backendUrl })
+    this.startPromise = invoke("start_backend", { backendUrl })
       .then(async () => {
         this.backendStarted = true;
-        this.setStatus('starting');
+        this.setStatus("starting");
 
         // Poll for the dynamically assigned port
         await this.waitForPort();
         this.beginHealthMonitoring();
       })
       .catch((error) => {
-        this.setStatus('unhealthy');
-        console.error('[TauriBackendService] Failed to start backend:', error);
+        this.setStatus("unhealthy");
+        console.error("[TauriBackendService] Failed to start backend:", error);
         throw error;
       })
       .finally(() => {
@@ -192,17 +198,19 @@ export class TauriBackendService {
   private async waitForPort(): Promise<void> {
     while (true) {
       try {
-        const port = await invoke<number | null>('get_backend_port');
+        const port = await invoke<number | null>("get_backend_port");
         if (port) {
           this.backendPort = port;
           // Notify status listeners so hooks reading getBackendUrl() re-evaluate
-          this.statusListeners.forEach(listener => listener(this.backendStatus));
+          this.statusListeners.forEach((listener) =>
+            listener(this.backendStatus),
+          );
           return;
         }
       } catch (error) {
-        console.error('Failed to get backend port:', error);
+        console.error("Failed to get backend port:", error);
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
@@ -212,7 +220,7 @@ export class TauriBackendService {
     }
     this.healthMonitor = this.waitForHealthy()
       .catch((error) => {
-        console.error('Backend failed to become healthy:', error);
+        console.error("Backend failed to become healthy:", error);
       })
       .finally(() => {
         this.healthMonitor = null;
@@ -222,36 +230,47 @@ export class TauriBackendService {
   /** Always checks the local bundled backend at localhost:{port}. */
   async checkBackendHealth(): Promise<boolean> {
     if (!this.backendStarted) {
-      console.debug('[TauriBackendService] Health check: backend not started');
-      this.setStatus('stopped');
+      console.debug("[TauriBackendService] Health check: backend not started");
+      this.setStatus("stopped");
       return false;
     }
     if (!this.backendPort) {
-      console.debug('[TauriBackendService] Health check: backend port not available');
+      console.debug(
+        "[TauriBackendService] Health check: backend port not available",
+      );
       return false;
     }
 
     const configUrl = `http://localhost:${this.backendPort}/api/v1/config/app-config`;
-    console.debug(`[TauriBackendService] Checking local backend health at: ${configUrl}`);
+    console.debug(
+      `[TauriBackendService] Checking local backend health at: ${configUrl}`,
+    );
 
     try {
-      const response = await fetch(configUrl, { method: 'GET', connectTimeout: 5000 });
+      const response = await fetch(configUrl, {
+        method: "GET",
+        connectTimeout: 5000,
+      });
 
       if (!response.ok) {
-        console.warn(`[TauriBackendService] Health check failed: ${response.status}`);
-        this.setStatus('unhealthy');
+        console.warn(
+          `[TauriBackendService] Health check failed: ${response.status}`,
+        );
+        this.setStatus("unhealthy");
         return false;
       }
 
       const data = await response.json();
       const dependenciesReady = data.dependenciesReady === true;
-      console.debug(`[TauriBackendService] dependenciesReady=${dependenciesReady}`);
+      console.debug(
+        `[TauriBackendService] dependenciesReady=${dependenciesReady}`,
+      );
 
-      this.setStatus(dependenciesReady ? 'healthy' : 'starting');
+      this.setStatus(dependenciesReady ? "healthy" : "starting");
       return dependenciesReady;
     } catch (error) {
-      console.error('[TauriBackendService] Health check error:', error);
-      this.setStatus('unhealthy');
+      console.error("[TauriBackendService] Health check error:", error);
+      this.setStatus("unhealthy");
       return false;
     }
   }
@@ -262,7 +281,7 @@ export class TauriBackendService {
       if (isHealthy) {
         return;
       }
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
@@ -279,7 +298,7 @@ export class TauriBackendService {
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = null;
     }
-    this.setStatus('stopped');
+    this.setStatus("stopped");
     this.healthMonitor = null;
     this.startPromise = null;
   }

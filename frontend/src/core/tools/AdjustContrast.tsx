@@ -1,32 +1,36 @@
-import { useTranslation } from 'react-i18next';
-import { useEffect, useMemo, useState } from 'react';
-import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
-import { BaseToolProps, ToolComponent } from '@app/types/tool';
-import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
-import { useAdjustContrastParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
-import { useAdjustContrastOperation } from '@app/hooks/tools/adjustContrast/useAdjustContrastOperation';
-import AdjustContrastBasicSettings from '@app/components/tools/adjustContrast/AdjustContrastBasicSettings';
-import AdjustContrastColorSettings from '@app/components/tools/adjustContrast/AdjustContrastColorSettings';
-import AdjustContrastPreview from '@app/components/tools/adjustContrast/AdjustContrastPreview';
-import { useAccordionSteps } from '@app/hooks/tools/shared/useAccordionSteps';
-import NavigationArrows from '@app/components/shared/filePreview/NavigationArrows';
+import { useTranslation } from "react-i18next";
+import { useEffect, useMemo, useState } from "react";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { useAdjustContrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import { useAdjustContrastOperation } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import AdjustContrastBasicSettings from "@app/components/tools/adjustContrast/AdjustContrastBasicSettings";
+import AdjustContrastColorSettings from "@app/components/tools/adjustContrast/AdjustContrastColorSettings";
+import AdjustContrastPreview from "@app/components/tools/adjustContrast/AdjustContrastPreview";
+import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
+import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
 
 const AdjustContrast = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'adjustContrast',
+    "adjustContrast",
     useAdjustContrastParameters,
     useAdjustContrastOperation,
-    props
+    props,
   );
 
-  enum Step { NONE='none', BASIC='basic', COLORS='colors' }
+  enum Step {
+    NONE = "none",
+    BASIC = "basic",
+    COLORS = "colors",
+  }
   const accordion = useAccordionSteps<Step>({
     noneValue: Step.NONE,
     initialStep: Step.BASIC,
     stateConditions: { hasFiles: base.hasFiles, hasResults: base.hasResults },
-    afterResults: base.handleSettingsReset
+    afterResults: base.handleSettingsReset,
   });
 
   // Track which selected file is being previewed. Clamp when selection changes.
@@ -44,7 +48,8 @@ const AdjustContrast = (props: BaseToolProps) => {
   }, [base.selectedFiles, previewIndex, totalSelected]);
 
   const handlePrev = () => setPreviewIndex((i) => Math.max(0, i - 1));
-  const handleNext = () => setPreviewIndex((i) => Math.min(totalSelected - 1, i + 1));
+  const handleNext = () =>
+    setPreviewIndex((i) => Math.min(totalSelected - 1, i + 1));
 
   return createToolFlow({
     files: {
@@ -53,7 +58,7 @@ const AdjustContrast = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t('adjustContrast.basic', 'Basic Adjustments'),
+        title: t("adjustContrast.basic", "Basic Adjustments"),
         isCollapsed: accordion.getCollapsedState(Step.BASIC),
         onCollapsedClick: () => accordion.handleStepToggle(Step.BASIC),
         content: (
@@ -65,7 +70,7 @@ const AdjustContrast = (props: BaseToolProps) => {
         ),
       },
       {
-        title: t('adjustContrast.adjustColors', 'Adjust Colors'),
+        title: t("adjustContrast.adjustColors", "Adjust Colors"),
         isCollapsed: accordion.getCollapsedState(Step.COLORS),
         onCollapsedClick: () => accordion.handleStepToggle(Step.COLORS),
         content: (
@@ -84,7 +89,7 @@ const AdjustContrast = (props: BaseToolProps) => {
           onNext={handleNext}
           disabled={totalSelected <= 1}
         >
-          <div style={{ width: '100%' }}>
+          <div style={{ width: "100%" }}>
             <AdjustContrastPreview
               file={currentFile || null}
               parameters={base.params.parameters}
@@ -92,23 +97,30 @@ const AdjustContrast = (props: BaseToolProps) => {
           </div>
         </NavigationArrows>
         {totalSelected > 1 && (
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--text-color-muted)' }}>
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: 8,
+              fontSize: 12,
+              color: "var(--text-color-muted)",
+            }}
+          >
             {`${previewIndex + 1} of ${totalSelected}`}
           </div>
         )}
       </div>
     ),
     executeButton: {
-      text: t('adjustContrast.confirm', 'Confirm'),
+      text: t("adjustContrast.confirm", "Confirm"),
       isVisible: !base.hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: base.handleExecute,
       paramsValid: true,
     },
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: t('adjustContrast.results.title', 'Adjusted PDF'),
+      title: t("adjustContrast.results.title", "Adjusted PDF"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },
@@ -117,5 +129,3 @@ const AdjustContrast = (props: BaseToolProps) => {
 };
 
 export default AdjustContrast as ToolComponent;
-
-

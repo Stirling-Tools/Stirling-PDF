@@ -4,9 +4,9 @@
   right: 4.5rem;
   z-index: 1000;
   background: var(--modal-content-bg, #111418);
-  border: 1px solid var(--api-keys-card-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--api-keys-card-border, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
   padding: 12px 16px;
   max-width: 30rem;
   width: 30rem;
@@ -57,7 +57,7 @@
 }
 
 .guest-banner-dismiss:hover {
-  background: var(--mantine-color-gray-1, rgba(255,255,255,0.05));
+  background: var(--mantine-color-gray-1, rgba(255, 255, 255, 0.05));
 }
 
 .guest-banner-signup {

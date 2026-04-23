@@ -9,10 +9,10 @@ const Repair = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'repair',
+    "repair",
     useRepairParameters,
     useRepairOperation,
-    props
+    props,
   );
 
   return createToolFlow({

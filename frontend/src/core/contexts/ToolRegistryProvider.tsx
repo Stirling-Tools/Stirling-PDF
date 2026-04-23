@@ -1,15 +1,19 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import type { ToolId } from '@app/types/toolId';
-import type { ToolRegistry } from '@app/data/toolsTaxonomy';
-import ToolRegistryContext, { ToolRegistryCatalog } from '@app/contexts/ToolRegistryContext';
-import { useTranslatedToolCatalog } from '@app/data/useTranslatedToolRegistry';
+import type { ToolId } from "@app/types/toolId";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import ToolRegistryContext, {
+  ToolRegistryCatalog,
+} from "@app/contexts/ToolRegistryContext";
+import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 
 interface ToolRegistryProviderProps {
   children: React.ReactNode;
 }
 
-export const ToolRegistryProvider: React.FC<ToolRegistryProviderProps> = ({ children }) => {
+export const ToolRegistryProvider: React.FC<ToolRegistryProviderProps> = ({
+  children,
+}) => {
   const catalog = useTranslatedToolCatalog();
 
   const contextValue = useMemo<ToolRegistryCatalog>(() => {

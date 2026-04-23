@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import apiClient from '@app/services/apiClient';
-import { alert } from '@app/components/toast';
-import { SignRequestSummary, SessionSummary } from '@app/types/signingSession';
+import { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
+import { alert } from "@app/components/toast";
+import { SignRequestSummary, SessionSummary } from "@app/types/signingSession";
 
 export interface UseSigningSessionsOptions {
   enabled?: boolean;
@@ -22,7 +22,7 @@ export interface UseSigningSessionsResult {
  * Supports auto-refresh for real-time updates.
  */
 export const useSigningSessions = (
-  options: UseSigningSessionsOptions = {}
+  options: UseSigningSessionsOptions = {},
 ): UseSigningSessionsResult => {
   const { enabled = true, autoRefreshInterval = 0 } = options;
   const { t } = useTranslation();
@@ -40,21 +40,24 @@ export const useSigningSessions = (
 
     try {
       const [requestsResponse, sessionsResponse] = await Promise.all([
-        apiClient.get<SignRequestSummary[]>('/api/v1/security/cert-sign/sign-requests'),
-        apiClient.get<SessionSummary[]>('/api/v1/security/cert-sign/sessions'),
+        apiClient.get<SignRequestSummary[]>(
+          "/api/v1/security/cert-sign/sign-requests",
+        ),
+        apiClient.get<SessionSummary[]>("/api/v1/security/cert-sign/sessions"),
       ]);
 
       setSignRequests(requestsResponse.data);
       setMySessions(sessionsResponse.data);
     } catch (err) {
-      const errorObj = err instanceof Error ? err : new Error('Failed to fetch signing data');
+      const errorObj =
+        err instanceof Error ? err : new Error("Failed to fetch signing data");
       setError(errorObj);
-      console.error('Failed to fetch signing data:', err);
+      console.error("Failed to fetch signing data:", err);
 
       alert({
-        alertType: 'warning',
-        title: t('common.error'),
-        body: t('certSign.fetchFailed', 'Failed to load signing data'),
+        alertType: "warning",
+        title: t("common.error"),
+        body: t("certSign.fetchFailed", "Failed to load signing data"),
         expandable: false,
         durationMs: 2500,
       });

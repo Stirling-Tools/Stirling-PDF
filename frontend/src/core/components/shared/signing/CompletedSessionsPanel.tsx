@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next';
-import { Loader, Center, Text, Badge } from '@mantine/core';
+import { useTranslation } from "react-i18next";
+import { Loader, Center, Text, Badge } from "@mantine/core";
 
 interface SessionItem {
-  itemType: 'signRequest' | 'mySession';
+  itemType: "signRequest" | "mySession";
   sessionId: string;
   documentName: string;
   createdAt: string;
@@ -29,30 +29,30 @@ const CompletedSessionsPanel = ({
   const { t } = useTranslation();
 
   const getStatusColor = (status?: string, itemType?: string): string => {
-    if (itemType === 'mySession') return 'green';
+    if (itemType === "mySession") return "green";
     switch (status) {
-      case 'SIGNED':
-        return 'green';
-      case 'DECLINED':
-        return 'red';
+      case "SIGNED":
+        return "green";
+      case "DECLINED":
+        return "red";
       default:
-        return 'gray';
+        return "gray";
     }
   };
 
   const getStatusLabel = (item: SessionItem): string => {
-    if (item.itemType === 'mySession') {
-      return t('certSign.finalized', 'Finalized');
+    if (item.itemType === "mySession") {
+      return t("certSign.finalized", "Finalized");
     }
 
     // For sign requests
     switch (item.myStatus) {
-      case 'SIGNED':
-        return t('certSign.signed', 'Signed');
-      case 'DECLINED':
-        return t('certSign.declined', 'Declined');
+      case "SIGNED":
+        return t("certSign.signed", "Signed");
+      case "DECLINED":
+        return t("certSign.declined", "Declined");
       default:
-        return item.myStatus || 'COMPLETED';
+        return item.myStatus || "COMPLETED";
     }
   };
 
@@ -65,7 +65,7 @@ const CompletedSessionsPanel = ({
       ) : sessions.length === 0 ? (
         <div className="quick-access-popout__section">
           <Text size="sm" c="dimmed" ta="center" py="xl">
-            {t('quickAccess.noCompletedSessions', 'No completed sessions')}
+            {t("quickAccess.noCompletedSessions", "No completed sessions")}
           </Text>
         </div>
       ) : (
@@ -77,16 +77,20 @@ const CompletedSessionsPanel = ({
               onClick={() => onSessionClick(session)}
             >
               <div className="quick-access-popout__sign-request-info">
-                <div className="quick-access-popout__row-title">{session.documentName}</div>
+                <div className="quick-access-popout__row-title">
+                  {session.documentName}
+                </div>
                 <div className="quick-access-popout__row-subtitle">
-                  {session.itemType === 'signRequest' ? (
+                  {session.itemType === "signRequest" ? (
                     <>
                       From: {session.ownerUsername}
-                      {session.dueDate && ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
+                      {session.dueDate &&
+                        ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
                     </>
                   ) : (
                     <>
-                      Created: {new Date(session.createdAt).toLocaleDateString()}
+                      Created:{" "}
+                      {new Date(session.createdAt).toLocaleDateString()}
                       {session.signedCount !== undefined &&
                         session.participantCount !== undefined &&
                         ` • ${session.signedCount}/${session.participantCount} signed`}
@@ -95,7 +99,10 @@ const CompletedSessionsPanel = ({
                 </div>
               </div>
               <div className="quick-access-popout__sign-request-badge">
-                <Badge size="sm" color={getStatusColor(session.myStatus, session.itemType)}>
+                <Badge
+                  size="sm"
+                  color={getStatusColor(session.myStatus, session.itemType)}
+                >
                   {getStatusLabel(session)}
                 </Badge>
               </div>

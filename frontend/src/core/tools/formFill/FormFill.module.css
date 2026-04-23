@@ -8,7 +8,8 @@
 
 .modeTabs {
   flex-shrink: 0;
-  border-bottom: 1px solid var(--border-default, var(--mantine-color-default-border));
+  border-bottom: 1px solid
+    var(--border-default, var(--mantine-color-default-border));
   background: transparent;
   padding: 0.25rem;
 }
@@ -58,7 +59,8 @@
   flex-shrink: 0;
   padding: 0.75rem 1rem;
   background: transparent;
-  border-bottom: 1px solid var(--border-default, var(--mantine-color-default-border));
+  border-bottom: 1px solid
+    var(--border-default, var(--mantine-color-default-border));
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -128,7 +130,7 @@
 }
 
 .pageDivider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: var(--border-default, var(--mantine-color-default-border));
@@ -261,7 +263,8 @@
 .statusBar {
   flex-shrink: 0;
   padding: 0.5rem 1rem;
-  border-top: 1px solid var(--border-default, var(--mantine-color-default-border));
+  border-top: 1px solid
+    var(--border-default, var(--mantine-color-default-border));
   display: flex;
   align-items: center;
   justify-content: space-between;

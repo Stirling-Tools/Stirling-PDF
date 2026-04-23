@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -22,9 +22,13 @@ import {
 } from "@app/components/tooltips/useWatermarkTips";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
-const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const AddWatermark = ({
+  onPreviewFile,
+  onComplete,
+  onError,
+}: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const [collapsedType, setCollapsedType] = useState(false);
   const [collapsedStyle, setCollapsedStyle] = useState(true);
@@ -39,8 +43,8 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   const watermarkFormattingTips = useWatermarkFormattingTips();
 
   // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-watermark");
-
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("add-watermark");
 
   useEffect(() => {
     watermarkOperation.resetResults();
@@ -56,13 +60,20 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
 
   const handleAddWatermark = async () => {
     try {
-      await watermarkOperation.executeOperation(watermarkParams.parameters, selectedFiles);
+      await watermarkOperation.executeOperation(
+        watermarkParams.parameters,
+        selectedFiles,
+      );
       if (watermarkOperation.files && onComplete) {
         onComplete(watermarkOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : t("watermark.error.failed", "Add watermark operation failed"));
+        onError(
+          error instanceof Error
+            ? error.message
+            : t("watermark.error.failed", "Add watermark operation failed"),
+        );
       }
     }
   };
@@ -83,7 +94,9 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = watermarkOperation.files.length > 0 || watermarkOperation.downloadUrl !== null;
+  const hasResults =
+    watermarkOperation.files.length > 0 ||
+    watermarkOperation.downloadUrl !== null;
 
   // Dynamic step structure based on watermark type
   const getSteps = () => {
@@ -93,12 +106,16 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
       title: t("watermark.steps.type", "Watermark Type"),
       isCollapsed: hasResults ? true : collapsedType,
       isVisible: hasFiles || hasResults,
-      onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedType(!collapsedType),
+      onCollapsedClick: hasResults
+        ? handleSettingsReset
+        : () => setCollapsedType(!collapsedType),
       tooltip: watermarkTypeTips,
       content: (
         <WatermarkTypeSettings
           watermarkType={watermarkParams.parameters.watermarkType}
-          onWatermarkTypeChange={(type) => watermarkParams.updateParameter("watermarkType", type)}
+          onWatermarkTypeChange={(type) =>
+            watermarkParams.updateParameter("watermarkType", type)
+          }
           disabled={endpointLoading}
         />
       ),
@@ -125,7 +142,9 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
         steps.push({
           title: t("watermark.steps.textStyle", "Style"),
           isCollapsed: hasResults ? true : collapsedStyle,
-          onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedStyle(!collapsedStyle),
+          onCollapsedClick: hasResults
+            ? handleSettingsReset
+            : () => setCollapsedStyle(!collapsedStyle),
           tooltip: watermarkTextStyleTips,
           content: (
             <WatermarkTextStyle
@@ -140,7 +159,9 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
         steps.push({
           title: t("watermark.steps.formatting", "Formatting"),
           isCollapsed: hasResults ? true : collapsedFormatting,
-          onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedFormatting(!collapsedFormatting),
+          onCollapsedClick: hasResults
+            ? handleSettingsReset
+            : () => setCollapsedFormatting(!collapsedFormatting),
           tooltip: watermarkFormattingTips,
           content: (
             <WatermarkFormatting
@@ -172,7 +193,9 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
         steps.push({
           title: t("watermark.steps.formatting", "Formatting"),
           isCollapsed: hasResults ? true : collapsedFormatting,
-          onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedFormatting(!collapsedFormatting),
+          onCollapsedClick: hasResults
+            ? handleSettingsReset
+            : () => setCollapsedFormatting(!collapsedFormatting),
           tooltip: watermarkFormattingTips,
           content: (
             <WatermarkFormatting

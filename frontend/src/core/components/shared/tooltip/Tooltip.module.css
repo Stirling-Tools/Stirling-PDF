@@ -4,12 +4,16 @@
   border: 0.0625rem solid var(--border-default);
   border-radius: 0.75rem;
   background-color: var(--bg-raised);
-  box-shadow: 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1), 0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1),
+    0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05);
   font-size: 0.875rem;
   line-height: 1.5;
   pointer-events: auto;
   z-index: 9999;
-  transition: opacity 100ms ease-out, transform 100ms ease-out;
+  transition:
+    opacity 100ms ease-out,
+    transform 100ms ease-out;
   max-width: 50vh;
   max-height: 80vh;
   color: var(--text-primary);
@@ -20,7 +24,10 @@
 /* Pinned tooltip indicator */
 .tooltip-container.pinned {
   border-color: var(--primary-color, #3b82f6);
-  box-shadow: 0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1), 0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05), 0 0 0 0.125rem rgba(59, 130, 246, 0.1);
+  box-shadow:
+    0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1),
+    0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05),
+    0 0 0 0.125rem rgba(59, 130, 246, 0.1);
 }
 
 /* Pinned tooltip header */
@@ -41,7 +48,9 @@
   border-radius: 0.25rem;
   border: 0.0625rem solid var(--border-default);
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -116,12 +125,17 @@
   color: var(--link-color, #3b82f6) !important;
   text-decoration: underline;
   text-decoration-color: var(--link-underline-color, rgba(59, 130, 246, 0.3));
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
 }
 
 .tooltip-body a:hover {
   color: var(--link-hover-color, #2563eb) !important;
-  text-decoration-color: var(--link-hover-underline-color, rgba(37, 99, 235, 0.5));
+  text-decoration-color: var(
+    --link-hover-underline-color,
+    rgba(37, 99, 235, 0.5)
+  );
 }
 
 .tooltip-container .tooltip-body {
@@ -141,9 +155,11 @@
 
 .tooltip-container .tooltip-body a:hover {
   color: var(--link-hover-color, #2563eb) !important;
-  text-decoration-color: var(--link-hover-underline-color, rgba(37, 99, 235, 0.5));
+  text-decoration-color: var(
+    --link-hover-underline-color,
+    rgba(37, 99, 235, 0.5)
+  );
 }
-
 
 /* Tooltip Arrows */
 .tooltip-arrow {
@@ -154,7 +170,6 @@
   border: 0.0625rem solid var(--border-default);
   transform: rotate(45deg);
 }
-
 
 .tooltip-arrow-sidebar {
   top: 50%;
@@ -194,4 +209,4 @@
   transform: translateY(-50%) rotate(45deg);
   border-right: none;
   border-top: none;
-} 
+}

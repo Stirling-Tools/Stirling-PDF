@@ -52,7 +52,8 @@
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -61,18 +62,18 @@
 }
 
 /* Action styles */
-.actionRow:hover { 
-  background: var(--hover-bg); 
+.actionRow:hover {
+  background: var(--hover-bg);
 }
 
-.actionDanger { 
-  color: var(--text-brand-accent); 
+.actionDanger {
+  color: var(--text-brand-accent);
 }
 
-.actionsDivider { 
-  height: 1px; 
-  background: var(--border-default); 
-  margin: 4px 0; 
+.actionsDivider {
+  height: 1px;
+  background: var(--border-default);
+  margin: 4px 0;
 }
 
 .pinIndicator {
@@ -85,7 +86,7 @@
 
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: #6B7280;
+  background: #6b7280;
   color: white;
   padding: 4px 8px;
   border-radius: 12px;

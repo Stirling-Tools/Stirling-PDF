@@ -1,10 +1,18 @@
-import { Card, Text, Group, Badge, Stack, Tooltip, ActionIcon } from '@mantine/core';
-import GroupIcon from '@mui/icons-material/Group';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { useTranslation } from 'react-i18next';
-import type { BillingStatus } from '@app/services/saasBillingService';
-import { BILLING_CONFIG, getFormattedOveragePrice } from '@app/config/billing';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import {
+  Card,
+  Text,
+  Group,
+  Badge,
+  Stack,
+  Tooltip,
+  ActionIcon,
+} from "@mantine/core";
+import GroupIcon from "@mui/icons-material/Group";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { useTranslation } from "react-i18next";
+import type { BillingStatus } from "@app/services/saasBillingService";
+import { BILLING_CONFIG, getFormattedOveragePrice } from "@app/config/billing";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface TeamData {
   teamId: number;
@@ -15,9 +23,9 @@ interface TeamData {
 }
 
 interface ActiveSubscriptionCardProps {
-  tier: BillingStatus['tier'];
-  subscription: BillingStatus['subscription'];
-  usage: BillingStatus['meterUsage'];
+  tier: BillingStatus["tier"];
+  subscription: BillingStatus["subscription"];
+  usage: BillingStatus["meterUsage"];
   isTrialing: boolean;
   price?: number;
   currency?: string;
@@ -42,21 +50,21 @@ export function ActiveSubscriptionCard({
   // Format timestamp to readable date
   const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   // Get tier display name
   const getTierName = (): string => {
     switch (tier) {
-      case 'free':
-        return t('settings.planBilling.tier.free', 'Free Plan');
-      case 'team':
-        return t('settings.planBilling.tier.team', 'Team Plan');
-      case 'enterprise':
-        return t('settings.planBilling.tier.enterprise', 'Enterprise Plan');
+      case "free":
+        return t("settings.planBilling.tier.free", "Free Plan");
+      case "team":
+        return t("settings.planBilling.tier.team", "Team Plan");
+      case "enterprise":
+        return t("settings.planBilling.tier.enterprise", "Enterprise Plan");
       default:
         return tier;
     }
@@ -64,31 +72,34 @@ export function ActiveSubscriptionCard({
 
   // Get price display
   const getPriceDisplay = (): string => {
-    if (tier === 'free') {
-      return '$0/month';
+    if (tier === "free") {
+      return "$0/month";
     }
     // Use actual price from Stripe if available
     if (price !== undefined && currency) {
       return `${currency}${price}/month`;
     }
     // Fallback to default pricing
-    return '$10/month';
+    return "$10/month";
   };
 
   // Get description
   const getDescription = (): string => {
-    if (tier === 'free') {
-      return t('settings.planBilling.tier.freeDescription', '50 credits per month');
+    if (tier === "free") {
+      return t(
+        "settings.planBilling.tier.freeDescription",
+        "50 credits per month",
+      );
     }
     return t(
-      'settings.planBilling.tier.teamDescription',
-      '500 credits/month included, automatic overage billing for uninterrupted service'
+      "settings.planBilling.tier.teamDescription",
+      "500 credits/month included, automatic overage billing for uninterrupted service",
     );
   };
 
   // Format overage cost
   const formatOverageCost = (cents: number, credits: number): string => {
-    return t('settings.planBilling.billing.overageCost', {
+    return t("settings.planBilling.billing.overageCost", {
       amount: `$${(cents / 100).toFixed(2)}`,
       credits,
       defaultValue: `Current overage cost: $${(cents / 100).toFixed(2)} (${credits} credits)`,
@@ -96,7 +107,7 @@ export function ActiveSubscriptionCard({
   };
 
   // Pro/Team card
-  if (tier === 'team' || tier === 'enterprise') {
+  if (tier === "team" || tier === "enterprise") {
     return (
       <Card padding="lg" radius="md" withBorder>
         <Stack gap="sm">
@@ -105,30 +116,39 @@ export function ActiveSubscriptionCard({
             <div style={{ flex: 1 }}>
               <Group gap="xs" mb="xs">
                 <Text size="lg" fw={600}>
-                  {!isPersonalTeam && isTeamLeader ? t('settings.planBilling.tier.team', 'Team Plan') : getTierName()}
+                  {!isPersonalTeam && isTeamLeader
+                    ? t("settings.planBilling.tier.team", "Team Plan")
+                    : getTierName()}
                 </Text>
                 {!isPersonalTeam && (
-                  <Badge color="violet" variant="light" leftSection={<GroupIcon sx={{ fontSize: 12 }} />}>
-                    {t('settings.planBilling.tier.teamBadge', 'Team')}
+                  <Badge
+                    color="violet"
+                    variant="light"
+                    leftSection={<GroupIcon sx={{ fontSize: 12 }} />}
+                  >
+                    {t("settings.planBilling.tier.teamBadge", "Team")}
                   </Badge>
                 )}
                 <Tooltip
                   label={
                     <div style={{ maxWidth: 300 }}>
                       <Text size="sm" mb="xs">
-                        {t('settings.planBilling.tier.teamTooltipCredits', {
+                        {t("settings.planBilling.tier.teamTooltipCredits", {
                           credits: BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH,
                           defaultValue: `Team plan includes ${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits/month.`,
                         })}
                       </Text>
                       <Text size="sm" mb="xs">
-                        {t('settings.planBilling.tier.teamTooltipOverage', {
+                        {t("settings.planBilling.tier.teamTooltipOverage", {
                           price: getFormattedOveragePrice(),
                           defaultValue: `Automatic overage billing at ${getFormattedOveragePrice()}/credit ensures uninterrupted service.`,
                         })}
                       </Text>
                       <Text size="sm">
-                        {t('settings.planBilling.tier.teamTooltipFineprint', 'Only pay for what you use beyond included credits.')}
+                        {t(
+                          "settings.planBilling.tier.teamTooltipFineprint",
+                          "Only pay for what you use beyond included credits.",
+                        )}
                       </Text>
                     </div>
                   }
@@ -143,18 +163,25 @@ export function ActiveSubscriptionCard({
                 </Tooltip>
                 {isTrialing && (
                   <Badge color="blue" variant="light">
-                    {t('settings.planBilling.status.trial', 'Trial')}
+                    {t("settings.planBilling.status.trial", "Trial")}
                   </Badge>
                 )}
               </Group>
               {!isPersonalTeam && !isTeamLeader && (
                 <Text size="sm" c="dimmed" mb="xs">
-                  {t('settings.planBilling.team.managedByTeam', 'Managed by team')}
+                  {t(
+                    "settings.planBilling.team.managedByTeam",
+                    "Managed by team",
+                  )}
                 </Text>
               )}
               {!isPersonalTeam && isTeamLeader && currentTeam && (
                 <Text size="sm" c="dimmed" mb="xs">
-                  {t('settings.planBilling.team.memberCount', '{{count}} team members', { count: currentTeam.seatsUsed })}
+                  {t(
+                    "settings.planBilling.team.memberCount",
+                    "{{count}} team members",
+                    { count: currentTeam.seatsUsed },
+                  )}
                 </Text>
               )}
               <Text size="sm" c="dimmed" mb="xs">
@@ -163,16 +190,22 @@ export function ActiveSubscriptionCard({
               {/* Show overage cost if applicable */}
               {usage && usage.currentPeriodCredits > 0 && (
                 <Text size="sm" c="orange" fw={500}>
-                  {formatOverageCost(usage.estimatedCost, usage.currentPeriodCredits)}
+                  {formatOverageCost(
+                    usage.estimatedCost,
+                    usage.currentPeriodCredits,
+                  )}
                 </Text>
               )}
             </div>
 
             {/* Right side: Price */}
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: "right" }}>
               {!isPersonalTeam && !isTeamLeader ? (
                 <Text size="lg" c="dimmed">
-                  {t('settings.planBilling.team.managedByTeam', 'Managed by team')}
+                  {t(
+                    "settings.planBilling.team.managedByTeam",
+                    "Managed by team",
+                  )}
                 </Text>
               ) : (
                 <Text size="xl" fw={700}>
@@ -186,7 +219,11 @@ export function ActiveSubscriptionCard({
           {subscription?.currentPeriodEnd && (
             <Group gap="xs" mt="xs">
               <Text size="sm" c="dimmed">
-                {t('settings.planBilling.billing.nextBillingDate', 'Next billing date:')} {formatDate(subscription.currentPeriodEnd)}
+                {t(
+                  "settings.planBilling.billing.nextBillingDate",
+                  "Next billing date:",
+                )}{" "}
+                {formatDate(subscription.currentPeriodEnd)}
               </Text>
             </Group>
           )}
@@ -209,7 +246,7 @@ export function ActiveSubscriptionCard({
             {getDescription()}
           </Text>
         </div>
-        <div style={{ textAlign: 'right' }}>
+        <div style={{ textAlign: "right" }}>
           <Text size="xl" fw={700}>
             {getPriceDisplay()}
           </Text>

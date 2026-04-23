@@ -1,18 +1,15 @@
-import {
-  getPdfiumModule,
-  saveRawDocument,
-} from '@app/services/pdfiumService';
-import { copyRgbaToBgraHeap } from '@app/utils/pdfiumBitmapUtils';
+import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
+import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
 
 export interface ImageToPdfOptions {
-  imageResolution?: 'full' | 'reduced';
-  pageFormat?: 'keep' | 'A4' | 'letter';
+  imageResolution?: "full" | "reduced";
+  pageFormat?: "keep" | "A4" | "letter";
   stretchToFit?: boolean;
 }
 
 // Standard page sizes in PDF points (72 dpi)
 const PAGE_SIZES = {
-  A4: [595.276, 841.890] as [number, number],
+  A4: [595.276, 841.89] as [number, number],
   Letter: [612, 792] as [number, number],
 };
 
@@ -21,11 +18,11 @@ const PAGE_SIZES = {
  */
 export async function convertImageToPdf(
   imageFile: File,
-  options: ImageToPdfOptions = {}
+  options: ImageToPdfOptions = {},
 ): Promise<File> {
   const {
-    imageResolution = 'full',
-    pageFormat = 'A4',
+    imageResolution = "full",
+    pageFormat = "A4",
     stretchToFit = false,
   } = options;
 
@@ -36,14 +33,14 @@ export async function convertImageToPdf(
     let imageBlob: Blob = imageFile;
 
     // Apply image resolution reduction if requested
-    if (imageResolution === 'reduced') {
+    if (imageResolution === "reduced") {
       imageBlob = await reduceImageResolution(imageFile, 1200);
     }
 
     // Decode image to RGBA pixels via canvas
     const decoded = await decodeImageToRgba(imageBlob);
     if (!decoded) {
-      throw new Error('Failed to decode image');
+      throw new Error("Failed to decode image");
     }
 
     const { rgba, width: imageWidth, height: imageHeight } = decoded;
@@ -52,17 +49,17 @@ export async function convertImageToPdf(
     let pageWidth: number;
     let pageHeight: number;
 
-    if (pageFormat === 'keep') {
+    if (pageFormat === "keep") {
       pageWidth = imageWidth;
       pageHeight = imageHeight;
-    } else if (pageFormat === 'letter') {
+    } else if (pageFormat === "letter") {
       [pageWidth, pageHeight] = PAGE_SIZES.Letter;
     } else {
       [pageWidth, pageHeight] = PAGE_SIZES.A4;
     }
 
     // Adjust orientation to match image
-    if (pageFormat !== 'keep') {
+    if (pageFormat !== "keep") {
       const imageIsLandscape = imageWidth > imageHeight;
       const pageIsLandscape = pageWidth > pageHeight;
       if (imageIsLandscape !== pageIsLandscape) {
@@ -76,7 +73,7 @@ export async function convertImageToPdf(
     let drawWidth: number;
     let drawHeight: number;
 
-    if (stretchToFit || pageFormat === 'keep') {
+    if (stretchToFit || pageFormat === "keep") {
       drawX = 0;
       drawY = 0;
       drawWidth = pageWidth;
@@ -100,16 +97,16 @@ export async function convertImageToPdf(
 
     // Create new PDF document
     const docPtr = m.FPDF_CreateNewDocument();
-    if (!docPtr) throw new Error('PDFium: failed to create document');
+    if (!docPtr) throw new Error("PDFium: failed to create document");
 
     try {
       // Create a page
       const pagePtr = m.FPDFPage_New(docPtr, 0, pageWidth, pageHeight);
-      if (!pagePtr) throw new Error('PDFium: failed to create page');
+      if (!pagePtr) throw new Error("PDFium: failed to create page");
 
       // Create bitmap from RGBA data (PDFium uses BGRA)
       const bitmapPtr = m.FPDFBitmap_Create(imageWidth, imageHeight, 1);
-      if (!bitmapPtr) throw new Error('PDFium: failed to create bitmap');
+      if (!bitmapPtr) throw new Error("PDFium: failed to create bitmap");
 
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
@@ -121,33 +118,38 @@ export async function convertImageToPdf(
       const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
       if (!imageObjPtr) {
         m.FPDFBitmap_Destroy(bitmapPtr);
-        throw new Error('PDFium: failed to create image object');
+        throw new Error("PDFium: failed to create image object");
       }
 
-      const setBitmapOk = m.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjPtr, bitmapPtr);
+      const setBitmapOk = m.FPDFImageObj_SetBitmap(
+        pagePtr,
+        0,
+        imageObjPtr,
+        bitmapPtr,
+      );
       m.FPDFBitmap_Destroy(bitmapPtr);
 
       if (!setBitmapOk) {
         m.FPDFPageObj_Destroy(imageObjPtr);
-        throw new Error('PDFium: failed to set bitmap on image object');
+        throw new Error("PDFium: failed to set bitmap on image object");
       }
 
       // Set transformation matrix: scale + translate
       // FS_MATRIX: {a, b, c, d, e, f} — 6 floats
       const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
-      m.pdfium.setValue(matrixPtr, drawWidth, 'float');       // a = scaleX
-      m.pdfium.setValue(matrixPtr + 4, 0, 'float');           // b
-      m.pdfium.setValue(matrixPtr + 8, 0, 'float');           // c
-      m.pdfium.setValue(matrixPtr + 12, drawHeight, 'float'); // d = scaleY
-      m.pdfium.setValue(matrixPtr + 16, drawX, 'float');      // e = translateX
-      m.pdfium.setValue(matrixPtr + 20, drawY, 'float');      // f = translateY
+      m.pdfium.setValue(matrixPtr, drawWidth, "float"); // a = scaleX
+      m.pdfium.setValue(matrixPtr + 4, 0, "float"); // b
+      m.pdfium.setValue(matrixPtr + 8, 0, "float"); // c
+      m.pdfium.setValue(matrixPtr + 12, drawHeight, "float"); // d = scaleY
+      m.pdfium.setValue(matrixPtr + 16, drawX, "float"); // e = translateX
+      m.pdfium.setValue(matrixPtr + 20, drawY, "float"); // f = translateY
 
       const setMatrixOk = m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr);
       m.pdfium.wasmExports.free(matrixPtr);
 
       if (!setMatrixOk) {
         m.FPDFPageObj_Destroy(imageObjPtr);
-        throw new Error('PDFium: failed to set image matrix');
+        throw new Error("PDFium: failed to set image matrix");
       }
 
       // Insert image into page
@@ -159,17 +161,19 @@ export async function convertImageToPdf(
 
       // Save document
       const pdfBytes = await saveRawDocument(docPtr);
-      const pdfFilename = imageFile.name.replace(/\.[^.]+$/, '.pdf');
+      const pdfFilename = imageFile.name.replace(/\.[^.]+$/, ".pdf");
 
-      return new File([pdfBytes], pdfFilename, { type: 'application/pdf' });
+      return new File([pdfBytes], pdfFilename, { type: "application/pdf" });
     } finally {
       m.FPDF_CloseDocument(docPtr);
     }
   } catch (error) {
-    console.error('Error converting image to PDF:', error);
+    console.error("Error converting image to PDF:", error);
     throw new Error(
-      `Failed to convert image to PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      { cause: error }
+      `Failed to convert image to PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      {
+        cause: error,
+      },
     );
   }
 }
@@ -177,17 +181,19 @@ export async function convertImageToPdf(
 /**
  * Decode an image Blob to RGBA pixel data via canvas.
  */
-function decodeImageToRgba(imageBlob: Blob): Promise<{ rgba: Uint8Array; width: number; height: number } | null> {
+function decodeImageToRgba(
+  imageBlob: Blob,
+): Promise<{ rgba: Uint8Array; width: number; height: number } | null> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(imageBlob);
 
     img.onload = () => {
       try {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
           URL.revokeObjectURL(url);
           resolve(null);
@@ -221,7 +227,7 @@ function decodeImageToRgba(imageBlob: Blob): Promise<{ rgba: Uint8Array; width: 
  */
 async function reduceImageResolution(
   imageFile: File,
-  maxDimension: number
+  maxDimension: number,
 ): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -248,25 +254,27 @@ async function reduceImageResolution(
           newWidth = (width / height) * maxDimension;
         }
 
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = newWidth;
         canvas.height = newHeight;
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Failed to get canvas context');
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Failed to get canvas context");
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-        const outputType = imageFile.type.startsWith('image/')
+        const outputType = imageFile.type.startsWith("image/")
           ? imageFile.type
-          : 'image/jpeg';
+          : "image/jpeg";
 
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(new Error('Failed to convert canvas to blob'));
+              reject(new Error("Failed to convert canvas to blob"));
               return;
             }
-            const reducedFile = new File([blob], imageFile.name, { type: outputType });
+            const reducedFile = new File([blob], imageFile.name, {
+              type: outputType,
+            });
             URL.revokeObjectURL(url);
             resolve(reducedFile);
           },
@@ -281,7 +289,7 @@ async function reduceImageResolution(
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     img.src = url;
@@ -292,5 +300,5 @@ async function reduceImageResolution(
  * Check if a file is an image
  */
 export function isImageFile(file: File): boolean {
-  return file.type.startsWith('image/');
+  return file.type.startsWith("image/");
 }

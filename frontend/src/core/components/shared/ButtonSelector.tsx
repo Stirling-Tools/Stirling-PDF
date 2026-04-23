@@ -5,7 +5,7 @@ export interface ButtonOption<T> {
   value: T;
   label: string;
   disabled?: boolean;
-  tooltip?: string;  // Tooltip shown on hover (useful for explaining why option is disabled)
+  tooltip?: string; // Tooltip shown on hover (useful for explaining why option is disabled)
 }
 
 interface ButtonSelectorProps<T> {
@@ -30,33 +30,43 @@ const ButtonSelector = <T extends string | number>({
   textClassName,
 }: ButtonSelectorProps<T>) => {
   return (
-    <Stack gap='var(--mantine-spacing-sm)'>
+    <Stack gap="var(--mantine-spacing-sm)">
       {/* Label (if it exists) */}
-      {label && <Text style={{
-        fontSize: "var(--mantine-font-size-sm)",
-        lineHeight: "var(--mantine-line-height-sm)",
-        fontWeight: "var(--font-weight-medium)",
-      }}>{label}</Text>}
+      {label && (
+        <Text
+          style={{
+            fontSize: "var(--mantine-font-size-sm)",
+            lineHeight: "var(--mantine-line-height-sm)",
+            fontWeight: "var(--font-weight-medium)",
+          }}
+        >
+          {label}
+        </Text>
+      )}
 
       {/* Buttons */}
-      <Group gap='4px'>
+      <Group gap="4px">
         {options.map((option) => {
           const isDisabled = disabled || option.disabled;
           const button = (
             <Button
-              variant={value === option.value ? 'filled' : 'outline'}
-              color={value === option.value ? 'var(--color-primary-500)' : 'var(--text-muted)'}
+              variant={value === option.value ? "filled" : "outline"}
+              color={
+                value === option.value
+                  ? "var(--color-primary-500)"
+                  : "var(--text-muted)"
+              }
               onClick={() => onChange(option.value)}
               disabled={isDisabled}
               className={buttonClassName}
               style={{
                 flex: fullWidth ? 1 : undefined,
-                height: 'auto',
-                minHeight: '2.5rem',
-                fontSize: 'var(--mantine-font-size-sm)',
-                lineHeight: '1.4',
-                paddingTop: '0.5rem',
-                paddingBottom: '0.5rem'
+                height: "auto",
+                minHeight: "2.5rem",
+                fontSize: "var(--mantine-font-size-sm)",
+                lineHeight: "1.4",
+                paddingTop: "0.5rem",
+                paddingBottom: "0.5rem",
               }}
             >
               <FitText
@@ -72,13 +82,29 @@ const ButtonSelector = <T extends string | number>({
           // Wrap with tooltip if provided (useful for disabled state explanations)
           if (option.tooltip && isDisabled) {
             return (
-              <Tooltip key={option.value} label={option.tooltip} position="top" withArrow>
-                <span style={{ flex: fullWidth ? 1 : undefined, display: 'flex' }}>{button}</span>
+              <Tooltip
+                key={option.value}
+                label={option.tooltip}
+                position="top"
+                withArrow
+              >
+                <span
+                  style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}
+                >
+                  {button}
+                </span>
               </Tooltip>
             );
           }
 
-          return <span key={option.value} style={{ flex: fullWidth ? 1 : undefined, display: 'flex' }}>{button}</span>;
+          return (
+            <span
+              key={option.value}
+              style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}
+            >
+              {button}
+            </span>
+          );
         })}
       </Group>
     </Stack>

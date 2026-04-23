@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useNavigationState } from '@app/contexts/NavigationContext';
-import { useViewer } from '@app/contexts/ViewerContext';
+import { useEffect, useRef } from "react";
+import { useNavigationState } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 
 /**
  * Hook that automatically stops read-aloud when navigating away from the viewer.
@@ -8,7 +8,7 @@ import { useViewer } from '@app/contexts/ViewerContext';
  */
 export function useStopReadAloudOnNavigation(
   isReadingAloud: boolean,
-  onStop: () => void
+  onStop: () => void,
 ) {
   const { workbench } = useNavigationState();
   const viewer = useViewer();
@@ -28,7 +28,10 @@ export function useStopReadAloudOnNavigation(
     }
 
     // Stop on active file change
-    if (isReadingAloud && previousStateRef.current.activeFileIndex !== viewer.activeFileIndex) {
+    if (
+      isReadingAloud &&
+      previousStateRef.current.activeFileIndex !== viewer.activeFileIndex
+    ) {
       onStop();
       previousStateRef.current.activeFileIndex = viewer.activeFileIndex;
       return;
@@ -46,7 +49,7 @@ export function useStopReadAloudOnNavigation(
       onStop();
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isReadingAloud, onStop]);
 }

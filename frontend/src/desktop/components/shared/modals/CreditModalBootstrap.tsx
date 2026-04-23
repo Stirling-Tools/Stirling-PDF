@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
-import { useSaaSMode } from '@app/hooks/useSaaSMode';
-import { BILLING_CONFIG } from '@app/config/billing';
-import { CreditExhaustedModal } from '@app/components/shared/modals/CreditExhaustedModal';
-import { InsufficientCreditsModal } from '@app/components/shared/modals/InsufficientCreditsModal';
-import { useCreditEvents } from '@app/hooks/useCreditEvents';
-import { CREDIT_EVENTS } from '@app/constants/creditEvents';
+import { useEffect, useState } from "react";
+import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
+import { BILLING_CONFIG } from "@app/config/billing";
+import { CreditExhaustedModal } from "@app/components/shared/modals/CreditExhaustedModal";
+import { InsufficientCreditsModal } from "@app/components/shared/modals/InsufficientCreditsModal";
+import { useCreditEvents } from "@app/hooks/useCreditEvents";
+import { CREDIT_EVENTS } from "@app/constants/creditEvents";
 
 /**
  * Desktop Credit Modal Bootstrap
@@ -21,16 +21,35 @@ export function CreditModalBootstrap() {
   }>({});
 
   const isSaaSMode = useSaaSMode();
-  const { creditBalance, isManagedTeamMember, lastFetchTime, plansLastFetchTime, refreshPlans } = useSaaSBilling();
+  const {
+    creditBalance,
+    isManagedTeamMember,
+    lastFetchTime,
+    plansLastFetchTime,
+    refreshPlans,
+  } = useSaaSBilling();
 
   // Preload plan pricing when billing confirms credits are low.
   // Fires once: only when in SaaS mode, billing has loaded (lastFetchTime set) and plans haven't been
   // fetched yet (plansLastFetchTime null). This way the modal shows real prices instantly.
   useEffect(() => {
-    if (isSaaSMode && lastFetchTime !== null && plansLastFetchTime === null && creditBalance < BILLING_CONFIG.PLAN_PRICING_PRELOAD_THRESHOLD && !isManagedTeamMember) {
+    if (
+      isSaaSMode &&
+      lastFetchTime !== null &&
+      plansLastFetchTime === null &&
+      creditBalance < BILLING_CONFIG.PLAN_PRICING_PRELOAD_THRESHOLD &&
+      !isManagedTeamMember
+    ) {
       refreshPlans();
     }
-  }, [isSaaSMode, lastFetchTime, plansLastFetchTime, creditBalance, isManagedTeamMember, refreshPlans]);
+  }, [
+    isSaaSMode,
+    lastFetchTime,
+    plansLastFetchTime,
+    creditBalance,
+    isManagedTeamMember,
+    refreshPlans,
+  ]);
 
   // Monitor credit balance and dispatch events
   useCreditEvents();
@@ -64,7 +83,10 @@ export function CreditModalBootstrap() {
 
     return () => {
       window.removeEventListener(CREDIT_EVENTS.EXHAUSTED, handleExhausted);
-      window.removeEventListener(CREDIT_EVENTS.INSUFFICIENT, handleInsufficient);
+      window.removeEventListener(
+        CREDIT_EVENTS.INSUFFICIENT,
+        handleInsufficient,
+      );
     };
   }, [isManagedTeamMember, creditBalance]);
 

@@ -4,14 +4,15 @@ from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
-from stirling.models import ApiModel, OperationId, ParamToolModel
+from stirling.models import ApiModel, ParamToolModel, ToolEndpoint
 
 from .agent_specs import AgentSpec
+from .common import WorkflowOutcome
 
 
 class ExecutionStepResult(ApiModel):
     step_index: int
-    tool: OperationId | None = None
+    tool: ToolEndpoint | None = None
     success: bool
     output_summary: str | None = None
     output_data: dict[str, Any] = Field(default_factory=dict)
@@ -31,19 +32,19 @@ class AgentExecutionRequest(ApiModel):
 
 
 class ToolCallExecutionAction(ApiModel):
-    outcome: Literal["tool_call"] = "tool_call"
-    tool: OperationId
+    outcome: Literal[WorkflowOutcome.TOOL_CALL] = WorkflowOutcome.TOOL_CALL
+    tool: ToolEndpoint
     parameters: ParamToolModel
     rationale: str | None = None
 
 
 class CompletedExecutionAction(ApiModel):
-    outcome: Literal["completed"] = "completed"
+    outcome: Literal[WorkflowOutcome.COMPLETED] = WorkflowOutcome.COMPLETED
     summary: str
 
 
 class CannotContinueExecutionAction(ApiModel):
-    outcome: Literal["cannot_continue"] = "cannot_continue"
+    outcome: Literal[WorkflowOutcome.CANNOT_CONTINUE] = WorkflowOutcome.CANNOT_CONTINUE
     reason: str
 
 

@@ -5,79 +5,108 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   engine:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-    defaults:
-      run:
-        working-directory: engine
-
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
         with:
           enable-cache: true
 
-      - name: Install dependencies
-        run: make install
-
-      - name: Run fixers
-        # Ignore errors here because we're going to add comments for them in the following steps before actually failing
-        run: make fix || true
-
-      - name: Check for fixer changes
-        id: fixer_changes
-        run: |
-          if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Post fixer suggestions
-        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@v1
-        continue-on-error: true
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          tool_name: engine-make-fix
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          filter_mode: file
-          fail_level: any
-          level: info
+          java-version: "25"
+          distribution: "temurin"
 
-      - name: Comment on fixer suggestions
-        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: "The Python code in your PR has formatting/linting issues. Consider running `make fix` locally or setting up your editor's Ruff integration to auto-format and lint your files as you go, or commit the suggested changes on this PR.",
-            });
+          gradle-version: 9.3.1
 
-      - name: Verify fixer changes are committed
-        if: steps.fixer_changes.outputs.changed == 'true'
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+
+      - name: Regenerate tool models
+        run: task engine:tool-models
+
+      - name: Verify tool models are up to date
         run: |
-          if ! git diff --exit-code; then
-            echo "Fixes are out of date."
-            echo "Apply the reviewdog suggestions or run 'make fix' from engine/ and commit the updated files."
-            git --no-pager diff --stat
+          if ! git diff --exit-code engine/src/stirling/models/tool_models.py; then
+            echo "tool_models.py is out of date."
+            echo "Run 'task engine:tool-models' locally and commit the updated file."
             exit 1
           fi
 
+      - name: Run fixers
+        run: task engine:fix
+
+      - name: Verify fixes are committed
+        id: fixer_changes
+        run: |
+          if ! git diff --quiet; then
+            git --no-pager diff --stat
+            echo "::error::There are issues with your Python code that will need to be fixed before they can be merged in. Run 'task engine:fix' to auto-fix what can be fixed automatically, then run 'task engine:check' to see what still needs fixing manually."
+            exit 1
+          fi
+
+      - name: Comment on fixer failures
+        if: steps.fixer_changes.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const marker = '<!-- engine-check -->';
+            const body = [
+              marker,
+              '### Engine Check Failed',
+              '',
+              'There are issues with your Python code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task engine:fix` to auto-fix what can be fixed automatically, then run `task engine:check` to see what still needs fixing manually.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
       - name: Run linting
-        run: make lint
+        run: task engine:lint
 
       - name: Run type checking
-        run: make typecheck
+        run: task engine:typecheck
 
       - name: Run tests
-        run: make test
+        run: task engine:test

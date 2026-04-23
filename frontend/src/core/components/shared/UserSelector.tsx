@@ -1,25 +1,31 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { MultiSelect, Loader, Text, Button, Stack } from '@mantine/core';
-import { useNavigate } from 'react-router-dom';
-import { alert } from '@app/components/toast';
-import { UserSummary } from '@app/types/signingSession';
-import apiClient from '@app/services/apiClient';
-import { useAuth } from '@app/auth/UseSession';
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { MultiSelect, Loader, Text, Button, Stack } from "@mantine/core";
+import { useNavigate } from "react-router-dom";
+import { alert } from "@app/components/toast";
+import { UserSummary } from "@app/types/signingSession";
+import apiClient from "@app/services/apiClient";
+import { useAuth } from "@app/auth/UseSession";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 interface UserSelectorProps {
   value: number[];
   onChange: (userIds: number[]) => void;
   placeholder?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   disabled?: boolean;
 }
 
 type SelectItem = { value: string; label: string };
 type GroupedData = { group: string; items: SelectItem[] };
 
-const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = false }: UserSelectorProps) => {
+const UserSelector = ({
+  value,
+  onChange,
+  placeholder,
+  size = "sm",
+  disabled = false,
+}: UserSelectorProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -30,8 +36,8 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get('/api/v1/user/users');
-        console.log('Users API response:', response.data);
+        const response = await apiClient.get("/api/v1/user/users");
+        console.log("Users API response:", response.data);
         const fetchedUsers = response.data || [];
 
         // Process selectData inside useEffect - group by team
@@ -41,16 +47,20 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
         fetchedUsers
           .filter((u: UserSummary) => u && u.userId && u.username)
           .filter((u: UserSummary) => u.userId !== currentUserId) // Exclude current user
-          .filter((u: UserSummary) => u.teamName?.toLowerCase() !== 'internal') // Exclude internal users
+          .filter((u: UserSummary) => u.teamName?.toLowerCase() !== "internal") // Exclude internal users
           .forEach((user: UserSummary) => {
-            const teamName = user.teamName || t('certSign.collab.userSelector.noTeam', 'No Team');
+            const teamName =
+              user.teamName ||
+              t("certSign.collab.userSelector.noTeam", "No Team");
             if (!usersByTeam[teamName]) {
               usersByTeam[teamName] = [];
             }
-            const displayName = user.displayName || user.username || 'Unknown';
-            const username = user.username || 'unknown';
+            const displayName = user.displayName || user.username || "Unknown";
+            const username = user.username || "unknown";
             const label =
-              displayName !== username ? `${displayName} (@${username})` : displayName;
+              displayName !== username
+                ? `${displayName} (@${username})`
+                : displayName;
             usersByTeam[teamName].push({
               value: String(user.userId),
               label,
@@ -58,19 +68,24 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
           });
 
         // Convert to Mantine's grouped format
-        const processed: GroupedData[] = Object.entries(usersByTeam).map(([teamName, items]) => ({
-          group: teamName,
-          items: items.sort((a, b) => a.label.localeCompare(b.label)),
-        }));
+        const processed: GroupedData[] = Object.entries(usersByTeam).map(
+          ([teamName, items]) => ({
+            group: teamName,
+            items: items.sort((a, b) => a.label.localeCompare(b.label)),
+          }),
+        );
 
-        console.log('Processed selectData:', processed);
+        console.log("Processed selectData:", processed);
         setSelectData(processed);
       } catch (error) {
-        console.error('Failed to load users:', error);
+        console.error("Failed to load users:", error);
         alert({
-          alertType: 'error',
-          title: t('common.error'),
-          body: t('certSign.collab.userSelector.loadError', 'Failed to load users'),
+          alertType: "error",
+          title: t("common.error"),
+          body: t(
+            "certSign.collab.userSelector.loadError",
+            "Failed to load users",
+          ),
         });
       } finally {
         setLoading(false);
@@ -83,8 +98,10 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
   // Process stringValue when value prop changes
   useEffect(() => {
     const safeValue = Array.isArray(value) ? value : [];
-    const result = safeValue.map((id) => (id != null ? id.toString() : '')).filter(Boolean);
-    console.log('stringValue for MultiSelect:', result);
+    const result = safeValue
+      .map((id) => (id != null ? id.toString() : ""))
+      .filter(Boolean);
+    console.log("stringValue for MultiSelect:", result);
     setStringValue(result);
   }, [value]);
 
@@ -97,10 +114,14 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
     return (
       <Stack gap="xs" align="flex-start">
         <Text size="sm" c="dimmed">
-          {t('certSign.collab.userSelector.noUsers', 'No other users found.')}
+          {t("certSign.collab.userSelector.noUsers", "No other users found.")}
         </Text>
-        <Button size="xs" variant="light" onClick={() => navigate('/settings/people')}>
-          {t('certSign.collab.userSelector.inviteUsers', 'Add Users')}
+        <Button
+          size="xs"
+          variant="light"
+          onClick={() => navigate("/settings/people")}
+        >
+          {t("certSign.collab.userSelector.inviteUsers", "Add Users")}
         </Button>
       </Stack>
     );
@@ -116,13 +137,19 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
           .filter((id) => !isNaN(id));
         onChange(parsedIds);
       }}
-      placeholder={placeholder || t('certSign.collab.userSelector.placeholder', 'Select users...')}
+      placeholder={
+        placeholder ||
+        t("certSign.collab.userSelector.placeholder", "Select users...")
+      }
       searchable
       clearable
       size={size}
       disabled={disabled}
       maxDropdownHeight={300}
-      comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+      comboboxProps={{
+        withinPortal: true,
+        zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
+      }}
     />
   );
 };

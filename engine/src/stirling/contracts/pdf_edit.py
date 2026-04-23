@@ -6,34 +6,36 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ToolOperationStep
+from .common import ConversationMessage, ExtractedFileText, NeedContentResponse, ToolOperationStep, WorkflowOutcome
 
 
 class PdfEditRequest(ApiModel):
     user_message: str
-    conversation_id: str | None = None
     file_names: list[str] = Field(default_factory=list)
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
+    page_text: list[ExtractedFileText] = Field(default_factory=list)
 
 
 class EditPlanResponse(ApiModel):
-    outcome: Literal["plan"] = "plan"
+    outcome: Literal[WorkflowOutcome.PLAN] = WorkflowOutcome.PLAN
     summary: str
     rationale: str | None = None
     steps: list[ToolOperationStep]
 
 
 class EditClarificationRequest(ApiModel):
-    outcome: Literal["need_clarification"] = "need_clarification"
+    outcome: Literal[WorkflowOutcome.NEED_CLARIFICATION] = WorkflowOutcome.NEED_CLARIFICATION
     question: str
     reason: str
 
 
 class EditCannotDoResponse(ApiModel):
-    outcome: Literal["cannot_do"] = "cannot_do"
+    outcome: Literal[WorkflowOutcome.CANNOT_DO] = WorkflowOutcome.CANNOT_DO
     reason: str
 
 
-PdfEditResponse = Annotated[
-    EditPlanResponse | EditClarificationRequest | EditCannotDoResponse,
+type PdfEditTerminalResponse = EditPlanResponse | EditClarificationRequest | EditCannotDoResponse
+type PdfEditResponse = Annotated[
+    PdfEditTerminalResponse | NeedContentResponse,
     Field(discriminator="outcome"),
 ]

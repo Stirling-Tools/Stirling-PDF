@@ -12,12 +12,11 @@ const RemovePages = (props: BaseToolProps) => {
   const tooltipContent = useRemovePagesTips();
 
   const base = useBaseTool(
-    'remove-pages',
+    "remove-pages",
     useRemovePagesParameters,
     useRemovePagesOperation,
-    props
+    props,
   );
-
 
   const settingsContent = (
     <RemovePagesSettings
@@ -36,7 +35,9 @@ const RemovePages = (props: BaseToolProps) => {
       {
         title: t("removePages.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: settingsContent,
         tooltip: tooltipContent,
       },

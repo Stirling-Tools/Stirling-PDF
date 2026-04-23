@@ -10,10 +10,10 @@ const Sanitize = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'sanitize',
+    "sanitize",
     useSanitizeParameters,
     useSanitizeOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -25,7 +25,9 @@ const Sanitize = (props: BaseToolProps) => {
       {
         title: t("sanitize.steps.settings", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: (
           <SanitizeSettings
             parameters={base.params.parameters}

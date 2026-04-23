@@ -10,10 +10,16 @@ interface AccountLogoutDeps {
  * Desktop builds override this file via path resolution.
  */
 export function useAccountLogout() {
-  return async ({ signOut, redirectToLogin }: AccountLogoutDeps): Promise<void> => {
+  return async ({
+    signOut,
+    redirectToLogin,
+  }: AccountLogoutDeps): Promise<void> => {
     try {
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem('stirling_sso_auto_login_logged_out', '1');
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(
+          "stirling_sso_auto_login_logged_out",
+          "1",
+        );
       }
       await signOut();
     } finally {

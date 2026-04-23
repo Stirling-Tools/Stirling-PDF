@@ -1,22 +1,32 @@
-import { useState, useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Paper, Group, Button, Text, Divider, CloseButton } from '@mantine/core';
-import { useIsPhone } from '@app/hooks/useIsMobile';
-import CancelIcon from '@mui/icons-material/Cancel';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
-import { Z_INDEX_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
-import { SignRequestDetail } from '@app/types/signingSession';
-import { LocalEmbedPDFWithAnnotations, AnnotationAPI } from '@app/components/viewer/LocalEmbedPDFWithAnnotations';
-import { alert } from '@app/components/toast';
-import SignControlsStrip from '@app/components/tools/certSign/SignControlsStrip';
-import { CertificateConfigModal } from '@app/components/tools/certSign/modals/CertificateConfigModal';
-import type { CertificateSubmitData } from '@app/components/tools/certSign/modals/CertificateConfigModal';
-import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import { useFileActions } from '@app/contexts/file/fileHooks';
+import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Paper,
+  Group,
+  Button,
+  Text,
+  Divider,
+  CloseButton,
+} from "@mantine/core";
+import { useIsPhone } from "@app/hooks/useIsMobile";
+import CancelIcon from "@mui/icons-material/Cancel";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
+import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Z_INDEX_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { SignRequestDetail } from "@app/types/signingSession";
+import {
+  LocalEmbedPDFWithAnnotations,
+  AnnotationAPI,
+} from "@app/components/viewer/LocalEmbedPDFWithAnnotations";
+import { alert } from "@app/components/toast";
+import SignControlsStrip from "@app/components/tools/certSign/SignControlsStrip";
+import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
+import type { CertificateSubmitData } from "@app/components/tools/certSign/modals/CertificateConfigModal";
+import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { useFileActions } from "@app/contexts/file/fileHooks";
 
 export interface SignRequestWorkbenchData {
   signRequest: SignRequestDetail;
@@ -44,13 +54,13 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   const [signatureConfig, setSignatureConfig] = useState<SignParameters | null>(
     canSign
       ? {
-          signatureType: 'canvas',
-          signerName: '',
-          fontFamily: 'Helvetica',
+          signatureType: "canvas",
+          signerName: "",
+          fontFamily: "Helvetica",
           fontSize: 16,
-          textColor: '#000000',
+          textColor: "#000000",
         }
-      : null
+      : null,
   );
   const [previewCount, setPreviewCount] = useState(0);
   const [placementMode, setPlacementMode] = useState(true);
@@ -73,7 +83,9 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       return;
     }
     const check = () => {
-      const has = (annotationApiRef.current as any)?.getHasSelectedAnnotation?.();
+      const has = (
+        annotationApiRef.current as any
+      )?.getHasSelectedAnnotation?.();
       setHasSelectedAnnotation(Boolean(has));
     };
     check();
@@ -88,96 +100,122 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   const handleOpenCertificateModal = () => {
     if (previewCount === 0) {
       alert({
-        alertType: 'error',
-        title: t('common.error'),
-        body: t('certSign.collab.signRequest.noSignatures', 'Please place at least one signature on the PDF'),
+        alertType: "error",
+        title: t("common.error"),
+        body: t(
+          "certSign.collab.signRequest.noSignatures",
+          "Please place at least one signature on the PDF",
+        ),
       });
       return;
     }
     setCertificateModalOpen(true);
   };
 
-  const handleSign = async (certData: CertificateSubmitData, reason?: string, location?: string) => {
+  const handleSign = async (
+    certData: CertificateSubmitData,
+    reason?: string,
+    location?: string,
+  ) => {
     const previews = annotationApiRef.current?.getSignaturePreviews() || [];
-    console.log('handleSign called, previews:', previews.length, 'signatures');
+    console.log("handleSign called, previews:", previews.length, "signatures");
 
     setSigning(true);
     try {
       const formData = new FormData();
 
-      if (certData.certType === 'UPLOAD') {
-        const { uploadFormat, p12File, privateKeyFile, certFile, jksFile, password } = certData;
-        formData.append('certType', uploadFormat);
+      if (certData.certType === "UPLOAD") {
+        const {
+          uploadFormat,
+          p12File,
+          privateKeyFile,
+          certFile,
+          jksFile,
+          password,
+        } = certData;
+        formData.append("certType", uploadFormat);
         switch (uploadFormat) {
-          case 'PKCS12':
-          case 'PFX':
+          case "PKCS12":
+          case "PFX":
             if (!p12File) {
               alert({
-                alertType: 'error',
-                title: t('common.error'),
-                body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
+                alertType: "error",
+                title: t("common.error"),
+                body: t(
+                  "certSign.collab.signRequest.noCertificate",
+                  "Please select a certificate file",
+                ),
               });
               setSigning(false);
               return;
             }
-            formData.append('p12File', p12File);
+            formData.append("p12File", p12File);
             break;
-          case 'PEM':
+          case "PEM":
             if (!privateKeyFile || !certFile) {
               alert({
-                alertType: 'error',
-                title: t('common.error'),
-                body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
+                alertType: "error",
+                title: t("common.error"),
+                body: t(
+                  "certSign.collab.signRequest.noCertificate",
+                  "Please select a certificate file",
+                ),
               });
               setSigning(false);
               return;
             }
-            formData.append('privateKeyFile', privateKeyFile);
-            formData.append('certFile', certFile);
+            formData.append("privateKeyFile", privateKeyFile);
+            formData.append("certFile", certFile);
             break;
-          case 'JKS':
+          case "JKS":
             if (!jksFile) {
               alert({
-                alertType: 'error',
-                title: t('common.error'),
-                body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
+                alertType: "error",
+                title: t("common.error"),
+                body: t(
+                  "certSign.collab.signRequest.noCertificate",
+                  "Please select a certificate file",
+                ),
               });
               setSigning(false);
               return;
             }
-            formData.append('jksFile', jksFile);
+            formData.append("jksFile", jksFile);
             break;
         }
         if (password) {
-          formData.append('password', password);
+          formData.append("password", password);
         }
       } else {
-        formData.append('certType', certData.certType);
+        formData.append("certType", certData.certType);
       }
 
       // Add signature appearance settings from sign request
       if (signRequest.showSignature !== undefined) {
-        formData.append('showSignature', signRequest.showSignature.toString());
+        formData.append("showSignature", signRequest.showSignature.toString());
       }
-      if (signRequest.pageNumber !== undefined && signRequest.pageNumber !== null) {
-        formData.append('pageNumber', signRequest.pageNumber.toString());
+      if (
+        signRequest.pageNumber !== undefined &&
+        signRequest.pageNumber !== null
+      ) {
+        formData.append("pageNumber", signRequest.pageNumber.toString());
       }
 
       // Participant-provided reason/location override session defaults
       if (reason && reason.trim()) {
-        formData.append('reason', reason);
+        formData.append("reason", reason);
       } else if (signRequest.reason) {
-        formData.append('reason', signRequest.reason);
+        formData.append("reason", signRequest.reason);
       }
 
       if (location && location.trim()) {
-        formData.append('location', location);
+        formData.append("location", location);
       } else if (signRequest.location) {
-        formData.append('location', signRequest.location);
+        formData.append("location", signRequest.location);
       }
 
       if (signRequest.showLogo !== undefined) {
-        formData.append('showLogo', signRequest.showLogo.toString());
+        formData.append("showLogo", signRequest.showLogo.toString());
       }
 
       // Add all wet signatures from previews
@@ -192,14 +230,18 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
           height: preview.height,
         }));
 
-        console.log('Sending wet signatures to backend:', wetSignaturesJson.length, 'signatures');
-        formData.append('wetSignaturesData', JSON.stringify(wetSignaturesJson));
+        console.log(
+          "Sending wet signatures to backend:",
+          wetSignaturesJson.length,
+          "signatures",
+        );
+        formData.append("wetSignaturesData", JSON.stringify(wetSignaturesJson));
       }
 
       await onSign(formData);
       setCertificateModalOpen(false);
     } catch (error) {
-      console.error('Failed to sign document:', error);
+      console.error("Failed to sign document:", error);
     } finally {
       setSigning(false);
     }
@@ -210,7 +252,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     try {
       await onDecline();
     } catch (error) {
-      console.error('Failed to decline request:', error);
+      console.error("Failed to decline request:", error);
       setDeclining(false);
     }
   };
@@ -218,9 +260,12 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   const handleAddToActiveFiles = async () => {
     await fileActions.addFiles([pdfFile]);
     alert({
-      alertType: 'success',
-      title: t('success'),
-      body: t('certSign.collab.signRequest.addedToFiles', 'Document added to active files'),
+      alertType: "success",
+      title: t("success"),
+      body: t(
+        "certSign.collab.signRequest.addedToFiles",
+        "Document added to active files",
+      ),
       expandable: false,
       durationMs: 2500,
     });
@@ -237,57 +282,93 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ) => {
-    console.log('Signature placed:', { id, pageIndex, x, y, width, height });
+    console.log("Signature placed:", { id, pageIndex, x, y, width, height });
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       {/* Top Control Bar */}
-      <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE, position: 'relative' }}>
-        <Group justify="space-between" style={{ flexWrap: isPhone ? 'wrap' : 'nowrap' }}>
+      <Paper
+        p="sm"
+        shadow="sm"
+        style={{
+          flexShrink: 0,
+          zIndex: Z_INDEX_FULLSCREEN_SURFACE,
+          position: "relative",
+        }}
+      >
+        <Group
+          justify="space-between"
+          style={{ flexWrap: isPhone ? "wrap" : "nowrap" }}
+        >
           <Group gap="md">
-            <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />
+            <LocalIcon
+              icon="signature-rounded"
+              width="1.5rem"
+              height="1.5rem"
+            />
             <div>
-              <Text size="sm" fw={600} style={{ maxWidth: isPhone ? '180px' : undefined }} truncate={isPhone ? 'end' : undefined}>
+              <Text
+                size="sm"
+                fw={600}
+                style={{ maxWidth: isPhone ? "180px" : undefined }}
+                truncate={isPhone ? "end" : undefined}
+              >
                 {signRequest.documentName}
               </Text>
               {!isPhone && (
                 <Text size="xs" c="dimmed">
-                  {t('certSign.collab.signRequest.from', 'From')}: {signRequest.ownerUsername} •{' '}
+                  {t("certSign.collab.signRequest.from", "From")}:{" "}
+                  {signRequest.ownerUsername} •{" "}
                   {new Date(signRequest.createdAt).toLocaleDateString()}
                 </Text>
               )}
             </div>
           </Group>
 
-          <Group gap="xs" style={{ width: isPhone ? '100%' : undefined }} justify={isPhone ? 'flex-end' : undefined}>
+          <Group
+            gap="xs"
+            style={{ width: isPhone ? "100%" : undefined }}
+            justify={isPhone ? "flex-end" : undefined}
+          >
             <Button
               variant="light"
               size="sm"
               leftSection={<FolderOpenIcon fontSize="small" />}
               onClick={handleAddToActiveFiles}
               style={{
-                backgroundColor: 'var(--landing-inner-paper-bg)',
-                color: 'var(--btn-open-file)',
-                border: '1px solid var(--landing-inner-paper-border)',
+                backgroundColor: "var(--landing-inner-paper-bg)",
+                color: "var(--btn-open-file)",
+                border: "1px solid var(--landing-inner-paper-border)",
               }}
             >
-              {t('certSign.collab.signRequest.addToFiles', 'Add to Active Files')}
+              {t(
+                "certSign.collab.signRequest.addToFiles",
+                "Add to Active Files",
+              )}
             </Button>
-            {signRequest.myStatus !== 'SIGNED' && signRequest.myStatus !== 'DECLINED' && (
-              <Button
-                variant="light"
-                color="red"
-                size="sm"
-                leftSection={<CancelIcon fontSize="small" />}
-                onClick={handleDecline}
-                loading={declining}
-              >
-                {t('certSign.collab.signRequest.decline', 'Decline Request')}
-              </Button>
-            )}
+            {signRequest.myStatus !== "SIGNED" &&
+              signRequest.myStatus !== "DECLINED" && (
+                <Button
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  leftSection={<CancelIcon fontSize="small" />}
+                  onClick={handleDecline}
+                  loading={declining}
+                >
+                  {t("certSign.collab.signRequest.decline", "Decline Request")}
+                </Button>
+              )}
             {!isPhone && (
               <>
                 <Divider orientation="vertical" />
@@ -296,7 +377,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                     variant="subtle"
                     size="sm"
                     onClick={() => annotationApiRef.current?.zoomOut()}
-                    title={t('viewer.zoomOut', 'Zoom out')}
+                    title={t("viewer.zoomOut", "Zoom out")}
                   >
                     <ZoomOutIcon fontSize="small" />
                   </Button>
@@ -304,7 +385,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                     variant="subtle"
                     size="sm"
                     onClick={() => annotationApiRef.current?.resetZoom()}
-                    title={t('viewer.resetZoom', 'Reset zoom')}
+                    title={t("viewer.resetZoom", "Reset zoom")}
                   >
                     <ZoomOutMapIcon fontSize="small" />
                   </Button>
@@ -312,7 +393,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                     variant="subtle"
                     size="sm"
                     onClick={() => annotationApiRef.current?.zoomIn()}
-                    title={t('viewer.zoomIn', 'Zoom in')}
+                    title={t("viewer.zoomIn", "Zoom in")}
                   >
                     <ZoomInIcon fontSize="small" />
                   </Button>
@@ -320,7 +401,14 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
               </>
             )}
             <Divider orientation="vertical" />
-            <CloseButton size="md" onClick={onBack} title={t('certSign.collab.signRequest.backToList', 'Back to Sign Requests')} />
+            <CloseButton
+              size="md"
+              onClick={onBack}
+              title={t(
+                "certSign.collab.signRequest.backToList",
+                "Back to Sign Requests",
+              )}
+            />
           </Group>
         </Group>
       </Paper>
@@ -341,7 +429,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       )}
 
       {/* PDF Viewer (full width) */}
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
         <LocalEmbedPDFWithAnnotations
           ref={annotationApiRef}
           file={pdfFile}
@@ -362,11 +450,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
           onSign={handleSign}
           signatureCount={previewCount}
           disabled={signing}
-          defaultReason={signRequest.reason || ''}
-          defaultLocation={signRequest.location || ''}
+          defaultReason={signRequest.reason || ""}
+          defaultLocation={signRequest.location || ""}
         />
       )}
-
     </div>
   );
 };

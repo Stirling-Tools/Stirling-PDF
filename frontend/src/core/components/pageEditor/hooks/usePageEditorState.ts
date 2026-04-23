@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import React from 'react';
+import { useState, useCallback } from "react";
+import React from "react";
 
 export interface PageEditorState {
   // Selection state
@@ -23,7 +23,7 @@ export interface PageEditorState {
   setIsAnimating: (animating: boolean) => void;
   setSplitPositions: React.Dispatch<React.SetStateAction<Set<string>>>;
   setExportLoading: (loading: boolean) => void;
-  
+
   // Helper functions
   togglePage: (pageId: string) => void;
   toggleSelectAll: (allPageIds: string[]) => void;
@@ -38,22 +38,22 @@ export function usePageEditorState(): PageEditorState {
   // Selection state
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
-  
+
   // Animation state
   const [movingPage, setMovingPage] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  
+
   // Split state - position-based split tracking (replaces page-based splitAfter)
   const [splitPositions, setSplitPositions] = useState<Set<string>>(new Set());
-  
+
   // Export state
   const [exportLoading, setExportLoading] = useState(false);
-  
+
   // Helper functions
   const togglePage = useCallback((pageId: string) => {
-    setSelectedPageIds(prev => {
+    setSelectedPageIds((prev) => {
       const newSelection = prev.includes(pageId)
-        ? prev.filter(id => id !== pageId)
+        ? prev.filter((id) => id !== pageId)
         : [...prev, pageId];
       return newSelection;
     });
@@ -61,17 +61,17 @@ export function usePageEditorState(): PageEditorState {
 
   const toggleSelectAll = useCallback((allPageIds: string[]) => {
     if (!allPageIds.length) return;
-    
-    setSelectedPageIds(prev => 
-      prev.length === allPageIds.length ? [] : allPageIds
+
+    setSelectedPageIds((prev) =>
+      prev.length === allPageIds.length ? [] : allPageIds,
     );
   }, []);
-  
+
   const animateReorder = useCallback(() => {
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 500);
   }, []);
-  
+
   return {
     // State
     selectionMode,
@@ -80,7 +80,7 @@ export function usePageEditorState(): PageEditorState {
     isAnimating,
     splitPositions,
     exportLoading,
-    
+
     // Setters
     setSelectionMode,
     setSelectedPageIds,
@@ -88,7 +88,7 @@ export function usePageEditorState(): PageEditorState {
     setIsAnimating,
     setSplitPositions,
     setExportLoading,
-    
+
     // Helpers
     togglePage,
     toggleSelectAll,

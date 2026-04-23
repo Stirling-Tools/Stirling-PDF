@@ -1,7 +1,7 @@
-import { Button, Stack, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import type { FileState } from '@app/types/file';
+import { Button, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import type { FileState } from "@app/types/file";
 
 interface SelectDocumentStepProps {
   selectedFiles: FileState[];
@@ -22,28 +22,33 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
       {!hasValidFile ? (
         <Text size="sm" c="dimmed" ta="center">
           {t(
-            'groupSigning.steps.selectDocument.noFile',
-            'Please select a single PDF file from your active files to create a signing session.'
+            "groupSigning.steps.selectDocument.noFile",
+            "Please select a single PDF file from your active files to create a signing session.",
           )}
         </Text>
       ) : (
         <>
           <div>
             <Text size="sm" c="dimmed" mb="xs">
-              {t('groupSigning.steps.selectDocument.selectedFile', 'Selected document')}
+              {t(
+                "groupSigning.steps.selectDocument.selectedFile",
+                "Selected document",
+              )}
             </Text>
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                border: '1px solid var(--mantine-color-default-border)',
-                borderRadius: 'var(--mantine-radius-default)',
-                backgroundColor: 'var(--mantine-color-default-hover)',
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px",
+                border: "1px solid var(--mantine-color-default-border)",
+                borderRadius: "var(--mantine-radius-default)",
+                backgroundColor: "var(--mantine-color-default-hover)",
               }}
             >
-              <PictureAsPdfIcon sx={{ fontSize: 32, color: 'var(--mantine-color-red-6)' }} />
+              <PictureAsPdfIcon
+                sx={{ fontSize: 32, color: "var(--mantine-color-red-6)" }}
+              />
               <div style={{ flex: 1 }}>
                 <Text size="sm" fw={600}>
                   {selectedFile?.name}
@@ -58,7 +63,10 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
           </div>
 
           <Button onClick={onNext} fullWidth>
-            {t('groupSigning.steps.selectDocument.continue', 'Continue to Participant Selection')}
+            {t(
+              "groupSigning.steps.selectDocument.continue",
+              "Continue to Participant Selection",
+            )}
           </Button>
         </>
       )}

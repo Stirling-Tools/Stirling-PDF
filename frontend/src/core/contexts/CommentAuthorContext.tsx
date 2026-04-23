@@ -1,16 +1,16 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from "react";
 
 export interface CommentAuthorValue {
   displayName: string;
 }
 
-const defaultValue: CommentAuthorValue = { displayName: 'Guest' };
+const defaultValue: CommentAuthorValue = { displayName: "Guest" };
 
 const CommentAuthorContext = createContext<CommentAuthorValue>(defaultValue);
 
 export function CommentAuthorProvider({
   children,
-  displayName = 'Guest',
+  displayName = "Guest",
 }: {
   children: ReactNode;
   displayName?: string;

@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileState, useFileSelection } from "@app/contexts/FileContext";
+import { useFileState } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -15,17 +16,18 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation(convertParams.parameters);
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(convertParams.getEndpointName());
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled(convertParams.getEndpointName());
 
   // Prevent reset immediately after operation completes (when consumeFiles auto-selects outputs)
   const skipNextSelectionResetRef = useRef(false);
-  const previousSelectionRef = useRef<string>('');
+  const previousSelectionRef = useRef<string>("");
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
@@ -37,7 +39,10 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = convertOperation.files.length > 0 || convertOperation.downloadUrl !== null;
+  const hasResults =
+    convertOperation.files.length > 0 ||
+    convertOperation.downloadUrl !== null ||
+    !!convertOperation.errorMessage;
   const settingsCollapsed = hasResults;
 
   // When operation completes, flag the next selection change to skip reset
@@ -49,7 +54,10 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   // Reset results when user manually changes file selection
   useEffect(() => {
-    const currentSelection = selectedFiles.map(f => f.fileId).sort().join(',');
+    const currentSelection = selectedFiles
+      .map((f) => f.fileId)
+      .sort()
+      .join(",");
 
     if (currentSelection === previousSelectionRef.current) return; // No change
 
@@ -70,7 +78,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         onPreviewFile?.(null);
       }
     } else {
-      previousSelectionRef.current = '';
+      previousSelectionRef.current = "";
       if (activeFiles.length === 0) {
         convertParams.resetParameters();
       }
@@ -83,7 +91,10 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       convertOperation.resetResults();
       onPreviewFile?.(null);
     }
-  }, [convertParams.parameters.fromExtension, convertParams.parameters.toExtension]);
+  }, [
+    convertParams.parameters.fromExtension,
+    convertParams.parameters.toExtension,
+  ]);
 
   useEffect(() => {
     if (hasFiles) {
@@ -99,13 +110,18 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleConvert = async () => {
     try {
-      await convertOperation.executeOperation(convertParams.parameters, selectedFiles);
+      await convertOperation.executeOperation(
+        convertParams.parameters,
+        selectedFiles,
+      );
       if (convertOperation.files && onComplete) {
         onComplete(convertOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : "Convert operation failed");
+        onError(
+          error instanceof Error ? error.message : "Convert operation failed",
+        );
       }
     }
   };

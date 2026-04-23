@@ -1,10 +1,10 @@
-import React from 'react';
-import { Card, Text, Group, Flex, Alert, Button, Badge } from '@mantine/core';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import { useTranslation } from 'react-i18next';
-import { PlanTier } from '@app/hooks/usePlans';
-import { ManageBillingButton } from '@app/components/shared/ManageBillingButton';
+import React from "react";
+import { Card, Text, Group, Flex, Alert, Button, Badge } from "@mantine/core";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import { useTranslation } from "react-i18next";
+import { PlanTier } from "@app/hooks/usePlans";
+import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 
 interface TrialStatus {
   isTrialing: boolean;
@@ -27,23 +27,35 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
   _activeSince,
   _nextBillingDate,
   trialStatus,
-  onAddPaymentClick
+  onAddPaymentClick,
 }) => {
   const { t } = useTranslation();
 
   return (
     <div>
       <Flex justify="space-between" align="center">
-        <h3 style={{ margin: 0, color: 'var(--mantine-color-text)', fontSize: '1rem' }}>
-          {t('plan.activePlan.title', 'Active Plan')}
+        <h3
+          style={{
+            margin: 0,
+            color: "var(--mantine-color-text)",
+            fontSize: "1rem",
+          }}
+        >
+          {t("plan.activePlan.title", "Active Plan")}
         </h3>
         <ManageBillingButton
           returnUrl={`${window.location.origin}/account`}
           trialStatus={trialStatus}
         />
       </Flex>
-      <p style={{ margin: '0.25rem 0 1rem 0', color: 'var(--mantine-color-dimmed)', fontSize: '0.875rem' }}>
-        {t('plan.activePlan.subtitle', 'Your current subscription details')}
+      <p
+        style={{
+          margin: "0.25rem 0 1rem 0",
+          color: "var(--mantine-color-dimmed)",
+          fontSize: "0.875rem",
+        }}
+      >
+        {t("plan.activePlan.subtitle", "Your current subscription details")}
       </p>
 
       {/* Trial Status Alert */}
@@ -53,23 +65,28 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
           icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
           mt="md"
           mb="md"
-          title={t('plan.trial.title', 'Free Trial Active')}
+          title={t("plan.trial.title", "Free Trial Active")}
         >
           <Text size="sm">
-            {t('plan.trial.daysRemaining', 'Your trial ends in {{days}} days', {
-              days: trialStatus.daysRemaining
+            {t("plan.trial.daysRemaining", "Your trial ends in {{days}} days", {
+              days: trialStatus.daysRemaining,
             })}
           </Text>
           <Text size="xs" c="dimmed">
-            {t('plan.trial.endDate', 'Expires: {{date}}', {
-              date: new Date(trialStatus.trialEnd).toLocaleDateString()
+            {t("plan.trial.endDate", "Expires: {{date}}", {
+              date: new Date(trialStatus.trialEnd).toLocaleDateString(),
             })}
           </Text>
           {trialStatus.hasScheduledSub ? (
             <Text size="xs" c="green" fw={500} mt="sm">
-              ✓ {t('plan.trial.subscriptionScheduled', 'Subscription scheduled - starts {{date}}', {
-                date: new Date(trialStatus.trialEnd).toLocaleDateString()
-              })}
+              ✓{" "}
+              {t(
+                "plan.trial.subscriptionScheduled",
+                "Subscription scheduled - starts {{date}}",
+                {
+                  date: new Date(trialStatus.trialEnd).toLocaleDateString(),
+                },
+              )}
             </Text>
           ) : (
             onAddPaymentClick && (
@@ -80,7 +97,7 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
                 onClick={onAddPaymentClick}
                 leftSection={<CreditCardIcon sx={{ fontSize: 14 }} />}
               >
-                {t('plan.trial.subscribeToPro', 'Subscribe to Pro')}
+                {t("plan.trial.subscribeToPro", "Subscribe to Pro")}
               </Button>
             )
           )}
@@ -96,7 +113,7 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
               </Text>
               {trialStatus?.isTrialing && (
                 <Badge color="blue" variant="light">
-                  {t('plan.trial.badge', 'Trial')}
+                  {t("plan.trial.badge", "Trial")}
                 </Badge>
               )}
             </Group>
@@ -108,7 +125,8 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
           </div>
           <div className="text-right">
             <Text size="xl" fw={700}>
-              {currentPlan.currency}{currentPlan.price}/month
+              {currentPlan.currency}
+              {currentPlan.price}/month
             </Text>
             {/* {nextBillingDate && (
               <Text size="sm" c="dimmed">

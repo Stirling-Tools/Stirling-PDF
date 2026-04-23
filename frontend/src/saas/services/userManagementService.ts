@@ -1,5 +1,5 @@
-import apiClient from '@app/services/apiClient';
-import { supabase, isSupabaseConfigured } from '@app/services/supabaseClient';
+import apiClient from "@app/services/apiClient";
+import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 
 export interface User {
   id: number;
@@ -45,7 +45,7 @@ export interface CreateUserRequest {
   password?: string;
   role: string;
   teamId?: number;
-  authType: 'password' | 'SSO';
+  authType: "password" | "SSO";
   forceChange?: boolean;
 }
 
@@ -107,7 +107,9 @@ export const userManagementService = {
    * Get all users with session data (admin only)
    */
   async getUsers(): Promise<AdminSettingsData> {
-    const response = await apiClient.get<AdminSettingsData>('/api/v1/proprietary/ui-data/admin-settings');
+    const response = await apiClient.get<AdminSettingsData>(
+      "/api/v1/proprietary/ui-data/admin-settings",
+    );
     return response.data;
   },
 
@@ -115,7 +117,7 @@ export const userManagementService = {
    * Get users without a team
    */
   async getUsersWithoutTeam(): Promise<User[]> {
-    const response = await apiClient.get<User[]>('/api/v1/users/without-team');
+    const response = await apiClient.get<User[]>("/api/v1/users/without-team");
     return response.data;
   },
 
@@ -124,19 +126,19 @@ export const userManagementService = {
    */
   async createUser(data: CreateUserRequest): Promise<void> {
     const formData = new FormData();
-    formData.append('username', data.username);
+    formData.append("username", data.username);
     if (data.password) {
-      formData.append('password', data.password);
+      formData.append("password", data.password);
     }
-    formData.append('role', data.role);
+    formData.append("role", data.role);
     if (data.teamId) {
-      formData.append('teamId', data.teamId.toString());
+      formData.append("teamId", data.teamId.toString());
     }
-    formData.append('authType', data.authType);
+    formData.append("authType", data.authType);
     if (data.forceChange !== undefined) {
-      formData.append('forceChange', data.forceChange.toString());
+      formData.append("forceChange", data.forceChange.toString());
     }
-    await apiClient.post('/api/v1/user/admin/saveUser', formData, {
+    await apiClient.post("/api/v1/user/admin/saveUser", formData, {
       suppressErrorToast: true, // Component will handle error display
     });
   },
@@ -146,12 +148,12 @@ export const userManagementService = {
    */
   async updateUserRole(data: UpdateUserRoleRequest): Promise<void> {
     const formData = new FormData();
-    formData.append('username', data.username);
-    formData.append('role', data.role);
+    formData.append("username", data.username);
+    formData.append("role", data.role);
     if (data.teamId) {
-      formData.append('teamId', data.teamId.toString());
+      formData.append("teamId", data.teamId.toString());
     }
-    await apiClient.post('/api/v1/user/admin/changeRole', formData, {
+    await apiClient.post("/api/v1/user/admin/changeRole", formData, {
       suppressErrorToast: true,
     });
   },
@@ -161,22 +163,31 @@ export const userManagementService = {
    */
   async toggleUserEnabled(username: string, enabled: boolean): Promise<void> {
     const formData = new FormData();
-    formData.append('enabled', enabled.toString());
-    await apiClient.post(`/api/v1/user/admin/changeUserEnabled/${username}`, formData, {
-      suppressErrorToast: true,
-    });
+    formData.append("enabled", enabled.toString());
+    await apiClient.post(
+      `/api/v1/user/admin/changeUserEnabled/${username}`,
+      formData,
+      {
+        suppressErrorToast: true,
+      },
+    );
   },
 
   /**
    * Delete a user (admin only)
    */
-  async deleteUser(user: User, options?: { notifyUser?: boolean }): Promise<void> {
+  async deleteUser(
+    user: User,
+    options?: { notifyUser?: boolean },
+  ): Promise<void> {
     if (isSupabaseConfigured && supabase) {
       if (!user.email) {
-        throw new Error('Email missing for this user. Please contact support for manual removal.');
+        throw new Error(
+          "Email missing for this user. Please contact support for manual removal.",
+        );
       }
 
-      const { error } = await supabase.functions.invoke('delete-user', {
+      const { error } = await supabase.functions.invoke("delete-user", {
         body: {
           target_email: user.email,
           notify_user: options?.notifyUser ?? true,
@@ -184,7 +195,7 @@ export const userManagementService = {
       });
 
       if (error) {
-        throw new Error(error.message || 'Supabase deletion failed');
+        throw new Error(error.message || "Supabase deletion failed");
       }
       return;
     }
@@ -197,18 +208,18 @@ export const userManagementService = {
    */
   async inviteUsers(data: InviteUsersRequest): Promise<InviteUsersResponse> {
     const formData = new FormData();
-    formData.append('emails', data.emails);
-    formData.append('role', data.role);
+    formData.append("emails", data.emails);
+    formData.append("role", data.role);
     if (data.teamId) {
-      formData.append('teamId', data.teamId.toString());
+      formData.append("teamId", data.teamId.toString());
     }
 
     const response = await apiClient.post<InviteUsersResponse>(
-      '/api/v1/user/admin/inviteUsers',
+      "/api/v1/user/admin/inviteUsers",
       formData,
       {
         suppressErrorToast: true, // Component will handle error display
-      }
+      },
     );
 
     return response.data;
@@ -217,29 +228,31 @@ export const userManagementService = {
   /**
    * Generate an invite link (admin only)
    */
-  async generateInviteLink(data: InviteLinkRequest): Promise<InviteLinkResponse> {
+  async generateInviteLink(
+    data: InviteLinkRequest,
+  ): Promise<InviteLinkResponse> {
     const formData = new FormData();
     // Only append email if it's provided and not empty
     if (data.email && data.email.trim()) {
-      formData.append('email', data.email);
+      formData.append("email", data.email);
     }
-    formData.append('role', data.role);
+    formData.append("role", data.role);
     if (data.teamId) {
-      formData.append('teamId', data.teamId.toString());
+      formData.append("teamId", data.teamId.toString());
     }
     if (data.expiryHours) {
-      formData.append('expiryHours', data.expiryHours.toString());
+      formData.append("expiryHours", data.expiryHours.toString());
     }
     if (data.sendEmail !== undefined) {
-      formData.append('sendEmail', data.sendEmail.toString());
+      formData.append("sendEmail", data.sendEmail.toString());
     }
 
     const response = await apiClient.post<InviteLinkResponse>(
-      '/api/v1/invite/generate',
+      "/api/v1/invite/generate",
       formData,
       {
         suppressErrorToast: true,
-      }
+      },
     );
 
     return response.data;
@@ -249,7 +262,9 @@ export const userManagementService = {
    * Get list of active invite links (admin only)
    */
   async getInviteLinks(): Promise<InviteToken[]> {
-    const response = await apiClient.get<{ invites: InviteToken[] }>('/api/v1/invite/list');
+    const response = await apiClient.get<{ invites: InviteToken[] }>(
+      "/api/v1/invite/list",
+    );
     return response.data.invites;
   },
 
@@ -266,7 +281,9 @@ export const userManagementService = {
    * Clean up expired invite links (admin only)
    */
   async cleanupExpiredInvites(): Promise<{ deletedCount: number }> {
-    const response = await apiClient.post<{ deletedCount: number }>('/api/v1/invite/cleanup');
+    const response = await apiClient.post<{ deletedCount: number }>(
+      "/api/v1/invite/cleanup",
+    );
     return response.data;
   },
 };

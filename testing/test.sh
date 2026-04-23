@@ -88,6 +88,7 @@ capture_failure_logs() {
 capture_build_failure() {
     local build_name=$1
     local log_file="$REPORT_DIR/${build_name//[^a-zA-Z0-9_-]/_}.failure.log"
+    local build_log="$REPORT_DIR/${build_name//[^a-zA-Z0-9_-]/_}.build.log"
     local gradle_report_dirs=(
         "$PROJECT_ROOT/app/core/build/reports/tests"
         "$PROJECT_ROOT/app/common/build/reports/tests"
@@ -98,6 +99,13 @@ capture_build_failure() {
         echo "=== Build failure: $build_name ==="
         echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo "---"
+
+        # Include Docker/command build output if captured
+        if [ -f "$build_log" ]; then
+            echo "--- Build output (last 100 lines) ---"
+            tail -100 "$build_log"
+            echo ""
+        fi
 
         for report_dir in "${gradle_report_dirs[@]}"; do
             if [ -d "$report_dir" ]; then
@@ -332,6 +340,8 @@ capture_file_list() {
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
+        -not -path '*/tmp/stirling-pdf/lu*' \
+        -not -path '*/tmp/stirling-pdf/tmp*' \
         -not -path '/tmp/lu*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
@@ -361,8 +371,10 @@ capture_file_list() {
             -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-            -not -path '/tmp/lu*' \
-            -not -path '/tmp/tmp*' \
+            -not -path '*/tmp/stirling-pdf/lu*' \
+            -not -path '*/tmp/stirling-pdf/tmp*' \
+            -not -path '*/tmp/lu*' \
+            -not -path '*/tmp/tmp*' \
             -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
@@ -699,12 +711,14 @@ main() {
         else
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
         fi
+        local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
-            ${DOCKER_CACHE_ARGS_ULTRA_LITE} .; then
+            ${DOCKER_CACHE_ARGS_ULTRA_LITE} . 2>&1 | tee "$ultra_lite_build_log"; then
             failed_tests+=("Build-Ultra-Lite-Docker")
+            capture_build_failure "Build-Ultra-Lite-Docker"
             gha_endgroup
             exit 1
         fi
@@ -783,13 +797,15 @@ main() {
         else
             DOCKER_CACHE_ARGS_FAT=""
         fi
+        local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
             ${BASE_IMAGE_ARG} \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
-            ${DOCKER_CACHE_ARGS_FAT} .; then
+            ${DOCKER_CACHE_ARGS_FAT} . 2>&1 | tee "$fat_build_log"; then
             failed_tests+=("Build-Fat-Docker")
+            capture_build_failure "Build-Fat-Docker"
             gha_endgroup
             exit 1
         fi
@@ -875,6 +891,25 @@ main() {
             # Save docker logs produced during the behave run
             docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null || true
 
+            # Check for "response is already committed" errors in docker logs.
+            # These indicate Spring Security re-running on async dispatches
+            # (e.g. StreamingResponseBody completion) which can corrupt responses.
+            local committed_errors
+            committed_errors=$(grep -c "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null) || committed_errors=0
+            if [ "$committed_errors" -gt 0 ]; then
+                echo "ERROR: Found $committed_errors 'response is already committed' errors in docker logs."
+                echo "This usually means a StreamingResponseBody endpoint is triggering a Spring Security"
+                echo "re-authorization on the async dispatch. Check spring.security.filter.dispatcher-types"
+                echo "in application.properties."
+                grep -B2 "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" | head -30
+                local committed_log="$REPORT_DIR/response-committed-errors.log"
+                grep -B5 "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" > "$committed_log"
+                test_failure_logs["Response-Already-Committed"]="$committed_log"
+                failed_tests+=("Response-Already-Committed")
+            else
+                echo "No 'response is already committed' errors found in docker logs."
+            fi
+
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 
@@ -886,6 +921,36 @@ main() {
                 passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
             else
                 echo "WARNING: Unexpected temporary files detected after behave tests!"
+
+                # Save temp file failure details to a log for the test report
+                local tempfile_log="$REPORT_DIR/temp-files-failure.log"
+                {
+                    echo "=== Temp File Regression Failure ==="
+                    echo "Container: $CONTAINER_NAME"
+                    echo ""
+                    echo "=== Before snapshot ==="
+                    cat "$BEFORE_FILE" 2>/dev/null || echo "(empty)"
+                    echo ""
+                    echo "=== After snapshot ==="
+                    cat "$AFTER_FILE" 2>/dev/null || echo "(empty)"
+                    echo ""
+                    echo "=== Diff (new/changed files) ==="
+                    cat "$DIFF_FILE" 2>/dev/null || echo "(empty)"
+                    echo ""
+                    echo "=== Leftover temp files ==="
+                    cat "${DIFF_FILE}.tmp" 2>/dev/null || echo "(none found)"
+                    echo ""
+                    echo "=== Docker logs ==="
+                    docker logs "$CONTAINER_NAME" 2>&1 | tail -200
+                } > "$tempfile_log" 2>/dev/null || true
+
+                # Copy snapshots to report dir for artifact upload
+                cp "$BEFORE_FILE" "$REPORT_DIR/" 2>/dev/null || true
+                cp "$AFTER_FILE" "$REPORT_DIR/" 2>/dev/null || true
+                cp "$DIFF_FILE" "$REPORT_DIR/" 2>/dev/null || true
+                cp "${DIFF_FILE}.tmp" "$REPORT_DIR/files_diff_tmp_matches.txt" 2>/dev/null || true
+
+                test_failure_logs["Stirling-PDF-Regression-Temp-Files"]="$tempfile_log"
                 failed_tests+=("Stirling-PDF-Regression-Temp-Files")
             fi
             passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")

@@ -28,9 +28,7 @@ import "@app/utils/fileIdSafety";
 function MobileScannerProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>
-        {children}
-      </RainbowThemeProvider>
+      <RainbowThemeProvider>{children}</RainbowThemeProvider>
     </PreferencesProvider>
   );
 }

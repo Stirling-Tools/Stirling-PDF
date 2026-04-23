@@ -9,10 +9,10 @@ const SingleLargePage = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'singleLargePage',
+    "singleLargePage",
     useSingleLargePageParameters,
     useSingleLargePageOperation,
-    props
+    props,
   );
 
   return createToolFlow({

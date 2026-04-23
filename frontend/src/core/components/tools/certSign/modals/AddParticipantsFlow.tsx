@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Modal, Stack, TextInput, Button, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import AddIcon from '@mui/icons-material/Add';
-import UserSelector from '@app/components/shared/UserSelector';
+import { useState } from "react";
+import { Modal, Stack, TextInput, Button, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import AddIcon from "@mui/icons-material/Add";
+import UserSelector from "@app/components/shared/UserSelector";
 
 interface AddParticipantsFlowProps {
   opened: boolean;
@@ -17,12 +17,12 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
 }) => {
   const { t } = useTranslation();
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [defaultReason, setDefaultReason] = useState('');
+  const [defaultReason, setDefaultReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
     setSelectedUserIds([]);
-    setDefaultReason('');
+    setDefaultReason("");
     onClose();
   };
 
@@ -32,7 +32,7 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
       await onSubmit(selectedUserIds, defaultReason.trim() || undefined);
       handleClose();
     } catch (error) {
-      console.error('Failed to add participants:', error);
+      console.error("Failed to add participants:", error);
     } finally {
       setSubmitting(false);
     }
@@ -42,28 +42,40 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
     <Modal
       opened={opened}
       onClose={handleClose}
-      title={t('certSign.collab.sessionDetail.addParticipants', 'Add Participants')}
+      title={t(
+        "certSign.collab.sessionDetail.addParticipants",
+        "Add Participants",
+      )}
       size="lg"
     >
       <Stack gap="md">
         <UserSelector
           value={selectedUserIds}
           onChange={setSelectedUserIds}
-          placeholder={t('certSign.collab.sessionDetail.selectUsers', 'Select users...')}
+          placeholder={t(
+            "certSign.collab.sessionDetail.selectUsers",
+            "Select users...",
+          )}
         />
 
         <TextInput
-          label={t('certSign.reason', 'Default Reason')}
-          description={t('certSign.collab.addParticipants.reasonHelp', 'Pre-set a signing reason for these participants (optional, they can override when signing)')}
+          label={t("certSign.reason", "Default Reason")}
+          description={t(
+            "certSign.collab.addParticipants.reasonHelp",
+            "Pre-set a signing reason for these participants (optional, they can override when signing)",
+          )}
           value={defaultReason}
           onChange={(e) => setDefaultReason(e.currentTarget.value)}
-          placeholder={t('certSign.collab.addParticipants.reasonPlaceholder', 'e.g. Approval, Review...')}
+          placeholder={t(
+            "certSign.collab.addParticipants.reasonPlaceholder",
+            "e.g. Approval, Review...",
+          )}
           size="sm"
         />
 
         <Group justify="flex-end">
           <Button variant="default" onClick={handleClose}>
-            {t('common.cancel', 'Cancel')}
+            {t("common.cancel", "Cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -72,9 +84,13 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
             leftSection={<AddIcon sx={{ fontSize: 16 }} />}
             color="green"
           >
-            {t('certSign.collab.addParticipants.add', 'Add {{count}} Participant(s)', {
-              count: selectedUserIds.length,
-            })}
+            {t(
+              "certSign.collab.addParticipants.add",
+              "Add {{count}} Participant(s)",
+              {
+                count: selectedUserIds.length,
+              },
+            )}
           </Button>
         </Group>
       </Stack>

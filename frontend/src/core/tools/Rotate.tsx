@@ -12,10 +12,10 @@ const Rotate = (props: BaseToolProps) => {
   const rotateTips = useRotateTips();
 
   const base = useBaseTool(
-    'rotate',
+    "rotate",
     useRotateParameters,
     useRotateOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const Rotate = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: rotateTips,
         content: (
           <RotateSettings

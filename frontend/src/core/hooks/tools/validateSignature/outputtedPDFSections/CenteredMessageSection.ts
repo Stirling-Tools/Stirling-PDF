@@ -1,6 +1,6 @@
-import { PdfiumFont, PdfiumPage, rgb } from '@app/services/pdfiumDocBuilder';
-import { wrapText } from '@app/hooks/tools/validateSignature/utils/pdfText';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import { PdfiumFont, PdfiumPage, rgb } from "@app/services/pdfiumDocBuilder";
+import { wrapText } from "@app/hooks/tools/validateSignature/utils/pdfText";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface DrawCenteredMessageOptions {
   page: PdfiumPage;
@@ -28,7 +28,8 @@ export const drawCenteredMessage = ({
   const badgeFontSize = 10;
   const badgePaddingX = 14;
   const badgePaddingY = 6;
-  const badgeWidth = font.widthOfTextAtSize(text, badgeFontSize) + badgePaddingX * 2;
+  const badgeWidth =
+    font.widthOfTextAtSize(text, badgeFontSize) + badgePaddingX * 2;
   const badgeHeight = badgeFontSize + badgePaddingY * 2;
   const badgeX = marginX + (contentWidth - badgeWidth) / 2;
 

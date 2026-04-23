@@ -6,7 +6,7 @@
 import { ToolId } from "@app/types/toolId";
 
 declare const tag: unique symbol;
-export type FileId = string & { readonly [tag]: 'FileId' };
+export type FileId = string & { readonly [tag]: "FileId" };
 
 /**
  * Tool operation metadata for history tracking

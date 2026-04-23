@@ -48,6 +48,7 @@ import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
@@ -67,6 +68,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
+    private final LoginAttemptService loginAttemptService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -773,6 +775,14 @@ public class UserController {
         }
         return ResponseEntity.ok(
                 Map.of("message", "User " + (enabled ? "enabled" : "disabled") + " successfully"));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/admin/unlockUser/{username}")
+    @Audited(type = AuditEventType.SETTINGS_CHANGED, level = AuditLevel.BASIC)
+    public ResponseEntity<?> unlockUser(@PathVariable("username") String username) {
+        loginAttemptService.resetAttempts(username);
+        return ResponseEntity.ok(Map.of("message", "User account unlocked successfully"));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

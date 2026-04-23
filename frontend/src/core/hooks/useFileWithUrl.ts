@@ -1,17 +1,19 @@
-import { useMemo, useEffect } from 'react';
-import { isFileObject } from '@app/types/fileContext';
+import { useMemo, useEffect } from "react";
+import { isFileObject } from "@app/types/fileContext";
 
 /**
  * Hook to convert a File object to { file: File; url: string } format
  * Creates blob URL on-demand and revokes it when file changes or component unmounts.
  */
-export function useFileWithUrl(file: File | Blob | null): { file: File | Blob; url: string } | null {
+export function useFileWithUrl(
+  file: File | Blob | null,
+): { file: File | Blob; url: string } | null {
   const result = useMemo(() => {
     if (!file) return null;
 
     // Validate that file is a proper File, StirlingFile, or Blob object
     if (!isFileObject(file) && !(file instanceof Blob)) {
-      console.warn('useFileWithUrl: Expected File or Blob, got:', file);
+      console.warn("useFileWithUrl: Expected File or Blob, got:", file);
       return null;
     }
 
@@ -19,7 +21,11 @@ export function useFileWithUrl(file: File | Blob | null): { file: File | Blob; u
       const url = URL.createObjectURL(file);
       return { file, url };
     } catch (error) {
-      console.error('useFileWithUrl: Failed to create object URL:', error, file);
+      console.error(
+        "useFileWithUrl: Failed to create object URL:",
+        error,
+        file,
+      );
       return null;
     }
   }, [file]);

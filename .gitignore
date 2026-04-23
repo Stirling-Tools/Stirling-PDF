@@ -165,6 +165,7 @@ __pycache__/
 # Virtual environments
 .env*
 !.env*.example
+!engine/.env
 .venv*
 env*/
 venv*/
@@ -181,6 +182,7 @@ venv.bak/
 .idea/
 *.iml
 out/
+.junie/
 
 # Ignore Mac DS_Store files
 .DS_Store
@@ -216,7 +218,13 @@ id_ecdsa.pub
 id_ed25519
 id_ed25519.pub
 .ssh/
+
+# Allow the published GPG release signing public key (safe to share)
+!docs/security/signing-key.pub
 *ssh
+
+# Taskfile checksum cache
+.task/
 
 # cache
 .cache
@@ -254,3 +262,6 @@ docs/type3/signatures/
 
 # Type3 sample PDFs (development only)
 **/type3/samples/
+
+# Claude
+.claude/

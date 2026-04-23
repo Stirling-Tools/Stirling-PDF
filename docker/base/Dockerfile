@@ -5,7 +5,7 @@
 ARG TARGETPLATFORM
 
 # Stage 1: Build and strip Calibre
-FROM ubuntu:noble AS calibre-build
+FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS calibre-build
 ARG TARGETPLATFORM
 ARG CALIBRE_VERSION=9.4.0
 ARG CALIBRE_STRIP_WEBENGINE=false
@@ -270,7 +270,7 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 
 
 # Stage 2: Build Ghostscript from source
-FROM ubuntu:noble AS gs-build
+FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS gs-build
 ARG TARGETPLATFORM
 ARG GS_VERSION=10.06.0
 
@@ -294,7 +294,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
-FROM ubuntu:noble AS pdf-tools-build
+FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
@@ -339,7 +339,7 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble AS python-venv-build
+FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.6
 
@@ -350,7 +350,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
-    /opt/venv/bin/pip install --no-cache-dir --prefer-binary \
+    /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
       cryptography \
       "unoserver==${UNOSERVER_VERSION}" && \
@@ -364,7 +364,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble AS runtime
+FROM eclipse-temurin:25-jre-noble@sha256:a051234f864d7ab78bf0188c3c540ac06c711a3b566f00f246be37073cc99dce AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -385,8 +385,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils fontforge \
-      gosu unpaper pngquant \
+      # ffmpeg disabled due to raised CVEs
+      # ffmpeg \
+      poppler-utils fontforge \
+      unpaper pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
       fonts-liberation2 \
@@ -622,8 +624,7 @@ RUN set -eux; \
         -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser 2>/dev/null \
         || useradd -m -g stirlingpdfgroup \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    fi; \
-    ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
+    fi
 
 # Application directories
 RUN set -eux; \

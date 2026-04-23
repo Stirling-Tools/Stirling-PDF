@@ -1,5 +1,6 @@
 package stirling.software.SPDF.model.api.converters;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -28,7 +29,7 @@ public class ConvertPDFToMarkdown {
             summary = "Convert PDF to Markdown",
             description =
                     "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
+    public ResponseEntity<Resource> processPdfToMarkdown(@ModelAttribute PDFFile file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager);

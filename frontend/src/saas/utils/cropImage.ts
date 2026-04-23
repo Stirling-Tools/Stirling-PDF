@@ -19,7 +19,7 @@ export interface Area {
  */
 export async function getCroppedImage(
   imageSrc: string,
-  pixelCrop: Area
+  pixelCrop: Area,
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -27,11 +27,11 @@ export async function getCroppedImage(
     image.onload = () => {
       try {
         // Create canvas with crop dimensions
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
 
         if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
+          reject(new Error("Failed to get canvas context"));
           return;
         }
 
@@ -54,20 +54,20 @@ export async function getCroppedImage(
           0,
           0,
           pixelCrop.width,
-          pixelCrop.height
+          pixelCrop.height,
         );
 
         // Convert canvas to PNG blob
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(new Error('Failed to create blob from canvas'));
+              reject(new Error("Failed to create blob from canvas"));
               return;
             }
             resolve(blob);
           },
-          'image/png',
-          1.0 // Maximum quality
+          "image/png",
+          1.0, // Maximum quality
         );
       } catch (error) {
         reject(error);
@@ -75,7 +75,7 @@ export async function getCroppedImage(
     };
 
     image.onerror = () => {
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     // Start loading the image

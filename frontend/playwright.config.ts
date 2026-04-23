@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Stirling-PDF E2E Test Configuration
@@ -8,8 +8,8 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './src/core/tests',
-  testMatch: '**/*.spec.ts',
+  testDir: "./src/core/tests",
+  testMatch: "**/*.spec.ts",
 
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -21,12 +21,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
 
   /* Workers: CI uses 1 for stability, locally use 50% of CPU cores */
-  workers: process.env.CI ? 1 : '50%',
+  workers: process.env.CI ? 1 : "50%",
 
   /* Reporter to use */
   reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
+    ["html", { open: "never" }],
+    ["list"],
   ],
 
   /* Global timeout per test */
@@ -39,10 +39,10 @@ export default defineConfig({
 
   /* Shared settings for all the projects below */
   use: {
-    baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'on-first-retry',
+    baseURL: "http://localhost:5173",
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "on-first-retry",
     actionTimeout: 10_000,
     navigationTimeout: 30_000,
   },
@@ -50,29 +50,29 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         viewport: { width: 1920, height: 1080 },
       },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
   ],
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: "npx vite",
+    url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

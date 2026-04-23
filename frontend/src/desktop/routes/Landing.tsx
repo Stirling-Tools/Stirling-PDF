@@ -1,4 +1,4 @@
-import HomePage from '@app/pages/HomePage';
+import HomePage from "@app/pages/HomePage";
 
 /**
  * Desktop override of Landing.

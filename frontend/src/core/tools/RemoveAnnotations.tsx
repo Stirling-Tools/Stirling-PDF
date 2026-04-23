@@ -12,10 +12,10 @@ const RemoveAnnotations = (props: BaseToolProps) => {
   const removeAnnotationsTips = useRemoveAnnotationsTips();
 
   const base = useBaseTool(
-    'removeAnnotations',
+    "removeAnnotations",
     useRemoveAnnotationsParameters,
     useRemoveAnnotationsOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const RemoveAnnotations = (props: BaseToolProps) => {
       {
         title: t("removeAnnotations.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: removeAnnotationsTips,
         content: <RemoveAnnotationsSettings />,
       },

@@ -248,7 +248,8 @@
   flex-wrap: nowrap;
 }
 
-.topBar[data-view="viewer"][data-mobile="true"][data-wrapped="false"] .viewerControls {
+.topBar[data-view="viewer"][data-mobile="true"][data-wrapped="false"]
+  .viewerControls {
   flex: 1 1 auto;
   overflow: hidden;
 }
@@ -328,7 +329,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .zoomButton:hover {
@@ -366,7 +369,9 @@
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .iconButton.iconTextButton {

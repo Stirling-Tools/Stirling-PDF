@@ -1,6 +1,9 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
-import { useMemo, useCallback } from 'react';
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
+import { useMemo, useCallback } from "react";
 
 // Normalize angle to number between 0 and 359
 export const normalizeAngle = (angle: number): number => {
@@ -25,7 +28,7 @@ export type RotateParametersHook = BaseParametersHook<RotateParameters> & {
 export const useRotateParameters = (): RotateParametersHook => {
   const baseHook = useBaseParameters({
     defaultParameters,
-    endpointName: 'rotate-pdf',
+    endpointName: "rotate-pdf",
     validateFn: (params) => {
       // Angle must be a multiple of 90
       return params.angle % 90 === 0;
@@ -34,12 +37,12 @@ export const useRotateParameters = (): RotateParametersHook => {
 
   // Rotate clockwise by 90 degrees
   const rotateClockwise = useCallback(() => {
-    baseHook.updateParameter('angle', baseHook.parameters.angle + 90);
+    baseHook.updateParameter("angle", baseHook.parameters.angle + 90);
   }, [baseHook]);
 
   // Rotate anticlockwise by 90 degrees
   const rotateAnticlockwise = useCallback(() => {
-    baseHook.updateParameter('angle', baseHook.parameters.angle - 90);
+    baseHook.updateParameter("angle", baseHook.parameters.angle - 90);
   }, [baseHook]);
 
   // Check if rotation will actually change the document
@@ -49,12 +52,15 @@ export const useRotateParameters = (): RotateParametersHook => {
   }, [baseHook.parameters.angle, normalizeAngle]);
 
   // Override updateParameter - no longer normalize angles here
-  const updateParameter = useCallback(<K extends keyof RotateParameters>(
-    parameter: K,
-    value: RotateParameters[K]
-  ) => {
-    baseHook.updateParameter(parameter, value);
-  }, [baseHook]);
+  const updateParameter = useCallback(
+    <K extends keyof RotateParameters>(
+      parameter: K,
+      value: RotateParameters[K],
+    ) => {
+      baseHook.updateParameter(parameter, value);
+    },
+    [baseHook],
+  );
 
   return {
     ...baseHook,
