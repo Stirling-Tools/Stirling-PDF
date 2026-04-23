@@ -46,7 +46,7 @@ const Merge = (props: BaseToolProps) => {
       hasAutoSwitchedRef.current = true;
       navActions.setWorkbench("fileEditor");
     }
-  }, []);
+  }, [isViewerMode, navActions]);
   const naturalCompare = useCallback((a: string, b: string): number => {
     const isDigit = (char: string) => char >= "0" && char <= "9";
 
