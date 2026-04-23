@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -209,6 +209,23 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
+  const [stampImagePreviewUrl, setStampImagePreviewUrl] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!parameters.stampImage) {
+      setStampImagePreviewUrl(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(parameters.stampImage);
+    setStampImagePreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [parameters.stampImage]);
 
   return (
     <Stack gap="md">
@@ -683,7 +700,7 @@ const StampSetupSettings = ({
           {parameters.stampImage && (
             <Stack gap="xs">
               <img
-                src={URL.createObjectURL(parameters.stampImage)}
+                src={stampImagePreviewUrl ?? ""}
                 alt="Selected stamp image"
                 className="max-h-24 w-full object-contain border border-gray-200 rounded bg-gray-50"
               />
