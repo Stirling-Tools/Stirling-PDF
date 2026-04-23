@@ -248,24 +248,28 @@ public class PdfJsonConversionService {
         }
     }
 
-    public byte[] convertPdfToJson(MultipartFile file) throws IOException {
-        return convertPdfToJson(file, null, false);
+    public void convertPdfToJson(MultipartFile file, OutputStream out) throws IOException {
+        convertPdfToJson(file, null, false, out);
     }
 
-    public byte[] convertPdfToJson(MultipartFile file, boolean lightweight) throws IOException {
-        return convertPdfToJson(file, null, lightweight);
-    }
-
-    public byte[] convertPdfToJson(
-            MultipartFile file, Consumer<PdfJsonConversionProgress> progressCallback)
+    public void convertPdfToJson(MultipartFile file, boolean lightweight, OutputStream out)
             throws IOException {
-        return convertPdfToJson(file, progressCallback, false);
+        convertPdfToJson(file, null, lightweight, out);
     }
 
-    public byte[] convertPdfToJson(
+    public void convertPdfToJson(
             MultipartFile file,
             Consumer<PdfJsonConversionProgress> progressCallback,
-            boolean lightweight)
+            OutputStream out)
+            throws IOException {
+        convertPdfToJson(file, progressCallback, false, out);
+    }
+
+    public void convertPdfToJson(
+            MultipartFile file,
+            Consumer<PdfJsonConversionProgress> progressCallback,
+            boolean lightweight,
+            OutputStream out)
             throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
@@ -593,7 +597,9 @@ public class PdfJsonConversionService {
                             pdfJson.getPages().size());
                 }
 
-                byte[] result = objectMapper.writeValueAsBytes(pdfJson);
+                // Stream JSON directly to the caller's OutputStream to avoid allocating the
+                // entire document on the heap before writing it out.
+                objectMapper.writeValue(out, pdfJson);
                 progress.accept(PdfJsonConversionProgress.complete());
 
                 // Clear Type3 cache entries immediately for non-cached conversions
@@ -602,15 +608,13 @@ public class PdfJsonConversionService {
                 if (!useLazyImages) {
                     clearType3CacheEntriesForJob(jobId);
                 }
-
-                return result;
             }
         } finally {
             closeQuietly(normalizedFile);
         }
     }
 
-    public byte[] convertJsonToPdf(MultipartFile file) throws IOException {
+    public void convertJsonToPdf(MultipartFile file, OutputStream out) throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
@@ -804,15 +808,11 @@ public class PdfJsonConversionService {
                 log.info("JSON->PDF conversion complete: {} pages", pages.size());
             }
 
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                document.save(baos);
-                byte[] result = baos.toByteArray();
+            // Stream the PDF directly to the caller's OutputStream — PDFBox writes incrementally.
+            document.save(out);
 
-                // Clear Type3 cache entries for this conversion
-                clearType3CacheEntriesForJob(syntheticJobId);
-
-                return result;
-            }
+            // Clear Type3 cache entries for this conversion
+            clearType3CacheEntriesForJob(syntheticJobId);
         }
     }
 
@@ -6075,7 +6075,8 @@ public class PdfJsonConversionService {
      * Extracts document metadata, fonts, and page dimensions without page content. Caches the PDF
      * bytes for subsequent page requests.
      */
-    public byte[] extractDocumentMetadata(MultipartFile file, String jobId) throws IOException {
+    public void extractDocumentMetadata(MultipartFile file, String jobId, OutputStream out)
+            throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
@@ -6170,12 +6171,13 @@ public class PdfJsonConversionService {
             progress.accept(
                     PdfJsonConversionProgress.of(100, "complete", "Metadata extraction complete"));
 
-            return objectMapper.writeValueAsBytes(docMetadata);
+            objectMapper.writeValue(out, docMetadata);
         }
     }
 
     /** Extracts a single page from cached PDF bytes. Re-loads the PDF for each request. */
-    public byte[] extractSinglePage(String jobId, int pageNumber) throws IOException {
+    public void extractSinglePage(String jobId, int pageNumber, OutputStream out)
+            throws IOException {
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
@@ -6326,11 +6328,12 @@ public class PdfJsonConversionService {
                     pageModel.getAnnotations().size(),
                     jobId);
 
-            return objectMapper.writeValueAsBytes(pageModel);
+            objectMapper.writeValue(out, pageModel);
         }
     }
 
-    public byte[] extractPageFonts(String jobId, int pageNumber) throws IOException {
+    public void extractPageFonts(String jobId, int pageNumber, OutputStream out)
+            throws IOException {
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
@@ -6347,7 +6350,8 @@ public class PdfJsonConversionService {
         Map<PDFont, String> pageMap =
                 pageFontResources != null ? pageFontResources.get(pageNumber) : null;
         if (pageMap == null || pageMap.isEmpty()) {
-            return objectMapper.writeValueAsBytes(Collections.emptyList());
+            objectMapper.writeValue(out, Collections.emptyList());
+            return;
         }
 
         Map<String, PdfJsonFont> cachedFonts = cached.getFonts();
@@ -6375,7 +6379,7 @@ public class PdfJsonConversionService {
         pageFonts.sort(
                 Comparator.comparing(
                         PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
-        return objectMapper.writeValueAsBytes(pageFonts);
+        objectMapper.writeValue(out, pageFonts);
     }
 
     public byte[] exportUpdatedPages(String jobId, PdfJsonDocument updates) throws IOException {

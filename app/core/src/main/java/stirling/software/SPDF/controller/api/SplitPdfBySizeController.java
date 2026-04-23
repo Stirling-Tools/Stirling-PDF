@@ -8,11 +8,11 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -51,7 +51,7 @@ public class SplitPdfBySizeController {
                             + " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB"
                             + " (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF"
                             + " Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> autoSplitPdf(
+    public ResponseEntity<Resource> autoSplitPdf(
             @ModelAttribute SplitPdfBySizeOrCountRequest request) throws Exception {
 
         log.debug("Starting PDF split process with request: {}", request);

@@ -18,11 +18,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -31,14 +32,15 @@ import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class MultiPageLayoutControllerTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -97,7 +99,7 @@ class MultiPageLayoutControllerTest {
         req.setAddBorder(Boolean.FALSE);
         req.setFileInput(fileWithExt);
 
-        ResponseEntity<StreamingResponseBody> resp = controller.mergeMultiplePagesIntoOne(req);
+        ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
         Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
         Assertions.assertEquals(MediaType.APPLICATION_PDF, resp.getHeaders().getContentType());
         Assertions.assertNotNull(resp.getBody());
@@ -122,7 +124,7 @@ class MultiPageLayoutControllerTest {
         req.setAddBorder(Boolean.TRUE);
         req.setFileInput(fileWithExt);
 
-        ResponseEntity<StreamingResponseBody> resp = controller.mergeMultiplePagesIntoOne(req);
+        ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
         Assertions.assertEquals(HttpStatus.OK, resp.getStatusCode());
         Assertions.assertEquals(MediaType.APPLICATION_PDF, resp.getHeaders().getContentType());
         Assertions.assertNotNull(resp.getBody());
@@ -145,7 +147,7 @@ class MultiPageLayoutControllerTest {
         req.setAddBorder(Boolean.TRUE);
         req.setFileInput(fileNoExt);
 
-        ResponseEntity<StreamingResponseBody> resp = controller.mergeMultiplePagesIntoOne(req);
+        ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
         Assertions.assertEquals(
                 "name_multi_page_layout.pdf",
                 resp.getHeaders().getContentDisposition().getFilename());
