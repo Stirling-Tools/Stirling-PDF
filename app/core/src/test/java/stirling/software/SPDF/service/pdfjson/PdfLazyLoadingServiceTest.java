@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +54,11 @@ class PdfLazyLoadingServiceTest {
                 Exception.class,
                 () ->
                         service.extractDocumentMetadata(
-                                null, "job1", new HashMap<>(), new HashMap<>()));
+                                null,
+                                "job1",
+                                new HashMap<>(),
+                                new HashMap<>(),
+                                new ByteArrayOutputStream()));
     }
 
     @Test
@@ -89,7 +95,8 @@ class PdfLazyLoadingServiceTest {
                                 page -> null,
                                 cos -> cos,
                                 (doc, pageNum) -> new java.util.ArrayList<>(),
-                                (doc, pageNum) -> new java.util.ArrayList<>()));
+                                (doc, pageNum) -> new java.util.ArrayList<>(),
+                                new ByteArrayOutputStream()));
     }
 
     @Test
@@ -108,15 +115,26 @@ class PdfLazyLoadingServiceTest {
         metadata.setNumberOfPages(1);
         when(metadataService.extractMetadata(any())).thenReturn(metadata);
         when(metadataService.extractXmpMetadata(any())).thenReturn(null);
-        when(objectMapper.writeValueAsBytes(any())).thenReturn(new byte[] {'{', '}'});
+        // Service now writes directly to the OutputStream using writeValue, not writeValueAsBytes.
+        // ObjectMapper.writeValue(OutputStream, Object) — the OutputStream is argument 0.
+        doAnswer(
+                        inv -> {
+                            OutputStream os = inv.getArgument(0, OutputStream.class);
+                            os.write(new byte[] {'{', '}'});
+                            return null;
+                        })
+                .when(objectMapper)
+                .writeValue(any(OutputStream.class), any());
         when(taskManager.addNote(any(), any())).thenReturn(true);
 
         Map<String, PdfJsonFont> fonts = new HashMap<>();
         Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        byte[] result = service.extractDocumentMetadata(file, "job1", fonts, pageFontResources);
+        service.extractDocumentMetadata(file, "job1", fonts, pageFontResources, out);
 
-        assertNotNull(result);
+        assertNotNull(out.toByteArray());
+        assertEquals(2, out.toByteArray().length);
         verify(metadataService).extractMetadata(any());
     }
 }
