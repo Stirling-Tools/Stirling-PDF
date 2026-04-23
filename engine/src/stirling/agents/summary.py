@@ -97,7 +97,9 @@ class SummaryAgent:
             toolsets=[rag.toolset],
             model_settings=self.runtime.smart_model_settings,
         )
-        result = await agent.run(self._build_prompt(request))
+        prompt = self._build_prompt(request)
+        logger.debug("[summary] prompt:\n%s", prompt)
+        result = await agent.run(prompt)
         return result.output
 
     def _build_prompt(self, request: SummaryRequest) -> str:

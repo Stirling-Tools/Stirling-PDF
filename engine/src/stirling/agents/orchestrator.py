@@ -171,7 +171,7 @@ class OrchestratorAgent:
         return await SummaryAgent(self.runtime).handle(
             SummaryRequest(
                 files=request.files,
-                focus=None,
+                focus=request.user_message,
                 conversation_history=request.conversation_history,
             )
         )

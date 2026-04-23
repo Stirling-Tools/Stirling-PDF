@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable, Callable
 
 from pydantic_ai import FunctionToolset
 from pydantic_ai.toolsets import AbstractToolset
 
 from stirling.rag.service import RagService
+from stirling.rag.store import SearchResult
+
+logger = logging.getLogger(__name__)
 
 
 class RagCapability:
@@ -95,8 +99,21 @@ class RagCapability:
             results = await self._rag_service.search(query, top_k=k)
 
         if not results:
+            logger.info("[rag] search_knowledge query=%r -> 0 results", query)
             return "No relevant results found in the knowledge base."
 
+        formatted = self._format_results(results)
+        logger.info(
+            "[rag] search_knowledge query=%r -> %d results, %d chars",
+            query,
+            len(results),
+            len(formatted),
+        )
+        logger.debug("[rag] search_knowledge query=%r returned:\n%s", query, formatted)
+        return formatted
+
+    @staticmethod
+    def _format_results(results: list[SearchResult]) -> str:
         sections = []
         for i, result in enumerate(results, 1):
             source = result.document.metadata.get("source", "unknown")
