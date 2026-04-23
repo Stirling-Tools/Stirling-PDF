@@ -382,6 +382,54 @@ class EmlToPdfParams(ApiModel):
     )
 
 
+class Strategy(StrEnum):
+    auto = "AUTO"
+    overlay_only = "OVERLAY_ONLY"
+    image_finalize = "IMAGE_FINALIZE"
+
+
+class ExecuteParams(ApiModel):
+    convert_pdf_to_image: bool | None = Field(
+        False, description="Rasterize the output PDF after redaction. Equivalent to strategy=IMAGE_FINALIZE."
+    )
+    custom_padding: float | None = Field(
+        None, description="Extra padding in points added around each matched text block."
+    )
+    image_boxes: str | None = Field(
+        None,
+        description="Newline-separated image bounding boxes to redact. Format per line: pageIndex,x1,y1,x2,y2 (0-based page index; x1,y1,x2,y2 in PDF user-space coordinates with origin at bottom-left, Y increasing upward).",
+    )
+    image_pages: str | None = Field(
+        None,
+        description="Comma-separated 1-based page numbers to scan for images when redactAllImages=true. If omitted, all pages are scanned. Example: '1,3' scans pages 1 and 3.",
+    )
+    page_numbers: str | None = Field(
+        None,
+        description="Comma-separated 1-based page numbers to fully blackout (e.g. '2,4,6-8'). The entire page content is removed and replaced with a solid colour fill.",
+    )
+    redact_all_images: bool | None = Field(
+        False,
+        description="When true, detect and redact all images on the specified pages (or all pages if imagePages is not set). Image positions are detected directly by the server; no bounding boxes need to be provided.",
+    )
+    redact_color: str | None = Field("#000000", description="Hex colour for redaction fills.")
+    regex_patterns: str | None = Field(
+        None,
+        description="Newline-separated Java-compatible regex patterns to find and redact. Each non-empty line is treated as a regular expression.",
+    )
+    strategy: Strategy | None = Field(
+        Strategy.auto,
+        description="AUTO: attempt content-stream text removal, overlay on failure. OVERLAY_ONLY: draw rectangles only, skip token rewriting. IMAGE_FINALIZE: rasterize the PDF after redaction.",
+    )
+    text_ranges: list[str] | None = Field(
+        None,
+        description="Flat array of [startString, endString, startString, endString, ...] pairs. Each consecutive pair defines one explicit range to redact. Submit as repeated form values with the same key.",
+    )
+    texts_to_redact: str | None = Field(
+        None,
+        description="Newline-separated exact strings to find and redact. Each non-empty line is matched verbatim (case-sensitive) against the document text.",
+    )
+
+
 class ExtractImageScansParams(ApiModel):
     angle_threshold: int | None = Field(5, description="The angle threshold for the image scan extraction")
     border_size: int | None = Field(1, description="The border size for the image scan extraction")
@@ -1119,6 +1167,7 @@ class Model(
         | CertSignParams
         | SessionsParams
         | RedactParams
+        | ExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1183,6 +1232,7 @@ class Model(
         | CertSignParams
         | SessionsParams
         | RedactParams
+        | ExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1248,6 +1298,7 @@ type ParamToolModel = (
     | CertSignParams
     | SessionsParams
     | RedactParams
+    | ExecuteParams
     | RemovePasswordParams
     | SanitizePdfParams
     | TimestampPdfParams
@@ -1314,6 +1365,7 @@ class ToolEndpoint(StrEnum):
     CERT_SIGN = "/api/v1/security/cert-sign"
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     REDACT = "/api/v1/security/redact"
+    EXECUTE = "/api/v1/security/redact/execute"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
@@ -1378,6 +1430,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.CERT_SIGN: CertSignParams,
     ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.REDACT: RedactParams,
+    ToolEndpoint.EXECUTE: ExecuteParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
     ToolEndpoint.TIMESTAMP_PDF: TimestampPdfParams,

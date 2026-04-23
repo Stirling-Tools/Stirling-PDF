@@ -220,13 +220,13 @@ public class AiWorkflowService {
 
         try {
             List<Resource> inputFiles = toResources(filesByName);
-            listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
-            List<Resource> results = executeStep(endpointPath, parameters, inputFiles);
+            listener.onProgress(
+                    AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1, parameters));
+            StepOutput output = executeStep(endpointPath, parameters, inputFiles);
+            String summary = output.summary() != null ? output.summary() : response.getRationale();
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            response.getRationale(),
-                            results,
-                            new ArrayList<>(filesByName.keySet())));
+                            summary, output.files(), new ArrayList<>(filesByName.keySet())));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -247,6 +247,7 @@ public class AiWorkflowService {
 
         try {
             List<Resource> currentFiles = toResources(filesByName);
+            String lastStepSummary = null;
 
             for (int i = 0; i < steps.size(); i++) {
                 Map<String, Object> step = steps.get(i);
@@ -262,15 +263,21 @@ public class AiWorkflowService {
                 }
 
                 listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(endpointPath, i + 1, steps.size()));
-                currentFiles = executeStep(endpointPath, parameters, currentFiles);
+                        AiWorkflowProgressEvent.executingTool(
+                                endpointPath, i + 1, steps.size(), parameters));
+                StepOutput output = executeStep(endpointPath, parameters, currentFiles);
+                currentFiles = output.files();
+                if (output.summary() != null) {
+                    lastStepSummary = output.summary();
+                }
             }
 
+            // Prefer the tool's own summary (e.g. redaction plan description) over the
+            // orchestrator's generic plan description.
+            String finalSummary = lastStepSummary != null ? lastStepSummary : response.getSummary();
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            response.getSummary(),
-                            currentFiles,
-                            new ArrayList<>(filesByName.keySet())));
+                            finalSummary, currentFiles, new ArrayList<>(filesByName.keySet())));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -278,31 +285,40 @@ public class AiWorkflowService {
         }
     }
 
+    /** Files produced by a single tool step, plus an optional human-readable summary. */
+    private record StepOutput(List<Resource> files, String summary) {}
+
     /**
      * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
      * call. Otherwise, the endpoint is called once per file. ZIP responses are unpacked so each
      * inner file is treated as its own result (e.g. split outputs a ZIP of pages).
      */
-    private List<Resource> executeStep(
-            String endpointPath, Map<String, Object> parameters, List<Resource> inputFiles)
+    private StepOutput executeStep(
+            String toolId, Map<String, Object> parameters, List<Resource> inputFiles)
             throws IOException {
-        List<Resource> results = new ArrayList<>();
-        if (toolMetadataService.isMultiInput(endpointPath)) {
-            results.addAll(callEndpoint(endpointPath, parameters, inputFiles));
+        if (toolMetadataService.isMultiInput(toolId)) {
+            return callEndpoint(toolId, parameters, inputFiles);
         } else {
+            List<Resource> results = new ArrayList<>();
+            String lastSummary = null;
             for (Resource file : inputFiles) {
-                results.addAll(callEndpoint(endpointPath, parameters, List.of(file)));
+                StepOutput output = callEndpoint(toolId, parameters, List.of(file));
+                results.addAll(output.files());
+                if (output.summary() != null) {
+                    lastSummary = output.summary();
+                }
             }
+            return new StepOutput(results, lastSummary);
         }
-        return results;
     }
 
     /**
-     * Call an endpoint and return the response body. Endpoints that are declared as ZIP-returning
-     * in the API spec (multi-output, or {@code Output:ZIP-*}) are unpacked into their individual
-     * entries so callers always see a flat list of result files.
+     * Call an endpoint and return the response body plus any {@code X-Stirling-Summary} header.
+     * Endpoints that are declared as ZIP-returning in the API spec (multi-output, or {@code
+     * Output:ZIP-*}) are unpacked into their individual entries so callers always see a flat list
+     * of result files.
      */
-    private List<Resource> callEndpoint(
+    private StepOutput callEndpoint(
             String endpointPath, Map<String, Object> parameters, List<Resource> files)
             throws IOException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -323,11 +339,15 @@ public class AiWorkflowService {
             throw new IOException(
                     "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
         }
+        String summary = response.getHeaders().getFirst("X-Stirling-Summary");
         Resource resource = response.getBody();
+        List<Resource> resultFiles;
         if (toolMetadataService.shouldUnpackZipResponse(endpointPath)) {
-            return ZipExtractionUtils.extractZip(resource, tempFileManager);
+            resultFiles = ZipExtractionUtils.extractZip(resource, tempFileManager);
+        } else {
+            resultFiles = List.of(resource);
         }
-        return List.of(resource);
+        return new StepOutput(resultFiles, summary);
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesByName) throws IOException {

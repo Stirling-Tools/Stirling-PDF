@@ -6,7 +6,7 @@
 
 export const PROPRIETARY_REGULAR_TOOL_IDS = [] as const;
 
-export const PROPRIETARY_SUPER_TOOL_IDS = [] as const;
+export const PROPRIETARY_SUPER_TOOL_IDS = ["ai-workflow"] as const;
 
 export const PROPRIETARY_LINK_TOOL_IDS = [] as const;
 
