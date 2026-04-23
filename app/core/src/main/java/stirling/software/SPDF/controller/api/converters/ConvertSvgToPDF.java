@@ -95,10 +95,7 @@ public class ConvertSvgToPDF {
                     filenames.add(Filenames.toSimpleFileName(originalFilename));
 
                 } catch (IOException e) {
-                    log.error(
-                            "SVG sanitization/reading failed for {}: {}",
-                            originalFilename,
-                            e.getMessage());
+                    log.error("SVG sanitization/reading failed for {}", originalFilename, e);
                 }
             }
 

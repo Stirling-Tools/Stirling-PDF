@@ -158,7 +158,14 @@ public class FileStorage {
             success = true;
         } finally {
             if (!success) {
-                Files.deleteIfExists(filePath);
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
             }
         }
         log.debug("Stored StreamingResponseBody with ID: {}", fileId);
@@ -175,11 +182,18 @@ public class FileStorage {
         Files.createDirectories(filePath.getParent());
         boolean success = false;
         try (InputStream in = resource.getInputStream()) {
-            Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(in, filePath);
             success = true;
         } finally {
             if (!success) {
-                Files.deleteIfExists(filePath);
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
             }
         }
         log.debug("Stored Resource with ID: {}", fileId);

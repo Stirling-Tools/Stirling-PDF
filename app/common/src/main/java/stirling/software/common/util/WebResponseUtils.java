@@ -72,7 +72,8 @@ public class WebResponseUtils {
     }
 
     /**
-     * Save a {@link PDDocument} to a managed temp file and return it as a streamed web response.
+     * Save a {@link PDDocument} to a managed temp file and return it as a file-backed {@code
+     * ResponseEntity<Resource>}.
      *
      * <p>The returned {@link Resource} owns the supplied {@link TempFile} — the file is deleted
      * when Spring closes the response {@link InputStream} after writing the body. This is a
@@ -169,8 +170,17 @@ public class WebResponseUtils {
     /**
      * {@link Resource} backed by a {@link TempFile}. The underlying temp file is deleted when the
      * response {@code InputStream} is closed — i.e. after Spring has finished writing the body. Any
-     * {@link IOException} during the copy bubbles up through Spring's normal error path so it is
-     * logged and the client sees a proper HTTP error, rather than a silently-truncated response.
+     * {@link IOException} during the copy is logged via {@link ClosingInputStream} and propagates
+     * through Spring's normal error path. Since response headers are committed before the body
+     * transfer begins, a mid-body failure manifests as a server-side log entry plus an aborted
+     * connection rather than a silently-truncated success — which is the behaviour this class was
+     * added to restore.
+     *
+     * <p><b>Single-use contract:</b> {@link #getInputStream()} is intended to be called once by
+     * Spring's {@code ResourceHttpMessageConverter} on the normal write path. After the returned
+     * stream is closed the backing temp file is deleted, so subsequent {@code getInputStream()}
+     * calls will either see a deleted file (tests that mock {@link TempFile#close()} are an
+     * exception) or fail at read time. Callers that need to re-read the body must copy it first.
      */
     public static final class ManagedTempFileResource extends FileSystemResource {
 

@@ -83,8 +83,13 @@ public class ConvertPdfJsonController {
             tempOut.close();
             throw e;
         }
-        logJsonResponse("pdf/text-editor", tempOut.getPath());
-        return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+        try {
+            logJsonResponse("pdf/text-editor", tempOut.getPath());
+            return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/text-editor/pdf")
@@ -145,8 +150,8 @@ public class ConvertPdfJsonController {
             tempOut.close();
             throw e;
         }
-        logJsonResponse("pdf/text-editor/metadata", tempOut.getPath());
         try {
+            logJsonResponse("pdf/text-editor/metadata", tempOut.getPath());
             return ResponseEntity.ok()
                     .header("X-Job-Id", scopedJobKey)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -221,8 +226,13 @@ public class ConvertPdfJsonController {
             tempOut.close();
             throw e;
         }
-        logJsonResponse("pdf/text-editor/page", tempOut.getPath());
-        return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+        try {
+            logJsonResponse("pdf/text-editor/page", tempOut.getPath());
+            return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
     }
 
     @GetMapping(value = "/pdf/text-editor/fonts/{jobId}/{pageNumber}")
@@ -245,8 +255,13 @@ public class ConvertPdfJsonController {
             tempOut.close();
             throw e;
         }
-        logJsonResponse("pdf/text-editor/fonts/page", tempOut.getPath());
-        return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+        try {
+            logJsonResponse("pdf/text-editor/fonts/page", tempOut.getPath());
+            return WebResponseUtils.fileToWebResponse(tempOut, docName, MediaType.APPLICATION_JSON);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
     }
 
     @AutoJobPostMapping(
