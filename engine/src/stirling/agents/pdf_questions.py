@@ -3,24 +3,22 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents._page_text import format_page_text, has_page_text
 from stirling.contracts import (
-    ExtractedFileText,
     NeedContentFileRequest,
+    NeedContentResponse,
     PdfContentType,
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    SupportedCapability,
     format_conversation_history,
 )
 from stirling.services import AppRuntime
 
 
 class PdfQuestionAgent:
-    DEFAULT_MAX_PAGES = 12
-    DEFAULT_MAX_CHARACTERS = 24_000
-
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         rag = runtime.rag_capability
@@ -44,8 +42,9 @@ class PdfQuestionAgent:
         )
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
-        if not self._has_page_text(request.page_text):
-            return PdfQuestionNeedContentResponse(
+        if not has_page_text(request.page_text):
+            return NeedContentResponse(
+                resume_with=SupportedCapability.PDF_QUESTION,
                 reason="No extracted PDF page text was provided, so the question cannot be answered yet.",
                 files=[
                     NeedContentFileRequest(
@@ -54,8 +53,8 @@ class PdfQuestionAgent:
                     )
                     for file_name in request.file_names
                 ],
-                max_pages=self.DEFAULT_MAX_PAGES,
-                max_characters=self.DEFAULT_MAX_CHARACTERS,
+                max_pages=self.runtime.settings.max_pages,
+                max_characters=self.runtime.settings.max_characters,
             )
         return await self._run_answer_agent(request)
 
@@ -65,12 +64,7 @@ class PdfQuestionAgent:
 
     def _build_prompt(self, request: PdfQuestionRequest) -> str:
         file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
-        sections = [
-            f"[File: {file_text.file_name}, Page {selection.page_number or '?'}]\n{selection.text}"
-            for file_text in request.page_text
-            for selection in file_text.pages
-        ]
-        pages = "\n\n".join(sections)
+        pages = format_page_text(request.page_text, empty="")
         history = format_conversation_history(request.conversation_history)
         return (
             f"Conversation history:\n{history}\n"
@@ -78,6 +72,3 @@ class PdfQuestionAgent:
             f"Question: {request.question}\n"
             f"Extracted page text:\n{pages}"
         )
-
-    def _has_page_text(self, page_text: list[ExtractedFileText]) -> bool:
-        return any(selection.text.strip() for file_text in page_text for selection in file_text.pages)
