@@ -75,6 +75,10 @@ class RagService:
         """Remove a collection and all its documents."""
         await self._store.delete_collection(collection)
 
+    async def has_collection(self, collection: str) -> bool:
+        """Check whether a collection exists."""
+        return await self._store.has_collection(collection)
+
     async def list_collections(self) -> list[str]:
         """List all available collections."""
         return await self._store.list_collections()

@@ -116,6 +116,7 @@ class OrchestratorAgent:
                 return await self._run_agent_draft(request)
             case (
                 SupportedCapability.ORCHESTRATE
+                | SupportedCapability.PDF_SUMMARY
                 | SupportedCapability.AGENT_REVISE
                 | SupportedCapability.AGENT_NEXT_ACTION
                 | SupportedCapability.MATH_AUDITOR_AGENT

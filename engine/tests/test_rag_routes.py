@@ -6,10 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from stirling.api import app
-from stirling.api.dependencies import get_rag_embedding_model, get_rag_service
+from stirling.api.dependencies import get_rag_service
 from stirling.rag import Document, RagService, SqliteVecStore
-
-TEST_EMBEDDING_MODEL = "test-embedder"
 
 
 class StubEmbedder:
@@ -53,153 +51,127 @@ def _build_service() -> RagService:
 
 
 @pytest.fixture
-def client() -> Iterator[TestClient]:
-    service = _build_service()
+def service() -> RagService:
+    return _build_service()
+
+
+@pytest.fixture
+def client(service: RagService) -> Iterator[TestClient]:
     app.dependency_overrides[get_rag_service] = lambda: service
-    app.dependency_overrides[get_rag_embedding_model] = lambda: TEST_EMBEDDING_MODEL
     try:
         yield TestClient(app)
     finally:
         app.dependency_overrides.pop(get_rag_service, None)
-        app.dependency_overrides.pop(get_rag_embedding_model, None)
 
 
-# ── /status ─────────────────────────────────────────────────────────────
+# ── POST /documents ─────────────────────────────────────────────────────
 
 
-def test_status_reports_embedding_model_and_collections(client: TestClient) -> None:
+def test_ingest_document_indexes_page_text(client: TestClient, service: RagService) -> None:
+    response = client.post(
+        "/api/v1/rag/documents",
+        json={
+            "documentId": "doc-123",
+            "source": "report.pdf",
+            "pageText": [
+                {"pageNumber": 1, "text": "The introduction covers the main topic."},
+                {"pageNumber": 2, "text": "The conclusion summarises the findings."},
+            ],
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["documentId"] == "doc-123"
+    assert body["chunksIndexed"] >= 2
+
+
+@pytest.mark.anyio
+async def test_ingest_document_replaces_existing_content(client: TestClient, service: RagService) -> None:
     client.post(
-        "/api/v1/rag/index",
-        json={"collection": "my-docs", "text": "Hello world.", "source": "a.pdf"},
+        "/api/v1/rag/documents",
+        json={
+            "documentId": "replace-me",
+            "pageText": [{"pageNumber": 1, "text": "Original content that existed before."}],
+        },
     )
-    response = client.get("/api/v1/rag/status")
-    assert response.status_code == 200
-    body = response.json()
-    assert body["embeddingModel"] == TEST_EMBEDDING_MODEL
-    assert "my-docs" in body["collections"]
-
-
-def test_status_when_empty(client: TestClient) -> None:
-    response = client.get("/api/v1/rag/status")
-    assert response.status_code == 200
-    body = response.json()
-    assert body == {"embeddingModel": TEST_EMBEDDING_MODEL, "collections": []}
-
-
-# ── /index ──────────────────────────────────────────────────────────────
-
-
-def test_index_returns_chunk_count(client: TestClient) -> None:
+    # Second ingest with different content should replace the first entirely
     response = client.post(
-        "/api/v1/rag/index",
-        json={"collection": "indexed", "text": "Short text.", "source": "doc.pdf"},
+        "/api/v1/rag/documents",
+        json={
+            "documentId": "replace-me",
+            "pageText": [{"pageNumber": 1, "text": "New content that replaced the old."}],
+        },
     )
     assert response.status_code == 200
-    body = response.json()
-    assert body["collection"] == "indexed"
-    assert body["chunksIndexed"] >= 1
+
+    results = await service.search("New content", collection="replace-me", top_k=5)
+    texts = [r.document.text for r in results]
+    assert any("New content" in t for t in texts)
+    assert not any("Original content" in t for t in texts)
 
 
-def test_index_rejects_empty_collection_name(client: TestClient) -> None:
+def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/index",
-        json={"collection": "", "text": "Text.", "source": "x.pdf"},
+        "/api/v1/rag/documents",
+        json={
+            "documentId": "mixed",
+            "pageText": [
+                {"pageNumber": 1, "text": "  "},
+                {"pageNumber": 2, "text": "Real content on page 2."},
+            ],
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["chunksIndexed"] >= 1
+
+
+def test_ingest_document_with_no_content_returns_zero(client: TestClient) -> None:
+    response = client.post("/api/v1/rag/documents", json={"documentId": "empty"})
+    assert response.status_code == 200
+    assert response.json()["chunksIndexed"] == 0
+
+
+def test_ingest_document_rejects_empty_id(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/rag/documents",
+        json={"documentId": "", "pageText": [{"pageNumber": 1, "text": "something"}]},
     )
     assert response.status_code == 422
 
 
-def test_index_rejects_oversized_text(client: TestClient) -> None:
-    huge = "x" * 1_000_001  # Just over the 1MB cap
+def test_ingest_document_rejects_non_positive_page_number(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/index",
-        json={"collection": "toobig", "text": huge},
+        "/api/v1/rag/documents",
+        json={"documentId": "bad-page", "pageText": [{"pageNumber": 0, "text": "something"}]},
     )
     assert response.status_code == 422
 
 
-# ── /search ─────────────────────────────────────────────────────────────
+# ── DELETE /documents/{id} ──────────────────────────────────────────────
 
 
-def test_search_returns_results(client: TestClient) -> None:
+def test_delete_document_reports_deleted_true_when_existed(client: TestClient) -> None:
     client.post(
-        "/api/v1/rag/index",
-        json={"collection": "search-test", "text": "Python is fun.", "source": "guide.pdf"},
+        "/api/v1/rag/documents",
+        json={"documentId": "to-delete", "pageText": [{"pageNumber": 1, "text": "Text."}]},
     )
-    response = client.post(
-        "/api/v1/rag/search",
-        json={"query": "Python", "collection": "search-test", "topK": 3},
-    )
+    response = client.delete("/api/v1/rag/documents/to-delete")
     assert response.status_code == 200
-    body = response.json()
-    assert body["query"] == "Python"
-    assert len(body["results"]) >= 1
-    first = body["results"][0]
-    assert first["source"] == "guide.pdf"
-    assert "score" in first
+    assert response.json() == {"documentId": "to-delete", "deleted": True}
 
 
-def test_search_rejects_empty_collection_name(client: TestClient) -> None:
-    response = client.post(
-        "/api/v1/rag/search",
-        json={"query": "anything", "collection": ""},
-    )
-    assert response.status_code == 422
+def test_delete_document_is_idempotent(client: TestClient) -> None:
+    response = client.delete("/api/v1/rag/documents/never-existed")
+    assert response.status_code == 200
+    assert response.json() == {"documentId": "never-existed", "deleted": False}
 
 
-def test_search_without_collection_searches_all(client: TestClient) -> None:
+@pytest.mark.anyio
+async def test_delete_document_removes_collection(client: TestClient, service: RagService) -> None:
     client.post(
-        "/api/v1/rag/index",
-        json={"collection": "col-one", "text": "Alpha content.", "source": "one.pdf"},
+        "/api/v1/rag/documents",
+        json={"documentId": "gone", "pageText": [{"pageNumber": 1, "text": "Text."}]},
     )
-    client.post(
-        "/api/v1/rag/index",
-        json={"collection": "col-two", "text": "Beta content.", "source": "two.pdf"},
-    )
-    response = client.post(
-        "/api/v1/rag/search",
-        json={"query": "content"},
-    )
-    assert response.status_code == 200
-    body = response.json()
-    assert len(body["results"]) >= 1
-
-
-# ── /collections ────────────────────────────────────────────────────────
-
-
-def test_collections_empty_when_no_data(client: TestClient) -> None:
-    response = client.get("/api/v1/rag/collections")
-    assert response.status_code == 200
-    assert response.json() == {"collections": []}
-
-
-def test_collections_lists_indexed(client: TestClient) -> None:
-    client.post(
-        "/api/v1/rag/index",
-        json={"collection": "list-me", "text": "Text.", "source": "x.pdf"},
-    )
-    response = client.get("/api/v1/rag/collections")
-    assert response.status_code == 200
-    assert "list-me" in response.json()["collections"]
-
-
-# ── DELETE /collections/{name} ──────────────────────────────────────────
-
-
-def test_delete_collection_removes_it(client: TestClient) -> None:
-    client.post(
-        "/api/v1/rag/index",
-        json={"collection": "to-delete", "text": "Text.", "source": "x.pdf"},
-    )
-    response = client.delete("/api/v1/rag/collections/to-delete")
-    assert response.status_code == 200
-    assert response.json() == {"status": "deleted", "collection": "to-delete"}
-
-    listing = client.get("/api/v1/rag/collections").json()
-    assert "to-delete" not in listing["collections"]
-
-
-def test_delete_nonexistent_collection_is_idempotent(client: TestClient) -> None:
-    response = client.delete("/api/v1/rag/collections/never-existed")
-    assert response.status_code == 200
-    assert response.json() == {"status": "deleted", "collection": "never-existed"}
+    assert await service.has_collection("gone")
+    client.delete("/api/v1/rag/documents/gone")
+    assert not await service.has_collection("gone")

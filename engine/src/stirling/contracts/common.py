@@ -49,6 +49,7 @@ class WorkflowOutcome(StrEnum):
 
     ANSWER = "answer"
     NEED_CONTENT = "need_content"
+    NEED_INGEST = "need_ingest"
     NOT_FOUND = "not_found"
     PLAN = "plan"
     NEED_CLARIFICATION = "need_clarification"
@@ -80,6 +81,7 @@ class SupportedCapability(StrEnum):
     ORCHESTRATE = "orchestrate"
     PDF_EDIT = "pdf_edit"
     PDF_QUESTION = "pdf_question"
+    PDF_SUMMARY = "pdf_summary"
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
@@ -120,6 +122,20 @@ class NeedContentResponse(ApiModel):
     files: list[NeedContentFileRequest] = Field(default_factory=list)
     max_pages: int
     max_characters: int
+
+
+class NeedIngestResponse(ApiModel):
+    """Signal that the named documents must be ingested into RAG before the agent can continue.
+
+    Java's handling: for each document_id, extract the requested content types, POST to
+    ``/api/v1/rag/documents``, then retry the original request with the same document_ids.
+    """
+
+    outcome: Literal[WorkflowOutcome.NEED_INGEST] = WorkflowOutcome.NEED_INGEST
+    resume_with: SupportedCapability
+    reason: str
+    document_ids: list[str]
+    content_types: list[PdfContentType] = Field(default_factory=list)
 
 
 class ToolOperationStep(ApiModel):

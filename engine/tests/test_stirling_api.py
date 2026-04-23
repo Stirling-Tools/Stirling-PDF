@@ -7,6 +7,7 @@ from stirling.api.dependencies import (
     get_orchestrator_agent,
     get_pdf_edit_agent,
     get_pdf_question_agent,
+    get_summary_agent,
     get_user_spec_agent,
 )
 from stirling.config import load_settings
@@ -20,10 +21,12 @@ from stirling.contracts import (
     CannotContinueExecutionAction,
     EditCannotDoResponse,
     NeedContentResponse,
+    NeedIngestResponse,
     OrchestratorRequest,
     PdfEditRequest,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
+    SummaryRequest,
     SupportedCapability,
 )
 from stirling.models.tool_models import Angle, RotatePdfParams
@@ -50,6 +53,15 @@ class StubPdfQuestionAgent:
         return PdfQuestionNotFoundResponse(reason=request.question)
 
 
+class StubSummaryAgent:
+    async def handle(self, request: SummaryRequest) -> NeedIngestResponse:
+        return NeedIngestResponse(
+            resume_with=SupportedCapability.PDF_SUMMARY,
+            reason="stub-not-ingested",
+            document_ids=request.document_ids,
+        )
+
+
 class StubUserSpecAgent:
     async def draft(self, request: AgentDraftRequest) -> AgentDraftResponse:
         return AgentDraftResponse(
@@ -74,6 +86,7 @@ app.dependency_overrides[load_settings] = build_app_settings
 app.dependency_overrides[get_orchestrator_agent] = lambda: StubOrchestratorAgent()
 app.dependency_overrides[get_pdf_edit_agent] = lambda: StubPdfEditAgent()
 app.dependency_overrides[get_pdf_question_agent] = lambda: StubPdfQuestionAgent()
+app.dependency_overrides[get_summary_agent] = lambda: StubSummaryAgent()
 app.dependency_overrides[get_user_spec_agent] = lambda: StubUserSpecAgent()
 app.dependency_overrides[get_execution_planning_agent] = lambda: StubExecutionPlanningAgent()
 
@@ -113,6 +126,15 @@ def test_pdf_questions_route() -> None:
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "not_found"
+
+
+def test_pdf_summary_route() -> None:
+    response = client.post("/api/v1/pdf/summary", json={"documentIds": ["doc-1", "doc-2"]})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["outcome"] == "need_ingest"
+    assert body["documentIds"] == ["doc-1", "doc-2"]
 
 
 def test_agent_draft_route() -> None:

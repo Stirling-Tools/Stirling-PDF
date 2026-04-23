@@ -4,6 +4,7 @@ from .execution import ExecutionPlanningAgent
 from .orchestrator import OrchestratorAgent
 from .pdf_edit import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
 from .pdf_questions import PdfQuestionAgent
+from .summary import SummaryAgent
 from .user_spec import UserSpecAgent
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "PdfEditParameterSelector",
     "PdfEditPlanSelection",
     "PdfQuestionAgent",
+    "SummaryAgent",
     "UserSpecAgent",
 ]
