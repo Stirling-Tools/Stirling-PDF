@@ -58,7 +58,7 @@ class StubSummaryAgent:
         return NeedIngestResponse(
             resume_with=SupportedCapability.PDF_SUMMARY,
             reason="stub-not-ingested",
-            document_ids=request.document_ids,
+            files_to_ingest=request.files,
         )
 
 
@@ -101,7 +101,10 @@ def test_health_route() -> None:
 
 
 def test_orchestrator_route() -> None:
-    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this", "fileNames": ["test.pdf"]})
+    response = client.post(
+        "/api/v1/orchestrator",
+        json={"userMessage": "route this", "files": [{"id": "test-id", "name": "test.pdf"}]},
+    )
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "need_content"
@@ -119,7 +122,7 @@ def test_pdf_questions_route() -> None:
         "/api/v1/pdf/questions",
         json={
             "question": "what is this?",
-            "fileNames": ["test.pdf"],
+            "files": [{"id": "test-id", "name": "test.pdf"}],
             "pageText": [{"fileName": "test.pdf", "pages": [{"pageNumber": 1, "text": "Example"}]}],
         },
     )
@@ -129,12 +132,20 @@ def test_pdf_questions_route() -> None:
 
 
 def test_pdf_summary_route() -> None:
-    response = client.post("/api/v1/pdf/summary", json={"documentIds": ["doc-1", "doc-2"]})
+    response = client.post(
+        "/api/v1/pdf/summary",
+        json={
+            "files": [
+                {"id": "doc-1-id", "name": "doc-1.pdf"},
+                {"id": "doc-2-id", "name": "doc-2.pdf"},
+            ],
+        },
+    )
 
     assert response.status_code == 200
     body = response.json()
     assert body["outcome"] == "need_ingest"
-    assert body["documentIds"] == ["doc-1", "doc-2"]
+    assert [file["id"] for file in body["filesToIngest"]] == ["doc-1-id", "doc-2-id"]
 
 
 def test_agent_draft_route() -> None:

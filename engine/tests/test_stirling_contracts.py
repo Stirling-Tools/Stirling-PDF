@@ -3,6 +3,7 @@ from stirling.contracts import (
     AgentExecutionRequest,
     AgentSpec,
     AgentSpecStep,
+    AiFile,
     EditPlanResponse,
     ExecutionContext,
     ExtractedFileText,
@@ -18,7 +19,7 @@ from stirling.models.tool_models import Angle, RotatePdfParams, ToolEndpoint
 def test_orchestrator_request_accepts_user_message() -> None:
     request = OrchestratorRequest(
         user_message="Rotate the PDF",
-        file_names=["test.pdf"],
+        files=[AiFile(id="test-id", name="test.pdf")],
         artifacts=[
             ExtractedTextArtifact(
                 files=[

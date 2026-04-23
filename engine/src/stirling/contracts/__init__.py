@@ -9,6 +9,7 @@ from .agent_drafts import (
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
 from .common import (
+    AiFile,
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
@@ -22,6 +23,7 @@ from .common import (
     ToolOperationStep,
     WorkflowOutcome,
     format_conversation_history,
+    format_file_names,
 )
 from .execution import (
     AgentExecutionRequest,
@@ -82,6 +84,7 @@ from .summary import (
 )
 
 __all__ = [
+    "AiFile",
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
@@ -112,6 +115,7 @@ __all__ = [
     "FolioManifest",
     "FolioType",
     "format_conversation_history",
+    "format_file_names",
     "HealthResponse",
     "IngestDocumentRequest",
     "IngestDocumentResponse",

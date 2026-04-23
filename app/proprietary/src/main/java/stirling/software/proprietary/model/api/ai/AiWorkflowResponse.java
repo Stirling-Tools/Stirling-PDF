@@ -71,6 +71,12 @@ public class AiWorkflowResponse {
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
 
+    @Schema(
+            description =
+                    "Files the AI engine requires to be ingested into RAG before it can continue"
+                            + " the workflow. Populated on need_ingest outcomes.")
+    private List<AiFile> filesToIngest = new ArrayList<>();
+
     @Schema(description = "Maximum number of pages the AI engine wants text extracted from")
     private Integer maxPages;
 

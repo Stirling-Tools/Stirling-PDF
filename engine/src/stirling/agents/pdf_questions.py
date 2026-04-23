@@ -14,6 +14,7 @@ from stirling.contracts import (
     PdfQuestionResponse,
     SupportedCapability,
     format_conversation_history,
+    format_file_names,
 )
 from stirling.services import AppRuntime
 
@@ -48,10 +49,10 @@ class PdfQuestionAgent:
                 reason="No extracted PDF page text was provided, so the question cannot be answered yet.",
                 files=[
                     NeedContentFileRequest(
-                        file_name=file_name,
+                        file_name=file.name,
                         content_types=[PdfContentType.PAGE_TEXT],
                     )
-                    for file_name in request.file_names
+                    for file in request.files
                 ],
                 max_pages=self.runtime.settings.max_pages,
                 max_characters=self.runtime.settings.max_characters,
@@ -63,12 +64,11 @@ class PdfQuestionAgent:
         return result.output
 
     def _build_prompt(self, request: PdfQuestionRequest) -> str:
-        file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
         pages = format_page_text(request.page_text, empty="")
         history = format_conversation_history(request.conversation_history)
         return (
             f"Conversation history:\n{history}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
             f"Extracted page text:\n{pages}"
         )

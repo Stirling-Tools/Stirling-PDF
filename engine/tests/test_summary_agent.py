@@ -6,6 +6,7 @@ import pytest
 
 from stirling.agents import SummaryAgent
 from stirling.contracts import (
+    AiFile,
     NeedIngestResponse,
     PdfContentType,
     SummaryAnswerResponse,
@@ -76,35 +77,38 @@ def runtime_with_stub_rag(runtime: AppRuntime) -> AppRuntime:
 async def test_summary_agent_requests_ingest_when_document_missing(runtime_with_stub_rag: AppRuntime) -> None:
     agent = SummaryAgent(runtime_with_stub_rag)
 
-    response = await agent.handle(SummaryRequest(document_ids=["missing-doc"]))
+    missing_file = AiFile(id="missing-doc-id", name="missing-doc.pdf")
+    response = await agent.handle(SummaryRequest(files=[missing_file]))
 
     assert isinstance(response, NeedIngestResponse)
     assert response.resume_with == SupportedCapability.PDF_SUMMARY
-    assert response.document_ids == ["missing-doc"]
+    assert response.files_to_ingest == [missing_file]
     assert PdfContentType.PAGE_TEXT in response.content_types
 
 
 @pytest.mark.anyio
-async def test_summary_agent_reports_only_missing_document_ids(runtime_with_stub_rag: AppRuntime) -> None:
+async def test_summary_agent_reports_only_missing_files(runtime_with_stub_rag: AppRuntime) -> None:
     await runtime_with_stub_rag.rag_service.index_text(
-        collection="present-doc",
+        collection="present-doc-id",
         text="Some content for the document.",
-        source="present-doc",
+        source="present-doc.pdf",
     )
     agent = SummaryAgent(runtime_with_stub_rag)
 
-    response = await agent.handle(SummaryRequest(document_ids=["present-doc", "missing-doc"]))
+    present_file = AiFile(id="present-doc-id", name="present-doc.pdf")
+    missing_file = AiFile(id="missing-doc-id", name="missing-doc.pdf")
+    response = await agent.handle(SummaryRequest(files=[present_file, missing_file]))
 
     assert isinstance(response, NeedIngestResponse)
-    assert response.document_ids == ["missing-doc"]
+    assert response.files_to_ingest == [missing_file]
 
 
 @pytest.mark.anyio
 async def test_summary_agent_returns_structured_summary(runtime_with_stub_rag: AppRuntime) -> None:
     await runtime_with_stub_rag.rag_service.index_text(
-        collection="report",
+        collection="report-id",
         text="The quarterly report covers revenue, costs, and outlook.",
-        source="report",
+        source="report.pdf",
     )
     agent = StubSummaryAgent(
         runtime_with_stub_rag,
@@ -115,7 +119,12 @@ async def test_summary_agent_returns_structured_summary(runtime_with_stub_rag: A
         ),
     )
 
-    response = await agent.handle(SummaryRequest(document_ids=["report"], focus="financials"))
+    response = await agent.handle(
+        SummaryRequest(
+            files=[AiFile(id="report-id", name="report.pdf")],
+            focus="financials",
+        )
+    )
 
     assert isinstance(response, SummaryAnswerResponse)
     assert response.tldr == "Quarterly report summary."
@@ -125,15 +134,15 @@ async def test_summary_agent_returns_structured_summary(runtime_with_stub_rag: A
 @pytest.mark.anyio
 async def test_summary_agent_can_return_not_found(runtime_with_stub_rag: AppRuntime) -> None:
     await runtime_with_stub_rag.rag_service.index_text(
-        collection="thin-doc",
+        collection="thin-doc-id",
         text="A short blurb.",
-        source="thin-doc",
+        source="thin-doc.pdf",
     )
     agent = StubSummaryAgent(
         runtime_with_stub_rag,
         SummaryNotFoundResponse(reason="The document does not contain enough content to summarise."),
     )
 
-    response = await agent.handle(SummaryRequest(document_ids=["thin-doc"]))
+    response = await agent.handle(SummaryRequest(files=[AiFile(id="thin-doc-id", name="thin-doc.pdf")]))
 
     assert isinstance(response, SummaryNotFoundResponse)

@@ -21,6 +21,7 @@ from stirling.contracts import (
     SupportedCapability,
     ToolOperationStep,
     format_conversation_history,
+    format_file_names,
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
@@ -115,7 +116,6 @@ class PdfEditParameterSelector:
     ) -> str:
         operation_id = operation_plan[operation_index]
         operation_list = ", ".join(operation.name for operation in operation_plan)
-        file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         generated_steps_text = (
             "\n".join(
                 f"- Step {step_index + 1}: {step.model_dump_json()}" for step_index, step in enumerate(generated_steps)
@@ -126,7 +126,7 @@ class PdfEditParameterSelector:
         return (
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Operation plan: {operation_list}\n"
             f"Selected operation index: {operation_index + 1} of {len(operation_plan)}\n"
             f"Selected operation: {operation_id.name}\n"
@@ -149,7 +149,7 @@ class PdfEditAgent:
     async def handle(self, request: PdfEditRequest, allow_need_content: bool = True) -> PdfEditResponse:
         logger.info(
             "[pdf-edit] handle: files=%s has_text=%s allow_need_content=%s msg=%r",
-            request.file_names,
+            [file.name for file in request.files],
             has_page_text(request.page_text),
             allow_need_content,
             request.user_message,
@@ -208,11 +208,10 @@ class PdfEditAgent:
         )
 
     def _build_selection_prompt(self, request: PdfEditRequest) -> str:
-        file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         return (
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Supported operations: {self._supported_operations_prompt()}\n"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
@@ -226,8 +225,8 @@ class PdfEditAgent:
         request: PdfEditRequest,
     ) -> NeedContentResponse:
         files = selection.files or [
-            NeedContentFileRequest(file_name=file_name, content_types=[PdfContentType.PAGE_TEXT])
-            for file_name in request.file_names
+            NeedContentFileRequest(file_name=file.name, content_types=[PdfContentType.PAGE_TEXT])
+            for file in request.files
         ]
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_EDIT,

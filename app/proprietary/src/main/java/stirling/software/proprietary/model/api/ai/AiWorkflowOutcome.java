@@ -12,6 +12,7 @@ public enum AiWorkflowOutcome {
     ANSWER("answer"),
     NOT_FOUND("not_found"),
     NEED_CONTENT("need_content"),
+    NEED_INGEST("need_ingest"),
     PLAN("plan"),
     NEED_CLARIFICATION("need_clarification"),
     CANNOT_DO("cannot_do"),
@@ -19,7 +20,9 @@ public enum AiWorkflowOutcome {
     TOOL_CALL("tool_call"),
     COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),
-    CANNOT_CONTINUE("cannot_continue");
+    CANNOT_CONTINUE("cannot_continue"),
+    SUMMARY_ANSWER("summary_answer"),
+    SUMMARY_NOT_FOUND("summary_not_found");
 
     private final String value;
 

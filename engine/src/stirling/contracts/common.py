@@ -59,6 +59,8 @@ class WorkflowOutcome(StrEnum):
     COMPLETED = "completed"
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
+    SUMMARY_ANSWER = "summary_answer"
+    SUMMARY_NOT_FOUND = "summary_not_found"
 
 
 class ArtifactKind(StrEnum):
@@ -93,10 +95,28 @@ class ConversationMessage(ApiModel):
     content: str
 
 
+class AiFile(ApiModel):
+    """A file the user has supplied, identified by both a stable id and a display name.
+
+    The id is opaque to the engine: Java generates it (content hash, file path, UUID, etc.)
+    and the engine uses it as the RAG collection key for any agent that indexes content.
+    The name is used in user-facing prompts and responses.
+    """
+
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+
+
 def format_conversation_history(conversation_history: list[ConversationMessage]) -> str:
     if not conversation_history:
         return "None"
     return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
+
+
+def format_file_names(files: list[AiFile]) -> str:
+    if not files:
+        return "No file names were provided."
+    return ", ".join(file.name for file in files)
 
 
 class PdfTextSelection(ApiModel):
@@ -125,16 +145,16 @@ class NeedContentResponse(ApiModel):
 
 
 class NeedIngestResponse(ApiModel):
-    """Signal that the named documents must be ingested into RAG before the agent can continue.
+    """Signal that the listed files must be ingested into RAG before the agent can continue.
 
-    Java's handling: for each document_id, extract the requested content types, POST to
-    ``/api/v1/rag/documents``, then retry the original request with the same document_ids.
+    Java's handling: for each file, extract the requested content types, POST to
+    ``/api/v1/rag/documents`` keyed by ``file.id``, then retry the original request.
     """
 
     outcome: Literal[WorkflowOutcome.NEED_INGEST] = WorkflowOutcome.NEED_INGEST
     resume_with: SupportedCapability
     reason: str
-    document_ids: list[str]
+    files_to_ingest: list[AiFile]
     content_types: list[PdfContentType] = Field(default_factory=list)
 
 

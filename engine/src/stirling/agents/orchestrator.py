@@ -10,6 +10,7 @@ from pydantic_ai.tools import RunContext
 
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
+from stirling.agents.summary import SummaryAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftRequest,
@@ -21,10 +22,13 @@ from stirling.contracts import (
     PdfEditResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    SummaryRequest,
+    SummaryResponse,
     SupportedCapability,
     ToolOperationStep,
     UnsupportedCapabilityResponse,
     format_conversation_history,
+    format_file_names,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
@@ -56,6 +60,11 @@ class OrchestratorAgent:
                     description="Delegate questions about PDF contents and return the PDF question result.",
                 ),
                 ToolOutput(
+                    self.delegate_pdf_summary,
+                    name="delegate_pdf_summary",
+                    description="Delegate requests to summarise one or more PDFs and return the summary result.",
+                ),
+                ToolOutput(
                     self.delegate_user_spec,
                     name="delegate_user_spec",
                     description="Delegate requests to create or revise a user agent spec and return the draft result.",
@@ -80,6 +89,7 @@ class OrchestratorAgent:
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
                 "Use delegate_pdf_question for questions about PDF contents. "
+                "Use delegate_pdf_summary for requests to summarise PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
@@ -91,7 +101,7 @@ class OrchestratorAgent:
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
         logger.info(
             "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
-            request.file_names,
+            [file.name for file in request.files],
             request.resume_with,
             [type(a).__name__ for a in request.artifacts],
             request.user_message,
@@ -112,11 +122,12 @@ class OrchestratorAgent:
                 return await self._run_pdf_question(request)
             case SupportedCapability.PDF_EDIT:
                 return await self._run_pdf_edit(request)
+            case SupportedCapability.PDF_SUMMARY:
+                return await self._run_pdf_summary(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
             case (
                 SupportedCapability.ORCHESTRATE
-                | SupportedCapability.PDF_SUMMARY
                 | SupportedCapability.AGENT_REVISE
                 | SupportedCapability.AGENT_NEXT_ACTION
                 | SupportedCapability.MATH_AUDITOR_AGENT
@@ -133,7 +144,7 @@ class OrchestratorAgent:
         return await PdfEditAgent(self.runtime).handle(
             PdfEditRequest(
                 user_message=request.user_message,
-                file_names=request.file_names,
+                files=request.files,
                 conversation_history=request.conversation_history,
                 page_text=extracted_text.files if extracted_text is not None else [],
             )
@@ -147,8 +158,20 @@ class OrchestratorAgent:
         return await PdfQuestionAgent(self.runtime).handle(
             PdfQuestionRequest(
                 question=request.user_message,
-                file_names=request.file_names,
+                files=request.files,
                 page_text=extracted_text.files if extracted_text is not None else [],
+                conversation_history=request.conversation_history,
+            )
+        )
+
+    async def delegate_pdf_summary(self, ctx: RunContext[OrchestratorDeps]) -> SummaryResponse:
+        return await self._run_pdf_summary(ctx.deps.request)
+
+    async def _run_pdf_summary(self, request: OrchestratorRequest) -> SummaryResponse:
+        return await SummaryAgent(self.runtime).handle(
+            SummaryRequest(
+                files=request.files,
+                focus=None,
                 conversation_history=request.conversation_history,
             )
         )
@@ -191,12 +214,11 @@ class OrchestratorAgent:
 
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
-        file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
         history = format_conversation_history(request.conversation_history)
         return (
             f"Conversation history:\n{history}\n"
             f"User message: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Available artifacts:\n{artifact_summary}"
         )
 

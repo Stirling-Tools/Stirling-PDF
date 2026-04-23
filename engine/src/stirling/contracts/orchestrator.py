@@ -8,16 +8,19 @@ from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
 from .common import (
+    AiFile,
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
     NeedContentResponse,
+    NeedIngestResponse,
     SupportedCapability,
     WorkflowOutcome,
 )
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditTerminalResponse
 from .pdf_questions import PdfQuestionTerminalResponse
+from .summary import SummaryTerminalResponse
 
 
 class ExtractedTextArtifact(ApiModel):
@@ -30,7 +33,7 @@ WorkflowArtifact = Annotated[ExtractedTextArtifact, Field(discriminator="kind")]
 
 class OrchestratorRequest(ApiModel):
     user_message: str
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
@@ -45,7 +48,9 @@ class UnsupportedCapabilityResponse(ApiModel):
 type OrchestratorResponse = Annotated[
     PdfEditTerminalResponse
     | PdfQuestionTerminalResponse
+    | SummaryTerminalResponse
     | NeedContentResponse
+    | NeedIngestResponse
     | AgentDraftResponse
     | NextExecutionAction
     | UnsupportedCapabilityResponse,

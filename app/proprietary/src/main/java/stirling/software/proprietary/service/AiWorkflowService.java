@@ -35,6 +35,9 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
+import stirling.software.proprietary.model.api.ai.AiFile;
+import stirling.software.proprietary.model.api.ai.AiRagIngestRequest;
+import stirling.software.proprietary.model.api.ai.AiRagPageText;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -54,6 +57,8 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class AiWorkflowService {
 
+    private static final String RAG_DOCUMENTS_ENDPOINT = "/api/v1/rag/documents";
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
     private final PdfContentExtractor pdfContentExtractor;
@@ -62,6 +67,7 @@ public class AiWorkflowService {
     private final FileStorage fileStorage;
     private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
+    private final FileIdStrategy fileIdStrategy;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -85,14 +91,17 @@ public class AiWorkflowService {
         validateRequest(request);
 
         Map<String, MultipartFile> filesByName = new LinkedHashMap<>();
+        List<AiFile> files = new ArrayList<>();
         for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
-            filesByName.put(
-                    fileInput.getFileInput().getOriginalFilename(), fileInput.getFileInput());
+            MultipartFile multipartFile = fileInput.getFileInput();
+            String name = multipartFile.getOriginalFilename();
+            filesByName.put(name, multipartFile);
+            files.add(new AiFile(fileIdStrategy.idFor(multipartFile), name));
         }
 
         WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
         initialRequest.setUserMessage(request.getUserMessage().trim());
-        initialRequest.setFileNames(new ArrayList<>(filesByName.keySet()));
+        initialRequest.setFiles(files);
         initialRequest.setConversationHistory(
                 request.getConversationHistory() == null
                         ? new ArrayList<>()
@@ -116,6 +125,7 @@ public class AiWorkflowService {
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener);
+            case NEED_INGEST -> onNeedIngest(response, filesByName, request, listener);
             case TOOL_CALL -> onToolCall(response, filesByName, listener);
             case PLAN -> onPlan(response, filesByName, listener);
             case ANSWER,
@@ -125,7 +135,9 @@ public class AiWorkflowService {
                     DRAFT,
                     COMPLETED,
                     UNSUPPORTED_CAPABILITY,
-                    CANNOT_CONTINUE ->
+                    CANNOT_CONTINUE,
+                    SUMMARY_ANSWER,
+                    SUMMARY_NOT_FOUND ->
                     new WorkflowState.Terminal(response);
         };
     }
@@ -187,7 +199,7 @@ public class AiWorkflowService {
 
             WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
             nextRequest.setUserMessage(request.getUserMessage());
-            nextRequest.setFileNames(request.getFileNames());
+            nextRequest.setFiles(request.getFiles());
             nextRequest.setConversationHistory(request.getConversationHistory());
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
@@ -201,6 +213,70 @@ public class AiWorkflowService {
                 }
             }
         }
+    }
+
+    private WorkflowState onNeedIngest(
+            AiWorkflowResponse response,
+            Map<String, MultipartFile> filesByName,
+            WorkflowTurnRequest request,
+            ProgressListener listener)
+            throws IOException {
+        List<AiFile> filesToIngest = response.getFilesToIngest();
+        if (filesToIngest == null || filesToIngest.isEmpty()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "AI engine returned need_ingest without listing any files to ingest."));
+        }
+        // Guard against a retry loop: if we've already ingested this turn and the engine still
+        // asks for more, something is wrong on its side.
+        if (!request.getArtifacts().isEmpty() || request.getResumeWith() != null) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "AI engine requested ingest after the workflow had already been resumed."));
+        }
+
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.EXTRACTING_CONTENT));
+
+        for (AiFile file : filesToIngest) {
+            MultipartFile multipartFile = filesByName.get(file.getName());
+            if (multipartFile == null) {
+                return new WorkflowState.Terminal(
+                        cannotContinue(
+                                "AI engine requested ingest for unknown file: " + file.getName()));
+            }
+            ingestFile(file, multipartFile);
+        }
+
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
+
+        WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
+        nextRequest.setUserMessage(request.getUserMessage());
+        nextRequest.setFiles(request.getFiles());
+        nextRequest.setConversationHistory(request.getConversationHistory());
+        nextRequest.setResumeWith(response.getResumeWith());
+        return new WorkflowState.Pending(nextRequest);
+    }
+
+    private void ingestFile(AiFile file, MultipartFile multipartFile) throws IOException {
+        List<AiRagPageText> pages = new ArrayList<>();
+        try (PDDocument document = pdfDocumentFactory.load(multipartFile, true)) {
+            int pageCount = document.getNumberOfPages();
+            for (int pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
+                String pageText = pdfContentExtractor.extractPageTextRaw(document, pageNumber);
+                if (pageText != null && !pageText.isBlank()) {
+                    pages.add(new AiRagPageText(pageNumber, pageText));
+                }
+            }
+        }
+        AiRagIngestRequest ingestRequest =
+                new AiRagIngestRequest(file.getId(), file.getName(), pages);
+        String body = objectMapper.writeValueAsString(ingestRequest);
+        aiEngineClient.post(RAG_DOCUMENTS_ENDPOINT, body);
+        log.debug(
+                "Ingested file into RAG: id={}, name={}, pages={}",
+                file.getId(),
+                file.getName(),
+                pages.size());
     }
 
     @SuppressWarnings("unchecked")
@@ -420,7 +496,7 @@ public class AiWorkflowService {
     @Data
     private static class WorkflowTurnRequest {
         private String userMessage;
-        private List<String> fileNames = new ArrayList<>();
+        private List<AiFile> files = new ArrayList<>();
         private List<AiConversationMessage> conversationHistory = new ArrayList<>();
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;

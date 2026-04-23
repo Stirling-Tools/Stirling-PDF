@@ -7,6 +7,7 @@ import pytest
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
 from stirling.agents.pdf_edit import PdfEditPlanOutput
 from stirling.contracts import (
+    AiFile,
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
@@ -91,7 +92,7 @@ async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> Non
     response = await agent.handle(
         PdfEditRequest(
             user_message="Rotate the PDF clockwise and then compress it.",
-            file_names=["scan.pdf"],
+            files=[AiFile(id="scan-id", name="scan.pdf")],
         )
     )
 
@@ -117,7 +118,7 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtim
 
     request = PdfEditRequest(
         user_message="Rotate the PDF clockwise and then compress it.",
-        file_names=["scan.pdf"],
+        files=[AiFile(id="scan-id", name="scan.pdf")],
     )
     response = await agent.handle(request)
 
@@ -181,7 +182,7 @@ async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime
     response = await agent.handle(
         PdfEditRequest(
             user_message="Split after every page that says 'NEW PAGE'.",
-            file_names=["report.pdf"],
+            files=[AiFile(id="report-id", name="report.pdf")],
         )
     )
 
@@ -269,7 +270,7 @@ async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: Ap
     await agent.handle(
         PdfEditRequest(
             user_message="Rotate clockwise.",
-            file_names=["report.pdf"],
+            files=[AiFile(id="report-id", name="report.pdf")],
             page_text=page_text,
         )
     )

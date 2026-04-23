@@ -4,6 +4,7 @@ import pytest
 
 from stirling.agents import PdfQuestionAgent
 from stirling.contracts import (
+    AiFile,
     ExtractedFileText,
     NeedContentResponse,
     PdfQuestionAnswerResponse,
@@ -38,7 +39,11 @@ async def test_pdf_question_agent_requires_extracted_text(runtime: AppRuntime) -
     agent = PdfQuestionAgent(runtime)
 
     response = await agent.handle(
-        PdfQuestionRequest(question="What is the total?", page_text=[], file_names=["test.pdf"])
+        PdfQuestionRequest(
+            question="What is the total?",
+            page_text=[],
+            files=[AiFile(id="test-id", name="test.pdf")],
+        )
     )
 
     assert isinstance(response, NeedContentResponse)
@@ -58,7 +63,7 @@ async def test_pdf_question_agent_returns_grounded_answer(runtime: AppRuntime) -
         PdfQuestionRequest(
             question="What is the total?",
             page_text=[invoice_page()],
-            file_names=["invoice.pdf"],
+            files=[AiFile(id="invoice-id", name="invoice.pdf")],
         )
     )
 
@@ -79,7 +84,7 @@ async def test_pdf_question_agent_returns_not_found_when_text_is_insufficient(ru
                     pages=[PdfTextSelection(page_number=1, text="This page contains only a shipping address.")],
                 )
             ],
-            file_names=["invoice.pdf"],
+            files=[AiFile(id="invoice-id", name="invoice.pdf")],
         )
     )
 

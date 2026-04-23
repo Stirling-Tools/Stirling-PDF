@@ -7,6 +7,7 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .common import (
+    AiFile,
     ConversationMessage,
     ExtractedFileText,
     NeedContentResponse,
@@ -17,7 +18,7 @@ from .common import (
 class PdfQuestionRequest(ApiModel):
     question: str
     page_text: list[ExtractedFileText] = Field(default_factory=list)
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
 
