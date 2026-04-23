@@ -33,7 +33,7 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
  * of the caller (e.g. the orchestrator's {@code delegate_pdf_question} or {@code
  * delegate_pdf_review} meta-agents).
  *
- * <p>Lives under {@code /api/v1/misc/} so it is dispatchable by the AI orchestrator via the
+ * <p>Lives under {@code /api/v1/ai/tools/} so it is dispatchable by the AI orchestrator via the
  * standard {@code InternalApiClient} allowlist — no special-case plumbing needed.
  *
  * <p>The raw PDF never leaves Java. Python receives only structured text and CSV data.
