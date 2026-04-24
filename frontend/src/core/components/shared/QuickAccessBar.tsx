@@ -57,6 +57,7 @@ import {
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import { QuickAccessBarFooterExtensions } from "@app/components/quickAccessBar/QuickAccessBarFooterExtensions";
 import { useConfigButtonIcon } from "@app/hooks/useConfigButtonIcon";
+import { LoginLogoutButton } from "@app/components/quickAccessBar/LoginLogoutButton";
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -1088,6 +1089,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 </React.Fragment>
               );
             })}
+            <LoginLogoutButton />
           </Stack>
         </div>
       </div>
