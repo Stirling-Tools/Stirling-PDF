@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.AiToolInputValidator;
 import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
 /**
@@ -77,10 +78,7 @@ public class MathAuditorAgentController {
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance) {
 
-        String contentType = fileInput.getContentType();
-        if (contentType == null || !contentType.equals(MediaType.APPLICATION_PDF_VALUE)) {
-            return ResponseEntity.badRequest().build();
-        }
+        AiToolInputValidator.validatePdfUpload(fileInput);
         if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().build();
         }

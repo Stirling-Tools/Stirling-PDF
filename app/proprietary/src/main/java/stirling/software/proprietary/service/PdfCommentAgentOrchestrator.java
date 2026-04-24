@@ -11,7 +11,6 @@ import java.util.UUID;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -90,6 +89,7 @@ public class PdfCommentAgentOrchestrator {
      * @return the annotated PDF bytes and suggested filename
      */
     public AnnotatedPdf applyComments(MultipartFile pdfFile, String prompt) throws IOException {
+        AiToolInputValidator.validatePdfUpload(pdfFile);
         String trimmedPrompt = prompt == null ? "" : prompt.trim();
         if (trimmedPrompt.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prompt is required");
@@ -98,11 +98,6 @@ public class PdfCommentAgentOrchestrator {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Prompt exceeds maximum length of " + MAX_PROMPT_LEN + " characters");
-        }
-        String contentType = pdfFile.getContentType();
-        if (contentType == null || !contentType.equals(MediaType.APPLICATION_PDF_VALUE)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only application/pdf uploads are supported");
         }
 
         String sessionId = UUID.randomUUID().toString();

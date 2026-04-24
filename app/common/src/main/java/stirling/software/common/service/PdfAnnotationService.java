@@ -47,6 +47,13 @@ public class PdfAnnotationService {
     private static final String DEFAULT_AUTHOR = "Stirling AI";
 
     /**
+     * Cap on sticky-note text length. PDF annotation bodies can technically be much longer, but
+     * anything beyond this is almost certainly pathological (accidental document-dump or malicious
+     * payload) and would bloat the output file.
+     */
+    private static final int MAX_COMMENT_TEXT_LENGTH = 100_000;
+
+    /**
      * Add a list of sticky notes to {@code doc}. Specs that reference an out-of-range page or
      * contain blank text are logged and skipped; this method never throws for a single bad spec.
      *
@@ -94,7 +101,24 @@ public class PdfAnnotationService {
             log.warn("Skipping sticky-note[{}]: text is blank.", index);
             return false;
         }
-        int page = spec.location().pageIndex();
+        if (spec.text().length() > MAX_COMMENT_TEXT_LENGTH) {
+            log.warn(
+                    "Skipping sticky-note[{}]: text length {} exceeds limit {}.",
+                    index,
+                    spec.text().length(),
+                    MAX_COMMENT_TEXT_LENGTH);
+            return false;
+        }
+        AnnotationLocation loc = spec.location();
+        if (loc.width() <= 0f || loc.height() <= 0f) {
+            log.warn(
+                    "Skipping sticky-note[{}]: non-positive dimensions width={} height={}.",
+                    index,
+                    loc.width(),
+                    loc.height());
+            return false;
+        }
+        int page = loc.pageIndex();
         if (page < 0 || page >= totalPages) {
             log.warn(
                     "Skipping sticky-note[{}]: pageIndex={} out of range [0, {}).",
