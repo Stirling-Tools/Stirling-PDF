@@ -12,15 +12,15 @@ from stirling.models.base import ApiModel
 
 
 class AddAttachmentsParams(ApiModel):
-    attachments: list[bytes] | None = Field(None, description="The image file to be overlaid onto the PDF.")
+    attachments: list[bytes] | None = Field(default=None, description="The image file to be overlaid onto the PDF.")
     convert_to_pdf_a3b: bool | None = Field(
-        False, description="Convert the resulting PDF to PDF/A-3b format after adding attachments"
+        default=False, description="Convert the resulting PDF to PDF/A-3b format after adding attachments"
     )
 
 
 class AddCommentsParams(ApiModel):
     comments: str | None = Field(
-        None,
+        default=None,
         description="JSON array of comment specs. Each element has: {pageIndex, x, y, width, height, text, author?, subject?}. Coordinates are PDF user-space with origin at the page's bottom-left.",
         examples=[
             '[{"pageIndex":0,"x":72,"y":720,"width":20,"height":20,"text":"Check this paragraph","author":"Reviewer","subject":"Unclear wording"}]'
@@ -29,9 +29,15 @@ class AddCommentsParams(ApiModel):
 
 
 class AddImageParams(ApiModel):
-    every_page: bool | None = Field(False, description="Whether to overlay the image onto every page of the PDF.")
-    x: float | None = Field(0, description="The x-coordinate at which to place the top-left corner of the image.")
-    y: float | None = Field(0, description="The y-coordinate at which to place the top-left corner of the image.")
+    every_page: bool | None = Field(
+        default=False, description="Whether to overlay the image onto every page of the PDF."
+    )
+    x: float | None = Field(
+        default=0, description="The x-coordinate at which to place the top-left corner of the image."
+    )
+    y: float | None = Field(
+        default=0, description="The y-coordinate at which to place the top-left corner of the image."
+    )
 
 
 class CustomMargin(StrEnum):
@@ -61,30 +67,30 @@ class Position(IntEnum):
 
 class AddPageNumbersParams(ApiModel):
     custom_margin: CustomMargin | None = Field(
-        CustomMargin.medium, description="Custom margin: small/medium/large/x-large"
+        default=CustomMargin.medium, description="Custom margin: small/medium/large/x-large"
     )
     custom_text: str | None = Field(
-        "{n}",
+        default="{n}",
         description="Custom text pattern. Available variables: {n}=current page number, {total}=total pages, {filename}=original filename",
         examples=["Page {n} of {total}"],
     )
     font_color: str | None = Field(
-        "#000000", description="Hex colour for page numbers (e.g. #FF0000)", examples=["#000000"]
+        default="#000000", description="Hex colour for page numbers (e.g. #FF0000)", examples=["#000000"]
     )
-    font_size: float | None = Field(12, description="Font size for page numbers", ge=1.0)
-    font_type: FontType | None = Field(None, description="Font type for page numbers")
+    font_size: float | None = Field(default=12, description="Font size for page numbers", ge=1.0)
+    font_type: FontType | None = Field(default=None, description="Font type for page numbers")
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-    pages_to_number: str | None = Field("all", description="Which pages to number (e.g. '1,3-5,7' or 'all')")
+    pages_to_number: str | None = Field(default="all", description="Which pages to number (e.g. '1,3-5,7' or 'all')")
     position: Position | None = Field(
-        None,
+        default=None,
         description="Position: 1-9 representing positions on the page (1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right)",
     )
-    starting_number: int | None = Field(1, description="Starting number for page numbering", ge=1)
+    starting_number: int | None = Field(default=1, description="Starting number for page numbering", ge=1)
     zero_pad: int | None = Field(
-        0, description="Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding", ge=0
+        default=0, description="Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding", ge=0
     )
 
 
@@ -95,26 +101,27 @@ class KeyLength(IntEnum):
 
 
 class AddPasswordParams(ApiModel):
-    key_length: KeyLength | None = Field(None, description="The length of the encryption key")
+    key_length: KeyLength | None = Field(default=None, description="The length of the encryption key")
     owner_password: SecretStr | None = Field(
-        None,
+        default=None,
         description="The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)",
     )
     password: SecretStr | None = Field(
-        None, description="The password to be added to the PDF file (Restricts the opening of the document itself.)"
+        default=None,
+        description="The password to be added to the PDF file (Restricts the opening of the document itself.)",
     )
-    prevent_assembly: bool | None = Field(False, description="Whether document assembly is prevented")
-    prevent_extract_content: bool | None = Field(False, description="Whether content extraction is prevented")
+    prevent_assembly: bool | None = Field(default=False, description="Whether document assembly is prevented")
+    prevent_extract_content: bool | None = Field(default=False, description="Whether content extraction is prevented")
     prevent_extract_for_accessibility: bool | None = Field(
-        False, description="Whether content extraction for accessibility is prevented"
+        default=False, description="Whether content extraction for accessibility is prevented"
     )
-    prevent_fill_in_form: bool | None = Field(False, description="Whether form filling is prevented")
-    prevent_modify: bool | None = Field(False, description="Whether document modification is prevented")
+    prevent_fill_in_form: bool | None = Field(default=False, description="Whether form filling is prevented")
+    prevent_modify: bool | None = Field(default=False, description="Whether document modification is prevented")
     prevent_modify_annotations: bool | None = Field(
-        False, description="Whether modification of annotations is prevented"
+        default=False, description="Whether modification of annotations is prevented"
     )
-    prevent_printing: bool | None = Field(False, description="Whether printing of the document is prevented")
-    prevent_printing_faithful: bool | None = Field(False, description="Whether faithful printing is prevented")
+    prevent_printing: bool | None = Field(default=False, description="Whether printing of the document is prevented")
+    prevent_printing_faithful: bool | None = Field(default=False, description="Whether faithful printing is prevented")
 
 
 class Alphabet(StrEnum):
@@ -132,32 +139,32 @@ class StampType(StrEnum):
 
 
 class AddStampParams(ApiModel):
-    alphabet: Alphabet | None = Field(Alphabet.roman, description="The selected alphabet of the stamp text")
-    custom_color: str | None = Field("#d3d3d3", description="The color of the stamp text")
+    alphabet: Alphabet | None = Field(default=Alphabet.roman, description="The selected alphabet of the stamp text")
+    custom_color: str | None = Field(default="#d3d3d3", description="The color of the stamp text")
     custom_margin: CustomMargin | None = Field(
-        CustomMargin.medium, description="Specifies the margin size for the stamp."
+        default=CustomMargin.medium, description="Specifies the margin size for the stamp."
     )
-    font_size: float | None = Field(40, description="The font size of the stamp text and image in points.")
-    opacity: float | None = Field(0.5, description="The opacity of the stamp (0.0 - 1.0)")
+    font_size: float | None = Field(default=40, description="The font size of the stamp text and image in points.")
+    opacity: float | None = Field(default=0.5, description="The opacity of the stamp (0.0 - 1.0)")
     override_x: float | None = Field(
-        -1,
+        default=-1,
         description="Override X coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.",
     )
     override_y: float | None = Field(
-        -1,
+        default=-1,
         description="Override Y coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.",
     )
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
     position: Position | None = Field(
-        Position.integer_8,
+        default=Position.integer_8,
         description="Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)",
     )
-    rotation: float | None = Field(0, description="The rotation of the stamp in degrees")
-    stamp_text: str | None = Field("Stirling Software", description="The stamp text")
-    stamp_type: StampType | None = Field(None, description="The stamp type (text or image)")
+    rotation: float | None = Field(default=0, description="The rotation of the stamp in degrees")
+    stamp_text: str | None = Field(default="Stirling Software", description="The stamp text")
+    stamp_type: StampType | None = Field(default=None, description="The stamp type (text or image)")
 
 
 class WatermarkType(StrEnum):
@@ -166,37 +173,37 @@ class WatermarkType(StrEnum):
 
 
 class AddWatermarkParams(ApiModel):
-    alphabet: Alphabet | None = Field(Alphabet.roman, description="The selected alphabet")
-    convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to an image")
-    custom_color: str | None = Field("#d3d3d3", description="The color for watermark")
-    font_size: float | None = Field(30, description="The font size of the watermark text", ge=1.0)
-    height_spacer: int | None = Field(50, description="The height spacer between watermark elements", ge=0)
-    opacity: float | None = Field(0.5, description="The opacity of the watermark (0.0 - 1.0)")
-    rotation: float | None = Field(0, description="The rotation of the watermark in degrees")
-    watermark_text: str | None = Field("Stirling Software", description="The watermark text")
-    watermark_type: WatermarkType | None = Field(None, description="The watermark type (text or image)")
-    width_spacer: int | None = Field(50, description="The width spacer between watermark elements", ge=0)
+    alphabet: Alphabet | None = Field(default=Alphabet.roman, description="The selected alphabet")
+    convert_pdf_to_image: bool | None = Field(default=False, description="Convert the redacted PDF to an image")
+    custom_color: str | None = Field(default="#d3d3d3", description="The color for watermark")
+    font_size: float | None = Field(default=30, description="The font size of the watermark text", ge=1.0)
+    height_spacer: int | None = Field(default=50, description="The height spacer between watermark elements", ge=0)
+    opacity: float | None = Field(default=0.5, description="The opacity of the watermark (0.0 - 1.0)")
+    rotation: float | None = Field(default=0, description="The rotation of the watermark in degrees")
+    watermark_text: str | None = Field(default="Stirling Software", description="The watermark text")
+    watermark_type: WatermarkType | None = Field(default=None, description="The watermark type (text or image)")
+    width_spacer: int | None = Field(default=50, description="The width spacer between watermark elements", ge=0)
 
 
 class AutoRedactParams(ApiModel):
-    convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to an image")
-    custom_padding: float | None = Field(None, description="Custom padding for redaction")
-    list_of_text: str | None = Field("text,text2", description="List of text to redact from the PDF")
-    redact_color: str | None = Field("#000000", description="The color for redaction")
-    use_regex: bool | None = Field(False, description="Whether to use regex for the listOfText")
-    whole_word_search: bool | None = Field(False, description="Whether to use whole word search")
+    convert_pdf_to_image: bool | None = Field(default=False, description="Convert the redacted PDF to an image")
+    custom_padding: float | None = Field(default=None, description="Custom padding for redaction")
+    list_of_text: str | None = Field(default="text,text2", description="List of text to redact from the PDF")
+    redact_color: str | None = Field(default="#000000", description="The color for redaction")
+    use_regex: bool | None = Field(default=False, description="Whether to use regex for the listOfText")
+    whole_word_search: bool | None = Field(default=False, description="Whether to use whole word search")
 
 
 class AutoRenameParams(ApiModel):
     use_first_text_as_fallback: bool | None = Field(
-        False,
+        default=False,
         description="Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.",
     )
 
 
 class AutoSplitPdfParams(ApiModel):
     duplex_mode: bool | None = Field(
-        False,
+        default=False,
         description="Flag indicating if the duplex mode is active, where the page after the divider also gets removed.",
     )
 
@@ -217,30 +224,38 @@ class SpineLocation(StrEnum):
 
 
 class BookletImpositionParams(ApiModel):
-    add_border: bool | None = Field(None, description="Boolean for if you wish to add border around the pages")
-    add_gutter: bool | None = Field(None, description="Add gutter margin (inner margin for binding)")
-    double_sided: bool | None = Field(None, description="Generate both front and back sides (double-sided printing)")
-    duplex_pass: DuplexPass | None = Field(DuplexPass.both, description="For manual duplex: which pass to generate")
-    flip_on_short_edge: bool | None = Field(
-        None, description="Flip back sides for short-edge duplex printing (default is long-edge)"
+    add_border: bool | None = Field(default=None, description="Boolean for if you wish to add border around the pages")
+    add_gutter: bool | None = Field(default=None, description="Add gutter margin (inner margin for binding)")
+    double_sided: bool | None = Field(
+        default=None, description="Generate both front and back sides (double-sided printing)"
     )
-    gutter_size: float | None = Field(12, description="Gutter margin size in points (used when addGutter is true)")
+    duplex_pass: DuplexPass | None = Field(
+        default=DuplexPass.both, description="For manual duplex: which pass to generate"
+    )
+    flip_on_short_edge: bool | None = Field(
+        default=None, description="Flip back sides for short-edge duplex printing (default is long-edge)"
+    )
+    gutter_size: float | None = Field(
+        default=12, description="Gutter margin size in points (used when addGutter is true)"
+    )
     pages_per_sheet: PagesPerSheet | None = Field(
-        PagesPerSheet.number_2,
+        default=PagesPerSheet.number_2,
         description="The number of pages per side for booklet printing (always 2 for proper booklet).",
     )
-    spine_location: SpineLocation | None = Field(SpineLocation.left, description="The spine location for the booklet.")
+    spine_location: SpineLocation | None = Field(
+        default=SpineLocation.left, description="The spine location for the booklet."
+    )
 
 
 class CbrToPdfParams(ApiModel):
     optimize_for_ebook: bool | None = Field(
-        False, description="Optimize the output PDF for ebook reading using Ghostscript"
+        default=False, description="Optimize the output PDF for ebook reading using Ghostscript"
     )
 
 
 class CbzToPdfParams(ApiModel):
     optimize_for_ebook: bool | None = Field(
-        False, description="Optimize the output PDF for ebook reading using Ghostscript"
+        default=False, description="Optimize the output PDF for ebook reading using Ghostscript"
     )
 
 
@@ -253,19 +268,21 @@ class CertType(StrEnum):
 
 
 class CertSignParams(ApiModel):
-    cert_type: CertType | None = Field(None, description="The type of the digital certificate")
-    location: str | None = Field("SPDF", description="The location where the PDF is signed")
-    name: str | None = Field("SPDF", description="The name of the signer")
+    cert_type: CertType | None = Field(default=None, description="The type of the digital certificate")
+    location: str | None = Field(default="SPDF", description="The location where the PDF is signed")
+    name: str | None = Field(default="SPDF", description="The name of the signer")
     page_number: int | None = Field(
-        1,
+        default=1,
         description="The page number where the signature should be visible. This is required if showSignature is set to true",
     )
-    password: SecretStr | None = Field(None, description="The password for the keystore or the private key")
-    reason: str | None = Field("Signed by SPDF", description="The reason for signing the PDF")
+    password: SecretStr | None = Field(default=None, description="The password for the keystore or the private key")
+    reason: str | None = Field(default="Signed by SPDF", description="The reason for signing the PDF")
     show_logo: bool | None = Field(
-        True, description="Whether to visually show a signature logo along with the signature"
+        default=True, description="Whether to visually show a signature logo along with the signature"
     )
-    show_signature: bool | None = Field(False, description="Whether to visually show the signature in the PDF file")
+    show_signature: bool | None = Field(
+        default=False, description="Whether to visually show the signature in the PDF file"
+    )
 
 
 class LineArtEdgeLevel(IntEnum):
@@ -287,41 +304,48 @@ class OptimizeLevel(IntEnum):
 
 
 class CompressPdfParams(ApiModel):
-    expected_output_size: str | None = Field("25KB", description="The expected output size, e.g. '100MB', '25KB', etc.")
-    grayscale: bool | None = Field(False, description="Whether to convert the PDF to grayscale. Default is false.")
+    expected_output_size: str | None = Field(
+        default="25KB", description="The expected output size, e.g. '100MB', '25KB', etc."
+    )
+    grayscale: bool | None = Field(
+        default=False, description="Whether to convert the PDF to grayscale. Default is false."
+    )
     line_art: bool | None = Field(
-        False, description="Whether to convert images to high-contrast line art using ImageMagick. Default is false."
+        default=False,
+        description="Whether to convert images to high-contrast line art using ImageMagick. Default is false.",
     )
     line_art_edge_level: LineArtEdgeLevel | None = Field(
-        LineArtEdgeLevel.integer_1,
+        default=LineArtEdgeLevel.integer_1,
         description="Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.",
     )
-    line_art_threshold: float | None = Field(55, description="Threshold to use for line art conversion (0-100).")
+    line_art_threshold: float | None = Field(
+        default=55, description="Threshold to use for line art conversion (0-100)."
+    )
     linearize: bool | None = Field(
-        False, description="Whether to linearize the PDF for faster web viewing. Default is false."
+        default=False, description="Whether to linearize the PDF for faster web viewing. Default is false."
     )
     normalize: bool | None = Field(
-        False, description="Whether to normalize the PDF content for better compatibility. Default is false."
+        default=False, description="Whether to normalize the PDF content for better compatibility. Default is false."
     )
     optimize_level: OptimizeLevel | None = Field(
-        None,
+        default=None,
         description="The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.",
     )
 
 
 class CropParams(ApiModel):
-    auto_crop: bool | None = Field(None, description="Enable auto-crop to detect and remove white space")
-    height: float | None = Field(None, description="The height of the crop area")
+    auto_crop: bool | None = Field(default=None, description="Enable auto-crop to detect and remove white space")
+    height: float | None = Field(default=None, description="The height of the crop area")
     remove_data_outside_crop: bool | None = Field(
-        None, description="Whether to remove text outside the crop area (keeps images)"
+        default=None, description="Whether to remove text outside the crop area (keeps images)"
     )
-    width: float | None = Field(None, description="The width of the crop area")
-    x: float | None = Field(None, description="The x-coordinate of the top-left corner of the crop area")
-    y: float | None = Field(None, description="The y-coordinate of the top-left corner of the crop area")
+    width: float | None = Field(default=None, description="The width of the crop area")
+    x: float | None = Field(default=None, description="The x-coordinate of the top-left corner of the crop area")
+    y: float | None = Field(default=None, description="The y-coordinate of the top-left corner of the crop area")
 
 
 class DeleteAttachmentParams(ApiModel):
-    attachment_name: str | None = Field(None, description="The name of the attachment to delete")
+    attachment_name: str | None = Field(default=None, description="The name of the attachment to delete")
 
 
 class EmbedAllFonts(Enum):
@@ -346,45 +370,46 @@ class OptimizeForEbook(Enum):
 
 class EbookToPdfParams(ApiModel):
     embed_all_fonts: EmbedAllFonts | None = Field(
-        EmbedAllFonts.boolean_false, description="Embed all fonts from the eBook into the generated PDF"
+        default=EmbedAllFonts.boolean_false, description="Embed all fonts from the eBook into the generated PDF"
     )
     include_page_numbers: IncludePageNumbers | None = Field(
-        IncludePageNumbers.boolean_false, description="Add page numbers to the generated PDF"
+        default=IncludePageNumbers.boolean_false, description="Add page numbers to the generated PDF"
     )
     include_table_of_contents: IncludeTableOfContents | None = Field(
-        IncludeTableOfContents.boolean_false, description="Add a generated table of contents to the resulting PDF"
+        default=IncludeTableOfContents.boolean_false,
+        description="Add a generated table of contents to the resulting PDF",
     )
     optimize_for_ebook: OptimizeForEbook | None = Field(
-        OptimizeForEbook.boolean_false,
+        default=OptimizeForEbook.boolean_false,
         description="Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)",
     )
 
 
 class EditTableOfContentsParams(ApiModel):
     bookmark_data: str | None = Field(
-        None,
+        default=None,
         description="Bookmark structure in JSON format",
         examples=[
             '[{\\"title\\":\\"Chapter 1\\",\\"pageNumber\\":1,\\"children\\":[{\\"title\\":\\"Section 1.1\\",\\"pageNumber\\":2}]}]'
         ],
     )
     replace_existing: bool | None = Field(
-        None, description="Whether to replace existing bookmarks or append to them", examples=[True]
+        default=None, description="Whether to replace existing bookmarks or append to them", examples=[True]
     )
 
 
 class EmlToPdfParams(ApiModel):
     download_html: bool | None = Field(
-        None, description="Download HTML intermediate file instead of PDF", examples=[False]
+        default=None, description="Download HTML intermediate file instead of PDF", examples=[False]
     )
     include_all_recipients: bool | None = Field(
-        None, description="Include CC and BCC recipients in header (if available)", examples=[True]
+        default=None, description="Include CC and BCC recipients in header (if available)", examples=[True]
     )
     include_attachments: bool | None = Field(
-        None, description="Include email attachments in the PDF output", examples=[False]
+        default=None, description="Include email attachments in the PDF output", examples=[False]
     )
     max_attachment_size_mb: int | None = Field(
-        None,
+        default=None,
         description="Maximum attachment size in MB to include (default 10MB, range: 1-100)",
         examples=[10],
         ge=1,
@@ -393,11 +418,13 @@ class EmlToPdfParams(ApiModel):
 
 
 class ExtractImageScansParams(ApiModel):
-    angle_threshold: int | None = Field(5, description="The angle threshold for the image scan extraction")
-    border_size: int | None = Field(1, description="The border size for the image scan extraction")
-    min_area: int | None = Field(8000, description="The minimum area for the image scan extraction")
-    min_contour_area: int | None = Field(500, description="The minimum contour area for the image scan extraction")
-    tolerance: int | None = Field(20, description="The tolerance for the image scan extraction")
+    angle_threshold: int | None = Field(default=5, description="The angle threshold for the image scan extraction")
+    border_size: int | None = Field(default=1, description="The border size for the image scan extraction")
+    min_area: int | None = Field(default=8000, description="The minimum area for the image scan extraction")
+    min_contour_area: int | None = Field(
+        default=500, description="The minimum contour area for the image scan extraction"
+    )
+    tolerance: int | None = Field(default=20, description="The tolerance for the image scan extraction")
 
 
 class Format(StrEnum):
@@ -407,20 +434,22 @@ class Format(StrEnum):
 
 
 class ExtractImagesParams(ApiModel):
-    format: Format | None = Field(Format.png, description="The output image format e.g., 'png', 'jpeg', or 'gif'")
+    format: Format | None = Field(
+        default=Format.png, description="The output image format e.g., 'png', 'jpeg', or 'gif'"
+    )
 
 
 class FlattenParams(ApiModel):
     flatten_only_forms: bool | None = Field(
-        False, description="True to flatten only the forms, false to flatten full PDF (Convert page to image)"
+        default=False, description="True to flatten only the forms, false to flatten full PDF (Convert page to image)"
     )
     render_dpi: int | None = Field(
-        None, description="Optional DPI for page rendering when flattening the full document.", ge=72
+        default=None, description="Optional DPI for page rendering when flattening the full document.", ge=72
     )
 
 
 class HtmlToPdfParams(ApiModel):
-    zoom: float | None = Field(1, description="Zoom level for displaying the website. Default is '1'.")
+    zoom: float | None = Field(default=1, description="Zoom level for displaying the website. Default is '1'.")
 
 
 class ColorType(StrEnum):
@@ -437,11 +466,17 @@ class FitOption(StrEnum):
 
 class ImgToPdfParams(ApiModel):
     auto_rotate: bool | None = Field(
-        False, description="Whether to automatically rotate the images to better fit the PDF page"
+        default=False, description="Whether to automatically rotate the images to better fit the PDF page"
     )
-    color_type: ColorType | None = Field(ColorType.color, description="The color type of the output image(s)")
+    color_type: ColorType | None = Field(default=ColorType.color, description="The color type of the output image(s)")
     fit_option: FitOption | None = Field(
-        FitOption.fill_page, description="Option to determine how the image will fit onto the page"
+        default=FitOption.fill_page, description="Option to determine how the image will fit onto the page"
+    )
+
+
+class MathAuditorAgentParams(ApiModel):
+    tolerance: float | None = Field(
+        default=0.01, description="Arithmetic tolerance â€” differences smaller than this are ignored (default: 0.01)"
     )
 
 
@@ -455,18 +490,20 @@ class SortType(StrEnum):
 
 class MergePdfsParams(ApiModel):
     client_file_ids: str | None = Field(
-        None, description="JSON array of client-provided IDs for each uploaded file (same order as fileInput)"
+        default=None, description="JSON array of client-provided IDs for each uploaded file (same order as fileInput)"
     )
+    file_order: str | None = None
     generate_toc: bool | None = Field(
-        False,
+        default=False,
         description="Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
     )
     remove_cert_sign: bool | None = Field(
-        True,
+        default=True,
         description="Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.",
     )
     sort_type: SortType | None = Field(
-        SortType.order_provided, description="The type of sorting to be applied on the input files before merging."
+        default=SortType.order_provided,
+        description="The type of sorting to be applied on the input files before merging.",
     )
 
 
@@ -498,41 +535,55 @@ class ReadingDirection(StrEnum):
 
 
 class MultiPageLayoutParams(ApiModel):
-    add_border: bool | None = Field(None, description="Boolean for if you wish to add border around the pages")
+    add_border: bool | None = Field(default=None, description="Boolean for if you wish to add border around the pages")
     arrangement: Arrangement | None = Field(
-        Arrangement.by_rows,
+        default=Arrangement.by_rows,
         description="The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while BY_COLUMNS fills pages column by column.",
     )
     border_width: float | None = Field(
-        1, description="Border width (in points) to apply around each page when merging", examples=[2], ge=0.0
+        default=1, description="Border width (in points) to apply around each page when merging", examples=[2], ge=0.0
     )
     bottom_margin: float | None = Field(
-        0, description="Bottom margin (in points) to apply to the output pages when merging", examples=[200], ge=0.0
+        default=0,
+        description="Bottom margin (in points) to apply to the output pages when merging",
+        examples=[200],
+        ge=0.0,
     )
-    cols: float | None = Field(2, description="Number of columns", examples=[2], ge=1.0, le=300.0)
+    cols: float | None = Field(default=2, description="Number of columns", examples=[2], ge=1.0, le=300.0)
     inner_margin: float | None = Field(
-        0, description="Inner margin (in points) to apply around each page when merging", examples=[200], ge=0.0
+        default=0, description="Inner margin (in points) to apply around each page when merging", examples=[200], ge=0.0
     )
     left_margin: float | None = Field(
-        0, description="Left margin (in points) to apply to the output pages when merging", examples=[200], ge=0.0
+        default=0,
+        description="Left margin (in points) to apply to the output pages when merging",
+        examples=[200],
+        ge=0.0,
     )
     mode: Mode | None = Field(
-        Mode.default, description="Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows."
+        default=Mode.default, description="Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows."
     )
-    orientation: Orientation | None = Field(Orientation.portrait, description="The orientation of the output PDF pages")
+    orientation: Orientation | None = Field(
+        default=Orientation.portrait, description="The orientation of the output PDF pages"
+    )
     pages_per_sheet: PagesPerSheet1 | None = Field(
-        None, description="The number of pages to fit onto a single sheet in the output PDF."
+        default=None, description="The number of pages to fit onto a single sheet in the output PDF."
     )
     reading_direction: ReadingDirection | None = Field(
-        ReadingDirection.ltr,
+        default=ReadingDirection.ltr,
         description="The direction in which pages are arranged on the sheet: LTR (left-to-right) or RTL (right-to-left).",
     )
     right_margin: float | None = Field(
-        0, description="Right margin (in points) to apply to the output pages when merging", examples=[200], ge=0.0
+        default=0,
+        description="Right margin (in points) to apply to the output pages when merging",
+        examples=[200],
+        ge=0.0,
     )
-    rows: float | None = Field(1, description="Number of rows", examples=[3], ge=1.0, le=300.0)
+    rows: float | None = Field(default=1, description="Number of rows", examples=[3], ge=1.0, le=300.0)
     top_margin: float | None = Field(
-        0, description="Top margin (in points) to apply to the output pages when merging", examples=[200], ge=0.0
+        default=0,
+        description="Top margin (in points) to apply to the output pages when merging",
+        examples=[200],
+        ge=0.0,
     )
 
 
@@ -548,20 +599,22 @@ class OcrType(StrEnum):
 
 
 class OcrPdfParams(ApiModel):
-    clean: bool | None = Field(None, description="Clean the input file if set to true")
-    clean_final: bool | None = Field(None, description="Clean the final output if set to true")
-    deskew: bool | None = Field(None, description="Deskew the input file if set to true")
+    clean: bool | None = Field(default=None, description="Clean the input file if set to true")
+    clean_final: bool | None = Field(default=None, description="Clean the final output if set to true")
+    deskew: bool | None = Field(default=None, description="Deskew the input file if set to true")
     languages: list[str] | None = Field(
-        ["eng"], description="List of languages to use in OCR processing, e.g., 'eng', 'deu'"
+        default=["eng"], description="List of languages to use in OCR processing, e.g., 'eng', 'deu'"
     )
     ocr_render_type: OcrRenderType | None = Field(
-        OcrRenderType.hocr, description="Specify the OCR render type, either 'hocr' or 'sandwich'"
+        default=OcrRenderType.hocr, description="Specify the OCR render type, either 'hocr' or 'sandwich'"
     )
     ocr_type: OcrType | None = Field(
-        None, description="Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'"
+        default=None, description="Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'"
     )
-    remove_images_after: bool | None = Field(None, description="Remove images from the output PDF if set to true")
-    sidecar: bool | None = Field(None, description="Include OCR text in a sidecar text file if set to true")
+    remove_images_after: bool | None = Field(
+        default=None, description="Remove images from the output PDF if set to true"
+    )
+    sidecar: bool | None = Field(default=None, description="Include OCR text in a sidecar text file if set to true")
 
 
 class OverlayMode(StrEnum):
@@ -577,37 +630,43 @@ class OverlayPosition(Enum):
 
 class OverlayPdfsParams(ApiModel):
     counts: list[int] | None = Field(
-        None,
+        default=None,
         description="An array of integers specifying the number of times each corresponding overlay file should be applied in the 'FixedRepeatOverlay' mode. This should match the length of the overlayFiles array.",
     )
     overlay_files: list[bytes] | None = Field(
-        None,
+        default=None,
         description="An array of PDF files to be used as overlays on the base PDF. The order in these files is applied based on the selected mode.",
     )
     overlay_mode: OverlayMode | None = Field(
-        None,
+        default=None,
         description="The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts",
     )
     overlay_position: OverlayPosition | None = Field(
-        None, description="Overlay position 0 is Foregound, 1 is Background"
+        default=None, description="Overlay position 0 is Foregound, 1 is Background"
+    )
+
+
+class PdfCommentAgentParams(ApiModel):
+    prompt: str | None = Field(
+        default=None, description="Natural-language instructions for the AI â€” what to comment on"
     )
 
 
 class PdfToCbrParams(ApiModel):
     dpi: int | None = Field(
-        None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
+        default=None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
     )
 
 
 class PdfToCbzParams(ApiModel):
     dpi: int | None = Field(
-        None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
+        default=None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
     )
 
 
 class PdfToCsvParams(ApiModel):
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
 
@@ -633,11 +692,15 @@ class TargetDevice(StrEnum):
 
 class PdfToEpubParams(ApiModel):
     detect_chapters: DetectChapters | None = Field(
-        DetectChapters.boolean_true, description="Detect headings that look like chapters and insert EPUB page breaks."
+        default=DetectChapters.boolean_true,
+        description="Detect headings that look like chapters and insert EPUB page breaks.",
     )
-    output_format: OutputFormat | None = Field(OutputFormat.epub, description="Choose the output format for the ebook.")
+    output_format: OutputFormat | None = Field(
+        default=OutputFormat.epub, description="Choose the output format for the ebook."
+    )
     target_device: TargetDevice | None = Field(
-        TargetDevice.tablet_phone_images, description="Choose an output profile optimized for the reader device."
+        default=TargetDevice.tablet_phone_images,
+        description="Choose an output profile optimized for the reader device.",
     )
 
 
@@ -655,18 +718,18 @@ class SingleOrMultiple(StrEnum):
 
 
 class PdfToImgParams(ApiModel):
-    color_type: ColorType | None = Field(ColorType.color, description="The color type of the output image(s)")
-    dpi: int | None = Field(300, description="The DPI (dots per inch) for the output image(s)")
-    image_format: ImageFormat | None = Field(ImageFormat.png, description="The output image format")
+    color_type: ColorType | None = Field(default=ColorType.color, description="The color type of the output image(s)")
+    dpi: int | None = Field(default=300, description="The DPI (dots per inch) for the output image(s)")
+    image_format: ImageFormat | None = Field(default=ImageFormat.png, description="The output image format")
     include_annotations: bool | None = Field(
-        False, description="Include annotations such as comments in the output image(s)"
+        default=False, description="Include annotations such as comments in the output image(s)"
     )
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
     single_or_multiple: SingleOrMultiple | None = Field(
-        SingleOrMultiple.multiple,
+        default=SingleOrMultiple.multiple,
         description="Choose between a single image containing all pages or separate images for each page",
     )
 
@@ -682,9 +745,9 @@ class OutputFormat1(StrEnum):
 
 
 class PdfToPdfaParams(ApiModel):
-    output_format: OutputFormat1 | None = Field(None, description="The output format type (PDF/A or PDF/X)")
+    output_format: OutputFormat1 | None = Field(default=None, description="The output format type (PDF/A or PDF/X)")
     strict: bool | None = Field(
-        None, description="If true, the conversion will fail if the output is not perfectly compliant"
+        default=None, description="If true, the conversion will fail if the output is not perfectly compliant"
     )
 
 
@@ -695,7 +758,11 @@ class OutputFormat2(StrEnum):
 
 
 class PdfToPresentationParams(ApiModel):
-    output_format: OutputFormat2 | None = Field(None, description="The output Presentation format")
+    output_format: OutputFormat2 | None = Field(default=None, description="The output Presentation format")
+
+
+class PdfToTextEditorParams(ApiModel):
+    lightweight: bool | None = False
 
 
 class OutputFormat3(StrEnum):
@@ -704,7 +771,7 @@ class OutputFormat3(StrEnum):
 
 
 class PdfToTextParams(ApiModel):
-    output_format: OutputFormat3 | None = Field(None, description="The output Text or RTF format")
+    output_format: OutputFormat3 | None = Field(default=None, description="The output Text or RTF format")
 
 
 class OutputFormat4(StrEnum):
@@ -720,8 +787,8 @@ class Prepress(Enum):
 
 
 class PdfToVectorParams(ApiModel):
-    output_format: OutputFormat4 | None = Field(OutputFormat4.eps, description="Target vector format extension")
-    prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
+    output_format: OutputFormat4 | None = Field(default=OutputFormat4.eps, description="Target vector format extension")
+    prepress: Prepress | None = Field(default=Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
 class OutputFormat5(StrEnum):
@@ -731,12 +798,12 @@ class OutputFormat5(StrEnum):
 
 
 class PdfToWordParams(ApiModel):
-    output_format: OutputFormat5 | None = Field(None, description="The output Word document format")
+    output_format: OutputFormat5 | None = Field(default=None, description="The output Word document format")
 
 
 class PdfToXlsxParams(ApiModel):
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
 
@@ -756,45 +823,45 @@ class CustomMode(StrEnum):
 
 class RearrangePagesParams(ApiModel):
     custom_mode: CustomMode | None = Field(
-        None,
+        default=None,
         description="The custom mode for page rearrangement. Valid values are:\nCUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.\nDUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).\nODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.\nREMOVE_FIRST: Removes the first page.\nREMOVE_LAST: Removes the last page.\nREMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n",
     )
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
 
 
 class RedactionArea(ApiModel):
-    color: str | None = Field(None, description="The color used to redact the specified area.")
-    height: float | None = Field(None, description="The height of the area to be redacted.")
-    page: int | None = Field(None, description="The page on which the area should be redacted.")
-    width: float | None = Field(None, description="The width of the area to be redacted.")
-    x: float | None = Field(None, description="The left edge point of the area to be redacted.")
-    y: float | None = Field(None, description="The top edge point of the area to be redacted.")
+    color: str | None = Field(default=None, description="The color used to redact the specified area.")
+    height: float | None = Field(default=None, description="The height of the area to be redacted.")
+    page: int | None = Field(default=None, description="The page on which the area should be redacted.")
+    width: float | None = Field(default=None, description="The width of the area to be redacted.")
+    x: float | None = Field(default=None, description="The left edge point of the area to be redacted.")
+    y: float | None = Field(default=None, description="The top edge point of the area to be redacted.")
 
 
 class RemoveBlanksParams(ApiModel):
-    threshold: int | None = Field(10, description="The threshold value to determine blank pages", ge=0, le=255)
+    threshold: int | None = Field(default=10, description="The threshold value to determine blank pages", ge=0, le=255)
     white_percent: float | None = Field(
-        99.9, description="The percentage of white color on a page to consider it as blank", ge=0.1, le=100.0
+        default=99.9, description="The percentage of white color on a page to consider it as blank", ge=0.1, le=100.0
     )
 
 
 class RemovePagesParams(ApiModel):
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
 
 
 class RemovePasswordParams(ApiModel):
-    password: SecretStr | None = Field(None, description="The password of the PDF file")
+    password: SecretStr | None = Field(default=None, description="The password of the PDF file")
 
 
 class RenameAttachmentParams(ApiModel):
-    attachment_name: str | None = Field(None, description="The current name of the attachment to rename")
-    new_name: str | None = Field(None, description="The new name for the attachment")
+    attachment_name: str | None = Field(default=None, description="The current name of the attachment to rename")
+    new_name: str | None = Field(default=None, description="The new name for the attachment")
 
 
 class HighContrastColorCombination(StrEnum):
@@ -821,18 +888,18 @@ class ReplaceAndInvertOption(StrEnum):
 
 class ReplaceInvertPdfParams(ApiModel):
     back_ground_color: str | None = Field(
-        None,
+        default=None,
         description="If CUSTOM_COLOR option selected, then pick the custom color for background. Expected color value should be 24bit decimal value of a color",
     )
     high_contrast_color_combination: HighContrastColorCombination | None = Field(
-        HighContrastColorCombination.white_text_on_black,
+        default=HighContrastColorCombination.white_text_on_black,
         description="If HIGH_CONTRAST_COLOR option selected, then pick the default color option for text and background.",
     )
     replace_and_invert_option: ReplaceAndInvertOption | None = Field(
-        ReplaceAndInvertOption.high_contrast_color, description="Replace and Invert color options of a pdf."
+        default=ReplaceAndInvertOption.high_contrast_color, description="Replace and Invert color options of a pdf."
     )
     text_color: str | None = Field(
-        None,
+        default=None,
         description="If CUSTOM_COLOR option selected, then pick the custom color for text. Expected color value should be 24bit decimal value of a color",
     )
 
@@ -846,17 +913,17 @@ class Angle(IntEnum):
 
 class RotatePdfParams(ApiModel):
     angle: Angle | None = Field(
-        None, description="The clockwise angle by which to rotate the PDF file. Must be a multiple of 90."
+        default=None, description="The clockwise angle by which to rotate the PDF file. Must be a multiple of 90."
     )
 
 
 class SanitizePdfParams(ApiModel):
-    remove_embedded_files: bool | None = Field(True, description="Remove embedded files from the PDF")
-    remove_fonts: bool | None = Field(False, description="Remove fonts from the PDF")
-    remove_java_script: bool | None = Field(True, description="Remove JavaScript actions from the PDF")
-    remove_links: bool | None = Field(False, description="Remove links from the PDF")
-    remove_metadata: bool | None = Field(False, description="Remove document info metadata from the PDF")
-    remove_xmp_metadata: bool | None = Field(False, description="Remove XMP metadata from the PDF")
+    remove_embedded_files: bool | None = Field(default=True, description="Remove embedded files from the PDF")
+    remove_fonts: bool | None = Field(default=False, description="Remove fonts from the PDF")
+    remove_java_script: bool | None = Field(default=True, description="Remove JavaScript actions from the PDF")
+    remove_links: bool | None = Field(default=False, description="Remove links from the PDF")
+    remove_metadata: bool | None = Field(default=False, description="Remove document info metadata from the PDF")
+    remove_xmp_metadata: bool | None = Field(default=False, description="Remove XMP metadata from the PDF")
 
 
 class PageSize(StrEnum):
@@ -874,10 +941,13 @@ class PageSize(StrEnum):
 
 class ScalePagesParams(ApiModel):
     page_size: PageSize | None = Field(
-        None, description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."
+        default=None,
+        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.",
     )
     scale_factor: float | None = Field(
-        1, description="The scale of the content on the pages of the output PDF. Acceptable values are floats.", ge=0.0
+        default=1,
+        description="The scale of the content on the pages of the output PDF. Acceptable values are floats.",
+        ge=0.0,
     )
 
 
@@ -900,20 +970,28 @@ class Rotation(StrEnum):
 
 
 class ScannerEffectParams(ApiModel):
-    advanced_enabled: bool | None = Field(None, description="Whether advanced settings are enabled", examples=[False])
-    blur: float | None = Field(None, description="Blur amount (0 = none, higher = more blur)", examples=[1.0])
-    border: int | None = Field(None, description="Border thickness in pixels", examples=[20])
-    brightness: float | None = Field(None, description="Brightness multiplier (1.0 = no change)", examples=[1.0])
-    colorspace: Colorspace | None = Field(None, description="Colorspace for output image", examples=["grayscale"])
-    contrast: float | None = Field(None, description="Contrast multiplier (1.0 = no change)", examples=[1.0])
-    noise: float | None = Field(None, description="Noise amount (0 = none, higher = more noise)", examples=[8.0])
-    quality: Quality | None = Field(None, description="Scan quality preset", examples=["high"])
-    resolution: int | None = Field(None, description="Rendering resolution in DPI", examples=[300])
-    rotate: int | None = Field(None, description="Base rotation in degrees", examples=[0])
-    rotate_variance: int | None = Field(None, description="Random rotation variance in degrees", examples=[2])
-    rotation: Rotation | None = Field(None, description="Rotation preset", examples=["none"])
+    advanced_enabled: bool | None = Field(
+        default=None, description="Whether advanced settings are enabled", examples=[False]
+    )
+    blur: float | None = Field(default=None, description="Blur amount (0 = none, higher = more blur)", examples=[1.0])
+    border: int | None = Field(default=None, description="Border thickness in pixels", examples=[20])
+    brightness: float | None = Field(
+        default=None, description="Brightness multiplier (1.0 = no change)", examples=[1.0]
+    )
+    colorspace: Colorspace | None = Field(
+        default=None, description="Colorspace for output image", examples=["grayscale"]
+    )
+    contrast: float | None = Field(default=None, description="Contrast multiplier (1.0 = no change)", examples=[1.0])
+    noise: float | None = Field(
+        default=None, description="Noise amount (0 = none, higher = more noise)", examples=[8.0]
+    )
+    quality: Quality | None = Field(default=None, description="Scan quality preset", examples=["high"])
+    resolution: int | None = Field(default=None, description="Rendering resolution in DPI", examples=[300])
+    rotate: int | None = Field(default=None, description="Base rotation in degrees", examples=[0])
+    rotate_variance: int | None = Field(default=None, description="Random rotation variance in degrees", examples=[2])
+    rotation: Rotation | None = Field(default=None, description="Rotation preset", examples=["none"])
     rotation_value: int | None = None
-    yellowish: bool | None = Field(None, description="Simulate yellowed paper", examples=[False])
+    yellowish: bool | None = Field(default=None, description="Simulate yellowed paper", examples=[False])
 
 
 class WorkflowType(StrEnum):
@@ -939,10 +1017,10 @@ class SessionsParams(ApiModel):
 
 class SplitBySizeOrCountParams(ApiModel):
     split_type: int | None = Field(
-        0, description="Determines the type of split: 0 for size, 1 for page count, 2 for document count"
+        default=0, description="Determines the type of split: 0 for size, 1 for page count, 2 for document count"
     )
     split_value: str | None = Field(
-        "10MB", description="Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')"
+        default="10MB", description="Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')"
     )
 
 
@@ -957,24 +1035,24 @@ class PageSize1(StrEnum):
 
 class SplitForPosterPrintParams(ApiModel):
     page_size: PageSize1 | None = Field(
-        None, description="Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')"
+        default=None, description="Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')"
     )
-    right_to_left: bool | None = Field(False, description="Split right-to-left instead of left-to-right")
+    right_to_left: bool | None = Field(default=False, description="Split right-to-left instead of left-to-right")
     xfactor: int | None = None
     yfactor: int | None = None
 
 
 class SplitPagesParams(ApiModel):
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description='Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.',
     )
 
 
 class SplitPdfByChaptersParams(ApiModel):
-    allow_duplicates: bool | None = Field(False, description="Whether to allow duplicates or not")
-    bookmark_level: int | None = Field(0, description="Maximum bookmark level required", ge=0)
-    include_metadata: bool | None = Field(False, description="Whether to include Metadata or not")
+    allow_duplicates: bool | None = Field(default=False, description="Whether to allow duplicates or not")
+    bookmark_level: int | None = Field(default=0, description="Maximum bookmark level required", ge=0)
+    include_metadata: bool | None = Field(default=False, description="Whether to include Metadata or not")
 
 
 class SplitMode(StrEnum):
@@ -987,27 +1065,29 @@ class SplitMode(StrEnum):
 
 class SplitPdfBySectionsParams(ApiModel):
     horizontal_divisions: int | None = Field(
-        0, description="Number of horizontal divisions for each PDF page", ge=0, le=50
+        default=0, description="Number of horizontal divisions for each PDF page", ge=0, le=50
     )
-    merge: bool | None = Field(False, description="Merge the split documents into a single PDF")
-    page_numbers: str | None = Field("SPLIT_ALL", description="Pages to be split by section")
+    merge: bool | None = Field(default=False, description="Merge the split documents into a single PDF")
+    page_numbers: str | None = Field(default="SPLIT_ALL", description="Pages to be split by section")
     split_mode: SplitMode | None = Field(
-        None,
+        default=None,
         description="Modes for page split. Valid values are:\nSPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.\nSPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.\nSPLIT_ALL_EXCEPT_LAST: Splits all except the last page.\nSPLIT_ALL: Splits all pages.\nCUSTOM: Custom split.\n",
     )
-    vertical_divisions: int | None = Field(1, description="Number of vertical divisions for each PDF page", ge=0, le=50)
+    vertical_divisions: int | None = Field(
+        default=1, description="Number of vertical divisions for each PDF page", ge=0, le=50
+    )
 
 
 class SvgToPdfParams(ApiModel):
     combine_into_single_pdf: bool | None = Field(
-        False,
+        default=False,
         description="Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.",
     )
 
 
 class TimestampPdfParams(ApiModel):
     tsa_url: str | None = Field(
-        "http://timestamp.digicert.com",
+        default="http://timestamp.digicert.com",
         description="URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.",
     )
 
@@ -1020,31 +1100,36 @@ class Trapped(StrEnum):
 
 class UpdateMetadataParams(ApiModel):
     all_request_params: dict[str, str] | None = Field(
-        None,
+        default=None,
         description="Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard",
     )
-    author: str | None = Field("author", description="The author of the document")
+    author: str | None = Field(default="author", description="The author of the document")
     creation_date: str | None = Field(
-        "2023/10/01 12:00:00",
+        default="2023/10/01 12:00:00",
         description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss)",
         pattern="yyyy/MM/dd HH:mm:ss",
     )
-    creator: str | None = Field("creator", description="The creator of the document")
-    delete_all: bool | None = Field(False, description="Delete all metadata if set to true")
-    keywords: str | None = Field("keywords", description="The keywords for the document")
+    creator: str | None = Field(default="creator", description="The creator of the document")
+    delete_all: bool | None = Field(default=False, description="Delete all metadata if set to true")
+    keywords: str | None = Field(default="keywords", description="The keywords for the document")
     modification_date: str | None = Field(
-        "2023/10/01 12:00:00",
+        default="2023/10/01 12:00:00",
         description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss)",
         pattern="yyyy/MM/dd HH:mm:ss",
     )
-    producer: str | None = Field("producer", description="The producer of the document")
-    subject: str | None = Field("subject", description="The subject of the document")
-    title: str | None = Field("title", description="The title of the document")
-    trapped: Trapped | None = Field(Trapped.false, description="The trapped status of the document")
+    producer: str | None = Field(default="producer", description="The producer of the document")
+    subject: str | None = Field(default="subject", description="The subject of the document")
+    title: str | None = Field(default="title", description="The title of the document")
+    trapped: Trapped | None = Field(default=Trapped.false, description="The trapped status of the document")
 
 
 class UrlToPdfParams(ApiModel):
-    url_input: str | None = Field(None, description="The input URL to be converted to a PDF file")
+    url_input: str | None = Field(default=None, description="The input URL to be converted to a PDF file")
+
+
+class ValidateCertificateParams(ApiModel):
+    cert_type: str | None = None
+    password: str | None = None
 
 
 class OutputFormat6(StrEnum):
@@ -1055,23 +1140,27 @@ class OutputFormat6(StrEnum):
 
 
 class VectorToPdfParams(ApiModel):
-    output_format: OutputFormat6 | None = Field(OutputFormat6.eps, description="Target vector format extension")
-    prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
+    output_format: OutputFormat6 | None = Field(default=OutputFormat6.eps, description="Target vector format extension")
+    prepress: Prepress | None = Field(default=Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
 class RedactParams(ApiModel):
-    convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to an image")
+    convert_pdf_to_image: bool | None = Field(default=False, description="Convert the redacted PDF to an image")
     page_numbers: str | None = Field(
-        "all",
+        default="all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-    page_redaction_color: str | None = Field("#000000", description="The color used to fully redact certain pages")
-    redactions: list[RedactionArea] | None = Field(None, description="A list of areas that should be redacted")
+    page_redaction_color: str | None = Field(
+        default="#000000", description="The color used to fully redact certain pages"
+    )
+    redactions: list[RedactionArea] | None = Field(default=None, description="A list of areas that should be redacted")
 
 
 class Model(
     RootModel[
-        CbrToPdfParams
+        MathAuditorAgentParams
+        | PdfCommentAgentParams
+        | CbrToPdfParams
         | CbzToPdfParams
         | EbookToPdfParams
         | EmlToPdfParams
@@ -1085,6 +1174,7 @@ class Model(
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
+        | PdfToTextEditorParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
@@ -1129,6 +1219,7 @@ class Model(
         | AutoRedactParams
         | CertSignParams
         | SessionsParams
+        | ValidateCertificateParams
         | RedactParams
         | RemovePasswordParams
         | SanitizePdfParams
@@ -1136,7 +1227,9 @@ class Model(
     ]
 ):
     root: (
-        CbrToPdfParams
+        MathAuditorAgentParams
+        | PdfCommentAgentParams
+        | CbrToPdfParams
         | CbzToPdfParams
         | EbookToPdfParams
         | EmlToPdfParams
@@ -1150,6 +1243,7 @@ class Model(
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
+        | PdfToTextEditorParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
@@ -1194,6 +1288,7 @@ class Model(
         | AutoRedactParams
         | CertSignParams
         | SessionsParams
+        | ValidateCertificateParams
         | RedactParams
         | RemovePasswordParams
         | SanitizePdfParams
@@ -1202,7 +1297,9 @@ class Model(
 
 
 type ParamToolModel = (
-    CbrToPdfParams
+    MathAuditorAgentParams
+    | PdfCommentAgentParams
+    | CbrToPdfParams
     | CbzToPdfParams
     | EbookToPdfParams
     | EmlToPdfParams
@@ -1216,6 +1313,7 @@ type ParamToolModel = (
     | PdfToPdfaParams
     | PdfToPresentationParams
     | PdfToTextParams
+    | PdfToTextEditorParams
     | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
@@ -1260,6 +1358,7 @@ type ParamToolModel = (
     | AutoRedactParams
     | CertSignParams
     | SessionsParams
+    | ValidateCertificateParams
     | RedactParams
     | RemovePasswordParams
     | SanitizePdfParams
@@ -1269,6 +1368,8 @@ type ParamToolModelType = type[ParamToolModel]
 
 
 class ToolEndpoint(StrEnum):
+    MATH_AUDITOR_AGENT = "/api/v1/ai/tools/math-auditor-agent"
+    PDF_COMMENT_AGENT = "/api/v1/ai/tools/pdf-comment-agent"
     CBR_TO_PDF = "/api/v1/convert/cbr/pdf"
     CBZ_TO_PDF = "/api/v1/convert/cbz/pdf"
     EBOOK_TO_PDF = "/api/v1/convert/ebook/pdf"
@@ -1283,6 +1384,7 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PDFA = "/api/v1/convert/pdf/pdfa"
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
+    PDF_TO_TEXT_EDITOR = "/api/v1/convert/pdf/text-editor"
     PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
@@ -1327,6 +1429,7 @@ class ToolEndpoint(StrEnum):
     AUTO_REDACT = "/api/v1/security/auto-redact"
     CERT_SIGN = "/api/v1/security/cert-sign"
     SESSIONS = "/api/v1/security/cert-sign/sessions"
+    VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
@@ -1334,6 +1437,8 @@ class ToolEndpoint(StrEnum):
 
 
 OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
+    ToolEndpoint.MATH_AUDITOR_AGENT: MathAuditorAgentParams,
+    ToolEndpoint.PDF_COMMENT_AGENT: PdfCommentAgentParams,
     ToolEndpoint.CBR_TO_PDF: CbrToPdfParams,
     ToolEndpoint.CBZ_TO_PDF: CbzToPdfParams,
     ToolEndpoint.EBOOK_TO_PDF: EbookToPdfParams,
@@ -1348,6 +1453,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PDFA: PdfToPdfaParams,
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
+    ToolEndpoint.PDF_TO_TEXT_EDITOR: PdfToTextEditorParams,
     ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
@@ -1392,6 +1498,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
     ToolEndpoint.CERT_SIGN: CertSignParams,
     ToolEndpoint.SESSIONS: SessionsParams,
+    ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,

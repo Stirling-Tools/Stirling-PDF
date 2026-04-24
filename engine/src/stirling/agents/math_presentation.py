@@ -13,13 +13,40 @@ import json
 import re
 from typing import Any
 
+from pydantic import Field
+
 from stirling.contracts import (
     OrchestratorRequest,
     ToolReportArtifact,
     Verdict,
 )
 from stirling.contracts.ledger import Discrepancy, Severity
-from stirling.models.tool_models import CommentSpec, ToolEndpoint
+from stirling.models.base import ApiModel
+from stirling.models.tool_models import ToolEndpoint
+
+
+class CommentSpec(ApiModel):
+    """Sticky-note spec serialised into the ``comments`` JSON string sent to
+    ``/api/v1/misc/add-comments``. Kept local to this module — it's purely the
+    engine-side structured representation of each discrepancy we flag on the PDF,
+    and the backend's tool contract takes the JSON string form, not this type.
+    """
+
+    page_index: int = Field(description="0-indexed page number.")
+    x: float = Field(description="Bottom-left x coord of the icon (PDF user-space).")
+    y: float = Field(description="Bottom-left y coord of the icon (PDF user-space).")
+    width: float = Field(description="Width of the icon in user-space units.")
+    height: float = Field(description="Height of the icon in user-space units.")
+    text: str = Field(description="Comment body shown in the popup.")
+    author: str | None = Field(default=None)
+    subject: str | None = Field(default=None)
+    anchor_text: str | None = Field(
+        default=None,
+        description=(
+            "Optional text snippet to locate on the page; when set, the server anchors"
+            " the icon at the first matching line and ignores the x/y coords."
+        ),
+    )
 
 # ---------------------------------------------------------------------------
 # Intent detection

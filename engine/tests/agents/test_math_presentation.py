@@ -15,7 +15,7 @@ from stirling.agents.math_presentation import (
     verdict_to_comment_specs,
     verdict_to_prose,
 )
-from stirling.contracts import OrchestratorRequest, ToolReportArtifact
+from stirling.contracts import OrchestratorRequest, ToolReportArtifact, WorkflowArtifact
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
 from stirling.models.tool_models import ToolEndpoint
 
@@ -126,7 +126,7 @@ def test_is_math_intent_matches_math_keywords() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _orchestrator_request_with_artifacts(artifacts: list) -> OrchestratorRequest:
+def _orchestrator_request_with_artifacts(artifacts: list[WorkflowArtifact]) -> OrchestratorRequest:
     return OrchestratorRequest(
         user_message="review the math",
         file_names=["report.pdf"],

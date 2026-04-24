@@ -9,13 +9,14 @@ pydantic-ai agent.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from stirling.api import app
 from stirling.api.dependencies import get_pdf_comment_agent
-from stirling.config import AppSettings, load_settings
+from stirling.config import AppSettings, RagBackend, load_settings
 from stirling.contracts.pdf_comments import (
     PdfCommentInstruction,
     PdfCommentRequest,
@@ -34,6 +35,15 @@ class StubSettingsProvider:
             fast_model_name="test",
             smart_model_max_tokens=8192,
             fast_model_max_tokens=2048,
+            rag_backend=RagBackend.SQLITE,
+            rag_embedding_model="test-embed",
+            rag_store_path=Path(":memory:"),
+            rag_pgvector_dsn="",
+            rag_chunk_size=512,
+            rag_chunk_overlap=64,
+            rag_default_top_k=5,
+            max_pages=100,
+            max_characters=100_000,
             posthog_enabled=False,
             posthog_api_key="",
             posthog_host="https://eu.i.posthog.com",
