@@ -362,7 +362,7 @@ jobs:
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
       - name: Run stubbed E2E tests (chromium)
-        run: task frontend:test:e2e -- --project=stubbed
+        run: task frontend:test:e2e -- --project=stubbed --workers=3
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -400,23 +400,38 @@ jobs:
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
       - name: Start Spring Boot backend (background)
+        env:
+          # Match the admin/admin credentials hard-coded in the live test helpers.
+          # Without these the backend falls back to the default admin/stirling user
+          # (see InitialSecuritySetup.createDefaultAdminUser) and every login fails.
+          SECURITY_INITIALLOGIN_USERNAME: admin
+          SECURITY_INITIALLOGIN_PASSWORD: admin
         run: |
           nohup ./gradlew :stirling-pdf:bootRun > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
       - name: Wait for backend to become ready
         run: |
-          for i in $(seq 1 120); do
+          start=$SECONDS
+          # 300 iterations × 2s = 10 minute ceiling
+          for i in $(seq 1 300); do
             if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then
-              echo "Backend up after ${i}s"
+              echo "Backend up after $((SECONDS - start))s"
               exit 0
             fi
-            sleep 5
+            sleep 2
           done
-          echo "Backend did not become ready in 600s"
+          echo "Backend did not become ready in $((SECONDS - start))s"
           tail -200 /tmp/backend.log || true
           exit 1
       - name: Run live E2E tests (chromium)
+        id: live-tests
         run: task frontend:test:e2e -- --project=live
+      - name: Print backend log on failure
+        if: failure() && steps.live-tests.conclusion == 'failure'
+        run: |
+          echo "::group::Spring Boot backend log (last 500 lines)"
+          tail -500 /tmp/backend.log || echo "no backend log found"
+          echo "::endgroup::"
       - name: Stop backend
         if: always()
         run: |

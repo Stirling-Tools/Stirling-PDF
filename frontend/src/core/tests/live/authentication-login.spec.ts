@@ -64,41 +64,6 @@ test.describe("1. Authentication and Login", () => {
     });
   });
 
-  test.describe("1.2 Login Page - Invalid Credentials", () => {
-    // Skipped: sending invalid credentials triggers account lockout on the shared
-    // backend, which breaks other tests running in parallel across browsers.
-    test.skip("should show error message with invalid credentials", async ({
-      page,
-    }) => {
-      // Starting state: User is logged out; browser on /login
-      await page.goto("/login");
-      await page.waitForLoadState("domcontentloaded");
-
-      // Step 1: Enter invaliduser into the username field
-      const usernameInput = page.locator("#email");
-      await usernameInput.fill("invaliduser");
-
-      // Step 2: Enter wrongpassword into the password field
-      const passwordInput = page.locator("#password");
-      await passwordInput.fill("wrongpassword");
-
-      // Step 3: Click the "Sign In" button
-      await page.locator('button[type="submit"]').click();
-
-      // Step 4: Verify an error message is displayed (accept "invalid", "incorrect",
-      // or "locked" since parallel runs may trigger the account lockout threshold)
-      await expect(
-        page.locator("text=/invalid|error|incorrect|locked|salah|terkunci/i"),
-      ).toBeVisible({ timeout: 10000 });
-
-      // Step 5: Verify the user remains on the /login page
-      await expect(page).toHaveURL(/\/login/);
-
-      // Step 6: Verify input fields retain values
-      await expect(usernameInput).toHaveValue("invaliduser");
-    });
-  });
-
   test.describe("1.3 Login Page - Empty Fields Validation", () => {
     test("should keep Sign In button disabled when fields are empty", async ({
       page,
@@ -122,39 +87,6 @@ test.describe("1. Authentication and Login", () => {
       await usernameInput.clear();
       await passwordInput.fill("admin");
       await expect(signInButton).toBeDisabled();
-    });
-  });
-
-  test.describe("1.4 Login Page - Account Lockout After Failed Attempts", () => {
-    // This test locks the admin account which can cause other tests to fail.
-    // Use a separate non-admin user or skip if running the full suite.
-    test.skip("should lock account after 5 failed login attempts", async ({
-      page,
-    }) => {
-      // Starting state: User is logged out; browser on /login
-      await page.goto("/login");
-      await page.waitForLoadState("domcontentloaded");
-
-      // Step 1: Attempt to log in with invalid credentials 5 times
-      for (let i = 0; i < 5; i++) {
-        await page.locator("#email").fill("lockout-test-user");
-        await page.locator("#password").fill("wrongpassword" + i);
-        await page.locator('button[type="submit"]').click();
-        await page.waitForTimeout(1000);
-      }
-
-      // Step 2-3: After the 5th failed attempt, verify lockout message is displayed
-      await expect(
-        page.locator("text=/locked|terkunci|too many|terlalu banyak/i"),
-      ).toBeVisible({ timeout: 10000 });
-
-      // Step 4-5: Attempt to log in with correct credentials immediately after lockout
-      await page.locator("#email").fill("lockout-test-user");
-      await page.locator("#password").fill("correctpassword");
-      await page.locator('button[type="submit"]').click();
-
-      // Verify the login is rejected due to the lockout period
-      await expect(page).toHaveURL(/\/login/);
     });
   });
 
