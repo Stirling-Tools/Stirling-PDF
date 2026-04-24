@@ -12,10 +12,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -132,7 +132,7 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> cropPdf(@ModelAttribute CropPdfForm request)
+    public ResponseEntity<Resource> cropPdf(@ModelAttribute CropPdfForm request)
             throws IOException {
         if (request.isAutoCrop()) {
             return cropWithAutomaticDetection(request);
@@ -153,8 +153,8 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> cropWithAutomaticDetection(
-            @ModelAttribute CropPdfForm request) throws IOException {
+    private ResponseEntity<Resource> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
+            throws IOException {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
             try (PDDocument newDocument =
@@ -207,8 +207,8 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> cropWithPDFBox(
-            @ModelAttribute CropPdfForm request) throws IOException {
+    private ResponseEntity<Resource> cropWithPDFBox(@ModelAttribute CropPdfForm request)
+            throws IOException {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
             try (PDDocument newDocument =
@@ -263,8 +263,8 @@ public class CropController {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> cropWithGhostscript(
-            @ModelAttribute CropPdfForm request) throws IOException {
+    private ResponseEntity<Resource> cropWithGhostscript(@ModelAttribute CropPdfForm request)
+            throws IOException {
         TempFile tempInputFile = null;
         TempFile tempOutputFile = null;
 
@@ -301,7 +301,7 @@ public class CropController {
             processExecutor.runCommandWithOutputHandling(command);
 
             TempFile out = tempOutputFile;
-            tempOutputFile = null; // ownership transferred to StreamingResponseBody
+            tempOutputFile = null; // ownership transferred to response Resource
             return WebResponseUtils.pdfFileToWebResponse(
                     out,
                     GeneralUtils.generateFilename(

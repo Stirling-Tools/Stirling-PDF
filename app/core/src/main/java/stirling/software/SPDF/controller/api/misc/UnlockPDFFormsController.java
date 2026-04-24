@@ -10,10 +10,10 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +49,7 @@ public class UnlockPDFFormsController {
             description =
                     "Removing read-only property from form fields making them fillable"
                             + "Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<StreamingResponseBody> unlockPDFForms(@ModelAttribute PDFFile file) {
+    public ResponseEntity<Resource> unlockPDFForms(@ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 
