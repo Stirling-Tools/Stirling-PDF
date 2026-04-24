@@ -11,11 +11,11 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,8 +46,8 @@ public class PageNumbersController {
             description =
                     "This operation takes an input PDF file and adds page numbers to it. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> addPageNumbers(
-            @ModelAttribute AddPageNumbersRequest request) throws IOException {
+    public ResponseEntity<Resource> addPageNumbers(@ModelAttribute AddPageNumbersRequest request)
+            throws IOException {
 
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();

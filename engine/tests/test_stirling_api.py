@@ -19,18 +19,25 @@ from stirling.contracts import (
     AgentRevisionResponse,
     CannotContinueExecutionAction,
     EditCannotDoResponse,
+    NeedContentResponse,
     OrchestratorRequest,
     PdfEditRequest,
-    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
+    SupportedCapability,
 )
 from stirling.models.tool_models import Angle, RotatePdfParams
 
 
 class StubOrchestratorAgent:
-    async def handle(self, request: OrchestratorRequest) -> PdfQuestionNeedContentResponse:
-        return PdfQuestionNeedContentResponse(reason=request.user_message, files=[], max_pages=1, max_characters=1000)
+    async def handle(self, request: OrchestratorRequest) -> NeedContentResponse:
+        return NeedContentResponse(
+            resume_with=SupportedCapability.PDF_QUESTION,
+            reason=request.user_message,
+            files=[],
+            max_pages=1,
+            max_characters=1000,
+        )
 
 
 class StubPdfEditAgent:

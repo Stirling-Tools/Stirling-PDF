@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import assert_never
 
@@ -23,10 +24,13 @@ from stirling.contracts import (
     SupportedCapability,
     ToolOperationStep,
     UnsupportedCapabilityResponse,
+    format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -85,12 +89,20 @@ class OrchestratorAgent:
         )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        logger.info(
+            "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
+            request.file_names,
+            request.resume_with,
+            [type(a).__name__ for a in request.artifacts],
+            request.user_message,
+        )
         if request.resume_with is not None:
             return await self._resume(request, request.resume_with)
         result = await self.agent.run(
             self._build_prompt(request),
             deps=OrchestratorDeps(runtime=self.runtime, request=request),
         )
+        logger.info("[orchestrator] routed -> %s", type(result.output).__name__)
         return result.output
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
@@ -116,8 +128,14 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
+        extracted_text = self._get_extracted_text_artifact(request)
         return await PdfEditAgent(self.runtime).handle(
-            PdfEditRequest(user_message=request.user_message, file_names=request.file_names)
+            PdfEditRequest(
+                user_message=request.user_message,
+                file_names=request.file_names,
+                conversation_history=request.conversation_history,
+                page_text=extracted_text.files if extracted_text is not None else [],
+            )
         )
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
@@ -130,6 +148,7 @@ class OrchestratorAgent:
                 question=request.user_message,
                 file_names=request.file_names,
                 page_text=extracted_text.files if extracted_text is not None else [],
+                conversation_history=request.conversation_history,
             )
         )
 
@@ -137,7 +156,12 @@ class OrchestratorAgent:
         return await self._run_agent_draft(ctx.deps.request)
 
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
-        return await UserSpecAgent(self.runtime).draft(AgentDraftRequest(user_message=request.user_message))
+        return await UserSpecAgent(self.runtime).draft(
+            AgentDraftRequest(
+                user_message=request.user_message,
+                conversation_history=request.conversation_history,
+            )
+        )
 
     async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
         return EditPlanResponse(
@@ -167,7 +191,13 @@ class OrchestratorAgent:
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
         file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
-        return f"User message: {request.user_message}\nFiles: {file_names}\nAvailable artifacts:\n{artifact_summary}"
+        history = format_conversation_history(request.conversation_history)
+        return (
+            f"Conversation history:\n{history}\n"
+            f"User message: {request.user_message}\n"
+            f"Files: {file_names}\n"
+            f"Available artifacts:\n{artifact_summary}"
+        )
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:
         if not request.artifacts:
