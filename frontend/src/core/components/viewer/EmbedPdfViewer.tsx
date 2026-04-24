@@ -1135,7 +1135,12 @@ const EmbedPdfViewerContent = ({
   }, [effectiveFile]);
 
   // Register viewer right-rail buttons
-  useViewerRightRailButtons(isRulerActive, setIsRulerActive, customScale, setCustomScale);
+  useViewerRightRailButtons(
+    isRulerActive,
+    setIsRulerActive,
+    customScale,
+    setCustomScale,
+  );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses PDFium WASM (frontend-only).

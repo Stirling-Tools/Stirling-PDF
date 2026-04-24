@@ -6,6 +6,7 @@ import {
   convertUnit,
 } from "@app/utils/measurementUtils";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Point {
   x: number;
@@ -147,7 +148,7 @@ function pickScale(
  */
 function getDecimalPlaces(value: number): number {
   const absVal = Math.abs(value);
-  
+
   const decimalRanges = [
     { threshold: 1000000, decimals: 0 },
     { threshold: 1000, decimals: 2 },
@@ -156,7 +157,7 @@ function getDecimalPlaces(value: number): number {
     { threshold: 0.01, decimals: 4 },
     { threshold: 0.001, decimals: 5 },
   ];
-  
+
   return decimalRanges.find((r) => absVal >= r.threshold)?.decimals ?? 6;
 }
 
@@ -164,9 +165,9 @@ function formatScaled(pts: number, scale: MeasureScale): string {
   // Use raw PDF factor directly for maximum precision
   const val = pts * scale.factor;
   if (val === 0) return `0 ${scale.unit}`;
-  
+
   const decimals = getDecimalPlaces(val);
-  
+
   return `${val.toFixed(decimals)} ${scale.unit}`;
 }
 
@@ -183,13 +184,13 @@ function formatScaled(pts: number, scale: MeasureScale): string {
  */
 function scaledCross(pts: number, scale: MeasureScale): string | null {
   const unit = scale.unit.toLowerCase().trim();
-  
+
   // Validate unit is known
   if (!(unit in POINT_TO_UNIT)) return null;
-  
+
   // Get the value in the PDF's own unit system using raw factor
   const valueInUnit = pts * scale.factor;
-  
+
   // Convert to opposite system using generic convertUnit function
   if (isImperialUnit(scale.unit)) {
     // PDF is imperial (ft, in, yd, mi) → convert to meters

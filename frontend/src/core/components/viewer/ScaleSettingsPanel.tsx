@@ -1,7 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Group, Button, NumberInput, Select, Stack, Text, Grid } from "@mantine/core";
+import {
+  Group,
+  Button,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+  Grid,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { MeasureScale } from "./RulerOverlay";
+import { MeasureScale } from "@app/components/viewer/RulerOverlay";
 import {
   generateScaleLabel,
   parsePresetRatio,
@@ -27,7 +35,9 @@ export function ScaleSettingsPanel({
 }: ScaleSettingsPanelProps) {
   const { t } = useTranslation();
   const ratioInputRef = useRef<HTMLInputElement>(null);
-  const [ratio, setRatio] = useState<number | null>(currentScale?.ratio ?? null);
+  const [ratio, setRatio] = useState<number | null>(
+    currentScale?.ratio ?? null,
+  );
   const [unit, setUnit] = useState<string>(currentScale?.unit || "m");
   const [presetSelected, setPresetSelected] = useState<string | null>(null);
   const [ratioError, setRatioError] = useState<string | null>(null);
@@ -97,9 +107,7 @@ export function ScaleSettingsPanel({
     const numValue = inputValue ? parseFloat(inputValue) : null;
 
     if (numValue === null || numValue === undefined || isNaN(numValue)) {
-      setRatioError(
-        t("scaleSettings.ratioRequired", "Ratio is required"),
-      );
+      setRatioError(t("scaleSettings.ratioRequired", "Ratio is required"));
       return false;
     }
     if (numValue <= 0) {
@@ -175,7 +183,7 @@ export function ScaleSettingsPanel({
               key={`ratio-${currentScale?.ratio ?? "empty"}`}
               label="Ratio"
               placeholder="e.g., 100"
-              value={ratio}
+              value={ratio ?? undefined}
               onChange={handleRatioChange}
               min={0.1}
               step={1}
