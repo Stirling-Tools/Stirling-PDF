@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useFrontendVersionInfo } from '@app/hooks/useFrontendVersionInfo';
-import { updateService, type UpdateSummary } from '@app/services/updateService';
-import UpdateModal from '@app/components/shared/UpdateModal';
+import { useEffect, useRef, useState } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
+import { updateService, type UpdateSummary } from "@app/services/updateService";
+import UpdateModal from "@app/components/shared/UpdateModal";
 
 /**
  * How long to wait after mount before checking for an update. Matches the
@@ -17,7 +17,7 @@ const STARTUP_DELAY_MS = 15_000;
  * Shared with the desktop popup so snoozing in either context suppresses
  * both popups for the same 24h window.
  */
-const SNOOZE_KEY = 'stirling-pdf-updater:snoozedUntil';
+const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -26,8 +26,11 @@ const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000;
  * `__TAURI_INTERNALS__` before any user code runs.
  */
 function isRunningInTauri(): boolean {
-  if (typeof window === 'undefined') return false;
-  return typeof (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ !== 'undefined';
+  if (typeof window === "undefined") return false;
+  return (
+    typeof (window as unknown as { __TAURI_INTERNALS__?: unknown })
+      .__TAURI_INTERNALS__ !== "undefined"
+  );
 }
 
 /**
@@ -50,7 +53,9 @@ export function UpdateStartupPopup() {
   // offline / self-hosted-down scenarios.
   const currentVersion = appVersion ?? config?.appVersion ?? null;
 
-  const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
+  const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(
+    null,
+  );
   const [showModal, setShowModal] = useState(false);
   const hasChecked = useRef(false);
 
@@ -69,14 +74,20 @@ export function UpdateStartupPopup() {
 
       try {
         const machineInfo = {
-          machineType: config?.machineType ?? 'unknown',
+          machineType: config?.machineType ?? "unknown",
           activeSecurity: config?.activeSecurity ?? false,
-          licenseType: config?.license ?? 'NORMAL',
+          licenseType: config?.license ?? "NORMAL",
         };
-        const summary = await updateService.getUpdateSummary(currentVersion, machineInfo);
+        const summary = await updateService.getUpdateSummary(
+          currentVersion,
+          machineInfo,
+        );
         if (
           summary?.latest_version &&
-          updateService.compareVersions(summary.latest_version, currentVersion) > 0
+          updateService.compareVersions(
+            summary.latest_version,
+            currentVersion,
+          ) > 0
         ) {
           setUpdateSummary(summary);
           setShowModal(true);
@@ -84,19 +95,24 @@ export function UpdateStartupPopup() {
       } catch (err) {
         // Surface as a console warning — a silent failure here is preferable
         // to a noisy error banner on every offline startup.
-        console.warn('[UpdateStartupPopup] startup update check failed:', err);
+        console.warn("[UpdateStartupPopup] startup update check failed:", err);
       }
     }, STARTUP_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [currentVersion, config?.machineType, config?.activeSecurity, config?.license]);
+  }, [
+    currentVersion,
+    config?.machineType,
+    config?.activeSecurity,
+    config?.license,
+  ]);
 
   if (!updateSummary || !currentVersion) return null;
 
   const machineInfo = {
-    machineType: config?.machineType ?? 'unknown',
+    machineType: config?.machineType ?? "unknown",
     activeSecurity: config?.activeSecurity ?? false,
-    licenseType: config?.license ?? 'NORMAL',
+    licenseType: config?.license ?? "NORMAL",
   };
 
   return (
@@ -104,7 +120,10 @@ export function UpdateStartupPopup() {
       opened={showModal}
       onClose={() => setShowModal(false)}
       onRemindLater={() => {
-        localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_DURATION_MS));
+        localStorage.setItem(
+          SNOOZE_KEY,
+          String(Date.now() + SNOOZE_DURATION_MS),
+        );
         setShowModal(false);
       }}
       currentVersion={currentVersion}

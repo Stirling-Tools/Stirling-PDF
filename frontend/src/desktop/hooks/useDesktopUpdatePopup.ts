@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { getVersion } from '@tauri-apps/api/app';
-import { updateService, UpdateSummary } from '@app/services/updateService';
-import { useDesktopInstall } from '@app/hooks/useDesktopInstall';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
+import { updateService, UpdateSummary } from "@app/services/updateService";
+import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
 import {
   desktopUpdateService,
   type CanInstallResult,
-} from '@app/services/desktopUpdateService';
+} from "@app/services/desktopUpdateService";
 
-const SNOOZE_KEY = 'stirling-pdf-updater:snoozedUntil';
+const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const STARTUP_DELAY_MS = 15_000;
 
 /**
@@ -37,8 +37,10 @@ const STARTUP_DELAY_MS = 15_000;
  */
 export function useDesktopUpdatePopup() {
   const [showModal, setShowModal] = useState(false);
-  const [currentVersion, setCurrentVersion] = useState('');
-  const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
+  const [currentVersion, setCurrentVersion] = useState("");
+  const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(
+    null,
+  );
   // Popup-local canInstall — kept separate from install.canInstall so the
   // modal can be guaranteed to receive the probe result on the same render
   // that opens the modal. Setting setCanInstall + setShowModal in the same
@@ -58,14 +60,15 @@ export function useDesktopUpdatePopup() {
     hasChecked.current = true;
 
     const timer = setTimeout(async () => {
-      let mode: Awaited<ReturnType<typeof desktopUpdateService.getUpdateMode>> = 'prompt';
+      let mode: Awaited<ReturnType<typeof desktopUpdateService.getUpdateMode>> =
+        "prompt";
       try {
         mode = await desktopUpdateService.getUpdateMode();
       } catch {
         /* fall through with default */
       }
 
-      if (mode === 'disabled') {
+      if (mode === "disabled") {
         // Managed deployment opted out of updates entirely — nothing to do.
         return;
       }
@@ -73,7 +76,7 @@ export function useDesktopUpdatePopup() {
       // Honour the user's "remind me later" snooze, but only in the interactive
       // flow. `auto` mode always applies updates so enterprise installs never
       // drift onto old versions just because a previous user pressed Later.
-      if (mode === 'prompt') {
+      if (mode === "prompt") {
         const snoozedUntil = localStorage.getItem(SNOOZE_KEY);
         if (snoozedUntil && Date.now() < parseInt(snoozedUntil, 10)) return;
       }
@@ -82,13 +85,26 @@ export function useDesktopUpdatePopup() {
         const version = await getVersion();
         setCurrentVersion(version);
 
-        const platform = navigator.platform?.toLowerCase() ?? '';
-        const machineType = platform.includes('mac') ? 'Client-mac'
-          : platform.includes('linux') ? 'Client-unix'
-          : 'Client-win';
-        const machineInfo = { machineType, activeSecurity: false, licenseType: 'NORMAL' };
-        const summary = await updateService.getUpdateSummary(version, machineInfo);
-        if (!summary?.latest_version || updateService.compareVersions(summary.latest_version, version) <= 0) return;
+        const platform = navigator.platform?.toLowerCase() ?? "";
+        const machineType = platform.includes("mac")
+          ? "Client-mac"
+          : platform.includes("linux")
+            ? "Client-unix"
+            : "Client-win";
+        const machineInfo = {
+          machineType,
+          activeSecurity: false,
+          licenseType: "NORMAL",
+        };
+        const summary = await updateService.getUpdateSummary(
+          version,
+          machineInfo,
+        );
+        if (
+          !summary?.latest_version ||
+          updateService.compareVersions(summary.latest_version, version) <= 0
+        )
+          return;
 
         // Ask the Tauri updater whether it can provide an in-app install.
         // This may fail (placeholder pubkey, 404 on latest.json, signature
@@ -102,7 +118,7 @@ export function useDesktopUpdatePopup() {
         // stale pre-check value at this point in the microtask.
         const tauriReady = await installRef.current.checkTauriUpdate();
 
-        if (mode === 'auto') {
+        if (mode === "auto") {
           // Auto mode requires a working Tauri updater — we can't headless-
           // install via an external download link. If the tauri endpoint
           // is broken, or the user can't install, silently skip. The
@@ -110,14 +126,15 @@ export function useDesktopUpdatePopup() {
           // if they ever open the popup manually.
           if (!tauriReady) {
             console.warn(
-              '[DesktopUpdatePopup] auto-update skipped: tauri updater not available (pubkey/endpoint/signature issue?)',
+              "[DesktopUpdatePopup] auto-update skipped: tauri updater not available (pubkey/endpoint/signature issue?)",
             );
             return;
           }
-          const ci: CanInstallResult = await desktopUpdateService.canInstallUpdates();
+          const ci: CanInstallResult =
+            await desktopUpdateService.canInstallUpdates();
           if (!ci.canInstall) {
             console.warn(
-              '[DesktopUpdatePopup] auto-update silently skipped: install dir not writable',
+              "[DesktopUpdatePopup] auto-update silently skipped: install dir not writable",
             );
             return;
           }
@@ -126,7 +143,7 @@ export function useDesktopUpdatePopup() {
             await installRef.current.actions.startInstall();
             await installRef.current.actions.restartApp();
           } catch (err) {
-            console.error('[DesktopUpdatePopup] auto-update failed:', err);
+            console.error("[DesktopUpdatePopup] auto-update failed:", err);
           }
           return;
         }
@@ -137,12 +154,13 @@ export function useDesktopUpdatePopup() {
         // is unavailable — so the user always has a path forward even
         // when latest.json is missing, the pubkey is wrong, or the
         // signature doesn't match.
-        const ci: CanInstallResult = await desktopUpdateService.canInstallUpdates();
+        const ci: CanInstallResult =
+          await desktopUpdateService.canInstallUpdates();
         setUpdateSummary(summary);
         setCanInstall(ci);
         setShowModal(true);
       } catch (err) {
-        console.error('[DesktopUpdatePopup] Startup check failed:', err);
+        console.error("[DesktopUpdatePopup] Startup check failed:", err);
       }
     }, STARTUP_DELAY_MS);
 

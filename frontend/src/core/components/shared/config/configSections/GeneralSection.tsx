@@ -39,7 +39,6 @@ import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 
-
 /**
  * Desktop-only: user-facing update policy control, rendered inside the
  * Software Updates section alongside the version info. Passed from the
@@ -48,11 +47,11 @@ const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
  */
 export interface DesktopUpdateModeControl {
   /** Current mode. */
-  mode: 'prompt' | 'auto' | 'disabled';
+  mode: "prompt" | "auto" | "disabled";
   /** `true` when the mode was written by a provisioning file — disables the control. */
   locked: boolean;
   /** Called when the user picks a new mode. Async: surface errors via toast. */
-  onChange: (mode: 'prompt' | 'auto' | 'disabled') => Promise<void> | void;
+  onChange: (mode: "prompt" | "auto" | "disabled") => Promise<void> | void;
 }
 
 interface GeneralSectionProps {
@@ -106,7 +105,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
     setFileLimitInput(preferences.autoUnzipFileLimit);
   }, [preferences.autoUnzipFileLimit]);
 
-
   // The version to use for update checks — on desktop use the Tauri app version,
   // falling back to the backend version
   const currentVersion = appVersion ?? config?.appVersion ?? null;
@@ -136,10 +134,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
 
     if (
       summary?.latest_version &&
-      updateService.compareVersions(
-        summary.latest_version,
-        currentVersion,
-      ) > 0
+      updateService.compareVersions(summary.latest_version, currentVersion) > 0
     ) {
       setUpdateSummary(summary);
     } else {
@@ -150,13 +145,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   };
 
   // Build desktop install props for the UpdateModal (only when provided by desktop override)
-  const desktopInstallProps = desktopInstall?.tauriInstallReady ? {
-    state: desktopInstall.state,
-    progress: desktopInstall.progress,
-    errorMessage: desktopInstall.errorMessage,
-    canInstall: desktopInstall.canInstall,
-    actions: desktopInstall.actions,
-  } : undefined;
+  const desktopInstallProps = desktopInstall?.tauriInstallReady
+    ? {
+        state: desktopInstall.state,
+        progress: desktopInstall.progress,
+        errorMessage: desktopInstall.errorMessage,
+        canInstall: desktopInstall.canInstall,
+        actions: desktopInstall.actions,
+      }
+    : undefined;
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
@@ -317,16 +314,16 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             <Group justify="space-between" align="center">
               <div>
                 {config?.appVersion && (
-                <Text size="sm" c="dimmed">
-                  {t(
-                    "settings.general.updates.currentBackendVersion",
-                    "Current Backend Version",
-                  )}
-                  :{" "}
-                  <Text component="span" fw={500}>
-                    {config.appVersion}
+                  <Text size="sm" c="dimmed">
+                    {t(
+                      "settings.general.updates.currentBackendVersion",
+                      "Current Backend Version",
+                    )}
+                    :{" "}
+                    <Text component="span" fw={500}>
+                      {config.appVersion}
+                    </Text>
                   </Text>
-                </Text>
                 )}
                 {updateSummary && (
                   <Text size="sm" c="dimmed" mt={4}>
@@ -389,7 +386,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Stack gap="xs">
                 <Group gap="xs" align="center">
                   <Text fw={600} size="sm">
-                    {t("settings.general.updates.updateBehavior", "Update behavior")}
+                    {t(
+                      "settings.general.updates.updateBehavior",
+                      "Update behavior",
+                    )}
                   </Text>
                   {desktopUpdateMode.locked && (
                     // `color="gray" variant="light"` rendered as near-invisible
@@ -397,7 +397,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     // contrast in both themes to read clearly without being
                     // shouty.
                     <Badge color="blue" variant="light" size="sm" radius="sm">
-                      {t("settings.general.updates.managedByAdmin", "Managed by administrator")}
+                      {t(
+                        "settings.general.updates.managedByAdmin",
+                        "Managed by administrator",
+                      )}
                     </Badge>
                   )}
                 </Group>
@@ -417,25 +420,27 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   value={desktopUpdateMode.mode}
                   onChange={(value) => {
                     if (!value) return;
-                    void desktopUpdateMode.onChange(value as 'prompt' | 'auto' | 'disabled');
+                    void desktopUpdateMode.onChange(
+                      value as "prompt" | "auto" | "disabled",
+                    );
                   }}
                   data={[
                     {
-                      value: 'prompt',
+                      value: "prompt",
                       label: t(
                         "settings.general.updates.modePrompt",
                         "Ask me before installing updates",
                       ),
                     },
                     {
-                      value: 'auto',
+                      value: "auto",
                       label: t(
                         "settings.general.updates.modeAuto",
                         "Install updates automatically",
                       ),
                     },
                     {
-                      value: 'disabled',
+                      value: "disabled",
                       label: t(
                         "settings.general.updates.modeDisabled",
                         "Don't check for updates",
@@ -769,7 +774,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           opened={updateModalOpened}
           onClose={() => setUpdateModalOpened(false)}
           onRemindLater={() => {
-            localStorage.setItem('stirling-pdf-updater:snoozedUntil', String(Date.now() + 24 * 60 * 60 * 1000));
+            localStorage.setItem(
+              "stirling-pdf-updater:snoozedUntil",
+              String(Date.now() + 24 * 60 * 60 * 1000),
+            );
           }}
           currentVersion={appVersion ?? config?.appVersion ?? ""}
           updateSummary={updateSummary}

@@ -1,5 +1,5 @@
-import { invoke } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export interface UpdateInfo {
   /** New version string, e.g. "2.8.0" */
@@ -28,7 +28,7 @@ export interface UpdateProgress {
  * * `auto`     – silently download, install, and restart on startup.
  * * `disabled` – never check for updates or surface update UI.
  */
-export type UpdateMode = 'prompt' | 'auto' | 'disabled';
+export type UpdateMode = "prompt" | "auto" | "disabled";
 
 /** Current [`UpdateMode`] plus whether the UI can change it. */
 export interface UpdateModeInfo {
@@ -53,7 +53,7 @@ export interface CanInstallResult {
 }
 
 // ─── localStorage keys ────────────────────────────────────────────────────────
-const KEY_PREFIX = 'stirling-pdf-updater:';
+const KEY_PREFIX = "stirling-pdf-updater:";
 const KEY_LAST_CHECKED = `${KEY_PREFIX}lastChecked`;
 const KEY_CHECK_INTERVAL_HOURS = `${KEY_PREFIX}checkIntervalHours`;
 const KEY_AUTO_DOWNLOAD = `${KEY_PREFIX}autoDownload`;
@@ -77,9 +77,9 @@ class DesktopUpdateService {
    */
   async checkForUpdate(): Promise<UpdateInfo | null> {
     try {
-      return await invoke<UpdateInfo | null>('check_for_update');
+      return await invoke<UpdateInfo | null>("check_for_update");
     } catch (error) {
-      console.error('[DesktopUpdateService] check_for_update failed:', error);
+      console.error("[DesktopUpdateService] check_for_update failed:", error);
       return null;
     }
   }
@@ -101,14 +101,16 @@ class DesktopUpdateService {
     this.cleanupEventListeners();
 
     this.progressUnlisten = await listen<UpdateProgress>(
-      'update-download-progress',
+      "update-download-progress",
       (event) => onProgress(event.payload),
     );
 
-    this.finishUnlisten = await listen<void>('update-download-finished', () => onFinish());
+    this.finishUnlisten = await listen<void>("update-download-finished", () =>
+      onFinish(),
+    );
 
     try {
-      await invoke<void>('download_and_install_update');
+      await invoke<void>("download_and_install_update");
     } finally {
       this.cleanupEventListeners();
     }
@@ -119,12 +121,12 @@ class DesktopUpdateService {
    * The process will be replaced — this call never returns normally.
    */
   async restartApp(): Promise<void> {
-    await invoke<void>('restart_app');
+    await invoke<void>("restart_app");
   }
 
   /** Return the currently running app version string. */
   async getAppVersion(): Promise<string> {
-    return invoke<string>('get_app_version');
+    return invoke<string>("get_app_version");
   }
 
   /**
@@ -136,13 +138,13 @@ class DesktopUpdateService {
    */
   async getUpdateModeInfo(): Promise<UpdateModeInfo> {
     try {
-      return await invoke<UpdateModeInfo>('get_update_mode');
+      return await invoke<UpdateModeInfo>("get_update_mode");
     } catch (error) {
       console.warn(
-        '[DesktopUpdateService] get_update_mode failed, defaulting to prompt/unlocked:',
+        "[DesktopUpdateService] get_update_mode failed, defaulting to prompt/unlocked:",
         error,
       );
-      return { mode: 'prompt', locked: false };
+      return { mode: "prompt", locked: false };
     }
   }
 
@@ -158,7 +160,7 @@ class DesktopUpdateService {
    * changed.
    */
   async setUpdateMode(mode: UpdateMode): Promise<void> {
-    await invoke<void>('set_update_mode', { mode });
+    await invoke<void>("set_update_mode", { mode });
   }
 
   /**
@@ -171,10 +173,10 @@ class DesktopUpdateService {
    */
   async canInstallUpdates(): Promise<CanInstallResult> {
     try {
-      return await invoke<CanInstallResult>('can_install_updates');
+      return await invoke<CanInstallResult>("can_install_updates");
     } catch (error) {
       console.warn(
-        '[DesktopUpdateService] can_install_updates failed, assuming allowed:',
+        "[DesktopUpdateService] can_install_updates failed, assuming allowed:",
         error,
       );
       return { canInstall: true, reason: null, installDir: null };
@@ -233,7 +235,9 @@ class DesktopUpdateService {
 
   getCheckIntervalHours(): number {
     const stored = localStorage.getItem(KEY_CHECK_INTERVAL_HOURS);
-    return stored !== null ? parseInt(stored, 10) : DEFAULT_CHECK_INTERVAL_HOURS;
+    return stored !== null
+      ? parseInt(stored, 10)
+      : DEFAULT_CHECK_INTERVAL_HOURS;
   }
 
   setCheckIntervalHours(hours: number): void {
@@ -241,7 +245,7 @@ class DesktopUpdateService {
   }
 
   isAutoDownloadEnabled(): boolean {
-    return localStorage.getItem(KEY_AUTO_DOWNLOAD) === 'true';
+    return localStorage.getItem(KEY_AUTO_DOWNLOAD) === "true";
   }
 
   setAutoDownload(value: boolean): void {
@@ -264,7 +268,10 @@ class DesktopUpdateService {
 
   /** Snooze update notifications for the given number of hours. */
   snoozeFor(hours: number): void {
-    localStorage.setItem(KEY_SNOOZED_UNTIL, String(Date.now() + hours * 60 * 60 * 1000));
+    localStorage.setItem(
+      KEY_SNOOZED_UNTIL,
+      String(Date.now() + hours * 60 * 60 * 1000),
+    );
   }
 
   clearSnooze(): void {

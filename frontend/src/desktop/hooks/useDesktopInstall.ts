@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { useState, useEffect, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type {
   DesktopInstallState,
   DesktopInstallProgress,
   DesktopInstallActions,
-} from '@core/components/shared/UpdateModal';
-import { desktopUpdateService, type CanInstallResult } from '@app/services/desktopUpdateService';
+} from "@core/components/shared/UpdateModal";
+import {
+  desktopUpdateService,
+  type CanInstallResult,
+} from "@app/services/desktopUpdateService";
 
 /**
  * Desktop-only hook managing the Tauri updater install state.
@@ -14,7 +17,7 @@ import { desktopUpdateService, type CanInstallResult } from '@app/services/deskt
  * via the desktop GeneralSection override.
  */
 export function useDesktopInstall() {
-  const [state, setState] = useState<DesktopInstallState>('idle');
+  const [state, setState] = useState<DesktopInstallState>("idle");
   const [progress, setProgress] = useState<DesktopInstallProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [tauriInstallReady, setTauriInstallReady] = useState(false);
@@ -34,9 +37,11 @@ export function useDesktopInstall() {
   // Listen for the ready-to-restart event from Rust
   useEffect(() => {
     let unlisten: UnlistenFn | undefined;
-    listen<void>('update-ready-to-restart', () => {
-      setState('ready-to-restart');
-    }).then((fn) => { unlisten = fn; });
+    listen<void>("update-ready-to-restart", () => {
+      setState("ready-to-restart");
+    }).then((fn) => {
+      unlisten = fn;
+    });
     return () => unlisten?.();
   }, []);
 
@@ -57,7 +62,9 @@ export function useDesktopInstall() {
    */
   const checkTauriUpdate = useCallback(async (): Promise<boolean> => {
     try {
-      const result = await invoke<{ version: string } | null>('check_for_update');
+      const result = await invoke<{ version: string } | null>(
+        "check_for_update",
+      );
       const ready = !!result;
       setTauriInstallReady(ready);
       if (result) {
@@ -74,39 +81,41 @@ export function useDesktopInstall() {
     }
   }, []);
 
-  const startInstall: DesktopInstallActions['startInstall'] = useCallback(async () => {
-    setState('downloading');
-    setProgress(null);
-    setErrorMessage(null);
+  const startInstall: DesktopInstallActions["startInstall"] =
+    useCallback(async () => {
+      setState("downloading");
+      setProgress(null);
+      setErrorMessage(null);
 
-    let progressUnlisten: UnlistenFn | undefined;
-    let finishUnlisten: UnlistenFn | undefined;
+      let progressUnlisten: UnlistenFn | undefined;
+      let finishUnlisten: UnlistenFn | undefined;
 
-    try {
-      progressUnlisten = await listen<DesktopInstallProgress>(
-        'update-download-progress',
-        (event) => {
-          setProgress(event.payload);
-          if (event.payload.percent >= 100) setState('installing');
-        },
-      );
-      finishUnlisten = await listen<void>('update-download-finished', () => {
-        setState('installing');
-      });
-      await invoke<void>('download_and_install_update');
-    } catch (err) {
-      console.error('[useDesktopInstall] Install failed:', err);
-      setErrorMessage(err instanceof Error ? err.message : String(err));
-      setState('error');
-    } finally {
-      progressUnlisten?.();
-      finishUnlisten?.();
-    }
-  }, []);
+      try {
+        progressUnlisten = await listen<DesktopInstallProgress>(
+          "update-download-progress",
+          (event) => {
+            setProgress(event.payload);
+            if (event.payload.percent >= 100) setState("installing");
+          },
+        );
+        finishUnlisten = await listen<void>("update-download-finished", () => {
+          setState("installing");
+        });
+        await invoke<void>("download_and_install_update");
+      } catch (err) {
+        console.error("[useDesktopInstall] Install failed:", err);
+        setErrorMessage(err instanceof Error ? err.message : String(err));
+        setState("error");
+      } finally {
+        progressUnlisten?.();
+        finishUnlisten?.();
+      }
+    }, []);
 
-  const restartApp: DesktopInstallActions['restartApp'] = useCallback(async () => {
-    await invoke<void>('restart_app');
-  }, []);
+  const restartApp: DesktopInstallActions["restartApp"] =
+    useCallback(async () => {
+      await invoke<void>("restart_app");
+    }, []);
 
   return {
     state,

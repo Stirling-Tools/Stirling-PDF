@@ -23,7 +23,7 @@ const GeneralSection: React.FC = () => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
   const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo>({
-    mode: 'prompt',
+    mode: "prompt",
     locked: false,
   });
   const [updateModeError, setUpdateModeError] = useState<string | null>(null);
@@ -59,15 +59,15 @@ const GeneralSection: React.FC = () => {
         const fresh = await desktopUpdateService.getUpdateModeInfo();
         setUpdateModeInfo(fresh);
       } catch (err) {
-        console.error('[GeneralSection] setUpdateMode failed:', err);
+        console.error("[GeneralSection] setUpdateMode failed:", err);
         const msg =
           err instanceof Error
             ? err.message
-            : typeof err === 'string'
+            : typeof err === "string"
               ? err
               : t(
-                  'settings.general.updates.updateBehaviorErrorLocked',
-                  'This setting is locked by your administrator.',
+                  "settings.general.updates.updateBehaviorErrorLocked",
+                  "This setting is locked by your administrator.",
                 );
         setUpdateModeError(msg);
       }
@@ -82,8 +82,8 @@ const GeneralSection: React.FC = () => {
         <Alert
           color="red"
           title={t(
-            'settings.general.updates.updateBehaviorError',
-            'Could not change update behavior',
+            "settings.general.updates.updateBehaviorError",
+            "Could not change update behavior",
           )}
           withCloseButton
           onClose={() => setUpdateModeError(null)}
@@ -92,7 +92,9 @@ const GeneralSection: React.FC = () => {
         </Alert>
       )}
       <CoreGeneralSection
-        hideUpdateSection={updateModeInfo.mode === 'disabled' && updateModeInfo.locked}
+        hideUpdateSection={
+          updateModeInfo.mode === "disabled" && updateModeInfo.locked
+        }
         desktopInstall={{
           state: install.state,
           progress: install.progress,
