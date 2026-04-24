@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable
 from pydantic_ai import FunctionToolset
 from pydantic_ai.toolsets import AbstractToolset
 
+from stirling.models import FileId
 from stirling.rag.service import RagService
 from stirling.rag.store import SearchResult
 
@@ -31,7 +32,7 @@ class RagCapability:
     def __init__(
         self,
         rag_service: RagService,
-        collections: list[str] | None = None,
+        collections: list[FileId] | None = None,
         top_k: int = 5,
     ) -> None:
         self._rag_service = rag_service
@@ -52,7 +53,7 @@ class RagCapability:
         return self._toolset
 
     @staticmethod
-    def _static_instructions_text(collections: list[str]) -> str:
+    def _static_instructions_text(collections: list[FileId]) -> str:
         collection_desc = f"collections: {', '.join(collections)}"
         return (
             "You have access to a knowledge base search tool called 'search_knowledge'. "

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 
+from stirling.models import FileId
 from stirling.rag.embedder import EmbeddingService
 from stirling.rag.store import Document, SearchResult, VectorStore
 
@@ -18,7 +19,7 @@ class RagService:
 
     async def index_text(
         self,
-        collection: str,
+        collection: FileId,
         text: str,
         source: str = "",
         metadata: dict[str, str] | None = None,
@@ -31,7 +32,7 @@ class RagService:
         await self._store.add_documents(collection, documents, embeddings)
         return len(documents)
 
-    async def index_documents(self, collection: str, documents: list[Document]) -> int:
+    async def index_documents(self, collection: FileId, documents: list[Document]) -> int:
         """Embed and store pre-chunked documents. Returns the number stored."""
         if not documents:
             return 0
@@ -55,7 +56,7 @@ class RagService:
     async def search(
         self,
         query: str,
-        collection: str | None = None,
+        collection: FileId | None = None,
         top_k: int | None = None,
     ) -> list[SearchResult]:
         """Embed query and search across one or all collections.
@@ -84,17 +85,17 @@ class RagService:
         all_results.sort(key=lambda r: r.score, reverse=True)
         return all_results[:k]
 
-    async def delete_collection(self, collection: str) -> None:
+    async def delete_collection(self, collection: FileId) -> None:
         """Remove a collection and all its documents."""
         await self._store.delete_collection(collection)
 
-    async def has_collection(self, collection: str) -> bool:
+    async def has_collection(self, collection: FileId) -> bool:
         """Check whether a collection exists."""
         return await self._store.has_collection(collection)
 
-    async def list_collections(self) -> list[str]:
+    async def list_collections(self) -> list[FileId]:
         """List all available collections."""
-        return await self._store.list_collections()
+        return [FileId(name) for name in await self._store.list_collections()]
 
     async def close(self) -> None:
         """Release the underlying vector store's resources."""

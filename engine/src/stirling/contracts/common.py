@@ -5,7 +5,7 @@ from typing import Literal, assert_never
 
 from pydantic import Field, model_validator
 
-from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
+from stirling.models import OPERATIONS, ApiModel, FileId, ToolEndpoint
 from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
 
@@ -103,7 +103,7 @@ class AiFile(ApiModel):
     The name is used in user-facing prompts and responses.
     """
 
-    id: str = Field(min_length=1)
+    id: FileId = Field(min_length=1)
     name: str = Field(min_length=1)
 
 

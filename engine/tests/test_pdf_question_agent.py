@@ -12,6 +12,7 @@ from stirling.contracts import (
     PdfQuestionRequest,
     PdfTextSelection,
 )
+from stirling.models import FileId
 from stirling.services.runtime import AppRuntime
 
 
@@ -42,7 +43,7 @@ async def test_pdf_question_agent_requires_extracted_text(runtime: AppRuntime) -
         PdfQuestionRequest(
             question="What is the total?",
             page_text=[],
-            files=[AiFile(id="test-id", name="test.pdf")],
+            files=[AiFile(id=FileId("test-id"), name="test.pdf")],
         )
     )
 
@@ -63,7 +64,7 @@ async def test_pdf_question_agent_returns_grounded_answer(runtime: AppRuntime) -
         PdfQuestionRequest(
             question="What is the total?",
             page_text=[invoice_page()],
-            files=[AiFile(id="invoice-id", name="invoice.pdf")],
+            files=[AiFile(id=FileId("invoice-id"), name="invoice.pdf")],
         )
     )
 
@@ -84,7 +85,7 @@ async def test_pdf_question_agent_returns_not_found_when_text_is_insufficient(ru
                     pages=[PdfTextSelection(page_number=1, text="This page contains only a shipping address.")],
                 )
             ],
-            files=[AiFile(id="invoice-id", name="invoice.pdf")],
+            files=[AiFile(id=FileId("invoice-id"), name="invoice.pdf")],
         )
     )
 

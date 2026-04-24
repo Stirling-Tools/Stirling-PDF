@@ -4,6 +4,8 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
+from .common import FileId
+
 
 class IngestedPageText(ApiModel):
     page_number: int = Field(ge=1)
@@ -22,16 +24,16 @@ class IngestDocumentRequest(ApiModel):
     into chunk metadata so search results are readable when document_id is a hash.
     """
 
-    document_id: str = Field(min_length=1)
+    document_id: FileId = Field(min_length=1)
     source: str = Field(min_length=1)
     page_text: list[IngestedPageText] | None = None
 
 
 class IngestDocumentResponse(ApiModel):
-    document_id: str
+    document_id: FileId
     chunks_indexed: int
 
 
 class DeleteDocumentResponse(ApiModel):
-    document_id: str
+    document_id: FileId
     deleted: bool

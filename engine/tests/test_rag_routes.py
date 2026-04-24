@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from stirling.api import app
 from stirling.api.dependencies import get_rag_service
+from stirling.models import FileId
 from stirling.rag import Document, RagService, SqliteVecStore
 
 
@@ -106,7 +107,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
     )
     assert response.status_code == 200
 
-    results = await service.search("New content", collection="replace-me", top_k=5)
+    results = await service.search("New content", collection=FileId("replace-me"), top_k=5)
     texts = [r.document.text for r in results]
     assert any("New content" in t for t in texts)
     assert not any("Original content" in t for t in texts)
@@ -199,6 +200,6 @@ async def test_delete_document_removes_collection(client: TestClient, service: R
         "/api/v1/rag/documents",
         json={"documentId": "gone", "source": "gone.pdf", "pageText": [{"pageNumber": 1, "text": "Text."}]},
     )
-    assert await service.has_collection("gone")
+    assert await service.has_collection(FileId("gone"))
     client.delete("/api/v1/rag/documents/gone")
-    assert not await service.has_collection("gone")
+    assert not await service.has_collection(FileId("gone"))

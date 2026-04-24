@@ -11,6 +11,7 @@ from stirling.contracts import (
     IngestDocumentResponse,
     PdfContentType,
 )
+from stirling.models import FileId
 from stirling.rag import Document, RagService
 
 router = APIRouter(prefix="/api/v1/rag", tags=["rag"])
@@ -52,7 +53,7 @@ async def ingest_document(
 
 @router.delete("/documents/{document_id}", response_model=DeleteDocumentResponse)
 async def delete_document(
-    document_id: str,
+    document_id: FileId,
     rag: Annotated[RagService, Depends(get_rag_service)],
 ) -> DeleteDocumentResponse:
     """Remove a document's content from RAG. Idempotent."""

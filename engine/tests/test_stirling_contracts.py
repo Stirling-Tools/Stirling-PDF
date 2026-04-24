@@ -13,13 +13,14 @@ from stirling.contracts import (
     PdfTextSelection,
     ToolOperationStep,
 )
+from stirling.models import FileId
 from stirling.models.tool_models import Angle, RotatePdfParams, ToolEndpoint
 
 
 def test_orchestrator_request_accepts_user_message() -> None:
     request = OrchestratorRequest(
         user_message="Rotate the PDF",
-        files=[AiFile(id="test-id", name="test.pdf")],
+        files=[AiFile(id=FileId("test-id"), name="test.pdf")],
         artifacts=[
             ExtractedTextArtifact(
                 files=[
