@@ -406,6 +406,11 @@ jobs:
           # (see InitialSecuritySetup.createDefaultAdminUser) and every login fails.
           SECURITY_INITIALLOGIN_USERNAME: admin
           SECURITY_INITIALLOGIN_PASSWORD: admin
+          # Suppress the analytics opt-in modal that fires on first admin login when
+          # enableAnalytics is null (see Onboarding.tsx). The modal renders a Mantine
+          # overlay that intercepts pointer events on every tool page until dismissed,
+          # which causes every "click run button" assertion in the live suite to fail.
+          SYSTEM_ENABLEANALYTICS: "false"
         run: |
           nohup ./gradlew :stirling-pdf:bootRun > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
