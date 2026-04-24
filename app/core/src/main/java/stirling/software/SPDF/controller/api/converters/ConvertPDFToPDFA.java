@@ -71,13 +71,13 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -577,7 +577,7 @@ public class ConvertPDFToPDFA {
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
                     "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+    public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -613,7 +613,7 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
-    private ResponseEntity<StreamingResponseBody> handlePdfXConversion(
+    private ResponseEntity<Resource> handlePdfXConversion(
             MultipartFile inputFile, String outputFormat) throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
@@ -1806,7 +1806,7 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
-    private ResponseEntity<StreamingResponseBody> handlePdfAConversion(
+    private ResponseEntity<Resource> handlePdfAConversion(
             MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 

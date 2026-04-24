@@ -1,3 +1,8 @@
+// Must be imported before React so the DOM-prototype patch is installed
+// before React's commit phase runs. Prevents browser page translators
+// (Edge / Google Translate / extensions) from crashing the app via
+// parent-mismatch DOMExceptions. See the module for details.
+import "@app/utils/patchDomForTranslators";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "../vite-env.d.ts"; // eslint-disable-line no-restricted-imports -- Outside app paths

@@ -11,11 +11,11 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,8 +48,8 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to"
                             + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> markdownToPdf(
-            @ModelAttribute GeneralFile generalFile) throws Exception {
+    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
+            throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {

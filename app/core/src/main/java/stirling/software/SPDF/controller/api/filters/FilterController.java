@@ -5,11 +5,11 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,8 +56,8 @@ public class FilterController {
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<StreamingResponseBody> containsText(
-            @ModelAttribute ContainsTextRequest request) throws IOException, InterruptedException {
+    public ResponseEntity<Resource> containsText(@ModelAttribute ContainsTextRequest request)
+            throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
@@ -89,8 +89,8 @@ public class FilterController {
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<StreamingResponseBody> containsImage(
-            @ModelAttribute PDFWithPageNums request) throws IOException, InterruptedException {
+    public ResponseEntity<Resource> containsImage(@ModelAttribute PDFWithPageNums request)
+            throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
 

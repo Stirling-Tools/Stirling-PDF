@@ -5,11 +5,11 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -39,7 +39,7 @@ public class RotationController {
             description =
                     "This endpoint rotates a given PDF file by a specified angle. The angle must be"
                             + " a multiple of 90. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> rotatePDF(@ModelAttribute RotatePDFRequest request)
+    public ResponseEntity<Resource> rotatePDF(@ModelAttribute RotatePDFRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
