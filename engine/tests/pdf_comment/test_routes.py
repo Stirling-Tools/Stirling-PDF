@@ -177,3 +177,25 @@ class TestGenerateEndpoint:
         assert call.user_message == "flag dates"
         assert len(call.chunks) == 1
         assert call.chunks[0].id == "p0-c0"
+
+    def test_agent_exception_surfaces_as_500(self) -> None:
+        """If the agent raises (LLM outage, auth failure, OOM), the route must
+        surface it as HTTP 500 so Java's AiEngineClient maps it to 502 — rather
+        than silently returning an empty/successful response that the Java caller
+        would mis-apply as 'zero comments to place'."""
+
+        class FailingAgent:
+            async def generate(self, _request: PdfCommentRequest) -> PdfCommentResponse:
+                raise RuntimeError("model provider unreachable")
+
+        app.dependency_overrides[load_settings] = StubSettingsProvider()
+        app.dependency_overrides[get_pdf_comment_agent] = lambda: FailingAgent()
+        try:
+            with TestClient(app, raise_server_exceptions=False) as failing_client:
+                resp = failing_client.post(
+                    "/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body()
+                )
+            assert resp.status_code == 500
+        finally:
+            app.dependency_overrides.pop(load_settings, None)
+            app.dependency_overrides.pop(get_pdf_comment_agent, None)

@@ -210,6 +210,28 @@ class AddCommentsControllerTest {
                 .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    void returnsSuccessForEmptyCommentsArray() throws Exception {
+        // An empty JSON array is a valid payload — nothing to annotate, but the caller
+        // should still get back the input PDF without any error so pipelines that
+        // produce zero comments don't have to special-case the empty result.
+        MockMultipartFile file = pdf("doc.pdf", twoPagePdfBytes());
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+
+        AddCommentsRequest request = new AddCommentsRequest();
+        request.setFileInput(file);
+        request.setComments("[]");
+
+        ResponseEntity<Resource> response = controller.addComments(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        try (PDDocument reloaded = Loader.loadPDF(drainBody(response))) {
+            assertThat(textAnnotations(reloaded.getPage(0).getAnnotations())).isEmpty();
+            assertThat(textAnnotations(reloaded.getPage(1).getAnnotations())).isEmpty();
+        }
+    }
+
     // --- helpers ---
 
     private static MockMultipartFile pdf(String name, byte[] bytes) {
