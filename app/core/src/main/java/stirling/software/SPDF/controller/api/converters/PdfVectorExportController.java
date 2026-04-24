@@ -10,10 +10,10 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -51,7 +51,7 @@ public class PdfVectorExportController {
             description =
                     "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript."
                             + " Input:PS/EPS Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertGhostscriptInputsToPdf(
+    public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
         String originalName =
@@ -98,7 +98,7 @@ public class PdfVectorExportController {
             description =
                     "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS)."
                             + " Input:PDF Output:VECTOR Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertPdfToVector(
+    public ResponseEntity<Resource> convertPdfToVector(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
         String originalName =

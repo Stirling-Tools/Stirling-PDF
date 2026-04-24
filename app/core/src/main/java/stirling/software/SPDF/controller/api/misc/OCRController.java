@@ -21,11 +21,11 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -90,7 +90,7 @@ public class OCRController {
                             + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
                             + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
                             + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
-    public ResponseEntity<StreamingResponseBody> processPdfWithOCR(
+    public ResponseEntity<Resource> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -194,13 +194,13 @@ public class OCRController {
                 // The intermediate PDF temp file is no longer needed; only the zip is streamed.
                 tempOutputFile.close();
                 pdfOwnershipTransferred = true;
-                ResponseEntity<StreamingResponseBody> response =
+                ResponseEntity<Resource> response =
                         WebResponseUtils.fileToWebResponse(
                                 tempZipFile, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 zipOwnershipTransferred = true;
                 return response;
             } else {
-                ResponseEntity<StreamingResponseBody> response =
+                ResponseEntity<Resource> response =
                         WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename);
                 pdfOwnershipTransferred = true;
                 return response;

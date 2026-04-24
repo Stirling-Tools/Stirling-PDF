@@ -30,10 +30,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
@@ -48,14 +49,15 @@ import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToEpubControllerTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -142,7 +144,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("novel.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("novel_convertedToEPUB.epub");
-            ResponseEntity<StreamingResponseBody> response = controller.convertPdfToEpub(request);
+            ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertEquals(13, command.size());
@@ -234,7 +236,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("story.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("story_convertedToEPUB.epub");
-            ResponseEntity<StreamingResponseBody> response = controller.convertPdfToEpub(request);
+            ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertTrue(command.stream().noneMatch(arg -> "--chapter".equals(arg)));
@@ -319,7 +321,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
                     .thenReturn("book_convertedToAZW3.azw3");
-            ResponseEntity<StreamingResponseBody> response = controller.convertPdfToEpub(request);
+            ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertEquals("ebook-convert", command.get(0));
