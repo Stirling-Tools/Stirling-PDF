@@ -107,9 +107,7 @@ async def test_generate_drops_hallucinated_chunk_ids(runtime: AppRuntime) -> Non
 @pytest.mark.anyio
 async def test_generate_short_circuits_for_empty_chunks(runtime: AppRuntime) -> None:
     agent = PdfCommentAgent(runtime)
-    empty_request = PdfCommentRequest(
-        session_id="empty-session", user_message="anything", chunks=[]
-    )
+    empty_request = PdfCommentRequest(session_id="empty-session", user_message="anything", chunks=[])
 
     with patch.object(agent._agent, "run") as run_mock:
         response = await agent.generate(empty_request)
@@ -158,9 +156,7 @@ def test_build_prompt_escapes_user_message_delimiter_injection(runtime: AppRunti
     # inject "--- Page 99 ---"; JSON-encoding collapses it into the quoted user-
     # message line so no attacker-supplied page marker appears as structure.
     structural_markers = [
-        line
-        for line in prompt.splitlines()
-        if line.startswith("--- Page ") and line.endswith(" ---")
+        line for line in prompt.splitlines() if line.startswith("--- Page ") and line.endswith(" ---")
     ]
     assert structural_markers == ["--- Page 1 ---"]
 

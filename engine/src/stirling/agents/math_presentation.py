@@ -96,10 +96,7 @@ def verdict_to_prose(verdict: Verdict) -> str:
     warnings = [d for d in discrepancies if d.severity == Severity.WARNING]
 
     if verdict.clean and not discrepancies:
-        return (
-            f"No mathematical issues found across {len(verdict.pages_examined)} "
-            f"page(s). {verdict.summary}"
-        )
+        return f"No mathematical issues found across {len(verdict.pages_examined)} page(s). {verdict.summary}"
 
     lines: list[str] = [verdict.summary.strip()] if verdict.summary else []
     if errors or warnings:
@@ -190,9 +187,7 @@ def verdict_to_add_comments_payload(verdict: Verdict) -> str:
     """Build the JSON-encoded ``comments`` string the add-comments tool expects."""
     specs = verdict_to_comment_specs(verdict)
     # Use the shared ApiModel serialisation so aliases (camelCase) match Java.
-    serialised: list[dict[str, Any]] = [
-        spec.model_dump(by_alias=True, exclude_none=True) for spec in specs
-    ]
+    serialised: list[dict[str, Any]] = [spec.model_dump(by_alias=True, exclude_none=True) for spec in specs]
     return json.dumps(serialised)
 
 

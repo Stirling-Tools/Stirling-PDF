@@ -163,14 +163,10 @@ class OrchestratorAgent:
             )
         )
 
-    async def delegate_pdf_question(
-        self, ctx: RunContext[OrchestratorDeps]
-    ) -> PdfQuestionResponse | EditPlanResponse:
+    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse | EditPlanResponse:
         return await self._run_pdf_question(ctx.deps.request)
 
-    async def _run_pdf_question(
-        self, request: OrchestratorRequest
-    ) -> PdfQuestionResponse | EditPlanResponse:
+    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse | EditPlanResponse:
         """Answer a question about a PDF.
 
         When the prompt smells like math, consults the math-auditor specialist first (via a
@@ -246,10 +242,7 @@ class OrchestratorAgent:
             comments_json = verdict_to_add_comments_payload(verdict)
             discrepancy_count = len(verdict.discrepancies or [])
             return EditPlanResponse(
-                summary=(
-                    f"Flagging {discrepancy_count} math issue"
-                    f"{'s' if discrepancy_count != 1 else ''} on the PDF."
-                ),
+                summary=(f"Flagging {discrepancy_count} math issue{'s' if discrepancy_count != 1 else ''} on the PDF."),
                 steps=[
                     ToolOperationStep(
                         tool=ToolEndpoint.ADD_COMMENTS,

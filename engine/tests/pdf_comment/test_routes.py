@@ -130,15 +130,11 @@ def _snake_request_body() -> dict[str, object]:
 
 class TestGenerateEndpoint:
     def test_camel_case_body_returns_200(self, client: TestClient) -> None:
-        resp = client.post(
-            "/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body()
-        )
+        resp = client.post("/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body())
         assert resp.status_code == 200
 
     def test_camel_case_body_response_has_expected_shape(self, client: TestClient) -> None:
-        resp = client.post(
-            "/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body()
-        )
+        resp = client.post("/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body())
         body = resp.json()
         assert body["sessionId"] == "sess-1"
         assert isinstance(body["comments"], list)
@@ -151,9 +147,7 @@ class TestGenerateEndpoint:
     def test_snake_case_body_is_still_accepted(self, client: TestClient) -> None:
         """ApiModel has validate_by_name=True & validate_by_alias=True, so snake_case
         payloads must still be accepted."""
-        resp = client.post(
-            "/api/v1/ai/pdf-comment-agent/generate", json=_snake_request_body()
-        )
+        resp = client.post("/api/v1/ai/pdf-comment-agent/generate", json=_snake_request_body())
         assert resp.status_code == 200
         body = resp.json()
         # Response is always serialised in camelCase regardless of request form.
@@ -192,9 +186,7 @@ class TestGenerateEndpoint:
         app.dependency_overrides[get_pdf_comment_agent] = lambda: FailingAgent()
         try:
             with TestClient(app, raise_server_exceptions=False) as failing_client:
-                resp = failing_client.post(
-                    "/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body()
-                )
+                resp = failing_client.post("/api/v1/ai/pdf-comment-agent/generate", json=_camel_request_body())
             assert resp.status_code == 500
         finally:
             app.dependency_overrides.pop(load_settings, None)
