@@ -272,7 +272,7 @@ def main() -> None:
         raise SystemExit(f"OpenAPI spec not found at {spec_path}\nRun 'task engine:tool-models' to generate it.")
     output_path = Path(args.output)
 
-    with open(spec_path) as f:
+    with open(spec_path, encoding="utf-8") as f:
         spec = json.load(f)
 
     result = ToolDiscovery(spec).discover()

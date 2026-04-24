@@ -476,7 +476,7 @@ class ImgToPdfParams(ApiModel):
 
 class MathAuditorAgentParams(ApiModel):
     tolerance: float | None = Field(
-        default=0.01, description="Arithmetic tolerance â€” differences smaller than this are ignored (default: 0.01)"
+        default=0.01, description="Arithmetic tolerance — differences smaller than this are ignored (default: 0.01)"
     )
 
 
@@ -648,7 +648,7 @@ class OverlayPdfsParams(ApiModel):
 
 class PdfCommentAgentParams(ApiModel):
     prompt: str | None = Field(
-        default=None, description="Natural-language instructions for the AI â€” what to comment on"
+        default=None, description="Natural-language instructions for the AI — what to comment on"
     )
 
 
