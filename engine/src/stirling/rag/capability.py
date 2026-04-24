@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable
 
-from pydantic_ai import FunctionToolset
+from pydantic_ai import FunctionToolset, RunContext, ToolDefinition
 from pydantic_ai.toolsets import AbstractToolset
 
 from stirling.models import FileId
@@ -11,6 +11,11 @@ from stirling.rag.service import RagService
 from stirling.rag.store import SearchResult
 
 logger = logging.getLogger(__name__)
+
+# Default cap on ``search_knowledge`` calls per agent run. After this many calls the
+# tool is removed from the agent's toolset for subsequent turns, forcing it to answer
+# from what it has already retrieved rather than looping indefinitely.
+DEFAULT_MAX_SEARCHES = 5
 
 
 class RagCapability:
@@ -34,12 +39,19 @@ class RagCapability:
         rag_service: RagService,
         collections: list[FileId] | None = None,
         top_k: int = 5,
+        max_searches: int = DEFAULT_MAX_SEARCHES,
     ) -> None:
         self._rag_service = rag_service
         self._collections = collections
         self._top_k = top_k
+        self._max_searches = max_searches
+        self._search_count = 0
         toolset: FunctionToolset[None] = FunctionToolset()
-        toolset.add_function(self._search_knowledge, name="search_knowledge")
+        toolset.add_function(
+            self._search_knowledge,
+            name="search_knowledge",
+            prepare=self._prepare_search_knowledge,
+        )
         self._toolset = toolset
 
     @property
@@ -78,6 +90,18 @@ class RagCapability:
             "You do not have to use it if the answer is already clear from the provided text."
         )
 
+    async def _prepare_search_knowledge(
+        self,
+        ctx: RunContext[None],
+        tool_def: ToolDefinition,
+    ) -> ToolDefinition | None:
+        """Remove the search tool from the agent's toolset once the per-run search
+        budget is exhausted. The agent then has no choice but to answer from what it
+        has already retrieved, which prevents runaway search loops."""
+        if self._search_count >= self._max_searches:
+            return None
+        return tool_def
+
     async def _search_knowledge(self, query: str, max_results: int | None = None) -> str:
         """Search the knowledge base for information relevant to the query.
 
@@ -88,6 +112,7 @@ class RagCapability:
         Returns:
             Formatted text with the most relevant knowledge base excerpts.
         """
+        self._search_count += 1
         k = max_results if max_results is not None else self._top_k
         if self._collections:
             all_results = []
