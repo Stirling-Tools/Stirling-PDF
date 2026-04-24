@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import apiClient from "@app/services/apiClient";
 import {
+  type CustomToolOperationConfig,
   ToolType,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -40,32 +41,26 @@ export const buildReplaceColorFormData = (
   return formData;
 };
 
-export const replaceColorOperationConfig = {
-  toolType: ToolType.custom,
-  buildFormData: buildReplaceColorFormData,
-  operationType: "replaceColor",
-  endpoint: "/api/v1/misc/replace-invert-pdf",
-  multiFileEndpoint: false,
-  defaultParameters,
-} as const;
+const resolveReplaceColorEndpoint = (params: ReplaceColorParameters): string =>
+  params.mode === "TEXT_COLOR_REPLACEMENT"
+    ? "/api/v1/misc/replace-text-colors"
+    : "/api/v1/misc/replace-invert-pdf";
 
-export const useReplaceColorOperation = () => {
-  const { t } = useTranslation();
-
-  return useToolOperation<ReplaceColorParameters>({
-    ...replaceColorOperationConfig,
+export const replaceColorOperationConfig: CustomToolOperationConfig<ReplaceColorParameters> =
+  {
+    toolType: ToolType.custom,
+    operationType: "replaceColor",
+    endpoint: resolveReplaceColorEndpoint,
+    defaultParameters,
     customProcessor: async (params, files) => {
       const outputFiles: File[] = [];
       for (const file of files) {
         const formData = buildReplaceColorFormData(params, file);
-        const endpoint =
-          params.mode === "TEXT_COLOR_REPLACEMENT"
-            ? "/api/v1/misc/replace-text-colors"
-            : "/api/v1/misc/replace-invert-pdf";
-
-        const response = await apiClient.post(endpoint, formData, {
-          responseType: "blob",
-        });
+        const response = await apiClient.post(
+          resolveReplaceColorEndpoint(params),
+          formData,
+          { responseType: "blob" },
+        );
 
         outputFiles.push(
           new File([response.data], file.name, {
@@ -78,6 +73,13 @@ export const useReplaceColorOperation = () => {
         files: outputFiles,
       };
     },
+  };
+
+export const useReplaceColorOperation = () => {
+  const { t } = useTranslation();
+
+  return useToolOperation<ReplaceColorParameters>({
+    ...replaceColorOperationConfig,
     getErrorMessage: createStandardErrorHandler(
       t(
         "replaceColor.error.failed",

@@ -15,9 +15,9 @@ import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 const ReplaceColor = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const replaceColorTips = useReplaceColorTips();
-  const [detectedTextColors, setDetectedTextColors] = useState<DetectedTextColor[]>(
-    [],
-  );
+  const [detectedTextColors, setDetectedTextColors] = useState<
+    DetectedTextColor[]
+  >([]);
   const [isScanningTextColors, setIsScanningTextColors] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
 
