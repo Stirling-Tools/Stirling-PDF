@@ -106,6 +106,9 @@ public class WatermarkController {
         // Load the input PDF with proper resource management
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
+            // Flatten form widgets so the watermark is not hidden behind input fields.
+            PdfUtils.flattenFormFieldsForOverlay(document);
+
             // Create a page in the document
             for (PDPage page : document.getPages()) {
                 // Get the page's content stream
