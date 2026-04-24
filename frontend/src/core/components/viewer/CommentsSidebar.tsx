@@ -22,12 +22,36 @@ import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import { getSidebarAnnotationsWithRepliesGroupedByPage } from "@embedpdf/plugin-annotation";
-import { PdfAnnotationSubtype, PdfAnnotationReplyType } from "@embedpdf/models";
+import {
+  PdfAnnotationSubtype,
+  PdfAnnotationReplyType,
+  type PdfAnnotationObject,
+  type PdfTextAnnoObject,
+} from "@embedpdf/models";
 import { useCommentAuthor } from "@app/contexts/CommentAuthorContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
 const SIDEBAR_WIDTH = "18rem";
+
+/** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
+const STANDALONE_COMMENT_SUBTYPES = new Set([
+  PdfAnnotationSubtype.TEXT,
+  PdfAnnotationSubtype.FREETEXT,
+  PdfAnnotationSubtype.CARET,
+]);
+
+function isStandaloneCommentType(type: number | undefined): boolean {
+  return (
+    type !== undefined &&
+    STANDALONE_COMMENT_SUBTYPES.has(type as PdfAnnotationSubtype)
+  );
+}
+
+const ANNOTATE_PANEL_ID = "annotate" as const;
+const TEXT_COMMENT_TOOL_ID = "textComment" as const;
 
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
 function formatCommentDate(obj: any): string {
@@ -143,8 +167,20 @@ function isCommentAnnotation(ann: any): boolean {
     return true;
   // Any annotation explicitly added to comments via the "Add comment" button
   if (ann?.customData?.isComment === true) return true;
-  // CARET (type 14) = insertText/replaceText; TEXT (type 1) = textComment
-  if (!toolId && (ann?.type === 14 || ann?.type === 1)) return true;
+  const type = ann?.type;
+  // Standalone comment types (TEXT, FREETEXT, CARET) without a toolId are always comments
+  if (!toolId && isStandaloneCommentType(type)) return true;
+  // Non-standalone annotations with non-empty contents: customData (including isComment and
+  // toolId) is NOT persisted to PDF, but `contents` is a standard PDF field and survives
+  // save/reload. Exclude standalone comment types (TEXT, FREETEXT, CARET) which use
+  // `contents` for their own annotation text. Exclude replies.
+  if (
+    type !== undefined &&
+    !isStandaloneCommentType(type) &&
+    !ann?.inReplyToId &&
+    (ann?.contents ?? "").trim().length > 0
+  )
+    return true;
   return false;
 }
 
@@ -213,6 +249,8 @@ export function CommentsSidebar({
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
+  const { handleToolSelectForced } = useToolWorkflow();
+  const { activateAnnotationToolRef } = useAnnotationContext();
   const [draftContents, setDraftContents] = useState<Record<string, string>>(
     {},
   );
@@ -324,8 +362,8 @@ export function CommentsSidebar({
       const all = getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
       const filtered: typeof all = {};
       for (const [page, entries] of Object.entries(all)) {
-        const commentEntries = (entries as typeof entries).filter((e) =>
-          isCommentAnnotation((e as any).annotation?.object),
+        const commentEntries = entries.filter((e) =>
+          isCommentAnnotation(e.annotation.object),
         );
         if (commentEntries.length > 0) {
           filtered[Number(page)] = commentEntries;
@@ -341,12 +379,11 @@ export function CommentsSidebar({
   // state is AnnotationDocumentState — selectedUids are keys in byUid, and may equal id.
   const selectedAnnotationIds = useMemo(() => {
     const selectedUids: string[] = state?.selectedUids ?? [];
-    const byUid: Record<string, any> = (state as any)?.byUid ?? {};
     const ids = new Set<string>();
     for (const uid of selectedUids) {
       // uid itself may be the annotation id
       ids.add(uid);
-      const annId = byUid[uid]?.object?.id;
+      const annId = state.byUid[uid]?.object.id;
       if (annId) ids.add(annId);
     }
     return ids;
@@ -383,12 +420,12 @@ export function CommentsSidebar({
   } | null>(null);
 
   const isLinkedAnnotation = (ann: any) => {
-    const toolId = ann?.customData?.toolId ?? ann?.customData?.annotationToolId;
+    const type = ann?.type;
+    if (isStandaloneCommentType(type)) return false;
+    if (ann?.inReplyToId) return false;
     return (
-      ann?.customData?.isComment === true &&
-      toolId !== "textComment" &&
-      toolId !== "insertText" &&
-      toolId !== "replaceText"
+      ann?.customData?.isComment === true ||
+      (type !== undefined && (ann?.contents ?? "").trim().length > 0)
     );
   };
 
@@ -408,7 +445,13 @@ export function CommentsSidebar({
     const { pageIndex, id, ann } = deleteModal;
     const existing = (ann?.customData ?? {}) as Record<string, unknown>;
     const { isComment: _removed, ...rest } = existing;
-    provides.updateAnnotation(pageIndex, id, { customData: rest } as any);
+    // Also clear contents: the contents field is the persisted signal for
+    // post-reload linked annotations, so clearing it removes the annotation
+    // from the sidebar (contents is not visually rendered on ink/shape/markup types).
+    provides.updateAnnotation(pageIndex, id, {
+      customData: rest,
+      contents: "",
+    } as unknown as Partial<PdfAnnotationObject>);
     setDeleteModal(null);
   }, [deleteModal, provides]);
 
@@ -443,7 +486,7 @@ export function CommentsSidebar({
         origin: { x: 0, y: 0 },
         size: { width: 1, height: 1 },
       };
-      provides.createAnnotation(pageIndex, {
+      const reply: PdfTextAnnoObject = {
         type: PdfAnnotationSubtype.TEXT,
         id: `reply-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         pageIndex,
@@ -452,7 +495,8 @@ export function CommentsSidebar({
         inReplyToId: parentId,
         replyType: PdfAnnotationReplyType.Reply,
         author: displayName,
-      } as any);
+      };
+      provides.createAnnotation(pageIndex, reply);
       setReplyDrafts((prev) => ({ ...prev, [key]: "" }));
     },
     [provides, replyDrafts, displayName],
@@ -475,6 +519,13 @@ export function CommentsSidebar({
     },
     [provides, displayName],
   );
+
+  const handleAddComment = useCallback(() => {
+    handleToolSelectForced(ANNOTATE_PANEL_ID);
+    requestAnimationFrame(() => {
+      activateAnnotationToolRef.current?.(TEXT_COMMENT_TOOL_ID);
+    });
+  }, [handleToolSelectForced, activateAnnotationToolRef]);
 
   if (!visible) return null;
 
@@ -510,19 +561,49 @@ export function CommentsSidebar({
           height="1.25rem"
           style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }}
         />
-        <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
+        <Text fw={600} size="sm" tt="uppercase" lts={0.5} style={{ flex: 1 }}>
           {t("viewer.comments.title", "Comments")}
         </Text>
+        {totalCount > 0 && (
+          <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              color="gray"
+              onClick={handleAddComment}
+            >
+              <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </div>
       <ScrollArea style={{ flex: 1 }}>
         <Stack p="sm" gap="md">
           {totalCount === 0 ? (
-            <Text size="sm" c="dimmed">
-              {t(
-                "viewer.comments.hint",
-                "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
-              )}
-            </Text>
+            <Stack align="center" gap="sm" py="lg">
+              <LocalIcon
+                icon="comment"
+                width="2rem"
+                height="2rem"
+                style={{ color: "var(--mantine-color-dimmed)" }}
+              />
+              <Text size="sm" c="dimmed" ta="center">
+                {t(
+                  "viewer.comments.hint",
+                  "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
+                )}
+              </Text>
+              <Button
+                variant="light"
+                size="xs"
+                onClick={handleAddComment}
+                leftSection={
+                  <LocalIcon icon="add" width="1rem" height="1rem" />
+                }
+              >
+                {t("viewer.comments.addComment", "Add comment")}
+              </Button>
+            </Stack>
           ) : (
             pageNumbers.map((pageIndex) => {
               const entries = byPage[pageIndex] ?? [];

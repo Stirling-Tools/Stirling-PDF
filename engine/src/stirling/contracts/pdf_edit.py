@@ -6,13 +6,14 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ConversationMessage, ToolOperationStep, WorkflowOutcome
+from .common import ConversationMessage, ExtractedFileText, NeedContentResponse, ToolOperationStep, WorkflowOutcome
 
 
 class PdfEditRequest(ApiModel):
     user_message: str
     file_names: list[str] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
+    page_text: list[ExtractedFileText] = Field(default_factory=list)
 
 
 class EditPlanResponse(ApiModel):
@@ -33,7 +34,8 @@ class EditCannotDoResponse(ApiModel):
     reason: str
 
 
-PdfEditResponse = Annotated[
-    EditPlanResponse | EditClarificationRequest | EditCannotDoResponse,
+type PdfEditTerminalResponse = EditPlanResponse | EditClarificationRequest | EditCannotDoResponse
+type PdfEditResponse = Annotated[
+    PdfEditTerminalResponse | NeedContentResponse,
     Field(discriminator="outcome"),
 ]

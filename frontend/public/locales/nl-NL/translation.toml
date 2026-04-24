@@ -1,3 +1,4 @@
+accessInvite = "Uitnodigen"
 addToDoc = "Toevoegen aan document"
 alphabet = "Alfabet"
 apply = "Toepassen"
@@ -8,22 +9,22 @@ black = "Zwart"
 blue = "Blauw"
 bored = "Verveeld met wachten?"
 cancel = "Annuleren"
-confirm = "Bevestigen"
 changedCredsMessage = "Inloggegevens gewijzigd!"
 chooseFile = "Bestand kiezen"
 close = "Sluiten"
 color = "Kleur"
 comingSoon = "Binnenkort"
+confirm = "Bevestigen"
 confirmClose = "Sluiten bevestigen"
 confirmCloseCancel = "Annuleren"
 confirmCloseConfirm = "Bestand sluiten"
-confirmCloseMessage = "Weet u zeker dat u dit bestand wilt sluiten?"
 confirmCloseDiscard = "Wijzigingen verwerpen en sluiten"
+confirmCloseMessage = "Weet u zeker dat u dit bestand wilt sluiten?"
 confirmCloseSave = "Opslaan en sluiten"
+confirmCloseSaveFailed = "Opgeslagen met fouten. {{count}} bestand{{plural}} kon niet worden opgeslagen."
+confirmCloseSaveFailedTitle = "Opslaan mislukt"
 confirmCloseUnsaved = "Dit bestand heeft niet-opgeslagen wijzigingen."
 confirmCloseUnsavedList = "U heeft {{count}} bestand{{plural}} met niet-opgeslagen wijzigingen.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Opslaan mislukt"
-confirmCloseSaveFailed = "Opgeslagen met fouten. {{count}} bestand{{plural}} kon niet worden opgeslagen."
 confirmPasswordErrorMessage = "Nieuw wachtwoord en bevestig wachtwoord moeten overeenkomen."
 custom = "Aangepast..."
 customPosition = "Aangepaste positie"
@@ -43,11 +44,14 @@ downloadComplete = "Download klaar"
 downloadPdf = "PDF downloaden"
 downloadUnavailable = "Download niet beschikbaar voor dit item"
 edit = "Bewerken"
+editSecret = "Bewerk deze waarde"
 editYourNewFiles = "Uw nieuwe bestand(en) bewerken"
+encryptedFileBlocked = "Bestand is met een wachtwoord beveiligd. Ontgrendel het eerst."
+encryptedFilesBlocked = "{{count}} bestanden zijn met een wachtwoord beveiligd. Ontgrendel ze eerst."
 exportAndContinue = "Exporteren en doorgaan"
 false = "Onwaar"
-fileSavedToDisk = "Bestand opgeslagen op schijf"
 fileNotSavedToDisk = "Niet op schijf opgeslagen"
+fileSavedToDisk = "Bestand opgeslagen op schijf"
 fileSelected = "Geselecteerd: {{filename}}"
 filesSelected = "Bestanden geselecteerd"
 font = "Lettertype"
@@ -61,12 +65,15 @@ help = "Hulp"
 imgPrompt = "Selecteer afbeelding(en)"
 incorrectPasswordMessage = "Huidige wachtwoord is onjuist."
 info = "Informatie"
+insufficientCredits = "Onvoldoende credits. Vereist: {{requiredCredits}}, Beschikbaar: {{currentBalance}}, Tekort: {{shortfall}}"
 invalidPasswordMessage = "Het wachtwoord mag geen spaties ten beginne of einde bevatten en mag niet leeg zijn."
 invalidUndoData = "Kan niet ongedaan maken: ongeldige bewerkingsgegevens"
 invalidUsernameMessage = "Ongeldige gebruikersnaam, gebruikersnaam kan alleen letters, nummers en de volgende speciale tekens @._+- bevatten of moet een geldig emailadres zijn."
 joinDiscord = "Word lid van onze Discord-server"
 keepWorking = "Doorgaan met werken"
 loading = "Laden..."
+loadingCredits = "Credits controleren..."
+loadingProStatus = "Abonnementsstatus controleren..."
 logOut = "Uitloggen"
 marginTooltip = "Afstand tussen het paginanummer en de rand van de pagina."
 moreOptions = "Meer opties"
@@ -80,6 +87,7 @@ noFilesToUndo = "Kan niet ongedaan maken: er zijn geen bestanden verwerkt in de 
 noOperationToUndo = "Geen bewerking om ongedaan te maken"
 notAuthenticatedMessage = "Gebruiker niet ingelogd."
 nothingToUndo = "Niets om ongedaan te maken"
+noticeTopUpOrPlan = "Onvoldoende credits, vul aan of upgrade naar een abonnement"
 noValidFiles = "Geen geldige bestanden om te verwerken"
 oops = "Oeps!"
 openInViewer = "Openen in Viewer"
@@ -96,9 +104,9 @@ pendingRedactionsTitle = "Unapplied Redactions"
 pin = "Bestand vastzetten (actief houden na tooluitvoering)"
 poweredBy = "Mogelijk gemaakt door"
 pro = "Pro"
-processTimeWarning = "Waarschuwing: Dit proces kan tot een minuut duren afhankelijk van de bestandsgrootte"
 processingComplete = "Je bestand is klaar."
 processingCompleteMultiple = "{{count}} bestanden zijn klaar."
+processTimeWarning = "Waarschuwing: Dit proces kan tot een minuut duren afhankelijk van de bestandsgrootte"
 property = "Eigenschap"
 quickPosition = "Snelle positie"
 red = "Rood"
@@ -108,7 +116,6 @@ save = "Opslaan"
 saveToBrowser = "Opslaan in browser"
 saveUnavailable = "Opslaan niet beschikbaar voor dit item"
 seeDockerHub = "Zie Docker Hub"
-editSecret = "Bewerk deze waarde"
 selectFillter = "-- Selecteren --"
 size = "Grootte"
 sponsor = "Sponsor"
@@ -143,11 +150,6 @@ welcome = "Welkom"
 white = "Wit"
 WorkInProgess = "Werk in uitvoering. Werkt mogelijk niet of bevat fouten. Meld eventuele problemen!"
 yes = "Ja"
-insufficientCredits = "Onvoldoende credits. Vereist: {{requiredCredits}}, Beschikbaar: {{currentBalance}}, Tekort: {{shortfall}}"
-loadingCredits = "Credits controleren..."
-loadingProStatus = "Abonnementsstatus controleren..."
-noticeTopUpOrPlan = "Onvoldoende credits, vul aan of upgrade naar een abonnement"
-accessInvite = "Uitnodigen"
 
 [account]
 accountSettings = "Account instellingen"
@@ -851,6 +853,14 @@ title = "API-endpoints"
 userDefaults = "Standaardinstellingen voor gebruikersvoorkeuren"
 userDefaultsDescription = "Stel standaardwaarden in voor gebruikersvoorkeuren. Gebruikers kunnen deze overschrijven in hun persoonlijke instellingen."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Uitgeschakelde conversieopties verbergen in plaats van ze grijs weer te geven"
+label = "Onbeschikbare conversies standaard verbergen"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Uitgeschakelde tools verbergen in plaats van ze grijs weer te geven"
+label = "Onbeschikbare tools standaard verbergen"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Selecteer endpointgroepen om uit te schakelen"
 label = "Uitgeschakelde endpointgroepen"
@@ -858,14 +868,6 @@ label = "Uitgeschakelde endpointgroepen"
 [admin.settings.endpoints.toRemove]
 description = "Selecteer afzonderlijke endpoints om uit te schakelen"
 label = "Uitgeschakelde endpoints"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Uitgeschakelde tools verbergen in plaats van ze grijs weer te geven"
-label = "Onbeschikbare tools standaard verbergen"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Uitgeschakelde conversieopties verbergen in plaats van ze grijs weer te geven"
-label = "Onbeschikbare conversies standaard verbergen"
 
 [admin.settings.enterpriseRequired]
 message = "Voor toegang tot {{featureName}} is een Enterprise-licentie vereist. U bekijkt demogegevens ter referentie."
@@ -974,6 +976,10 @@ label = "Standaardlocale"
 description = "Maximale bestandsgrootte voor uploaden (bijv. 100MB, 1GB)"
 label = "Uploadlimiet"
 
+[admin.settings.general.frontendUrl]
+description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+label = "Frontend URL"
+
 [admin.settings.general.hideDisabledTools]
 description = "Uitgeschakelde tools in de interface verbergen"
 label = "Uitgeschakelde tools verbergen"
@@ -985,10 +991,6 @@ label = "Google Drive verbergen"
 [admin.settings.general.hideDisabledTools.mobileScanner]
 description = "Mobiele QR-scannerknop verbergen als niet ingeschakeld"
 label = "Mobiele scanner verbergen"
-
-[admin.settings.general.frontendUrl]
-description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
-label = "Frontend URL"
 
 [admin.settings.general.homeDescription]
 description = "De beschrijvingstekst die op de startpagina wordt getoond"
@@ -1169,9 +1171,25 @@ description = "Configureer authenticatie, inloggedrag en beveiligingsbeleid."
 title = "Beveiliging"
 
 [admin.settings.security.audit]
+hideDetails = "Auditniveau-details verbergen"
 label = "Auditlogboek"
 showDetails = "Auditniveau-details weergeven"
-hideDetails = "Auditniveau-details verbergen"
+
+[admin.settings.security.audit.advancedOptions]
+description = "De volgende opties vergroten verwerkingstijd en geheugengebruik. Schakel alleen in als het echt nodig is."
+title = "Geavanceerde opties"
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extraheer SHA-256-hash van geüploade PDF-bestanden voor integriteitscontrole. Onafhankelijk van auditniveau."
+label = "Bestandshash vastleggen (SHA-256)"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Retourwaarden van methoden vastleggen. Niet aanbevolen: verhoogt logvolume en schijfgebruik aanzienlijk."
+label = "Resultaten van bewerkingen vastleggen"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extraheer auteursveld uit PDF-documenten tijdens verwerking. Vereist PDF-parsing, verhoogt latentie. Onafhankelijk van auditniveau."
+label = "PDF-auteursmetadata vastleggen"
 
 [admin.settings.security.audit.enabled]
 description = "Gebruikersacties en systeemgebeurtenissen bijhouden voor compliance en beveiligingsmonitoring"
@@ -1182,30 +1200,14 @@ description = "0=UIT, 1=BASIS, 2=STANDAARD, 3=UITGEBREID"
 label = "Auditniveau"
 
 [admin.settings.security.audit.levelDetails]
-off = "Geen auditlogging (behalve kritieke beveiligingsgebeurtenissen)"
 basic = "PDF-bestandsbewerkingen (comprimeren, splitsen, samenvoegen, enz.) en instellingenwijzigingen. Legt vast: status van bewerking (succes/mislukt), methodeparameters, timing. Minimaal logvolume."
+off = "Geen auditlogging (behalve kritieke beveiligingsgebeurtenissen)"
 standard = "BASIC-gebeurtenissen plus: inloggen/uitloggen, accountwijzigingen, algemene GET-verzoeken. Sluit continue polling-aanroepen (/auth/me, /app-config, /health, enz.) uit om logruis te verminderen. Ideaal voor de meeste implementaties."
 verbose = "STANDARD-gebeurtenissen plus: continue polling-aanroepen, alle GET-verzoeken, gedetailleerde timing. Waarschuwing: hoog logvolume en prestatie-impact."
 
 [admin.settings.security.audit.retentionDays]
 description = "Aantal dagen dat auditlogs bewaard blijven"
 label = "Bewaartermijn audit (dagen)"
-
-[admin.settings.security.audit.advancedOptions]
-title = "Geavanceerde opties"
-description = "De volgende opties vergroten verwerkingstijd en geheugengebruik. Schakel alleen in als het echt nodig is."
-
-[admin.settings.security.audit.captureFileHash]
-description = "Extraheer SHA-256-hash van geüploade PDF-bestanden voor integriteitscontrole. Onafhankelijk van auditniveau."
-label = "Bestandshash vastleggen (SHA-256)"
-
-[admin.settings.security.audit.capturePdfAuthor]
-description = "Extraheer auteursveld uit PDF-documenten tijdens verwerking. Vereist PDF-parsing, verhoogt latentie. Onafhankelijk van auditniveau."
-label = "PDF-auteursmetadata vastleggen"
-
-[admin.settings.security.audit.captureOperationResults]
-description = "Retourwaarden van methoden vastleggen. Niet aanbevolen: verhoogt logvolume en schijfgebruik aanzienlijk."
-label = "Resultaten van bewerkingen vastleggen"
 
 [admin.settings.security.csrfDisabled]
 description = "Cross-Site Request Forgery-bescherming uitschakelen (niet aanbevolen)"
@@ -1274,6 +1276,14 @@ label = "Initiële gebruikersnaam"
 [admin.settings.security.jwt]
 label = "JWT-configuratie"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerantie voor tijdsafwijking tussen client en server tijdens tokenvalidatie (standaard: 60 seconden)"
+label = "Tolerantie voor klokafwijking (seconden)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Levensduur van toegangstoken in minuten voor desktopclients. Desktop-apps worden automatisch gedetecteerd via de User-Agent en krijgen langere sessies voor betere UX (standaard: 43200 = 30 dagen)"
+label = "Vervaltijd desktoptoken (minuten)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automatisch verlopen JWT-sleutels verwijderen"
 label = "Opschonen van sleutels inschakelen"
@@ -1282,29 +1292,21 @@ label = "Opschonen van sleutels inschakelen"
 description = "JWT-ondertekeningssleutels automatisch periodiek roteren"
 label = "Sleutelrotatie inschakelen"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Levensduur van toegangstoken in minuten voor webclients (standaard: 1440 = 24 uur)"
-label = "Vervaltijd webtoken (minuten)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Levensduur van toegangstoken in minuten voor desktopclients. Desktop-apps worden automatisch gedetecteerd via de User-Agent en krijgen langere sessies voor betere UX (standaard: 43200 = 30 dagen)"
-label = "Vervaltijd desktoptoken (minuten)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerantie voor tijdsafwijking tussen client en server tijdens tokenvalidatie (standaard: 60 seconden)"
-label = "Tolerantie voor klokafwijking (seconden)"
+[admin.settings.security.jwt.persistence]
+description = "JWT-sleutels persistent opslaan om serverherstarts te overleven"
+label = "Sleutelpersistentie inschakelen"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Sta tokenvernieuwing toe binnen dit aantal minuten na het verlopen (standaard: 15 minuten, maximaal 3 pogingen)"
 label = "Respijtperiode voor vernieuwen (minuten)"
 
-[admin.settings.security.jwt.persistence]
-description = "JWT-sleutels persistent opslaan om serverherstarts te overleven"
-label = "Sleutelpersistentie inschakelen"
-
 [admin.settings.security.jwt.secureCookie]
 description = "HTTPS vereisen voor JWT-cookies (aanbevolen voor productie)"
 label = "Beveiligde cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Levensduur van toegangstoken in minuten voor webclients (standaard: 1440 = 24 uur)"
+label = "Vervaltijd webtoken (minuten)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximaal aantal mislukte inlogpogingen voordat het account wordt vergrendeld"
@@ -1332,6 +1334,34 @@ description = "Controls whether the application can be embedded in iframes"
 disabled = "Disabled (No X-Frame-Options header)"
 label = "X-Frame-Options"
 sameorigin = "Same Origin (Allow framing from same domain)"
+
+[admin.settings.storage]
+description = "Serveropslag en deelopties beheren."
+title = "Bestandsopslag en delen"
+
+[admin.settings.storage.enabled]
+description = "Gebruikers toestaan bestanden op de server op te slaan."
+label = "Serverbestandsopslag inschakelen"
+
+[admin.settings.storage.sharing.email]
+description = "Delen met e-mailadressen toestaan."
+label = "E-mail delen inschakelen"
+mailLink = "E-mailinstellingen configureren"
+mailNote = "Vereist e-mailconfiguratie. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Gebruikers toestaan opgeslagen bestanden te delen."
+label = "Delen inschakelen"
+
+[admin.settings.storage.sharing.links]
+description = "Delen via aangemelde links toestaan."
+frontendUrlLink = "Configureren in Systeeminstellingen"
+frontendUrlNote = "Vereist een Frontend URL. "
+label = "Koppelingen voor delen inschakelen"
+
+[admin.settings.storage.signing.enabled]
+description = "Gebruikers toestaan ondertekeningssessies met meerdere deelnemers te maken. Vereist dat serverbestandsopslag is ingeschakeld."
+label = "Groepsondertekenen inschakelen (Alpha)"
 
 [admin.settings.telegram]
 description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
@@ -1429,34 +1459,6 @@ title = "Processing"
 description = "Maximum time to wait for a processing job before reporting an error."
 label = "Processing Timeout (seconds)"
 
-[admin.settings.storage]
-description = "Serveropslag en deelopties beheren."
-title = "Bestandsopslag en delen"
-
-[admin.settings.storage.enabled]
-description = "Gebruikers toestaan bestanden op de server op te slaan."
-label = "Serverbestandsopslag inschakelen"
-
-[admin.settings.storage.sharing.email]
-description = "Delen met e-mailadressen toestaan."
-label = "E-mail delen inschakelen"
-mailLink = "E-mailinstellingen configureren"
-mailNote = "Vereist e-mailconfiguratie. "
-
-[admin.settings.storage.sharing.enabled]
-description = "Gebruikers toestaan opgeslagen bestanden te delen."
-label = "Delen inschakelen"
-
-[admin.settings.storage.sharing.links]
-description = "Delen via aangemelde links toestaan."
-frontendUrlLink = "Configureren in Systeeminstellingen"
-frontendUrlNote = "Vereist een Frontend URL. "
-label = "Koppelingen voor delen inschakelen"
-
-[admin.settings.storage.signing.enabled]
-description = "Gebruikers toestaan ondertekeningssessies met meerdere deelnemers te maken. Vereist dat serverbestandsopslag is ingeschakeld."
-label = "Groepsondertekenen inschakelen (Alpha)"
-
 [admin.settings.unsavedChanges]
 cancel = "Verder bewerken"
 discard = "Wijzigingen verwerpen"
@@ -1521,6 +1523,7 @@ settings = "U kunt de instellingen voor analyses wijzigen in het bestand config/
 title = "Wilt u Stirling PDF beter maken?"
 
 [annotation]
+annotationStyle = "Annotatiestijl"
 applyChanges = "Wijzigingen toepassen"
 backgroundColor = "Achtergrondkleur"
 borderOff = "Rand: Uit"
@@ -1530,6 +1533,8 @@ chooseColor = "Kies een kleur"
 circle = "Cirkel"
 clearBackground = "Achtergrond verwijderen"
 color = "Kleur"
+comment = "Opmerking"
+comments = "Opmerkingen"
 contents = "Tekst"
 delete = "Verwijderen"
 desc = "Markering, pen, tekst en notities toevoegen. Wijzigingen blijven actief—geen afvlakking nodig."
@@ -1547,7 +1552,6 @@ editStampHint = "Om de afbeelding te wijzigen; verwijder deze stempel en voeg ee
 editSwitchToSelect = "Schakel over op Selecten & Bewerken om deze annotatie te bewerken."
 editText = "Tekstkader bewerken"
 editTextMarkup = "Tekstannotatie bewerken"
-annotationStyle = "Annotatiestijl"
 ellipse = "Ellips"
 exit = "Annotatiemodus sluiten"
 fillColor = "Vulkleur"
@@ -1557,14 +1561,11 @@ freehandHighlighter = "Vrije hand marker"
 highlight = "Markeren"
 imagePreview = "Voorbeeld"
 inkHighlighter = "Vrije hand marker"
+insertText = "Tekst invoegen"
 line = "Lijn"
 lineArrow = "Pijl"
 noBackground = "Geen achtergrond"
 note = "Notitie"
-comment = "Opmerking"
-comments = "Opmerkingen"
-insertText = "Tekst invoegen"
-replaceText = "Tekst vervangen"
 noteIcon = "Notitiepictogram"
 notesStamps = "Notities & Stempels"
 opacity = "Dekking"
@@ -1574,6 +1575,7 @@ polyline = "Polylijn"
 properties = "Eigenschappen"
 rectangle = "Rechthoek"
 redo = "Opnieuw uitvoeren"
+replaceText = "Tekst vervangen"
 saveChanges = "Save Changes"
 saveFailed = "Kan kopie niet opslaan"
 saveReady = "Download gereed"
@@ -1627,68 +1629,6 @@ goToSettings = "Ga naar auditinstellingen"
 notAvailable = "Auditsysteem niet beschikbaar"
 notAvailableMessage = "Het auditsysteem is niet geconfigureerd of niet beschikbaar."
 
-[audit.error]
-title = "Fout bij laden van auditsysteem"
-
-[audit.export]
-clearFilters = "Wissen"
-description = "Exporteer auditgebeurtenissen naar CSV- of JSON-formaat. Gebruik filters om de geëxporteerde gegevens te beperken."
-endDate = "Einddatum"
-error = "Gegevens exporteren mislukt"
-exportButton = "Gegevens exporteren"
-fieldAuthor = "Auteur (uit PDF)"
-fieldDate = "Datum"
-fieldDocumentName = "Documentnaam"
-fieldFileHash = "Bestandshash (SHA-256)"
-fieldIpAddress = "IP-adres"
-fieldOperationResults = "Bewerkingsresultaten"
-fieldOutcome = "Uitkomst (Succes/Mislukt)"
-fieldTool = "Tool"
-fieldUsername = "Gebruikersnaam"
-filterByType = "Filteren op type"
-filterByUser = "Filteren op gebruiker"
-filters = "Filters (optioneel)"
-format = "Exportformaat"
-selectFields = "Velden selecteren om op te nemen"
-startDate = "Startdatum"
-title = "Auditgegevens exporteren"
-verboseRequired = "Vereist VERBOSE auditniveau"
-
-[audit.systemStatus]
-autoRefresh = "Automatisch vernieuwen"
-autoRefreshLabel = "Automatisch elke 30s vernieuwen"
-captureBySettings = "Inschakelen in instellingen"
-capturedFields = "Vastgelegde velden"
-date = "Datum"
-days = "dagen"
-disabled = "Uitgeschakeld"
-documentName = "Documentnaam"
-enabled = "Ingeschakeld"
-fileHash = "Bestandshash"
-level = "Auditniveau"
-pdfAuthor = "PDF-auteur"
-retention = "Bewaartermijn"
-status = "Auditlogging"
-title = "Systeemstatus"
-tool = "Tool"
-totalEvents = "Totaal aantal gebeurtenissen"
-username = "Gebruikersnaam"
-verboseOnly = "Alleen VERBOSE"
-
-[audit.stats]
-activeUsers = "Actieve gebruikers"
-attention = "Aandacht vereist"
-avgLatency = "Gem. latentie"
-error = "Fout bij laden van statistieken"
-errorLoadingStats = "Statistieken laden mislukt"
-excellent = "Uitstekend"
-good = "Goed"
-noData = "N.v.t."
-successRate = "Succesratio"
-title = "Samenvatting"
-totalEvents = "Totaal aantal gebeurtenissen"
-vsLastPeriod = "t.o.v. vorige periode"
-
 [audit.charts]
 byTool = "Meest gebruikte tools"
 byType = "Gebeurtenissen per type"
@@ -1701,6 +1641,27 @@ noData = "Geen gegevens voor deze periode"
 overTime = "Gebeurtenissen in de tijd"
 title = "Auditdashboard"
 week = "Week"
+
+[audit.clearData]
+cancel = "Annuleren"
+codeDoesNotMatch = "Code komt niet overeen"
+codePlaceholder = "Typ de code hier"
+confirmationCode = "Bevestigingscode"
+confirmationRequired = "Alle auditgegevens verwijderen"
+confirmMessage = "Dit verwijdert permanent alle auditlogs. Voer hieronder de bevestigingscode in om door te gaan."
+confirmTitle = "Bevestig dat je wilt verwijderen"
+deleteButton = "Verwijderen"
+enterCode = "Bevestigingscode"
+enterCodeBelow = "Voer de code exact in zoals hierboven weergegeven (hoofdlettergevoelig)"
+initiateDelete = "Alle gegevens verwijderen"
+irreversible = "ONOMKEERBAAR"
+success = "Succes"
+successMessage = "Alle auditgegevens zijn succesvol gewist"
+warning1 = "Deze actie kan niet ongedaan worden gemaakt"
+warning2 = "Het verwijderen van auditgegevens verwijdert permanent alle historische auditlogs, inclusief beveiligingsgebeurtenissen, gebruikersactiviteiten en bestandsbewerkingen uit de database."
+
+[audit.error]
+title = "Fout bij laden van auditsysteem"
 
 [audit.events]
 actions = "Acties"
@@ -1728,40 +1689,81 @@ type = "Type"
 user = "Gebruiker"
 viewDetails = "Details bekijken"
 
+[audit.export]
+clearFilters = "Wissen"
+description = "Exporteer auditgebeurtenissen naar CSV- of JSON-formaat. Gebruik filters om de geëxporteerde gegevens te beperken."
+endDate = "Einddatum"
+error = "Gegevens exporteren mislukt"
+exportButton = "Gegevens exporteren"
+fieldAuthor = "Auteur (uit PDF)"
+fieldDate = "Datum"
+fieldDocumentName = "Documentnaam"
+fieldFileHash = "Bestandshash (SHA-256)"
+fieldIpAddress = "IP-adres"
+fieldOperationResults = "Bewerkingsresultaten"
+fieldOutcome = "Uitkomst (Succes/Mislukt)"
+fieldTool = "Tool"
+fieldUsername = "Gebruikersnaam"
+filterByType = "Filteren op type"
+filterByUser = "Filteren op gebruiker"
+filters = "Filters (optioneel)"
+format = "Exportformaat"
+selectFields = "Velden selecteren om op te nemen"
+startDate = "Startdatum"
+title = "Auditgegevens exporteren"
+verboseRequired = "Vereist VERBOSE auditniveau"
+
 [audit.filters]
 allOutcomes = "Alles"
 failureOnly = "Alleen mislukkingen"
-last7Days = "Afgelopen 7 dagen"
 last30Days = "Afgelopen 30 dagen"
+last7Days = "Afgelopen 7 dagen"
 outcomeFilter = "Uitkomst"
 quickPresets = "Snelle filters"
 successOnly = "Alleen successen"
 thisMonth = "Deze maand"
 today = "Vandaag"
 
+[audit.stats]
+activeUsers = "Actieve gebruikers"
+attention = "Aandacht vereist"
+avgLatency = "Gem. latentie"
+error = "Fout bij laden van statistieken"
+errorLoadingStats = "Statistieken laden mislukt"
+excellent = "Uitstekend"
+good = "Goed"
+noData = "N.v.t."
+successRate = "Succesratio"
+title = "Samenvatting"
+totalEvents = "Totaal aantal gebeurtenissen"
+vsLastPeriod = "t.o.v. vorige periode"
+
+[audit.systemStatus]
+autoRefresh = "Automatisch vernieuwen"
+autoRefreshLabel = "Automatisch elke 30s vernieuwen"
+captureBySettings = "Inschakelen in instellingen"
+capturedFields = "Vastgelegde velden"
+date = "Datum"
+days = "dagen"
+disabled = "Uitgeschakeld"
+documentName = "Documentnaam"
+enabled = "Ingeschakeld"
+fileHash = "Bestandshash"
+level = "Auditniveau"
+pdfAuthor = "PDF-auteur"
+retention = "Bewaartermijn"
+status = "Auditlogging"
+title = "Systeemstatus"
+tool = "Tool"
+totalEvents = "Totaal aantal gebeurtenissen"
+username = "Gebruikersnaam"
+verboseOnly = "Alleen VERBOSE"
+
 [audit.tabs]
 clearData = "Gegevens wissen"
 dashboard = "Dashboard"
 events = "Auditgebeurtenissen"
 export = "Exporteren"
-
-[audit.clearData]
-cancel = "Annuleren"
-codeDoesNotMatch = "Code komt niet overeen"
-codePlaceholder = "Typ de code hier"
-confirmationCode = "Bevestigingscode"
-confirmationRequired = "Alle auditgegevens verwijderen"
-confirmMessage = "Dit verwijdert permanent alle auditlogs. Voer hieronder de bevestigingscode in om door te gaan."
-confirmTitle = "Bevestig dat je wilt verwijderen"
-deleteButton = "Verwijderen"
-enterCode = "Bevestigingscode"
-enterCodeBelow = "Voer de code exact in zoals hierboven weergegeven (hoofdlettergevoelig)"
-initiateDelete = "Alle gegevens verwijderen"
-irreversible = "ONOMKEERBAAR"
-success = "Succes"
-successMessage = "Alle auditgegevens zijn succesvol gewist"
-warning1 = "Deze actie kan niet ongedaan worden gemaakt"
-warning2 = "Het verwijderen van auditgegevens verwijdert permanent alle historische auditlogs, inclusief beveiligingsgebeurtenissen, gebruikersactiviteiten en bestandsbewerkingen uit de database."
 
 [auth]
 accessDenied = "Toegang geweigerd"
@@ -2088,43 +2090,70 @@ keywords = "Sleutelwoorden: odd, even"
 numbers = "Cijfers/reeksen: 5, 10-20"
 progressions = "Voortgangen: 3n, 4n+1"
 
+[certificateChoice.tooltip]
+header = "Certificaattypen"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Beheerd door systeembeheerders"
+bullet2 = "Gedeeld met geautoriseerde gebruikers"
+bullet3 = "Vertegenwoordigt bedrijfsidentiteit, niet individueel"
+bullet4 = "Beste voor: Officiële documenten, teamhandtekeningen"
+description = "Een gedeeld certificaat dat door uw organisatie wordt geleverd. Gebruikt voor organisatiebrede ondertekeningsbevoegdheid."
+title = "Organisatiecertificaat"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Automatisch gegenereerd bij eerste gebruik"
+bullet2 = "Gekoppeld aan uw gebruikersaccount"
+bullet3 = "Kan niet met andere gebruikers worden gedeeld"
+bullet4 = "Beste voor: Persoonlijke documenten, individuele verantwoordelijkheid"
+description = "Een automatisch gegenereerd certificaat dat uniek is voor uw gebruikersaccount. Geschikt voor individuele handtekeningen."
+title = "Persoonlijk certificaat"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Vereist P12/PFX-bestand en wachtwoord"
+bullet2 = "Kan worden uitgegeven door externe certificaatautoriteiten"
+bullet3 = "Hoger vertrouwensniveau voor juridische documenten"
+bullet4 = "Beste voor: Juridisch bindende contracten, externe validatie"
+description = "Gebruik uw eigen PKCS#12-certificaatbestand. Biedt volledige controle over certificaateigenschappen."
+title = "Aangepaste P12 uploaden"
+
 [certSign]
 allSigned = "Alle deelnemers hebben getekend. Klaar om te finaliseren."
 awaitingSignatures = "In afwachting van handtekeningen"
-signatureProgress = "{{signedCount}}/{{totalCount}} handtekeningen"
 chooseCertificate = "Certificaatbestand kiezen"
-declined = "Geweigerd"
-fetchFailed = "Ondertekeningsgegevens laden mislukt"
-finalized = "Gefinaliseerd"
-notified = "In afwachting"
-partialNote = "U kunt vroegtijdig finaliseren met de huidige handtekeningen. Niet-ondertekende deelnemers worden uitgesloten."
-pending = "In afwachting"
-readyToFinalize = "Klaar om te finaliseren"
-signed = "Ondertekend"
-viewed = "Bekeken"
 chooseJksFile = "JKS-bestand kiezen"
 chooseP12File = "PKCS12-bestand kiezen"
 choosePfxFile = "PFX-bestand kiezen"
 choosePrivateKey = "Privésleutelbestand kiezen"
+declined = "Geweigerd"
+fetchFailed = "Ondertekeningsgegevens laden mislukt"
 filenamePrefix = "ondertekend"
+finalized = "Gefinaliseerd"
 location = "Locatie"
 logoTitle = "Logo"
 name = "Naam"
 noLogo = "Geen logo"
+notified = "In afwachting"
 pageNumber = "Paginanummer"
+partialNote = "U kunt vroegtijdig finaliseren met de huidige handtekeningen. Niet-ondertekende deelnemers worden uitgesloten."
 password = "Wachtwoord van het certificaat"
 passwordOptional = "Leeg laten als er geen wachtwoord is"
+pending = "In afwachting"
+readyToFinalize = "Klaar om te finaliseren"
 reason = "Reden"
 serverCertMessage = "Servercertificaat gebruiken - geen bestanden of wachtwoord nodig"
 showLogo = "Logo tonen"
+signatureProgress = "{{signedCount}}/{{totalCount}} handtekeningen"
+signed = "Ondertekend"
 tags = "authenticeren,PEM,P12,officieel,versleutelen"
 title = "Certificaat ondertekening"
+viewed = "Bekeken"
 
 [certSign.appearance]
 invisible = "Onzichtbaar"
 stepTitle = "Weergave van handtekening"
-visible = "Zichtbaar"
 visibility = "Zichtbaarheid"
+visible = "Zichtbaar"
 
 [certSign.appearance.options]
 title = "Handtekeningdetails"
@@ -2172,8 +2201,227 @@ title = "Welke optie moet ik gebruiken?"
 [certSign.certTypeStep]
 stepTitle = "Certificaatindeling"
 
+[certSign.collab.addParticipants]
+add = "{{count}} deelnemer(s) toevoegen"
+back = "Terug"
+configureSignatures = "Handtekeninginstellingen configureren"
+continue = "Doorgaan naar handtekeninginstellingen"
+reasonHelp = "Stel vooraf een ondertekeningsreden in voor deze deelnemers (optioneel; ze kunnen dit aanpassen bij het ondertekenen)"
+reasonPlaceholder = "bijv. Goedkeuring, Review..."
+selectUsers = "Gebruikers selecteren"
+
+[certSign.collab.finalize]
+button = "Finaliseren en ondertekende PDF laden"
+early = "Finaliseren met huidige handtekeningen"
+
+[certSign.collab.participant]
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Ongeldig certificaat"
+certNetworkError = "Certificaat kon niet worden gevalideerd"
+certValid = "✓ Certificaat geldig"
+certValidating = "Certificaat wordt gevalideerd..."
+certValidUntil = " tot {{date}}"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Pagina met handtekeningoverzicht opnemen"
+includeSummaryPageHelp = "Aan het einde wordt een overzichtspagina toegevoegd met alle handtekeningmetadata. De digitale certificaathandtekeningvakken op afzonderlijke pagina's worden onderdrukt (natte handtekeningen blijven onaangetast)."
+
+[certSign.collab.sessionDetail]
+addButton = "Deelnemers toevoegen"
+addParticipants = "Deelnemers toevoegen"
+addParticipantsError = "Deelnemers toevoegen mislukt"
+backToList = "Terug naar sessies"
+deleteConfirm = "Weet u het zeker? Dit kan niet ongedaan worden gemaakt."
+deleted = "Sessie verwijderd"
+deleteError = "Sessie verwijderen mislukt"
+deleteSession = "Sessie verwijderen"
+dueDate = "Vervaldatum"
+finalizeError = "Sessie finaliseren mislukt"
+loadPdfError = "Ondertekende PDF laden mislukt"
+loadSignedPdf = "Ondertekende PDF laden in actieve bestanden"
+messageLabel = "Bericht"
+noAdditionalInfo = "Geen aanvullende informatie"
+owner = "Eigenaar"
+participantRemoved = "Deelnemer verwijderd"
+participants = "Deelnemers"
+participantsAdded = "Deelnemers succesvol toegevoegd"
+removeParticipant = "Verwijderen"
+removeParticipantError = "Deelnemer verwijderen mislukt"
+selectUsers = "Gebruikers selecteren..."
+sessionInfo = "Sessie-informatie"
+workbenchTitle = "Sessiebeheer"
+
+[certSign.collab.sessionList]
+active = "Actief"
+finalized = "Gefinaliseerd"
+
+[certSign.collab.signatureSettings]
+description = "Configureer hoe handtekeningen voor alle deelnemers worden weergegeven"
+title = "Weergave van handtekening"
+
+[certSign.collab.signRequest]
+addedToFiles = "Document toegevoegd aan actieve bestanden"
+addSignature = "Uw handtekening toevoegen"
+addToFiles = "Toevoegen aan actieve bestanden"
+advancedSettings = "Geavanceerde instellingen"
+backToList = "Terug naar ondertekeningsverzoeken"
+certificateChoice = "Selecteer een certificaat om mee te ondertekenen"
+changeSignature = "Handtekening wijzigen"
+clearSignature = "Handtekening wissen"
+completeAndSign = "Voltooien en ondertekenen"
+createNewSignature = "Nieuwe handtekening maken"
+decline = "Verzoek weigeren"
+declineButton = "Weigeren"
+deleteSelected = "Geselecteerde handtekening verwijderen"
+drawSignature = "Teken hieronder uw handtekening"
+dueDate = "Vervaldatum"
+fileTooLarge = "Bestandsgrootte moet kleiner zijn dan 5MB"
+fontFamily = "Lettertype"
+fontSize = "Lettergrootte: {{size}}px"
+fontSizePlaceholder = "Grootte"
+from = "Van"
+invalidCertFile = "Selecteer een P12- of PFX-certificaatbestand"
+invalidFileType = "Selecteer een afbeeldingsbestand"
+location = "Locatie (optioneel)"
+locationPlaceholder = "Vanwaar ondertekent u?"
+message = "Bericht"
+noCertificate = "Selecteer een certificaatbestand"
+noSignatures = "Plaats ten minste één handtekening op de PDF"
+p12File = "P12/PFX-certificaatbestand"
+password = "Certificaatwachtwoord"
+passwordPlaceholder = "Voer wachtwoord in..."
+penColor = "Penkleur"
+penSize = "Penmaat: {{size}}px"
+placementActive = "Klik op de PDF om te plaatsen"
+placeSignatureButton = "Handtekening op PDF plaatsen"
+reason = "Reden (optioneel)"
+reasonPlaceholder = "Waarom ondertekent u?"
+removeCertFile = "Bestand verwijderen"
+removeImage = "Afbeelding verwijderen"
+savedSignatures = "Opgeslagen handtekeningen"
+selectFile = "Afbeeldingsbestand selecteren"
+selectSignatureTitle = "Handtekening selecteren of maken"
+signatureInfo = "Deze instellingen zijn geconfigureerd door de documenteigenaar"
+signaturePlaced = "Handtekening geplaatst op pagina"
+signatureSettings = "Handtekeninginstellingen"
+signatureText = "Handtekeningtekst"
+signatureTextPlaceholder = "Voer uw naam in..."
+signatureTypeLabel = "Handtekeningtype"
+signButton = "Document ondertekenen"
+signingTitle = "Ondertekenen"
+textColor = "Tekstkleur"
+typeSignature = "Typ uw naam om een handtekening te maken"
+uploadCert = "Aangepast certificaat"
+uploadCertDesc = "Gebruik uw eigen P12/PFX-certificaat"
+uploadSignature = "Upload uw handtekeningafbeelding"
+usePersonalCert = "Persoonlijk certificaat"
+usePersonalCertDesc = "Automatisch gegenereerd voor uw account"
+useServerCert = "Organisatiecertificaat"
+useServerCertDesc = "Gedeeld organisatiecertificaat"
+workbenchTitle = "Ondertekeningsverzoek"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Kies lijnkleur"
+continue = "Doorgaan"
+
+[certSign.collab.signRequest.certModal]
+certInvalid = "Certificaat ongeldig: {{error}}"
+certInvalidFallback = "Ongeldig certificaat"
+certNetworkError = "Certificaat kon niet worden gevalideerd"
+certValidating = "Certificaat wordt gevalideerd..."
+certValidUntil = "Certificaat geldig tot {{date}}"
+description = "U hebt {{count}} handtekening(en) geplaatst. Kies uw certificaat om het ondertekenen te voltooien."
+sign = "Document ondertekenen"
+title = "Certificaat configureren"
+
+[certSign.collab.signRequest.image]
+hint = "Upload een PNG- of JPG-afbeelding van uw handtekening"
+
+[certSign.collab.signRequest.mode]
+move = "Handtekening verplaatsen"
+place = "Handtekening plaatsen"
+title = "Modus ondertekenen of verplaatsen"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Tekenen"
+image = "Uploaden"
+text = "Typen"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Klik op de PDF om uw handtekening te plaatsen"
+title = "Handtekening plaatsen"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Geselecteerde handtekening"
+missing = "Geen voorbeeld"
+textFallback = "Handtekening"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Getekende handtekening"
+defaultImageLabel = "Geüploade handtekening"
+defaultLabel = "Handtekening"
+defaultTextLabel = "Getypte handtekening"
+delete = "Handtekening verwijderen"
+none = "Geen opgeslagen handtekeningen"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Tekenen"
+type = "Typen"
+upload = "Uploaden"
+
+[certSign.collab.signRequest.steps]
+back = "Terug"
+cancelPlacement = "Plaatsing annuleren"
+certificate = "Certificaat"
+clickMultipleTimes = "Klik meerdere keren op de PDF om handtekeningen te plaatsen. Sleep een handtekening om te verplaatsen of te schalen."
+clickToPlace = "Klik op de PDF waar u uw handtekening wilt laten verschijnen."
+continue = "Doorgaan naar certificaatkeuze"
+continueToPlacement = "Doorgaan naar plaatsing"
+continueToReview = "Doorgaan naar controle"
+createSignature = "Handtekening maken"
+invisible = "Onzichtbaar"
+location = "Locatie:"
+multipleSignatures = "{{count}} handtekeningen worden toegepast op de PDF"
+oneSignature = "1 handtekening wordt toegepast op de PDF"
+placeOnPdf = "Plaatsen op PDF"
+reason = "Reden:"
+reviewTitle = "Controleren vóór ondertekenen"
+signaturePlaced = "Handtekening geplaatst op pagina {{page}}. U kunt de positie aanpassen door opnieuw te klikken of doorgaan naar controle."
+visibility = "Zichtbaarheid:"
+visible = "Zichtbaar"
+yourSignatures = "Uw handtekeningen ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Kleur"
+fontLabel = "Lettertype"
+fontSizeLabel = "Grootte"
+fontSizePlaceholder = "16"
+label = "Handtekeningtekst"
+modalHint = "Voer uw naam in en klik vervolgens op Doorgaan om deze op de PDF te plaatsen."
+placeholder = "Voer uw naam in..."
+
+[certSign.collab.userSelector]
+inviteUsers = "Gebruikers toevoegen"
+loadError = "Gebruikers laden mislukt"
+noTeam = "Geen team"
+noUsers = "Geen andere gebruikers gevonden."
+placeholder = "Gebruikers selecteren..."
+
 [certSign.error]
 failed = "Er is een fout opgetreden bij het verwerken van handtekeningen."
+
+[certSign.mobile]
+panelActions = "Acties"
+panelDocument = "Document"
+panelPeople = "Personen"
+
+[certSign.sessions]
+deleted = "Sessie verwijderd"
+fetchFailed = "Sessiegegevens laden mislukt"
+finalized = "Sessie gefinaliseerd"
+loaded = "Ondertekende PDF geladen"
+pdfNotReady = "PDF niet gereed"
+pdfNotReadyDesc = "De ondertekende PDF wordt gegenereerd. Probeer het zo meteen opnieuw."
 
 [certSign.sign]
 results = "Ondertekende PDF"
@@ -2230,252 +2478,6 @@ bullet3 = "Controleert of het document na ondertekening is gewijzigd"
 bullet4 = "Kan aangepaste certificaten gebruiken voor verificatie"
 text = "Wanneer u handtekeningen controleert, geeft de tool aan of ze geldig zijn, wie het document heeft ondertekend, wanneer het is ondertekend en of het document na ondertekening is gewijzigd."
 title = "Handtekeningen controleren"
-
-[certSign.collab.finalize]
-button = "Finaliseren en ondertekende PDF laden"
-early = "Finaliseren met huidige handtekeningen"
-
-[certSign.collab.sessionDetail]
-addButton = "Deelnemers toevoegen"
-addParticipants = "Deelnemers toevoegen"
-addParticipantsError = "Deelnemers toevoegen mislukt"
-backToList = "Terug naar sessies"
-deleteConfirm = "Weet u het zeker? Dit kan niet ongedaan worden gemaakt."
-deleteError = "Sessie verwijderen mislukt"
-deleted = "Sessie verwijderd"
-deleteSession = "Sessie verwijderen"
-dueDate = "Vervaldatum"
-finalizeError = "Sessie finaliseren mislukt"
-loadPdfError = "Ondertekende PDF laden mislukt"
-loadSignedPdf = "Ondertekende PDF laden in actieve bestanden"
-messageLabel = "Bericht"
-noAdditionalInfo = "Geen aanvullende informatie"
-owner = "Eigenaar"
-participantRemoved = "Deelnemer verwijderd"
-participants = "Deelnemers"
-participantsAdded = "Deelnemers succesvol toegevoegd"
-removeParticipant = "Verwijderen"
-removeParticipantError = "Deelnemer verwijderen mislukt"
-selectUsers = "Gebruikers selecteren..."
-sessionInfo = "Sessie-informatie"
-workbenchTitle = "Sessiebeheer"
-
-[certSign.collab.signRequest]
-addedToFiles = "Document toegevoegd aan actieve bestanden"
-addSignature = "Uw handtekening toevoegen"
-addToFiles = "Toevoegen aan actieve bestanden"
-advancedSettings = "Geavanceerde instellingen"
-backToList = "Terug naar ondertekeningsverzoeken"
-certificateChoice = "Selecteer een certificaat om mee te ondertekenen"
-changeSignature = "Handtekening wijzigen"
-clearSignature = "Handtekening wissen"
-completeAndSign = "Voltooien en ondertekenen"
-createNewSignature = "Nieuwe handtekening maken"
-declineButton = "Weigeren"
-decline = "Verzoek weigeren"
-deleteSelected = "Geselecteerde handtekening verwijderen"
-drawSignature = "Teken hieronder uw handtekening"
-dueDate = "Vervaldatum"
-fileTooLarge = "Bestandsgrootte moet kleiner zijn dan 5MB"
-fontFamily = "Lettertype"
-fontSize = "Lettergrootte: {{size}}px"
-fontSizePlaceholder = "Grootte"
-from = "Van"
-invalidCertFile = "Selecteer een P12- of PFX-certificaatbestand"
-invalidFileType = "Selecteer een afbeeldingsbestand"
-location = "Locatie (optioneel)"
-locationPlaceholder = "Vanwaar ondertekent u?"
-message = "Bericht"
-noCertificate = "Selecteer een certificaatbestand"
-noSignatures = "Plaats ten minste één handtekening op de PDF"
-p12File = "P12/PFX-certificaatbestand"
-password = "Certificaatwachtwoord"
-passwordPlaceholder = "Voer wachtwoord in..."
-penColor = "Penkleur"
-penSize = "Penmaat: {{size}}px"
-placementActive = "Klik op de PDF om te plaatsen"
-placeSignatureButton = "Handtekening op PDF plaatsen"
-reason = "Reden (optioneel)"
-reasonPlaceholder = "Waarom ondertekent u?"
-removeImage = "Afbeelding verwijderen"
-removeCertFile = "Bestand verwijderen"
-savedSignatures = "Opgeslagen handtekeningen"
-selectFile = "Afbeeldingsbestand selecteren"
-selectSignatureTitle = "Handtekening selecteren of maken"
-signButton = "Document ondertekenen"
-signatureInfo = "Deze instellingen zijn geconfigureerd door de documenteigenaar"
-signaturePlaced = "Handtekening geplaatst op pagina"
-signatureSettings = "Handtekeninginstellingen"
-signatureText = "Handtekeningtekst"
-signatureTextPlaceholder = "Voer uw naam in..."
-signatureTypeLabel = "Handtekeningtype"
-signingTitle = "Ondertekenen"
-textColor = "Tekstkleur"
-typeSignature = "Typ uw naam om een handtekening te maken"
-uploadCert = "Aangepast certificaat"
-uploadCertDesc = "Gebruik uw eigen P12/PFX-certificaat"
-uploadSignature = "Upload uw handtekeningafbeelding"
-usePersonalCert = "Persoonlijk certificaat"
-usePersonalCertDesc = "Automatisch gegenereerd voor uw account"
-useServerCert = "Organisatiecertificaat"
-useServerCertDesc = "Gedeeld organisatiecertificaat"
-workbenchTitle = "Ondertekeningsverzoek"
-
-[certSign.collab.signRequest.canvas]
-colorPickerTitle = "Kies lijnkleur"
-continue = "Doorgaan"
-
-[certSign.collab.signRequest.certModal]
-description = "U hebt {{count}} handtekening(en) geplaatst. Kies uw certificaat om het ondertekenen te voltooien."
-sign = "Document ondertekenen"
-certValidating = "Certificaat wordt gevalideerd..."
-certValidUntil = "Certificaat geldig tot {{date}}"
-certInvalid = "Certificaat ongeldig: {{error}}"
-certInvalidFallback = "Ongeldig certificaat"
-certNetworkError = "Certificaat kon niet worden gevalideerd"
-title = "Certificaat configureren"
-
-[certSign.collab.signRequest.image]
-hint = "Upload een PNG- of JPG-afbeelding van uw handtekening"
-
-[certSign.collab.signRequest.mode]
-move = "Handtekening verplaatsen"
-place = "Handtekening plaatsen"
-title = "Modus ondertekenen of verplaatsen"
-
-[certSign.collab.signRequest.modeTabs]
-draw = "Tekenen"
-image = "Uploaden"
-text = "Typen"
-
-[certSign.collab.signRequest.placeSignature]
-message = "Klik op de PDF om uw handtekening te plaatsen"
-title = "Handtekening plaatsen"
-
-[certSign.collab.signRequest.preview]
-imageAlt = "Geselecteerde handtekening"
-missing = "Geen voorbeeld"
-textFallback = "Handtekening"
-
-[certSign.collab.signRequest.saved]
-defaultCanvasLabel = "Getekende handtekening"
-defaultImageLabel = "Geüploade handtekening"
-defaultLabel = "Handtekening"
-defaultTextLabel = "Getypte handtekening"
-delete = "Handtekening verwijderen"
-none = "Geen opgeslagen handtekeningen"
-
-[certSign.collab.signRequest.signatureType]
-draw = "Tekenen"
-type = "Typen"
-upload = "Uploaden"
-
-[certSign.collab.signRequest.steps]
-back = "Terug"
-cancelPlacement = "Plaatsing annuleren"
-certificate = "Certificaat"
-clickMultipleTimes = "Klik meerdere keren op de PDF om handtekeningen te plaatsen. Sleep een handtekening om te verplaatsen of te schalen."
-clickToPlace = "Klik op de PDF waar u uw handtekening wilt laten verschijnen."
-continue = "Doorgaan naar certificaatkeuze"
-continueToPlacement = "Doorgaan naar plaatsing"
-continueToReview = "Doorgaan naar controle"
-createSignature = "Handtekening maken"
-invisible = "Onzichtbaar"
-location = "Locatie:"
-multipleSignatures = "{{count}} handtekeningen worden toegepast op de PDF"
-oneSignature = "1 handtekening wordt toegepast op de PDF"
-placeOnPdf = "Plaatsen op PDF"
-reason = "Reden:"
-reviewTitle = "Controleren vóór ondertekenen"
-signaturePlaced = "Handtekening geplaatst op pagina {{page}}. U kunt de positie aanpassen door opnieuw te klikken of doorgaan naar controle."
-visible = "Zichtbaar"
-visibility = "Zichtbaarheid:"
-yourSignatures = "Uw handtekeningen ({{count}})"
-
-[certSign.collab.signRequest.text]
-colorLabel = "Kleur"
-fontLabel = "Lettertype"
-fontSizeLabel = "Grootte"
-fontSizePlaceholder = "16"
-label = "Handtekeningtekst"
-modalHint = "Voer uw naam in en klik vervolgens op Doorgaan om deze op de PDF te plaatsen."
-placeholder = "Voer uw naam in..."
-
-[certSign.collab.participant]
-certValidating = "Certificaat wordt gevalideerd..."
-certValid = "✓ Certificaat geldig"
-certValidUntil = " tot {{date}}"
-certInvalid = "✗ {{error}}"
-certInvalidFallback = "Ongeldig certificaat"
-certNetworkError = "Certificaat kon niet worden gevalideerd"
-
-[certSign.collab.addParticipants]
-add = "{{count}} deelnemer(s) toevoegen"
-back = "Terug"
-configureSignatures = "Handtekeninginstellingen configureren"
-continue = "Doorgaan naar handtekeninginstellingen"
-reasonHelp = "Stel vooraf een ondertekeningsreden in voor deze deelnemers (optioneel; ze kunnen dit aanpassen bij het ondertekenen)"
-reasonPlaceholder = "bijv. Goedkeuring, Review..."
-selectUsers = "Gebruikers selecteren"
-
-[certSign.collab.sessionCreation]
-includeSummaryPage = "Pagina met handtekeningoverzicht opnemen"
-includeSummaryPageHelp = "Aan het einde wordt een overzichtspagina toegevoegd met alle handtekeningmetadata. De digitale certificaathandtekeningvakken op afzonderlijke pagina's worden onderdrukt (natte handtekeningen blijven onaangetast)."
-
-[certSign.collab.sessionList]
-active = "Actief"
-finalized = "Gefinaliseerd"
-
-[certSign.collab.signatureSettings]
-description = "Configureer hoe handtekeningen voor alle deelnemers worden weergegeven"
-title = "Weergave van handtekening"
-
-[certSign.collab.userSelector]
-inviteUsers = "Gebruikers toevoegen"
-loadError = "Gebruikers laden mislukt"
-noTeam = "Geen team"
-noUsers = "Geen andere gebruikers gevonden."
-placeholder = "Gebruikers selecteren..."
-
-[certSign.mobile]
-panelActions = "Acties"
-panelDocument = "Document"
-panelPeople = "Personen"
-
-[certSign.sessions]
-deleted = "Sessie verwijderd"
-fetchFailed = "Sessiegegevens laden mislukt"
-finalized = "Sessie gefinaliseerd"
-loaded = "Ondertekende PDF geladen"
-pdfNotReady = "PDF niet gereed"
-pdfNotReadyDesc = "De ondertekende PDF wordt gegenereerd. Probeer het zo meteen opnieuw."
-
-[certificateChoice.tooltip]
-header = "Certificaattypen"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Beheerd door systeembeheerders"
-bullet2 = "Gedeeld met geautoriseerde gebruikers"
-bullet3 = "Vertegenwoordigt bedrijfsidentiteit, niet individueel"
-bullet4 = "Beste voor: Officiële documenten, teamhandtekeningen"
-description = "Een gedeeld certificaat dat door uw organisatie wordt geleverd. Gebruikt voor organisatiebrede ondertekeningsbevoegdheid."
-title = "Organisatiecertificaat"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Automatisch gegenereerd bij eerste gebruik"
-bullet2 = "Gekoppeld aan uw gebruikersaccount"
-bullet3 = "Kan niet met andere gebruikers worden gedeeld"
-bullet4 = "Beste voor: Persoonlijke documenten, individuele verantwoordelijkheid"
-description = "Een automatisch gegenereerd certificaat dat uniek is voor uw gebruikersaccount. Geschikt voor individuele handtekeningen."
-title = "Persoonlijk certificaat"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Vereist P12/PFX-bestand en wachtwoord"
-bullet2 = "Kan worden uitgegeven door externe certificaatautoriteiten"
-bullet3 = "Hoger vertrouwensniveau voor juridische documenten"
-bullet4 = "Beste voor: Juridisch bindende contracten, externe validatie"
-description = "Gebruik uw eigen PKCS#12-certificaatbestand. Biedt volledige controle over certificaateigenschappen."
-title = "Aangepaste P12 uploaden"
 
 [changeCreds]
 changePassword = "U gebruikt de standaard inloggegevens. Voer alstublieft een nieuw wachtwoord in"
@@ -2658,6 +2660,26 @@ title = "Rechten wijzigen"
 [changePermissions.tooltip.warning]
 text = "Om deze machtigingen niet wijzigbaar te maken, gebruik de tool Wachtwoord toevoegen om een eigenaarwachtwoord in te stellen."
 
+[chat.progress]
+analyzing = "Uw verzoek wordt geanalyseerd..."
+calling_engine = "AI is aan het nadenken..."
+executing_tool_generic = "Tool wordt uitgevoerd..."
+executing_tool_generic_step = "Tool wordt uitgevoerd (stap {{step}} van {{total}})..."
+executing_tool_single = "Voert {{tool}} uit..."
+executing_tool_step = "Voert {{tool}} uit (stap {{step}} van {{total}})..."
+extracting_content = "Inhoud uit uw documenten wordt geëxtraheerd..."
+processing = "Geëxtraheerde inhoud wordt verwerkt..."
+thinking = "Bezig met nadenken..."
+
+[chat.toolsUsed]
+summary = "{{count}} tools uitgevoerd"
+summary_one = "1 tool uitgevoerd"
+summary_other = "{{count}} tools uitgevoerd"
+unknownTool = "Onbekende tool"
+
+[cloudBadge]
+tooltip = "Deze bewerking gebruikt je cloud-credits"
+
 [colorPicker]
 title = "Kies kleur"
 
@@ -2755,11 +2777,38 @@ message = "Eén of beiden van de bijgewerkte documenten zijn te groot om verwerk
 body = "Deze PDF's overschrijden samen 2,000 pagina's. De verwerking kan enkele minuten duren."
 title = "Grote vergelijking bezig"
 
+[compare.mode]
+pixel = "Pixelvergelijking"
+text = "Tekstvergelijking"
+
 [compare.no.text]
 message = "Een of beide geselecteerde PDF-bestanden bevatten geen tekstinhoud. Kies a.u.b. PDF-bestanden met tekst voor vergelijking."
 
 [compare.original]
 label = "Originele PDF"
+
+[compare.pixel]
+base = "Origineel"
+changed = "gewijzigd"
+comparison = "Bewerkt"
+diff = "Verschillen"
+diffOnly = "Alleen verschillen"
+missingInBase = "Ontbreekt in origineel"
+missingInComparison = "Ontbreekt in bewerkt"
+overall = "algemeen"
+overlay = "Overlay"
+pageLabel = "Pagina"
+pagesChanged = "pagina's gewijzigd"
+sideBySide = "Naast elkaar"
+sizeMismatch = "Formaat komt niet overeen"
+summaryTitle = "Pixelvergelijking"
+
+[compare.pixel.errors]
+canvasContextUnavailable = "Kan geen 2D-canvascontext verkrijgen voor pixelvergelijking."
+
+[compare.pixel.warnings]
+noPages = "Een of beide documenten hebben geen pagina's."
+pageCountMismatch = "Aantal pagina's komt niet overeen: het originele document heeft {{base}} pagina's, het bewerkte document heeft er {{comparison}}. Extra pagina's worden eenzijdig weergegeven en gemarkeerd als volledig verwijderd/toegevoegd."
 
 [compare.rendering]
 complete = "Verwerking voltooid"
@@ -2998,9 +3047,11 @@ blackwhite = "Zwart-wit"
 cbrDpi = "DPI voor weergave van afbeeldingen"
 cbrOptions = "CBR-opties"
 cbrOutputOptions = "PDF-naar-CBR-opties"
+cbrToPdf = "CBR → PDF"
 cbzDpi = "DPI voor weergave van afbeeldingen"
 cbzOptions = "CBZ-naar-PDF-opties"
 cbzOutputOptions = "PDF-naar-CBZ-opties"
+cbzToPdf = "CBZ → PDF"
 color = "Kleur"
 colorType = "Kleurtype"
 combineImages = "Afbeeldingen combineren"
@@ -3018,13 +3069,16 @@ desc = "Bestanden tussen verschillende formaten converteren"
 downloadConverted = "Geconverteerd bestand downloaden"
 downloadHtml = "HTML-tussenbestand downloaden in plaats van PDF"
 dpi = "DPI"
+ebookToPdf = "eBook → PDF"
 emailOptions = "E-mail-naar-PDF-opties"
+emlToPdf = "E-mail → PDF"
 errorConversion = "Er is een fout opgetreden bij het converteren van het bestand."
 errorNoFiles = "Selecteer minimaal één bestand om te converteren."
 errorNoFormat = "Selecteer zowel bron- als doelformaat."
 errorNotSupported = "Conversie van {{from}} naar {{to}} wordt niet ondersteund."
 fileFormat = "Bestandsformaat"
 files = "Bestanden"
+fileToPdf = "Office/Document → PDF"
 fillPage = "Pagina vullen"
 fitDocumentToPage = "Document aan pagina aanpassen"
 fitOption = "Passingsoptie"
@@ -3052,6 +3106,9 @@ pdfaFormat = "PDF/A-formaat"
 pdfaNote = "PDF/A-1b is compatibeler, PDF/A-2b ondersteunt meer functies."
 pdfaOptions = "PDF/A-opties"
 pdfOptions = "PDF-opties"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
 pdfxDescription = "PDF/X is een ISO-standaard PDF-subset voor betrouwbaar afdrukken en grafische uitwisseling."
 pdfxDigitalSignatureWarning = "Het PDF-bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
 pptExt = "PowerPoint (.pptx)"
@@ -3066,6 +3123,7 @@ sourceFormatPlaceholder = "Brontype"
 strictMode = "Strict Mode"
 strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
+svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 targetFormatPlaceholder = "Doeltype"
 textRtf = "Tekst/RTF"
@@ -3075,15 +3133,6 @@ webOptions = "Web-naar-PDF-opties"
 wordDoc = "Word-document"
 wordDocExt = "Word-document (.docx)"
 zoomLevel = "Zoomniveau"
-cbrToPdf = "CBR → PDF"
-cbzToPdf = "CBZ → PDF"
-ebookToPdf = "eBook → PDF"
-emlToPdf = "E-mail → PDF"
-fileToPdf = "Office/Document → PDF"
-pdfToCbr = "PDF → CBR"
-pdfToCbz = "PDF → CBZ"
-pdfToEpub = "PDF → EPUB"
-svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook-naar-PDF-opties"
@@ -3147,6 +3196,77 @@ description = "These cookies are essential for the website to function properly.
 [cookieBanner.services]
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
+
+[credits]
+enableOverageBilling = "Overschrijdingsfacturering inschakelen"
+maybeLater = "Misschien later"
+upgrade = "Upgraden"
+
+[credits.insufficient]
+brief = "Onvoldoende credits. Je hebt {{required}} credits nodig maar hebt er {{current}}."
+freeTier = "Upgrade naar Team voor 10x meer credits en onbeperkte overschrijdingsfacturering."
+managedMember = "Neem contact op met je teamleider voor hulp."
+message = "Je hebt niet genoeg credits om {{tool}} uit te voeren. Je hebt momenteel {{current}} credits."
+messageWithAmount = "Je hebt {{required}} credits nodig om {{tool}} uit te voeren, maar je hebt er slechts {{current}}."
+teamMember = "Schakel overschrijdingsfacturering in zodat je nooit zonder credits komt te zitten."
+title = "Onvoldoende credits"
+
+[credits.modal]
+advancedMonitoring = "Geavanceerde monitoring"
+allInOneWorkspace = "Alles-in-één PDF-werkruimte (viewer, tools & agent)"
+apiSandbox = "API-sandbox"
+contactSales = "Neem contact op met Sales"
+creditsRemaining = "{{current}} van {{total}} resterend"
+creditsThisMonth = "Maandelijkse credits"
+current = "Huidig abonnement"
+customPricing = "Aangepast"
+customSmartFolders = "Aangepaste Smart Folders"
+dedicatedSupportSlas = "Toegewijde support & SLA's"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Alles in Credits, plus:"
+everythingInFree = "Alles in Free, plus:"
+fasterThroughput = "10x snellere doorvoer"
+forRegularWork = "Voor regulier PDF-werk:"
+freeTier = "Gratis niveau"
+fullyPrivateFiles = "Volledige bestandsprivacy"
+largeFileProcessing = "Verwerking van grote bestanden"
+managedMemberMessage = "Je hebt onbeperkte toegang tot credits via je team. Neem contact op met je teamleider als je hulp nodig hebt."
+managedMemberTitle = "Onbeperkte credits"
+meteringBillingNote = "Overschrijdingscredits worden maandelijks gefactureerd samen met je Team-abonnement. Volg je gebruik op elk moment in je accountinstellingen."
+meteringExplanation = "Je Team-abonnement bevat {{credits}} credits per maand. Wanneer ze op zijn, levert overschrijdingsfacturering automatisch extra credits zodat je nooit hoeft te stoppen met werken."
+meteringIncluded = "{{credits}} credits/maand inbegrepen bij Team"
+meteringNeverRunOut = "Nooit zonder credits"
+meteringNoCommitment = "Geen verplichting, op elk moment opzegbaar"
+meteringPayAsYouGo = "Alleen betalen voor wat je gebruikt"
+meteringPrice = "Extra credits voor {{price}}/credit"
+meteringTitle = "Betaal-naar-gebruik overschrijdingsfacturering"
+monthlyCredits = "maandelijkse credits"
+orgWideAccess = "Organisatiebrede toegangscontrole"
+overage = "overschrijding"
+perMonth = "/maand"
+popular = "Populair"
+premiumAiModels = "Premium AI-modellen"
+prioritySupport = "Prioritaire support"
+privateDocCloud = "Privé Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Beveiligde API-toegang"
+selfHostLink = "Bekijk de documentatie en plannen"
+selfHostPrompt = "Wil je zelf hosten?"
+standardThroughput = "Standaard doorvoer"
+subtitle = "Upgrade naar Team voor 10x de credits en snellere verwerking."
+subtitlePro = "Schakel automatische overschrijdingsfacturering in zodat je nooit zonder credits zit."
+teamLeaderOnly = "Alleen teamleiders kunnen overschrijdingsfacturering inschakelen"
+teamSubscription = "Team"
+titleExhausted = "Je hebt je gratis credits gebruikt"
+titleExhaustedPro = "Je hebt geen credits meer"
+unlimitedApiAccess = "Onbeperkte API-toegang"
+unlimitedMonthlyCredits = "Site-licentie"
+unlimitedSeats = "Onbeperkte seats"
+
+[credits.modal.features]
+everythingInCredits = "Alles in Credits, plus:"
+everythingInFree = "Alles in Free, plus:"
+forRegularWork = "Voor regulier PDF-werk:"
 
 [crop]
 autoCrop = "Witruimte autom. bijsnijden"
@@ -3352,6 +3472,9 @@ successBodyWithName = "Wachtwoord verwijderd uit {{fileName}}"
 successTitle = "Wachtwoord verwijderd"
 title = "Verwijder wachtwoord om door te gaan"
 unlock = "Ontgrendelen en doorgaan"
+unlockAll = "Voor alle ({{count}}) gebruiken"
+unlockAllPartialFail = "Onjuist wachtwoord voor: {{names}}"
+unlockAllSuccess = "{{count}} bestand(en) ontgrendeld."
 unlockPrompt = "Ontgrendel PDF om door te gaan"
 
 [encryptedPdfUnlock.password]
@@ -3464,10 +3587,14 @@ addFiles = "Bestanden toevoegen"
 [fileManager]
 active = "Actief"
 addToUpload = "Aan upload toevoegen"
+changesNotUploaded = "Wijzigingen niet geüpload"
 clearAll = "Alles wissen"
 clearSelection = "Selectie wissen"
 clickToUpload = "Klik om bestanden te uploaden"
 closeFile = "Bestand sluiten"
+cloudFile = "Cloudbestand"
+copyCreated = "Kopie opgeslagen op dit apparaat."
+copyFailed = "Kopie kon niet worden gemaakt."
 delete = "Verwijderen"
 deleteAll = "Alles verwijderen"
 deleteSelected = "Geselecteerde verwijderen"
@@ -3486,14 +3613,24 @@ fileSize = "Grootte"
 filesSelected = "bestanden geselecteerd"
 filesStored = "bestanden opgeslagen"
 fileVersion = "Versie"
+filterAll = "Alles"
+filterLocal = "Lokaal"
+filterSharedByMe = "Door mij gedeeld"
+filterSharedWithMe = "Met mij gedeeld"
 googleDrive = "Google Drive"
 googleDriveNotAvailable = "Google Drive-integratie niet beschikbaar"
 googleDriveShort = "Drive"
 hideHistory = "Geschiedenis verbergen"
 lastModified = "Laatst gewijzigd"
+lastSynced = "Laatst gesynchroniseerd"
+leaveShare = "Verwijderen uit mijn lijst"
+leaveShareFailed = "Het gedeelde bestand kon niet worden verwijderd."
+leaveShareSuccess = "Verwijderd uit uw gedeelde lijst."
 loadingFiles = "Bestanden laden..."
 loadingHistory = "Geschiedenis laden..."
 localFiles = "Lokale bestanden"
+localOnly = "Alleen lokaal"
+makeCopy = "Kopie maken"
 mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
 mobileUploadNotAvailable = "Mobile upload not enabled"
@@ -3506,36 +3643,10 @@ openFile = "Bestand openen"
 openFiles = "Bestanden openen"
 openInFileEditor = "Openen in bestandseditor"
 openInPageEditor = "Openen in Pagina-editor"
+owner = "Eigenaar"
+ownerUnknown = "Onbekend"
 recent = "Recent"
 reloadFiles = "Bestanden opnieuw laden"
-restore = "Herstellen"
-saveSelected = "Selectie opslaan"
-searchFiles = "Bestanden zoeken..."
-selectAll = "Alles selecteren"
-selectedCount = "{{count}} geselecteerd"
-selectedFiles = "Geselecteerde bestanden"
-showAll = "Alles weergeven"
-showHistory = "Geschiedenis weergeven"
-sortByDate = "Sorteren op datum"
-sortByName = "Sorteren op naam"
-sortBySize = "Sorteren op grootte"
-storage = "Opslag"
-storageCleared = "Browser heeft opslag gewist. Bestanden zijn verwijderd. Upload ze opnieuw."
-storageError = "Er is een opslagfout opgetreden"
-storageLow = "Opslag raakt vol. Overweeg oude bestanden te verwijderen."
-subtitle = "Voeg bestanden toe aan uw opslag voor gemakkelijke toegang in alle tools"
-supportMessage = "Aangedreven door databaseopslag van de browser voor onbeperkte capaciteit"
-title = "PDF-bestanden uploaden"
-toolChain = "Toegepaste tools"
-totalSelected = "Totaal geselecteerd"
-unsupported = "Niet ondersteund"
-unzip = "Uitpakken"
-uploadError = "Uploaden van sommige bestanden is mislukt."
-copyCreated = "Kopie opgeslagen op dit apparaat."
-copyFailed = "Kopie kon niet worden gemaakt."
-leaveShare = "Verwijderen uit mijn lijst"
-leaveShareFailed = "Het gedeelde bestand kon niet worden verwijderd."
-leaveShareSuccess = "Verwijderd uit uw gedeelde lijst."
 removeBoth = "Uit beide verwijderen"
 removeFilePrompt = "Dit bestand is opgeslagen op dit apparaat en op uw server. Van waar wilt u het verwijderen?"
 removeFileTitle = "Bestand verwijderen"
@@ -3547,28 +3658,40 @@ removeServerSuccess = "Van server verwijderd."
 removeSharedPrompt = "Dit bestand is met u gedeeld. U kunt het verwijderen van dit apparaat of uit uw gedeelde lijst."
 removeSharedServerOnlyBlockedPrompt = "Dit bestand is met u gedeeld en alleen op de server opgeslagen."
 removeSharedServerOnlyPrompt = "Dit bestand is met u gedeeld en alleen op de server opgeslagen. Verwijderen uit uw lijst?"
-changesNotUploaded = "Wijzigingen niet geüpload"
-cloudFile = "Cloudbestand"
-filterAll = "Alles"
-filterLocal = "Lokaal"
-filterSharedByMe = "Door mij gedeeld"
-filterSharedWithMe = "Met mij gedeeld"
-lastSynced = "Laatst gesynchroniseerd"
-localOnly = "Alleen lokaal"
-makeCopy = "Kopie maken"
-owner = "Eigenaar"
-ownerUnknown = "Onbekend"
+restore = "Herstellen"
+saveSelected = "Selectie opslaan"
+searchFiles = "Bestanden zoeken..."
+selectAll = "Alles selecteren"
+selectedCount = "{{count}} geselecteerd"
+selectedFiles = "Geselecteerde bestanden"
 share = "Delen"
-shareSelected = "Geselecteerde delen"
 sharedByYou = "Door u gedeeld"
 sharedEditNoticeBody = "U hebt geen bewerkingsrechten op de serverversie van dit bestand. Eventuele bewerkingen worden als lokale kopie opgeslagen."
 sharedEditNoticeConfirm = "Begrepen"
 sharedEditNoticeTitle = "Alleen-lezen serverkopie"
 sharedWithYou = "Met u gedeeld"
+shareSelected = "Geselecteerde delen"
 sharing = "Delen"
+showAll = "Alles weergeven"
+showHistory = "Geschiedenis weergeven"
+sortByDate = "Sorteren op datum"
+sortByName = "Sorteren op naam"
+sortBySize = "Sorteren op grootte"
+storage = "Opslag"
+storageCleared = "Browser heeft opslag gewist. Bestanden zijn verwijderd. Upload ze opnieuw."
+storageError = "Er is een opslagfout opgetreden"
+storageLow = "Opslag raakt vol. Overweeg oude bestanden te verwijderen."
 storageState = "Opslag"
+subtitle = "Voeg bestanden toe aan uw opslag voor gemakkelijke toegang in alle tools"
+supportMessage = "Aangedreven door databaseopslag van de browser voor onbeperkte capaciteit"
 synced = "Gesynchroniseerd"
+title = "PDF-bestanden uploaden"
+toolChain = "Toegepaste tools"
+totalSelected = "Totaal geselecteerd"
+unsupported = "Niet ondersteund"
+unzip = "Uitpakken"
 updateOnServer = "Bijwerken op server"
+uploadError = "Uploaden van sommige bestanden is mislukt."
 uploadSelected = "Geselecteerde uploaden"
 uploadToServer = "Uploaden naar server"
 
@@ -3696,77 +3819,6 @@ title = "Over PDF's afvlakken"
 discord = "Discord"
 issues = "GitHub"
 
-[groupSigning.tooltip]
-header = "Over groepsondertekenen"
-
-[groupSigning.tooltip.finalization]
-bullet1 = "Alle handtekeningen worden toegepast in de door u opgegeven deelnemersvolgorde"
-bullet2 = "U kunt indien nodig met gedeeltelijke handtekeningen finaliseren"
-bullet3 = "Na finalisatie kan de sessie niet meer worden gewijzigd"
-description = "Zodra alle deelnemers hebben getekend (of u ervoor kiest eerder te finaliseren), kunt u de definitieve ondertekende PDF genereren."
-title = "Finalisatieproces"
-
-[groupSigning.tooltip.roles]
-bullet1 = "Eigenaar (u): Maakt sessie, configureert standaard handtekeningen, finaliseert document"
-bullet2 = "Deelnemers: Maken hun handtekening, kiezen certificaat, plaatsen op PDF"
-bullet3 = "Deelnemers kunnen zichtbaarheid, reden of locatie-instellingen niet wijzigen"
-description = "U beheert de instellingen voor de handtekeningweergave voor alle deelnemers."
-title = "Rollen van deelnemers"
-
-[groupSigning.tooltip.sequential]
-bullet1 = "Eerste deelnemer moet tekenen voordat de tweede toegang krijgt tot het document"
-bullet2 = "Zorgt voor juiste ondertekeningsvolgorde voor juridische naleving"
-bullet3 = "U kunt deelnemers herschikken door ze in de lijst te slepen"
-description = "Deelnemers ondertekenen documenten in de door u opgegeven volgorde. Elke ondertekenaar ontvangt een melding wanneer hij/zij aan de beurt is."
-title = "Sequentieel ondertekenen"
-
-[groupSigning.steps]
-back = "Terug"
-completed = "Voltooid"
-current = "Huidig"
-stepLabel = "Stap {{number}}"
-
-[groupSigning.steps.configureDefaults]
-continue = "Doorgaan naar controle"
-invisible = "Handtekeningen zijn onzichtbaar (alleen metadata)"
-locationLabel = "Locatie:"
-preview = "Voorbeeld"
-reasonLabel = "Reden:"
-title = "Handtekeninginstellingen configureren"
-visible = "Handtekeningen zijn zichtbaar op pagina {{page}}"
-
-[groupSigning.steps.review]
-document = "Document"
-dueDate = "Vervaldatum (optioneel)"
-dueDatePlaceholder = "Vervaldatum selecteren..."
-invisible = "Onzichtbaar (alleen metadata)"
-location = "Locatie:"
-logo = "Logo:"
-logoHidden = "Geen logo"
-logoShown = "Stirling PDF-logo weergegeven"
-participants = "Deelnemers"
-reason = "Reden:"
-send = "Ondertekeningsverzoeken verzenden"
-signatureSettings = "Handtekeninginstellingen"
-title = "Sessiedetails controleren"
-titleShort = "Controleren en verzenden"
-visibility = "Zichtbaarheid:"
-visible = "Zichtbaar op pagina {{page}}"
-participantCount = "{{count}} deelnemer(s) tekenen in volgorde"
-
-[groupSigning.steps.selectDocument]
-continue = "Doorgaan naar deelnemersselectie"
-noFile = "Selecteer één PDF-bestand uit uw actieve bestanden om een ondertekeningssessie te maken."
-selectedFile = "Geselecteerd document"
-title = "Document selecteren"
-
-[groupSigning.steps.selectParticipants]
-continue = "Doorgaan naar handtekeninginstellingen"
-count = "{{count}} deelnemer(s) geselecteerd"
-label = "Deelnemers selecteren"
-placeholder = "Deelnemers kiezen om te ondertekenen..."
-title = "Deelnemers kiezen"
-
 [getPdfInfo]
 downloadJson = "JSON downloaden"
 downloads = "Downloads"
@@ -3873,6 +3925,77 @@ javaScript = "JavaScript"
 layers = "Lagen"
 multimedia = "Multimedia"
 
+[groupSigning.steps]
+back = "Terug"
+completed = "Voltooid"
+current = "Huidig"
+stepLabel = "Stap {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Doorgaan naar controle"
+invisible = "Handtekeningen zijn onzichtbaar (alleen metadata)"
+locationLabel = "Locatie:"
+preview = "Voorbeeld"
+reasonLabel = "Reden:"
+title = "Handtekeninginstellingen configureren"
+visible = "Handtekeningen zijn zichtbaar op pagina {{page}}"
+
+[groupSigning.steps.review]
+document = "Document"
+dueDate = "Vervaldatum (optioneel)"
+dueDatePlaceholder = "Vervaldatum selecteren..."
+invisible = "Onzichtbaar (alleen metadata)"
+location = "Locatie:"
+logo = "Logo:"
+logoHidden = "Geen logo"
+logoShown = "Stirling PDF-logo weergegeven"
+participantCount = "{{count}} deelnemer(s) tekenen in volgorde"
+participants = "Deelnemers"
+reason = "Reden:"
+send = "Ondertekeningsverzoeken verzenden"
+signatureSettings = "Handtekeninginstellingen"
+title = "Sessiedetails controleren"
+titleShort = "Controleren en verzenden"
+visibility = "Zichtbaarheid:"
+visible = "Zichtbaar op pagina {{page}}"
+
+[groupSigning.steps.selectDocument]
+continue = "Doorgaan naar deelnemersselectie"
+noFile = "Selecteer één PDF-bestand uit uw actieve bestanden om een ondertekeningssessie te maken."
+selectedFile = "Geselecteerd document"
+title = "Document selecteren"
+
+[groupSigning.steps.selectParticipants]
+continue = "Doorgaan naar handtekeninginstellingen"
+count = "{{count}} deelnemer(s) geselecteerd"
+label = "Deelnemers selecteren"
+placeholder = "Deelnemers kiezen om te ondertekenen..."
+title = "Deelnemers kiezen"
+
+[groupSigning.tooltip]
+header = "Over groepsondertekenen"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Alle handtekeningen worden toegepast in de door u opgegeven deelnemersvolgorde"
+bullet2 = "U kunt indien nodig met gedeeltelijke handtekeningen finaliseren"
+bullet3 = "Na finalisatie kan de sessie niet meer worden gewijzigd"
+description = "Zodra alle deelnemers hebben getekend (of u ervoor kiest eerder te finaliseren), kunt u de definitieve ondertekende PDF genereren."
+title = "Finalisatieproces"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Eigenaar (u): Maakt sessie, configureert standaard handtekeningen, finaliseert document"
+bullet2 = "Deelnemers: Maken hun handtekening, kiezen certificaat, plaatsen op PDF"
+bullet3 = "Deelnemers kunnen zichtbaarheid, reden of locatie-instellingen niet wijzigen"
+description = "U beheert de instellingen voor de handtekeningweergave voor alle deelnemers."
+title = "Rollen van deelnemers"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "Eerste deelnemer moet tekenen voordat de tweede toegang krijgt tot het document"
+bullet2 = "Zorgt voor juiste ondertekeningsvolgorde voor juridische naleving"
+bullet3 = "U kunt deelnemers herschikken door ze in de lijst te slepen"
+description = "Deelnemers ondertekenen documenten in de door u opgegeven volgorde. Elke ondertekenaar ontvangt een melding wanneer hij/zij aan de beurt is."
+title = "Sequentieel ondertekenen"
+
 [guestBanner]
 dismiss = "Banner sluiten"
 message = "Maak een gratis account aan om uw werk op te slaan, meer functies te gebruiken en het project te steunen."
@@ -3935,10 +4058,6 @@ title = "Annoteren"
 desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal voor terugkerende taken."
 tags = "workflow,volgorde,automatisering"
 title = "Automatiseren"
-
-[home.formFill]
-desc = "Vul PDF-formuliervelden interactief in met een visuele editor"
-title = "Formulier invullen"
 
 [home.autoRename]
 desc = "Hernoemt een PDF-bestand automatisch op basis van de gedetecteerde kop"
@@ -4034,6 +4153,10 @@ title = "Pagina's extraheren"
 desc = "Verwijder alle interactieve elementen en formulieren uit een PDF"
 tags = "vereenvoudigen,verwijderen,interactief"
 title = "Afvlakken"
+
+[home.formFill]
+desc = "Vul PDF-formuliervelden interactief in met een visuele editor"
+title = "Formulier invullen"
 
 [home.getPdfInfo]
 desc = "Haalt alle mogelijke informatie op van PDF's"
@@ -4185,11 +4308,6 @@ desc = "Voegt handtekening toe aan PDF via tekenen, tekst of afbeelding"
 tags = "handtekening,ondertekenen"
 title = "Ondertekenen"
 
-[home.timestampPdf]
-desc = "Voeg een RFC 3161-documenttijdstempel toe om te bewijzen wanneer je PDF bestond"
-tags = "tijdstempel,RFC 3161,TSA,time stamp authority,documenttijdstempel,bestaansbewijs,tijdstempeltoken,vertrouwde tijdstempel,tijdstempel ondertekenen,notariseren"
-title = "PDF tijdstempelen"
-
 [home.split]
 desc = "Splits PDF's in meerdere documenten"
 tags = "splitsen,scheiden,opdelen"
@@ -4209,6 +4327,11 @@ title = "PDF splitsen in secties"
 desc = "API-documentatie bekijken en endpoints testen"
 tags = "API,documentatie,test"
 title = "API-documentatie"
+
+[home.timestampPdf]
+desc = "Voeg een RFC 3161-documenttijdstempel toe om te bewijzen wanneer je PDF bestond"
+tags = "tijdstempel,RFC 3161,TSA,time stamp authority,documenttijdstempel,bestaansbewijs,tijdstempeltoken,vertrouwde tijdstempel,tijdstempel ondertekenen,notariseren"
+title = "PDF tijdstempelen"
 
 [home.unlockPDFForms]
 desc = "Eigenschap alleen-lezen van formuliervelden in een PDF-document verwijderen."
@@ -4298,6 +4421,8 @@ welcomeTitle = "U bent uitgenodigd!"
 
 [landing]
 addFiles = "Bestanden toevoegen"
+heroSubtitle = "Sleep of voeg een bestaande PDF toe om te beginnen."
+heroTitle = "Stirling PDF"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Openen vanaf computer"
 uploadFromComputer = "Uploaden vanaf computer"
@@ -4321,6 +4446,18 @@ module = "Module"
 nav = "Licenties"
 title = "Licenties van derden"
 version = "Versie"
+
+[localMode]
+toolUnavailable = "Deze tool vereist een account. Log in bij Stirling Cloud of verbind met een zelfgehoste server om deze te gebruiken."
+
+[localMode.banner]
+message = "Log in om alle tools te ontgrendelen."
+signIn = "Inloggen"
+title = "Lokaal actief"
+
+[localMode.toolPicker]
+message = "Log in om alle tools te ontgrendelen."
+signIn = "Inloggen"
 
 [login]
 accountCreatedSuccess = "Account succesvol aangemaakt! U kunt nu inloggen."
@@ -4382,12 +4519,12 @@ sendResetLink = "Resetlink verzenden"
 sessionExpired = "Uw sessie is verlopen. Log alstublieft opnieuw in."
 signin = "Inloggen"
 signInAnonymously = "Als gast aanmelden"
-subtitle = "Log opnieuw in bij Stirling PDF"
 signingIn = "Inloggen..."
 signinTitle = "Gelieve in te loggen"
 signInWith = "Inloggen met"
 signOut = "Uitloggen"
 ssoSignIn = "Inloggen via Single Sign-on"
+subtitle = "Log opnieuw in bij Stirling PDF"
 title = "Inloggen"
 toManySessions = "U heeft te veel actieve sessies"
 unexpectedError = "Onverwachte fout: {{message}}"
@@ -4430,9 +4567,11 @@ tags = "markup,web-inhoud,transformatie,omzetten"
 title = "Markdown naar PDF"
 
 [merge]
+goToFileEditor = "Ga naar de bestandseditor"
 submit = "Samenvoegen"
 tags = "samenvoegen,pagina bewerkingen,serverzijde"
 title = "Samenvoegen"
+viewerModeHint = "Samenvoegen vereist 2 of meer bestanden. Ga naar de bestandseditor om ze te selecteren."
 
 [merge.error]
 failed = "Er is een fout opgetreden bij het samenvoegen van de PDF's."
@@ -4701,15 +4840,6 @@ viewSwitcher = "Gebruik deze bedieningselementen om te kiezen hoe u uw PDF's wil
 workbench = "Dit is de <strong>Werkbank</strong> - het hoofdgebied waar u uw PDF's bekijkt en bewerkt."
 wrapUp = "U bent er klaar voor! U kent de belangrijkste onderdelen van de app en hoe u ze gebruikt. Klik wanneer u wilt op de knop <strong>Help</strong> om deze rondleiding opnieuw te zien."
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "Na afloop van je proefperiode ga je door met ons gratis niveau. Voeg een betaalmethode toe om Pro-toegang te behouden."
-afterTrialWithPayment = "Je Pro-abonnement start automatisch wanneer de proefperiode eindigt."
-body = "Je hebt tijdens je proefperiode volledige toegang tot de Pro-functies van Stirling PDF. Geniet van onbeperkte conversies, grotere bestandsgroottes en prioriteitsverwerking."
-daysRemaining = "Nog {{days}} dagen resterend"
-daysRemainingSingular = "Nog {{days}} dag resterend"
-title = "Je 30-daagse Pro-proefperiode"
-trialEnds = "Proefperiode eindigt op {{date}}"
-
 [onboarding.buttons]
 back = "Terug"
 download = "Downloaden →"
@@ -4722,6 +4852,15 @@ skipTheTour = "Rondleiding overslaan"
 body = "Stirling werkt het best als desktopapp. U kunt het offline gebruiken, sneller documenten openen en lokaal op uw computer bewerken."
 title = "Downloaden"
 titleWithOs = "Downloaden voor {{osLabel}}"
+
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Na afloop van je proefperiode ga je door met ons gratis niveau. Voeg een betaalmethode toe om Pro-toegang te behouden."
+afterTrialWithPayment = "Je Pro-abonnement start automatisch wanneer de proefperiode eindigt."
+body = "Je hebt tijdens je proefperiode volledige toegang tot de Pro-functies van Stirling PDF. Geniet van onbeperkte conversies, grotere bestandsgroottes en prioriteitsverwerking."
+daysRemaining = "Nog {{days}} dagen resterend"
+daysRemainingSingular = "Nog {{days}} dag resterend"
+title = "Je 30-daagse Pro-proefperiode"
+trialEnds = "Proefperiode eindigt op {{date}}"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Zodra u de loginmodus inschakelt, kunt u gebruikers beheren, instellingen configureren en de servergezondheid monitoren. De eerste <strong>{{freeTierLimit}}</strong> personen op uw server gebruiken Stirling gratis."
@@ -4858,126 +4997,6 @@ title = "Pagina-editor"
 zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
 
-[viewer]
-cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
-disableColorFilter = "Kleurfilter uitschakelen"
-dualPageView = "Dubbele paginaweergave"
-enableDarkFilter = "Donkerfilter inschakelen"
-enableSepiaFilter = "Sepiafilter inschakelen"
-firstPage = "Eerste pagina"
-lastPage = "Laatste pagina"
-nextPage = "Volgende pagina"
-onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
-previousPage = "Vorige pagina"
-singlePageView = "Enkele paginaweergave"
-unknownFile = "Onbekend bestand"
-zoomIn = "Inzoomen"
-zoomOut = "Uitzoomen"
-resetZoom = "Zoom resetten"
-
-[viewer.nonPdf]
-fileTypeBadge = "{{type}}-bestand"
-convertToPdf = "Converteren naar PDF"
-loading = "Laden..."
-emptyFile = "Leeg bestand"
-csvStats = "{{rows}} rijen · {{columns}} kolommen · {{size}}"
-sortedBy = "Gesorteerd op: {{column}}"
-columnDefault = "Kolom {{index}}"
-htmlPreviewWarning = "HTML-voorbeeld — externe bronnen worden mogelijk niet geladen · {{size}}"
-htmlPreview = "HTML-voorbeeld"
-invalidJson = "Ongeldige JSON — ruwe inhoud wordt weergegeven"
-textStats = "{{lines}} regels · {{size}}"
-lineNumbers = "Regelnummers"
-renderMarkdown = "Markdown renderen"
-
-[viewer.attachments]
-title = "Bijlagen"
-searchPlaceholder = "Bijlagen zoeken"
-noSupport = "Ondersteuning voor bijlagen is niet beschikbaar voor deze viewer."
-noDocument = "Open een PDF om de bijlagen te bekijken."
-loading = "Bijlagen laden..."
-empty = "Geen bijlagen in dit document"
-noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
-
-[viewer.comments]
-title = "Opmerkingen"
-hint = "Plaats opmerkingen met de tools Opmerking, Tekst invoegen of Tekst vervangen. Ze verschijnen hier per pagina."
-placeholder = "Typ je opmerking..."
-pageLabel = "Pagina {{page}}"
-oneComment = "1 opmerking"
-nComments = "{{count}} opmerkingen"
-addCommentPlaceholder = "Opmerking toevoegen..."
-addLink = "Link toevoegen"
-goToLink = "Naar link gaan"
-addComment = "Opmerking toevoegen"
-viewComment = "Opmerking bekijken"
-addReplyPlaceholder = "Antwoord toevoegen..."
-saveReply = "Antwoord opslaan"
-send = "Verzenden"
-moreActions = "Meer acties"
-typeComment = "Opmerking"
-typeInsertText = "Tekst invoegen"
-typeReplaceText = "Tekst vervangen"
-locateAnnotation = "Zoeken in document"
-deleteTitle = "Annotatie uit opmerkingen verwijderen?"
-deleteDescription = "Deze annotatie heeft een opmerking gekoppeld. Je kunt alleen de opmerking uit de zijbalk verwijderen en de annotatie behouden, of alles verwijderen."
-removeCommentOnly = "Alleen opmerking verwijderen"
-deleteAnnotationAndComment = "Annotatie en opmerking verwijderen"
-
-[viewer.formBar]
-title = "Formuliervelden"
-unsavedBadge = "Niet opgeslagen"
-unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
-hasFieldsDesc = "Deze PDF bevat invulbare velden"
-dismiss = "Sluiten"
-apply = "Wijzigingen toepassen"
-download = "PDF downloaden"
-
-[rightRail]
-closeSelected = "Geselecteerde bestanden sluiten"
-selectAll = "Alles selecteren"
-deselectAll = "Alles deselecteren"
-selectByNumber = "Selecteren op paginanummers"
-deleteSelected = "Geselecteerde pagina's verwijderen"
-closePdf = "PDF sluiten"
-exportAll = "PDF exporteren"
-downloadSelected = "Geselecteerde bestanden downloaden"
-annotations = "Annotaties"
-exportSelected = "Geselecteerde pagina's exporteren"
-formFill = "Formulier invullen"
-saveChanges = "Wijzigingen opslaan"
-toggleAttachments = "Bijlagen tonen/verbergen"
-toggleTheme = "Thema wisselen"
-language = "Taal"
-toggleAnnotations = "Annotaties tonen/verbergen"
-toggleLayers = "Lagen in-/uitschakelen"
-search = "PDF doorzoeken"
-panMode = "Pan-modus"
-applyRedactionsFirst = "Apply redactions first"
-rotateLeft = "Linksom draaien"
-rotateRight = "Rechtsom draaien"
-toggleSidebar = "Zijbalk tonen/verbergen"
-toggleBookmarks = "Bladwijzers tonen/verbergen"
-toggleComments = "Opmerkingen"
-print = "PDF afdrukken"
-ruler = "Liniaal / Meten"
-readAloud = "Voorlezen"
-readAloudSpeed = "Snelheid"
-readAloudLanguage = "Taal"
-selectLanguage = "Selecteer taal"
-draw = "Draw"
-redact = "Redact"
-exitRedaction = "Exit Redaction Mode"
-save = "Save"
-downloadAll = "Alles downloaden"
-saveAll = "Alles opslaan"
-saveAs = "Opslaan als"
-
-[textAlign]
-left = "Links"
-center = "Gecentreerd"
-right = "Rechts"
-
 [pageExtracter]
 header = "Pagina's extraheren"
 placeholder = "(bijv. 1,2,8 of 4,7,12-16 of 2n-1)"
@@ -5000,10 +5019,24 @@ tags = "samenvoegen,composiet,enkel-zicht,organiseren"
 title = "Meerdere pagina indeling"
 top = "Bovenmarge"
 
-[pageLayout.mode]
-default = "Standaard"
-custom = "Aangepast"
-label = "Modus:"
+[pageLayout.advanced.tooltip.arrangement]
+bullet1 = "Op rijen: Elke rij eerst vullen."
+bullet2 = "Op kolommen: Elke kolom eerst vullen."
+text = "Bepaalt of pagina's het raster rij-voor-rij of kolom-voor-kolom vullen."
+title = "Paginavolgorde"
+
+[pageLayout.advanced.tooltip.header]
+title = "Geavanceerde indelingsopties"
+
+[pageLayout.advanced.tooltip.orientation]
+text = "Kies de richting van het uiteindelijke vel. Staand werkt beter voor hoge inhoud, terwijl liggend breder opgezette lay-outs beter past."
+title = "Oriëntatie"
+
+[pageLayout.advanced.tooltip.readingDirection]
+bullet1 = "LTR: Links-naar-rechts volgorde."
+bullet2 = "RTL: Rechts-naar-links volgorde."
+text = "Stelt de horizontale volgorde in het raster in, handig voor links-naar-rechts en rechts-naar-links documentconventies."
+title = "Leesrichting"
 
 [pageLayout.arrangement]
 byColumns = "Op kolommen"
@@ -5018,100 +5051,86 @@ label = "Paginavolgorde:"
 
 [pageLayout.error]
 failed = "Er is een fout opgetreden bij het maken van de multi-pagina-indeling."
-outerVerticalMarginsTooLarge = "Boven-/ondermarges zijn te groot voor dit paginaformaat."
-outerHorizontalMarginsTooLarge = "Links-/rechtermarges zijn te groot voor dit paginaformaat."
 innerMarginTooLarge = "Binnenmarge is te groot voor de geselecteerde lay-out."
+outerHorizontalMarginsTooLarge = "Links-/rechtermarges zijn te groot voor dit paginaformaat."
+outerVerticalMarginsTooLarge = "Boven-/ondermarges zijn te groot voor dit paginaformaat."
 
-[pageLayout.orientation]
-landscape = "Liggend"
-portrait = "Staand"
-label = "Oriëntatie:"
-
-[pageLayout.readingDirection]
-ltr = "Links naar rechts"
-rtl = "Rechts naar links"
-label = "Leesrichting:"
-
-[pageLayout.tooltip.header]
-title = "Handleiding pagina-indeling"
-
-[pageLayout.tooltip.overview]
-title = "Wat is pagina-indeling?"
-text = "Plaats meerdere pagina's op één vel voor hand-outs of om papier te besparen."
-
-[pageLayout.tooltip.mode]
-title = "Modus"
-text = "Kies hoe het raster wordt geconfigureerd:"
-bullet1 = "Standaard: Kies een voorinstelling en het raster wordt automatisch berekend."
-bullet2 = "Aangepast: Stel rijen en kolommen handmatig in."
-
-[pageLayout.tooltip.pagesPerSheet]
-title = "Pagina's per vel (standaardmodus)"
-text = "Kies hoeveel pagina's per vel (bijv. 4 → 2×2, 9 → 3×3)."
-
-[pageLayout.tooltip.rowsCols]
-title = "Rijen en kolommen (aangepaste modus)"
-text = "Stel de exacte rasterafmetingen in. Totaal pagina's per vel = rijen × kolommen."
-
-[pageLayout.tooltip.orientation]
-title = "Oriëntatie"
-text = "Stelt de oriëntatie van het uitvoervel in:"
-bullet1 = "Staand: Hoger dan breed."
-bullet2 = "Liggend: Breder dan hoog."
-
-[pageLayout.tooltip.arrangement]
-title = "Paginavolgorde"
-text = "Bepaalt in welke volgorde pagina's het raster vullen:"
-bullet1 = "Op rijen: Vul rij voor rij (links-naar-rechts of rechts-naar-links)."
-bullet2 = "Op kolommen: Vul van boven naar beneden, kolom per kolom."
-
-[pageLayout.tooltip.readingDirection]
-title = "Leesrichting"
-text = "Bepaalt de horizontale volgorde van pagina's:"
-bullet1 = "LTR: Links naar rechts."
-bullet2 = "RTL: Rechts naar links."
-
-[pageLayout.tooltip.addBorder]
+[pageLayout.marginsBorders.tooltip.borders]
+text = "Schakel randen in om lijnen rond elke geplaatste pagina te tekenen. Dit kan helpen bij visuele scheiding of bij het afsnijden."
 title = "Randen toevoegen"
-text = "Tekent randlijnen rond elke paginacel voor snijhulplijnen of visuele scheiding."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+text = "Randdikte wordt alleen toegepast wanneer randen zijn ingeschakeld. Hogere waarden geven dikkere lijnen."
+title = "Randdikte"
 
 [pageLayout.marginsBorders.tooltip.header]
 title = "Marges en randen"
 
-[pageLayout.marginsBorders.tooltip.margins]
-title = "Marges"
-text = "Gebruik boven-, onder-, linker- en rechtermarges om de ruimte rond het volledige uitvoervel te bepalen."
-
 [pageLayout.marginsBorders.tooltip.innerMargin]
-title = "Binnenmarge"
 text = "Binnenmarge voegt ruimte toe tussen cellen in het paginaraster voor betere scheiding en leesbaarheid."
+title = "Binnenmarge"
 
-[pageLayout.marginsBorders.tooltip.borders]
+[pageLayout.marginsBorders.tooltip.margins]
+text = "Gebruik boven-, onder-, linker- en rechtermarges om de ruimte rond het volledige uitvoervel te bepalen."
+title = "Marges"
+
+[pageLayout.mode]
+custom = "Aangepast"
+default = "Standaard"
+label = "Modus:"
+
+[pageLayout.orientation]
+label = "Oriëntatie:"
+landscape = "Liggend"
+portrait = "Staand"
+
+[pageLayout.readingDirection]
+label = "Leesrichting:"
+ltr = "Links naar rechts"
+rtl = "Rechts naar links"
+
+[pageLayout.tooltip.addBorder]
+text = "Tekent randlijnen rond elke paginacel voor snijhulplijnen of visuele scheiding."
 title = "Randen toevoegen"
-text = "Schakel randen in om lijnen rond elke geplaatste pagina te tekenen. Dit kan helpen bij visuele scheiding of bij het afsnijden."
 
-[pageLayout.marginsBorders.tooltip.borderWidth]
-title = "Randdikte"
-text = "Randdikte wordt alleen toegepast wanneer randen zijn ingeschakeld. Hogere waarden geven dikkere lijnen."
-
-[pageLayout.advanced.tooltip.header]
-title = "Geavanceerde indelingsopties"
-
-[pageLayout.advanced.tooltip.orientation]
-title = "Oriëntatie"
-text = "Kies de richting van het uiteindelijke vel. Staand werkt beter voor hoge inhoud, terwijl liggend breder opgezette lay-outs beter past."
-
-[pageLayout.advanced.tooltip.arrangement]
+[pageLayout.tooltip.arrangement]
+bullet1 = "Op rijen: Vul rij voor rij (links-naar-rechts of rechts-naar-links)."
+bullet2 = "Op kolommen: Vul van boven naar beneden, kolom per kolom."
+text = "Bepaalt in welke volgorde pagina's het raster vullen:"
 title = "Paginavolgorde"
-text = "Bepaalt of pagina's het raster rij-voor-rij of kolom-voor-kolom vullen."
-bullet1 = "Op rijen: Elke rij eerst vullen."
-bullet2 = "Op kolommen: Elke kolom eerst vullen."
 
-[pageLayout.advanced.tooltip.readingDirection]
+[pageLayout.tooltip.header]
+title = "Handleiding pagina-indeling"
+
+[pageLayout.tooltip.mode]
+bullet1 = "Standaard: Kies een voorinstelling en het raster wordt automatisch berekend."
+bullet2 = "Aangepast: Stel rijen en kolommen handmatig in."
+text = "Kies hoe het raster wordt geconfigureerd:"
+title = "Modus"
+
+[pageLayout.tooltip.orientation]
+bullet1 = "Staand: Hoger dan breed."
+bullet2 = "Liggend: Breder dan hoog."
+text = "Stelt de oriëntatie van het uitvoervel in:"
+title = "Oriëntatie"
+
+[pageLayout.tooltip.overview]
+text = "Plaats meerdere pagina's op één vel voor hand-outs of om papier te besparen."
+title = "Wat is pagina-indeling?"
+
+[pageLayout.tooltip.pagesPerSheet]
+text = "Kies hoeveel pagina's per vel (bijv. 4 → 2×2, 9 → 3×3)."
+title = "Pagina's per vel (standaardmodus)"
+
+[pageLayout.tooltip.readingDirection]
+bullet1 = "LTR: Links naar rechts."
+bullet2 = "RTL: Rechts naar links."
+text = "Bepaalt de horizontale volgorde van pagina's:"
 title = "Leesrichting"
-text = "Stelt de horizontale volgorde in het raster in, handig voor links-naar-rechts en rechts-naar-links documentconventies."
-bullet1 = "LTR: Links-naar-rechts volgorde."
-bullet2 = "RTL: Rechts-naar-links volgorde."
+
+[pageLayout.tooltip.rowsCols]
+text = "Stel de exacte rasterafmetingen in. Totaal pagina's per vel = rijen × kolommen."
+title = "Rijen en kolommen (aangepaste modus)"
 
 [pageRemover]
 header = "PDF pagina verwijderaar"
@@ -5197,6 +5216,9 @@ title = "Tips"
 autoClose = "Dit venster wordt automatisch gesloten..."
 billingPeriod = "Facturatieperiode"
 canCloseWindow = "U kunt dit venster nu sluiten."
+checkoutInstructions = "Rond je aankoop af in het browservenster dat zojuist is geopend. Ga na de betaling hier terug en klik op de knop hieronder om je factureringsinformatie te vernieuwen."
+checkoutOpened = "Afrekenen geopend in browser"
+closeLater = "Ik doe dit later"
 emailInvalid = "Voer een geldig e-mailadres in"
 enterpriseNote = "Plaatsen kunnen worden aangepast bij het afrekenen (1-1000)."
 error = "Betalingsfout"
@@ -5218,6 +5240,7 @@ perMonth = "/maand"
 perYear = "/jaar"
 preparing = "Afrekenproces voorbereiden..."
 redirecting = "Doorsturen naar beveiligde checkout..."
+refreshBilling = "Ik heb betaald - Facturering vernieuwen"
 stripeNotConfigured = "Stripe niet geconfigureerd"
 stripeNotConfiguredMessage = "Stripe-betalintegratie is niet geconfigureerd. Neem contact op met uw beheerder."
 success = "Betaling geslaagd!"
@@ -5229,10 +5252,6 @@ upgradeCompleteMessage = "Uw abonnement is succesvol geüpgraded. Uw bestaande l
 upgradeSuccess = "Betaling geslaagd! Uw abonnement is geüpgraded. De licentie is op uw server bijgewerkt. U ontvangt binnenkort een bevestigingsmail."
 upgradeTitle = "Upgraden naar {{planName}}"
 yearly = "Jaarlijks"
-checkoutOpened = "Afrekenen geopend in browser"
-checkoutInstructions = "Rond je aankoop af in het browservenster dat zojuist is geopend. Ga na de betaling hier terug en klik op de knop hieronder om je factureringsinformatie te vernieuwen."
-refreshBilling = "Ik heb betaald - Facturering vernieuwen"
-closeLater = "Ik doe dit later"
 
 [payment.emailStage]
 continue = "Doorgaan"
@@ -5456,13 +5475,6 @@ prompt = "Kies pagina om tabel te extraheren"
 submit = "Extraheren"
 title = "PDF naar CSV"
 
-[PDFToXLSX]
-header = "PDF naar Excel"
-prompt = "Kies pagina's om tabellen te extraheren"
-submit = "Converteren"
-title = "PDF naar Excel (XLSX)"
-tags = "spreadsheet,excel,xlsx,tabel,extraheren,converteren"
-
 [PDFToHTML]
 credit = "Deze service gebruikt pdftohtml voor bestandsconversie."
 header = "PDF naar HTML"
@@ -5561,6 +5573,13 @@ title = "PDF naar Word"
 [PDFToWord.selectText]
 1 = "Uitvoerbestandsformaat"
 
+[PDFToXLSX]
+header = "PDF naar Excel"
+prompt = "Kies pagina's om tabellen te extraheren"
+submit = "Converteren"
+tags = "spreadsheet,excel,xlsx,tabel,extraheren,converteren"
+title = "PDF naar Excel (XLSX)"
+
 [PDFToXML]
 credit = "Deze service gebruikt LibreOffice voor bestandsconversie."
 header = "PDF naar XML"
@@ -5626,10 +5645,10 @@ manage = "Beheren"
 perMonth = "/maand"
 perSeat = "/plaats"
 popular = "Populair"
-selectPlan = "Abonnement selecteren"
-selectCredits = "Selecteer het aantal credits"
-showComparison = "Alle functies vergelijken"
 purchase = "Kopen"
+selectCredits = "Selecteer het aantal credits"
+selectPlan = "Abonnement selecteren"
+showComparison = "Alle functies vergelijken"
 totalCost = "Totale kosten"
 upgrade = "Upgraden"
 withServer = "+ Server-abonnement"
@@ -5638,19 +5657,29 @@ withServer = "+ Server-abonnement"
 subtitle = "Details van uw huidige abonnement"
 title = "Actief abonnement"
 
+[plan.api]
+large = "5,000 Credits"
+medium = "1,000 Credits"
+small = "500 Credits"
+xsmall = "100 Credits"
+
+[plan.apiPackages]
+subtitle = "Koop API-credits voor je applicaties"
+title = "API-creditpakketten"
+
 [plan.availablePlans]
-subtitle = "Kies het abonnement dat bij uw behoeften past"
 loadError = "Kan planprijzen niet laden. Standaardwaarden worden gebruikt."
+subtitle = "Kies het abonnement dat bij uw behoeften past"
 title = "Beschikbare abonnementen"
 
 [plan.enterprise]
-siteLicense = "Site-licentie"
 highlight1 = "Aangepaste prijzen"
 highlight2 = "Toegewijde ondersteuning"
 highlight3 = "Nieuwste functies"
 name = "Enterprise"
 requiresServer = "Server vereist"
 requiresServerMessage = "Upgrade eerst naar het Server-abonnement voordat u naar Enterprise opwaardeert."
+siteLicense = "Site-licentie"
 
 [plan.feature]
 api = "API-toegang"
@@ -5722,16 +5751,6 @@ successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu s
 name = "Team"
 siteLicense = "Site-licentie"
 
-[plan.api]
-large = "5,000 Credits"
-medium = "1,000 Credits"
-small = "500 Credits"
-xsmall = "100 Credits"
-
-[plan.apiPackages]
-subtitle = "Koop API-credits voor je applicaties"
-title = "API-creditpakketten"
-
 [plan.trial]
 badge = "Proef"
 continueWithFree = "Doorgaan met gratis niveau"
@@ -5746,77 +5765,6 @@ subscribeToPro = "Abonneer je op Pro"
 subscriptionScheduled = "Abonnement gepland - start op {{date}}"
 title = "Gratis proefperiode actief"
 
-[credits]
-enableOverageBilling = "Overschrijdingsfacturering inschakelen"
-maybeLater = "Misschien later"
-upgrade = "Upgraden"
-
-[credits.modal]
-advancedMonitoring = "Geavanceerde monitoring"
-allInOneWorkspace = "Alles-in-één PDF-werkruimte (viewer, tools & agent)"
-apiSandbox = "API-sandbox"
-contactSales = "Neem contact op met Sales"
-creditsRemaining = "{{current}} van {{total}} resterend"
-creditsThisMonth = "Maandelijkse credits"
-current = "Huidig abonnement"
-customPricing = "Aangepast"
-customSmartFolders = "Aangepaste Smart Folders"
-dedicatedSupportSlas = "Toegewijde support & SLA's"
-enterpriseSubscription = "Enterprise"
-everythingInCredits = "Alles in Credits, plus:"
-everythingInFree = "Alles in Free, plus:"
-fasterThroughput = "10x snellere doorvoer"
-forRegularWork = "Voor regulier PDF-werk:"
-freeTier = "Gratis niveau"
-fullyPrivateFiles = "Volledige bestandsprivacy"
-largeFileProcessing = "Verwerking van grote bestanden"
-managedMemberMessage = "Je hebt onbeperkte toegang tot credits via je team. Neem contact op met je teamleider als je hulp nodig hebt."
-managedMemberTitle = "Onbeperkte credits"
-meteringBillingNote = "Overschrijdingscredits worden maandelijks gefactureerd samen met je Team-abonnement. Volg je gebruik op elk moment in je accountinstellingen."
-meteringExplanation = "Je Team-abonnement bevat {{credits}} credits per maand. Wanneer ze op zijn, levert overschrijdingsfacturering automatisch extra credits zodat je nooit hoeft te stoppen met werken."
-meteringIncluded = "{{credits}} credits/maand inbegrepen bij Team"
-meteringNoCommitment = "Geen verplichting, op elk moment opzegbaar"
-meteringNeverRunOut = "Nooit zonder credits"
-meteringPayAsYouGo = "Alleen betalen voor wat je gebruikt"
-meteringPrice = "Extra credits voor {{price}}/credit"
-meteringTitle = "Betaal-naar-gebruik overschrijdingsfacturering"
-monthlyCredits = "maandelijkse credits"
-orgWideAccess = "Organisatiebrede toegangscontrole"
-overage = "overschrijding"
-perMonth = "/maand"
-popular = "Populair"
-premiumAiModels = "Premium AI-modellen"
-prioritySupport = "Prioritaire support"
-privateDocCloud = "Privé Document Cloud"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Beveiligde API-toegang"
-selfHostLink = "Bekijk de documentatie en plannen"
-selfHostPrompt = "Wil je zelf hosten?"
-standardThroughput = "Standaard doorvoer"
-subtitle = "Upgrade naar Team voor 10x de credits en snellere verwerking."
-subtitlePro = "Schakel automatische overschrijdingsfacturering in zodat je nooit zonder credits zit."
-teamLeaderOnly = "Alleen teamleiders kunnen overschrijdingsfacturering inschakelen"
-teamSubscription = "Team"
-titleExhausted = "Je hebt je gratis credits gebruikt"
-titleExhaustedPro = "Je hebt geen credits meer"
-unlimitedApiAccess = "Onbeperkte API-toegang"
-unlimitedMonthlyCredits = "Site-licentie"
-unlimitedSeats = "Onbeperkte seats"
-
-[credits.modal.features]
-everythingInCredits = "Alles in Credits, plus:"
-everythingInFree = "Alles in Free, plus:"
-forRegularWork = "Voor regulier PDF-werk:"
-
-[credits.insufficient]
-brief = "Onvoldoende credits. Je hebt {{required}} credits nodig maar hebt er {{current}}."
-freeTier = "Upgrade naar Team voor 10x meer credits en onbeperkte overschrijdingsfacturering."
-managedMember = "Neem contact op met je teamleider voor hulp."
-message = "Je hebt niet genoeg credits om {{tool}} uit te voeren. Je hebt momenteel {{current}} credits."
-messageWithAmount = "Je hebt {{required}} credits nodig om {{tool}} uit te voeren, maar je hebt er slechts {{current}}."
-teamMember = "Schakel overschrijdingsfacturering in zodat je nooit zonder credits komt te zitten."
-title = "Onvoldoende credits"
-
 [printFile]
 header = "Print bestand naar printer"
 submit = "Afdrukken"
@@ -5825,6 +5773,207 @@ title = "Print bestand"
 [printFile.selectText]
 1 = "Selecteer bestand om te printen"
 2 = "Voer printernaam in"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Bestandsimport"
+
+[provider.googledrive.apiKey]
+description = "Google API-sleutel voor Google Picker API van Google Cloud Console"
+label = "API-sleutel"
+
+[provider.googledrive.appId]
+description = "Google Drive App-ID van Google Cloud Console"
+label = "App-ID"
+
+[provider.googledrive.clientId]
+description = "Google OAuth 2.0 Client-ID van Google Cloud Console"
+label = "Client-ID"
+
+[provider.googledrive.enabled]
+description = "Sta gebruikers toe om bestanden rechtstreeks vanaf Google Drive te importeren"
+label = "Google Drive-bestandskiezer inschakelen"
+
+[provider.oauth2.generic]
+name = "Generieke OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.autoCreateUser]
+description = "Automatisch gebruikersaccounts aanmaken bij de eerste OAuth2-aanmelding"
+label = "Gebruikers automatisch aanmaken"
+
+[provider.oauth2.generic.blockRegistration]
+description = "Nieuwe gebruikersregistratie via OAuth2 voorkomen"
+label = "Registratie blokkeren"
+
+[provider.oauth2.generic.clientId]
+description = "De OAuth2 client-ID van je provider"
+label = "Client-ID"
+
+[provider.oauth2.generic.clientSecret]
+description = "Het OAuth2 clientgeheim van je provider"
+label = "Clientgeheim"
+
+[provider.oauth2.generic.enabled]
+description = "Authenticatie inschakelen via een aangepaste OAuth2-provider"
+label = "Generieke OAuth2 inschakelen"
+
+[provider.oauth2.generic.issuer]
+description = "Provider die OpenID Connect Discovery ondersteunt (/.well-known/openid-configuration)"
+label = "Issuer-URL"
+
+[provider.oauth2.generic.provider]
+description = "De naam van je OAuth2-provider (bijv. Azure AD, Okta)"
+label = "Naam provider"
+
+[provider.oauth2.generic.scopes]
+description = "Komma-gescheiden OAuth2-scopes"
+label = "Scopes"
+
+[provider.oauth2.generic.useAsUsername]
+description = "Veld om als gebruikersnaam te gebruiken"
+label = "Gebruiken als gebruikersnaam"
+
+[provider.oauth2.github]
+scope = "Aanmeldingsauthenticatie"
+
+[provider.oauth2.github.clientId]
+description = "De OAuth2 client-ID van GitHub Developer Settings"
+label = "Client-ID"
+
+[provider.oauth2.github.clientSecret]
+description = "Het OAuth2 clientgeheim van GitHub Developer Settings"
+label = "Clientgeheim"
+
+[provider.oauth2.github.scopes]
+description = "Komma-gescheiden OAuth2-scopes"
+label = "Scopes"
+
+[provider.oauth2.github.useAsUsername]
+description = "Veld om als gebruikersnaam te gebruiken (email, login, name)"
+label = "Gebruiken als gebruikersnaam"
+
+[provider.oauth2.google]
+scope = "Aanmeldingsauthenticatie"
+
+[provider.oauth2.google.clientId]
+description = "De OAuth2 client-ID van Google Cloud Console"
+label = "Client-ID"
+
+[provider.oauth2.google.clientSecret]
+description = "Het OAuth2 clientgeheim van Google Cloud Console"
+label = "Clientgeheim"
+
+[provider.oauth2.google.scopes]
+description = "Komma-gescheiden OAuth2-scopes"
+label = "Scopes"
+
+[provider.oauth2.google.useAsUsername]
+description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name)"
+label = "Gebruiken als gebruikersnaam"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.clientId]
+description = "De OAuth2 client-ID van Keycloak"
+label = "Client-ID"
+
+[provider.oauth2.keycloak.clientSecret]
+description = "Het OAuth2 clientgeheim van Keycloak"
+label = "Clientgeheim"
+
+[provider.oauth2.keycloak.issuer]
+description = "URL van het OpenID Connect Discovery-eindpunt van de Keycloak-realm"
+label = "Issuer-URL"
+
+[provider.oauth2.keycloak.scopes]
+description = "Komma-gescheiden OAuth2-scopes"
+label = "Scopes"
+
+[provider.oauth2.keycloak.useAsUsername]
+description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name, preferred_username)"
+label = "Gebruiken als gebruikersnaam"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.autoCreateUser]
+description = "Automatisch gebruikersaccounts aanmaken bij de eerste SAML2-aanmelding"
+label = "Gebruikers automatisch aanmaken"
+
+[provider.saml2.blockRegistration]
+description = "Nieuwe gebruikersregistratie via SAML2 voorkomen"
+label = "Registratie blokkeren"
+
+[provider.saml2.enabled]
+description = "SAML2-authenticatie inschakelen (alleen Enterprise)"
+label = "SAML2 inschakelen"
+
+[provider.saml2.idpCert]
+description = "Het certificaatpad (bijv. classpath:okta.cert)"
+label = "IDP-certificaat"
+
+[provider.saml2.idpIssuer]
+description = "De ID van je provider"
+label = "IDP-issuer"
+
+[provider.saml2.idpMetadataUri]
+description = "De URI voor de metadata van je provider"
+label = "IDP-metadata-URI"
+
+[provider.saml2.idpSingleLoginUrl]
+description = "De URL voor het initiëren van SSO"
+label = "IDP Single Login-URL"
+
+[provider.saml2.idpSingleLogoutUrl]
+description = "De URL voor het initiëren van SLO"
+label = "IDP Single Logout-URL"
+
+[provider.saml2.privateKey]
+description = "Het pad naar je privésleutel"
+label = "Privésleutel"
+
+[provider.saml2.provider]
+description = "De naam van je SAML2-provider"
+label = "Naam provider"
+
+[provider.saml2.registrationId]
+description = "De naam van je Service Provider (SP)-appnaam"
+label = "Registratie-ID"
+
+[provider.saml2.spCert]
+description = "Het pad naar je ondertekeningscertificaat"
+label = "SP-certificaat"
+
+[provider.smtp]
+name = "SMTP-mail"
+scope = "E-mailmeldingen"
+
+[provider.smtp.enabled]
+description = "E-mailmeldingen en SMTP-functionaliteit inschakelen"
+label = "Mail inschakelen"
+
+[provider.smtp.from]
+description = "Het e-mailadres dat als afzender wordt gebruikt"
+label = "Van-adres"
+
+[provider.smtp.host]
+description = "De hostnaam of het IP-adres van je SMTP-server"
+label = "SMTP-host"
+
+[provider.smtp.password]
+description = "Wachtwoord voor SMTP-authenticatie"
+label = "SMTP-wachtwoord"
+
+[provider.smtp.port]
+description = "Het poortnummer voor de SMTP-verbinding (meestal 25, 465 of 587)"
+label = "SMTP-poort"
+
+[provider.smtp.username]
+description = "Gebruikersnaam voor SMTP-authenticatie"
+label = "SMTP-gebruikersnaam"
 
 [quickAccess]
 access = "Toegang"
@@ -5867,7 +6016,12 @@ createNew = "Nieuw verzoek maken"
 createSession = "Ondertekeningsverzoek maken"
 dueDate = "Vervaldatum (optioneel)"
 files = "Bestand"
+filterDeclined = "Geweigerd"
+filterMine = "Van mij"
+filterOverdue = "Achterstallig"
+filterSigned = "Ondertekend"
 help = "Hulp"
+newRequest = "Nieuw verzoek"
 noActiveSessions = "Geen openstaande ondertekeningsverzoeken of actieve sessies"
 noCompletedSessions = "Geen voltooide sessies"
 noFile = "Geen bestand geselecteerd"
@@ -5875,8 +6029,9 @@ read = "Lezen"
 reader = "Lezer"
 refresh = "Vernieuwen"
 requestSignatures = "Handtekeningen aanvragen"
-selectSingleFileToRequest = "Selecteer één PDF-bestand om handtekeningen aan te vragen"
+searchDocuments = "Documenten zoeken…"
 selectedFile = "Geselecteerd bestand"
+selectSingleFileToRequest = "Selecteer één PDF-bestand om handtekeningen aan te vragen"
 selectUsers = "Gebruikers selecteren om te ondertekenen"
 selectUsersPlaceholder = "Deelnemers kiezen..."
 sendingRequest = "Verzenden..."
@@ -5885,14 +6040,8 @@ showMeAround = "Leid me rond"
 sign = "Teken"
 signatureRequests = "Ondertekeningsverzoeken"
 signYourself = "Zelf ondertekenen"
-newRequest = "Nieuw verzoek"
 tours = "Rondleidingen"
 wetSign = "Handtekening toevoegen"
-filterMine = "Van mij"
-filterOverdue = "Achterstallig"
-filterSigned = "Ondertekend"
-filterDeclined = "Geweigerd"
-searchDocuments = "Documenten zoeken…"
 
 [quickAccess.helpMenu]
 adminTour = "Rondleiding voor beheer"
@@ -5933,15 +6082,15 @@ title = "Woorden om te zwartlakken"
 failed = "Er is een fout opgetreden bij het zwartlakken van de PDF."
 
 [redact.manual]
+activate = "Hulpmiddel voor anonimiseren activeren"
+active = "Anonimiseermodus actief"
 apply = "Apply"
 applyChanges = "Wijzigingen toepassen"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 boxRedaction = "Vak tekenen voor zwartlakken"
-colourPicker = "Kleurenkiezer"
 colorLabel = "Kleur voor anonimiseren"
-active = "Anonimiseermodus actief"
-activate = "Hulpmiddel voor anonimiseren activeren"
+colourPicker = "Kleurenkiezer"
 controlsTitle = "Manual Redaction Controls"
 convertPDFToImageLabel = "PDF converteren naar PDF-afbeelding (gebruikt om tekst achter het vak te verwijderen)"
 export = "Exporteren"
@@ -6337,6 +6486,46 @@ title = "Hoog contrast"
 text = "Keer alle kleuren in de PDF volledig om, waardoor een negatief-achtig effect ontstaat. Nuttig om donkere modus-versies van documenten te maken of om oogvermoeidheid bij weinig licht te verminderen."
 title = "Alle kleuren inverteren"
 
+[rightRail]
+annotations = "Annotaties"
+applyRedactionsFirst = "Apply redactions first"
+closePdf = "PDF sluiten"
+closeSelected = "Geselecteerde bestanden sluiten"
+deleteSelected = "Geselecteerde pagina's verwijderen"
+deselectAll = "Alles deselecteren"
+downloadAll = "Alles downloaden"
+downloadSelected = "Geselecteerde bestanden downloaden"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+exportAll = "PDF exporteren"
+exportSelected = "Geselecteerde pagina's exporteren"
+formFill = "Formulier invullen"
+language = "Taal"
+panMode = "Pan-modus"
+print = "PDF afdrukken"
+readAloud = "Voorlezen"
+readAloudLanguage = "Taal"
+readAloudSpeed = "Snelheid"
+redact = "Redact"
+rotateLeft = "Linksom draaien"
+rotateRight = "Rechtsom draaien"
+ruler = "Liniaal / Meten"
+save = "Save"
+saveAll = "Alles opslaan"
+saveAs = "Opslaan als"
+saveChanges = "Wijzigingen opslaan"
+search = "PDF doorzoeken"
+selectAll = "Alles selecteren"
+selectByNumber = "Selecteren op paginanummers"
+selectLanguage = "Selecteer taal"
+toggleAnnotations = "Annotaties tonen/verbergen"
+toggleAttachments = "Bijlagen tonen/verbergen"
+toggleBookmarks = "Bladwijzers tonen/verbergen"
+toggleComments = "Opmerkingen"
+toggleLayers = "Lagen in-/uitschakelen"
+toggleSidebar = "Zijbalk tonen/verbergen"
+toggleTheme = "Thema wisselen"
+
 [rotate]
 rotateLeft = "Tegen de klok in draaien"
 rotateRight = "Met de klok mee draaien"
@@ -6359,32 +6548,6 @@ text = "Draai uw PDF-pagina's met de klok mee of tegen de klok in in stappen van
 
 [rotate.tooltip.header]
 title = "Overzicht rotatie-instellingen"
-
-[timestampPdf]
-completed = "PDF succesvol van tijdstempel voorzien"
-desc = "Voeg een RFC 3161-documenttijdstempel toe aan je PDF met een vertrouwde Time Stamp Authority (TSA)-server."
-filenamePrefix = "tijdgestempeld"
-results = "Tijdstempelresultaten"
-submit = "Tijdstempel toepassen"
-title = "PDF tijdstempelen"
-
-[timestampPdf.error]
-failed = "Er is een fout opgetreden bij het tijdstempelen van de PDF."
-generic = "Tijdstempelen mislukt"
-
-[timestampPdf.files]
-placeholder = "Selecteer een PDF-bestand in de hoofdweergave om te beginnen"
-
-[timestampPdf.options]
-note = "Alleen een SHA-256-hash van je document wordt naar de TSA-server gestuurd; het PDF-bestand zelf wordt nooit naar de TSA-server verzonden."
-title = "Tijdstempelserver (TSA)"
-
-[timestampPdf.options.tsaUrl]
-desc = "Kies een vertrouwde Time Stamp Authority"
-label = "Selecteer een TSA-server"
-
-[timestampPdf.steps]
-settings = "Instellingen"
 
 [sanitize]
 completed = "Opschonen succesvol voltooid"
@@ -6554,37 +6717,6 @@ bullet3 = "Cruciaal voor goedkeuringsworkflows en juridische ketens van bewaring
 description = "De volgorde die u bij het maken van de sessie opgeeft, bepaalt wie als eerste tekent."
 title = "Ondertekeningsvolgorde"
 
-[signatureSettings.tooltip]
-header = "Instellingen voor handtekeningweergave"
-
-[signatureSettings.tooltip.location]
-bullet1 = "Voorbeelden: \"New York, USA\", \"London Office\", \"Remote\""
-bullet2 = "Niet hetzelfde als paginapositie"
-bullet3 = "Kan vereist zijn voor bepaalde rechtsgebieden"
-description = "Optionele geografische locatie waar de handtekening is toegepast. Opgeslagen in certificaatmetadata."
-title = "Handtekeninglocatie"
-
-[signatureSettings.tooltip.logo]
-bullet1 = "Weergegeven naast handtekening en tekst"
-bullet2 = "Ondersteunt PNG-, JPG-indelingen"
-bullet3 = "Verbetert professionele uitstraling"
-description = "Voeg een bedrijfslogo toe aan zichtbare handtekeningen voor branding en authenticiteit."
-title = "Bedrijfslogo"
-
-[signatureSettings.tooltip.reason]
-bullet1 = "Voorbeelden: \"Goedkeuring\", \"Contractovereenkomst\", \"Review voltooid\""
-bullet2 = "Zichtbaar in PDF-handtekeningseigenschappen"
-bullet3 = "Handig voor audittrails en naleving"
-description = "Optionele tekst die uitlegt waarom het document wordt ondertekend. Opgeslagen in certificaatmetadata."
-title = "Reden voor handtekening"
-
-[signatureSettings.tooltip.visibility]
-bullet1 = "<b>Zichtbaar</b>: Handtekening verschijnt op PDF met aangepaste weergave"
-bullet2 = "<b>Onzichtbaar</b>: Certificaat ingesloten zonder visuele markering"
-bullet3 = "Onzichtbare handtekeningen bieden nog steeds cryptografische validatie"
-description = "Bepaalt of de handtekening zichtbaar is op het document of onzichtbaar wordt ingesloten."
-title = "Zichtbaarheid van handtekening"
-
 [settings.configuration]
 advanced = "Geavanceerd"
 database = "Database"
@@ -6606,6 +6738,102 @@ user = "Ingelogd als"
 local = "Alleen lokaal"
 saas = "Stirling Cloud"
 selfhosted = "Self-hosted"
+
+[settings.developer]
+apiKeys = "API-sleutels"
+title = "Ontwikkelaar"
+
+[settings.general]
+autoUnzip = "API-antwoorden automatisch uitpakken"
+autoUnzipDescription = "Automatisch bestanden uit ZIP-antwoorden halen"
+autoUnzipFileLimit = "Limiet automatisch uitpakken"
+autoUnzipFileLimitDescription = "Maximaal aantal bestanden om uit ZIP te halen"
+autoUnzipFileLimitTooltip = "Alleen uitpakken als de ZIP dit aantal bestanden of minder bevat. Stel hoger in om grotere ZIP's te extraheren."
+autoUnzipTooltip = "ZIP-bestanden die door API-bewerkingen worden teruggegeven automatisch uitpakken. Uitschakelen om ZIP-bestanden intact te laten. Dit heeft geen invloed op automatiseringsworkflows."
+defaultPdfEditor = "Standaard PDF-editor"
+defaultPdfEditorActive = "Stirling PDF is de standaard PDF-editor"
+defaultPdfEditorChecking = "Controleren..."
+defaultPdfEditorInactive = "Een andere app is als standaard ingesteld"
+defaultPdfEditorSet = "Al standaard"
+defaultStartupView = "Standaardweergave bij opstarten"
+defaultStartupViewDescription = "Kies welk tabblad in de linkerkolom actief is wanneer de app start"
+defaultToolPickerMode = "Standaard toolkiezer-modus"
+defaultToolPickerModeDescription = "Kies of de toolkiezer standaard in volledig scherm of zijbalk opent"
+defaultViewerZoom = "Standaard zoomniveau van de lezer"
+defaultViewerZoomDescription = "Stel het standaard zoomniveau in bij het openen van PDF's in de lezer"
+description = "Configureer algemene app-voorkeuren."
+hideUnavailableConversions = "Niet-beschikbare conversies verbergen"
+hideUnavailableConversionsDescription = "Verwijder uitgeschakelde conversie-opties in de tool Converteren in plaats van ze grijs te tonen."
+hideUnavailableTools = "Niet-beschikbare tools verbergen"
+hideUnavailableToolsDescription = "Verwijder tools die door de server zijn uitgeschakeld in plaats van ze grijs te tonen."
+logout = "Afmelden"
+setAsDefault = "Als standaard instellen"
+title = "Algemeen"
+user = "Gebruiker"
+
+[settings.general.enableFeatures]
+action = "Configureren"
+and = "en"
+benefit = "Schakelt gebruikersrollen, teamsamenwerking, beheerdersfuncties en enterprise-functies in."
+dismiss = "Sluiten"
+intro = "Schakel gebruikersauthenticatie, teambeheer en werkruimtefuncties in voor uw organisatie."
+learnMore = "Meer info in de documentatie"
+title = "Voor systeembeheerders"
+
+[settings.general.mode]
+fullscreen = "Volledig scherm"
+sidebar = "Zijbalk"
+
+[settings.general.startupView]
+automate = "Automatiseren"
+read = "Lezer"
+tools = "Tools"
+
+[settings.general.updates]
+checkForUpdates = "Op updates controleren"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+description = "Controleer op updates en bekijk versie-informatie"
+latestVersion = "Laatste versie"
+serverNeedsUpdate = "Server needs to be updated by administrator"
+title = "Software-updates"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+viewDetails = "Details bekijken"
+
+[settings.general.versionInfo]
+description = "Desktop and server version details"
+desktop = "Desktop Version"
+server = "Server Version"
+title = "Version Information"
+
+[settings.general.zoomLevel]
+auto = "Automatisch"
+fitPage = "Passend op pagina"
+fitWidth = "Passend op breedte"
+
+[settings.hotkeys]
+capturing = "Toetsen indrukken... (Esc om te annuleren)"
+change = "Sneltoets wijzigen"
+customBadge = "Aangepast"
+defaultLabel = "Standaard: {{shortcut}}"
+description = "Pas sneltoetsen aan voor snelle toegang tot tools. Klik op \"Sneltoets wijzigen\" en druk een nieuwe toetsencombinatie in. Druk op Esc om te annuleren."
+errorConflict = "Sneltoets wordt al gebruikt door {{tool}}."
+none = "Niet toegewezen"
+noShortcut = "Geen sneltoets ingesteld"
+reset = "Reset"
+searchPlaceholder = "Tools zoeken..."
+shortcut = "Sneltoets"
+title = "Sneltoetsen"
+
+[settings.hotkeys.errorModifier]
+mac = "Neem ⌘ (Command), ⌥ (Option) of een andere modificatietoets op in de sneltoets."
+windows = "Neem Ctrl, Alt of een andere modificatietoets op in de sneltoets."
+
+[settings.licensingAnalytics]
+audit = "Audit"
+plan = "Abonnement"
+title = "Licenties & Analyse"
+usageAnalytics = "Gebruiksstatistieken"
 
 [settings.planBilling]
 currentPlan = "Huidig abonnement"
@@ -6637,6 +6865,10 @@ canceled = "Geannuleerd"
 pastDue = "Achterstallig"
 trial = "Proef"
 
+[settings.planBilling.team]
+managedByTeam = "Beheerd door team"
+memberCount = "{{count}} teamleden"
+
 [settings.planBilling.tier]
 enterprise = "Enterprise"
 enterpriseDescription = "Aangepaste enterprise-functies en support"
@@ -6648,10 +6880,6 @@ teamDescription = "500 credits/maand inbegrepen, automatische overschrijdingsfac
 teamTooltipCredits = "Team-abonnement bevat {{credits}} credits/maand."
 teamTooltipFineprint = "Je betaalt alleen voor wat je gebruikt boven de inbegrepen credits."
 teamTooltipOverage = "Automatische overschrijdingsfacturering tegen {{price}}/credit zorgt voor ononderbroken service."
-
-[settings.planBilling.team]
-managedByTeam = "Beheerd door team"
-memberCount = "{{count}} teamleden"
 
 [settings.planBilling.trial]
 daysRemaining = "{{days}} dagen resterend"
@@ -6670,88 +6898,6 @@ featureThroughput = "Snellere verwerkingsdoorvoer"
 opensInBrowser = "Opent in browser om upgrade te voltooien"
 subtitle = "Upgrade naar Team voor:"
 title = "Upgrade je abonnement"
-
-[settings.developer]
-apiKeys = "API-sleutels"
-title = "Ontwikkelaar"
-
-[settings.general]
-autoUnzip = "API-antwoorden automatisch uitpakken"
-autoUnzipDescription = "Automatisch bestanden uit ZIP-antwoorden halen"
-autoUnzipFileLimit = "Limiet automatisch uitpakken"
-autoUnzipFileLimitDescription = "Maximaal aantal bestanden om uit ZIP te halen"
-autoUnzipFileLimitTooltip = "Alleen uitpakken als de ZIP dit aantal bestanden of minder bevat. Stel hoger in om grotere ZIP's te extraheren."
-autoUnzipTooltip = "ZIP-bestanden die door API-bewerkingen worden teruggegeven automatisch uitpakken. Uitschakelen om ZIP-bestanden intact te laten. Dit heeft geen invloed op automatiseringsworkflows."
-defaultPdfEditor = "Standaard PDF-editor"
-defaultPdfEditorActive = "Stirling PDF is de standaard PDF-editor"
-defaultPdfEditorChecking = "Controleren..."
-defaultPdfEditorInactive = "Een andere app is als standaard ingesteld"
-defaultPdfEditorSet = "Al standaard"
-defaultToolPickerMode = "Standaard toolkiezer-modus"
-defaultToolPickerModeDescription = "Kies of de toolkiezer standaard in volledig scherm of zijbalk opent"
-description = "Configureer algemene app-voorkeuren."
-hideUnavailableConversions = "Niet-beschikbare conversies verbergen"
-hideUnavailableConversionsDescription = "Verwijder uitgeschakelde conversie-opties in de tool Converteren in plaats van ze grijs te tonen."
-hideUnavailableTools = "Niet-beschikbare tools verbergen"
-hideUnavailableToolsDescription = "Verwijder tools die door de server zijn uitgeschakeld in plaats van ze grijs te tonen."
-logout = "Afmelden"
-setAsDefault = "Als standaard instellen"
-title = "Algemeen"
-user = "Gebruiker"
-
-[settings.general.enableFeatures]
-action = "Configureren"
-and = "en"
-benefit = "Schakelt gebruikersrollen, teamsamenwerking, beheerdersfuncties en enterprise-functies in."
-dismiss = "Sluiten"
-intro = "Schakel gebruikersauthenticatie, teambeheer en werkruimtefuncties in voor uw organisatie."
-learnMore = "Meer info in de documentatie"
-title = "Voor systeembeheerders"
-
-[settings.general.mode]
-fullscreen = "Volledig scherm"
-sidebar = "Zijbalk"
-
-[settings.general.updates]
-checkForUpdates = "Op updates controleren"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
-description = "Controleer op updates en bekijk versie-informatie"
-latestVersion = "Laatste versie"
-serverNeedsUpdate = "Server needs to be updated by administrator"
-title = "Software-updates"
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
-viewDetails = "Details bekijken"
-
-[settings.general.versionInfo]
-description = "Desktop and server version details"
-desktop = "Desktop Version"
-server = "Server Version"
-title = "Version Information"
-
-[settings.hotkeys]
-capturing = "Toetsen indrukken... (Esc om te annuleren)"
-change = "Sneltoets wijzigen"
-customBadge = "Aangepast"
-defaultLabel = "Standaard: {{shortcut}}"
-description = "Pas sneltoetsen aan voor snelle toegang tot tools. Klik op \"Sneltoets wijzigen\" en druk een nieuwe toetsencombinatie in. Druk op Esc om te annuleren."
-errorConflict = "Sneltoets wordt al gebruikt door {{tool}}."
-none = "Niet toegewezen"
-noShortcut = "Geen sneltoets ingesteld"
-reset = "Reset"
-searchPlaceholder = "Tools zoeken..."
-shortcut = "Sneltoets"
-title = "Sneltoetsen"
-
-[settings.hotkeys.errorModifier]
-mac = "Neem ⌘ (Command), ⌥ (Option) of een andere modificatietoets op in de sneltoets."
-windows = "Neem Ctrl, Alt of een andere modificatietoets op in de sneltoets."
-
-[settings.licensingAnalytics]
-audit = "Audit"
-plan = "Abonnement"
-title = "Licenties & Analyse"
-usageAnalytics = "Gebruiksstatistieken"
 
 [settings.policiesPrivacy]
 legal = "Juridisch"
@@ -6789,6 +6935,9 @@ security = "Beveiliging"
 telegram = "Telegram"
 title = "Beveiliging & Authenticatie"
 
+[settings.team]
+title = "Team"
+
 [settings.tooltips]
 enableLoginFirst = "Schakel eerst de loginmodus in"
 requiresEnterprise = "Enterprise-licentie vereist"
@@ -6798,21 +6947,6 @@ people = "Personen"
 teams = "Teams"
 title = "Werkruimte"
 
-[settings.team]
-title = "Team"
-
-[localMode]
-toolUnavailable = "Deze tool vereist een account. Log in bij Stirling Cloud of verbind met een zelfgehoste server om deze te gebruiken."
-
-[localMode.banner]
-message = "Log in om alle tools te ontgrendelen."
-signIn = "Inloggen"
-title = "Lokaal actief"
-
-[localMode.toolPicker]
-message = "Log in om alle tools te ontgrendelen."
-signIn = "Inloggen"
-
 [setup]
 description = "Begin door te kiezen hoe u Stirling PDF wilt gebruiken"
 welcome = "Welkom bij Stirling PDF"
@@ -6820,7 +6954,6 @@ welcome = "Welkom bij Stirling PDF"
 [setup.login]
 connectingTo = "Verbinden met:"
 hideInstructions = "Instructies verbergen"
-skipSignIn = "Doorgaan zonder in te loggen"
 instructions = "Om inloggen op uw Stirling PDF-server in te schakelen:"
 instructionsEnvVar = "Stel de omgevingsvariabele in:"
 instructionsOrYml = "Of in settings.yml:"
@@ -6830,6 +6963,7 @@ orContinueWith = "Of ga verder met e-mail"
 serverRequirement = "Let op: op de server moet inloggen zijn ingeschakeld."
 showInstructions = "Hoe inschakelen?"
 signInWith = "Inloggen met"
+skipSignIn = "Doorgaan zonder in te loggen"
 sso = "Single Sign-On"
 submit = "Inloggen"
 subtitle = "Vul uw gegevens in om door te gaan"
@@ -6866,9 +7000,9 @@ subtitle = "Log in met uw Stirling-account"
 title = "Inloggen bij Stirling"
 
 [setup.selfhosted]
+changeServerLocked = "Uw organisatie heeft deze app beperkt tot een specifieke server"
 link = "of maak verbinding met een zelfgehost account"
 subtitle = "Vul uw servergegevens in"
-changeServerLocked = "Uw organisatie heeft deze app beperkt tot een specifieke server"
 switchToLocal = "In plaats daarvan lokale tools gebruiken"
 title = "Inloggen bij server"
 
@@ -7068,14 +7202,45 @@ saved = "Opgeslagen"
 text = "Tekst"
 title = "Type handtekening"
 
+[signatureSettings.tooltip]
+header = "Instellingen voor handtekeningweergave"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Voorbeelden: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Niet hetzelfde als paginapositie"
+bullet3 = "Kan vereist zijn voor bepaalde rechtsgebieden"
+description = "Optionele geografische locatie waar de handtekening is toegepast. Opgeslagen in certificaatmetadata."
+title = "Handtekeninglocatie"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Weergegeven naast handtekening en tekst"
+bullet2 = "Ondersteunt PNG-, JPG-indelingen"
+bullet3 = "Verbetert professionele uitstraling"
+description = "Voeg een bedrijfslogo toe aan zichtbare handtekeningen voor branding en authenticiteit."
+title = "Bedrijfslogo"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Voorbeelden: \"Goedkeuring\", \"Contractovereenkomst\", \"Review voltooid\""
+bullet2 = "Zichtbaar in PDF-handtekeningseigenschappen"
+bullet3 = "Handig voor audittrails en naleving"
+description = "Optionele tekst die uitlegt waarom het document wordt ondertekend. Opgeslagen in certificaatmetadata."
+title = "Reden voor handtekening"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Zichtbaar</b>: Handtekening verschijnt op PDF met aangepaste weergave"
+bullet2 = "<b>Onzichtbaar</b>: Certificaat ingesloten zonder visuele markering"
+bullet3 = "Onzichtbare handtekeningen bieden nog steeds cryptografische validatie"
+description = "Bepaalt of de handtekening zichtbaar is op het document of onzichtbaar wordt ingesloten."
+title = "Zichtbaarheid van handtekening"
+
 [signRequest]
 declined = "Ondertekeningsverzoek geweigerd"
 fetchFailed = "Ondertekeningsverzoek laden mislukt"
 signed = "Document succesvol ondertekend"
 
 [signSession]
-createFailed = "Ondertekeningsverzoek maken mislukt"
 created = "Ondertekeningsverzoek verzonden"
+createFailed = "Ondertekeningsverzoek maken mislukt"
 
 [signup]
 accountCreatedSuccessfully = "Account succesvol aangemaakt! U kunt nu inloggen."
@@ -7156,15 +7321,15 @@ desc = "Automatisch splitsen met scheidingsvellen"
 name = "Paginascheider"
 tooltip = "Gebruik QR-code scheidingsvellen tussen documenten tijdens het scannen"
 
-[split.methods.byPoster]
-name = "Afdrukbare delen"
-desc = "Grote pagina's splitsen in afdrukbare formaten"
-tooltip = "Groot formaat pagina's opdelen in kleinere delen geschikt voor afdrukken op standaardpapier (A4, Letter, enz.)"
-
 [split.methods.byPages]
 desc = "Specifieke pagina's extraheren (1,3,5-10)"
 name = "Paginanummers"
 tooltip = "Voer paginanummers in, gescheiden door komma's, of reeksen met koppeltekens"
+
+[split.methods.byPoster]
+desc = "Grote pagina's splitsen in afdrukbare formaten"
+name = "Afdrukbare delen"
+tooltip = "Groot formaat pagina's opdelen in kleinere delen geschikt voor afdrukken op standaardpapier (A4, Letter, enz.)"
 
 [split.methods.bySections]
 desc = "Pagina's verdelen in rastersecties"
@@ -7192,27 +7357,27 @@ title = "Kies de splitsmethode"
 text = "Kies hoe u het PDF-document wilt splitsen. Elke methode is geoptimaliseerd voor verschillende use-cases en documenttypen."
 title = "Selectie splitsmethode"
 
+[split.poster]
+rightToLeft = "Rechts-naar-links splitsen"
+
+[split.poster.pageSize]
+description = "Formaat van uitvoerpagina's voor afdrukken"
+label = "Doelpaginaformaat"
+
+[split.poster.xFactor]
+description = "Aantal kolommen waarin elke pagina wordt gesplitst"
+label = "Horizontale verdelingen"
+
+[split.poster.yFactor]
+description = "Aantal rijen waarin elke pagina wordt gesplitst"
+label = "Verticale verdelingen"
+
 [split.settings]
 selectMethodFirst = "Selecteer eerst een splitsmethode"
 
 [split.steps]
 chooseMethod = "Methode kiezen"
 settings = "Instellingen"
-
-[split.poster]
-rightToLeft = "Rechts-naar-links splitsen"
-
-[split.poster.pageSize]
-label = "Doelpaginaformaat"
-description = "Formaat van uitvoerpagina's voor afdrukken"
-
-[split.poster.xFactor]
-label = "Horizontale verdelingen"
-description = "Aantal kolommen waarin elke pagina wordt gesplitst"
-
-[split.poster.yFactor]
-label = "Verticale verdelingen"
-description = "Aantal rijen waarin elke pagina wordt gesplitst"
 
 [split.tooltip.byChapters]
 bullet1 = "Bladwijzerniveau: welk niveau om op te splitsen (1=bovenste niveau)"
@@ -7251,6 +7416,13 @@ bullet5 = "Schakel Duplex-modus in als u beide zijden van scheidingsvellen scant
 text = "Scans automatisch splitsen met fysieke scheidingsvellen met QR-codes. Perfect voor meerdere documenten die samen zijn gescand."
 title = "Splitsen met paginascheider"
 
+[split.tooltip.byPages]
+bullet1 = "Enkele splitspunten: 3,7 (splitst na pagina's 3 en 7)"
+bullet2 = "Reeks-splitspunten: 3-8 (splitst vóór pagina 3 en na pagina 8)"
+bullet3 = "Gemengd: 2,5-10,15 (splitst na pagina 2, vóór pagina 5, na pagina 10 en na pagina 15)"
+text = "Splits de PDF op specifieke paginanummers. Met 'n' wordt gesplitst na pagina n. Met 'n-m' wordt gesplitst vóór pagina n en na pagina m."
+title = "Splitsen op paginanummers"
+
 [split.tooltip.byPoster]
 bullet1 = "Doelpaginaformaat: Kies uitvoerpapierformaat (A4, Letter, enz.)"
 bullet2 = "Horizontale/Verticale verdelingen: Rastergrootte voor splitsen"
@@ -7258,13 +7430,6 @@ bullet3 = "Rechts-naar-links: Keer kolomvolgorde om voor RTL-indelingen"
 bullet4 = "Print en zet de stukken in elkaar om je poster te maken"
 text = "Splits grote PDF-pagina's in kleinere, afdrukbare delen die geschikt zijn voor standaardpapierformaten. Perfect voor posterprints van oversized pagina's."
 title = "Splitsen voor posterafdruk"
-
-[split.tooltip.byPages]
-bullet1 = "Enkele splitspunten: 3,7 (splitst na pagina's 3 en 7)"
-bullet2 = "Reeks-splitspunten: 3-8 (splitst vóór pagina 3 en na pagina 8)"
-bullet3 = "Gemengd: 2,5-10,15 (splitst na pagina 2, vóór pagina 5, na pagina 10 en na pagina 15)"
-text = "Splits de PDF op specifieke paginanummers. Met 'n' wordt gesplitst na pagina n. Met 'n-m' wordt gesplitst vóór pagina n en na pagina m."
-title = "Splitsen op paginanummers"
 
 [split.tooltip.bySections]
 bullet1 = "Horizontaal: aantal rijen om te maken"
@@ -7355,106 +7520,6 @@ title = "PDF splits op hoofdstukken"
 [splitPdfByChapters]
 tags = "splitsen, hoofdstukken, bookmarks, organiseren"
 
-[storageShare]
-accessed = "Geopend"
-accessDenied = "U hebt geen toegang tot dit gedeelde bestand. Vraag de eigenaar om het met u te delen."
-accessFailed = "Kan activiteit niet laden."
-accessDeniedBody = "U hebt geen toegang tot dit bestand. Vraag de eigenaar om het met u te delen."
-accessDeniedTitle = "Geen toegang"
-accessLimitedCommenter = "Opmerkingentoegang komt binnenkort. Vraag de eigenaar om bewerkersrechten als u wilt downloaden."
-accessLimitedTitle = "Beperkte toegang"
-accessLimitedViewer = "Deze link is alleen-lezen. Vraag de eigenaar om bewerkersrechten als u wilt downloaden."
-createdAt = "Gemaakt"
-download = "Downloaden"
-downloadFailed = "Dit bestand kan niet worden gedownload."
-expiredBody = "Deze deellink is ongeldig of verlopen."
-expiredTitle = "Link verlopen"
-goToLogin = "Naar inloggen"
-loadFailed = "Gedeeld bestand kan niet worden geopend."
-loading = "Deellink laden..."
-loginPrompt = "Meld u aan om toegang te krijgen tot dit gedeelde bestand."
-loginRequired = "Inloggen vereist"
-openInApp = "Openen in Stirling PDF"
-ownerLabel = "Eigenaar"
-ownerUnknown = "Onbekend"
-requiresLogin = "Dit gedeelde bestand vereist inloggen."
-roleCommenter = "Opmerkinggever"
-roleEditor = "Bewerker"
-roleViewer = "Lezer"
-shareHeading = "Gedeeld bestand"
-titleDefault = "Gedeeld bestand"
-tryAgain = "Probeer het later opnieuw."
-addUser = "Toevoegen"
-commenterHint = "Reageren komt binnenkort."
-copied = "Link gekopieerd naar klembord"
-copy = "Kopiëren"
-copyFailed = "Kopiëren mislukt"
-description = "Maak een deellink voor dit bestand. Aangemelde gebruikers met de link hebben er toegang toe."
-downloadsCount = "Downloads: {{count}}"
-emailWarningBody = "Dit lijkt op een e-mailadres. Als deze persoon nog geen Stirling PDF-gebruiker is, kan hij/zij geen toegang krijgen tot het bestand."
-emailWarningConfirm = "Toch delen"
-emailWarningTitle = "E-mailadres"
-errorTitle = "Delen mislukt"
-failure = "Kan geen deellink genereren. Probeer het opnieuw."
-fileLabel = "Bestand"
-generate = "Link genereren"
-generated = "Deellink gegenereerd"
-hideActivity = "Activiteit verbergen"
-invalidUsername = "Voer een geldige gebruikersnaam of e-mailadres in."
-lastAccessed = "Laatst geopend"
-linkAccessTitle = "Toegang via deellink"
-linkLabel = "Deellink"
-linksDisabled = "Deellinks zijn uitgeschakeld."
-linksDisabledBody = "Deellinks zijn uitgeschakeld door uw serverinstellingen."
-manage = "Delen beheren"
-manageDescription = "Maak en beheer links om dit bestand te delen."
-manageLoadFailed = "Deellinks kunnen niet worden geladen."
-manageTitle = "Delen beheren"
-noActivity = "Nog geen activiteit."
-noLinks = "Nog geen actieve deellinks."
-noSharedUsers = "Nog geen gebruikers met toegang."
-removeLink = "Link verwijderen"
-removeUser = "Verwijderen"
-revokeFailed = "Kan de deellink niet verwijderen."
-revoked = "Deellink verwijderd"
-roleLabel = "Rol"
-sharingDisabled = "Delen is uitgeschakeld."
-sharingDisabledBody = "Delen is uitgeschakeld door uw serverinstellingen."
-sharedUsersTitle = "Gedeelde gebruikers"
-title = "Bestand delen"
-unknownUser = "Onbekende gebruiker"
-userAddFailed = "Kan niet met die gebruiker delen."
-userAdded = "Gebruiker toegevoegd aan lijst met gedeelde gebruikers."
-usernameLabel = "Gebruikersnaam of e-mail"
-usernamePlaceholder = "Voer een gebruikersnaam of e-mail in"
-userRemoveFailed = "Kan die gebruiker niet verwijderen."
-userRemoved = "Gebruiker uit de lijst met gedeelde gebruikers verwijderd."
-viewActivity = "Activiteit bekijken"
-viewed = "Bekeken"
-viewsCount = "Weergaven: {{count}}"
-downloaded = "Gedownload"
-bulkDescription = "Maak één link om alle geselecteerde bestanden te delen met ingelogde gebruikers."
-bulkTitle = "Geselecteerde bestanden delen"
-copyLink = "Deellink kopiëren"
-fileCount = "{{count}} bestanden geselecteerd"
-ownerOnly = "Alleen de eigenaar kan het delen beheren."
-selectSingleFile = "Selecteer één bestand om het delen te beheren."
-
-[storageUpload]
-description = "Dit uploadt het huidige bestand naar serveropslag voor uw eigen toegang."
-errorTitle = "Upload mislukt"
-failure = "Upload mislukt. Controleer uw inlog- en opslaginstellingen."
-fileLabel = "Bestand"
-hint = "Openbare links en toegangsmodi worden beheerd door uw serverinstellingen."
-success = "Geüpload naar server"
-title = "Uploaden naar server"
-updateButton = "Bijwerken op server"
-uploadButton = "Uploaden naar server"
-bulkDescription = "Dit uploadt de geselecteerde bestanden naar uw serveropslag."
-bulkTitle = "Geselecteerde bestanden uploaden"
-fileCount = "{{count}} bestanden geselecteerd"
-more = " +{{count}} meer"
-
 [storage]
 approximateSize = "Geschatte grootte"
 fileTooLarge = "Bestand te groot. Maximale grootte per bestand is"
@@ -7463,6 +7528,106 @@ storageLimit = "Opslaglimiet"
 storageQuotaExceeded = "Opslagquotum overschreden. Verwijder enkele bestanden voordat u meer uploadt."
 storageUsed = "Tijdelijke opslag gebruikt"
 temporaryNotice = "Bestanden worden tijdelijk opgeslagen in uw browser en kunnen automatisch worden gewist"
+
+[storageShare]
+accessDenied = "U hebt geen toegang tot dit gedeelde bestand. Vraag de eigenaar om het met u te delen."
+accessDeniedBody = "U hebt geen toegang tot dit bestand. Vraag de eigenaar om het met u te delen."
+accessDeniedTitle = "Geen toegang"
+accessed = "Geopend"
+accessFailed = "Kan activiteit niet laden."
+accessLimitedCommenter = "Opmerkingentoegang komt binnenkort. Vraag de eigenaar om bewerkersrechten als u wilt downloaden."
+accessLimitedTitle = "Beperkte toegang"
+accessLimitedViewer = "Deze link is alleen-lezen. Vraag de eigenaar om bewerkersrechten als u wilt downloaden."
+addUser = "Toevoegen"
+bulkDescription = "Maak één link om alle geselecteerde bestanden te delen met ingelogde gebruikers."
+bulkTitle = "Geselecteerde bestanden delen"
+commenterHint = "Reageren komt binnenkort."
+copied = "Link gekopieerd naar klembord"
+copy = "Kopiëren"
+copyFailed = "Kopiëren mislukt"
+copyLink = "Deellink kopiëren"
+createdAt = "Gemaakt"
+description = "Maak een deellink voor dit bestand. Aangemelde gebruikers met de link hebben er toegang toe."
+download = "Downloaden"
+downloaded = "Gedownload"
+downloadFailed = "Dit bestand kan niet worden gedownload."
+downloadsCount = "Downloads: {{count}}"
+emailWarningBody = "Dit lijkt op een e-mailadres. Als deze persoon nog geen Stirling PDF-gebruiker is, kan hij/zij geen toegang krijgen tot het bestand."
+emailWarningConfirm = "Toch delen"
+emailWarningTitle = "E-mailadres"
+errorTitle = "Delen mislukt"
+expiredBody = "Deze deellink is ongeldig of verlopen."
+expiredTitle = "Link verlopen"
+failure = "Kan geen deellink genereren. Probeer het opnieuw."
+fileCount = "{{count}} bestanden geselecteerd"
+fileLabel = "Bestand"
+generate = "Link genereren"
+generated = "Deellink gegenereerd"
+goToLogin = "Naar inloggen"
+hideActivity = "Activiteit verbergen"
+invalidUsername = "Voer een geldige gebruikersnaam of e-mailadres in."
+lastAccessed = "Laatst geopend"
+linkAccessTitle = "Toegang via deellink"
+linkLabel = "Deellink"
+linksDisabled = "Deellinks zijn uitgeschakeld."
+linksDisabledBody = "Deellinks zijn uitgeschakeld door uw serverinstellingen."
+loadFailed = "Gedeeld bestand kan niet worden geopend."
+loading = "Deellink laden..."
+loginPrompt = "Meld u aan om toegang te krijgen tot dit gedeelde bestand."
+loginRequired = "Inloggen vereist"
+manage = "Delen beheren"
+manageDescription = "Maak en beheer links om dit bestand te delen."
+manageLoadFailed = "Deellinks kunnen niet worden geladen."
+manageTitle = "Delen beheren"
+noActivity = "Nog geen activiteit."
+noLinks = "Nog geen actieve deellinks."
+noSharedUsers = "Nog geen gebruikers met toegang."
+openInApp = "Openen in Stirling PDF"
+ownerLabel = "Eigenaar"
+ownerOnly = "Alleen de eigenaar kan het delen beheren."
+ownerUnknown = "Onbekend"
+removeLink = "Link verwijderen"
+removeUser = "Verwijderen"
+requiresLogin = "Dit gedeelde bestand vereist inloggen."
+revoked = "Deellink verwijderd"
+revokeFailed = "Kan de deellink niet verwijderen."
+roleCommenter = "Opmerkinggever"
+roleEditor = "Bewerker"
+roleLabel = "Rol"
+roleViewer = "Lezer"
+selectSingleFile = "Selecteer één bestand om het delen te beheren."
+sharedUsersTitle = "Gedeelde gebruikers"
+shareHeading = "Gedeeld bestand"
+sharingDisabled = "Delen is uitgeschakeld."
+sharingDisabledBody = "Delen is uitgeschakeld door uw serverinstellingen."
+title = "Bestand delen"
+titleDefault = "Gedeeld bestand"
+tryAgain = "Probeer het later opnieuw."
+unknownUser = "Onbekende gebruiker"
+userAdded = "Gebruiker toegevoegd aan lijst met gedeelde gebruikers."
+userAddFailed = "Kan niet met die gebruiker delen."
+usernameLabel = "Gebruikersnaam of e-mail"
+usernamePlaceholder = "Voer een gebruikersnaam of e-mail in"
+userRemoved = "Gebruiker uit de lijst met gedeelde gebruikers verwijderd."
+userRemoveFailed = "Kan die gebruiker niet verwijderen."
+viewActivity = "Activiteit bekijken"
+viewed = "Bekeken"
+viewsCount = "Weergaven: {{count}}"
+
+[storageUpload]
+bulkDescription = "Dit uploadt de geselecteerde bestanden naar uw serveropslag."
+bulkTitle = "Geselecteerde bestanden uploaden"
+description = "Dit uploadt het huidige bestand naar serveropslag voor uw eigen toegang."
+errorTitle = "Upload mislukt"
+failure = "Upload mislukt. Controleer uw inlog- en opslaginstellingen."
+fileCount = "{{count}} bestanden geselecteerd"
+fileLabel = "Bestand"
+hint = "Openbare links en toegangsmodi worden beheerd door uw serverinstellingen."
+more = " +{{count}} meer"
+success = "Geüpload naar server"
+title = "Uploaden naar server"
+updateButton = "Bijwerken op server"
+uploadButton = "Uploaden naar server"
 
 [subscription]
 cancelsOn = "Wordt geannuleerd op {{date}}"
@@ -7507,8 +7672,121 @@ title = "API-documentatie"
 [tableExtraxt]
 tags = "CSV,tabel extractie,extractie,converteren"
 
+[team]
+cancelInviteError = "Uitnodiging annuleren mislukt"
+confirmCancelInvite = "Weet je zeker dat je deze uitnodiging wilt annuleren?"
+confirmLeave = "Weet je zeker dat je dit team wilt verlaten?"
+confirmLeaveLeader = "Als teamleider word je door te vertrekken uit het team verwijderd. Weet je het zeker?"
+confirmRemove = "Weet je zeker dat je dit lid wilt verwijderen?"
+editName = "Teamnaam bewerken"
+inviteCancelled = "Uitnodiging geannuleerd"
+inviteError = "Uitnodiging verzenden mislukt"
+inviteSent = "Uitnodiging succesvol verzonden"
+leader = "Teamleider"
+leaveButton = "Team verlaten"
+leaveError = "Team verlaten mislukt"
+leaveSuccess = "Team succesvol verlaten"
+loading = "Teamgegevens laden..."
+memberCount = "{{count}} leden"
+memberRemoved = "Lid succesvol verwijderd"
+namePlaceholder = "Voer teamnaam in"
+personal = "Persoonlijk"
+removeError = "Lid verwijderen mislukt"
+renameError = "Team hernoemen mislukt"
+renameSuccess = "Team succesvol hernoemd"
+
+[team.features]
+badge = "Teamfuncties"
+subtitle = "Werk samen met je team"
+title = "Teamsamenwerking"
+viewPlans = "Plannen bekijken"
+
+[team.features.billing]
+description = "Facturering en abonnementen beheren"
+title = "Beheer van facturering"
+
+[team.features.credits]
+description = "Gedeelde creditpool voor alle leden"
+title = "Gedeelde credits"
+
+[team.features.dashboard]
+description = "Teamactiviteit en gebruik bekijken"
+title = "Teamdashboard"
+
+[team.features.invite]
+description = "Voeg leden toe aan je team"
+title = "Leden uitnodigen"
+
+[team.invitationBanner]
+acceptButton = "Accepteren"
+message = "heeft je uitgenodigd om lid te worden van"
+rejectButton = "Weigeren"
+
+[team.invite]
+cancelLabel = "Annuleren"
+invalidEmail = "Ongeldig e-mailadres"
+placeholder = "Voer e-mailadres in"
+sendButton = "Uitnodiging verzenden"
+title = "Teamlid uitnodigen"
+
+[team.members]
+emailColumn = "E-mail"
+empty = "Nog geen teamleden"
+nameColumn = "Naam"
+pending = "In afwachting"
+remove = "Verwijderen"
+roleColumn = "Rol"
+title = "Teamleden"
+
+[team.upgrade]
+button = "Upgrade naar Team"
+description = "Ontgrendel teamsamenwerkingsfuncties"
+title = "Upgrade naar Team-abonnement"
+
+[textAlign]
+center = "Gecentreerd"
+left = "Links"
+right = "Rechts"
+
 [theme]
 toggle = "Thema wisselen"
+
+[timestampPdf]
+completed = "PDF succesvol van tijdstempel voorzien"
+desc = "Voeg een RFC 3161-documenttijdstempel toe aan je PDF met een vertrouwde Time Stamp Authority (TSA)-server."
+filenamePrefix = "tijdgestempeld"
+results = "Tijdstempelresultaten"
+submit = "Tijdstempel toepassen"
+title = "PDF tijdstempelen"
+
+[timestampPdf.error]
+failed = "Er is een fout opgetreden bij het tijdstempelen van de PDF."
+generic = "Tijdstempelen mislukt"
+
+[timestampPdf.files]
+placeholder = "Selecteer een PDF-bestand in de hoofdweergave om te beginnen"
+
+[timestampPdf.options]
+note = "Alleen een SHA-256-hash van je document wordt naar de TSA-server gestuurd; het PDF-bestand zelf wordt nooit naar de TSA-server verzonden."
+title = "Tijdstempelserver (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Kies een vertrouwde Time Stamp Authority"
+label = "Selecteer een TSA-server"
+
+[timestampPdf.steps]
+settings = "Instellingen"
+
+[tool]
+endpointUnavailable = "Deze tool is niet beschikbaar op je server."
+endpointUnavailableClickable = "Niet beschikbaar in deze modus. Klik om in te loggen."
+invalidParams = "Vul de vereiste instellingen in."
+noFiles = "Voeg een bestand toe om te beginnen."
+scopeFiles = "bestanden"
+scopeThisFile = "dit bestand"
+selectFilesHint = "Selecteer bestanden in Actieve bestanden om deze tool uit te voeren"
+singleFileScope = "Alleen van toepassing op: {{fileName}}"
+viewerMode = "Schakel over naar de bestandseditor om meerdere bestanden te selecteren."
 
 [toolPanel]
 alpha = "Alfa"
@@ -7568,12 +7846,6 @@ pageFormatting = "Pagina-opmaak"
 removal = "Verwijdering"
 signing = "Ondertekenen"
 verification = "Verificatie"
-
-[tool]
-endpointUnavailable = "Deze tool is niet beschikbaar op je server."
-endpointUnavailableClickable = "Niet beschikbaar in deze modus. Klik om in te loggen."
-invalidParams = "Vul de vereiste instellingen in."
-noFiles = "Voeg een bestand toe om te beginnen."
 
 [tools]
 noSearchResults = "Geen tools gevonden"
@@ -7793,6 +8065,81 @@ fileManager = "Bestandsbeheer"
 pageEditor = "Pagina-editor"
 viewer = "Viewer"
 
+[viewer]
+cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
+disableColorFilter = "Kleurfilter uitschakelen"
+dualPageView = "Dubbele paginaweergave"
+enableDarkFilter = "Donkerfilter inschakelen"
+enableSepiaFilter = "Sepiafilter inschakelen"
+firstPage = "Eerste pagina"
+lastPage = "Laatste pagina"
+nextPage = "Volgende pagina"
+onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
+previousPage = "Vorige pagina"
+resetZoom = "Zoom resetten"
+singlePageView = "Enkele paginaweergave"
+unknownFile = "Onbekend bestand"
+zoomIn = "Inzoomen"
+zoomOut = "Uitzoomen"
+
+[viewer.attachments]
+empty = "Geen bijlagen in dit document"
+loading = "Bijlagen laden..."
+noDocument = "Open een PDF om de bijlagen te bekijken."
+noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
+noSupport = "Ondersteuning voor bijlagen is niet beschikbaar voor deze viewer."
+searchPlaceholder = "Bijlagen zoeken"
+title = "Bijlagen"
+
+[viewer.comments]
+addComment = "Opmerking toevoegen"
+addCommentPlaceholder = "Opmerking toevoegen..."
+addLink = "Link toevoegen"
+addReplyPlaceholder = "Antwoord toevoegen..."
+deleteAnnotationAndComment = "Annotatie en opmerking verwijderen"
+deleteDescription = "Deze annotatie heeft een opmerking gekoppeld. Je kunt alleen de opmerking uit de zijbalk verwijderen en de annotatie behouden, of alles verwijderen."
+deleteTitle = "Annotatie uit opmerkingen verwijderen?"
+goToLink = "Naar link gaan"
+hint = "Plaats opmerkingen met de tools Opmerking, Tekst invoegen of Tekst vervangen. Ze verschijnen hier per pagina."
+locateAnnotation = "Zoeken in document"
+moreActions = "Meer acties"
+nComments = "{{count}} opmerkingen"
+oneComment = "1 opmerking"
+pageLabel = "Pagina {{page}}"
+placeholder = "Typ je opmerking..."
+removeCommentOnly = "Alleen opmerking verwijderen"
+saveReply = "Antwoord opslaan"
+send = "Verzenden"
+title = "Opmerkingen"
+typeComment = "Opmerking"
+typeInsertText = "Tekst invoegen"
+typeReplaceText = "Tekst vervangen"
+viewComment = "Opmerking bekijken"
+
+[viewer.formBar]
+apply = "Wijzigingen toepassen"
+dismiss = "Sluiten"
+download = "PDF downloaden"
+hasFieldsDesc = "Deze PDF bevat invulbare velden"
+title = "Formuliervelden"
+unsavedBadge = "Niet opgeslagen"
+unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
+
+[viewer.nonPdf]
+columnDefault = "Kolom {{index}}"
+convertToPdf = "Converteren naar PDF"
+csvStats = "{{rows}} rijen · {{columns}} kolommen · {{size}}"
+emptyFile = "Leeg bestand"
+fileTypeBadge = "{{type}}-bestand"
+htmlPreview = "HTML-voorbeeld"
+htmlPreviewWarning = "HTML-voorbeeld — externe bronnen worden mogelijk niet geladen · {{size}}"
+invalidJson = "Ongeldige JSON — ruwe inhoud wordt weergegeven"
+lineNumbers = "Regelnummers"
+loading = "Laden..."
+renderMarkdown = "Markdown renderen"
+sortedBy = "Gesorteerd op: {{column}}"
+textStats = "{{lines}} regels · {{size}}"
+
 [viewPdf]
 header = "PDF bekijken"
 tags = "bekijken,lezen,annoteren,tekst,afbeelding"
@@ -7800,30 +8147,6 @@ title = "PDF bekijken/bewerken"
 
 [warning]
 tooltipTitle = "Waarschuwing"
-
-[wetSignature.tooltip]
-header = "Methoden voor het maken van een handtekening"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Pas penkleur en -dikte aan"
-bullet2 = "Wissen en opnieuw tekenen tot u tevreden bent"
-bullet3 = "Werkt op aanraakapparaten (tablets, telefoons)"
-description = "Maak een handgeschreven handtekening met uw muis of touchscreen. Het best voor persoonlijke, authentieke handtekeningen."
-title = "Handtekening tekenen"
-
-[wetSignature.tooltip.type]
-bullet1 = "Kies uit meerdere lettertypen"
-bullet2 = "Pas tekstgrootte en -kleur aan"
-bullet3 = "Perfect voor gestandaardiseerde handtekeningen"
-description = "Genereer een handtekening vanuit getypte tekst. Snel en consistent, geschikt voor zakelijke documenten."
-title = "Handtekening typen"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Ondersteunt PNG, JPG en andere afbeeldingsformaten"
-bullet2 = "Transparante achtergronden aanbevolen voor de beste resultaten"
-bullet3 = "Afbeelding wordt geschaald naar het handtekeninggebied"
-description = "Upload een vooraf gemaakte handtekeningafbeelding. Ideaal als u een gescande handtekening of bedrijfslogo heeft."
-title = "Handtekeningafbeelding uploaden"
 
 [watermark]
 completed = "Watermerk toegevoegd"
@@ -7996,6 +8319,30 @@ title = "Watermerktekst"
 image = "Afbeelding"
 text = "Tekst"
 
+[wetSignature.tooltip]
+header = "Methoden voor het maken van een handtekening"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Pas penkleur en -dikte aan"
+bullet2 = "Wissen en opnieuw tekenen tot u tevreden bent"
+bullet3 = "Werkt op aanraakapparaten (tablets, telefoons)"
+description = "Maak een handgeschreven handtekening met uw muis of touchscreen. Het best voor persoonlijke, authentieke handtekeningen."
+title = "Handtekening tekenen"
+
+[wetSignature.tooltip.type]
+bullet1 = "Kies uit meerdere lettertypen"
+bullet2 = "Pas tekstgrootte en -kleur aan"
+bullet3 = "Perfect voor gestandaardiseerde handtekeningen"
+description = "Genereer een handtekening vanuit getypte tekst. Snel en consistent, geschikt voor zakelijke documenten."
+title = "Handtekening typen"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Ondersteunt PNG, JPG en andere afbeeldingsformaten"
+bullet2 = "Transparante achtergronden aanbevolen voor de beste resultaten"
+bullet3 = "Afbeelding wordt geschaald naar het handtekeninggebied"
+description = "Upload een vooraf gemaakte handtekeningafbeelding. Ideaal als u een gescande handtekening of bedrijfslogo heeft."
+title = "Handtekeningafbeelding uploaden"
+
 [workspace]
 title = "Werkruimte"
 
@@ -8014,9 +8361,9 @@ disable = "Uitschakelen"
 disabled = "Uitgeschakeld"
 editRole = "Rol bewerken"
 enable = "Inschakelen"
+loading = "Personen laden..."
 locked = "vergrendeld"
 lockedBadge = "Vergrendeld"
-loading = "Personen laden..."
 loginRequired = "Schakel eerst de loginmodus in"
 member = "Lid"
 noMembersFound = "Geen leden gevonden"
@@ -8262,278 +8609,3 @@ cancel = "Annuleren"
 confirm = "Uitpakken"
 message = "Dit ZIP-bestand bevat {{count}} bestanden. Toch uitpakken?"
 title = "Groot ZIP-bestand"
-
-[cloudBadge]
-tooltip = "Deze bewerking gebruikt je cloud-credits"
-
-[team]
-cancelInviteError = "Uitnodiging annuleren mislukt"
-confirmCancelInvite = "Weet je zeker dat je deze uitnodiging wilt annuleren?"
-confirmLeave = "Weet je zeker dat je dit team wilt verlaten?"
-confirmLeaveLeader = "Als teamleider word je door te vertrekken uit het team verwijderd. Weet je het zeker?"
-confirmRemove = "Weet je zeker dat je dit lid wilt verwijderen?"
-editName = "Teamnaam bewerken"
-inviteCancelled = "Uitnodiging geannuleerd"
-inviteError = "Uitnodiging verzenden mislukt"
-inviteSent = "Uitnodiging succesvol verzonden"
-leader = "Teamleider"
-leaveButton = "Team verlaten"
-leaveError = "Team verlaten mislukt"
-leaveSuccess = "Team succesvol verlaten"
-loading = "Teamgegevens laden..."
-memberCount = "{{count}} leden"
-memberRemoved = "Lid succesvol verwijderd"
-namePlaceholder = "Voer teamnaam in"
-personal = "Persoonlijk"
-removeError = "Lid verwijderen mislukt"
-renameError = "Team hernoemen mislukt"
-renameSuccess = "Team succesvol hernoemd"
-
-[team.invitationBanner]
-message = "heeft je uitgenodigd om lid te worden van"
-acceptButton = "Accepteren"
-rejectButton = "Weigeren"
-
-[team.features]
-badge = "Teamfuncties"
-subtitle = "Werk samen met je team"
-title = "Teamsamenwerking"
-viewPlans = "Plannen bekijken"
-
-[team.features.billing]
-description = "Facturering en abonnementen beheren"
-title = "Beheer van facturering"
-
-[team.features.credits]
-description = "Gedeelde creditpool voor alle leden"
-title = "Gedeelde credits"
-
-[team.features.dashboard]
-description = "Teamactiviteit en gebruik bekijken"
-title = "Teamdashboard"
-
-[team.features.invite]
-description = "Voeg leden toe aan je team"
-title = "Leden uitnodigen"
-
-[team.invite]
-cancelLabel = "Annuleren"
-invalidEmail = "Ongeldig e-mailadres"
-placeholder = "Voer e-mailadres in"
-sendButton = "Uitnodiging verzenden"
-title = "Teamlid uitnodigen"
-
-[team.members]
-emailColumn = "E-mail"
-empty = "Nog geen teamleden"
-nameColumn = "Naam"
-pending = "In afwachting"
-remove = "Verwijderen"
-roleColumn = "Rol"
-title = "Teamleden"
-
-[team.upgrade]
-button = "Upgrade naar Team"
-description = "Ontgrendel teamsamenwerkingsfuncties"
-title = "Upgrade naar Team-abonnement"
-
-[provider.oauth2.google]
-scope = "Aanmeldingsauthenticatie"
-
-[provider.oauth2.google.clientId]
-label = "Client-ID"
-description = "De OAuth2 client-ID van Google Cloud Console"
-
-[provider.oauth2.google.clientSecret]
-label = "Clientgeheim"
-description = "Het OAuth2 clientgeheim van Google Cloud Console"
-
-[provider.oauth2.google.scopes]
-label = "Scopes"
-description = "Komma-gescheiden OAuth2-scopes"
-
-[provider.oauth2.google.useAsUsername]
-label = "Gebruiken als gebruikersnaam"
-description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name)"
-
-[provider.oauth2.github]
-scope = "Aanmeldingsauthenticatie"
-
-[provider.oauth2.github.clientId]
-label = "Client-ID"
-description = "De OAuth2 client-ID van GitHub Developer Settings"
-
-[provider.oauth2.github.clientSecret]
-label = "Clientgeheim"
-description = "Het OAuth2 clientgeheim van GitHub Developer Settings"
-
-[provider.oauth2.github.scopes]
-label = "Scopes"
-description = "Komma-gescheiden OAuth2-scopes"
-
-[provider.oauth2.github.useAsUsername]
-label = "Gebruiken als gebruikersnaam"
-description = "Veld om als gebruikersnaam te gebruiken (email, login, name)"
-
-[provider.oauth2.keycloak]
-scope = "SSO"
-
-[provider.oauth2.keycloak.issuer]
-label = "Issuer-URL"
-description = "URL van het OpenID Connect Discovery-eindpunt van de Keycloak-realm"
-
-[provider.oauth2.keycloak.clientId]
-label = "Client-ID"
-description = "De OAuth2 client-ID van Keycloak"
-
-[provider.oauth2.keycloak.clientSecret]
-label = "Clientgeheim"
-description = "Het OAuth2 clientgeheim van Keycloak"
-
-[provider.oauth2.keycloak.scopes]
-label = "Scopes"
-description = "Komma-gescheiden OAuth2-scopes"
-
-[provider.oauth2.keycloak.useAsUsername]
-label = "Gebruiken als gebruikersnaam"
-description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name, preferred_username)"
-
-[provider.oauth2.generic]
-name = "Generieke OAuth2"
-scope = "SSO"
-
-[provider.oauth2.generic.enabled]
-label = "Generieke OAuth2 inschakelen"
-description = "Authenticatie inschakelen via een aangepaste OAuth2-provider"
-
-[provider.oauth2.generic.provider]
-label = "Naam provider"
-description = "De naam van je OAuth2-provider (bijv. Azure AD, Okta)"
-
-[provider.oauth2.generic.issuer]
-label = "Issuer-URL"
-description = "Provider die OpenID Connect Discovery ondersteunt (/.well-known/openid-configuration)"
-
-[provider.oauth2.generic.clientId]
-label = "Client-ID"
-description = "De OAuth2 client-ID van je provider"
-
-[provider.oauth2.generic.clientSecret]
-label = "Clientgeheim"
-description = "Het OAuth2 clientgeheim van je provider"
-
-[provider.oauth2.generic.scopes]
-label = "Scopes"
-description = "Komma-gescheiden OAuth2-scopes"
-
-[provider.oauth2.generic.useAsUsername]
-label = "Gebruiken als gebruikersnaam"
-description = "Veld om als gebruikersnaam te gebruiken"
-
-[provider.oauth2.generic.autoCreateUser]
-label = "Gebruikers automatisch aanmaken"
-description = "Automatisch gebruikersaccounts aanmaken bij de eerste OAuth2-aanmelding"
-
-[provider.oauth2.generic.blockRegistration]
-label = "Registratie blokkeren"
-description = "Nieuwe gebruikersregistratie via OAuth2 voorkomen"
-
-[provider.smtp]
-name = "SMTP-mail"
-scope = "E-mailmeldingen"
-
-[provider.smtp.enabled]
-label = "Mail inschakelen"
-description = "E-mailmeldingen en SMTP-functionaliteit inschakelen"
-
-[provider.smtp.host]
-label = "SMTP-host"
-description = "De hostnaam of het IP-adres van je SMTP-server"
-
-[provider.smtp.port]
-label = "SMTP-poort"
-description = "Het poortnummer voor de SMTP-verbinding (meestal 25, 465 of 587)"
-
-[provider.smtp.username]
-label = "SMTP-gebruikersnaam"
-description = "Gebruikersnaam voor SMTP-authenticatie"
-
-[provider.smtp.password]
-label = "SMTP-wachtwoord"
-description = "Wachtwoord voor SMTP-authenticatie"
-
-[provider.smtp.from]
-label = "Van-adres"
-description = "Het e-mailadres dat als afzender wordt gebruikt"
-
-[provider.saml2]
-name = "SAML2"
-scope = "SSO (SAML)"
-
-[provider.saml2.enabled]
-label = "SAML2 inschakelen"
-description = "SAML2-authenticatie inschakelen (alleen Enterprise)"
-
-[provider.saml2.provider]
-label = "Naam provider"
-description = "De naam van je SAML2-provider"
-
-[provider.saml2.registrationId]
-label = "Registratie-ID"
-description = "De naam van je Service Provider (SP)-appnaam"
-
-[provider.saml2.idpMetadataUri]
-label = "IDP-metadata-URI"
-description = "De URI voor de metadata van je provider"
-
-[provider.saml2.idpSingleLoginUrl]
-label = "IDP Single Login-URL"
-description = "De URL voor het initiëren van SSO"
-
-[provider.saml2.idpSingleLogoutUrl]
-label = "IDP Single Logout-URL"
-description = "De URL voor het initiëren van SLO"
-
-[provider.saml2.idpIssuer]
-label = "IDP-issuer"
-description = "De ID van je provider"
-
-[provider.saml2.idpCert]
-label = "IDP-certificaat"
-description = "Het certificaatpad (bijv. classpath:okta.cert)"
-
-[provider.saml2.privateKey]
-label = "Privésleutel"
-description = "Het pad naar je privésleutel"
-
-[provider.saml2.spCert]
-label = "SP-certificaat"
-description = "Het pad naar je ondertekeningscertificaat"
-
-[provider.saml2.autoCreateUser]
-label = "Gebruikers automatisch aanmaken"
-description = "Automatisch gebruikersaccounts aanmaken bij de eerste SAML2-aanmelding"
-
-[provider.saml2.blockRegistration]
-label = "Registratie blokkeren"
-description = "Nieuwe gebruikersregistratie via SAML2 voorkomen"
-
-[provider.googledrive]
-name = "Google Drive"
-scope = "Bestandsimport"
-
-[provider.googledrive.enabled]
-label = "Google Drive-bestandskiezer inschakelen"
-description = "Sta gebruikers toe om bestanden rechtstreeks vanaf Google Drive te importeren"
-
-[provider.googledrive.clientId]
-label = "Client-ID"
-description = "Google OAuth 2.0 Client-ID van Google Cloud Console"
-
-[provider.googledrive.apiKey]
-label = "API-sleutel"
-description = "Google API-sleutel voor Google Picker API van Google Cloud Console"
-
-[provider.googledrive.appId]
-label = "App-ID"
-description = "Google Drive App-ID van Google Cloud Console"

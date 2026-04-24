@@ -11,11 +11,11 @@ import java.util.Map;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.Overlay;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -46,8 +46,8 @@ public class PdfOverlayController {
             description =
                     "Overlay PDF files onto a base PDF with different modes: Sequential,"
                             + " Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
-    public ResponseEntity<StreamingResponseBody> overlayPdfs(
-            @ModelAttribute OverlayPdfsRequest request) throws IOException {
+    public ResponseEntity<Resource> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
+            throws IOException {
         MultipartFile baseFile = request.getFileInput();
         int overlayPos = request.getOverlayPosition();
 
@@ -89,7 +89,7 @@ public class PdfOverlayController {
                                 baseFile.getOriginalFilename(), "_overlayed.pdf");
 
                 TempFile out = tempOut;
-                tempOut = null; // ownership transferred to StreamingResponseBody
+                tempOut = null; // ownership transferred to response Resource
                 return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
             }
         } catch (Exception e) {

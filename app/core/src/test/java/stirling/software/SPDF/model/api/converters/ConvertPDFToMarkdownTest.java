@@ -3,7 +3,6 @@ package stirling.software.SPDF.model.api.converters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -13,16 +12,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.util.PDFToFile;
 
@@ -37,11 +36,11 @@ class ConvertPDFToMarkdownTest {
     @RestControllerAdvice
     static class GlobalErrorHandler {
         @ExceptionHandler(Exception.class)
-        ResponseEntity<StreamingResponseBody> handle(Exception ex) {
+        ResponseEntity<Resource> handle(Exception ex) {
             String message = ex.getMessage();
             byte[] body = message != null ? message.getBytes(StandardCharsets.UTF_8) : new byte[0];
-            StreamingResponseBody stream = out -> out.write(body);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(stream);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ByteArrayResource(body));
         }
     }
 
@@ -53,13 +52,12 @@ class ConvertPDFToMarkdownTest {
                 Mockito.mockConstruction(
                         PDFToFile.class,
                         (mock, ctx) -> {
-                            StreamingResponseBody stream = out -> out.write(md);
                             when(mock.processPdfToMarkdown(any(MultipartFile.class)))
                                     .thenAnswer(
                                             inv ->
                                                     ResponseEntity.ok()
                                                             .header("Content-Type", "text/markdown")
-                                                            .body(stream));
+                                                            .body(new ByteArrayResource(md)));
                         })) {
 
             MockMvc mvc = mockMvc();
@@ -71,12 +69,10 @@ class ConvertPDFToMarkdownTest {
                             "application/pdf",
                             new byte[] {1, 2, 3});
 
-            MvcResult asyncResult =
-                    mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(file))
-                            .andExpect(request().asyncStarted())
-                            .andReturn();
-
-            mvc.perform(asyncDispatch(asyncResult))
+            // ResponseEntity<Resource> is written synchronously on the request thread,
+            // so there is no async dispatch to wait for (unlike the old StreamingResponseBody
+            // path).
+            mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(file))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", "text/markdown"))
                     .andExpect(content().bytes(md));

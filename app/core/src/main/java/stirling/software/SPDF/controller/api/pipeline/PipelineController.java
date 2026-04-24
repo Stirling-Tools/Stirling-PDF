@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -58,8 +57,8 @@ public class PipelineController {
                     "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
                             + "Users provide files and a JSON configuration defining the sequence of operations to perform. "
                             + "Input:PDF Output:PDF/ZIP Type:MIMO")
-    public ResponseEntity<StreamingResponseBody> handleData(
-            @ModelAttribute HandleDataRequest request) throws DatabindException, JacksonException {
+    public ResponseEntity<Resource> handleData(@ModelAttribute HandleDataRequest request)
+            throws DatabindException, JacksonException {
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();
         if (files == null) {
