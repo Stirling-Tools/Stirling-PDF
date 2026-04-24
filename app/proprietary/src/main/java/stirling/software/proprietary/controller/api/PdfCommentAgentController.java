@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
 
@@ -43,12 +44,6 @@ import tools.jackson.databind.node.ObjectNode;
 @RequiredArgsConstructor
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class PdfCommentAgentController {
-
-    /**
-     * Response header tools use to surface structured metadata alongside a file body. Must stay in
-     * sync with the value in {@code AiWorkflowService}.
-     */
-    private static final String REPORT_HEADER = "X-Stirling-Tool-Report";
 
     private final PdfCommentAgentOrchestrator orchestrator;
     private final ObjectMapper objectMapper;
@@ -99,14 +94,14 @@ public class PdfCommentAgentController {
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", annotated.fileName());
         headers.setContentLength(annotated.bytes().length);
-        headers.set(REPORT_HEADER, buildReportHeader(annotated));
+        headers.set(AiToolResponseHeaders.TOOL_REPORT, buildReportHeader(annotated));
         return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(annotated.bytes()));
     }
 
     /**
-     * Build the metadata JSON surfaced in {@link #REPORT_HEADER} alongside the annotated PDF. Kept
-     * small (fits comfortably in a header): counts and the agent's rationale so a chat UI can show
-     * "Added 3 comments: <rationale>" alongside the downloaded file.
+     * Build the metadata JSON surfaced in {@link AiToolResponseHeaders#TOOL_REPORT} alongside the
+     * annotated PDF. Kept small (fits comfortably in a header): counts and the agent's rationale so
+     * a chat UI can show "Added 3 comments: <rationale>" alongside the downloaded file.
      */
     private String buildReportHeader(AnnotatedPdf annotated) {
         ObjectNode node = objectMapper.createObjectNode();

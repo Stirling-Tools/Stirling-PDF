@@ -85,12 +85,9 @@ public class AiWorkflowService {
      * payload the tool chose to surface alongside (or instead of) a file.
      *
      * <p>Tools populate the report either by returning a JSON body (whole body → report) or by
-     * adding the {@link #REPORT_HEADER} header alongside a file body.
+     * adding the {@link AiToolResponseHeaders#TOOL_REPORT} header alongside a file body.
      */
     private record ToolResult(List<Resource> files, JsonNode report) {}
-
-    /** Custom response header tools use to surface a structured metadata report. */
-    private static final String REPORT_HEADER = "X-Stirling-Tool-Report";
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         return orchestrate(request, NOOP_LISTENER);
@@ -359,8 +356,9 @@ public class AiWorkflowService {
      * <ul>
      *   <li>JSON body (Content-Type: application/json) → the entire body is the report, no files
      *       are returned.
-     *   <li>File body (PDF etc.) → the file is returned; if an {@link #REPORT_HEADER} header is
-     *       present, its (minified JSON) value is parsed as the report.
+     *   <li>File body (PDF etc.) → the file is returned; if an {@link
+     *       AiToolResponseHeaders#TOOL_REPORT} header is present, its (minified JSON) value is
+     *       parsed as the report.
      *   <li>ZIP responses declared by the tool metadata service are unpacked so callers always see
      *       a flat list of result files.
      * </ul>
@@ -405,9 +403,12 @@ public class AiWorkflowService {
         return new ToolResult(List.of(resource), report);
     }
 
-    /** Parse the optional {@link #REPORT_HEADER} header into a {@link JsonNode}, or return null. */
+    /**
+     * Parse the optional {@link AiToolResponseHeaders#TOOL_REPORT} header into a {@link JsonNode},
+     * or return null.
+     */
     private JsonNode parseReportHeader(HttpHeaders headers, String endpointPath) {
-        String raw = headers.getFirst(REPORT_HEADER);
+        String raw = headers.getFirst(AiToolResponseHeaders.TOOL_REPORT);
         if (raw == null || raw.isBlank()) {
             return null;
         }
@@ -416,7 +417,7 @@ public class AiWorkflowService {
         } catch (JacksonException e) {
             log.warn(
                     "Ignoring malformed {} header from {}: {}",
-                    REPORT_HEADER,
+                    AiToolResponseHeaders.TOOL_REPORT,
                     endpointPath,
                     e.getMessage());
             return null;

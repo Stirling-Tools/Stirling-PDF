@@ -23,6 +23,19 @@ export const buildPdfCommentAgentFormData = (
 };
 
 /**
+ * Reject filenames that are blank or contain path separators. The server is
+ * trusted to supply a sensible value, but guarding here means a hostile or
+ * buggy backend cannot convince the browser save-dialog to steer the download
+ * into a parent directory.
+ */
+const sanitiseFilename = (raw: string): string | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/[\\/]/.test(trimmed)) return null;
+  return trimmed;
+};
+
+/**
  * Extract the filename from a Content-Disposition header, falling back to a
  * sensible default based on the input file name. Handles both the quoted and
  * RFC 5987 (``filename*=UTF-8''encoded``) forms.
@@ -38,7 +51,8 @@ const filenameFromContentDisposition = (
   const extended = /filename\*=[^']*''([^;]+)/i.exec(header);
   if (extended?.[1]) {
     try {
-      return decodeURIComponent(extended[1].trim());
+      const decoded = sanitiseFilename(decodeURIComponent(extended[1]));
+      if (decoded) return decoded;
     } catch {
       // fall through to plain form
     }
@@ -47,7 +61,8 @@ const filenameFromContentDisposition = (
   // Plain: filename="..." or filename=...
   const plain = /filename="?([^";]+)"?/i.exec(header);
   if (plain?.[1]) {
-    return plain[1].trim();
+    const sanitised = sanitiseFilename(plain[1]);
+    if (sanitised) return sanitised;
   }
   return fallback;
 };
