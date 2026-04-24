@@ -57,7 +57,6 @@ class ToolDiscovery:
         "/api/v1/misc/",
         "/api/v1/security/",
         "/api/v1/convert/",
-        "/api/v1/ai/tools/",
     )
 
     def __init__(self, spec: dict[str, Any]):
@@ -228,7 +227,6 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         field_constraints=True,
         no_alias=True,
         set_default_enum_member=True,
-        use_default_kwarg=True,  # Field(default=X, ...) — pyright only recognises defaults via kwarg.
         additional_imports=["enum.StrEnum"],
         enable_version_header=False,
         custom_file_header=_FILE_HEADER,

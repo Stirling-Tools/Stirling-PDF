@@ -13,41 +13,14 @@ import json
 import re
 from typing import Any
 
-from pydantic import Field
-
 from stirling.contracts import (
+    CommentSpec,
     OrchestratorRequest,
     ToolReportArtifact,
     Verdict,
 )
 from stirling.contracts.ledger import Discrepancy, Severity
-from stirling.models.base import ApiModel
-from stirling.models.tool_models import ToolEndpoint
-
-
-class CommentSpec(ApiModel):
-    """Sticky-note spec serialised into the ``comments`` JSON string sent to
-    ``/api/v1/misc/add-comments``. Kept local to this module — it's purely the
-    engine-side structured representation of each discrepancy we flag on the PDF,
-    and the backend's tool contract takes the JSON string form, not this type.
-    """
-
-    page_index: int = Field(description="0-indexed page number.")
-    x: float = Field(description="Bottom-left x coord of the icon (PDF user-space).")
-    y: float = Field(description="Bottom-left y coord of the icon (PDF user-space).")
-    width: float = Field(description="Width of the icon in user-space units.")
-    height: float = Field(description="Height of the icon in user-space units.")
-    text: str = Field(description="Comment body shown in the popup.")
-    author: str | None = Field(default=None)
-    subject: str | None = Field(default=None)
-    anchor_text: str | None = Field(
-        default=None,
-        description=(
-            "Optional text snippet to locate on the page; when set, the server anchors"
-            " the icon at the first matching line and ignores the x/y coords."
-        ),
-    )
-
+from stirling.models.agent_tool_models import AgentToolId
 
 # ---------------------------------------------------------------------------
 # Intent detection
@@ -99,7 +72,7 @@ def extract_math_verdict(request: OrchestratorRequest) -> Verdict | None:
     for artifact in request.artifacts:
         if not isinstance(artifact, ToolReportArtifact):
             continue
-        if artifact.source_tool != ToolEndpoint.MATH_AUDITOR_AGENT:
+        if artifact.source_tool != AgentToolId.MATH_AUDITOR_AGENT:
             continue
         try:
             return Verdict.model_validate(artifact.report)
@@ -119,7 +92,7 @@ def verdict_to_prose(verdict: Verdict) -> str:
     Deterministic composition — no LLM needed. If there are few discrepancies
     we list them; if there are many we summarise counts + show a sample.
     """
-    discrepancies = verdict.discrepancies or []
+    discrepancies = verdict.discrepancies
     errors = [d for d in discrepancies if d.severity == Severity.ERROR]
     warnings = [d for d in discrepancies if d.severity == Severity.WARNING]
 
@@ -145,7 +118,7 @@ def verdict_to_prose(verdict: Verdict) -> str:
 
 
 def _discrepancy_one_liner(d: Discrepancy) -> str:
-    head = d.description.strip().rstrip(".") if d.description else "Discrepancy"
+    head = d.description.strip().rstrip(".") or "Discrepancy"
     if d.stated and d.expected:
         return f"{head} (stated {d.stated}, expected {d.expected})"
     return head
@@ -175,9 +148,7 @@ def verdict_to_comment_specs(verdict: Verdict) -> list[CommentSpec]:
     """
     specs: list[CommentSpec] = []
     per_page_index: dict[int, int] = {}
-    for d in verdict.discrepancies or []:
-        if d is None:
-            continue
+    for d in verdict.discrepancies:
         stack_index = per_page_index.get(d.page, 0)
         per_page_index[d.page] = stack_index + 1
         y = _ICON_Y_TOP - stack_index * _ICON_Y_STRIDE
@@ -204,11 +175,10 @@ def _anchor_text_for(d: Discrepancy) -> str | None:
     distinctive short string on the line. Fall back to ``context`` (which
     often quotes the surrounding phrase) when stated is absent.
     """
-    stated = (d.stated or "").strip()
+    stated = d.stated.strip()
     if stated:
         return stated
-    context = (d.context or "").strip()
-    return context or None
+    return d.context.strip() or None
 
 
 def verdict_to_add_comments_payload(verdict: Verdict) -> str:
@@ -221,11 +191,9 @@ def verdict_to_add_comments_payload(verdict: Verdict) -> str:
 
 def _comment_body(d: Discrepancy) -> str:
     label = _severity_label(d.severity)
-    desc = d.description.strip() if d.description else ""
-    context = d.context.strip() if d.context else ""
-    head = desc or context or "See details."
+    head = d.description.strip() or d.context.strip() or "See details."
     lines = [f"{label} {head}"]
-    if (d.stated and d.stated.strip()) or (d.expected and d.expected.strip()):
+    if d.stated.strip() or d.expected.strip():
         lines.append("")
         lines.append(f"Stated: {d.stated or '—'}")
         lines.append(f"Expected: {d.expected or '—'}")
@@ -233,13 +201,12 @@ def _comment_body(d: Discrepancy) -> str:
 
 
 def _comment_subject(d: Discrepancy) -> str:
-    kind = d.kind.value if d.kind is not None else "Discrepancy"
-    return f"{_severity_label(d.severity)} {kind}"
+    return f"{_severity_label(d.severity)} {d.kind.value}"
 
 
-def _severity_label(severity: Severity | None) -> str:
-    if severity == Severity.ERROR:
-        return "Error:"
-    if severity == Severity.WARNING:
-        return "Warning:"
-    return "Issue:"
+def _severity_label(severity: Severity) -> str:
+    match severity:
+        case Severity.ERROR:
+            return "Error:"
+        case Severity.WARNING:
+            return "Warning:"

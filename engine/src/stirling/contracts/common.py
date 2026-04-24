@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, assert_never
 
 from pydantic import Field, model_validator
 
 from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
-from stirling.models.tool_models import ParamToolModel
+from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
 
 class PdfContentType(StrEnum):
@@ -136,8 +136,8 @@ class ToolReportArtifact(ApiModel):
     """
 
     kind: Literal[ArtifactKind.TOOL_REPORT] = ArtifactKind.TOOL_REPORT
-    source_tool: ToolEndpoint = Field(
-        description="Endpoint path of the tool that produced this report.",
+    source_tool: AnyToolId = Field(
+        description="Tool id of the tool that produced this report.",
     )
     report: dict[str, Any] = Field(
         description="Free-form JSON payload as returned by the tool (Verdict, summary, etc.).",
@@ -146,12 +146,18 @@ class ToolReportArtifact(ApiModel):
 
 class ToolOperationStep(ApiModel):
     kind: Literal[StepKind.TOOL] = StepKind.TOOL
-    tool: ToolEndpoint
-    parameters: ParamToolModel
+    tool: AnyToolId
+    parameters: AnyParamModel
 
     @model_validator(mode="after")
     def validate_tool_parameter_pairing(self) -> ToolOperationStep:
-        expected_type = OPERATIONS[self.tool]
+        if isinstance(self.tool, AgentToolId):
+            expected_type = AGENT_OPERATIONS[self.tool]
+        elif isinstance(self.tool, ToolEndpoint):
+            expected_type = OPERATIONS[self.tool]
+        else:
+            assert_never(self.tool)
+
         if not isinstance(self.parameters, expected_type):
             actual_type = type(self.parameters).__name__
             raise ValueError(f"Parameters for tool {self.tool} must be {expected_type.__name__}, got {actual_type}.")

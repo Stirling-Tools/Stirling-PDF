@@ -3,18 +3,31 @@ from __future__ import annotations
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents._page_text import format_page_text, has_page_text
+from stirling.agents._page_text import (
+    format_page_text,
+    get_extracted_text_artifact,
+    has_page_text,
+)
+from stirling.agents.math_presentation import (
+    extract_math_verdict,
+    is_math_intent,
+    verdict_to_prose,
+)
 from stirling.contracts import (
+    EditPlanResponse,
     NeedContentFileRequest,
     NeedContentResponse,
+    OrchestratorRequest,
     PdfContentType,
     PdfQuestionAnswerResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
     SupportedCapability,
+    ToolOperationStep,
     format_conversation_history,
 )
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
 
 
@@ -57,6 +70,43 @@ class PdfQuestionAgent:
                 max_characters=self.runtime.settings.max_characters,
             )
         return await self._run_answer_agent(request)
+
+    async def orchestrate(self, request: OrchestratorRequest) -> PdfQuestionResponse | EditPlanResponse:
+        """Entry point for the orchestrator delegate.
+
+        When the prompt smells like math, consults the math-auditor specialist first (via a
+        plan step + resume), then digests the :class:`Verdict` into a prose answer. All other
+        prompts fall through to the normal :meth:`handle` pipeline.
+        """
+        if is_math_intent(request.user_message):
+            verdict = extract_math_verdict(request)
+            if verdict is None:
+                # First turn — ask Java to run the math specialist and come back.
+                return EditPlanResponse(
+                    summary="Consulting the math auditor to answer the question...",
+                    steps=[
+                        ToolOperationStep(
+                            tool=AgentToolId.MATH_AUDITOR_AGENT,
+                            parameters=MathAuditorAgentParams(),
+                        )
+                    ],
+                    resume_with=SupportedCapability.PDF_QUESTION,
+                )
+            # Second turn — Verdict in hand, render as a prose answer.
+            return PdfQuestionAnswerResponse(
+                answer=verdict_to_prose(verdict),
+                evidence=[],
+            )
+
+        extracted_text = get_extracted_text_artifact(request)
+        return await self.handle(
+            PdfQuestionRequest(
+                question=request.user_message,
+                file_names=request.file_names,
+                page_text=extracted_text.files if extracted_text is not None else [],
+                conversation_history=request.conversation_history,
+            )
+        )
 
     async def _run_answer_agent(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         result = await self.agent.run(self._build_prompt(request))

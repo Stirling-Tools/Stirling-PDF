@@ -8,14 +8,10 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
-from stirling.agents.math_presentation import (
-    extract_math_verdict,
-    is_math_intent,
-    verdict_to_add_comments_payload,
-    verdict_to_prose,
-)
+from stirling.agents._page_text import get_extracted_text_artifact
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
+from stirling.agents.pdf_review import PdfReviewAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftRequest,
@@ -25,21 +21,12 @@ from stirling.contracts import (
     OrchestratorResponse,
     PdfEditRequest,
     PdfEditResponse,
-    PdfQuestionRequest,
     PdfQuestionResponse,
     SupportedCapability,
-    ToolOperationStep,
     UnsupportedCapabilityResponse,
     format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.contracts.pdf_questions import PdfQuestionAnswerResponse
-from stirling.models.tool_models import (
-    AddCommentsParams,
-    MathAuditorAgentParams,
-    PdfCommentAgentParams,
-    ToolEndpoint,
-)
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -153,7 +140,7 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        extracted_text = self._get_extracted_text_artifact(request)
+        extracted_text = get_extracted_text_artifact(request)
         return await PdfEditAgent(self.runtime).handle(
             PdfEditRequest(
                 user_message=request.user_message,
@@ -167,41 +154,7 @@ class OrchestratorAgent:
         return await self._run_pdf_question(ctx.deps.request)
 
     async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse | EditPlanResponse:
-        """Answer a question about a PDF.
-
-        When the prompt smells like math, consults the math-auditor specialist first (via a
-        plan step + resume), then digests the :class:`Verdict` into a prose answer. All other
-        prompts go through the general :class:`PdfQuestionAgent`.
-        """
-        if is_math_intent(request.user_message):
-            verdict = extract_math_verdict(request)
-            if verdict is None:
-                # First turn — ask Java to run the math specialist and come back.
-                return EditPlanResponse(
-                    summary="Consulting the math auditor to answer the question...",
-                    steps=[
-                        ToolOperationStep(
-                            tool=ToolEndpoint.MATH_AUDITOR_AGENT,
-                            parameters=MathAuditorAgentParams(),
-                        )
-                    ],
-                    resume_with=SupportedCapability.PDF_QUESTION,
-                )
-            # Second turn — Verdict in hand, render as a prose answer.
-            return PdfQuestionAnswerResponse(
-                answer=verdict_to_prose(verdict),
-                evidence=[],
-            )
-
-        extracted_text = self._get_extracted_text_artifact(request)
-        return await PdfQuestionAgent(self.runtime).handle(
-            PdfQuestionRequest(
-                question=request.user_message,
-                file_names=request.file_names,
-                page_text=extracted_text.files if extracted_text is not None else [],
-                conversation_history=request.conversation_history,
-            )
-        )
+        return await PdfQuestionAgent(self.runtime).orchestrate(request)
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
         return await self._run_agent_draft(ctx.deps.request)
@@ -218,48 +171,7 @@ class OrchestratorAgent:
         return await self._run_pdf_review(ctx.deps.request)
 
     async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse:
-        """Produce an annotated PDF with review comments.
-
-        Math-flavoured prompts: consult math-auditor first, then project the :class:`Verdict`
-        into sticky-note specs for ``/api/v1/misc/add-comments``. Other review prompts go
-        through the composed :class:`PdfCommentAgentOrchestrator` (``/api/v1/ai/tools/pdf-comment-agent``)
-        which does its own chunk extraction + AI round-trip.
-        """
-        if is_math_intent(request.user_message):
-            verdict = extract_math_verdict(request)
-            if verdict is None:
-                return EditPlanResponse(
-                    summary="Consulting the math auditor to flag errors on the PDF...",
-                    steps=[
-                        ToolOperationStep(
-                            tool=ToolEndpoint.MATH_AUDITOR_AGENT,
-                            parameters=MathAuditorAgentParams(),
-                        )
-                    ],
-                    resume_with=SupportedCapability.PDF_REVIEW,
-                )
-            # Verdict in hand — project to comment specs and emit the annotate step.
-            comments_json = verdict_to_add_comments_payload(verdict)
-            discrepancy_count = len(verdict.discrepancies or [])
-            return EditPlanResponse(
-                summary=(f"Flagging {discrepancy_count} math issue{'s' if discrepancy_count != 1 else ''} on the PDF."),
-                steps=[
-                    ToolOperationStep(
-                        tool=ToolEndpoint.ADD_COMMENTS,
-                        parameters=AddCommentsParams(comments=comments_json),
-                    )
-                ],
-            )
-
-        return EditPlanResponse(
-            summary="Add AI-generated review comments to the PDF.",
-            steps=[
-                ToolOperationStep(
-                    tool=ToolEndpoint.PDF_COMMENT_AGENT,
-                    parameters=PdfCommentAgentParams(prompt=request.user_message),
-                )
-            ],
-        )
+        return await PdfReviewAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(
         self,
@@ -268,12 +180,6 @@ class OrchestratorAgent:
         message: str,
     ) -> UnsupportedCapabilityResponse:
         return UnsupportedCapabilityResponse(capability=capability, message=message)
-
-    def _get_extracted_text_artifact(self, request: OrchestratorRequest) -> ExtractedTextArtifact | None:
-        for artifact in request.artifacts:
-            if isinstance(artifact, ExtractedTextArtifact):
-                return artifact
-        return None
 
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)

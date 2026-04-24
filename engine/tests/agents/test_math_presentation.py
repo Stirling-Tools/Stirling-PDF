@@ -17,7 +17,7 @@ from stirling.agents.math_presentation import (
 )
 from stirling.contracts import OrchestratorRequest, ToolReportArtifact, WorkflowArtifact
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
-from stirling.models.tool_models import ToolEndpoint
+from stirling.models.agent_tool_models import AgentToolId
 
 
 def _make_verdict(discrepancies: list[Discrepancy]) -> Verdict:
@@ -152,7 +152,7 @@ def test_extract_math_verdict_roundtrips_a_math_auditor_report() -> None:
         ]
     )
     artifact = ToolReportArtifact(
-        source_tool=ToolEndpoint.MATH_AUDITOR_AGENT,
+        source_tool=AgentToolId.MATH_AUDITOR_AGENT,
         report=original.model_dump(mode="json"),
     )
     request = _orchestrator_request_with_artifacts([artifact])
@@ -175,7 +175,7 @@ def test_extract_math_verdict_ignores_artifacts_from_other_tools() -> None:
     """Only reports from the math-auditor count; reports from other specialists
     should be ignored here so meta-agents don't misinterpret them."""
     unrelated = ToolReportArtifact(
-        source_tool=ToolEndpoint.PDF_COMMENT_AGENT,
+        source_tool=AgentToolId.PDF_COMMENT_AGENT,
         report={"annotationsApplied": 3, "rationale": "irrelevant"},
     )
     request = _orchestrator_request_with_artifacts([unrelated])
@@ -186,7 +186,7 @@ def test_extract_math_verdict_degrades_gracefully_on_malformed_report() -> None:
     """A corrupt report JSON must not crash the orchestrator; the meta-agent will
     fall back to the non-math path."""
     malformed = ToolReportArtifact(
-        source_tool=ToolEndpoint.MATH_AUDITOR_AGENT,
+        source_tool=AgentToolId.MATH_AUDITOR_AGENT,
         report={"not_a_verdict_field": "garbage"},
     )
     request = _orchestrator_request_with_artifacts([malformed])

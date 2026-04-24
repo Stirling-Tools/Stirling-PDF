@@ -8,6 +8,7 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
+from .comments import CommentSpec
 from .common import (
     ArtifactKind,
     ConversationMessage,
@@ -99,6 +100,7 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "CommentSpec",
     "CompletedExecutionAction",
     "ConversationMessage",
     "Discrepancy",
