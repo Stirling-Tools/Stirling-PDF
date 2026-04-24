@@ -80,12 +80,12 @@ class OrchestratorAgent:
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
-                "Use delegate_pdf_question for questions about PDF contents, including "
-                "summaries, explanations, or any request that needs to read the document. "
+                "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
-                "Use unsupported_capability only when none of the other outputs fit."
+                "Use unsupported_capability when the user asks about the assistant itself "
+                "or when none of the other outputs fit; supply a helpful message."
             ),
             model_settings=runtime.fast_model_settings,
         )
