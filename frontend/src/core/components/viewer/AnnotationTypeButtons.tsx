@@ -58,9 +58,13 @@ export function AnnotationTypeButtons(props: AnnotationTypeButtonsProps) {
     onCommentColorChange,
   } = props;
 
-  const attachCommentButton = (
+  // When a comment is attached, show the same chat-bubble "View comment" button used by
+  // standalone comment annotations. When no comment, show the "Add comment" attach button.
+  const attachCommentButton = isInSidebar ? (
+    <CommentButton hasContent={hasCommentContent} onClick={onViewComment} />
+  ) : (
     <AttachCommentButton
-      isInSidebar={isInSidebar}
+      isInSidebar={false}
       onView={onViewComment}
       onAdd={onAddToSidebar}
     />
@@ -221,10 +225,6 @@ export function AnnotationTypeButtons(props: AnnotationTypeButtonsProps) {
       return (
         <>
           {attachCommentButton}
-          <CommentButton
-            hasContent={hasCommentContent}
-            onClick={onViewComment}
-          />
           <LinkButton
             firstLinkTarget={firstLinkTarget}
             onGoToLink={onGoToLink}
