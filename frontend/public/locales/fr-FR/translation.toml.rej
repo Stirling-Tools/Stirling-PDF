@@ -1,0 +1,34 @@
+@@ -1,8 +1,8 @@
+ # FILE: frontend/public/locales/fr-FR/translation.toml
+ 
+-app_title = "Aplication Web"
++app_title = "Application Web"
+ description = "Une application web moderne"
+-button_start = "Comencer"
++button_start = "Démarrer"
+ 
+ # Navigation
+ nav_home = "Accueil"
+@@ -12,7 +12,7 @@
+ nav_logout = "Déconnexion"
+ 
+ # Forms
+-form_label = "Formulair"
++form_label = "Formulaire"
+ form_placeholder = "Entrez votre texte"
+ form_submit = "Soumettre"
+ form_cancel = "Annuler"
+@@ -22,10 +22,10 @@
+ 
+ # Messages
+ message_success = "Opération réussie"
+-message_error = "Erreur s'est produite"
++message_error = "Une erreur s'est produite"
+ message_confirm = "Êtes-vous sûr?"
+ 
+ # Errors
+-error_404 = "Page non trouvée"
++error_404 = "Page introuvable"
+ error_500 = "Erreur serveur"
+ error_network = "Problème de connexion"
+\ No newline at end of line
