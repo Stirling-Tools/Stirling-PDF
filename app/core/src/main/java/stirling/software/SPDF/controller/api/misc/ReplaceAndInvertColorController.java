@@ -95,7 +95,7 @@ public class ReplaceAndInvertColorController {
             summary = "Replace specific PDF text colours",
             description =
                     "Replaces selected source text colours with a single target colour while leaving non-text content unchanged. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> replaceTextColors(
+    public ResponseEntity<Resource> replaceTextColors(
             @ModelAttribute ReplaceTextColorsRequest request) throws IOException {
         PDDocument output =
                 textColorReplacementService.replaceTextColors(
