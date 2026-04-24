@@ -636,7 +636,7 @@ jobs:
           fi
 
       - name: Build ${{ matrix.docker-rev }}
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
