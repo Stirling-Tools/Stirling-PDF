@@ -1,11 +1,6 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("18. Cookie Preferences", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   test.describe("18.1 Cookie Banner", () => {
     test("should open and configure cookie preferences from footer", async ({
       page,

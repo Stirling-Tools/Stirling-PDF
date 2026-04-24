@@ -1,11 +1,8 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup, ensureCookieConsent } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("19. Responsive Design and Accessibility", () => {
   test.describe("19.1 Responsive Layout - Mobile Viewport", () => {
     test("should be usable on mobile viewport sizes", async ({ page }) => {
-      await loginAndSetup(page);
-
       // Step 1: Resize the browser window to a mobile viewport
       await page.setViewportSize({ width: 375, height: 812 });
       await page.waitForTimeout(500);
@@ -28,8 +25,6 @@ test.describe("19. Responsive Design and Accessibility", () => {
 
   test.describe("19.2 Keyboard Navigation", () => {
     test("should be keyboard navigable", async ({ page }) => {
-      await loginAndSetup(page);
-
       // Step 1: Press Tab to navigate through the page
       await page.keyboard.press("Tab");
       await page.waitForTimeout(300);
@@ -43,8 +38,6 @@ test.describe("19. Responsive Design and Accessibility", () => {
       await expect(focusedElement).toBeVisible();
 
       // Step 5: On the login page, verify Tab order
-      await page.context().clearCookies();
-      await ensureCookieConsent(page);
       await page.goto("/login");
       await page.waitForLoadState("domcontentloaded");
 

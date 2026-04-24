@@ -1,11 +1,6 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("4. PDF Tool Pages - Common Patterns", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   test.describe("4.1 Tool Page - File Upload Required Before Processing", () => {
     test("should require file upload before processing on merge tool", async ({
       page,

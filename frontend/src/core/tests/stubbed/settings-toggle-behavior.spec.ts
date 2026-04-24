@@ -1,11 +1,6 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("25. Settings Toggle Behavior", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   test.describe("25.1 Toggle Switches Persist", () => {
     test("should persist toggle state across dialog open/close", async ({
       page,

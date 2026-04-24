@@ -1,11 +1,6 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("15. Tour/Onboarding", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   test.describe("15.1 Tour Button", () => {
     test("should start and dismiss tour guide", async ({ page }) => {
       // Step 1: Click the Tours button in the quick access bar (identified by data-tour="help-button")

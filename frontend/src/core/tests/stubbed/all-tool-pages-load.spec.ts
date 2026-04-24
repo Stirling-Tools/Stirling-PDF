@@ -1,5 +1,4 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 /**
  * Smoke test: verify every tool page loads without crashing,
@@ -105,10 +104,6 @@ async function verifyToolPageLoads(
 // ─── Tests: every tool page loads ────────────────────────────────────────────
 
 test.describe("Smoke: All tool pages load", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   for (const toolId of TOOL_IDS) {
     const urlPath = toUrlPath(toolId);
 
@@ -121,10 +116,6 @@ test.describe("Smoke: All tool pages load", () => {
 // ─── Tests: tools with sub-modes ─────────────────────────────────────────────
 
 test.describe("Smoke: Tool sub-modes load", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   // ── Split: click each available method card ─────────────────────────
   // Disabled endpoints remove cards entirely (shifting indices), so we
   // simply click every visible card rather than matching by index.

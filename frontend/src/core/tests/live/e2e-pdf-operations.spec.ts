@@ -6,7 +6,8 @@ import * as fs from "fs";
 /**
  * E2E tests for real PDF operations.
  * These tests upload actual PDF files, process them through the backend,
- * and verify the results are produced.
+ * and verify the results are produced. Requires a running Spring Boot backend
+ * — registered under the `live` Playwright project.
  */
 
 // Resolve test fixture paths - works from both frontend/ and repo root

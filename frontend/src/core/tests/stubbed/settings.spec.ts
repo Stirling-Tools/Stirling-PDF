@@ -1,11 +1,6 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("12. Settings", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   test.describe("12.1 Settings - General Preferences", () => {
     test("should open settings dialog with all configuration categories", async ({
       page,

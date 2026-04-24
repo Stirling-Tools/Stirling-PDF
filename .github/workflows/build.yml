@@ -340,6 +340,7 @@ jobs:
           retention-days: 3
 
   playwright-e2e:
+    # Backend-free stubbed suite — fast, no Spring Boot required.
     if: needs.files-changed.outputs.frontend == 'true'
     needs: files-changed
     runs-on: ubuntu-latest
@@ -360,13 +361,80 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
-      - name: Run E2E tests (chromium)
-        run: task frontend:test:e2e -- --project=chromium
+      - name: Run stubbed E2E tests (chromium)
+        run: task frontend:test:e2e -- --project=stubbed
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: playwright-report-pr-${{ github.run_id }}
+          name: playwright-report-stubbed-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  playwright-e2e-live:
+    # Live-backend suite — boots Spring Boot and runs auth + real tool round-trips.
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: files-changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up JDK 21
+        uses: actions/setup-java@c34c4b5dd11e2cc16a1fb0d0b9df05e20ce6ca86 # v5.0.1
+        with:
+          java-version: "21"
+          distribution: "temurin"
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Install Playwright (chromium only)
+        run: task frontend:test:e2e:install -- chromium
+      - name: Start Spring Boot backend (background)
+        run: |
+          nohup ./gradlew :stirling-pdf:bootRun > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+      - name: Wait for backend to become ready
+        run: |
+          for i in $(seq 1 120); do
+            if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then
+              echo "Backend up after ${i}s"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Backend did not become ready in 600s"
+          tail -200 /tmp/backend.log || true
+          exit 1
+      - name: Run live E2E tests (chromium)
+        run: task frontend:test:e2e -- --project=live
+      - name: Stop backend
+        if: always()
+        run: |
+          if [ -f /tmp/backend.pid ]; then
+            kill "$(cat /tmp/backend.pid)" 2>/dev/null || true
+          fi
+      - name: Upload backend log
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: backend-log-live-${{ github.run_id }}
+          path: /tmp/backend.log
+          retention-days: 7
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-report-live-${{ github.run_id }}
           path: frontend/playwright-report/
           retention-days: 7
 

@@ -1,9 +1,18 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("13. Language / Localization", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
+  test.use({
+    stubOptions: {
+      languages: [
+        "en-GB",
+        "en-US",
+        "id-ID",
+        "de-DE",
+        "es-ES",
+        "fr-FR",
+        "pt-BR",
+      ],
+    },
   });
 
   test.describe("13.1 Language Switcher", () => {

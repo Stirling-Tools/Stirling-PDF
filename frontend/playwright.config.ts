@@ -2,39 +2,38 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Stirling-PDF E2E Test Configuration
- * Tests are generated and maintained by Playwright Test Agents (planner, generator, healer).
  *
- * @see https://playwright.dev/docs/test-agents
+ * The suite is split into two projects:
+ *   - `stubbed` — backend-free specs that mock `/api/v1/*` via `page.route()`.
+ *                 Safe to run in CI without the Spring Boot server. Lives in
+ *                 `src/core/tests/stubbed/**`.
+ *   - `live`    — specs that require a real backend on `localhost:8080`
+ *                 (auth, admin mutation, real tool round-trips). Lives in
+ *                 `src/core/tests/live/**`.
+ *
+ * Run one:
+ *   npx playwright test --project=stubbed
+ *   npx playwright test --project=live
+ *
  * @see https://playwright.dev/docs/test-configuration
  */
+const chromiumViewport = {
+  ...devices["Desktop Chrome"],
+  viewport: { width: 1920, height: 1080 },
+};
+
 export default defineConfig({
   testDir: "./src/core/tests",
   testMatch: "**/*.spec.ts",
 
-  /* Run tests in files in parallel */
   fullyParallel: true,
-
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-
-  /* Retry on CI only — locally tests should pass cleanly */
   retries: process.env.CI ? 2 : 0,
-
-  /* Workers: CI uses 1 for stability, locally use 50% of CPU cores */
   workers: process.env.CI ? 1 : "50%",
-
-  /* Reporter to use */
   reporter: [["html", { open: "never" }], ["list"]],
-
-  /* Global timeout per test */
   timeout: 60_000,
+  expect: { timeout: 10_000 },
 
-  /* Expect timeout */
-  expect: {
-    timeout: 10_000,
-  },
-
-  /* Shared settings for all the projects below */
   use: {
     baseURL: "http://localhost:5173",
     trace: "on-first-retry",
@@ -44,28 +43,34 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
 
-  /* Configure projects for major browsers */
   projects: [
+    // Stubbed — no backend required, chromium-only for CI speed
     {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1920, height: 1080 },
-      },
+      name: "stubbed",
+      testDir: "./src/core/tests/stubbed",
+      use: chromiumViewport,
     },
 
+    // Live backend — auth + admin-mutation + real-tool smoke
     {
-      name: "firefox",
+      name: "live",
+      testDir: "./src/core/tests/live",
+      use: chromiumViewport,
+    },
+
+    // Cross-browser coverage for the stubbed suite (opt-in locally)
+    {
+      name: "stubbed-firefox",
+      testDir: "./src/core/tests/stubbed",
       use: { ...devices["Desktop Firefox"] },
     },
-
     {
-      name: "webkit",
+      name: "stubbed-webkit",
+      testDir: "./src/core/tests/stubbed",
       use: { ...devices["Desktop Safari"] },
     },
   ],
 
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: "npx vite",
     url: "http://localhost:5173",

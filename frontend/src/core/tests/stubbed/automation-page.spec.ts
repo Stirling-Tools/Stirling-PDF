@@ -1,9 +1,7 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("11. Automation Page", () => {
   test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
     await page.goto("/automate");
     await page.waitForLoadState("domcontentloaded");
   });

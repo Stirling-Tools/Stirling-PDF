@@ -1,13 +1,10 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("27. Browser Back/Forward Navigation", () => {
   test.describe("27.1 History Navigation Between Tools", () => {
     test("should navigate correctly using browser history", async ({
       page,
     }) => {
-      await loginAndSetup(page);
-
       // Step 1: Click on "Merge" tool to navigate to /merge
       await page.locator('a[href="/merge"]').first().click();
       await expect(page).toHaveURL(/\/merge/);

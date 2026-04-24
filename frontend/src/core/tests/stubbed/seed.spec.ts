@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/test-base";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 import * as path from "path";
 import * as fs from "fs";
 

@@ -1,11 +1,6 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("14. Fullscreen Mode", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
-  });
-
   test.describe("14.1 Toggle Fullscreen Tool Picker", () => {
     test("should toggle fullscreen mode for tool picker", async ({ page }) => {
       // Step 1: Click the fullscreen toggle button

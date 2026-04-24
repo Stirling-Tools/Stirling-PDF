@@ -1,9 +1,7 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("26. Workspace Features", () => {
   test.beforeEach(async ({ page }) => {
-    await loginAndSetup(page);
     // Open settings dialog
     await page
       .getByRole("button", { name: /settings/i })

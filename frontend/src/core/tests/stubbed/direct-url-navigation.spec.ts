@@ -1,11 +1,8 @@
-import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
 
 test.describe("17. Direct URL Navigation", () => {
   test.describe("17.1 Navigate to Valid Tool URLs", () => {
     test("should load correct tool pages via direct URL", async ({ page }) => {
-      await loginAndSetup(page);
-
       // Step 1: Navigate to a representative sample of tool URLs and verify they load.
       // We use the SPA's client-side router (via window.location + popstate) so we
       // validate route resolution without triggering full-page reloads that can
@@ -44,8 +41,6 @@ test.describe("17. Direct URL Navigation", () => {
 
   test.describe("17.2 Navigate to Invalid URL", () => {
     test("should handle unknown routes gracefully", async ({ page }) => {
-      await loginAndSetup(page);
-
       // Step 1: Navigate to a nonexistent page
       await page.goto("/nonexistent-page-12345");
       await page.waitForLoadState("domcontentloaded");
@@ -58,15 +53,8 @@ test.describe("17. Direct URL Navigation", () => {
     });
   });
 
-  test.describe("17.3 Navigate Without Authentication", () => {
-    test("should redirect unauthenticated users to login", async ({ page }) => {
-      // Starting state: User is logged out
-      // Step 1: Navigate directly to /merge
-      await page.goto("/merge");
-
-      // Step 2: Verify the user is redirected to the login page
-      // The app uses React Router state-based redirect (state.from), not URL params
-      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
-    });
-  });
+  // Auth-gate redirect is covered end-to-end by the live suite
+  // (live/authentication-login.spec.ts). Stubbing the unauthenticated state
+  // accurately also requires mocking the router's session store, which
+  // duplicates what a real login test already exercises.
 });
