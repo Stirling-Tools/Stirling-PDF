@@ -200,51 +200,71 @@ pub struct CanInstallResult {
 /// next to the running executable. This avoids trying to reverse-engineer
 /// Windows token elevation state, which is surprisingly hard to do correctly
 /// on Windows when UAC filtered tokens are in play.
+///
+/// On macOS and Linux the probe-next-to-exe heuristic is misleading:
+/// `current_exe().parent()` on macOS is `Stirling-PDF.app/Contents/MacOS/`
+/// which is almost always user-writable even when `/Applications/` is not,
+/// so the probe returns a false positive. On Linux the AppImage/deb install
+/// story is different and not gated by this kind of check. We platform-gate
+/// to Windows and report `can_install: true` elsewhere so the existing
+/// interactive update flow runs unchanged.
 #[tauri::command]
 pub fn can_install_updates() -> CanInstallResult {
-    let exe = match std::env::current_exe() {
-        Ok(p) => p,
-        Err(e) => {
-            add_log(format!("⚠️ can_install_updates: current_exe failed: {}", e));
-            return CanInstallResult {
-                can_install: false,
-                reason: Some("install_dir_unknown".to_string()),
-                install_dir: None,
-            };
-        }
-    };
-    let parent = match exe.parent() {
-        Some(p) => p.to_path_buf(),
-        None => {
-            return CanInstallResult {
-                can_install: false,
-                reason: Some("install_dir_unknown".to_string()),
-                install_dir: None,
-            };
-        }
-    };
+    #[cfg(not(target_os = "windows"))]
+    {
+        return CanInstallResult {
+            can_install: true,
+            reason: None,
+            install_dir: None,
+        };
+    }
 
-    let dir_display = parent.display().to_string();
-    let probe = parent.join(".stirling-auto-update-probe.tmp");
-    match std::fs::File::create(&probe) {
-        Ok(_) => {
-            let _ = std::fs::remove_file(&probe);
-            add_log(format!("✅ can_install_updates: writable: {}", dir_display));
-            CanInstallResult {
-                can_install: true,
-                reason: None,
-                install_dir: Some(dir_display),
+    #[cfg(target_os = "windows")]
+    {
+        let exe = match std::env::current_exe() {
+            Ok(p) => p,
+            Err(e) => {
+                add_log(format!("⚠️ can_install_updates: current_exe failed: {}", e));
+                return CanInstallResult {
+                    can_install: false,
+                    reason: Some("install_dir_unknown".to_string()),
+                    install_dir: None,
+                };
             }
-        }
-        Err(e) => {
-            add_log(format!(
-                "⚠️ can_install_updates: install dir not writable ({}): {}",
-                dir_display, e
-            ));
-            CanInstallResult {
-                can_install: false,
-                reason: Some("install_dir_not_writable".to_string()),
-                install_dir: Some(dir_display),
+        };
+        let parent = match exe.parent() {
+            Some(p) => p.to_path_buf(),
+            None => {
+                return CanInstallResult {
+                    can_install: false,
+                    reason: Some("install_dir_unknown".to_string()),
+                    install_dir: None,
+                };
+            }
+        };
+
+        let dir_display = parent.display().to_string();
+        let probe = parent.join(".stirling-auto-update-probe.tmp");
+        match std::fs::File::create(&probe) {
+            Ok(_) => {
+                let _ = std::fs::remove_file(&probe);
+                add_log(format!("✅ can_install_updates: writable: {}", dir_display));
+                CanInstallResult {
+                    can_install: true,
+                    reason: None,
+                    install_dir: Some(dir_display),
+                }
+            }
+            Err(e) => {
+                add_log(format!(
+                    "⚠️ can_install_updates: install dir not writable ({}): {}",
+                    dir_display, e
+                ));
+                CanInstallResult {
+                    can_install: false,
+                    reason: Some("install_dir_not_writable".to_string()),
+                    install_dir: Some(dir_display),
+                }
             }
         }
     }
