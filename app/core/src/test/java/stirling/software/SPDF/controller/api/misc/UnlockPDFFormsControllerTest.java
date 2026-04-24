@@ -16,9 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -67,7 +67,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<StreamingResponseBody> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -85,7 +85,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<StreamingResponseBody> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -99,7 +99,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<StreamingResponseBody> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         // Controller catches exceptions and returns null
         assertNull(response);
@@ -114,7 +114,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<StreamingResponseBody> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
@@ -133,7 +133,7 @@ class UnlockPDFFormsControllerTest {
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);
 
-        ResponseEntity<StreamingResponseBody> response = controller.unlockPDFForms(file);
+        ResponseEntity<Resource> response = controller.unlockPDFForms(file);
 
         assertNotNull(response);
         assertTrue(acroForm.getNeedAppearances());

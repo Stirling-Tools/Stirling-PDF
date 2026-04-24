@@ -16,11 +16,11 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import com.vladsch.flexmark.util.data.MutableDataSet;
@@ -49,7 +49,7 @@ public class PDFToFile {
         this.runtimePathConfig = runtimePathConfig;
     }
 
-    public ResponseEntity<StreamingResponseBody> processPdfToMarkdown(MultipartFile inputFile)
+    public ResponseEntity<Resource> processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
         if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -169,7 +169,7 @@ public class PDFToFile {
         return PATTERN.matcher(markdown).replaceAll("$1(images/$2)");
     }
 
-    public ResponseEntity<StreamingResponseBody> processPdfToHtml(MultipartFile inputFile)
+    public ResponseEntity<Resource> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
         if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -232,7 +232,7 @@ public class PDFToFile {
                 finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
-    public ResponseEntity<StreamingResponseBody> processPdfToOfficeFormat(
+    public ResponseEntity<Resource> processPdfToOfficeFormat(
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
 

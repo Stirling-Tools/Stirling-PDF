@@ -5,11 +5,18 @@ from dataclasses import dataclass
 import pytest
 
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
+from stirling.agents.pdf_edit import PdfEditPlanOutput
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
+    ExtractedFileText,
+    NeedContentFileRequest,
+    NeedContentResponse,
+    PdfContentType,
     PdfEditRequest,
+    PdfTextSelection,
+    SupportedCapability,
     ToolOperationStep,
 )
 from stirling.models.tool_models import Angle, FlattenParams, RotatePdfParams, ToolEndpoint
@@ -52,7 +59,7 @@ class StubPdfEditAgent(PdfEditAgent):
     def __init__(
         self,
         runtime: AppRuntime,
-        selection: PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse,
+        selection: PdfEditPlanOutput,
         parameter_selector: RecordingParameterSelector | PdfEditParameterSelector | None = None,
     ) -> None:
         super().__init__(runtime)
@@ -63,7 +70,8 @@ class StubPdfEditAgent(PdfEditAgent):
     async def _select_plan(
         self,
         request: PdfEditRequest,
-    ) -> PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse:
+        allow_need_content: bool = True,
+    ) -> PdfEditPlanOutput:
         return self.selection
 
 
@@ -153,3 +161,117 @@ async def test_pdf_edit_agent_returns_cannot_do_without_partial_plan(runtime: Ap
     response = await agent.handle(PdfEditRequest(user_message="Read this scan and summarize it."))
 
     assert isinstance(response, EditCannotDoResponse)
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime: AppRuntime) -> None:
+    parameter_selector = RecordingParameterSelector()
+    agent = StubPdfEditAgent(
+        runtime,
+        NeedContentResponse(
+            resume_with=SupportedCapability.PDF_EDIT,
+            reason="Need page text to locate the NEW PAGE markers.",
+            files=[],
+            max_pages=0,
+            max_characters=0,
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Split after every page that says 'NEW PAGE'.",
+            file_names=["report.pdf"],
+        )
+    )
+
+    assert isinstance(response, NeedContentResponse)
+    assert response.resume_with == SupportedCapability.PDF_EDIT
+    assert response.files == [NeedContentFileRequest(file_name="report.pdf", content_types=[PdfContentType.PAGE_TEXT])]
+    assert response.max_pages == runtime.settings.max_pages
+    assert response.max_characters == runtime.settings.max_characters
+    assert parameter_selector.calls == []
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_builds_selection_agent_matching_content_availability(runtime: AppRuntime) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
+
+    agent = PdfEditAgent(runtime)
+    captured: list[bool] = []
+
+    def record(*, allow_need_content: bool) -> PdfEditSelectionAgent:
+        captured.append(allow_need_content)
+        raise _StopSelectionError()
+
+    agent._build_selection_agent = record
+
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(PdfEditRequest(user_message="Rotate."))
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(
+            PdfEditRequest(
+                user_message="Rotate.",
+                page_text=[
+                    ExtractedFileText(
+                        file_name="report.pdf",
+                        pages=[PdfTextSelection(page_number=1, text="content")],
+                    )
+                ],
+            )
+        )
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(PdfEditRequest(user_message="Rotate."), allow_need_content=False)
+
+    assert captured == [True, False, False]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_selection_agent_excludes_need_content_from_schema_when_not_allowed(
+    runtime: AppRuntime,
+) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
+
+    can_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=True)
+    cannot_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=False)
+
+    assert NeedContentResponse in _agent_output_types(can_request)
+    assert NeedContentResponse not in _agent_output_types(cannot_request)
+
+
+def _agent_output_types(agent: object) -> list[type]:
+    native = getattr(getattr(agent, "agent"), "output_type")
+    return list(getattr(native, "outputs", []))
+
+
+class _StopSelectionError(Exception):
+    pass
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: AppRuntime) -> None:
+    parameter_selector = RecordingParameterSelector()
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.ROTATE_PDF],
+            summary="Rotate the PDF.",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    page_text = [
+        ExtractedFileText(
+            file_name="report.pdf",
+            pages=[PdfTextSelection(page_number=1, text="NEW PAGE")],
+        )
+    ]
+    await agent.handle(
+        PdfEditRequest(
+            user_message="Rotate clockwise.",
+            file_names=["report.pdf"],
+            page_text=page_text,
+        )
+    )
+
+    assert parameter_selector.calls[0].request.page_text == page_text

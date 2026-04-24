@@ -89,6 +89,8 @@ def test_app_settings_accepts_model_configuration() -> None:
         rag_chunk_size=512,
         rag_chunk_overlap=64,
         rag_default_top_k=5,
+        max_pages=200,
+        max_characters=200_000,
         posthog_enabled=False,
         posthog_api_key="",
         posthog_host="https://eu.i.posthog.com",

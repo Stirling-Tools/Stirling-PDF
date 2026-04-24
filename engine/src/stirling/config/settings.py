@@ -37,6 +37,9 @@ class AppSettings(BaseSettings):
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
 
+    max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
+    max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
+
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
 
@@ -57,6 +60,14 @@ def _configure_logging(level_name: str, log_file: str) -> None:
 
     root = logging.getLogger("stirling")
     root.setLevel(level)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s")
+
+    if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        sh.setLevel(level)
+        root.addHandler(sh)
+        root.propagate = False
 
     if log_file:
         log_path = Path(log_file)
@@ -67,7 +78,7 @@ def _configure_logging(level_name: str, log_file: str) -> None:
             backupCount=1,
             encoding="utf-8",
         )
-        fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(funcName)s] %(message)s"))
+        fh.setFormatter(formatter)
         fh.setLevel(level)
         root.addHandler(fh)
 
