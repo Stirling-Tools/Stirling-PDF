@@ -2799,6 +2799,7 @@ overall = "keseluruhan"
 overlay = "Tumpang tindih"
 pageLabel = "Halaman"
 pagesChanged = "halaman diubah"
+sideBySide = "Berdampingan"
 sizeMismatch = "Ukuran tidak cocok"
 summaryTitle = "Perbandingan Piksel"
 

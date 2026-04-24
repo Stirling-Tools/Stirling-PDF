@@ -2799,6 +2799,7 @@ overall = "ümumi"
 overlay = "Örtüşdürmə"
 pageLabel = "Səhifə"
 pagesChanged = "dəyişmiş səhifələr"
+sideBySide = "Yan-yana"
 sizeMismatch = "Ölçü uyğunsuzluğu"
 summaryTitle = "Piksel müqayisəsi"
 

@@ -2799,6 +2799,7 @@ overall = "övergripande"
 overlay = "Överlagring"
 pageLabel = "Sida"
 pagesChanged = "sidor ändrade"
+sideBySide = "Sida vid sida"
 sizeMismatch = "Storleksavvikelse"
 summaryTitle = "Pixeljämförelse"
 
