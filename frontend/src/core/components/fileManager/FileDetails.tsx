@@ -12,7 +12,8 @@ interface FileDetailsProps {
 }
 
 const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
-  const { selectedFiles, onOpenFiles, modalHeight } = useFileManagerContext();
+  const { selectedFiles, onOpenFiles, modalHeight, activeFileIds } =
+    useFileManagerContext();
   const { t } = useTranslation();
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -21,6 +22,9 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
   const currentFile =
     selectedFiles.length > 0 ? selectedFiles[currentFileIndex] : null;
   const hasSelection = selectedFiles.length > 0;
+  const hasActiveFiles = activeFileIds.length > 0;
+  // Enable "Close all files" when nothing is checked but files are open in workbench
+  const canCloseAll = !hasSelection && hasActiveFiles;
 
   // Use IndexedDB hook for the current file
   const { thumbnail: currentThumbnail } = useIndexedDBThumbnail(currentFile);
@@ -71,6 +75,7 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
         onPrevious={handlePrevious}
         onNext={handleNext}
         onOpenFiles={onOpenFiles}
+        canCloseAll={canCloseAll}
       />
     );
   }
@@ -104,18 +109,21 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
       <Button
         size="md"
         onClick={onOpenFiles}
-        disabled={!hasSelection}
+        disabled={!hasSelection && !canCloseAll}
         fullWidth
         style={{
-          backgroundColor: hasSelection
-            ? "var(--btn-open-file)"
-            : "var(--mantine-color-gray-4)",
+          backgroundColor:
+            hasSelection || canCloseAll
+              ? "var(--btn-open-file)"
+              : "var(--mantine-color-gray-4)",
           color: "white",
         }}
       >
-        {selectedFiles.length > 1
-          ? t("fileManager.openFiles", `Open ${selectedFiles.length} Files`)
-          : t("fileManager.openFile", "Open File")}
+        {canCloseAll
+          ? t("fileManager.closeAllFiles", "Close all files")
+          : selectedFiles.length > 1
+            ? t("fileManager.openFiles", `Open ${selectedFiles.length} Files`)
+            : t("fileManager.openFile", "Open File")}
       </Button>
     </Stack>
   );

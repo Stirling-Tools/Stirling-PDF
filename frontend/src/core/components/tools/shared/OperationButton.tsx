@@ -58,6 +58,10 @@ const OperationButton = ({
           "tool.endpointUnavailable",
           "This tool is unavailable on your server.",
         ),
+    filesLoading: t(
+      "tool.filesLoading",
+      "Files are still loading, please wait.",
+    ),
     noFiles: t("tool.noFiles", "Add a file to get started."),
     invalidParams: t("tool.invalidParams", "Fill in the required settings."),
     viewerMode: t(

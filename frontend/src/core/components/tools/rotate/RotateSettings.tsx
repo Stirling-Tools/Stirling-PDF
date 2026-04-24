@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
-import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import { useAllFiles } from "@app/contexts/FileContext";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface RotateSettingsProps {
@@ -17,12 +17,12 @@ const RotateSettings = ({
   disabled = false,
 }: RotateSettingsProps) => {
   const { t } = useTranslation();
-  const { selectedFileStubs } = useSelectedFiles();
+  const { fileStubs } = useAllFiles();
 
-  // Get the first selected file for preview
+  // Get the first file for preview
   const selectedStub = useMemo(() => {
-    return selectedFileStubs.length > 0 ? selectedFileStubs[0] : null;
-  }, [selectedFileStubs]);
+    return fileStubs.length > 0 ? fileStubs[0] : null;
+  }, [fileStubs]);
 
   // Get thumbnail for the selected file
   const [thumbnail, setThumbnail] = useState<string | null>(null);

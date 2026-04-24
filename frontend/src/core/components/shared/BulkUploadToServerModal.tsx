@@ -116,7 +116,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
           )}
         </Text>
         <Text size="sm" c="dimmed">
-          {t("storageUpload.fileCount", "{{count}} files selected", {
+          {t("storageUpload.fileCount", "{{count}} files", {
             count: files.length,
           })}
         </Text>

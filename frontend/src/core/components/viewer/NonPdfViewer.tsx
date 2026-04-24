@@ -4,6 +4,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
 import { useFileState } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   detectFileExtension,
@@ -24,8 +25,6 @@ export interface ViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
-  activeFileIndex?: number;
-  setActiveFileIndex?: (index: number) => void;
 }
 
 export interface NonPdfViewerProps extends ViewerProps {
@@ -134,7 +133,7 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
 export function NonPdfViewerWrapper(props: ViewerProps) {
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
-  const activeFileIndex = props.activeFileIndex ?? 0;
+  const { activeFileIndex } = useViewer();
 
   const file =
     props.previewFile ?? activeFiles[activeFileIndex] ?? activeFiles[0] ?? null;
@@ -143,7 +142,7 @@ export function NonPdfViewerWrapper(props: ViewerProps) {
     return (
       <Center style={{ flex: 1 }}>
         <Text c="dimmed" size="sm">
-          No file selected
+          No file loaded
         </Text>
       </Center>
     );

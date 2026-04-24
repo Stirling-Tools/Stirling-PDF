@@ -480,7 +480,7 @@ function FileContextInner({
 
     const allIds = [activeEncryptedFileId, ...encryptedQueue];
     let successCount = 0;
-    const failedNames: string[] = [];
+    const failedIds: FileId[] = [];
 
     for (const fileId of allIds) {
       try {
@@ -488,8 +488,7 @@ function FileContextInner({
         dismissedEncryptedFilesRef.current.delete(fileId);
         successCount++;
       } catch {
-        const name = stateRef.current.files.byId[fileId]?.name ?? fileId;
-        failedNames.push(name);
+        failedIds.push(fileId);
       }
     }
 
@@ -506,17 +505,16 @@ function FileContextInner({
       });
     }
 
-    if (failedNames.length > 0) {
+    if (failedIds.length > 0) {
+      const failedNames = failedIds.map(
+        (id) => stateRef.current.files.byId[id]?.name ?? id,
+      );
       setUnlockError(
         t("encryptedPdfUnlock.unlockAllPartialFail", {
           defaultValue: "Wrong password for: {{names}}",
           names: failedNames.join(", "),
         }),
       );
-      const failedIds = allIds.filter((id) => {
-        const name = stateRef.current.files.byId[id]?.name ?? id;
-        return failedNames.includes(name);
-      });
       setEncryptedQueue(failedIds.slice(1));
       setActiveEncryptedFileId(failedIds[0]);
     } else {

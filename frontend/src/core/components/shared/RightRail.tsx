@@ -37,7 +37,7 @@ const SECTION_ORDER: RightRailSection[] = ["top", "middle", "bottom"];
 function renderWithTooltip(
   node: React.ReactNode,
   tooltip: React.ReactNode | undefined,
-  position: "left" | "right",
+  position: "left" | "right" | "bottom",
   offset: number,
 ) {
   if (!tooltip) return node;

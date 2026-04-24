@@ -347,6 +347,9 @@ export async function addFiles(
         `📄 addFiles: After ZIP processing, ${filesToProcess.length} files to add`,
       );
 
+    // Collect hydrations to schedule after dispatch so updateStirlingFileStub finds files in state.
+    const pendingHydrations: Array<() => Promise<void>> = [];
+
     for (const file of filesToProcess) {
       const quickKey = createQuickKey(file);
 
@@ -419,18 +422,12 @@ export async function addFiles(
       }
       stirlingFileStubs.push(fileStub);
 
-      // Dispatch immediately so each file appears as soon as it is processed
-      dispatch({
-        type: "ADD_FILES",
-        payload: { stirlingFileStubs: [fileStub] },
-      });
-
       // Create StirlingFile directly
       const stirlingFile = createStirlingFile(file, fileId);
       stirlingFiles.push(stirlingFile);
 
-      // Queue background hydration so add flow doesn't block on thumbnail/metadata work
-      scheduleMetadataHydration(async () => {
+      // Capture per-file hydration task — scheduled after batch dispatch below
+      pendingHydrations.push(async () => {
         const targetFile = filesRef.current.get(fileId);
         if (!targetFile) {
           return;
@@ -483,7 +480,32 @@ export async function addFiles(
         if (Object.keys(updates).length > 0) {
           lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
         }
+
+        // Persist the thumbnail to IndexedDB so it's available in future sessions.
+        // The file was stored before hydration ran, so it had no thumbnail yet.
+        // Skip blob URLs — they're session-only and won't be valid after reload.
+        if (
+          primaryThumbnail &&
+          enablePersistence &&
+          !primaryThumbnail.startsWith("blob:")
+        ) {
+          try {
+            await fileStorage.updateThumbnail(fileId, primaryThumbnail);
+          } catch {
+            // Non-critical — regenerated lazily on next hover
+          }
+        }
       });
+    }
+
+    // Batch dispatch all files at once — one render instead of N sequential renders
+    if (stirlingFileStubs.length > 0) {
+      dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs } });
+    }
+
+    // Schedule hydrations after dispatch so updateStirlingFileStub finds files in state
+    for (const task of pendingHydrations) {
+      scheduleMetadataHydration(task);
     }
 
     // Persist to storage if enabled using fileStorage service
@@ -635,56 +657,6 @@ export async function consumeFiles(
 }
 
 /**
- * Helper function to restore files to filesRef and manage IndexedDB cleanup
- */
-async function restoreFilesAndCleanup(
-  filesToRestore: Array<{ file: File; record: StirlingFileStub }>,
-  fileIdsToRemove: FileId[],
-  filesRef: React.MutableRefObject<Map<FileId, File>>,
-  indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null,
-): Promise<void> {
-  // Remove files from filesRef
-  fileIdsToRemove.forEach((id) => {
-    if (filesRef.current.has(id)) {
-      if (DEBUG) console.log(`📄 Removing file ${id} from filesRef`);
-      filesRef.current.delete(id);
-    } else {
-      if (DEBUG) console.warn(`📄 File ${id} not found in filesRef`);
-    }
-  });
-
-  // Restore files to filesRef
-  filesToRestore.forEach(({ file, record }) => {
-    if (file && record) {
-      // Validate the file before restoring
-      if (file.size === 0) {
-        if (DEBUG) console.warn(`📄 Skipping empty file ${file.name}`);
-        return;
-      }
-
-      // Restore the file to filesRef
-      if (DEBUG)
-        console.log(
-          `📄 Restoring file ${file.name} with id ${record.id} to filesRef`,
-        );
-      filesRef.current.set(record.id, file);
-    }
-  });
-
-  // Clean up IndexedDB
-  if (indexedDB) {
-    const indexedDBPromises = fileIdsToRemove.map((fileId) =>
-      indexedDB.deleteFile(fileId).catch((error) => {
-        console.error("Failed to delete file from IndexedDB:", fileId, error);
-        throw error; // Re-throw to trigger rollback
-      }),
-    );
-
-    // Execute all IndexedDB operations
-    await Promise.all(indexedDBPromises);
-  }
-}
-
 /**
  * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
  */
@@ -701,6 +673,7 @@ export async function undoConsumeFiles(
       existingThumbnail?: string,
     ) => Promise<any>;
     deleteFile: (fileId: FileId) => Promise<void>;
+    bumpRevision?: () => void;
   } | null,
 ): Promise<void> {
   if (DEBUG)
@@ -719,30 +692,21 @@ export async function undoConsumeFiles(
   const backupFilesRef = new Map(filesRef.current);
 
   try {
-    // Prepare files to restore
-    const filesToRestore = inputFiles.map((file, index) => ({
-      file,
-      record: inputStirlingFileStubs[index],
-    }));
-
-    // Restore input files and clean up output files
-    await restoreFilesAndCleanup(
-      filesToRestore,
-      outputFileIds,
-      filesRef,
-      indexedDB,
-    );
-
-    // Mark restored files as dirty if they have localFilePath
-    // (they now differ from what's saved on disk)
-    const stubsWithDirtyMarked = inputStirlingFileStubs.map((stub) => {
-      if (stub.localFilePath) {
-        return { ...stub, isDirty: true };
+    // Sync filesRef before dispatch — prevents bumpRevision re-renders from seeing stale output IDs with no File objects.
+    outputFileIds.forEach((id) => filesRef.current.delete(id));
+    inputFiles.forEach((file, index) => {
+      const record = inputStirlingFileStubs[index];
+      if (file && record && file.size > 0) {
+        filesRef.current.set(record.id, file);
       }
-      return stub;
     });
 
-    // Dispatch the undo action (only if everything else succeeded)
+    // Mark restored files dirty if they have a local path (they now differ from disk).
+    const stubsWithDirtyMarked = inputStirlingFileStubs.map((stub) =>
+      stub.localFilePath ? { ...stub, isDirty: true } : stub,
+    );
+
+    // Dispatch with filesRef and state.files.ids now in sync.
     dispatch({
       type: "UNDO_CONSUME_FILES",
       payload: {
@@ -750,6 +714,33 @@ export async function undoConsumeFiles(
         outputFileIds,
       },
     });
+
+    // IDB cleanup fire-and-forget — state is already consistent when bumpRevision fires.
+    if (indexedDB) {
+      outputFileIds.forEach((fileId) => {
+        indexedDB.deleteFile(fileId).catch((error) => {
+          console.error(
+            "📄 undoConsumeFiles: Failed to delete output file from IDB:",
+            fileId,
+            error,
+          );
+          // Bump revision so the sidebar re-reads IDB and orphaned files reappear.
+          indexedDB.bumpRevision?.();
+        });
+      });
+    }
+
+    // Restore isLeaf in IDB — modal reads IDB directly and misses files if isLeaf=false.
+    await Promise.all(
+      inputStirlingFileStubs.map((stub) =>
+        fileStorage.markFileAsLeaf(stub.id).catch((error) => {
+          console.warn(
+            `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
+            error,
+          );
+        }),
+      ),
+    );
 
     if (DEBUG)
       console.log(

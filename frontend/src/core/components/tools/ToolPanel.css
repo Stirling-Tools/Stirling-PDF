@@ -1,3 +1,14 @@
+/* ---- Viewer mode mini-toolbar (top of ToolPanel) ---- */
+.tool-panel-viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-toolbar);
+  flex-shrink: 0;
+}
+
 /* CSS Custom Properties for Fullscreen Mode */
 .tool-panel__fullscreen-surface-inner {
   --fullscreen-bg-surface-1: color-mix(
@@ -128,6 +139,49 @@
     max-width 0.3s ease;
 }
 
+.tool-panel__collapsed-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10px;
+  gap: 8px;
+  height: 100%;
+  width: 100%;
+}
+
+.tool-panel__expand-btn {
+  flex-shrink: 0;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+.tool-panel__expand-btn svg {
+  color: var(--text-secondary) !important;
+}
+
+.tool-panel__expand-btn:hover {
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+.tool-panel__collapsed-search-btn {
+  flex-shrink: 0;
+  color: var(--text-secondary) !important;
+}
+
+.tool-panel__collapsed-search-btn svg {
+  color: var(--text-secondary) !important;
+}
+
+.tool-panel__collapsed-search-btn:hover {
+  color: var(--text-primary) !important;
+}
+
+.tool-panel__back-btn {
+  flex-shrink: 0;
+}
+
 .tool-panel--fullscreen-active {
   overflow: visible !important;
 }
@@ -136,7 +190,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.35rem 0.5rem;
 }
 
 .tool-panel__search-row .search-input-container {
@@ -604,7 +658,7 @@
 
 @keyframes tool-panel-fullscreen-slide-in {
   from {
-    transform: translateX(-6%) scaleX(0.85);
+    transform: translateX(6%) scaleX(0.85);
     opacity: 0;
   }
   to {
@@ -619,14 +673,14 @@
     opacity: 1;
   }
   to {
-    transform: translateX(-6%) scaleX(0.85);
+    transform: translateX(6%) scaleX(0.85);
     opacity: 0;
   }
 }
 
 @keyframes tool-panel-fullscreen-slide-in-rtl {
   from {
-    transform: translateX(6%) scaleX(0.85);
+    transform: translateX(-6%) scaleX(0.85);
     opacity: 0;
   }
   to {
@@ -641,7 +695,7 @@
     opacity: 1;
   }
   to {
-    transform: translateX(6%) scaleX(0.85);
+    transform: translateX(-6%) scaleX(0.85);
     opacity: 0;
   }
 }

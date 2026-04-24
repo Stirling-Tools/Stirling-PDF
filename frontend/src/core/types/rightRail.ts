@@ -1,6 +1,6 @@
 import React from "react";
 
-export type RightRailSection = "top" | "middle" | "bottom";
+export type RightRailSection = "top" | "middle" | "bottom" | "tool-panel";
 
 export type RightRailAction = () => void;
 

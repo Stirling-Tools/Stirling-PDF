@@ -116,8 +116,10 @@ export function useTooltipPosition({
 
       const tooltipRect = tooltipRef.current?.getBoundingClientRect() || null;
 
-      // Position adjacent to sidebar; mirror for RTL
-      if (isRTL) {
+      // Position adjacent to sidebar: left of panel when on the right half, right of panel when on left half; mirror for RTL
+      const panelCenter = rect.left + rect.width / 2;
+      const panelIsOnRight = panelCenter > window.innerWidth / 2;
+      if (isRTL ? !panelIsOnRight : panelIsOnRight) {
         left = rect.left - (tooltipRect?.width || 0) - 20;
       } else {
         left = rect.right + 20;

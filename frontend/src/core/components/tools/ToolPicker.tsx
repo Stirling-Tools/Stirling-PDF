@@ -65,12 +65,12 @@ const ToolPicker = ({
     isSearching ? filteredTools : emptyFilteredTools;
   const { searchGroups } = useToolSections(effectiveFilteredForSearch);
   const headerTextStyle: React.CSSProperties = {
-    fontSize: "0.75rem",
-    fontWeight: 500,
-    padding: "0.5rem 0 0.25rem 0.5rem",
-    textTransform: "none",
-    color: "var(--text-secondary, rgba(0, 0, 0, 0.6))",
-    opacity: 0.7,
+    fontSize: "0.68rem",
+    fontWeight: 600,
+    padding: "1rem 0 0.35rem 0.5rem",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    color: "var(--text-muted)",
   };
   const toTitleCase = (s: string) =>
     s.replace(

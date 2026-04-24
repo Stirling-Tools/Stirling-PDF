@@ -27,7 +27,7 @@ export default function PageSelectByNumberButton({
   return (
     <Tooltip
       content={label}
-      position="left"
+      position="bottom"
       offset={12}
       arrow
       portalTarget={document.body}

@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -69,7 +68,7 @@ const AddFileCard = ({
       />
 
       <div
-        className={`${styles.addFileCard} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative cursor-pointer`}
+        className={`${styles.addFileCard} w-[21rem] h-[26rem] select-none flex flex-col shadow-sm transition-all relative cursor-pointer`}
         tabIndex={0}
         role="button"
         aria-label={t("fileEditor.addFiles", "Add files")}
@@ -81,17 +80,6 @@ const AddFileCard = ({
           }
         }}
       >
-        {/* Header bar - matches FileEditorThumbnail structure */}
-        <div className={`${styles.header} ${styles.addFileHeader}`}>
-          <div className={styles.logoMark}>
-            <AddIcon sx={{ color: "inherit", fontSize: "1.5rem" }} />
-          </div>
-          <div className={styles.headerIndex}>
-            {t("fileEditor.addFiles", "Add Files")}
-          </div>
-          <div className={styles.kebab} />
-        </div>
-
         {/* Main content area */}
         <div className={styles.addFileContent}>
           {/* Stirling PDF Branding */}

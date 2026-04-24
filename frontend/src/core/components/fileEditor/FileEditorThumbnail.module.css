@@ -1,0 +1,250 @@
+.card {
+  width: 260px;
+  max-width: 260px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 10px 10px 12px;
+  position: relative;
+  --file-text-height: 58px;
+  --file-text-bottom: 12px;
+  --thumb-text-gap: 6px;
+  padding-bottom: calc(
+    var(--file-text-bottom) + var(--file-text-height) + var(--thumb-text-gap)
+  );
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Inner wrapper — centers [toolChain + thumbnail + hover menu] as a unit */
+.thumbInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Groups toolchain bar + thumbnail so they center together inside thumbWrap */
+.thumbUnit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 100%;
+}
+
+/* ToolChain bar sits directly above the thumbnail card — always rendered for consistent sizing */
+.toolChainBar {
+  flex-shrink: 0;
+  width: 100%;
+  height: 22px;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  line-height: 22px;
+  margin-bottom: 4px;
+}
+
+.card:hover .toolChainBar,
+.card:focus-within .toolChainBar {
+  opacity: 1;
+}
+
+.thumbWrap {
+  width: 100%;
+  position: relative;
+  height: 310px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbContainer {
+  aspect-ratio: var(--thumb-aspect, 8.5 / 11);
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-surface);
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.2s ease;
+}
+
+.thumbContainer[data-supported="false"] {
+  filter: grayscale(80%);
+  opacity: 0.65;
+}
+
+.thumbContainer:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* Text block pinned below thumbnail */
+.fileText {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: var(--file-text-bottom);
+  height: var(--file-text-height);
+  text-align: center;
+  pointer-events: none;
+  --file-name-line-height: 18px;
+  --file-name-lines: 2;
+  --file-meta-line-height: 14px;
+  --file-meta-gap: 4px;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: var(--file-name-line-height);
+  height: calc(var(--file-name-lines) * var(--file-name-line-height));
+  margin: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--file-meta-line-height) + var(--file-meta-gap));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.fileMeta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: var(--file-meta-line-height);
+  height: var(--file-meta-line-height);
+  overflow: hidden;
+  margin: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* CSS-hover driven menu visibility */
+.card [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card:hover
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.card:focus-within
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Error overlay */
+.errorOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(220, 38, 38, 0.12);
+  border-radius: 12px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.errorPill {
+  background: var(--mantine-color-red-6);
+  color: white;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Badges row pinned to top-left of thumbnail - always visible */
+.thumbBadges {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.ownershipBadge {
+  background: var(--mantine-color-blue-6);
+  color: white;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.versionBadgeThumb {
+  background: var(--mantine-color-blue-6);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.pinnedBadge {
+  background: var(--mantine-color-yellow-6);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.dragHandle {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  cursor: grab;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.card:hover .dragHandle,
+.card:focus-within .dragHandle {
+  opacity: 0.5;
+  pointer-events: auto;
+}

@@ -23,7 +23,6 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1rem;
-  padding-top: 3rem;
   height: 100%;
   min-height: 0;
   /* Allow the custom workbench to shrink within flex parents (prevents pushing right rail off-screen) */
@@ -520,6 +519,124 @@
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
+}
+
+/* Compare tool — file selection step (Original / Edited + swap column) */
+.compare-step-selection {
+  width: 100%;
+}
+
+.compare-step-selection__clear-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+/* Thumbnails + swap only — swap top aligns with first thumbnail, not “Original PDF” heading */
+.compare-step-selection__thumbs-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.compare-step-selection__thumbs-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Full-height light bar to the right of both cards (reference UI) */
+.compare-step-selection__swap {
+  flex-shrink: 0;
+  width: 36px;
+  min-width: 36px;
+  align-self: stretch;
+  margin: 0;
+  padding: 0.5rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: var(--radius-md);
+  border: 1px solid
+    color-mix(in srgb, var(--mantine-color-blue-4) 28%, var(--border-default));
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-0) 92%,
+    var(--mantine-color-body)
+  );
+  color: var(--mantine-color-blue-filled);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.compare-step-selection__swap:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-1) 75%,
+    var(--mantine-color-body)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-5) 35%,
+    var(--border-default)
+  );
+}
+
+.compare-step-selection__swap:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.compare-step-selection__swap-icon {
+  font-size: 1.35rem !important;
+  color: var(--mantine-color-blue-filled);
+}
+
+.compare-step-selection__swap-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--mantine-color-blue-filled);
+  writing-mode: horizontal-tb;
+}
+
+[data-mantine-color-scheme="”dark”"] .compare-step-selection__swap {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-9) 22%,
+    var(--mantine-color-dark-6)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-4) 40%,
+    var(--border-default)
+  );
+  color: var(--mantine-color-blue-3);
+}
+
+[data-mantine-color-scheme="”dark”"]
+  .compare-step-selection__swap:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-9) 32%,
+    var(--mantine-color-dark-6)
+  );
+}
+
+[data-mantine-color-scheme="”dark”"] .compare-step-selection__swap-icon,
+[data-mantine-color-scheme="”dark”"] .compare-step-selection__swap-label {
+  color: var(--mantine-color-blue-3);
 }
 
 /* Pixel compare mode */

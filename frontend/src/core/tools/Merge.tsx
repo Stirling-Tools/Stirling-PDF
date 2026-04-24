@@ -9,11 +9,7 @@ import { useMergeOperation } from "@app/hooks/tools/merge/useMergeOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useMergeTips } from "@app/components/tooltips/useMergeTips";
-import {
-  useFileManagement,
-  useSelectedFiles,
-  useAllFiles,
-} from "@app/contexts/FileContext";
+import { useFileManagement, useAllFiles } from "@app/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
@@ -24,8 +20,7 @@ const Merge = (props: BaseToolProps) => {
   const mergeTips = useMergeTips();
 
   // File selection hooks for custom sorting
-  const { fileIds } = useAllFiles();
-  const { selectedFileStubs } = useSelectedFiles();
+  const { fileIds, fileStubs } = useAllFiles();
   const { reorderFiles } = useFileManagement();
 
   const base = useBaseTool(
@@ -114,7 +109,7 @@ const Merge = (props: BaseToolProps) => {
   // Custom file sorting logic for merge tool
   const sortFiles = useCallback(
     (sortType: "filename" | "dateModified", ascending: boolean = true) => {
-      const sortedStubs = [...selectedFileStubs].sort((stubA, stubB) => {
+      const sortedStubs = [...fileStubs].sort((stubA, stubB) => {
         let comparison = 0;
         switch (sortType) {
           case "filename":
@@ -131,7 +126,7 @@ const Merge = (props: BaseToolProps) => {
       const deselectedIds = fileIds.filter((id) => !selectedIds.includes(id));
       reorderFiles([...selectedIds, ...deselectedIds]);
     },
-    [selectedFileStubs, fileIds, reorderFiles, naturalCompare],
+    [fileStubs, fileIds, reorderFiles, naturalCompare],
   );
 
   return createToolFlow({

@@ -17,6 +17,7 @@ export enum ToolType {
  */
 export type ExecuteDisabledReason =
   | "endpointUnavailable"
+  | "filesLoading"
   | "noFiles"
   | "invalidParams"
   | "viewerMode"

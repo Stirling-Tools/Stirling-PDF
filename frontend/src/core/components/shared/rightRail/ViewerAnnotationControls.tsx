@@ -203,14 +203,14 @@ export default function ViewerAnnotationControls({
           variant={isRedactMode ? "filled" : "subtle"}
           color={isRedactMode ? "blue" : undefined}
           radius="md"
-          className="right-rail-icon"
+          className="workbench-bar-action-icon"
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== "viewer"}
         >
           <LocalIcon
             icon="scan-delete-rounded"
-            width="1.5rem"
-            height="1.5rem"
+            width="1.25rem"
+            height="1.25rem"
           />
         </ActionIcon>
       </Tooltip>
@@ -230,7 +230,7 @@ export default function ViewerAnnotationControls({
           variant={annotationsHidden ? "filled" : "subtle"}
           color={annotationsHidden ? "blue" : undefined}
           radius="md"
-          className="right-rail-icon"
+          className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
           disabled={
             disabled ||
@@ -247,8 +247,8 @@ export default function ViewerAnnotationControls({
                 ? "visibility"
                 : "preview-off-rounded"
             }
-            width="1.5rem"
-            height="1.5rem"
+            width="1.25rem"
+            height="1.25rem"
           />
         </ActionIcon>
       </Tooltip>

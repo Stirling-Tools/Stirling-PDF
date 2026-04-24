@@ -121,7 +121,7 @@ export const useToolOperation = <TParams>(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
       // Validation
       if (selectedFiles.length === 0) {
-        actions.setError(t("noFileSelected", "No files selected"));
+        actions.setError(t("noFileSelected", "No file loaded"));
         return;
       }
 

@@ -1,14 +1,13 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   Text,
-  ActionIcon,
-  CheckboxIndicator,
-  Tooltip,
   Modal,
   Button,
   Group,
   Stack,
   Loader,
+  ActionIcon,
+  Tooltip,
 } from "@mantine/core";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
@@ -21,7 +20,6 @@ import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import LinkIcon from "@mui/icons-material/Link";
 import PushPinIcon from "@mui/icons-material/PushPin";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import {
@@ -31,11 +29,10 @@ import {
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
 
-import styles from "@app/components/fileEditor/FileEditor.module.css";
+import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useFileState } from "@app/contexts/file/fileHooks";
 import { FileId } from "@app/types/file";
-import { formatFileSize } from "@app/utils/fileUtils";
 import ToolChain from "@app/components/shared/ToolChain";
 import HoverActionMenu, {
   HoverAction,
@@ -51,12 +48,8 @@ interface FileEditorThumbnailProps {
   file: StirlingFileStub;
   index: number;
   totalFiles: number;
-  selectedFiles: FileId[];
-  selectionMode: boolean;
-  onToggleFile: (fileId: FileId) => void;
   onCloseFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
-  _onSetStatus: (status: string) => void;
   onReorderFiles?: (
     sourceFileId: FileId,
     targetFileId: FileId,
@@ -70,12 +63,8 @@ interface FileEditorThumbnailProps {
 
 const FileEditorThumbnail = ({
   file,
-  index,
-  selectedFiles,
-  onToggleFile,
   onCloseFile,
   onViewFile,
-  _onSetStatus,
   onReorderFiles,
   onDownloadFile,
   onUnzipFile,
@@ -95,41 +84,35 @@ const FileEditorThumbnail = ({
     openEncryptedUnlockPrompt,
   } = useFileContext();
   const { state, selectors } = useFileState();
-  const hasError = state.ui.errorFileIds.includes(file.id);
-
-  // ---- Drag state ----
-  const [isDragging, setIsDragging] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const dragElementRef = useRef<HTMLDivElement | null>(null);
-  const [showHoverMenu, setShowHoverMenu] = useState(false);
   const isMobile = useIsMobile();
-  const [showCloseModal, setShowCloseModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showSharedEditNotice, setShowSharedEditNotice] = useState(false);
-  const sharedEditNoticeShownRef = useRef(false);
 
-  // Resolve the actual File object for pin/unpin operations
-  const actualFile = useMemo(() => {
-    return activeFiles.find((f) => f.fileId === file.id);
-  }, [activeFiles, file.id]);
+  const actualFile = useMemo(
+    () => activeFiles.find((f) => f.fileId === file.id),
+    [activeFiles, file.id],
+  );
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
-  // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
 
+  const hasError = state.ui.errorFileIds.includes(file.id);
   const pageCount = file.processedFile?.totalPages || 0;
   const isEncrypted = Boolean(file.processedFile?.isEncrypted);
 
+  // Aspect ratio from page dimensions, falling back to letter size
+  const firstPage = file.processedFile?.pages?.[0];
+  const firstPageRotation = firstPage?.rotation ?? 0;
+  const isLandscape = firstPageRotation === 90 || firstPageRotation === 270;
+  const thumbAspect = (() => {
+    const w = firstPage?.width;
+    const h = firstPage?.height;
+    if (w && h && w > 0 && h > 0) {
+      return isLandscape ? `${h} / ${w}` : `${w} / ${h}`;
+    }
+    return isLandscape ? "11 / 8.5" : "8.5 / 11";
+  })();
+
   const handleRef = useRef<HTMLSpanElement | null>(null);
-
-  // ---- Selection ----
-  const isSelected = selectedFiles.includes(file.id);
-
-  // ---- Meta formatting ----
-  const prettySize = useMemo(() => {
-    return formatFileSize(file.size);
-  }, [file.size]);
+  const dragElementRef = useRef<HTMLDivElement | null>(null);
 
   const extUpper = useMemo(() => {
     const m = /\.([a-z0-9]+)$/i.exec(file.name ?? "");
@@ -143,6 +126,7 @@ const FileEditorThumbnail = ({
 
   const isCBZ = extLower === "cbz";
   const isCBR = extLower === "cbr";
+
   const uploadEnabled = config?.storageEnabled === true;
   const sharingEnabled =
     uploadEnabled && config?.storageSharingEnabled === true;
@@ -178,7 +162,13 @@ const FileEditorThumbnail = ({
     }).format(d);
   }, [file.lastModified]);
 
-  // ---- Drag & drop wiring ----
+  const [isDragging, setIsDragging] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showSharedEditNotice, setShowSharedEditNotice] = useState(false);
+  const sharedEditNoticeShownRef = useRef(false);
+
   const fileElementRef = useCallback(
     (element: HTMLDivElement | null) => {
       if (!element) return;
@@ -191,14 +181,10 @@ const FileEditorThumbnail = ({
           type: "file",
           fileId: file.id,
           fileName: file.name,
-          selectedFiles: [file.id], // Always drag only this file, ignore selection state
+          selectedFiles: [file.id],
         }),
-        onDragStart: () => {
-          setIsDragging(true);
-        },
-        onDrop: () => {
-          setIsDragging(false);
-        },
+        onDragStart: () => setIsDragging(true),
+        onDrop: () => setIsDragging(false),
       });
 
       const dropCleanup = dropTargetForElements({
@@ -211,10 +197,7 @@ const FileEditorThumbnail = ({
           const sourceData = source.data;
           return sourceData.type === "file" && sourceData.fileId !== file.id;
         },
-        onDragEnter: () => setIsDragOver(true),
-        onDragLeave: () => setIsDragOver(false),
         onDrop: ({ source }) => {
-          setIsDragOver(false);
           const sourceData = source.data;
           if (sourceData.type === "file" && onReorderFiles) {
             const sourceFileId = sourceData.fileId as FileId;
@@ -229,13 +212,14 @@ const FileEditorThumbnail = ({
         dropCleanup();
       };
     },
-    [file.id, file.name, selectedFiles, onReorderFiles],
+    [file.id, file.name, onReorderFiles],
   );
 
-  // Handle close with confirmation
-  const handleCloseWithConfirmation = useCallback(() => {
-    setShowCloseModal(true);
-  }, []);
+  const handleCloseWithConfirmation = useCallback(
+    () => setShowCloseModal(true),
+    [],
+  );
+  const handleCancelClose = useCallback(() => setShowCloseModal(false), []);
 
   const handleConfirmClose = useCallback(() => {
     onCloseFile(file.id);
@@ -278,7 +262,6 @@ const FileEditorThumbnail = ({
         return;
       }
     }
-    // Then close
     onCloseFile(file.id);
     alert({
       alertType: "success",
@@ -296,11 +279,6 @@ const FileEditorThumbnail = ({
     fileActions,
   ]);
 
-  const handleCancelClose = useCallback(() => {
-    setShowCloseModal(false);
-  }, []);
-
-  // Build hover menu actions
   const hoverActions = useMemo<HoverAction[]>(
     () => [
       {
@@ -313,6 +291,35 @@ const FileEditorThumbnail = ({
         },
       },
       {
+        id: "pin",
+        icon: <PushPinIcon style={{ fontSize: 20 }} />,
+        label: isPinned
+          ? t("unpin", "Unpin File (replace after tool run)")
+          : t("pin", "Pin File (keep active after tool run)"),
+        onClick: (e) => {
+          e.stopPropagation();
+          if (actualFile) {
+            if (isPinned) {
+              unpinFile(actualFile);
+              alert({
+                alertType: "neutral",
+                title: `Unpinned ${file.name}`,
+                expandable: false,
+                durationMs: 3000,
+              });
+            } else {
+              pinFile(actualFile);
+              alert({
+                alertType: "success",
+                title: `Pinned ${file.name}`,
+                expandable: false,
+                durationMs: 3000,
+              });
+            }
+          }
+        },
+      },
+      {
         id: "download",
         icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
         label: terminology.download,
@@ -321,36 +328,32 @@ const FileEditorThumbnail = ({
           onDownloadFile(file.id);
         },
       },
-      ...(canUpload || canShare
+      ...(canUpload
         ? [
-            ...(canUpload
-              ? [
-                  {
-                    id: "upload",
-                    icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
-                    label: isUploaded
-                      ? t("fileManager.updateOnServer", "Update on Server")
-                      : t("fileManager.uploadToServer", "Upload to Server"),
-                    onClick: (e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setShowUploadModal(true);
-                    },
-                  },
-                ]
-              : []),
-            ...(canShare
-              ? [
-                  {
-                    id: "share",
-                    icon: <LinkIcon style={{ fontSize: 20 }} />,
-                    label: t("fileManager.share", "Share"),
-                    onClick: (e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setShowShareModal(true);
-                    },
-                  },
-                ]
-              : []),
+            {
+              id: "upload",
+              icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
+              label: isUploaded
+                ? t("fileManager.updateOnServer", "Update on Server")
+                : t("fileManager.uploadToServer", "Upload to Server"),
+              onClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                setShowUploadModal(true);
+              },
+            },
+          ]
+        : []),
+      ...(canShare
+        ? [
+            {
+              id: "share",
+              icon: <LinkIcon style={{ fontSize: 20 }} />,
+              label: t("fileManager.share", "Share"),
+              onClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                setShowShareModal(true);
+              },
+            },
           ]
         : []),
       {
@@ -389,7 +392,10 @@ const FileEditorThumbnail = ({
       isZipFile,
       isCBZ,
       isCBR,
+      isPinned,
+      actualFile,
       terminology,
+      DownloadOutlinedIcon,
       onViewFile,
       onDownloadFile,
       onUnzipFile,
@@ -397,13 +403,13 @@ const FileEditorThumbnail = ({
       canUpload,
       canShare,
       isUploaded,
+      pinFile,
+      unpinFile,
     ],
   );
 
-  // ---- Card interactions ----
   const handleCardClick = () => {
     if (!isSupported) return;
-    // Clear error state if file has an error (click to clear error)
     if (hasError) {
       try {
         fileActions.clearFileError(file.id);
@@ -415,7 +421,6 @@ const FileEditorThumbnail = ({
       sharedEditNoticeShownRef.current = true;
       setShowSharedEditNotice(true);
     }
-    onToggleFile(file.id);
   };
 
   const handleCardDoubleClick = () => {
@@ -423,12 +428,9 @@ const FileEditorThumbnail = ({
     onViewFile(file.id);
   };
 
-  // ---- Style helpers ----
-  const getHeaderClassName = () => {
-    if (hasError) return styles.headerError;
-    if (!isSupported) return styles.headerUnsupported;
-    return isSelected ? styles.headerSelected : styles.headerResting;
-  };
+  const metaLine = [dateLabel, extUpper ? `${extUpper} file` : "", pageLabel]
+    .filter(Boolean)
+    .join(" - ");
 
   return (
     <div
@@ -436,257 +438,138 @@ const FileEditorThumbnail = ({
       data-file-id={file.id}
       data-testid="file-thumbnail"
       data-tour="file-card-checkbox"
-      data-selected={isSelected}
       data-supported={isSupported}
-      className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
-      style={
-        {
-          opacity: isDragging ? 0.4 : 1,
-          outline: isDragOver
-            ? "3px dashed var(--mantine-color-blue-5, #3b82f6)"
-            : undefined,
-          outlineOffset: isDragOver ? "2px" : undefined,
-          transform: isDragOver ? "scale(1.02)" : undefined,
-          transition:
-            "outline 120ms ease, transform 120ms ease, opacity 120ms ease",
-          // Tag each card with a stable, unique view-transition-name so the
-          // browser can animate the reorder (see FileEditor.handleReorderFiles,
-          // which dispatches reorderFiles inside document.startViewTransition).
-          viewTransitionName: `file-card-${file.id}`,
-        } as React.CSSProperties
-      }
+      className={`${styles.card} select-none`}
+      style={{ opacity: isDragging ? 0.9 : 1 }}
       tabIndex={0}
       role="listitem"
-      aria-selected={isSelected}
       onClick={handleCardClick}
-      onMouseEnter={() => setShowHoverMenu(true)}
-      onMouseLeave={() => setShowHoverMenu(false)}
       onDoubleClick={handleCardDoubleClick}
     >
-      {/* Header bar */}
-      <div
-        className={`${styles.header} ${getHeaderClassName()}`}
-        data-has-error={hasError}
-      >
-        {/* Logo/checkbox area */}
-        <div className={styles.logoMark}>
-          {hasError ? (
-            <div className={styles.errorPill}>
-              <span>{t("error._value", "Error")}</span>
-            </div>
-          ) : isSupported ? (
-            <CheckboxIndicator
-              checked={isSelected}
-              onChange={() => onToggleFile(file.id)}
-              color="var(--checkbox-checked-bg)"
-            />
-          ) : (
-            <div className={styles.unsupportedPill}>
-              <span>{t("unsupported", "Unsupported")}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Centered index */}
-        <div
-          className={styles.headerIndex}
-          aria-label={`Position ${index + 1}`}
-        >
-          {index + 1}
-        </div>
-
-        {/* Action buttons group */}
-        <div className={styles.headerActions}>
-          {isEncrypted && (
-            <Tooltip
-              label={t(
-                "encryptedPdfUnlock.unlockPrompt",
-                "Unlock PDF to continue",
+      <div className={styles.thumbInner}>
+        {/* Thumbnail area */}
+        <div className={styles.thumbWrap}>
+          {/* thumbUnit groups toolchain + card so they center together, keeping text tight above the card */}
+          <div className={styles.thumbUnit}>
+            {/* Tool chain bar — always rendered for consistent height, content only when history exists */}
+            <div className={styles.toolChainBar}>
+              {file.toolHistory && file.toolHistory.length > 0 && (
+                <ToolChain
+                  toolChain={file.toolHistory}
+                  displayStyle="text"
+                  size="xs"
+                  maxWidth="100%"
+                  color="var(--mantine-color-gray-7)"
+                />
               )}
+            </div>
+
+            <div
+              className={styles.thumbContainer}
+              data-supported={isSupported}
+              style={{ "--thumb-aspect": thumbAspect } as React.CSSProperties}
             >
-              <ActionIcon
-                aria-label={t(
-                  "encryptedPdfUnlock.unlockPrompt",
-                  "Unlock PDF to continue",
+              {/* Error overlay */}
+              {hasError && (
+                <div className={styles.errorOverlay}>
+                  <span className={styles.errorPill}>
+                    {t("error._value", "Error")}
+                  </span>
+                </div>
+              )}
+
+              {/* Thumbnail image or loading state */}
+              {file.thumbnailUrl ? (
+                <PrivateContent>
+                  <img
+                    src={file.thumbnailUrl}
+                    alt={file.name}
+                    className={styles.thumbImage}
+                    draggable={false}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </PrivateContent>
+              ) : file.type?.startsWith("application/pdf") ? (
+                <Stack
+                  align="center"
+                  justify="center"
+                  gap="xs"
+                  style={{ height: "100%" }}
+                >
+                  <Loader size="sm" />
+                  <Text size="xs" c="dimmed">
+                    Loading thumbnail...
+                  </Text>
+                </Stack>
+              ) : null}
+
+              {/* Badges — visible on hover via CSS */}
+              <div className={styles.thumbBadges}>
+                <span className={styles.versionBadgeThumb}>
+                  v{file.versionNumber}
+                </span>
+                {isPinned && (
+                  <span className={styles.pinnedBadge}>
+                    <PushPinIcon style={{ fontSize: 12 }} />
+                  </span>
                 )}
-                variant="subtle"
-                className={styles.headerIconButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openEncryptedUnlockPrompt(file.id);
-                }}
-              >
-                <LockOpenIcon fontSize="small" />
-              </ActionIcon>
-            </Tooltip>
-          )}
-          {/* Pin/Unpin icon */}
-          <Tooltip
-            label={
-              isPinned
-                ? t("unpin", "Unpin File (replace after tool run)")
-                : t("pin", "Pin File (keep active after tool run)")
-            }
-          >
-            <ActionIcon
-              aria-label={
-                isPinned
-                  ? t("unpin", "Unpin File (replace after tool run)")
-                  : t("pin", "Pin File (keep active after tool run)")
-              }
-              variant="subtle"
-              className={isPinned ? styles.pinned : styles.headerIconButton}
-              data-tour="file-card-pin"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (actualFile) {
-                  if (isPinned) {
-                    unpinFile(actualFile);
-                    alert({
-                      alertType: "neutral",
-                      title: `Unpinned ${file.name}`,
-                      expandable: false,
-                      durationMs: 3000,
-                    });
-                  } else {
-                    pinFile(actualFile);
-                    alert({
-                      alertType: "success",
-                      title: `Pinned ${file.name}`,
-                      expandable: false,
-                      durationMs: 3000,
-                    });
-                  }
-                }
-              }}
-            >
-              {isPinned ? (
-                <PushPinIcon fontSize="small" />
-              ) : (
-                <PushPinOutlinedIcon fontSize="small" />
-              )}
-            </ActionIcon>
-          </Tooltip>
-        </div>
-      </div>
-
-      {/* Title + meta line */}
-      <div
-        style={{
-          padding: "0.5rem",
-          textAlign: "center",
-          background: "var(--file-card-bg)",
-          marginTop: "0.5rem",
-          marginBottom: "0.5rem",
-        }}
-      >
-        <Text size="lg" fw={700} className={styles.title} title={file.name}>
-          <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
-        </Text>
-        <Text
-          size="sm"
-          c="dimmed"
-          className={styles.meta}
-          lineClamp={3}
-          title={`${extUpper || "FILE"} • ${prettySize}`}
-        >
-          {/* e.g.,  v2 - Jan 29, 2025 - PDF file - 3 Pages */}
-          {`v${file.versionNumber} - `}
-          {dateLabel}
-          {extUpper ? ` - ${extUpper} file` : ""}
-          {pageLabel ? ` - ${pageLabel}` : ""}
-        </Text>
-      </div>
-
-      {/* Preview area */}
-      <div
-        className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}
-        style={
-          isSupported || hasError
-            ? undefined
-            : { filter: "grayscale(80%)", opacity: 0.6 }
-        }
-      >
-        <div className={styles.previewPaper}>
-          {file.thumbnailUrl ? (
-            <PrivateContent>
-              <img
-                src={file.thumbnailUrl}
-                alt={file.name}
-                draggable={false}
-                loading="lazy"
-                decoding="async"
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  img.style.display = "none";
-                  img.parentElement?.setAttribute("data-thumb-missing", "true");
-                }}
-                style={{
-                  maxWidth: "80%",
-                  maxHeight: "80%",
-                  objectFit: "contain",
-                  borderRadius: 0,
-                  background: "#ffffff",
-                  border: "1px solid var(--border-default)",
-                  display: "block",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                  alignSelf: "start",
-                }}
-              />
-            </PrivateContent>
-          ) : file.type?.startsWith("application/pdf") ? (
-            <Stack
-              align="center"
-              justify="center"
-              gap="xs"
-              style={{ height: "100%" }}
-            >
-              <Loader size="sm" />
-              <Text size="xs" c="dimmed">
-                Loading thumbnail...
-              </Text>
-            </Stack>
-          ) : null}
-        </div>
-
-        {/* Drag handle (span wrapper so we can attach a ref reliably) */}
-        <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-          <DragIndicatorIcon fontSize="small" />
-        </span>
-
-        {/* Tool chain display at bottom */}
-        {file.toolHistory && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "4px",
-              left: "4px",
-              right: "4px",
-              padding: "4px 6px",
-              textAlign: "center",
-              fontWeight: 600,
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <ToolChain
-              toolChain={file.toolHistory}
-              displayStyle="text"
-              size="xs"
-              maxWidth={"100%"}
-              color="var(--mantine-color-gray-7)"
-            />
+                {isSharedFile && !isOwnedOrLocal && (
+                  <span className={styles.ownershipBadge}>
+                    {t("fileManager.sharedWithYou", "Shared")}
+                  </span>
+                )}
+                {isEncrypted && (
+                  <Tooltip
+                    label={t(
+                      "encryptedPdfUnlock.unlockPrompt",
+                      "Unlock PDF to continue",
+                    )}
+                  >
+                    <ActionIcon
+                      size="xs"
+                      variant="filled"
+                      color="yellow"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEncryptedUnlockPrompt(file.id);
+                      }}
+                      style={{ pointerEvents: "auto" }}
+                    >
+                      <LockOpenIcon style={{ fontSize: 12 }} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+          {/* end thumbUnit */}
+
+          {/* Drag handle */}
+          <span ref={handleRef} className={styles.dragHandle} aria-hidden>
+            <DragIndicatorIcon fontSize="small" />
+          </span>
+        </div>
+
+        {/* Hover action menu — visibility driven by CSS on desktop, always shown on mobile */}
+        <HoverActionMenu
+          show={isMobile}
+          actions={hoverActions}
+          position="outside"
+          visibility="cssHover"
+        />
       </div>
 
-      {/* Hover Menu */}
-      <HoverActionMenu
-        show={showHoverMenu || isMobile}
-        actions={hoverActions}
-        position="outside"
-      />
+      {/* File name + meta */}
+      <div className={styles.fileText}>
+        <p className={styles.fileName}>
+          <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
+        </p>
+        <p className={styles.fileMeta}>{metaLine}</p>
+      </div>
 
       {/* Close Confirmation Modal */}
       <Modal
@@ -703,7 +586,7 @@ const FileEditorThumbnail = ({
                 {t("confirmCloseUnsaved", "This file has unsaved changes.")}
               </Text>
               <Text size="sm" c="dimmed" fw={500}>
-                {file.name}
+                <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
                 <Button variant="light" onClick={handleCancelClose}>
@@ -730,7 +613,7 @@ const FileEditorThumbnail = ({
                 )}
               </Text>
               <Text size="sm" c="dimmed" fw={500}>
-                {file.name}
+                <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
                 <Button variant="light" onClick={handleCancelClose}>
@@ -748,6 +631,8 @@ const FileEditorThumbnail = ({
           )}
         </Stack>
       </Modal>
+
+      {/* Shared edit notice modal */}
       <Modal
         opened={showSharedEditNotice}
         onClose={() => setShowSharedEditNotice(false)}

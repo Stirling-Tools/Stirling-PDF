@@ -51,7 +51,7 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
   const executeOperation = useCallback(
     async (_params: GetPdfInfoParameters, selectedFiles: StirlingFile[]) => {
       if (selectedFiles.length === 0) {
-        setErrorMessage(t("noFileSelected", "No files selected"));
+        setErrorMessage(t("noFileSelected", "No file loaded"));
         return;
       }
 

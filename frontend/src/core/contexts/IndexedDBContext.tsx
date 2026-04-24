@@ -3,7 +3,13 @@
  * Integrates with FileContext to provide transparent file persistence
  */
 
-import React, { createContext, useContext, useCallback, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId } from "@app/types/file";
 import {
@@ -40,6 +46,10 @@ interface IndexedDBContextValue {
   }>;
   updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
   markFileAsProcessed: (fileId: FileId) => Promise<boolean>;
+
+  // Incremented after any write or delete — subscribe to trigger re-reads
+  revision: number;
+  bumpRevision: () => void;
 }
 
 const IndexedDBContext = createContext<IndexedDBContextValue | null>(null);
@@ -49,6 +59,9 @@ interface IndexedDBProviderProps {
 }
 
 export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
+  const [revision, setRevision] = useState(0);
+  const bumpRevision = useCallback(() => setRevision((r) => r + 1), []);
+
   // LRU File cache to avoid repeated ArrayBuffer→File conversions
   const fileCache = useRef(
     new Map<FileId, { file: File; lastAccessed: number }>(),
@@ -83,7 +96,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       const thumbnail =
         existingThumbnail || (await generateThumbnailForFile(file));
 
-      // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
+      // History is handled via direct fileStorage calls, not here
       const stirlingFile = createStirlingFile(file, fileId);
 
       // Create minimal stub for storage
@@ -116,9 +129,10 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
         );
       }
 
+      bumpRevision();
       return storedFile;
     },
-    [],
+    [bumpRevision],
   );
 
   const loadFile = useCallback(
@@ -155,13 +169,17 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [],
   );
 
-  const deleteFile = useCallback(async (fileId: FileId): Promise<void> => {
-    // Remove from cache
-    fileCache.current.delete(fileId);
+  const deleteFile = useCallback(
+    async (fileId: FileId): Promise<void> => {
+      // Remove from cache
+      fileCache.current.delete(fileId);
 
-    // Remove from IndexedDB
-    await fileStorage.deleteStirlingFile(fileId);
-  }, []);
+      // Remove from IndexedDB
+      await fileStorage.deleteStirlingFile(fileId);
+      bumpRevision();
+    },
+    [bumpRevision],
+  );
 
   const loadLeafMetadata = useCallback(async (): Promise<
     StirlingFileStub[]
@@ -184,12 +202,11 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       // Remove from cache
       fileIds.forEach((id) => fileCache.current.delete(id));
 
-      // Remove from IndexedDB in parallel
-      await Promise.all(
-        fileIds.map((id) => fileStorage.deleteStirlingFile(id)),
-      );
+      // Delete all in a single IDB transaction
+      await fileStorage.deleteMultipleStirlingFiles(fileIds);
+      bumpRevision();
     },
-    [],
+    [bumpRevision],
   );
 
   const clearAll = useCallback(async (): Promise<void> => {
@@ -198,7 +215,8 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
     // Clear IndexedDB
     await fileStorage.clearAll();
-  }, []);
+    bumpRevision();
+  }, [bumpRevision]);
 
   const getStorageStats = useCallback(async () => {
     return await fileStorage.getStorageStats();
@@ -206,16 +224,20 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
 
   const updateThumbnail = useCallback(
     async (fileId: FileId, thumbnail: string): Promise<boolean> => {
-      return await fileStorage.updateThumbnail(fileId, thumbnail);
+      const result = await fileStorage.updateThumbnail(fileId, thumbnail);
+      if (result) bumpRevision();
+      return result;
     },
-    [],
+    [bumpRevision],
   );
 
   const markFileAsProcessed = useCallback(
     async (fileId: FileId): Promise<boolean> => {
-      return await fileStorage.markFileAsProcessed(fileId);
+      const result = await fileStorage.markFileAsProcessed(fileId);
+      if (result) bumpRevision();
+      return result;
     },
-    [],
+    [bumpRevision],
   );
 
   const value: IndexedDBContextValue = {
@@ -230,6 +252,8 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     getStorageStats,
     updateThumbnail,
     markFileAsProcessed,
+    revision,
+    bumpRevision,
   };
 
   return (

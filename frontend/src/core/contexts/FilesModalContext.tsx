@@ -8,6 +8,7 @@ import React, {
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
@@ -26,8 +27,10 @@ interface FilesModalContextType {
   openFilesModal: (options?: {
     insertAfterPage?: number;
     customHandler?: (files: File[], insertAfterPage?: number) => void;
+    maxSelectable?: number | null;
   }) => void;
   closeFilesModal: () => void;
+  maxSelectable: number | null;
   onFileUpload: (files: File[]) => void;
   onRecentFileSelect: (stirlingFileStubs: StirlingFileStub[]) => void;
   onModalClose?: () => void;
@@ -42,12 +45,14 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const { addFiles } = useFileHandler();
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
+  const { actions: navActions } = useNavigationActions();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
   const [customHandler, setCustomHandler] = useState<
     ((files: File[], insertAfterPage?: number) => void) | undefined
   >();
+  const [maxSelectable, setMaxSelectable] = useState<number | null>(null);
 
   const importBundleToWorkbench = useCallback(
     async (
@@ -220,9 +225,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
     (options?: {
       insertAfterPage?: number;
       customHandler?: (files: File[], insertAfterPage?: number) => void;
+      maxSelectable?: number | null;
     }) => {
       setInsertAfterPage(options?.insertAfterPage);
       setCustomHandler(() => options?.customHandler);
+      setMaxSelectable(options?.maxSelectable ?? null);
       setIsFilesModalOpen(true);
     },
     [],
@@ -238,7 +245,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const handleFileUpload = useCallback(
     async (files: File[]) => {
       if (customHandler) {
-        // Use custom handler for special cases (like page insertion)
+        // Use custom handler for special cases (like page insertion) — no auto-navigation
         customHandler(files, insertAfterPage);
       } else {
         // 1) Add via standard flow (auto-selects new files)
@@ -256,6 +263,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           );
           actions.setSelectedFiles(nextSelection);
         }
+        // Single file → viewer, multiple → active files
+        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
       closeFilesModal();
     },
@@ -266,6 +275,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       customHandler,
       actions,
       fileCtx,
+      navActions,
     ],
   );
 
@@ -397,6 +407,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("addStirlingFileStubs action not available");
       }
 
+      // Single file → viewer, multiple → active files
+      const totalAdded = stirlingFileStubs.length;
+      navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
+
       closeFilesModal();
     },
     [
@@ -410,6 +424,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       downloadShareLinkFile,
       extractLatestFilesFromBundle,
       importBundleToWorkbench,
+      navActions,
     ],
   );
 
@@ -426,6 +441,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       onRecentFileSelect: handleRecentFileSelect,
       onModalClose,
       setOnModalClose: setModalCloseCallback,
+      maxSelectable,
     }),
     [
       isFilesModalOpen,
@@ -435,6 +451,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       handleRecentFileSelect,
       onModalClose,
       setModalCloseCallback,
+      maxSelectable,
     ],
   );
 
