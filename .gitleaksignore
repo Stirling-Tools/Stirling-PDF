@@ -1,0 +1,5 @@
+# PostHog project-level key — phc_ prefix keys are public/client-side by design
+# (PostHog client-side tracking embeds them in the browser bundle). Committed
+# intentionally in #6150 so engine/.env has a working default, with real
+# credentials overridden via engine/.env.local.
+engine/.env:generic-api-key:41

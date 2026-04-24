@@ -20,10 +20,34 @@
       <Component Id="ProvisionerBinaryComponent" Guid="*">
         <File Id="ProvisionerExe" Source="$(sys.SOURCEFILEDIR)stirling-provision.exe" KeyPath="yes" />
       </Component>
+      <Component Id="ThumbnailHandlerDllComponent" Guid="*">
+        <File Id="ThumbnailHandlerDll" Source="$(sys.SOURCEFILEDIR)stirling_thumbnail_handler.dll" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- PDF Thumbnail Handler COM registration -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="ThumbnailHandlerClsidComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}">
+          <RegistryValue Type="string" Value="Stirling-PDF Thumbnail Handler" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}\InprocServer32">
+          <RegistryValue Type="string" Value="[INSTALLDIR]stirling_thumbnail_handler.dll" />
+          <RegistryValue Type="string" Name="ThreadingModel" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="ThumbnailHandlerShellexComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\.pdf\shellex\{E357FCCD-A995-4576-B01F-234630154E96}">
+          <RegistryValue Type="string" Value="{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
     </DirectoryRef>
 
     <ComponentGroup Id="ProvisioningComponentGroup">
       <ComponentRef Id="ProvisionerBinaryComponent" />
+      <ComponentRef Id="ThumbnailHandlerDllComponent" />
+      <ComponentRef Id="ThumbnailHandlerClsidComponent" />
+      <ComponentRef Id="ThumbnailHandlerShellexComponent" />
     </ComponentGroup>
 
     <CustomAction

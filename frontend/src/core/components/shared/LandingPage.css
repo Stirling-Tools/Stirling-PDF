@@ -128,10 +128,25 @@
   color: var(--landing-button-color, var(--text-primary)) !important;
 }
 .landing-btn-secondary:hover {
-  background-color: var(--landing-button-hover-bg, var(--landing-button-bg, var(--bg-surface))) !important;
+  background-color: var(
+    --landing-button-hover-bg,
+    var(--landing-button-bg, var(--bg-surface))
+  ) !important;
 }
 
 /* Icon-only variant: accent colour instead of button text colour */
 .landing-btn-icon {
   color: var(--accent-interactive) !important;
+}
+
+/* Dropzone accept/reject outlines. Mantine 8 no longer supports nested
+ * `&[data-accept]` selectors inside the `styles` prop object, so these are
+ * plain CSS attribute selectors on a class applied to the Dropzone root. */
+.landing-dropzone[data-accept] {
+  outline: 2px dashed var(--accent-interactive);
+  outline-offset: 4px;
+}
+.landing-dropzone[data-reject] {
+  outline: 2px dashed var(--mantine-color-red-6);
+  outline-offset: 4px;
 }

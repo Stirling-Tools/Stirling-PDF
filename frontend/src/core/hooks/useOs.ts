@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 
-export type OS = "windows" | "mac-intel" | "mac-apple" | "linux-x64" | "linux-arm64" | "ios" | "android" | "unknown";
+export type OS =
+  | "windows"
+  | "mac-intel"
+  | "mac-apple"
+  | "linux-x64"
+  | "linux-arm64"
+  | "ios"
+  | "android"
+  | "unknown";
 
 function parseUA(ua: string): OS {
   const uaLower = ua.toLowerCase();
@@ -8,7 +16,9 @@ function parseUA(ua: string): OS {
   // iOS (includes iPadOS masquerading as Mac in some cases)
   const isIOS =
     /iphone|ipad|ipod/.test(uaLower) ||
-    (ua.includes("Macintosh") && typeof window !== "undefined" && "ontouchstart" in window);
+    (ua.includes("Macintosh") &&
+      typeof window !== "undefined" &&
+      "ontouchstart" in window);
   if (isIOS) return "ios";
 
   if (/android/.test(uaLower)) return "android";
@@ -41,12 +51,13 @@ export function useOs(): OS {
       const uaData = (navigator as any).userAgentData;
       if (uaData?.getHighEntropyValues) {
         try {
-          const { platform, architecture, bitness } = await uaData.getHighEntropyValues([
-            "platform",
-            "architecture",
-            "bitness",
-            "platformVersion",
-          ]);
+          const { platform, architecture, bitness } =
+            await uaData.getHighEntropyValues([
+              "platform",
+              "architecture",
+              "bitness",
+              "platformVersion",
+            ]);
 
           const plat = (platform || "").toLowerCase();
           if (plat.includes("windows")) detected = "windows";
@@ -54,10 +65,14 @@ export function useOs(): OS {
           else if (plat.includes("android")) detected = "android";
           else if (plat.includes("mac")) {
             // CH “architecture” is often "arm" on Apple Silicon
-            detected = architecture?.toLowerCase().includes("arm") ? "mac-apple" : "mac-intel";
+            detected = architecture?.toLowerCase().includes("arm")
+              ? "mac-apple"
+              : "mac-intel";
           } else if (plat.includes("linux") || plat.includes("chrome os")) {
             const archLower = (architecture || "").toLowerCase();
-            const isArm = archLower.includes("arm") || (bitness === "32" && /aarch|arm/.test(architecture || ""));
+            const isArm =
+              archLower.includes("arm") ||
+              (bitness === "32" && /aarch|arm/.test(architecture || ""));
             detected = isArm ? "linux-arm64" : "linux-x64";
           }
         } catch {

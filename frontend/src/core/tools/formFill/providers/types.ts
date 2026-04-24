@@ -29,5 +29,9 @@ export interface IFormDataProvider {
    * @param flatten - Whether to flatten the form (make fields non-editable)
    * @returns The filled PDF as a Blob
    */
-  fillForm(file: File | Blob, values: Record<string, string>, flatten: boolean): Promise<Blob>;
+  fillForm(
+    file: File | Blob,
+    values: Record<string, string>,
+    flatten: boolean,
+  ): Promise<Blob>;
 }

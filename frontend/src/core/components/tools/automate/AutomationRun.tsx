@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Text, Stack, Group, Card, Progress, Loader } from "@mantine/core";
+import {
+  Button,
+  Text,
+  Stack,
+  Group,
+  Card,
+  Progress,
+  Loader,
+} from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
 import { useFileSelection } from "@app/contexts/FileContext";
@@ -15,7 +23,11 @@ interface AutomationRunProps {
   automateOperation?: any; // TODO: Type this properly when available
 }
 
-export default function AutomationRun({ automation, onComplete, automateOperation }: AutomationRunProps) {
+export default function AutomationRun({
+  automation,
+  onComplete,
+  automateOperation,
+}: AutomationRunProps) {
   const { t } = useTranslation();
   const { selectedFiles } = useFileSelection();
   const { regularTools } = useToolRegistry();
@@ -28,7 +40,9 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
   // Use the operation hook's loading state
   const isExecuting = automateOperation?.isLoading || false;
-  const hasResults = automateOperation?.files.length > 0 || automateOperation?.downloadUrl !== null;
+  const hasResults =
+    automateOperation?.files.length > 0 ||
+    automateOperation?.downloadUrl !== null;
 
   // Initialize execution steps from automation
   useEffect(() => {
@@ -70,7 +84,13 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
     // Reset progress tracking
     setCurrentStepIndex(0);
-    setExecutionSteps((prev) => prev.map((step) => ({ ...step, status: EXECUTION_STATUS.PENDING, error: undefined })));
+    setExecutionSteps((prev) =>
+      prev.map((step) => ({
+        ...step,
+        status: EXECUTION_STATUS.PENDING,
+        error: undefined,
+      })),
+    );
 
     try {
       // Use the automateOperation.executeOperation to handle file consumption properly
@@ -80,17 +100,29 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           onStepStart: (stepIndex: number, _operationName: string) => {
             setCurrentStepIndex(stepIndex);
             setExecutionSteps((prev) =>
-              prev.map((step, idx) => (idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING } : step)),
+              prev.map((step, idx) =>
+                idx === stepIndex
+                  ? { ...step, status: EXECUTION_STATUS.RUNNING }
+                  : step,
+              ),
             );
           },
           onStepComplete: (stepIndex: number, _resultFiles: File[]) => {
             setExecutionSteps((prev) =>
-              prev.map((step, idx) => (idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED } : step)),
+              prev.map((step, idx) =>
+                idx === stepIndex
+                  ? { ...step, status: EXECUTION_STATUS.COMPLETED }
+                  : step,
+              ),
             );
           },
           onStepError: (stepIndex: number, error: string) => {
             setExecutionSteps((prev) =>
-              prev.map((step, idx) => (idx === stepIndex ? { ...step, status: EXECUTION_STATUS.ERROR, error } : step)),
+              prev.map((step, idx) =>
+                idx === stepIndex
+                  ? { ...step, status: EXECUTION_STATUS.ERROR, error }
+                  : step,
+              ),
             );
           },
         },
@@ -108,7 +140,9 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
   const getProgress = () => {
     if (executionSteps.length === 0) return 0;
-    const completedSteps = executionSteps.filter((step) => step.status === EXECUTION_STATUS.COMPLETED).length;
+    const completedSteps = executionSteps.filter(
+      (step) => step.status === EXECUTION_STATUS.COMPLETED,
+    ).length;
     return (completedSteps / executionSteps.length) * 100;
   };
 
@@ -140,10 +174,13 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
         {/* Automation Info */}
         <Card padding="md" withBorder>
           <Text size="sm" fw={500} mb="xs">
-            {automation?.name || t("automate.sequence.unnamed", "Unnamed Automation")}
+            {automation?.name ||
+              t("automate.sequence.unnamed", "Unnamed Automation")}
           </Text>
           <Text size="xs" c="dimmed">
-            {t("automate.sequence.steps", "{{count}} steps", { count: executionSteps.length })}
+            {t("automate.sequence.steps", "{{count}} steps", {
+              count: executionSteps.length,
+            })}
           </Text>
         </Card>
 
@@ -161,7 +198,11 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
         <Stack gap="xs">
           {executionSteps.map((step, index) => (
             <Group key={step.id} gap="sm" align="center">
-              <Text size="xs" c="dimmed" style={{ minWidth: "1rem", textAlign: "center" }}>
+              <Text
+                size="xs"
+                c="dimmed"
+                style={{ minWidth: "1rem", textAlign: "center" }}
+              >
                 {index + 1}
               </Text>
 
@@ -172,8 +213,11 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
                   size="sm"
                   style={{
                     color:
-                      step.status === EXECUTION_STATUS.RUNNING ? "var(--mantine-color-blue-6)" : "var(--mantine-color-text)",
-                    fontWeight: step.status === EXECUTION_STATUS.RUNNING ? 500 : 400,
+                      step.status === EXECUTION_STATUS.RUNNING
+                        ? "var(--mantine-color-blue-6)"
+                        : "var(--mantine-color-text)",
+                    fontWeight:
+                      step.status === EXECUTION_STATUS.RUNNING ? 500 : 400,
                   }}
                 >
                   {step.name}
@@ -193,7 +237,9 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           <Button
             leftSection={<PlayArrowIcon />}
             onClick={executeAutomation}
-            disabled={isExecuting || !selectedFiles || selectedFiles.length === 0}
+            disabled={
+              isExecuting || !selectedFiles || selectedFiles.length === 0
+            }
             loading={isExecuting}
           >
             {isExecuting

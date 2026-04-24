@@ -101,7 +101,10 @@ export default function SignupForm({
         <div
           aria-hidden={!showConfirm}
           className="auth-confirm"
-          style={{ maxHeight: showConfirm ? 96 : 0, opacity: showConfirm ? 1 : 0 }}
+          style={{
+            maxHeight: showConfirm ? 96 : 0,
+            opacity: showConfirm ? 1 : 0,
+          }}
         >
           <div className="auth-field">
             <PasswordInput
@@ -112,7 +115,9 @@ export default function SignupForm({
               placeholder={t("signup.confirmPasswordPlaceholder")}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !isSubmitting && onSubmit()
+              }
               error={fieldErrors.confirmPassword}
               classNames={{ label: "auth-label" }}
             />
@@ -131,7 +136,11 @@ export default function SignupForm({
             label={
               <span className="auth-terms-label">
                 {t("legal.iAgreeToThe", "I agree to all of the")}{" "}
-                <a href="https://www.stirlingpdf.com/terms" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://www.stirlingpdf.com/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {t("legal.terms", "Terms and Conditions")}
                 </a>
               </span>
@@ -143,7 +152,13 @@ export default function SignupForm({
       {/* Sign Up Button */}
       <Button
         onClick={onSubmit}
-        disabled={isSubmitting || !email || !password || !confirmPassword || (showTerms && !agree)}
+        disabled={
+          isSubmitting ||
+          !email ||
+          !password ||
+          !confirmPassword ||
+          (showTerms && !agree)
+        }
         className="auth-button"
         fullWidth
         loading={isSubmitting}

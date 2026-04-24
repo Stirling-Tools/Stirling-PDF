@@ -35,7 +35,9 @@ export const synchronizeUserUpgrade = async (
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: "Failed to synchronize user upgrade" }));
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: "Failed to synchronize user upgrade" }));
     throw new Error(errorData.error || "Failed to synchronize user upgrade");
   }
 

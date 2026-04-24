@@ -8,7 +8,12 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const SingleLargePage = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("singleLargePage", useSingleLargePageParameters, useSingleLargePageOperation, props);
+  const base = useBaseTool(
+    "singleLargePage",
+    useSingleLargePageParameters,
+    useSingleLargePageOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {

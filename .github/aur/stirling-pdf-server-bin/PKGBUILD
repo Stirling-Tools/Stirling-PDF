@@ -1,0 +1,90 @@
+# Maintainer: Stirling PDF Inc <contact@stirlingpdf.com>
+pkgname=stirling-pdf-server-bin
+pkgver=2.7.3
+pkgrel=1
+pkgdesc="Locally hosted, web-based PDF manipulation tool (server JAR, prebuilt)"
+arch=('any')
+url="https://www.stirling.com"
+license=('MIT' 'LicenseRef-Stirling-PDF-Proprietary')
+depends=('java-runtime>=21')
+provides=('stirling-pdf-server')
+conflicts=('stirling-pdf-server' 'stirling-pdf-server-git')
+backup=('etc/stirling-pdf-server/settings.yml')
+
+source=("Stirling-PDF-with-login-${pkgver}.jar::https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${pkgver}/Stirling-PDF-with-login.jar"
+        "stirling-pdf-server.service"
+        "stirling-pdf-server.sysusers"
+        "stirling-pdf-server.tmpfiles")
+sha256sums=('PLACEHOLDER_JAR_SHA256'
+            'PLACEHOLDER_SERVICE_SHA256'
+            'PLACEHOLDER_SYSUSERS_SHA256'
+            'PLACEHOLDER_TMPFILES_SHA256')
+
+prepare() {
+    cat > stirling-pdf-server.service << 'EOF'
+[Unit]
+Description=Stirling-PDF Server
+After=network.target
+
+[Service]
+Type=simple
+User=stirling-pdf
+Group=stirling-pdf
+WorkingDirectory=/var/lib/stirling-pdf-server
+ExecStart=/usr/bin/java -jar /usr/share/stirling-pdf-server/stirling-pdf-server.jar
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stirling-pdf-server
+Environment=JAVA_OPTS=-Xmx512m
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    cat > stirling-pdf-server.sysusers << 'EOF'
+u stirling-pdf - "Stirling-PDF Server" /var/lib/stirling-pdf-server -
+EOF
+
+    cat > stirling-pdf-server.tmpfiles << 'EOF'
+d /var/lib/stirling-pdf-server 0750 stirling-pdf stirling-pdf -
+d /var/log/stirling-pdf-server 0750 stirling-pdf stirling-pdf -
+EOF
+}
+
+package() {
+    # JAR
+    install -Dm644 "Stirling-PDF-with-login-${pkgver}.jar" \
+        "${pkgdir}/usr/share/stirling-pdf-server/stirling-pdf-server.jar"
+
+    # Wrapper script
+    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/stirling-pdf-server" << 'EOF'
+#!/bin/sh
+exec java $JAVA_OPTS -jar /usr/share/stirling-pdf-server/stirling-pdf-server.jar "$@"
+EOF
+
+    # systemd unit
+    install -Dm644 stirling-pdf-server.service \
+        "${pkgdir}/usr/lib/systemd/system/stirling-pdf-server.service"
+
+    # sysusers / tmpfiles
+    install -Dm644 stirling-pdf-server.sysusers \
+        "${pkgdir}/usr/lib/sysusers.d/stirling-pdf-server.conf"
+    install -Dm644 stirling-pdf-server.tmpfiles \
+        "${pkgdir}/usr/lib/tmpfiles.d/stirling-pdf-server.conf"
+
+    # Default config stub
+    install -dm755 "${pkgdir}/etc/stirling-pdf-server"
+    install -Dm644 /dev/stdin "${pkgdir}/etc/stirling-pdf-server/settings.yml" << 'EOF'
+# Stirling-PDF Server configuration
+# See https://github.com/Stirling-Tools/Stirling-PDF for all options
+server:
+  port: 8080
+EOF
+
+    # License
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE" << 'EOF'
+MIT License — see https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+EOF
+}

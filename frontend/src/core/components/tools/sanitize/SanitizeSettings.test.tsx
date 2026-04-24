@@ -11,7 +11,9 @@ vi.mock("react-i18next", () => ({
 }));
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("SanitizeSettings", () => {
   const defaultParameters: SanitizeParameters = {
@@ -32,7 +34,10 @@ describe("SanitizeSettings", () => {
   test("should render all sanitization option checkboxes", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -45,7 +50,10 @@ describe("SanitizeSettings", () => {
   test("should show correct initial checkbox states based on parameters", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -64,7 +72,10 @@ describe("SanitizeSettings", () => {
   test("should call onParameterChange with correct parameters when checkboxes are clicked", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -72,17 +83,27 @@ describe("SanitizeSettings", () => {
 
     // Click the first checkbox (removeJavaScript - should toggle from true to false)
     fireEvent.click(checkboxes[0]);
-    expect(mockOnParameterChange).toHaveBeenCalledWith("removeJavaScript", false);
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "removeJavaScript",
+      false,
+    );
 
     // Click the third checkbox (removeXMPMetadata - should toggle from false to true)
     fireEvent.click(checkboxes[2]);
-    expect(mockOnParameterChange).toHaveBeenCalledWith("removeXMPMetadata", true);
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "removeXMPMetadata",
+      true,
+    );
   });
 
   test("should disable all checkboxes when disabled prop is true", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={true} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+          disabled={true}
+        />
       </TestWrapper>,
     );
 
@@ -95,7 +116,11 @@ describe("SanitizeSettings", () => {
   test("should enable all checkboxes when disabled prop is false or undefined", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={false} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+          disabled={false}
+        />
       </TestWrapper>,
     );
 
@@ -117,7 +142,10 @@ describe("SanitizeSettings", () => {
 
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={allEnabledParameters} onParameterChange={mockOnParameterChange} />
+        <SanitizeSettings
+          parameters={allEnabledParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -130,21 +158,40 @@ describe("SanitizeSettings", () => {
   test("should call translation function with correct keys", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
     // Verify that translation keys are being called (just check that it was called, not specific order)
-    expect(mockT).toHaveBeenCalledWith("sanitize.options.title", expect.any(String));
-    expect(mockT).toHaveBeenCalledWith("sanitize.options.removeJavaScript.label", expect.any(String));
-    expect(mockT).toHaveBeenCalledWith("sanitize.options.removeEmbeddedFiles.label", expect.any(String));
-    expect(mockT).toHaveBeenCalledWith("sanitize.options.note", expect.any(String));
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.title",
+      expect.any(String),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.removeJavaScript.label",
+      expect.any(String),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.removeEmbeddedFiles.label",
+      expect.any(String),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.note",
+      expect.any(String),
+    );
   });
 
   test("should not call onParameterChange when disabled", () => {
     render(
       <TestWrapper>
-        <SanitizeSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={true} />
+        <SanitizeSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+          disabled={true}
+        />
       </TestWrapper>,
     );
 

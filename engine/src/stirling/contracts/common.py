@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import Literal, assert_never
 
 from pydantic import Field, model_validator
 
-from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
+from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
+from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
 
 class PdfContentType(StrEnum):
@@ -82,11 +83,18 @@ class SupportedCapability(StrEnum):
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
+    MATH_AUDITOR_AGENT = "math_auditor_agent"
 
 
 class ConversationMessage(ApiModel):
     role: str
     content: str
+
+
+def format_conversation_history(conversation_history: list[ConversationMessage]) -> str:
+    if not conversation_history:
+        return "None"
+    return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
 
 
 class PdfTextSelection(ApiModel):
@@ -99,16 +107,36 @@ class ExtractedFileText(ApiModel):
     pages: list[PdfTextSelection] = Field(default_factory=list)
 
 
+class NeedContentFileRequest(ApiModel):
+    file_name: str
+    page_numbers: list[int] = Field(default_factory=list)
+    content_types: list[PdfContentType]
+
+
+class NeedContentResponse(ApiModel):
+    outcome: Literal[WorkflowOutcome.NEED_CONTENT] = WorkflowOutcome.NEED_CONTENT
+    resume_with: SupportedCapability
+    reason: str
+    files: list[NeedContentFileRequest] = Field(default_factory=list)
+    max_pages: int
+    max_characters: int
+
+
 class ToolOperationStep(ApiModel):
     kind: Literal[StepKind.TOOL] = StepKind.TOOL
-    tool: OperationId
-    parameters: ParamToolModel
+    tool: AnyToolId
+    parameters: AnyParamModel
 
     @model_validator(mode="after")
     def validate_tool_parameter_pairing(self) -> ToolOperationStep:
-        expected_type = OPERATIONS[self.tool]
+        if isinstance(self.tool, AgentToolId):
+            expected_type = AGENT_OPERATIONS[self.tool]
+        elif isinstance(self.tool, ToolEndpoint):
+            expected_type = OPERATIONS[self.tool]
+        else:
+            assert_never(self.tool)
+
         if not isinstance(self.parameters, expected_type):
             actual_type = type(self.parameters).__name__
-            expected_type_name = expected_type.__name__
-            raise ValueError(f"Parameters for tool {self.tool.value} must be {expected_type_name}, got {actual_type}.")
+            raise ValueError(f"Parameters for tool {self.tool} must be {expected_type.__name__}, got {actual_type}.")
         return self

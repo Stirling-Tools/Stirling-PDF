@@ -6,7 +6,10 @@ export const usePageLayoutMarginsBordersTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("pageLayout.marginsBorders.tooltip.header.title", "Margins and Borders"),
+      title: t(
+        "pageLayout.marginsBorders.tooltip.header.title",
+        "Margins and Borders",
+      ),
     },
     tips: [
       {
@@ -17,21 +20,30 @@ export const usePageLayoutMarginsBordersTips = (): TooltipContent => {
         ),
       },
       {
-        title: t("pageLayout.marginsBorders.tooltip.innerMargin.title", "Inner Margin"),
+        title: t(
+          "pageLayout.marginsBorders.tooltip.innerMargin.title",
+          "Inner Margin",
+        ),
         description: t(
           "pageLayout.marginsBorders.tooltip.innerMargin.text",
           "Inner margin adds spacing between cells in the page grid to improve separation and readability.",
         ),
       },
       {
-        title: t("pageLayout.marginsBorders.tooltip.borders.title", "Add Borders"),
+        title: t(
+          "pageLayout.marginsBorders.tooltip.borders.title",
+          "Add Borders",
+        ),
         description: t(
           "pageLayout.marginsBorders.tooltip.borders.text",
           "Enable borders to draw lines around each placed page. This can help visual separation or trimming.",
         ),
       },
       {
-        title: t("pageLayout.marginsBorders.tooltip.borderWidth.title", "Border Thickness"),
+        title: t(
+          "pageLayout.marginsBorders.tooltip.borderWidth.title",
+          "Border Thickness",
+        ),
         description: t(
           "pageLayout.marginsBorders.tooltip.borderWidth.text",
           "Border thickness is only applied when borders are enabled. Higher values produce thicker lines.",

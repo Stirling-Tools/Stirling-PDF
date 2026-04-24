@@ -69,7 +69,10 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
 
         setLocalState((prevState) => {
           // Only update if state actually changed
-          if (prevState.results !== newState.results || prevState.activeIndex !== newState.activeIndex) {
+          if (
+            prevState.results !== newState.results ||
+            prevState.activeIndex !== newState.activeIndex
+          ) {
             return newState;
           }
           return prevState;
@@ -136,7 +139,10 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
               return results;
             } catch (error: any) {
               // Handle abort errors gracefully - these occur when searches overlap
-              if (error?.type === "abort" || error?.message?.includes("abort")) {
+              if (
+                error?.type === "abort" ||
+                error?.message?.includes("abort")
+              ) {
                 // Silently handle abort - this is expected when user types quickly
                 return null;
               }

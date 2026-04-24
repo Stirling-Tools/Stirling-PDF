@@ -10,7 +10,10 @@ const nodeGlobs = ["scripts/**/*.{js,ts,mjs}", "*.config.{js,ts,mjs}"];
 
 const baseRestrictedImportPatterns = [
   { regex: "^\\.", message: "Use @app/* imports instead of relative imports." },
-  { regex: "^src/", message: "Use @app/* imports instead of absolute src/ imports." },
+  {
+    regex: "^src/",
+    message: "Use @app/* imports instead of absolute src/ imports.",
+  },
 ];
 
 export default defineConfig(
@@ -64,7 +67,8 @@ export default defineConfig(
             ...baseRestrictedImportPatterns,
             {
               regex: "^@tauri-apps/",
-              message: "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
+              message:
+                "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
             },
           ],
         },
@@ -74,6 +78,7 @@ export default defineConfig(
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {
     files: [
+      "src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
       "src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
       "src/saas/**/*.{js,mjs,jsx,ts,tsx}",
       "src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",

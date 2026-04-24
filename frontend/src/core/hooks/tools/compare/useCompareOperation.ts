@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ADDITION_HIGHLIGHT,
+  CompareAnyResult,
   CompareDiffToken,
   CompareFilteredTokenInfo,
   CompareResultData,
@@ -10,6 +11,10 @@ import {
   CompareWorkerWarnings,
   REMOVAL_HIGHLIGHT,
 } from "@app/types/compare";
+import {
+  runPixelCompare,
+  revokePixelResult,
+} from "@app/services/pixelCompareService";
 import { CompareParameters } from "@app/hooks/tools/compare/useCompareParameters";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@app/types/fileContext";
@@ -28,8 +33,9 @@ import CompareWorkerCtor from "@app/workers/compareWorker?worker";
 const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
-  result: CompareResultData | null;
+  result: CompareAnyResult | null;
   warnings: string[];
+  pixelProgress: { current: number; total: number } | null;
 }
 
 // extractContentFromPdf moved to utils
@@ -42,7 +48,13 @@ export const useCompareOperation = (): CompareOperationHook => {
   const activeRunIdRef = useRef(0);
   const cancelledRef = useRef(false);
 
-  type OperationStatus = "idle" | "extracting" | "processing" | "complete" | "cancelled" | "error";
+  type OperationStatus =
+    | "idle"
+    | "extracting"
+    | "processing"
+    | "complete"
+    | "cancelled"
+    | "error";
   const [isLoading, setIsLoading] = useState(false);
   const [statusState, setStatusState] = useState<OperationStatus>("idle");
   const [statusDetailMs, setStatusDetailMs] = useState<number | null>(null);
@@ -50,8 +62,23 @@ export const useCompareOperation = (): CompareOperationHook => {
   const [files, setFiles] = useState<File[]>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFilename, setDownloadFilename] = useState("");
-  const [result, setResult] = useState<CompareResultData | null>(null);
+  const [result, setResult] = useState<CompareAnyResult | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [pixelProgress, setPixelProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const pixelSignalRef = useRef<{ cancelled: boolean }>({ cancelled: false });
+  const pixelResultRef = useRef<
+    import("@app/types/compare").CompareResultPixelData | null
+  >(null);
+
+  const revokePixelUrls = useCallback(() => {
+    if (pixelResultRef.current) {
+      revokePixelResult(pixelResultRef.current);
+      pixelResultRef.current = null;
+    }
+  }, []);
   const longRunningToastIdRef = useRef<string | null>(null);
   const dissimilarityToastIdRef = useRef<string | null>(null);
   const dissimilarityToastShownRef = useRef<boolean>(false);
@@ -71,16 +98,18 @@ export const useCompareOperation = (): CompareOperationHook => {
   }, []);
 
   const resetResults = useCallback(() => {
+    revokePixelUrls();
     setResult(null);
     setWarnings([]);
     setFiles([]);
+    setPixelProgress(null);
     cleanupDownloadUrl();
     setDownloadUrl(null);
     setDownloadFilename("");
     setStatusState("idle");
     setStatusDetailMs(null);
     setErrorMessage(null);
-  }, [cleanupDownloadUrl]);
+  }, [cleanupDownloadUrl, revokePixelUrls]);
 
   const clearError = useCallback(() => {
     setErrorMessage(null);
@@ -97,7 +126,11 @@ export const useCompareOperation = (): CompareOperationHook => {
 
       return await new Promise<{
         tokens: CompareDiffToken[];
-        stats: { baseWordCount: number; comparisonWordCount: number; durationMs: number };
+        stats: {
+          baseWordCount: number;
+          comparisonWordCount: number;
+          durationMs: number;
+        };
         warnings: string[];
       }>((resolve, reject) => {
         const collectedWarnings: string[] = [];
@@ -106,7 +139,11 @@ export const useCompareOperation = (): CompareOperationHook => {
         const handleMessage = (event: MessageEvent<CompareWorkerResponse>) => {
           if (cancelledRef.current) {
             cleanup();
-            reject(Object.assign(new Error("Operation cancelled"), { code: "CANCELLED" as const }));
+            reject(
+              Object.assign(new Error("Operation cancelled"), {
+                code: "CANCELLED" as const,
+              }),
+            );
             return;
           }
           const message = event.data;
@@ -143,7 +180,9 @@ export const useCompareOperation = (): CompareOperationHook => {
                 dismissToast(longRunningToastIdRef.current);
                 longRunningToastIdRef.current = null;
               }
-              const error: Error & { code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" } = new Error(message.message);
+              const error: Error & {
+                code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR";
+              } = new Error(message.message);
               error.code = message.code;
               reject(error);
               break;
@@ -156,7 +195,11 @@ export const useCompareOperation = (): CompareOperationHook => {
         const handleError = (event: ErrorEvent) => {
           cleanup();
           if (cancelledRef.current) {
-            reject(Object.assign(new Error("Operation cancelled"), { code: "CANCELLED" as const }));
+            reject(
+              Object.assign(new Error("Operation cancelled"), {
+                code: "CANCELLED" as const,
+              }),
+            );
           } else {
             reject(event.error ?? new Error(event.message));
           }
@@ -197,16 +240,29 @@ export const useCompareOperation = (): CompareOperationHook => {
       const runId = ++activeRunIdRef.current;
       cancelledRef.current = false;
       if (!params.baseFileId || !params.comparisonFileId) {
-        setErrorMessage(t("compare.error.selectRequired", "Select the original and edited document."));
+        setErrorMessage(
+          t(
+            "compare.error.selectRequired",
+            "Select the original and edited document.",
+          ),
+        );
         return;
       }
 
-      const baseFile = selectedFiles.find((file) => file.fileId === params.baseFileId) ?? selectors.getFile(params.baseFileId);
+      const baseFile =
+        selectedFiles.find((file) => file.fileId === params.baseFileId) ??
+        selectors.getFile(params.baseFileId);
       const comparisonFile =
-        selectedFiles.find((file) => file.fileId === params.comparisonFileId) ?? selectors.getFile(params.comparisonFileId);
+        selectedFiles.find((file) => file.fileId === params.comparisonFileId) ??
+        selectors.getFile(params.comparisonFileId);
 
       if (!baseFile || !comparisonFile) {
-        setErrorMessage(t("compare.error.filesMissing", "Unable to locate the selected files. Please re-select them."));
+        setErrorMessage(
+          t(
+            "compare.error.filesMissing",
+            "Unable to locate the selected files. Please re-select them.",
+          ),
+        );
         return;
       }
 
@@ -215,11 +271,78 @@ export const useCompareOperation = (): CompareOperationHook => {
       setStatusDetailMs(null);
       setErrorMessage(null);
       setWarnings([]);
+      revokePixelUrls();
       setResult(null);
       setFiles([]);
+      setPixelProgress(null);
       cleanupDownloadUrl();
       setDownloadUrl(null);
       setDownloadFilename("");
+
+      if (params.mode === "pixel") {
+        const operationStartPx = performance.now();
+        pixelSignalRef.current = { cancelled: false };
+        try {
+          setStatusState("processing");
+          const pixelResult = await runPixelCompare({
+            baseFile,
+            comparisonFile,
+            baseFileId: baseFile.fileId,
+            comparisonFileId: comparisonFile.fileId,
+            dpi: params.pixelDpi,
+            threshold: params.pixelThreshold,
+            onProgress: (current, total) => {
+              if (activeRunIdRef.current === runId)
+                setPixelProgress({ current, total });
+            },
+            signal: pixelSignalRef.current,
+            warnings: {
+              pageCountMismatch: t(
+                "compare.pixel.warnings.pageCountMismatch",
+                "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added.",
+              ),
+              noPages: t(
+                "compare.pixel.warnings.noPages",
+                "One or both documents have no pages.",
+              ),
+            },
+            errors: {
+              canvasContextUnavailable: t(
+                "compare.pixel.errors.canvasContextUnavailable",
+                "Unable to acquire 2D canvas context for pixel comparison.",
+              ),
+            },
+          });
+          if (cancelledRef.current || activeRunIdRef.current !== runId) {
+            revokePixelResult(pixelResult);
+            return;
+          }
+          pixelResultRef.current = pixelResult;
+          setResult(pixelResult);
+          setWarnings(pixelResult.warnings);
+          setStatusState("complete");
+        } catch (error: unknown) {
+          if (error instanceof Error && error.message === "CANCELLED") {
+            setStatusState("cancelled");
+          } else {
+            console.error("[compare] pixel operation failed", error);
+            const fallback = t(
+              "compare.error.generic",
+              "Unable to compare these files.",
+            );
+            setErrorMessage(
+              error instanceof Error && error.message
+                ? error.message
+                : fallback,
+            );
+          }
+        } finally {
+          setStatusDetailMs(Math.round(performance.now() - operationStartPx));
+          setIsLoading(false);
+          setPixelProgress(null);
+        }
+        return;
+      }
 
       const warningMessages: CompareWorkerWarnings = {
         // No accuracy warning any more
@@ -247,23 +370,42 @@ export const useCompareOperation = (): CompareOperationHook => {
 
         if (cancelledRef.current || activeRunIdRef.current !== runId) return;
 
-        if (baseContent.tokens.length === 0 || comparisonContent.tokens.length === 0) {
-          throw Object.assign(new Error(warningMessages.emptyTextMessage), { code: "EMPTY_TEXT" });
+        if (
+          baseContent.tokens.length === 0 ||
+          comparisonContent.tokens.length === 0
+        ) {
+          throw Object.assign(new Error(warningMessages.emptyTextMessage), {
+            code: "EMPTY_TEXT",
+          });
         }
 
         setStatusState("processing");
 
         // Filter out paragraph sentinels before diffing to avoid large false-positive runs
-        const baseFiltered = filterTokensForDiff(baseContent.tokens, baseContent.metadata);
-        const comparisonFiltered = filterTokensForDiff(comparisonContent.tokens, comparisonContent.metadata);
+        const baseFiltered = filterTokensForDiff(
+          baseContent.tokens,
+          baseContent.metadata,
+        );
+        const comparisonFiltered = filterTokensForDiff(
+          comparisonContent.tokens,
+          comparisonContent.metadata,
+        );
 
-        const combinedPageCount = (baseContent.pageSizes?.length ?? 0) + (comparisonContent.pageSizes?.length ?? 0);
+        const combinedPageCount =
+          (baseContent.pageSizes?.length ?? 0) +
+          (comparisonContent.pageSizes?.length ?? 0);
 
-        if (combinedPageCount >= LONG_RUNNING_PAGE_THRESHOLD && !longRunningToastIdRef.current) {
+        if (
+          combinedPageCount >= LONG_RUNNING_PAGE_THRESHOLD &&
+          !longRunningToastIdRef.current
+        ) {
           const toastId = alert({
             alertType: "neutral",
             title: t("compare.longJob.title", "Large comparison in progress"),
-            body: t("compare.longJob.body", "These PDFs together exceed 2,000 pages. Processing can take several minutes."),
+            body: t(
+              "compare.longJob.body",
+              "These PDFs together exceed 2,000 pages. Processing can take several minutes.",
+            ),
             location: "bottom-right" as ToastLocation,
             isPersistentPopup: true,
             expandable: false,
@@ -278,10 +420,17 @@ export const useCompareOperation = (): CompareOperationHook => {
         let observedUnchanged = 0;
 
         const handleEarlyDissimilarity = () => {
-          if (dissimilarityToastShownRef.current || dissimilarityToastIdRef.current) return;
+          if (
+            dissimilarityToastShownRef.current ||
+            dissimilarityToastIdRef.current
+          )
+            return;
           const toastId = alert({
             alertType: "warning",
-            title: t("compare.earlyDissimilarity.title", "These PDFs look highly different"),
+            title: t(
+              "compare.earlyDissimilarity.title",
+              "These PDFs look highly different",
+            ),
             body: t(
               "compare.earlyDissimilarity.body",
               "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
@@ -289,7 +438,10 @@ export const useCompareOperation = (): CompareOperationHook => {
             location: "bottom-right" as ToastLocation,
             isPersistentPopup: true,
             expandable: false,
-            buttonText: t("compare.earlyDissimilarity.stopButton", "Stop comparison"),
+            buttonText: t(
+              "compare.earlyDissimilarity.stopButton",
+              "Stop comparison",
+            ),
             buttonCallback: () => {
               try {
                 cancelOperation();
@@ -315,26 +467,35 @@ export const useCompareOperation = (): CompareOperationHook => {
           tokens,
           stats,
           warnings: workerWarnings,
-        } = await runCompareWorker(baseFiltered.tokens, comparisonFiltered.tokens, warningMessages, (chunk) => {
-          // Incremental ratio tracking for early warning
-          for (const tok of chunk) {
-            if (tok.type === "unchanged") observedUnchanged += 1;
-            else observedAddedRemoved += 1;
-          }
-          const seen = observedAddedRemoved + observedUnchanged;
-          if (
-            !dissimilarityToastShownRef.current &&
-            seen >= EARLY_TOAST_MIN_TOKENS &&
-            observedAddedRemoved / Math.max(1, seen) >= EARLY_TOAST_DIFF_RATIO
-          ) {
-            handleEarlyDissimilarity();
-          }
-        });
+        } = await runCompareWorker(
+          baseFiltered.tokens,
+          comparisonFiltered.tokens,
+          warningMessages,
+          (chunk) => {
+            // Incremental ratio tracking for early warning
+            for (const tok of chunk) {
+              if (tok.type === "unchanged") observedUnchanged += 1;
+              else observedAddedRemoved += 1;
+            }
+            const seen = observedAddedRemoved + observedUnchanged;
+            if (
+              !dissimilarityToastShownRef.current &&
+              seen >= EARLY_TOAST_MIN_TOKENS &&
+              observedAddedRemoved / Math.max(1, seen) >= EARLY_TOAST_DIFF_RATIO
+            ) {
+              handleEarlyDissimilarity();
+            }
+          },
+        );
 
         if (cancelledRef.current || activeRunIdRef.current !== runId) return;
 
-        const baseHasHighlight = new Array<boolean>(baseFiltered.tokens.length).fill(false);
-        const comparisonHasHighlight = new Array<boolean>(comparisonFiltered.tokens.length).fill(false);
+        const baseHasHighlight = new Array<boolean>(
+          baseFiltered.tokens.length,
+        ).fill(false);
+        const comparisonHasHighlight = new Array<boolean>(
+          comparisonFiltered.tokens.length,
+        ).fill(false);
 
         let baseTokenPointer = 0;
         let comparisonTokenPointer = 0;
@@ -385,6 +546,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         const changes = buildChanges(tokens, baseMetadata, comparisonMetadata);
 
         const comparisonResult: CompareResultData = {
+          mode: "text",
           base: {
             fileId: baseFile.fileId,
             fileName: baseFile.name,
@@ -410,8 +572,16 @@ export const useCompareOperation = (): CompareOperationHook => {
             comparison: comparisonMetadata,
           },
           filteredTokenData: {
-            base: buildFilteredTokenData(baseFiltered.tokens, baseFiltered.metadata, baseHasHighlight),
-            comparison: buildFilteredTokenData(comparisonFiltered.tokens, comparisonFiltered.metadata, comparisonHasHighlight),
+            base: buildFilteredTokenData(
+              baseFiltered.tokens,
+              baseFiltered.metadata,
+              baseHasHighlight,
+            ),
+            comparison: buildFilteredTokenData(
+              comparisonFiltered.tokens,
+              comparisonFiltered.metadata,
+              comparisonHasHighlight,
+            ),
           },
           sourceTokens: {
             base: baseContent.tokens,
@@ -440,9 +610,15 @@ export const useCompareOperation = (): CompareOperationHook => {
         console.error("[compare] operation failed", error);
         const errorCode = getWorkerErrorCode(error);
         if (errorCode === "EMPTY_TEXT") {
-          setErrorMessage(warningMessages.emptyTextMessage ?? t("compare.error.generic", "Unable to compare these files."));
+          setErrorMessage(
+            warningMessages.emptyTextMessage ??
+              t("compare.error.generic", "Unable to compare these files."),
+          );
         } else {
-          const fallbackMessage = t("compare.error.generic", "Unable to compare these files.");
+          const fallbackMessage = t(
+            "compare.error.generic",
+            "Unable to compare these files.",
+          );
           if (error instanceof Error && error.message) {
             setErrorMessage(error.message);
           } else if (typeof error === "string" && error.trim().length > 0) {
@@ -472,8 +648,10 @@ export const useCompareOperation = (): CompareOperationHook => {
   const cancelOperation = useCallback(() => {
     if (!isLoading) return;
     cancelledRef.current = true;
+    pixelSignalRef.current.cancelled = true;
     setIsLoading(false);
     setStatusState("cancelled");
+    setPixelProgress(null);
     if (workerRef.current) {
       try {
         workerRef.current.terminate();
@@ -494,6 +672,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   useEffect(() => {
     return () => {
       cleanupDownloadUrl();
+      revokePixelUrls();
       if (workerRef.current) {
         workerRef.current.terminate();
         workerRef.current = null;
@@ -503,7 +682,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         longRunningToastIdRef.current = null;
       }
     };
-  }, [cleanupDownloadUrl]);
+  }, [cleanupDownloadUrl, revokePixelUrls]);
 
   const status = useMemo(() => {
     const label =
@@ -518,7 +697,8 @@ export const useCompareOperation = (): CompareOperationHook => {
               : statusState === "cancelled"
                 ? t("operationCancelled", "Operation cancelled")
                 : "";
-    if (label && statusDetailMs != null) return `${label} (${statusDetailMs} ms)`;
+    if (label && statusDetailMs != null)
+      return `${label} (${statusDetailMs} ms)`;
     return label;
   }, [statusState, statusDetailMs, t]);
 
@@ -540,6 +720,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       undoOperation,
       result,
       warnings,
+      pixelProgress,
     }),
     [
       cancelOperation,
@@ -550,6 +731,7 @@ export const useCompareOperation = (): CompareOperationHook => {
       executeOperation,
       files,
       isLoading,
+      pixelProgress,
       resetResults,
       result,
       status,

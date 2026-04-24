@@ -22,7 +22,10 @@ export class EndpointAvailabilityService {
    * @param backendUrl - The URL for the backend
    * @returns Promise<boolean> - true if supported locally, false otherwise
    */
-  async isEndpointSupportedLocally(endpoint: string, backendUrl: string | null): Promise<boolean> {
+  async isEndpointSupportedLocally(
+    endpoint: string,
+    backendUrl: string | null,
+  ): Promise<boolean> {
     // Check cache first
     const cached = this.localCache.get(endpoint);
     const expiry = this.localCacheExpiry.get(endpoint);
@@ -48,7 +51,9 @@ export class EndpointAvailabilityService {
       });
 
       if (!response.ok) {
-        console.warn(`[endpointAvailabilityService] Failed to check local endpoint availability: ${response.status}`);
+        console.warn(
+          `[endpointAvailabilityService] Failed to check local endpoint availability: ${response.status}`,
+        );
         return false;
       }
 
@@ -61,7 +66,10 @@ export class EndpointAvailabilityService {
 
       return available;
     } catch (error) {
-      console.error(`[endpointAvailabilityService] Error checking local endpoint availability:`, error);
+      console.error(
+        `[endpointAvailabilityService] Error checking local endpoint availability:`,
+        error,
+      );
       return false; // Assume not supported on error
     }
   }
@@ -99,7 +107,9 @@ export class EndpointAvailabilityService {
       });
 
       if (!response.ok) {
-        console.warn(`[endpointAvailabilityService] Failed to check SaaS endpoint availability: ${response.status}`);
+        console.warn(
+          `[endpointAvailabilityService] Failed to check SaaS endpoint availability: ${response.status}`,
+        );
         return false;
       }
 
@@ -112,7 +122,10 @@ export class EndpointAvailabilityService {
 
       return available;
     } catch (error) {
-      console.error(`[endpointAvailabilityService] Error checking SaaS endpoint availability:`, error);
+      console.error(
+        `[endpointAvailabilityService] Error checking SaaS endpoint availability:`,
+        error,
+      );
       return false; // Assume not supported on error
     }
   }
@@ -138,7 +151,9 @@ export class EndpointAvailabilityService {
     this.localCache.forEach((available, endpoint) => {
       const expiry = this.localCacheExpiry.get(endpoint);
       const expiresIn = expiry ? Math.max(0, expiry - Date.now()) : 0;
-      console.log(`${endpoint}: ${available} (expires in ${Math.round(expiresIn / 1000)}s)`);
+      console.log(
+        `${endpoint}: ${available} (expires in ${Math.round(expiresIn / 1000)}s)`,
+      );
     });
     console.groupEnd();
 
@@ -146,7 +161,9 @@ export class EndpointAvailabilityService {
     this.saasCache.forEach((available, endpoint) => {
       const expiry = this.saasCacheExpiry.get(endpoint);
       const expiresIn = expiry ? Math.max(0, expiry - Date.now()) : 0;
-      console.log(`${endpoint}: ${available} (expires in ${Math.round(expiresIn / 1000)}s)`);
+      console.log(
+        `${endpoint}: ${available} (expires in ${Math.round(expiresIn / 1000)}s)`,
+      );
     });
     console.groupEnd();
 
@@ -160,7 +177,10 @@ export class EndpointAvailabilityService {
    * @param endpoints - Array of endpoint paths to check
    * @param backendUrl - The URL of the backend
    */
-  async preloadEndpoints(endpoints: string[], backendUrl: string | null): Promise<void> {
+  async preloadEndpoints(
+    endpoints: string[],
+    backendUrl: string | null,
+  ): Promise<void> {
     if (!backendUrl || endpoints.length === 0) {
       return;
     }
@@ -180,16 +200,24 @@ export class EndpointAvailabilityService {
         const data = await response.json();
         const now = Date.now();
 
-        Object.entries(data).forEach(([endpoint, details]: [string, any]) => {
-          const available = details?.enabled ?? false;
-          this.localCache.set(endpoint, available);
-          this.localCacheExpiry.set(endpoint, now + this.CACHE_DURATION);
-        });
+        Object.entries(data).forEach(
+          ([endpoint, details]: [string, unknown]) => {
+            const available =
+              (details as { enabled?: boolean })?.enabled ?? false;
+            this.localCache.set(endpoint, available);
+            this.localCacheExpiry.set(endpoint, now + this.CACHE_DURATION);
+          },
+        );
       } else {
-        console.warn(`[endpointAvailabilityService] Failed to preload endpoints: ${response.status}`);
+        console.warn(
+          `[endpointAvailabilityService] Failed to preload endpoints: ${response.status}`,
+        );
       }
     } catch (error) {
-      console.error("[endpointAvailabilityService] Error preloading endpoints:", error);
+      console.error(
+        "[endpointAvailabilityService] Error preloading endpoints:",
+        error,
+      );
     }
   }
 
@@ -229,28 +257,46 @@ export class EndpointAvailabilityService {
    * Get cache statistics (useful for debugging)
    */
   getCacheStats(): {
-    local: { size: number; entries: Array<{ endpoint: string; available: boolean; expiresIn: number }> };
-    saas: { size: number; entries: Array<{ endpoint: string; available: boolean; expiresIn: number }> };
+    local: {
+      size: number;
+      entries: Array<{
+        endpoint: string;
+        available: boolean;
+        expiresIn: number;
+      }>;
+    };
+    saas: {
+      size: number;
+      entries: Array<{
+        endpoint: string;
+        available: boolean;
+        expiresIn: number;
+      }>;
+    };
   } {
     const now = Date.now();
 
-    const localEntries = Array.from(this.localCache.entries()).map(([endpoint, available]) => {
-      const expiry = this.localCacheExpiry.get(endpoint) ?? 0;
-      return {
-        endpoint,
-        available,
-        expiresIn: Math.max(0, expiry - now),
-      };
-    });
+    const localEntries = Array.from(this.localCache.entries()).map(
+      ([endpoint, available]) => {
+        const expiry = this.localCacheExpiry.get(endpoint) ?? 0;
+        return {
+          endpoint,
+          available,
+          expiresIn: Math.max(0, expiry - now),
+        };
+      },
+    );
 
-    const saasEntries = Array.from(this.saasCache.entries()).map(([endpoint, available]) => {
-      const expiry = this.saasCacheExpiry.get(endpoint) ?? 0;
-      return {
-        endpoint,
-        available,
-        expiresIn: Math.max(0, expiry - now),
-      };
-    });
+    const saasEntries = Array.from(this.saasCache.entries()).map(
+      ([endpoint, available]) => {
+        const expiry = this.saasCacheExpiry.get(endpoint) ?? 0;
+        return {
+          endpoint,
+          available,
+          expiresIn: Math.max(0, expiry - now),
+        };
+      },
+    );
 
     return {
       local: {
@@ -270,5 +316,5 @@ export const endpointAvailabilityService = new EndpointAvailabilityService();
 
 // Expose to window for debugging
 if (typeof window !== "undefined") {
-  (window as any).endpointAvailabilityService = endpointAvailabilityService;
+  window.endpointAvailabilityService = endpointAvailabilityService;
 }

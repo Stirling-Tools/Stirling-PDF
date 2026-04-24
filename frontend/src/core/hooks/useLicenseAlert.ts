@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { UPGRADE_BANNER_ALERT_EVENT, type UpgradeBannerAlertPayload } from "@app/constants/events";
+import {
+  UPGRADE_BANNER_ALERT_EVENT,
+  type UpgradeBannerAlertPayload,
+} from "@app/constants/events";
 
 export interface LicenseAlertState {
   active: boolean;
@@ -29,7 +32,8 @@ export function useLicenseAlert(): LicenseAlertState {
         setState({
           active: true,
           audience: detail.audience ?? "user",
-          totalUsers: typeof detail.totalUsers === "number" ? detail.totalUsers : null,
+          totalUsers:
+            typeof detail.totalUsers === "number" ? detail.totalUsers : null,
           freeTierLimit: detail.freeTierLimit ?? 5,
         });
       } else {
@@ -37,10 +41,16 @@ export function useLicenseAlert(): LicenseAlertState {
       }
     };
 
-    window.addEventListener(UPGRADE_BANNER_ALERT_EVENT, handleAlert as EventListener);
+    window.addEventListener(
+      UPGRADE_BANNER_ALERT_EVENT,
+      handleAlert as EventListener,
+    );
 
     return () => {
-      window.removeEventListener(UPGRADE_BANNER_ALERT_EVENT, handleAlert as EventListener);
+      window.removeEventListener(
+        UPGRADE_BANNER_ALERT_EVENT,
+        handleAlert as EventListener,
+      );
     };
   }, []);
 

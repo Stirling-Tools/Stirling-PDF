@@ -6,6 +6,7 @@ import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { BaseToolProps } from "@app/types/tool";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import type {
   AnnotationToolId,
@@ -65,7 +66,9 @@ const KNOWN_ANNOTATION_TOOLS: AnnotationToolId[] = [
   "signatureInk",
 ];
 
-const isKnownAnnotationTool = (toolId: string | undefined | null): toolId is AnnotationToolId =>
+const isKnownAnnotationTool = (
+  toolId: string | undefined | null,
+): toolId is AnnotationToolId =>
   !!toolId && (KNOWN_ANNOTATION_TOOLS as string[]).includes(toolId);
 
 const Annotate = (_props: BaseToolProps) => {
@@ -83,13 +86,20 @@ const Annotate = (_props: BaseToolProps) => {
     placementPreviewSize,
     setPlacementPreviewSize,
   } = useSignature();
+  const { activateAnnotationToolRef } = useAnnotationContext();
   const viewerContext = useContext(ViewerContext);
   const viewerContextRef = useRef(viewerContext);
   useEffect(() => {
     viewerContextRef.current = viewerContext;
   }, [viewerContext]);
-  const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex, panActions, setCommentsSidebarVisible } =
-    useViewer();
+  const {
+    getZoomState,
+    registerImmediateZoomUpdate,
+    applyChanges,
+    activeFileIndex,
+    panActions,
+    setCommentsSidebarVisible,
+  } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>("select");
 
@@ -100,8 +110,14 @@ const Annotate = (_props: BaseToolProps) => {
   const [selectedTextDraft, setSelectedTextDraft] = useState<string>("");
   const [selectedFontSize, setSelectedFontSize] = useState<number>(14);
   const [stampImageData, setStampImageData] = useState<string | undefined>();
-  const [stampImageSize, setStampImageSize] = useState<{ width: number; height: number } | null>(null);
-  const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
+  const [stampImageSize, setStampImageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [historyAvailability, setHistoryAvailability] = useState({
+    canUndo: false,
+    canRedo: false,
+  });
   const manualToolSwitch = useRef<boolean>(false);
 
   // Zoom tracking for stamp size conversion
@@ -137,22 +153,26 @@ const Annotate = (_props: BaseToolProps) => {
     [currentZoom],
   );
 
-  const computeStampDisplaySize = useCallback((natural: { width: number; height: number } | null) => {
-    if (!natural) {
-      return { width: 180, height: 120 };
-    }
-    const maxSide = 260;
-    const minSide = 24;
-    const { width, height } = natural;
-    const largest = Math.max(width || maxSide, height || maxSide, 1);
-    const scale = Math.min(1, maxSide / largest);
-    return {
-      width: Math.max(minSide, Math.round(width * scale)),
-      height: Math.max(minSide, Math.round(height * scale)),
-    };
-  }, []);
+  const computeStampDisplaySize = useCallback(
+    (natural: { width: number; height: number } | null) => {
+      if (!natural) {
+        return { width: 180, height: 120 };
+      }
+      const maxSide = 260;
+      const minSide = 24;
+      const { width, height } = natural;
+      const largest = Math.max(width || maxSide, height || maxSide, 1);
+      const scale = Math.min(1, maxSide / largest);
+      return {
+        width: Math.max(minSide, Math.round(width * scale)),
+        height: Math.max(minSide, Math.round(height * scale)),
+      };
+    },
+    [],
+  );
 
-  const { styleState, styleActions, buildToolOptions, getActiveColor } = useAnnotationStyleState(cssToPdfSize);
+  const { styleState, styleActions, buildToolOptions, getActiveColor } =
+    useAnnotationStyleState(cssToPdfSize);
 
   const {
     setInkWidth,
@@ -196,7 +216,8 @@ const Annotate = (_props: BaseToolProps) => {
   }, []);
 
   useEffect(() => {
-    const isAnnotateActive = workbench === "viewer" && selectedTool === "annotate";
+    const isAnnotateActive =
+      workbench === "viewer" && selectedTool === "annotate";
     if (wasAnnotateActiveRef.current && !isAnnotateActive) {
       annotationApiRef?.current?.deactivateTools?.();
       signatureApiRef?.current?.deactivateTools?.();
@@ -208,10 +229,21 @@ const Annotate = (_props: BaseToolProps) => {
       setActiveTool("select");
       activeToolRef.current = "select";
       const toolOptions = buildToolOptions("select");
-      annotationApiRef?.current?.activateAnnotationTool?.("select", toolOptions);
+      annotationApiRef?.current?.activateAnnotationTool?.(
+        "select",
+        toolOptions,
+      );
     }
     wasAnnotateActiveRef.current = isAnnotateActive;
-  }, [workbench, selectedTool, annotationApiRef, signatureApiRef, setPlacementMode, buildToolOptions, viewerContext]);
+  }, [
+    workbench,
+    selectedTool,
+    annotationApiRef,
+    signatureApiRef,
+    setPlacementMode,
+    buildToolOptions,
+    viewerContext,
+  ]);
 
   // Monitor history state for undo/redo availability
   useEffect(() => {
@@ -251,9 +283,21 @@ const Annotate = (_props: BaseToolProps) => {
 
     viewerContext.setAnnotationMode(true);
     const toolOptions =
-      activeTool === "stamp" ? buildToolOptions("stamp", { stampImageData, stampImageSize }) : buildToolOptions(activeTool);
-    annotationApiRef?.current?.activateAnnotationTool?.(activeTool, toolOptions);
-  }, [viewerContext?.isAnnotationMode, signatureApiRef, activeTool, buildToolOptions, stampImageData, stampImageSize]);
+      activeTool === "stamp"
+        ? buildToolOptions("stamp", { stampImageData, stampImageSize })
+        : buildToolOptions(activeTool);
+    annotationApiRef?.current?.activateAnnotationTool?.(
+      activeTool,
+      toolOptions,
+    );
+  }, [
+    viewerContext?.isAnnotationMode,
+    signatureApiRef,
+    activeTool,
+    buildToolOptions,
+    stampImageData,
+    stampImageSize,
+  ]);
 
   // Reset to 'select' mode when switching between files
   // The new PDF gets a fresh EmbedPDF instance - forcing user to re-select tool ensures it works properly
@@ -311,11 +355,16 @@ const Annotate = (_props: BaseToolProps) => {
     // Change the tool
     setActiveTool(toolId);
     const options =
-      toolId === "stamp" ? buildToolOptions("stamp", { stampImageData, stampImageSize }) : buildToolOptions(toolId);
+      toolId === "stamp"
+        ? buildToolOptions("stamp", { stampImageData, stampImageSize })
+        : buildToolOptions(toolId);
 
     // For stamp, apply the image if we have one
     annotationApiRef?.current?.setAnnotationStyle?.(toolId, options);
-    annotationApiRef?.current?.activateAnnotationTool?.(toolId === "stamp" ? "stamp" : toolId, options);
+    annotationApiRef?.current?.activateAnnotationTool?.(
+      toolId === "stamp" ? "stamp" : toolId,
+      options,
+    );
 
     // Auto-open comments sidebar when a comment tool is selected
     if (["textComment", "insertText", "replaceText"].includes(toolId)) {
@@ -328,15 +377,30 @@ const Annotate = (_props: BaseToolProps) => {
     }, 300);
   };
 
+  // Keep ref in sync so external callers (e.g. CommentsSidebar) get the latest closure
+  activateAnnotationToolRef.current = activateAnnotationTool;
+
   useEffect(() => {
     // push style updates to EmbedPDF when sliders/colors change
     if (activeTool === "stamp") {
-      const options = buildToolOptions("stamp", { stampImageData, stampImageSize });
+      const options = buildToolOptions("stamp", {
+        stampImageData,
+        stampImageSize,
+      });
       annotationApiRef?.current?.setAnnotationStyle?.("stamp", options);
     } else {
-      annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+      annotationApiRef?.current?.setAnnotationStyle?.(
+        activeTool,
+        buildToolOptions(activeTool),
+      );
     }
-  }, [activeTool, buildToolOptions, signatureApiRef, stampImageData, stampImageSize]);
+  }, [
+    activeTool,
+    buildToolOptions,
+    signatureApiRef,
+    stampImageData,
+    stampImageSize,
+  ]);
 
   // Sync preview size from overlay to annotation engine
   useEffect(() => {
@@ -345,31 +409,55 @@ const Annotate = (_props: BaseToolProps) => {
     // and apply the converted size to the stamp tool automatically
     if (activeTool === "stamp" && stampImageData) {
       const size = placementPreviewSize ?? stampImageSize;
-      const stampOptions = buildToolOptions("stamp", { stampImageData, stampImageSize: size ?? null });
+      const stampOptions = buildToolOptions("stamp", {
+        stampImageData,
+        stampImageSize: size ?? null,
+      });
       annotationApiRef?.current?.setAnnotationStyle?.("stamp", stampOptions);
     }
-  }, [placementPreviewSize, activeTool, stampImageData, signatureApiRef, stampImageSize, cssToPdfSize, buildToolOptions]);
+  }, [
+    placementPreviewSize,
+    activeTool,
+    stampImageData,
+    signatureApiRef,
+    stampImageSize,
+    cssToPdfSize,
+    buildToolOptions,
+  ]);
 
   // Auto-switch to 'select' after placing a note or text annotation
   // EmbedPDF fires 'create' + committed:true when placement is finalised
   useEffect(() => {
-    const unsubscribe = annotationApiRef?.current?.onAnnotationEvent?.((event: AnnotationEvent) => {
-      if (event.type === "create" && event.committed) {
-        const toolId = activeToolRef.current;
-        if (["text", "note", "textComment", "insertText", "replaceText"].includes(toolId)) {
-          setActiveTool("select");
-          activeToolRef.current = "select";
-          annotationApiRef?.current?.activateAnnotationTool?.("select");
+    const unsubscribe = annotationApiRef?.current?.onAnnotationEvent?.(
+      (event: AnnotationEvent) => {
+        if (event.type === "create" && event.committed) {
+          const toolId = activeToolRef.current;
+          if (
+            [
+              "text",
+              "note",
+              "textComment",
+              "insertText",
+              "replaceText",
+            ].includes(toolId)
+          ) {
+            setActiveTool("select");
+            activeToolRef.current = "select";
+            annotationApiRef?.current?.activateAnnotationTool?.("select");
+          }
         }
-      }
-    });
+      },
+    );
     return () => {
       if (typeof unsubscribe === "function") unsubscribe();
     };
   }, [annotationApiRef?.current]);
 
   // Clipboard ref for copy/paste — no re-render needed
-  const clipboardRef = useRef<{ pageIndex: number; annotation: Record<string, unknown> } | null>(null);
+  const clipboardRef = useRef<{
+    pageIndex: number;
+    annotation: Record<string, unknown>;
+  } | null>(null);
 
   // Click-outside to blur FreeText/note inline editing so user can then drag the annotation.
   // When clicking the selection menu (e.g. Properties), only blur — do not deselect so the menu/popover can respond.
@@ -387,7 +475,9 @@ const Annotate = (_props: BaseToolProps) => {
 
       active.blur();
 
-      const onSelectionMenu = (target as HTMLElement).closest?.("[data-annotation-selection-menu]");
+      const onSelectionMenu = (target as HTMLElement).closest?.(
+        "[data-annotation-selection-menu]",
+      );
       if (onSelectionMenu) return;
 
       const pageParent = pageEl.parentElement;
@@ -413,7 +503,11 @@ const Annotate = (_props: BaseToolProps) => {
       const el = document.activeElement;
       if (!el) return false;
       const tag = (el as HTMLElement).tagName;
-      return tag === "INPUT" || tag === "TEXTAREA" || (el as HTMLElement).isContentEditable;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        (el as HTMLElement).isContentEditable
+      );
     };
 
     const handler = (e: KeyboardEvent) => {
@@ -421,7 +515,8 @@ const Annotate = (_props: BaseToolProps) => {
 
       // Backspace / Delete: delete selected annotation(s)
       if (e.key === "Backspace" || e.key === "Delete") {
-        const multiSelected = annotationApiRef?.current?.getSelectedAnnotations?.();
+        const multiSelected =
+          annotationApiRef?.current?.getSelectedAnnotations?.();
         if (multiSelected && multiSelected.length > 0) {
           e.preventDefault();
           const toDelete = multiSelected
@@ -438,25 +533,39 @@ const Annotate = (_props: BaseToolProps) => {
           }
           return;
         }
-        const selected: AnnotationSelection | null = annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
+        const selected: AnnotationSelection | null =
+          annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
         if (!selected) return;
         e.preventDefault();
-        const pageIndex: number = selected.pageIndex ?? selected.object?.pageIndex ?? 0;
-        const annotationId: string = selected.id ?? selected.object?.id ?? selected.uid ?? selected.object?.uid ?? "";
+        const pageIndex: number =
+          selected.pageIndex ?? selected.object?.pageIndex ?? 0;
+        const annotationId: string =
+          selected.id ??
+          selected.object?.id ??
+          selected.uid ??
+          selected.object?.uid ??
+          "";
         if (annotationId != null) {
-          annotationApiRef?.current?.deleteAnnotation?.(pageIndex, annotationId);
+          annotationApiRef?.current?.deleteAnnotation?.(
+            pageIndex,
+            annotationId,
+          );
         }
         return;
       }
 
       // Ctrl+C: copy selected annotation
       if ((e.ctrlKey || e.metaKey) && e.key === "c") {
-        const selected: AnnotationSelection | null = annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
+        const selected: AnnotationSelection | null =
+          annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
         if (!selected) return;
         e.preventDefault();
         const ann = selected.object ?? selected;
         const pageIndex: number = ann.pageIndex ?? 0;
-        clipboardRef.current = { pageIndex, annotation: { ...(ann as Record<string, unknown>) } };
+        clipboardRef.current = {
+          pageIndex,
+          annotation: { ...(ann as Record<string, unknown>) },
+        };
         return;
       }
 
@@ -497,9 +606,13 @@ const Annotate = (_props: BaseToolProps) => {
   }, [buildToolOptions, annotationApiRef]);
 
   const deriveToolFromAnnotation = useCallback(
-    (annotation: AnnotationSelection | null | undefined): AnnotationToolId | undefined => {
+    (
+      annotation: AnnotationSelection | null | undefined,
+    ): AnnotationToolId | undefined => {
       if (!annotation) return undefined;
-      const customToolId = annotation.customData?.toolId || annotation.customData?.annotationToolId;
+      const customToolId =
+        annotation.customData?.toolId ||
+        annotation.customData?.annotationToolId;
       if (isKnownAnnotationTool(customToolId)) {
         return customToolId;
       }
@@ -537,35 +650,36 @@ const Annotate = (_props: BaseToolProps) => {
     [],
   );
 
-  const { selectedAnn, setSelectedAnn, setSelectedAnnId } = useAnnotationSelection({
-    annotationApiRef,
-    deriveToolFromAnnotation,
-    activeToolRef,
-    setActiveTool,
-    setSelectedTextDraft,
-    setSelectedFontSize,
-    setInkWidth,
-    setShapeThickness,
-    setTextColor,
-    setTextBackgroundColor,
-    setNoteBackgroundColor,
-    setInkColor,
-    setHighlightColor,
-    setHighlightOpacity,
-    setFreehandHighlighterWidth,
-    setUnderlineColor,
-    setUnderlineOpacity,
-    setStrikeoutColor,
-    setStrikeoutOpacity,
-    setSquigglyColor,
-    setSquigglyOpacity,
-    setShapeStrokeColor,
-    setShapeFillColor,
-    setShapeOpacity,
-    setShapeStrokeOpacity,
-    setShapeFillOpacity,
-    setTextAlignment,
-  });
+  const { selectedAnn, setSelectedAnn, setSelectedAnnId } =
+    useAnnotationSelection({
+      annotationApiRef,
+      deriveToolFromAnnotation,
+      activeToolRef,
+      setActiveTool,
+      setSelectedTextDraft,
+      setSelectedFontSize,
+      setInkWidth,
+      setShapeThickness,
+      setTextColor,
+      setTextBackgroundColor,
+      setNoteBackgroundColor,
+      setInkColor,
+      setHighlightColor,
+      setHighlightOpacity,
+      setFreehandHighlighterWidth,
+      setUnderlineColor,
+      setUnderlineOpacity,
+      setStrikeoutColor,
+      setStrikeoutOpacity,
+      setSquigglyColor,
+      setSquigglyOpacity,
+      setShapeStrokeColor,
+      setShapeFillColor,
+      setShapeOpacity,
+      setShapeStrokeOpacity,
+      setShapeFillOpacity,
+      setTextAlignment,
+    });
 
   const steps =
     selectedFiles.length === 0

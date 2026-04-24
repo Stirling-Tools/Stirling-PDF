@@ -1,11 +1,15 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface RemovePasswordParameters extends BaseParameters {
   password: string;
 }
 
-export type RemovePasswordParametersHook = BaseParametersHook<RemovePasswordParameters>;
+export type RemovePasswordParametersHook =
+  BaseParametersHook<RemovePasswordParameters>;
 
 export const defaultParameters: RemovePasswordParameters = {
   password: "",

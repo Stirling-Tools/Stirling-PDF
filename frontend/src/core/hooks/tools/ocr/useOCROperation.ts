@@ -1,7 +1,14 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { OCRParameters, defaultParameters } from "@app/hooks/tools/ocr/useOCRParameters";
-import { useToolOperation, ToolOperationConfig, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  OCRParameters,
+  defaultParameters,
+} from "@app/hooks/tools/ocr/useOCRParameters";
+import {
+  useToolOperation,
+  ToolOperationConfig,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
@@ -42,7 +49,10 @@ function stripExt(name: string): string {
 }
 
 // Static function that can be used by both the hook and automation executor
-export const buildOCRFormData = (parameters: OCRParameters, file: File): FormData => {
+export const buildOCRFormData = (
+  parameters: OCRParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   parameters.languages.forEach((lang) => formData.append("languages", lang));
@@ -54,7 +64,10 @@ export const buildOCRFormData = (parameters: OCRParameters, file: File): FormDat
   formData.append("deskew", options.includes("deskew").toString());
   formData.append("clean", options.includes("clean").toString());
   formData.append("cleanFinal", options.includes("cleanFinal").toString());
-  formData.append("removeImagesAfter", options.includes("removeImagesAfter").toString());
+  formData.append(
+    "removeImagesAfter",
+    options.includes("removeImagesAfter").toString(),
+  );
   return formData;
 };
 
@@ -96,7 +109,9 @@ export const ocrResponseHandler = async (
         );
       }
       const title =
-        text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] || "Unknown error";
+        text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ||
+        text.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] ||
+        "Unknown error";
       throw new Error(`OCR service error: ${title}`);
     }
     throw new Error(`Response is not a valid PDF. Header: "${head}"`);
@@ -133,9 +148,12 @@ export const useOCROperation = () => {
     ...ocrOperationConfig,
     responseHandler,
     getErrorMessage: (error) =>
-      error.message?.includes("OCR tools") && error.message?.includes("not installed")
+      error.message?.includes("OCR tools") &&
+      error.message?.includes("not installed")
         ? "OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually."
-        : createStandardErrorHandler(t("ocr.error.failed", "OCR operation failed"))(error),
+        : createStandardErrorHandler(
+            t("ocr.error.failed", "OCR operation failed"),
+          )(error),
   };
 
   return useToolOperation(ocrConfig);

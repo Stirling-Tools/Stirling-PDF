@@ -5,11 +5,18 @@ import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxH
 
 interface ExtractPagesSettingsProps {
   parameters: ExtractPagesParameters;
-  onParameterChange: <K extends keyof ExtractPagesParameters>(key: K, value: ExtractPagesParameters[K]) => void;
+  onParameterChange: <K extends keyof ExtractPagesParameters>(
+    key: K,
+    value: ExtractPagesParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ExtractPagesSettings = ({ parameters, onParameterChange, disabled = false }: ExtractPagesSettingsProps) => {
+const ExtractPagesSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ExtractPagesSettingsProps) => {
   const { t } = useTranslation();
 
   const handleChange = (value: string) => {
@@ -22,11 +29,17 @@ const ExtractPagesSettings = ({ parameters, onParameterChange, disabled = false 
         label={t("extractPages.pageNumbers.label", "Pages to Extract")}
         value={parameters.pageNumbers || ""}
         onChange={(event) => handleChange(event.currentTarget.value)}
-        placeholder={t("extractPages.pageNumbers.placeholder", "e.g., 1,3,5-8 or odd & 1-10")}
+        placeholder={t(
+          "extractPages.pageNumbers.placeholder",
+          "e.g., 1,3,5-8 or odd & 1-10",
+        )}
         disabled={disabled}
         required
       />
-      <PageSelectionSyntaxHint input={parameters.pageNumbers || ""} variant="compact" />
+      <PageSelectionSyntaxHint
+        input={parameters.pageNumbers || ""}
+        variant="compact"
+      />
     </Stack>
   );
 };

@@ -6,7 +6,8 @@ import { openPlanSettings } from "@app/utils/appSettings";
 import type { ToolId } from "@app/types/toolId";
 
 export function useCreditCheck(operationType?: string, _endpoint?: string) {
-  const { hasSufficientCredits, isPro, creditBalance, refreshCredits } = useCredits();
+  const { hasSufficientCredits, isPro, creditBalance, refreshCredits } =
+    useCredits();
   const { t } = useTranslation();
 
   const checkCredits = useCallback(
@@ -32,16 +33,30 @@ export function useCreditCheck(operationType?: string, _endpoint?: string) {
         const error = t(
           "insufficientCredits",
           "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}",
-          { requiredCredits, currentBalance: creditCheck.currentBalance, shortfall },
+          {
+            requiredCredits,
+            currentBalance: creditCheck.currentBalance,
+            shortfall,
+          },
         );
-        const notice = t("noticeTopUpOrPlan", "Not enough credits, please top up or upgrade to a plan");
+        const notice = t(
+          "noticeTopUpOrPlan",
+          "Not enough credits, please top up or upgrade to a plan",
+        );
         openPlanSettings(notice);
         return error;
       }
 
       return null;
     },
-    [hasSufficientCredits, isPro, creditBalance, refreshCredits, operationType, t],
+    [
+      hasSufficientCredits,
+      isPro,
+      creditBalance,
+      refreshCredits,
+      operationType,
+      t,
+    ],
   );
 
   return { checkCredits };

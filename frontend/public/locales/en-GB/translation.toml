@@ -2648,6 +2648,23 @@ title = "Change Permissions"
 [changePermissions.tooltip.warning]
 text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
+[chat.progress]
+analyzing = "Analysing your request..."
+calling_engine = "AI is thinking..."
+executing_tool_generic = "Running tool..."
+executing_tool_generic_step = "Running tool (step {{step}} of {{total}})..."
+executing_tool_single = "Running {{tool}}..."
+executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
+extracting_content = "Extracting content from your documents..."
+processing = "Processing extracted content..."
+thinking = "Thinking..."
+
+[chat.toolsUsed]
+summary = "Ran {{count}} tools"
+summary_one = "Ran 1 tool"
+summary_other = "Ran {{count}} tools"
+unknownTool = "Unknown tool"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -2748,11 +2765,38 @@ message = "One or Both of the provided documents are too large to process"
 body = "These PDFs together exceed 2,000 pages. Processing can take several minutes."
 title = "Large comparison in progress"
 
+[compare.mode]
+pixel = "Pixel Comparison"
+text = "Text Comparison"
+
 [compare.no.text]
 message = "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
 
 [compare.original]
 label = "Original PDF"
+
+[compare.pixel]
+base = "Original"
+changed = "changed"
+comparison = "Edited"
+diff = "Differences"
+diffOnly = "Diff only"
+missingInBase = "Missing in original"
+missingInComparison = "Missing in edited"
+overall = "overall"
+overlay = "Overlay"
+pageLabel = "Page"
+pagesChanged = "pages changed"
+sideBySide = "Side-by-side"
+sizeMismatch = "Size mismatch"
+summaryTitle = "Pixel comparison"
+
+[compare.pixel.errors]
+canvasContextUnavailable = "Unable to acquire 2D canvas context for pixel comparison."
+
+[compare.pixel.warnings]
+noPages = "One or both documents have no pages."
+pageCountMismatch = "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added."
 
 [compare.rendering]
 complete = "Page rendering complete"

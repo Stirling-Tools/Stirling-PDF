@@ -1,4 +1,11 @@
-import { Stack, TextInput, Checkbox, Anchor, Text, Select } from "@mantine/core";
+import {
+  Stack,
+  TextInput,
+  Checkbox,
+  Anchor,
+  Text,
+  Select,
+} from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
@@ -7,11 +14,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 export interface SplitSettingsProps {
   parameters: SplitParameters;
-  onParameterChange: <K extends keyof SplitParameters>(key: K, value: SplitParameters[K]) => void;
+  onParameterChange: <K extends keyof SplitParameters>(
+    key: K,
+    value: SplitParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const SplitSettings = ({ parameters, onParameterChange, disabled = false }: SplitSettingsProps) => {
+const SplitSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: SplitSettingsProps) => {
   const { t } = useTranslation();
 
   const renderByPagesForm = () => (
@@ -33,7 +47,10 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
         max="300"
         value={parameters.hDiv}
         onChange={(e) => onParameterChange("hDiv", e.target.value)}
-        placeholder={t("split-by-sections.horizontal.placeholder", "Enter number of horizontal divisions")}
+        placeholder={t(
+          "split-by-sections.horizontal.placeholder",
+          "Enter number of horizontal divisions",
+        )}
         disabled={disabled}
       />
       <TextInput
@@ -43,37 +60,69 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
         max="300"
         value={parameters.vDiv}
         onChange={(e) => onParameterChange("vDiv", e.target.value)}
-        placeholder={t("split-by-sections.vertical.placeholder", "Enter number of vertical divisions")}
+        placeholder={t(
+          "split-by-sections.vertical.placeholder",
+          "Enter number of vertical divisions",
+        )}
         disabled={disabled}
       />
       <Select
         label={t("split-by-sections.splitMode.label", "Split Mode")}
         value={parameters.splitMode || "SPLIT_ALL"}
-        onChange={(value) => onParameterChange("splitMode", value || "SPLIT_ALL")}
-        description={t("split-by-sections.splitMode.description", "Choose how to split the pages")}
+        onChange={(value) =>
+          onParameterChange("splitMode", value || "SPLIT_ALL")
+        }
+        description={t(
+          "split-by-sections.splitMode.description",
+          "Choose how to split the pages",
+        )}
         data={[
-          { value: "SPLIT_ALL", label: t("split-by-sections.splitMode.splitAll", "Split all pages") },
+          {
+            value: "SPLIT_ALL",
+            label: t("split-by-sections.splitMode.splitAll", "Split all pages"),
+          },
           {
             value: "SPLIT_ALL_EXCEPT_FIRST",
-            label: t("split-by-sections.splitMode.splitAllExceptFirst", "Split all except first"),
+            label: t(
+              "split-by-sections.splitMode.splitAllExceptFirst",
+              "Split all except first",
+            ),
           },
           {
             value: "SPLIT_ALL_EXCEPT_LAST",
-            label: t("split-by-sections.splitMode.splitAllExceptLast", "Split all except last"),
+            label: t(
+              "split-by-sections.splitMode.splitAllExceptLast",
+              "Split all except last",
+            ),
           },
           {
             value: "SPLIT_ALL_EXCEPT_FIRST_AND_LAST",
-            label: t("split-by-sections.splitMode.splitAllExceptFirstAndLast", "Split all except first and last"),
+            label: t(
+              "split-by-sections.splitMode.splitAllExceptFirstAndLast",
+              "Split all except first and last",
+            ),
           },
-          { value: "CUSTOM", label: t("split-by-sections.splitMode.custom", "Custom pages") },
+          {
+            value: "CUSTOM",
+            label: t("split-by-sections.splitMode.custom", "Custom pages"),
+          },
         ]}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
       {parameters.splitMode === "CUSTOM" && (
         <TextInput
-          label={t("split-by-sections.customPages.label", "Custom Page Numbers")}
-          placeholder={t("split-by-sections.customPages.placeholder", "e.g. 2,4,6")}
+          label={t(
+            "split-by-sections.customPages.label",
+            "Custom Page Numbers",
+          )}
+          placeholder={t(
+            "split-by-sections.customPages.placeholder",
+            "e.g. 2,4,6",
+          )}
           value={parameters.customPages || ""}
           onChange={(e) => onParameterChange("customPages", e.target.value)}
           disabled={disabled}
@@ -106,7 +155,10 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
         break;
       default:
         label = t("split-by-size-or-count.value.label", "Split Value");
-        placeholder = t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages");
+        placeholder = t(
+          "split-by-size-or-count.value.placeholder",
+          "e.g. 10MB or 5 pages",
+        );
     }
 
     return (
@@ -132,13 +184,20 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
       <Checkbox
         label={t("splitByChapters.includeMetadata", "Include Metadata")}
         checked={parameters.includeMetadata}
-        onChange={(e) => onParameterChange("includeMetadata", e.currentTarget.checked)}
+        onChange={(e) =>
+          onParameterChange("includeMetadata", e.currentTarget.checked)
+        }
         disabled={disabled}
       />
       <Checkbox
-        label={t("splitByChapters.allowDuplicates", "Allow Duplicate Bookmarks")}
+        label={t(
+          "splitByChapters.allowDuplicates",
+          "Allow Duplicate Bookmarks",
+        )}
         checked={parameters.allowDuplicates}
-        onChange={(e) => onParameterChange("allowDuplicates", e.currentTarget.checked)}
+        onChange={(e) =>
+          onParameterChange("allowDuplicates", e.currentTarget.checked)
+        }
         disabled={disabled}
       />
     </Stack>
@@ -153,13 +212,21 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
         style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
       >
         <LocalIcon icon="download-rounded" width="2rem" height="2rem" />
-        {t("autoSplitPDF.dividerDownload2", "Download 'Auto Splitter Divider (with instructions).pdf'")}
+        {t(
+          "autoSplitPDF.dividerDownload2",
+          "Download 'Auto Splitter Divider (with instructions).pdf'",
+        )}
       </Anchor>
 
       <Checkbox
-        label={t("autoSplitPDF.duplexMode", "Duplex Mode (Front and back scanning)")}
+        label={t(
+          "autoSplitPDF.duplexMode",
+          "Duplex Mode (Front and back scanning)",
+        )}
         checked={parameters.duplexMode}
-        onChange={(e) => onParameterChange("duplexMode", e.currentTarget.checked)}
+        onChange={(e) =>
+          onParameterChange("duplexMode", e.currentTarget.checked)
+        }
         disabled={disabled}
       />
     </Stack>
@@ -169,7 +236,10 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
     <Stack gap="sm">
       <Select
         label={t("split.poster.pageSize.label", "Target Page Size")}
-        description={t("split.poster.pageSize.description", "Size of output pages for printing")}
+        description={t(
+          "split.poster.pageSize.description",
+          "Size of output pages for printing",
+        )}
         value={parameters.pageSize || "A4"}
         onChange={(value) => onParameterChange("pageSize", value || "A4")}
         data={[
@@ -181,11 +251,17 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
           { value: "Tabloid", label: "Tabloid (11 × 17 in)" },
         ]}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
       <TextInput
         label={t("split.poster.xFactor.label", "Horizontal Divisions")}
-        description={t("split.poster.xFactor.description", "Number of columns to split each page into")}
+        description={t(
+          "split.poster.xFactor.description",
+          "Number of columns to split each page into",
+        )}
         type="number"
         min="1"
         max="10"
@@ -196,7 +272,10 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
       />
       <TextInput
         label={t("split.poster.yFactor.label", "Vertical Divisions")}
-        description={t("split.poster.yFactor.description", "Number of rows to split each page into")}
+        description={t(
+          "split.poster.yFactor.description",
+          "Number of rows to split each page into",
+        )}
         type="number"
         min="1"
         max="10"
@@ -208,7 +287,9 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
       <Checkbox
         label={t("split.poster.rightToLeft", "Split right-to-left")}
         checked={parameters.rightToLeft || false}
-        onChange={(e) => onParameterChange("rightToLeft", e.currentTarget.checked)}
+        onChange={(e) =>
+          onParameterChange("rightToLeft", e.currentTarget.checked)
+        }
         disabled={disabled}
       />
     </Stack>
@@ -219,7 +300,10 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
     return (
       <Stack gap="sm">
         <Text c="dimmed" ta="center">
-          {t("split.settings.selectMethodFirst", "Please select a split method first")}
+          {t(
+            "split.settings.selectMethodFirst",
+            "Please select a split method first",
+          )}
         </Text>
       </Stack>
     );
@@ -229,13 +313,16 @@ const SplitSettings = ({ parameters, onParameterChange, disabled = false }: Spli
     <Stack gap="md">
       {/* Method-Specific Form */}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
-      {parameters.method === SPLIT_METHODS.BY_SECTIONS && renderBySectionsForm()}
+      {parameters.method === SPLIT_METHODS.BY_SECTIONS &&
+        renderBySectionsForm()}
       {(parameters.method === SPLIT_METHODS.BY_SIZE ||
         parameters.method === SPLIT_METHODS.BY_PAGE_COUNT ||
         parameters.method === SPLIT_METHODS.BY_DOC_COUNT) &&
         renderSplitValueForm()}
-      {parameters.method === SPLIT_METHODS.BY_CHAPTERS && renderByChaptersForm()}
-      {parameters.method === SPLIT_METHODS.BY_PAGE_DIVIDER && renderByPageDividerForm()}
+      {parameters.method === SPLIT_METHODS.BY_CHAPTERS &&
+        renderByChaptersForm()}
+      {parameters.method === SPLIT_METHODS.BY_PAGE_DIVIDER &&
+        renderByPageDividerForm()}
       {parameters.method === SPLIT_METHODS.BY_POSTER && renderByPosterForm()}
     </Stack>
   );

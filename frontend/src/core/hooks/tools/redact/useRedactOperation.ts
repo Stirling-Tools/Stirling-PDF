@@ -1,10 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { RedactParameters, defaultParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import {
+  RedactParameters,
+  defaultParameters,
+} from "@app/hooks/tools/redact/useRedactParameters";
 
 // Static configuration that can be used by both the hook and automation executor
-export const buildRedactFormData = (parameters: RedactParameters, file: File): FormData => {
+export const buildRedactFormData = (
+  parameters: RedactParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
 
   // For automatic mode we hit the backend and need full payload
@@ -16,7 +25,10 @@ export const buildRedactFormData = (parameters: RedactParameters, file: File): F
     formData.append("wholeWordSearch", parameters.wholeWordSearch.toString());
     formData.append("redactColor", parameters.redactColor.replace("#", ""));
     formData.append("customPadding", parameters.customPadding.toString());
-    formData.append("convertPDFToImage", parameters.convertPDFToImage.toString());
+    formData.append(
+      "convertPDFToImage",
+      parameters.convertPDFToImage.toString(),
+    );
   } else {
     // Manual redaction uses EmbedPDF in-viewer; we don't call the API.
     // Return an empty formData to satisfy shared interfaces without throwing.
@@ -45,6 +57,8 @@ export const useRedactOperation = () => {
 
   return useToolOperation<RedactParameters>({
     ...redactOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t("redact.error.failed", "An error occurred while redacting the PDF.")),
+    getErrorMessage: createStandardErrorHandler(
+      t("redact.error.failed", "An error occurred while redacting the PDF."),
+    ),
   });
 };

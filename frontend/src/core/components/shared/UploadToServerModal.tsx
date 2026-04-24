@@ -18,7 +18,12 @@ interface UploadToServerModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
-const UploadToServerModal: React.FC<UploadToServerModalProps> = ({ opened, onClose, file, onUploaded }) => {
+const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
+  opened,
+  onClose,
+  file,
+  onUploaded,
+}) => {
   const { t } = useTranslation();
   const { actions } = useFileActions();
   const [isUploading, setIsUploading] = useState(false);
@@ -38,7 +43,11 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({ opened, onClo
     try {
       const originalFileId = (file.originalFileId || file.id) as FileId;
       const remoteId = file.remoteStorageId;
-      const { remoteId: storedId, updatedAt, chain } = await uploadHistoryChain(originalFileId, remoteId);
+      const {
+        remoteId: storedId,
+        updatedAt,
+        chain,
+      } = await uploadHistoryChain(originalFileId, remoteId);
 
       for (const stub of chain) {
         actions.updateStirlingFileStub(stub.id, {
@@ -65,7 +74,12 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({ opened, onClo
       onClose();
     } catch (error) {
       console.error("Failed to upload file to server:", error);
-      setErrorMessage(t("storageUpload.failure", "Upload failed. Please check your login and storage settings."));
+      setErrorMessage(
+        t(
+          "storageUpload.failure",
+          "Upload failed. Please check your login and storage settings.",
+        ),
+      );
     } finally {
       setIsUploading(false);
     }
@@ -81,17 +95,26 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({ opened, onClo
     >
       <Stack gap="sm">
         <Text size="sm">
-          {t("storageUpload.description", "This uploads the current file to server storage for your own access.")}
+          {t(
+            "storageUpload.description",
+            "This uploads the current file to server storage for your own access.",
+          )}
         </Text>
         <Text size="sm" c="dimmed">
           {t("storageUpload.fileLabel", "File")}: {file.name}
         </Text>
         <Text size="xs" c="dimmed">
-          {t("storageUpload.hint", "Public links and access modes are controlled by your server settings.")}
+          {t(
+            "storageUpload.hint",
+            "Public links and access modes are controlled by your server settings.",
+          )}
         </Text>
 
         {errorMessage && (
-          <Alert color="red" title={t("storageUpload.errorTitle", "Upload failed")}>
+          <Alert
+            color="red"
+            title={t("storageUpload.errorTitle", "Upload failed")}
+          >
             {errorMessage}
           </Alert>
         )}
@@ -100,7 +123,11 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({ opened, onClo
           <Button variant="default" onClick={onClose} disabled={isUploading}>
             {t("cancel", "Cancel")}
           </Button>
-          <Button leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />} onClick={handleUpload} loading={isUploading}>
+          <Button
+            leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
+            onClick={handleUpload}
+            loading={isUploading}
+          >
             {file.remoteStorageId
               ? t("storageUpload.updateButton", "Update on Server")
               : t("storageUpload.uploadButton", "Upload to Server")}

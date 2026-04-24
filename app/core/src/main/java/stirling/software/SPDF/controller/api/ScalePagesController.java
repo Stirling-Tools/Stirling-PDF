@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -28,6 +28,7 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -36,6 +37,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ScalePagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     private static PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
@@ -118,7 +120,7 @@ public class ScalePagesController {
             description =
                     "This operation takes an input PDF file and the size to scale the pages to in"
                             + " the output PDF file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> scalePages(@ModelAttribute ScalePagesRequest request)
+    public ResponseEntity<Resource> scalePages(@ModelAttribute ScalePagesRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         String targetPDRectangle = request.getPageSize();
@@ -126,8 +128,7 @@ public class ScalePagesController {
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
                 PDDocument outputDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
             PDRectangle targetSize = getTargetSize(targetPDRectangle, sourceDocument);
 
@@ -168,11 +169,10 @@ public class ScalePagesController {
                 }
             }
 
-            outputDocument.save(baos);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(),
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"));
+            return WebResponseUtils.pdfDocToWebResponse(
+                    outputDocument,
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"),
+                    tempFileManager);
         }
     }
 }

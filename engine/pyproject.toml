@@ -5,17 +5,26 @@ description = "AI Document Engine"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.116.0",
+    "pgvector>=0.3.6",
+    "psycopg[binary]>=3.2",
     "pydantic>=2.0.0",
     "pydantic-ai>=1.67.0",
+    "pydantic-ai-slim[voyageai]>=1.67.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
+    "sqlite-vec>=0.1.6",
     "uvicorn>=0.35.0",
+    "opentelemetry-sdk>=1.39.0",
+    "posthog>=3.0.0",
 ]
 
 [dependency-groups]
 dev = [
+    "anyio>=4.0.0",
+    "datamodel-code-generator[ruff]>=0.26.0",
     "pytest>=8.0.0",
     "pyright>=1.1.408",
+    "referencing>=0.35.0",
     "ruff>=0.14.10",
 ]
 
@@ -44,6 +53,7 @@ select = [
     "UP",
     "PYI",    # flake8-pyi: flags deprecated typing constructs
     "FA",     # flake8-future-annotations: flags missing future annotations imports
+    "BLE",    # flake8-blind-except: flags bare `except Exception`
 ]
 
 [tool.pyright]

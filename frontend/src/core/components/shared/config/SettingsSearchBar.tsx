@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { ConfigNavSection, ConfigNavItem } from "@app/components/shared/config/configNavSections";
+import type {
+  ConfigNavSection,
+  ConfigNavItem,
+} from "@app/components/shared/config/configNavSections";
 
 interface SettingsSearchBarProps {
   configNavSections: ConfigNavSection[];
@@ -21,37 +24,42 @@ interface SettingsSearchOption {
   matchedContext?: string;
 }
 
-const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
-  general: ["settings.general"],
-  hotkeys: ["settings.hotkeys"],
-  account: ["account"],
-  people: ["settings.workspace"],
-  teams: ["settings.workspace", "settings.team"],
-  "api-keys": ["settings.developer"],
-  connectionMode: ["settings.connection"],
-  planBilling: ["settings.planBilling"],
-  adminGeneral: ["admin.settings.general"],
-  adminFeatures: ["admin.settings.features"],
-  adminEndpoints: ["admin.settings.endpoints"],
-  adminDatabase: ["admin.settings.database"],
-  adminAdvanced: ["admin.settings.advanced"],
-  adminSecurity: ["admin.settings.security"],
-  adminConnections: [
-    "admin.settings.connections",
-    "admin.settings.mail",
-    "admin.settings.security",
-    "admin.settings.telegram",
-    "admin.settings.premium",
-    "admin.settings.general",
-    "settings.securityAuth",
-    "settings.connection",
-  ],
-  adminPlan: ["settings.planBilling", "admin.settings.premium", "settings.licensingAnalytics"],
-  adminAudit: ["settings.licensingAnalytics"],
-  adminUsage: ["settings.licensingAnalytics"],
-  adminLegal: ["admin.settings.legal"],
-  adminPrivacy: ["admin.settings.privacy"],
-};
+const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> =
+  {
+    general: ["settings.general"],
+    hotkeys: ["settings.hotkeys"],
+    account: ["account"],
+    people: ["settings.workspace"],
+    teams: ["settings.workspace", "settings.team"],
+    "api-keys": ["settings.developer"],
+    connectionMode: ["settings.connection"],
+    planBilling: ["settings.planBilling"],
+    adminGeneral: ["admin.settings.general"],
+    adminFeatures: ["admin.settings.features"],
+    adminEndpoints: ["admin.settings.endpoints"],
+    adminDatabase: ["admin.settings.database"],
+    adminAdvanced: ["admin.settings.advanced"],
+    adminSecurity: ["admin.settings.security"],
+    adminConnections: [
+      "admin.settings.connections",
+      "admin.settings.mail",
+      "admin.settings.security",
+      "admin.settings.telegram",
+      "admin.settings.premium",
+      "admin.settings.general",
+      "settings.securityAuth",
+      "settings.connection",
+    ],
+    adminPlan: [
+      "settings.planBilling",
+      "admin.settings.premium",
+      "settings.licensingAnalytics",
+    ],
+    adminAudit: ["settings.licensingAnalytics"],
+    adminUsage: ["settings.licensingAnalytics"],
+    adminLegal: ["admin.settings.legal"],
+    adminPrivacy: ["admin.settings.privacy"],
+  };
 
 const getTranslationPrefixesForNavKey = (key: string): string[] => {
   const explicitPrefixes = SETTINGS_SEARCH_TRANSLATION_PREFIXES[key] ?? [];
@@ -60,7 +68,8 @@ const getTranslationPrefixesForNavKey = (key: string): string[] => {
 
   if (key.startsWith("admin")) {
     const adminSuffix = key.replace(/^admin/, "");
-    const normalizedAdminSuffix = adminSuffix.charAt(0).toLowerCase() + adminSuffix.slice(1);
+    const normalizedAdminSuffix =
+      adminSuffix.charAt(0).toLowerCase() + adminSuffix.slice(1);
     inferredPrefixes.push(`admin.settings.${normalizedAdminSuffix}`);
   } else {
     inferredPrefixes.push(`settings.${key}`);
@@ -80,7 +89,9 @@ const flattenTranslationStrings = (value: unknown): string[] => {
   }
 
   if (value && typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).flatMap(flattenTranslationStrings);
+    return Object.values(value as Record<string, unknown>).flatMap(
+      flattenTranslationStrings,
+    );
   }
 
   return [];
@@ -108,7 +119,11 @@ const buildMatchSnippet = (text: string, query: string): string => {
   return `${start > 0 ? "…" : ""}${snippet.slice(0, maxLength)}${end < text.length ? "…" : ""}`;
 };
 
-export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({ configNavSections, onNavigate, isMobile }) => {
+export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
+  configNavSections,
+  onNavigate,
+  isMobile,
+}) => {
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState("");
 
@@ -121,11 +136,18 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({ configNavS
         .map((item: ConfigNavItem) => {
           const translationPrefixes = getTranslationPrefixesForNavKey(item.key);
           const translationContent = translationPrefixes.flatMap((prefix) =>
-            flattenTranslationStrings(t(prefix, { returnObjects: true, defaultValue: {} } as any)),
+            flattenTranslationStrings(
+              t(prefix, { returnObjects: true, defaultValue: {} } as any),
+            ),
           );
 
           const searchableContent = Array.from(
-            new Set([item.label, section.title, `/settings/${item.key}`, ...translationContent]),
+            new Set([
+              item.label,
+              section.title,
+              `/settings/${item.key}`,
+              ...translationContent,
+            ]),
           );
 
           return {
@@ -147,20 +169,25 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({ configNavS
 
     const normalizedQuery = query.toLocaleLowerCase();
 
-    return searchableSections.reduce<SettingsSearchOption[]>((accumulator, option) => {
-      const matchedEntry = option.searchableContent.find((entry) => entry.toLocaleLowerCase().includes(normalizedQuery));
+    return searchableSections.reduce<SettingsSearchOption[]>(
+      (accumulator, option) => {
+        const matchedEntry = option.searchableContent.find((entry) =>
+          entry.toLocaleLowerCase().includes(normalizedQuery),
+        );
 
-      if (!matchedEntry) {
+        if (!matchedEntry) {
+          return accumulator;
+        }
+
+        accumulator.push({
+          ...option,
+          matchedContext: buildMatchSnippet(matchedEntry, query),
+        });
+
         return accumulator;
-      }
-
-      accumulator.push({
-        ...option,
-        matchedContext: buildMatchSnippet(matchedEntry, query),
-      });
-
-      return accumulator;
-    }, []);
+      },
+      [],
+    );
   }, [searchValue, searchableSections]);
 
   const handleSearchNavigation = useCallback(
@@ -197,7 +224,8 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({ configNavS
               {searchOption.label}
             </Text>
             <Text size="xs" c="dimmed">
-              {searchOption.sectionTitle} · {searchOption.matchedContext || searchOption.destinationPath}
+              {searchOption.sectionTitle} ·{" "}
+              {searchOption.matchedContext || searchOption.destinationPath}
             </Text>
           </div>
         );

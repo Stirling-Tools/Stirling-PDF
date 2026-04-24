@@ -56,7 +56,11 @@ describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
     test("should detect multiple PDF files and set auto-target", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const pdfFiles = [{ name: "doc1.pdf" }, { name: "doc2.pdf" }, { name: "doc3.pdf" }];
+      const pdfFiles = [
+        { name: "doc1.pdf" },
+        { name: "doc2.pdf" },
+        { name: "doc3.pdf" },
+      ];
 
       act(() => {
         result.current.analyzeFileTypes(pdfFiles);
@@ -87,7 +91,11 @@ describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
     test("should detect all image files and enable smart detection", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const imageFiles = [{ name: "photo1.jpg" }, { name: "photo2.png" }, { name: "photo3.gif" }];
+      const imageFiles = [
+        { name: "photo1.jpg" },
+        { name: "photo2.png" },
+        { name: "photo3.gif" },
+      ];
 
       act(() => {
         result.current.analyzeFileTypes(imageFiles);
@@ -162,7 +170,11 @@ describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
     test("should detect mixed file types and enable smart detection", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const mixedFiles = [{ name: "document.pdf" }, { name: "spreadsheet.xlsx" }, { name: "presentation.pptx" }];
+      const mixedFiles = [
+        { name: "document.pdf" },
+        { name: "spreadsheet.xlsx" },
+        { name: "presentation.pptx" },
+      ];
 
       act(() => {
         result.current.analyzeFileTypes(mixedFiles);
@@ -177,7 +189,11 @@ describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
     test("should detect mixed images and documents as mixed type", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const mixedFiles = [{ name: "photo.jpg" }, { name: "document.pdf" }, { name: "text.txt" }];
+      const mixedFiles = [
+        { name: "photo.jpg" },
+        { name: "document.pdf" },
+        { name: "text.txt" },
+      ];
 
       act(() => {
         result.current.analyzeFileTypes(mixedFiles);
@@ -190,7 +206,11 @@ describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
     test("should handle mixed with unknown file types", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const mixedFiles = [{ name: "document.pdf" }, { name: "unknown.xyz" }, { name: "noextension" }];
+      const mixedFiles = [
+        { name: "document.pdf" },
+        { name: "unknown.xyz" },
+        { name: "noextension" },
+      ];
 
       act(() => {
         result.current.analyzeFileTypes(mixedFiles);
@@ -231,7 +251,10 @@ describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
     test("should return correct endpoint for mixed smart detection", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const mixedFiles = [{ name: "document.pdf" }, { name: "spreadsheet.xlsx" }];
+      const mixedFiles = [
+        { name: "document.pdf" },
+        { name: "spreadsheet.xlsx" },
+      ];
 
       act(() => {
         result.current.analyzeFileTypes(mixedFiles);

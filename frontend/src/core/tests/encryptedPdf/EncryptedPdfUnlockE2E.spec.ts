@@ -27,29 +27,50 @@ const FAKE_UNLOCKED_PDF = Buffer.from(
 // Helper: mock all standard app APIs needed to load the main UI
 // ---------------------------------------------------------------------------
 async function mockAppApis(page: Page) {
-  await page.route("**/api/v1/info/status", (route) => route.fulfill({ json: { status: "UP" } }));
+  await page.route("**/api/v1/info/status", (route) =>
+    route.fulfill({ json: { status: "UP" } }),
+  );
 
   await page.route("**/api/v1/config/app-config", (route) =>
     route.fulfill({
-      json: { enableLogin: false, languages: ["en-GB"], defaultLocale: "en-GB" },
+      json: {
+        enableLogin: false,
+        languages: ["en-GB"],
+        defaultLocale: "en-GB",
+      },
     }),
   );
 
   await page.route("**/api/v1/auth/me", (route) =>
     route.fulfill({
-      json: { id: 1, username: "testuser", email: "test@example.com", roles: ["ROLE_USER"] },
+      json: {
+        id: 1,
+        username: "testuser",
+        email: "test@example.com",
+        roles: ["ROLE_USER"],
+      },
     }),
   );
 
-  await page.route("**/api/v1/config/endpoints-availability", (route) => route.fulfill({ json: {} }));
+  await page.route("**/api/v1/config/endpoints-availability", (route) =>
+    route.fulfill({ json: {} }),
+  );
 
-  await page.route("**/api/v1/config/endpoint-enabled*", (route) => route.fulfill({ json: true }));
+  await page.route("**/api/v1/config/endpoint-enabled*", (route) =>
+    route.fulfill({ json: true }),
+  );
 
-  await page.route("**/api/v1/config/group-enabled*", (route) => route.fulfill({ json: true }));
+  await page.route("**/api/v1/config/group-enabled*", (route) =>
+    route.fulfill({ json: true }),
+  );
 
-  await page.route("**/api/v1/ui-data/footer-info", (route) => route.fulfill({ json: {} }));
+  await page.route("**/api/v1/ui-data/footer-info", (route) =>
+    route.fulfill({ json: {} }),
+  );
 
-  await page.route("**/api/v1/proprietary/**", (route) => route.fulfill({ json: {} }));
+  await page.route("**/api/v1/proprietary/**", (route) =>
+    route.fulfill({ json: {} }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -60,7 +81,9 @@ function mockRemovePasswordSuccess(page: Page) {
     route.fulfill({
       status: 200,
       contentType: "application/pdf",
-      headers: { "Content-Disposition": 'attachment; filename="encrypted.pdf"' },
+      headers: {
+        "Content-Disposition": 'attachment; filename="encrypted.pdf"',
+      },
       body: FAKE_UNLOCKED_PDF,
     }),
   );
@@ -78,7 +101,8 @@ function mockRemovePasswordWrongPassword(page: Page) {
         type: "/errors/pdf-password",
         title: "PDF password incorrect",
         status: 400,
-        detail: "The PDF is passworded and requires the correct password to open.",
+        detail:
+          "The PDF is passworded and requires the correct password to open.",
       }),
     }),
   );
@@ -89,10 +113,16 @@ function mockRemovePasswordWrongPassword(page: Page) {
 // ---------------------------------------------------------------------------
 async function uploadFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
-  await page.waitForSelector(".mantine-Modal-overlay", { state: "visible", timeout: 5000 });
+  await page.waitForSelector(".mantine-Modal-overlay", {
+    state: "visible",
+    timeout: 5000,
+  });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
   // Modal auto-closes after file is selected
-  await page.waitForSelector(".mantine-Modal-overlay", { state: "hidden", timeout: 10000 });
+  await page.waitForSelector(".mantine-Modal-overlay", {
+    state: "hidden",
+    timeout: 10000,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -102,7 +132,10 @@ async function uploadFile(page: Page, filePath: string) {
 // ---------------------------------------------------------------------------
 async function uploadEncryptedFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
-  await page.waitForSelector(".mantine-Modal-overlay", { state: "visible", timeout: 5000 });
+  await page.waitForSelector(".mantine-Modal-overlay", {
+    state: "visible",
+    timeout: 5000,
+  });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -123,7 +156,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   test.beforeEach(async ({ page }) => {
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
-    await page.waitForSelector('[data-testid="files-button"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="files-button"]', {
+      timeout: 10000,
+    });
 
     // Dismiss onboarding tooltip if it appears (can block clicks in Firefox/WebKit)
     const tooltip = page.locator('button:has-text("Close tooltip")');
@@ -132,17 +167,25 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     }
   });
 
-  test("uploading an encrypted PDF shows the unlock modal", async ({ page }) => {
+  test("uploading an encrypted PDF shows the unlock modal", async ({
+    page,
+  }) => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
 
     // The unlock modal should appear with the expected title
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
     await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
-    await expect(page.getByRole("button", { name: UNLOCK_BUTTON_TEXT })).toBeVisible();
-    await expect(page.getByRole("button", { name: SKIP_BUTTON_TEXT })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: SKIP_BUTTON_TEXT }),
+    ).toBeVisible();
   });
 
-  test("unlock button is disabled when password field is empty", async ({ page }) => {
+  test("unlock button is disabled when password field is empty", async ({
+    page,
+  }) => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
 
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
@@ -151,7 +194,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(unlockBtn).toBeDisabled();
   });
 
-  test("unlock button becomes enabled after entering a password", async ({ page }) => {
+  test("unlock button becomes enabled after entering a password", async ({
+    page,
+  }) => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
 
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
@@ -163,7 +208,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(unlockBtn).toBeEnabled();
   });
 
-  test("successful unlock removes the modal and shows success alert", async ({ page }) => {
+  test("successful unlock removes the modal and shows success alert", async ({
+    page,
+  }) => {
     await mockRemovePasswordSuccess(page);
 
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
@@ -176,7 +223,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
 
     // Success alert should appear
-    await expect(page.getByText("Password removed", { exact: true })).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByText("Password removed", { exact: true }),
+    ).toBeVisible({ timeout: 5000 });
   });
 
   test("incorrect password shows error message in modal", async ({ page }) => {
@@ -189,7 +238,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
 
     // Error message should appear within the modal
-    await expect(page.getByText("Incorrect password")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Incorrect password")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Modal should remain open
     await expect(page.getByText(MODAL_TITLE)).toBeVisible();
@@ -219,7 +270,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
   });
 
-  test("uploading a normal PDF does not show the unlock modal", async ({ page }) => {
+  test("uploading a normal PDF does not show the unlock modal", async ({
+    page,
+  }) => {
     await uploadFile(page, SAMPLE_PDF);
 
     // Wait for the file to finish processing, then verify no unlock modal appeared
@@ -227,23 +280,40 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(page.getByText(MODAL_TITLE)).toBeHidden();
   });
 
-  test("unlock all button is hidden with only one encrypted file", async ({ page }) => {
+  test("unlock all button is hidden with only one encrypted file", async ({
+    page,
+  }) => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
 
     // The "Use for all" button should NOT appear with only one file
-    await expect(page.getByRole("button", { name: /Use for all/ })).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: /Use for all/ }),
+    ).toBeHidden();
   });
 
-  test("unlock all button appears with multiple encrypted files and unlocks all", async ({ page }) => {
+  test("unlock all button appears with multiple encrypted files and unlocks all", async ({
+    page,
+  }) => {
     await mockRemovePasswordSuccess(page);
 
     // Upload two encrypted files at once (different names to avoid deduplication)
     await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", { state: "visible", timeout: 5000 });
+    await page.waitForSelector(".mantine-Modal-overlay", {
+      state: "visible",
+      timeout: 5000,
+    });
     await page.locator('[data-testid="file-input"]').setInputFiles([
-      { name: "encrypted-a.pdf", mimeType: "application/pdf", buffer: fs.readFileSync(ENCRYPTED_PDF) },
-      { name: "encrypted-b.pdf", mimeType: "application/pdf", buffer: fs.readFileSync(ENCRYPTED_PDF) },
+      {
+        name: "encrypted-a.pdf",
+        mimeType: "application/pdf",
+        buffer: fs.readFileSync(ENCRYPTED_PDF),
+      },
+      {
+        name: "encrypted-b.pdf",
+        mimeType: "application/pdf",
+        buffer: fs.readFileSync(ENCRYPTED_PDF),
+      },
     ]);
 
     // The unlock modal should appear for the first file with "Use for all" visible
@@ -259,15 +329,28 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
   });
 
-  test("unlock all with wrong password shows which files failed", async ({ page }) => {
+  test("unlock all with wrong password shows which files failed", async ({
+    page,
+  }) => {
     await mockRemovePasswordWrongPassword(page);
 
     // Upload two encrypted files at once (different names to avoid deduplication)
     await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", { state: "visible", timeout: 5000 });
+    await page.waitForSelector(".mantine-Modal-overlay", {
+      state: "visible",
+      timeout: 5000,
+    });
     await page.locator('[data-testid="file-input"]').setInputFiles([
-      { name: "encrypted-a.pdf", mimeType: "application/pdf", buffer: fs.readFileSync(ENCRYPTED_PDF) },
-      { name: "encrypted-b.pdf", mimeType: "application/pdf", buffer: fs.readFileSync(ENCRYPTED_PDF) },
+      {
+        name: "encrypted-a.pdf",
+        mimeType: "application/pdf",
+        buffer: fs.readFileSync(ENCRYPTED_PDF),
+      },
+      {
+        name: "encrypted-b.pdf",
+        mimeType: "application/pdf",
+        buffer: fs.readFileSync(ENCRYPTED_PDF),
+      },
     ]);
 
     // The unlock modal should appear with "Use for all"
@@ -280,6 +363,8 @@ test.describe("Encrypted PDF Unlock Modal", () => {
 
     // Modal should remain open with error about failed files
     await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/Wrong password for/)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Wrong password for/)).toBeVisible({
+      timeout: 5000,
+    });
   });
 });

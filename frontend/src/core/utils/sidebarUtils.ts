@@ -6,7 +6,10 @@ import { SidebarRefs, SidebarState, SidebarInfo } from "@app/types/sidebar";
  * @param state - Current sidebar state
  * @returns Object containing the sidebar rect and whether the tool panel is active
  */
-export function getSidebarInfo(refs: SidebarRefs, state: SidebarState): SidebarInfo {
+export function getSidebarInfo(
+  refs: SidebarRefs,
+  state: SidebarState,
+): SidebarInfo {
   const { quickAccessRef, toolPanelRef } = refs;
   const { sidebarsVisible, readerMode } = state;
 

@@ -22,7 +22,9 @@ export const defaultAppService = {
    * Set or prompt to set Stirling PDF as default PDF handler
    * Returns a status string indicating what happened
    */
-  async setAsDefaultPdfHandler(): Promise<"set_successfully" | "opened_dialog" | "error"> {
+  async setAsDefaultPdfHandler(): Promise<
+    "set_successfully" | "opened_dialog" | "error"
+  > {
     try {
       const result = await invoke<string>("set_as_default_pdf_handler");
       return result as "set_successfully" | "opened_dialog";
@@ -37,7 +39,9 @@ export const defaultAppService = {
    */
   hasUserDismissedPrompt(): boolean {
     try {
-      const dismissed = localStorage.getItem("stirlingpdf_default_app_prompt_dismissed");
+      const dismissed = localStorage.getItem(
+        "stirlingpdf_default_app_prompt_dismissed",
+      );
       return dismissed === "true";
     } catch {
       return false;
@@ -49,7 +53,10 @@ export const defaultAppService = {
    */
   setPromptDismissed(dismissed: boolean): void {
     try {
-      localStorage.setItem("stirlingpdf_default_app_prompt_dismissed", dismissed ? "true" : "false");
+      localStorage.setItem(
+        "stirlingpdf_default_app_prompt_dismissed",
+        dismissed ? "true" : "false",
+      );
     } catch (error) {
       console.error("[DefaultApp] Failed to save prompt preference:", error);
     }

@@ -8,7 +8,9 @@ import { PDFDocument } from "@app/types/pageEditor";
  */
 export function useInitialPageDocument(): PDFDocument | null {
   const { document: liveDocument } = usePageDocument();
-  const [initialDocument, setInitialDocument] = useState<PDFDocument | null>(null);
+  const [initialDocument, setInitialDocument] = useState<PDFDocument | null>(
+    null,
+  );
   const lastDocumentIdRef = useRef<string | null>(null);
   const liveDocumentId = liveDocument?.id ?? null;
 
@@ -30,7 +32,11 @@ export function useInitialPageDocument(): PDFDocument | null {
       return;
     }
 
-    console.log("📄 useInitialPageDocument: Captured initial document with", liveDocument.pages.length, "pages");
+    console.log(
+      "📄 useInitialPageDocument: Captured initial document with",
+      liveDocument.pages.length,
+      "pages",
+    );
     setInitialDocument(liveDocument);
   }, [liveDocument, initialDocument]);
 

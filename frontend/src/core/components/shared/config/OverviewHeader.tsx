@@ -10,7 +10,10 @@ export function OverviewHeader() {
         {t("config.overview.title", "Application Configuration")}
       </Text>
       <Text size="sm" c="dimmed">
-        {t("config.overview.description", "Current application settings and configuration details.")}
+        {t(
+          "config.overview.description",
+          "Current application settings and configuration details.",
+        )}
       </Text>
     </div>
   );

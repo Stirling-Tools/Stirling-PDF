@@ -7,7 +7,10 @@ import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 // Import the essential plugins
-import { Viewport, ViewportPluginPackage } from "@embedpdf/plugin-viewport/react";
+import {
+  Viewport,
+  ViewportPluginPackage,
+} from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
@@ -17,8 +20,14 @@ import {
   PagePointerProvider,
   GlobalPointerProvider,
 } from "@embedpdf/plugin-interaction-manager/react";
-import { SelectionLayer, SelectionPluginPackage } from "@embedpdf/plugin-selection/react";
-import { TilingLayer, TilingPluginPackage } from "@embedpdf/plugin-tiling/react";
+import {
+  SelectionLayer,
+  SelectionPluginPackage,
+} from "@embedpdf/plugin-selection/react";
+import {
+  TilingLayer,
+  TilingPluginPackage,
+} from "@embedpdf/plugin-tiling/react";
 import { PanPluginPackage } from "@embedpdf/plugin-pan/react";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
@@ -29,11 +38,20 @@ import { BookmarkPluginPackage } from "@embedpdf/plugin-bookmark/react";
 import { AttachmentPluginPackage } from "@embedpdf/plugin-attachment/react";
 import { PrintPluginPackage } from "@embedpdf/plugin-print/react";
 import { HistoryPluginPackage } from "@embedpdf/plugin-history/react";
-import { AnnotationLayer, AnnotationPluginPackage } from "@embedpdf/plugin-annotation/react";
-import type { AnnotationTool, AnnotationEvent } from "@embedpdf/plugin-annotation";
+import {
+  AnnotationLayer,
+  AnnotationPluginPackage,
+} from "@embedpdf/plugin-annotation/react";
+import type {
+  AnnotationTool,
+  AnnotationEvent,
+} from "@embedpdf/plugin-annotation";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
-import { RedactionPluginPackage, RedactionLayer } from "@embedpdf/plugin-redaction/react";
+import {
+  RedactionPluginPackage,
+  RedactionLayer,
+} from "@embedpdf/plugin-redaction/react";
 import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
 import { ZoomAPIBridge } from "@app/components/viewer/ZoomAPIBridge";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
@@ -48,7 +66,11 @@ import { RotateAPIBridge } from "@app/components/viewer/RotateAPIBridge";
 import { SignatureAPIBridge } from "@app/components/viewer/SignatureAPIBridge";
 import { AnnotationAPIBridge } from "@app/components/viewer/AnnotationAPIBridge";
 import { HistoryAPIBridge } from "@app/components/viewer/HistoryAPIBridge";
-import type { SignatureAPI, AnnotationAPI, HistoryAPI } from "@app/components/viewer/viewerTypes";
+import type {
+  SignatureAPI,
+  AnnotationAPI,
+  HistoryAPI,
+} from "@app/components/viewer/viewerTypes";
 import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
 import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
@@ -59,7 +81,10 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
-import { RedactionPendingTracker, RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
+import {
+  RedactionPendingTracker,
+  RedactionPendingTrackerAPI,
+} from "@app/components/viewer/RedactionPendingTracker";
 import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
@@ -120,7 +145,9 @@ export function LocalEmbedPDF({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [, setAnnotations] = useState<Array<{ id: string; pageIndex: number; rect: Rect }>>([]);
+  const [, setAnnotations] = useState<
+    Array<{ id: string; pageIndex: number; rect: Rect }>
+  >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
 
   useEffect(() => {
@@ -151,7 +178,9 @@ export function LocalEmbedPDF({
     if (!pdfUrl) return [];
 
     // Calculate 3.5rem in pixels dynamically based on root font size
-    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const rootFontSize = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
     const viewportGap = rootFontSize * 3.5;
 
     // Determine export filename - use provided fileName, or extract from file/url
@@ -292,7 +321,11 @@ export function LocalEmbedPDF({
           <Text size="lg" fw={600} c="dimmed">
             {t("viewer.cannotPreviewFile")}
           </Text>
-          <Text c="dimmed" size="sm" style={{ textAlign: "center", maxWidth: "400px" }}>
+          <Text
+            c="dimmed"
+            size="sm"
+            style={{ textAlign: "center", maxWidth: "400px" }}
+          >
             {t("viewer.onlyPdfSupported")}
           </Text>
           <PrivateContent>
@@ -353,11 +386,19 @@ export function LocalEmbedPDF({
               type LooseAnnotationTool = {
                 id: string;
                 name: string;
-                interaction?: { exclusive: boolean; cursor: string; textSelection?: boolean; isRotatable?: boolean };
+                interaction?: {
+                  exclusive: boolean;
+                  cursor: string;
+                  textSelection?: boolean;
+                  isRotatable?: boolean;
+                };
                 matchScore?: (annotation: PdfAnnotationObject) => number;
                 defaults?: Record<string, unknown>;
                 clickBehavior?: Record<string, unknown>;
-                behavior?: { deactivateToolAfterCreate?: boolean; selectAfterCreate?: boolean };
+                behavior?: {
+                  deactivateToolAfterCreate?: boolean;
+                  selectAfterCreate?: boolean;
+                };
               };
               const ensureTool = (tool: LooseAnnotationTool) => {
                 const existing = annotationApi.getTool?.(tool.id);
@@ -369,8 +410,13 @@ export function LocalEmbedPDF({
               ensureTool({
                 id: "highlight",
                 name: "Highlight",
-                interaction: { exclusive: true, cursor: "text", textSelection: true },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0),
+                interaction: {
+                  exclusive: true,
+                  cursor: "text",
+                  textSelection: true,
+                },
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.HIGHLIGHT,
                   strokeColor: "#ffd54f",
@@ -386,8 +432,13 @@ export function LocalEmbedPDF({
               ensureTool({
                 id: "underline",
                 name: "Underline",
-                interaction: { exclusive: true, cursor: "text", textSelection: true },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0),
+                interaction: {
+                  exclusive: true,
+                  cursor: "text",
+                  textSelection: true,
+                },
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.UNDERLINE,
                   strokeColor: "#ffb300",
@@ -403,8 +454,13 @@ export function LocalEmbedPDF({
               ensureTool({
                 id: "strikeout",
                 name: "Strikeout",
-                interaction: { exclusive: true, cursor: "text", textSelection: true },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0),
+                interaction: {
+                  exclusive: true,
+                  cursor: "text",
+                  textSelection: true,
+                },
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.STRIKEOUT,
                   strokeColor: "#e53935",
@@ -420,8 +476,13 @@ export function LocalEmbedPDF({
               ensureTool({
                 id: "squiggly",
                 name: "Squiggly",
-                interaction: { exclusive: true, cursor: "text", textSelection: true },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0),
+                interaction: {
+                  exclusive: true,
+                  cursor: "text",
+                  textSelection: true,
+                },
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.SQUIGGLY,
                   strokeColor: "#00acc1",
@@ -438,7 +499,8 @@ export function LocalEmbedPDF({
                 id: "ink",
                 name: "Pen",
                 interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.INK ? 10 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.INK ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.INK,
                   strokeColor: "#1f2933",
@@ -460,7 +522,8 @@ export function LocalEmbedPDF({
                 interaction: { exclusive: true, cursor: "crosshair" },
                 matchScore: (annotation: PdfAnnotationObject) =>
                   annotation.type === PdfAnnotationSubtype.INK &&
-                  (annotation.strokeColor === "#ffd54f" || annotation.color === "#ffd54f")
+                  (annotation.strokeColor === "#ffd54f" ||
+                    annotation.color === "#ffd54f")
                     ? 8
                     : 0,
                 defaults: {
@@ -482,7 +545,8 @@ export function LocalEmbedPDF({
                 id: "square",
                 name: "Square",
                 interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.SQUARE,
                   color: "#0000ff", // fill color (blue)
@@ -506,7 +570,8 @@ export function LocalEmbedPDF({
                 id: "circle",
                 name: "Circle",
                 interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.CIRCLE,
                   color: "#0000ff", // fill color (blue)
@@ -530,7 +595,8 @@ export function LocalEmbedPDF({
                 id: "line",
                 name: "Line",
                 interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.LINE,
                   color: "#1565c0",
@@ -557,8 +623,14 @@ export function LocalEmbedPDF({
                 matchScore: (annotation: PdfAnnotationObject) => {
                   if (annotation.type !== PdfAnnotationSubtype.LINE) return 0;
                   // EmbedPDF stores endStyle/lineEndingStyles at runtime; library types use lineEndings
-                  const ann = annotation as PdfAnnotationObject & { endStyle?: string; lineEndingStyles?: { end?: string } };
-                  return ann.endStyle === "ClosedArrow" || ann.lineEndingStyles?.end === "ClosedArrow" ? 9 : 0;
+                  const ann = annotation as PdfAnnotationObject & {
+                    endStyle?: string;
+                    lineEndingStyles?: { end?: string };
+                  };
+                  return ann.endStyle === "ClosedArrow" ||
+                    ann.lineEndingStyles?.end === "ClosedArrow"
+                    ? 9
+                    : 0;
                 },
                 defaults: {
                   type: PdfAnnotationSubtype.LINE,
@@ -584,7 +656,8 @@ export function LocalEmbedPDF({
                 id: "polyline",
                 name: "Polyline",
                 interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.POLYLINE,
                   color: "#1565c0",
@@ -605,7 +678,8 @@ export function LocalEmbedPDF({
                 id: "polygon",
                 name: "Polygon",
                 interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.POLYGON,
                   color: "#0000ff", // fill color (blue)
@@ -627,8 +701,13 @@ export function LocalEmbedPDF({
               ensureTool({
                 id: "text",
                 name: "Text",
-                interaction: { exclusive: true, cursor: "text", isRotatable: false },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0),
+                interaction: {
+                  exclusive: true,
+                  cursor: "text",
+                  isRotatable: false,
+                },
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.FREETEXT,
                   textColor: "#111111",
@@ -647,8 +726,13 @@ export function LocalEmbedPDF({
               ensureTool({
                 id: "note",
                 name: "Note",
-                interaction: { exclusive: true, cursor: "pointer", isRotatable: false },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0),
+                interaction: {
+                  exclusive: true,
+                  cursor: "pointer",
+                  isRotatable: false,
+                },
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.FREETEXT,
                   textColor: "#1b1b1b",
@@ -672,7 +756,8 @@ export function LocalEmbedPDF({
                 id: "stamp",
                 name: "Image Stamp",
                 interaction: { exclusive: false, cursor: "copy" },
-                matchScore: (annotation: PdfAnnotationObject) => (annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0),
+                matchScore: (annotation: PdfAnnotationObject) =>
+                  annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0,
                 defaults: {
                   type: PdfAnnotationSubtype.STAMP,
                 },
@@ -720,19 +805,31 @@ export function LocalEmbedPDF({
                   // If the annotation doesn't have customData.toolId, patch it from the active tool.
                   // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
                   const annotationId = event.annotation.id;
-                  const existingCustomData = (event.annotation as unknown as { customData?: Record<string, unknown> })
-                    .customData;
+                  const existingCustomData = (
+                    event.annotation as unknown as {
+                      customData?: Record<string, unknown>;
+                    }
+                  ).customData;
                   if (annotationId && !existingCustomData?.toolId) {
                     const activeTool = (
-                      annotationApi as unknown as { getActiveTool?: () => { id: string } | null }
+                      annotationApi as unknown as {
+                        getActiveTool?: () => { id: string } | null;
+                      }
                     ).getActiveTool?.();
                     if (activeTool?.id && activeTool.id !== "select") {
                       (
                         annotationApi as unknown as {
-                          updateAnnotation?: (page: number, id: string, patch: Record<string, unknown>) => void;
+                          updateAnnotation?: (
+                            page: number,
+                            id: string,
+                            patch: Record<string, unknown>,
+                          ) => void;
                         }
                       ).updateAnnotation?.(event.pageIndex, annotationId, {
-                        customData: { ...(existingCustomData ?? {}), toolId: activeTool.id },
+                        customData: {
+                          ...(existingCustomData ?? {}),
+                          toolId: activeTool.id,
+                        },
                       });
                     }
                   }
@@ -741,7 +838,12 @@ export function LocalEmbedPDF({
                   // letting users discover the editing options before they click away.
                   if (annotationId) {
                     (
-                      annotationApi as unknown as { selectAnnotation?: (pageIndex: number, id: string) => void }
+                      annotationApi as unknown as {
+                        selectAnnotation?: (
+                          pageIndex: number,
+                          id: string,
+                        ) => void;
+                      }
                     ).selectAnnotation?.(event.pageIndex, annotationId);
                   }
 
@@ -749,7 +851,9 @@ export function LocalEmbedPDF({
                     onSignatureAdded(event.annotation);
                   }
                 } else if (event.type === "delete" && event.committed) {
-                  setAnnotations((prev) => prev.filter((ann) => ann.id !== event.annotation.id));
+                  setAnnotations((prev) =>
+                    prev.filter((ann) => ann.id !== event.annotation.id),
+                  );
                 }
               });
             }
@@ -764,15 +868,30 @@ export function LocalEmbedPDF({
             <SearchAPIBridge />
             <ThumbnailAPIBridge />
             <RotateAPIBridge />
-            {(enableAnnotations || enableRedaction || isManualRedactionMode) && <HistoryAPIBridge ref={historyApiRef} />}
-            {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
-            {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
-            {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-            {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
-              <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
+            {(enableAnnotations ||
+              enableRedaction ||
+              isManualRedactionMode) && (
+              <HistoryAPIBridge ref={historyApiRef} />
             )}
-            {(enableRedaction || isManualRedactionMode) && <RedactionPendingTracker ref={redactionTrackerRef} />}
-            {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
+            {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
+            {(enableRedaction || isManualRedactionMode) && (
+              <RedactionAPIBridge />
+            )}
+            {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
+            {(enableAnnotations ||
+              enableRedaction ||
+              isManualRedactionMode) && (
+              <SignatureAPIBridge
+                ref={signatureApiRef}
+                isSignMode={isSignMode}
+              />
+            )}
+            {(enableRedaction || isManualRedactionMode) && (
+              <RedactionPendingTracker ref={redactionTrackerRef} />
+            )}
+            {enableAnnotations && (
+              <AnnotationAPIBridge ref={annotationApiRef} />
+            )}
 
             <ExportAPIBridge />
             <BookmarkAPIBridge />
@@ -809,8 +928,15 @@ export function LocalEmbedPDF({
                         documentId={documentId}
                         renderPage={({ width, height, pageIndex }) => {
                           return (
-                            <Rotate key={`${documentId}-${pageIndex}`} documentId={documentId} pageIndex={pageIndex}>
-                              <PagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+                            <Rotate
+                              key={`${documentId}-${pageIndex}`}
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                            >
+                              <PagePointerProvider
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                              >
                                 <div
                                   data-page-index={pageIndex}
                                   data-page-width={width}
@@ -844,14 +970,24 @@ export function LocalEmbedPDF({
                                             : undefined,
                                     }}
                                   >
-                                    <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+                                    <TilingLayer
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                    />
                                   </div>
 
-                                  <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
+                                  <CustomSearchLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
 
                                   <div
                                     className="pdf-selection-layer"
-                                    style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+                                    style={{
+                                      position: "absolute",
+                                      inset: 0,
+                                      pointerEvents: "none",
+                                    }}
                                   >
                                     <SelectionLayer
                                       documentId={documentId}
@@ -859,7 +995,10 @@ export function LocalEmbedPDF({
                                       background="var(--pdf-selection-bg)"
                                     />
                                   </div>
-                                  <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
+                                  <TextSelectionHandler
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
 
                                   {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
                                   {enableFormFill && file && (
@@ -899,8 +1038,17 @@ export function LocalEmbedPDF({
                                       documentId={documentId}
                                       pageIndex={pageIndex}
                                       selectionOutline={{ color: "#007ACC" }}
-                                      selectionMenu={(props) => <AnnotationSelectionMenu {...props} />}
-                                      style={!showBakedAnnotations ? { opacity: 0, pointerEvents: "none" } : undefined}
+                                      selectionMenu={(props) => (
+                                        <AnnotationSelectionMenu {...props} />
+                                      )}
+                                      style={
+                                        !showBakedAnnotations
+                                          ? {
+                                              opacity: 0,
+                                              pointerEvents: "none",
+                                            }
+                                          : undefined
+                                      }
                                     />
                                   )}
 
@@ -908,12 +1056,17 @@ export function LocalEmbedPDF({
                                     <RedactionLayer
                                       documentId={documentId}
                                       pageIndex={pageIndex}
-                                      selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+                                      selectionMenu={(props) => (
+                                        <RedactionSelectionMenu {...props} />
+                                      )}
                                     />
                                   )}
 
                                   {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
-                                  <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+                                  <LinkLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
                                 </div>
                               </PagePointerProvider>
                             </Rotate>

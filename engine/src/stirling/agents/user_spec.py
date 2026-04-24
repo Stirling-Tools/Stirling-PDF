@@ -14,10 +14,10 @@ from stirling.contracts import (
     AgentRevisionWorkflowResponse,
     AiToolAgentStep,
     ConversationMessage,
-    EditCannotDoResponse,
-    EditClarificationRequest,
     EditPlanResponse,
     PdfEditRequest,
+    PdfEditTerminalResponse,
+    format_conversation_history,
 )
 from stirling.models import ApiModel
 from stirling.services import AppRuntime
@@ -45,14 +45,15 @@ class UserSpecAgent:
         )
 
     async def draft(self, request: AgentDraftRequest) -> AgentDraftWorkflowResponse:
-        edit_plan = await self._build_edit_plan(request.user_message)
+        edit_plan = await self._build_edit_plan(request.user_message, request.conversation_history)
         if not isinstance(edit_plan, EditPlanResponse):
             return edit_plan
         return AgentDraftResponse(draft=await self._run_draft_agent(request, edit_plan))
 
     async def revise(self, request: AgentRevisionRequest) -> AgentRevisionWorkflowResponse:
         edit_plan = await self._build_edit_plan(
-            f"Current objective: {request.current_draft.objective}\nRevision request: {request.user_message}"
+            f"Current objective: {request.current_draft.objective}\nRevision request: {request.user_message}",
+            request.conversation_history,
         )
         if not isinstance(edit_plan, EditPlanResponse):
             return edit_plan
@@ -80,7 +81,7 @@ class UserSpecAgent:
     def _build_draft_prompt(self, request: AgentDraftRequest, edit_plan: EditPlanResponse) -> str:
         return (
             f"User request:\n{request.user_message}\n\n"
-            f"Conversation history:\n{self._format_conversation_history(request.conversation_history)}\n\n"
+            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n\n"
             f"Edit plan summary:\n{edit_plan.summary}\n\n"
             f"Edit plan rationale:\n{edit_plan.rationale or 'None'}\n\n"
             f"Edit plan steps:\n{edit_plan.model_dump_json(indent=2)}"
@@ -89,20 +90,19 @@ class UserSpecAgent:
     def _build_revision_prompt(self, request: AgentRevisionRequest, edit_plan: EditPlanResponse) -> str:
         return (
             f"Revision request:\n{request.user_message}\n\n"
-            f"Conversation history:\n{self._format_conversation_history(request.conversation_history)}\n\n"
+            f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n\n"
             f"Current draft:\n{request.current_draft.model_dump_json(indent=2)}\n\n"
             f"Edit plan summary:\n{edit_plan.summary}\n\n"
             f"Edit plan rationale:\n{edit_plan.rationale or 'None'}\n\n"
             f"Edit plan steps:\n{edit_plan.model_dump_json(indent=2)}"
         )
 
-    def _format_conversation_history(self, conversation_history: list[ConversationMessage]) -> str:
-        if not conversation_history:
-            return "None"
-        return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
-
     async def _build_edit_plan(
         self,
         user_message: str,
-    ) -> EditPlanResponse | EditClarificationRequest | EditCannotDoResponse:
-        return await self.pdf_edit_agent.handle(PdfEditRequest(user_message=user_message))
+        conversation_history: list[ConversationMessage],
+    ) -> PdfEditTerminalResponse:
+        return await self.pdf_edit_agent.handle(
+            PdfEditRequest(user_message=user_message, conversation_history=conversation_history),
+            allow_need_content=False,
+        )

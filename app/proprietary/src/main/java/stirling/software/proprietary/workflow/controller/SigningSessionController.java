@@ -47,7 +47,9 @@ import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
-@Tag(name = "Security", description = "Security APIs - Signing Workflows")
+@Tag(
+        name = "Signing Sessions",
+        description = "Signing session lifecycle and participant management")
 @RequiredArgsConstructor
 public class SigningSessionController {
 

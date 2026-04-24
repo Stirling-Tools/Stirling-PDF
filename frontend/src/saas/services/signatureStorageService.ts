@@ -28,7 +28,9 @@ class SignatureStorageService {
     }
 
     // SaaS mode always uses localStorage (no backend signature API available)
-    console.log("[SignatureStorage] SaaS mode - using localStorage (backend not available)");
+    console.log(
+      "[SignatureStorage] SaaS mode - using localStorage (backend not available)",
+    );
     this.capabilities = {
       supportsBackend: false,
       storageType: "localStorage",

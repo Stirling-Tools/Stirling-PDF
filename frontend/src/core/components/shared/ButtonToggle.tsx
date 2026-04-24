@@ -74,5 +74,9 @@ export const ButtonToggle: React.FC<ButtonToggleProps> = ({
     return <Stack gap="xs">{options.map(renderButton)}</Stack>;
   }
 
-  return <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>{options.map(renderButton)}</div>;
+  return (
+    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+      {options.map(renderButton)}
+    </div>
+  );
 };

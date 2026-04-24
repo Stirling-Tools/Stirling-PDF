@@ -57,7 +57,9 @@ class AutomationStorage {
     return this.db;
   }
 
-  async saveAutomation(automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">): Promise<AutomationConfig> {
+  async saveAutomation(
+    automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">,
+  ): Promise<AutomationConfig> {
     const db = await this.ensureDB();
     const timestamp = new Date().toISOString();
 
@@ -83,7 +85,9 @@ class AutomationStorage {
     });
   }
 
-  async updateAutomation(automation: AutomationConfig): Promise<AutomationConfig> {
+  async updateAutomation(
+    automation: AutomationConfig,
+  ): Promise<AutomationConfig> {
     const db = await this.ensureDB();
 
     const updatedAutomation: AutomationConfig = {
@@ -135,7 +139,10 @@ class AutomationStorage {
       request.onsuccess = () => {
         const automations = request.result || [];
         // Sort by creation date, newest first
-        automations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        automations.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
         resolve(automations);
       };
 
@@ -174,8 +181,11 @@ class AutomationStorage {
     return automations.filter(
       (automation) =>
         automation.name.toLowerCase().includes(lowerQuery) ||
-        (automation.description && automation.description.toLowerCase().includes(lowerQuery)) ||
-        automation.operations.some((op) => op.operation.toLowerCase().includes(lowerQuery)),
+        (automation.description &&
+          automation.description.toLowerCase().includes(lowerQuery)) ||
+        automation.operations.some((op) =>
+          op.operation.toLowerCase().includes(lowerQuery),
+        ),
     );
   }
 }

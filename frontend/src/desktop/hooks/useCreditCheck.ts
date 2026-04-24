@@ -52,10 +52,14 @@ export function useCreditCheck(operationType?: string, endpoint?: string) {
           }),
         );
 
-        return t("credits.insufficient.brief", "Insufficient credits. You need {{required}} credits but have {{current}}.", {
-          required: requiredCredits,
-          current: creditBalance,
-        });
+        return t(
+          "credits.insufficient.brief",
+          "Insufficient credits. You need {{required}} credits but have {{current}}.",
+          {
+            required: requiredCredits,
+            current: creditBalance,
+          },
+        );
       }
 
       return null;

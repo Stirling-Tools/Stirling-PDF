@@ -15,7 +15,8 @@
   display: flex;
   flex-direction: column;
   background: var(--mantine-color-body);
-  border-left: 1px solid var(--border-subtle, var(--mantine-color-default-border));
+  border-left: 1px solid
+    var(--border-subtle, var(--mantine-color-default-border));
   z-index: 999;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
@@ -25,7 +26,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-subtle, var(--mantine-color-default-border));
+  border-bottom: 1px solid
+    var(--border-subtle, var(--mantine-color-default-border));
   flex-shrink: 0;
 }
 
@@ -38,7 +40,8 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem;
-  border-top: 1px solid var(--border-subtle, var(--mantine-color-default-border));
+  border-top: 1px solid
+    var(--border-subtle, var(--mantine-color-default-border));
   flex-shrink: 0;
 }
 

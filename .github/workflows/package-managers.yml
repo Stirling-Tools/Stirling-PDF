@@ -1,0 +1,159 @@
+name: Update Package Manager Manifests
+
+on:
+  release:
+    types: [ released ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to test (e.g. 2.9.2 — no v prefix)"
+        required: true
+        type: string
+      dry_run:
+        description: "Skip the git push at the end (safe test)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  get-release-info:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.info.outputs.version }}
+      dmg_arm64_sha256: ${{ steps.hashes.outputs.dmg_arm64_sha256 }}
+      dmg_x86_64_sha256: ${{ steps.hashes.outputs.dmg_x86_64_sha256 }}
+      msi_sha256: ${{ steps.hashes.outputs.msi_sha256 }}
+      deb_sha256: ${{ steps.hashes.outputs.deb_sha256 }}
+      jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Extract version from tag or manual input
+        id: info
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="$DISPATCH_VERSION"
+          else
+            VERSION="$RELEASE_TAG"
+          fi
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets and compute SHA256
+        id: hashes
+        env:
+          VERSION: ${{ steps.info.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BASE="https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${VERSION}"
+
+          download_sha256() {
+            local url="$1"
+            local file
+            file=$(basename "$url")
+            curl -fsSL --retry 3 -o "$file" "$url"
+            sha256sum "$file" | awk '{print $1}'
+          }
+
+          DMG_ARM64_SHA=$(download_sha256 "${BASE}/Stirling-PDF-macos-aarch64.dmg")
+          DMG_X64_SHA=$(download_sha256 "${BASE}/Stirling-PDF-macos-x86_64.dmg")
+          MSI_SHA=$(download_sha256 "${BASE}/Stirling-PDF-windows-x86_64.msi")
+          DEB_SHA=$(download_sha256 "${BASE}/Stirling-PDF-linux-x86_64.deb")
+          JAR_SHA=$(download_sha256 "${BASE}/Stirling-PDF-with-login.jar")
+
+          echo "dmg_arm64_sha256=$DMG_ARM64_SHA" >> "$GITHUB_OUTPUT"
+          echo "dmg_x86_64_sha256=$DMG_X64_SHA"  >> "$GITHUB_OUTPUT"
+          echo "msi_sha256=$MSI_SHA"              >> "$GITHUB_OUTPUT"
+          echo "deb_sha256=$DEB_SHA"              >> "$GITHUB_OUTPUT"
+          echo "jar_sha256=$JAR_SHA"              >> "$GITHUB_OUTPUT"
+
+  update-homebrew-and-scoop:
+    needs: get-release-info
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout homebrew-stirling-pdf tap (also hosts Scoop bucket)
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: Stirling-Tools/homebrew-stirling-pdf
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update Homebrew cask (Casks/stirling-pdf.rb)
+        env:
+          VERSION: ${{ needs.get-release-info.outputs.version }}
+          ARM64_SHA: ${{ needs.get-release-info.outputs.dmg_arm64_sha256 }}
+          X64_SHA: ${{ needs.get-release-info.outputs.dmg_x86_64_sha256 }}
+        run: |
+          CASK="tap/Casks/stirling-pdf.rb"
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$CASK"
+          awk -v arm="$ARM64_SHA" -v x64="$X64_SHA" '
+            /on_arm/     { in_arm=1 }
+            /on_intel/   { in_arm=0; in_intel=1 }
+            /end/        { in_arm=0; in_intel=0 }
+            in_arm  && /sha256/ { sub(/sha256 ".*"/, "sha256 \"" arm "\"") }
+            in_intel && /sha256/ { sub(/sha256 ".*"/, "sha256 \"" x64 "\"") }
+            { print }
+          ' "$CASK" > tmp && mv tmp "$CASK"
+
+      - name: Update Homebrew formula (Formula/stirling-pdf-server.rb)
+        env:
+          VERSION: ${{ needs.get-release-info.outputs.version }}
+          JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
+        run: |
+          FORMULA="tap/Formula/stirling-pdf-server.rb"
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$FORMULA"
+          sed -i "s/sha256 \".*\"/sha256 \"${JAR_SHA}\"/" "$FORMULA"
+
+      - name: Update Scoop stirling-pdf.json
+        env:
+          VERSION: ${{ needs.get-release-info.outputs.version }}
+          MSI_SHA: ${{ needs.get-release-info.outputs.msi_sha256 }}
+        run: |
+          MANIFEST="tap/scoop/stirling-pdf.json"
+          jq --arg v "$VERSION" --arg h "$MSI_SHA" \
+            '.version = $v | .architecture["64bit"].url = "https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v\($v)/Stirling-PDF-windows-x86_64.msi" | .architecture["64bit"].hash = $h' \
+            "$MANIFEST" > tmp.json && mv tmp.json "$MANIFEST"
+
+      - name: Update Scoop stirling-pdf-server.json
+        env:
+          VERSION: ${{ needs.get-release-info.outputs.version }}
+          JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
+        run: |
+          MANIFEST="tap/scoop/stirling-pdf-server.json"
+          jq --arg v "$VERSION" --arg h "$JAR_SHA" \
+            '.version = $v | .url = "https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v\($v)/Stirling-PDF-with-login.jar" | .hash = $h' \
+            "$MANIFEST" > tmp.json && mv tmp.json "$MANIFEST"
+
+      - name: Show tap diff (for dry-run visibility)
+        working-directory: tap
+        run: |
+          echo "--- diff --stat ---"
+          git diff --stat
+          echo "--- full diff ---"
+          git diff
+
+      - name: Commit and push all tap updates
+        if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
+        working-directory: tap
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/stirling-pdf.rb Formula/stirling-pdf-server.rb scoop/stirling-pdf.json scoop/stirling-pdf-server.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: bump Stirling-PDF to v${{ needs.get-release-info.outputs.version }}"
+          git push

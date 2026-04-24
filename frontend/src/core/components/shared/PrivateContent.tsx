@@ -23,7 +23,12 @@ interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
  *   <img src={thumbnail} alt="preview" />
  * </PrivateContent>
  */
-export const PrivateContent: React.FC<PrivateContentProps> = ({ children, className = "", style, ...props }) => {
+export const PrivateContent: React.FC<PrivateContentProps> = ({
+  children,
+  className = "",
+  style,
+  ...props
+}) => {
   const combinedClassName = `ph-no-capture${className ? ` ${className}` : ""}`;
   const combinedStyle = { display: "contents" as const, ...style };
 

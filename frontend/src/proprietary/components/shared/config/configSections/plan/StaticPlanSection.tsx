@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Card, Text, Stack, Button, Collapse, Divider, Tooltip } from "@mantine/core";
+import {
+  Card,
+  Text,
+  Stack,
+  Button,
+  Collapse,
+  Divider,
+  Tooltip,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@app/services/licenseService";
@@ -20,16 +28,23 @@ interface StaticPlanSectionProps {
   currentLicenseInfo?: LicenseInfo;
 }
 
-const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInfo }) => {
+const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
+  currentLicenseInfo,
+}) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
 
   // Static checkout modal state
   const [checkoutModalOpened, setCheckoutModalOpened] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<"server" | "enterprise">("server");
+  const [selectedPlan, setSelectedPlan] = useState<"server" | "enterprise">(
+    "server",
+  );
   const [isUpgrade, setIsUpgrade] = useState(false);
 
-  const handleOpenCheckout = (plan: "server" | "enterprise", upgrade: boolean) => {
+  const handleOpenCheckout = (
+    plan: "server" | "enterprise",
+    upgrade: boolean,
+  ) => {
     // Prevent Free → Enterprise (must have Server first)
     const currentTier = mapLicenseToTier(currentLicenseInfo || null);
     if (currentTier === "free" && plan === "enterprise") {
@@ -53,7 +68,10 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
     // Show warning about email verification
     alert({
       alertType: "warning",
-      title: t("plan.static.billingPortal.title", "Email Verification Required"),
+      title: t(
+        "plan.static.billingPortal.title",
+        "Email Verification Required",
+      ),
       body: t(
         "plan.static.billingPortal.message",
         "You will need to verify your email address in the Stripe billing portal. Check your email for a login link.",
@@ -110,7 +128,13 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {/* Available Plans */}
       <div>
-        <h3 style={{ margin: 0, color: "var(--mantine-color-text)", fontSize: "1rem" }}>
+        <h3
+          style={{
+            margin: 0,
+            color: "var(--mantine-color-text)",
+            fontSize: "1rem",
+          }}
+        >
           {t("plan.availablePlans.title", "Available Plans")}
         </h3>
         <p
@@ -120,7 +144,10 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
             fontSize: "0.875rem",
           }}
         >
-          {t("plan.static.contactToUpgrade", "Contact us to upgrade or customize your plan")}
+          {t(
+            "plan.static.contactToUpgrade",
+            "Contact us to upgrade or customize your plan",
+          )}
         </p>
 
         <div
@@ -140,9 +167,17 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
               style={getBaseCardStyle(plan.id === currentPlan.id)}
               className="plan-card"
             >
-              {plan.id === currentPlan.id && <PricingBadge type="current" label={t("plan.current", "Current Plan")} />}
+              {plan.id === currentPlan.id && (
+                <PricingBadge
+                  type="current"
+                  label={t("plan.current", "Current Plan")}
+                />
+              )}
               {plan.popular && plan.id !== currentPlan.id && (
-                <PricingBadge type="popular" label={t("plan.popular", "Popular")} />
+                <PricingBadge
+                  type="popular"
+                  label={t("plan.popular", "Popular")}
+                />
               )}
 
               <Stack gap="md" style={{ height: "100%" }}>
@@ -169,15 +204,27 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
 
                 {/* Tier-based button logic */}
                 {(() => {
-                  const currentTier = mapLicenseToTier(currentLicenseInfo || null);
+                  const currentTier = mapLicenseToTier(
+                    currentLicenseInfo || null,
+                  );
                   const isCurrent = checkIsCurrentTier(currentTier, plan.id);
-                  const isDowngradePlan = checkIsDowngrade(currentTier, plan.id);
+                  const isDowngradePlan = checkIsDowngrade(
+                    currentTier,
+                    plan.id,
+                  );
 
                   // Free Plan
                   if (plan.id === "free") {
                     return (
-                      <Button variant="filled" disabled fullWidth className="plan-button">
-                        {isCurrent ? t("plan.current", "Current Plan") : t("plan.free.included", "Included")}
+                      <Button
+                        variant="filled"
+                        disabled
+                        fullWidth
+                        className="plan-button"
+                      >
+                        {isCurrent
+                          ? t("plan.current", "Current Plan")
+                          : t("plan.free.included", "Included")}
                       </Button>
                     );
                   }
@@ -198,14 +245,24 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
                     }
                     if (isCurrent) {
                       return (
-                        <Button variant="filled" fullWidth onClick={handleManageBilling} className="plan-button">
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          onClick={handleManageBilling}
+                          className="plan-button"
+                        >
                           {t("plan.manage", "Manage")}
                         </Button>
                       );
                     }
                     if (isDowngradePlan) {
                       return (
-                        <Button variant="filled" disabled fullWidth className="plan-button">
+                        <Button
+                          variant="filled"
+                          disabled
+                          fullWidth
+                          className="plan-button"
+                        >
                           {t("plan.free.included", "Included")}
                         </Button>
                       );
@@ -216,9 +273,24 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
                   if (plan.id === "enterprise") {
                     if (isEnterpriseBlockedForFree(currentTier, plan.id)) {
                       return (
-                        <Tooltip label={t("plan.enterprise.requiresServer", "Requires Server plan")} position="top" withArrow>
-                          <Button variant="filled" disabled fullWidth className="plan-button">
-                            {t("plan.enterprise.requiresServer", "Requires Server")}
+                        <Tooltip
+                          label={t(
+                            "plan.enterprise.requiresServer",
+                            "Requires Server plan",
+                          )}
+                          position="top"
+                          withArrow
+                        >
+                          <Button
+                            variant="filled"
+                            disabled
+                            fullWidth
+                            className="plan-button"
+                          >
+                            {t(
+                              "plan.enterprise.requiresServer",
+                              "Requires Server",
+                            )}
                           </Button>
                         </Tooltip>
                       );
@@ -236,14 +308,24 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
                       //   </Button>
                       // );
                       return (
-                        <Button variant="filled" fullWidth disabled className="plan-button">
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          disabled
+                          className="plan-button"
+                        >
                           {t("plan.contact", "Contact Us")}
                         </Button>
                       );
                     }
                     if (isCurrent) {
                       return (
-                        <Button variant="filled" fullWidth onClick={handleManageBilling} className="plan-button">
+                        <Button
+                          variant="filled"
+                          fullWidth
+                          onClick={handleManageBilling}
+                          className="plan-button"
+                        >
                           {t("plan.manage", "Manage")}
                         </Button>
                       );
@@ -259,7 +341,10 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({ currentLicenseInf
 
         {/* Feature Comparison Toggle */}
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
-          <Button variant="subtle" onClick={() => setShowComparison(!showComparison)}>
+          <Button
+            variant="subtle"
+            onClick={() => setShowComparison(!showComparison)}
+          >
             {showComparison
               ? t("plan.hideComparison", "Hide Feature Comparison")
               : t("plan.showComparison", "Compare All Features")}

@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 import { useMemo, useCallback } from "react";
 
 // Normalize angle to number between 0 and 359
@@ -50,7 +53,10 @@ export const useRotateParameters = (): RotateParametersHook => {
 
   // Override updateParameter - no longer normalize angles here
   const updateParameter = useCallback(
-    <K extends keyof RotateParameters>(parameter: K, value: RotateParameters[K]) => {
+    <K extends keyof RotateParameters>(
+      parameter: K,
+      value: RotateParameters[K],
+    ) => {
       baseHook.updateParameter(parameter, value);
     },
     [baseHook],

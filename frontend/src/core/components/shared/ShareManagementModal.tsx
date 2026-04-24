@@ -53,7 +53,11 @@ interface ShareManagementModalProps {
   file: StirlingFileStub;
 }
 
-const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onClose, file }) => {
+const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
+  opened,
+  onClose,
+  file,
+}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const sharingEnabled = config?.storageSharingEnabled === true;
@@ -62,24 +66,48 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shareLinks, setShareLinks] = useState<ShareLinkResponse[]>([]);
-  const [activityMap, setActivityMap] = useState<Record<string, ShareLinkAccessResponse[]>>({});
-  const [sharedUsers, setSharedUsers] = useState<Array<{ username: string; accessRole?: string | null }>>([]);
+  const [activityMap, setActivityMap] = useState<
+    Record<string, ShareLinkAccessResponse[]>
+  >({});
+  const [sharedUsers, setSharedUsers] = useState<
+    Array<{ username: string; accessRole?: string | null }>
+  >([]);
   const [shareUsername, setShareUsername] = useState("");
-  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">("editor");
+  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">(
+    "editor",
+  );
   const [showEmailWarning, setShowEmailWarning] = useState(false);
-  const [selectedActivityToken, setSelectedActivityToken] = useState<string | null>(null);
-  const [confirmRevokeToken, setConfirmRevokeToken] = useState<string | null>(null);
-  const [confirmRemoveUser, setConfirmRemoveUser] = useState<string | null>(null);
+  const [selectedActivityToken, setSelectedActivityToken] = useState<
+    string | null
+  >(null);
+  const [confirmRevokeToken, setConfirmRevokeToken] = useState<string | null>(
+    null,
+  );
+  const [confirmRemoveUser, setConfirmRemoveUser] = useState<string | null>(
+    null,
+  );
 
   const normalizedShareUsername = shareUsername.trim();
   const lowerShareUsername = normalizedShareUsername.toLowerCase();
-  const isEmailInput = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedShareUsername);
-  const isSimpleUsername = /^[A-Za-z0-9@._+-]{3,50}$/.test(normalizedShareUsername);
-  const isReservedUsername = lowerShareUsername === "all_users" || lowerShareUsername === "anonymoususer";
-  const isValidShareUsername = normalizedShareUsername.length > 0 && !isReservedUsername && (isEmailInput || isSimpleUsername);
+  const isEmailInput = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    normalizedShareUsername,
+  );
+  const isSimpleUsername = /^[A-Za-z0-9@._+-]{3,50}$/.test(
+    normalizedShareUsername,
+  );
+  const isReservedUsername =
+    lowerShareUsername === "all_users" ||
+    lowerShareUsername === "anonymoususer";
+  const isValidShareUsername =
+    normalizedShareUsername.length > 0 &&
+    !isReservedUsername &&
+    (isEmailInput || isSimpleUsername);
   const shareUsernameError =
     normalizedShareUsername.length > 0 && !isValidShareUsername
-      ? t("storageShare.invalidUsername", "Enter a valid username or email address.")
+      ? t(
+          "storageShare.invalidUsername",
+          "Enter a valid username or email address.",
+        )
       : null;
 
   const shareBaseUrl = useMemo(() => {
@@ -88,7 +116,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       try {
         const parsed = new URL(frontendUrl);
         if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-          const normalized = frontendUrl.endsWith("/") ? frontendUrl.slice(0, -1) : frontendUrl;
+          const normalized = frontendUrl.endsWith("/")
+            ? frontendUrl.slice(0, -1)
+            : frontendUrl;
           return `${normalized}/share/`;
         }
       } catch {
@@ -103,9 +133,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await apiClient.get<StoredFileResponse>(`/api/v1/storage/files/${file.remoteStorageId}`, {
-        suppressErrorToast: true,
-      });
+      const response = await apiClient.get<StoredFileResponse>(
+        `/api/v1/storage/files/${file.remoteStorageId}`,
+        {
+          suppressErrorToast: true,
+        },
+      );
       const links = response.data?.shareLinks ?? [];
       const users =
         response.data?.sharedUsers ??
@@ -117,7 +150,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       setSharedUsers(users);
     } catch (error) {
       console.error("Failed to load share links:", error);
-      setErrorMessage(t("storageShare.manageLoadFailed", "Unable to load share links."));
+      setErrorMessage(
+        t("storageShare.manageLoadFailed", "Unable to load share links."),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +176,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       setSelectedActivityToken(null);
       return;
     }
-    if (!selectedActivityToken || !shareLinks.some((link) => link.token === selectedActivityToken)) {
+    if (
+      !selectedActivityToken ||
+      !shareLinks.some((link) => link.token === selectedActivityToken)
+    ) {
       setSelectedActivityToken(shareLinks[0].token);
     }
   }, [opened, selectedActivityToken, shareLinks]);
@@ -151,9 +189,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await apiClient.post(`/api/v1/storage/files/${file.remoteStorageId}/shares/links`, {
-        accessRole: shareRole,
-      });
+      const response = await apiClient.post(
+        `/api/v1/storage/files/${file.remoteStorageId}/shares/links`,
+        {
+          accessRole: shareRole,
+        },
+      );
       const token = response.data?.token as string | undefined;
       if (token) {
         setShareLinks((prev) => [
@@ -165,7 +206,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
           },
         ]);
         actions.updateStirlingFileStub(file.id, { remoteHasShareLinks: true });
-        await fileStorage.updateFileMetadata(file.id, { remoteHasShareLinks: true });
+        await fileStorage.updateFileMetadata(file.id, {
+          remoteHasShareLinks: true,
+        });
         alert({
           alertType: "success",
           title: t("storageShare.generated", "Share link generated"),
@@ -175,7 +218,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       }
     } catch (error: any) {
       console.error("Failed to create share link:", error);
-      setErrorMessage(t("storageShare.failure", "Unable to generate a share link. Please try again."));
+      setErrorMessage(
+        t(
+          "storageShare.failure",
+          "Unable to generate a share link. Please try again.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -210,9 +258,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       setIsLoading(true);
       setConfirmRevokeToken(null);
       try {
-        await apiClient.delete(`/api/v1/storage/files/${file.remoteStorageId}/shares/links/${token}`);
+        await apiClient.delete(
+          `/api/v1/storage/files/${file.remoteStorageId}/shares/links/${token}`,
+        );
         // Compute before setShareLinks so we don't read stale closure state after the update
-        const nextHasLinks = shareLinks.filter((link) => link.token !== token).length > 0;
+        const nextHasLinks =
+          shareLinks.filter((link) => link.token !== token).length > 0;
         setShareLinks((prev) => prev.filter((link) => link.token !== token));
         setActivityMap((prev) => {
           const updated = { ...prev };
@@ -220,8 +271,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
           return updated;
         });
         setSelectedActivityToken((prev) => (prev === token ? null : prev));
-        actions.updateStirlingFileStub(file.id, { remoteHasShareLinks: nextHasLinks });
-        await fileStorage.updateFileMetadata(file.id, { remoteHasShareLinks: nextHasLinks });
+        actions.updateStirlingFileStub(file.id, {
+          remoteHasShareLinks: nextHasLinks,
+        });
+        await fileStorage.updateFileMetadata(file.id, {
+          remoteHasShareLinks: nextHasLinks,
+        });
         alert({
           alertType: "success",
           title: t("storageShare.revoked", "Share link removed"),
@@ -230,7 +285,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
         });
       } catch (error) {
         console.error("Failed to revoke share link:", error);
-        setErrorMessage(t("storageShare.revokeFailed", "Unable to remove the share link."));
+        setErrorMessage(
+          t("storageShare.revokeFailed", "Unable to remove the share link."),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -253,7 +310,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
         }));
       } catch (error) {
         console.error("Failed to load share activity:", error);
-        setErrorMessage(t("storageShare.accessFailed", "Unable to load activity."));
+        setErrorMessage(
+          t("storageShare.accessFailed", "Unable to load activity."),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -283,15 +342,24 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        await apiClient.post(`/api/v1/storage/files/${file.remoteStorageId}/shares/users`, {
-          username: trimmed,
-          accessRole: shareRole,
-        });
+        await apiClient.post(
+          `/api/v1/storage/files/${file.remoteStorageId}/shares/users`,
+          {
+            username: trimmed,
+            accessRole: shareRole,
+          },
+        );
         setSharedUsers((prev) => {
           if (prev.some((user) => user.username === trimmed)) {
-            return prev.map((user) => (user.username === trimmed ? { ...user, accessRole: shareRole } : user));
+            return prev.map((user) =>
+              user.username === trimmed
+                ? { ...user, accessRole: shareRole }
+                : user,
+            );
           }
-          return [...prev, { username: trimmed, accessRole: shareRole }].sort((a, b) => a.username.localeCompare(b.username));
+          return [...prev, { username: trimmed, accessRole: shareRole }].sort(
+            (a, b) => a.username.localeCompare(b.username),
+          );
         });
         setShareUsername("");
         setShowEmailWarning(false);
@@ -303,12 +371,21 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
         });
       } catch (error) {
         console.error("Failed to share with user:", error);
-        setErrorMessage(t("storageShare.userAddFailed", "Unable to share with that user."));
+        setErrorMessage(
+          t("storageShare.userAddFailed", "Unable to share with that user."),
+        );
       } finally {
         setIsLoading(false);
       }
     },
-    [file.remoteStorageId, isEmailInput, isValidShareUsername, shareRole, shareUsername, t],
+    [
+      file.remoteStorageId,
+      isEmailInput,
+      isValidShareUsername,
+      shareRole,
+      shareUsername,
+      t,
+    ],
   );
 
   const handleUpdateUserRole = useCallback(
@@ -317,11 +394,20 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        await apiClient.post(`/api/v1/storage/files/${file.remoteStorageId}/shares/users`, {
-          username,
-          accessRole: nextRole,
-        });
-        setSharedUsers((prev) => prev.map((user) => (user.username === username ? { ...user, accessRole: nextRole } : user)));
+        await apiClient.post(
+          `/api/v1/storage/files/${file.remoteStorageId}/shares/users`,
+          {
+            username,
+            accessRole: nextRole,
+          },
+        );
+        setSharedUsers((prev) =>
+          prev.map((user) =>
+            user.username === username
+              ? { ...user, accessRole: nextRole }
+              : user,
+          ),
+        );
         alert({
           alertType: "success",
           title: t("storageShare.userAdded", "User added to shared list."),
@@ -330,7 +416,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
         });
       } catch (error) {
         console.error("Failed to update shared user role:", error);
-        setErrorMessage(t("storageShare.userAddFailed", "Unable to share with that user."));
+        setErrorMessage(
+          t("storageShare.userAddFailed", "Unable to share with that user."),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -345,17 +433,26 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       setErrorMessage(null);
       setConfirmRemoveUser(null);
       try {
-        await apiClient.delete(`/api/v1/storage/files/${file.remoteStorageId}/shares/users/${encodeURIComponent(username)}`);
-        setSharedUsers((prev) => prev.filter((user) => user.username !== username));
+        await apiClient.delete(
+          `/api/v1/storage/files/${file.remoteStorageId}/shares/users/${encodeURIComponent(username)}`,
+        );
+        setSharedUsers((prev) =>
+          prev.filter((user) => user.username !== username),
+        );
         alert({
           alertType: "success",
-          title: t("storageShare.userRemoved", "User removed from shared list."),
+          title: t(
+            "storageShare.userRemoved",
+            "User removed from shared list.",
+          ),
           expandable: false,
           durationMs: 2500,
         });
       } catch (error) {
         console.error("Failed to remove shared user:", error);
-        setErrorMessage(t("storageShare.userRemoveFailed", "Unable to remove that user."));
+        setErrorMessage(
+          t("storageShare.userRemoveFailed", "Unable to remove that user."),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -363,8 +460,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
     [file.remoteStorageId, t],
   );
 
-  const selectedActivity = selectedActivityToken ? activityMap[selectedActivityToken] : undefined;
-  const selectedLink = selectedActivityToken ? shareLinks.find((link) => link.token === selectedActivityToken) : undefined;
+  const selectedActivity = selectedActivityToken
+    ? activityMap[selectedActivityToken]
+    : undefined;
+  const selectedLink = selectedActivityToken
+    ? shareLinks.find((link) => link.token === selectedActivityToken)
+    : undefined;
 
   return (
     <Modal
@@ -379,7 +480,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
       <Stack gap="lg">
         <Stack gap={4}>
           <Text size="sm" c="dimmed">
-            {t("storageShare.manageDescription", "Create and manage links to share this file.")}
+            {t(
+              "storageShare.manageDescription",
+              "Create and manage links to share this file.",
+            )}
           </Text>
           <Text size="sm">
             {t("storageShare.fileLabel", "File")}:{" "}
@@ -390,13 +494,22 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
         </Stack>
 
         {errorMessage && (
-          <Alert color="red" title={t("storageShare.errorTitle", "Sharing error")}>
+          <Alert
+            color="red"
+            title={t("storageShare.errorTitle", "Sharing error")}
+          >
             {errorMessage}
           </Alert>
         )}
         {!sharingEnabled && (
-          <Alert color="yellow" title={t("storageShare.sharingDisabled", "Sharing is disabled.")}>
-            {t("storageShare.sharingDisabledBody", "Sharing has been disabled by your server settings.")}
+          <Alert
+            color="yellow"
+            title={t("storageShare.sharingDisabled", "Sharing is disabled.")}
+          >
+            {t(
+              "storageShare.sharingDisabledBody",
+              "Sharing has been disabled by your server settings.",
+            )}
           </Alert>
         )}
 
@@ -413,17 +526,34 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                   <Select
                     label={t("storageShare.roleLabel", "Role")}
                     value={shareRole}
-                    onChange={(value) => setShareRole((value as typeof shareRole) || "editor")}
-                    comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+                    onChange={(value) =>
+                      setShareRole((value as typeof shareRole) || "editor")
+                    }
+                    comboboxProps={{
+                      withinPortal: true,
+                      zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
+                    }}
                     data={[
-                      { value: "editor", label: t("storageShare.roleEditor", "Editor") },
-                      { value: "commenter", label: t("storageShare.roleCommenter", "Commenter") },
-                      { value: "viewer", label: t("storageShare.roleViewer", "Viewer") },
+                      {
+                        value: "editor",
+                        label: t("storageShare.roleEditor", "Editor"),
+                      },
+                      {
+                        value: "commenter",
+                        label: t("storageShare.roleCommenter", "Commenter"),
+                      },
+                      {
+                        value: "viewer",
+                        label: t("storageShare.roleViewer", "Viewer"),
+                      },
                     ]}
                   />
                   {shareRole === "commenter" && (
                     <Text size="xs" c="dimmed">
-                      {t("storageShare.commenterHint", "Commenting is coming soon.")}
+                      {t(
+                        "storageShare.commenterHint",
+                        "Commenting is coming soon.",
+                      )}
                     </Text>
                   )}
                   <Group justify="flex-end" gap="sm">
@@ -447,7 +577,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                 <Group align="flex-end" gap="sm">
                   <TextInput
                     label={t("storageShare.usernameLabel", "Username or email")}
-                    placeholder={t("storageShare.usernamePlaceholder", "Enter a username or email")}
+                    placeholder={t(
+                      "storageShare.usernamePlaceholder",
+                      "Enter a username or email",
+                    )}
                     value={shareUsername}
                     onChange={(event) => {
                       setShareUsername(event.currentTarget.value);
@@ -464,13 +597,22 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                   />
                   <Button
                     onClick={() => handleAddUser()}
-                    disabled={!sharingEnabled || isLoading || !normalizedShareUsername || !!shareUsernameError}
+                    disabled={
+                      !sharingEnabled ||
+                      isLoading ||
+                      !normalizedShareUsername ||
+                      !!shareUsernameError
+                    }
                   >
                     {t("storageShare.addUser", "Add")}
                   </Button>
                 </Group>
                 {showEmailWarning && (
-                  <Alert color="yellow" title={t("storageShare.emailWarningTitle", "Email address")} variant="light">
+                  <Alert
+                    color="yellow"
+                    title={t("storageShare.emailWarningTitle", "Email address")}
+                    variant="light"
+                  >
                     <Stack gap="xs">
                       <Text size="sm">
                         {t(
@@ -479,11 +621,21 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                         )}
                       </Text>
                       <Group justify="flex-end" gap="sm">
-                        <Button variant="default" onClick={() => setShowEmailWarning(false)} disabled={isLoading}>
+                        <Button
+                          variant="default"
+                          onClick={() => setShowEmailWarning(false)}
+                          disabled={isLoading}
+                        >
                           {t("cancel", "Cancel")}
                         </Button>
-                        <Button onClick={() => handleAddUser(true)} loading={isLoading}>
-                          {t("storageShare.emailWarningConfirm", "Share anyway")}
+                        <Button
+                          onClick={() => handleAddUser(true)}
+                          loading={isLoading}
+                        >
+                          {t(
+                            "storageShare.emailWarningConfirm",
+                            "Share anyway",
+                          )}
                         </Button>
                       </Group>
                     </Stack>
@@ -491,17 +643,27 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                 )}
                 {sharedUsers.length === 0 ? (
                   <Text size="sm" c="dimmed">
-                    {t("storageShare.noSharedUsers", "No users have access yet.")}
+                    {t(
+                      "storageShare.noSharedUsers",
+                      "No users have access yet.",
+                    )}
                   </Text>
                 ) : (
                   <Stack gap="xs">
                     {sharedUsers.map((user) => (
-                      <Group key={user.username} justify="space-between" align="flex-start">
+                      <Group
+                        key={user.username}
+                        justify="space-between"
+                        align="flex-start"
+                      >
                         <Stack gap={2}>
                           <Text size="sm">{user.username}</Text>
                           {user.accessRole === "commenter" && (
                             <Text size="xs" c="dimmed">
-                              {t("storageShare.commenterHint", "Commenting is coming soon.")}
+                              {t(
+                                "storageShare.commenterHint",
+                                "Commenting is coming soon.",
+                              )}
                             </Text>
                           )}
                         </Stack>
@@ -509,14 +671,34 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                           <Select
                             value={user.accessRole ?? "editor"}
                             onChange={(value) => {
-                              const nextRole = (value as "editor" | "commenter" | "viewer") || "editor";
-                              void handleUpdateUserRole(user.username, nextRole);
+                              const nextRole =
+                                (value as "editor" | "commenter" | "viewer") ||
+                                "editor";
+                              void handleUpdateUserRole(
+                                user.username,
+                                nextRole,
+                              );
                             }}
-                            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+                            comboboxProps={{
+                              withinPortal: true,
+                              zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
+                            }}
                             data={[
-                              { value: "editor", label: t("storageShare.roleEditor", "Editor") },
-                              { value: "commenter", label: t("storageShare.roleCommenter", "Commenter") },
-                              { value: "viewer", label: t("storageShare.roleViewer", "Viewer") },
+                              {
+                                value: "editor",
+                                label: t("storageShare.roleEditor", "Editor"),
+                              },
+                              {
+                                value: "commenter",
+                                label: t(
+                                  "storageShare.roleCommenter",
+                                  "Commenter",
+                                ),
+                              },
+                              {
+                                value: "viewer",
+                                label: t("storageShare.roleViewer", "Viewer"),
+                              },
                             ]}
                             size="xs"
                           />
@@ -533,7 +715,11 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                               >
                                 {t("confirm", "Confirm")}
                               </Button>
-                              <Button variant="default" size="xs" onClick={() => setConfirmRemoveUser(null)}>
+                              <Button
+                                variant="default"
+                                size="xs"
+                                onClick={() => setConfirmRemoveUser(null)}
+                              >
                                 {t("cancel", "Cancel")}
                               </Button>
                             </Group>
@@ -542,8 +728,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                               variant="light"
                               size="xs"
                               color="red"
-                              leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                              onClick={() => setConfirmRemoveUser(user.username)}
+                              leftSection={
+                                <DeleteIcon style={{ fontSize: 16 }} />
+                              }
+                              onClick={() =>
+                                setConfirmRemoveUser(user.username)
+                              }
                               disabled={isLoading}
                             >
                               {t("storageShare.removeUser", "Remove")}
@@ -579,8 +769,13 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
 
                   {shareLinks.map((link) => {
                     const activity = activityMap[link.token];
-                    const viewCount = activity?.filter((entry) => entry.accessType === "VIEW").length ?? 0;
-                    const downloadCount = activity?.filter((entry) => entry.accessType === "DOWNLOAD").length ?? 0;
+                    const viewCount =
+                      activity?.filter((entry) => entry.accessType === "VIEW")
+                        .length ?? 0;
+                    const downloadCount =
+                      activity?.filter(
+                        (entry) => entry.accessType === "DOWNLOAD",
+                      ).length ?? 0;
                     const lastAccessedAt = activity?.[0]?.accessedAt;
                     const isSelected = selectedActivityToken === link.token;
                     return (
@@ -594,7 +789,11 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                               <Button
                                 variant="subtle"
                                 size="xs"
-                                leftSection={<ContentCopyRoundedIcon style={{ fontSize: 16 }} />}
+                                leftSection={
+                                  <ContentCopyRoundedIcon
+                                    style={{ fontSize: 16 }}
+                                  />
+                                }
                                 onClick={() => handleCopyLink(link.token)}
                               >
                                 {t("storageShare.copy", "Copy")}
@@ -609,21 +808,39 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                                     {link.accessRole === "editor"
                                       ? t("storageShare.roleEditor", "Editor")
                                       : link.accessRole === "commenter"
-                                        ? t("storageShare.roleCommenter", "Commenter")
-                                        : t("storageShare.roleViewer", "Viewer")}
+                                        ? t(
+                                            "storageShare.roleCommenter",
+                                            "Commenter",
+                                          )
+                                        : t(
+                                            "storageShare.roleViewer",
+                                            "Viewer",
+                                          )}
                                   </Badge>
                                 )}
                               </Group>
                               <Group gap="sm" align="center">
                                 <Text size="xs" c="dimmed">
-                                  {t("storageShare.viewsCount", "Views: {{count}}", { count: viewCount })}
+                                  {t(
+                                    "storageShare.viewsCount",
+                                    "Views: {{count}}",
+                                    { count: viewCount },
+                                  )}
                                 </Text>
                                 <Text size="xs" c="dimmed">
-                                  {t("storageShare.downloadsCount", "Downloads: {{count}}", { count: downloadCount })}
+                                  {t(
+                                    "storageShare.downloadsCount",
+                                    "Downloads: {{count}}",
+                                    { count: downloadCount },
+                                  )}
                                 </Text>
                                 {lastAccessedAt && (
                                   <Text size="xs" c="dimmed">
-                                    {t("storageShare.lastAccessed", "Last accessed")}:{" "}
+                                    {t(
+                                      "storageShare.lastAccessed",
+                                      "Last accessed",
+                                    )}
+                                    :{" "}
                                     {new Date(lastAccessedAt).toLocaleString()}
                                   </Text>
                                 )}
@@ -633,12 +850,24 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                               <Button
                                 variant={isSelected ? "filled" : "light"}
                                 size="xs"
-                                leftSection={<HistoryIcon style={{ fontSize: 16 }} />}
-                                onClick={() => setSelectedActivityToken((prev) => (prev === link.token ? null : link.token))}
+                                leftSection={
+                                  <HistoryIcon style={{ fontSize: 16 }} />
+                                }
+                                onClick={() =>
+                                  setSelectedActivityToken((prev) =>
+                                    prev === link.token ? null : link.token,
+                                  )
+                                }
                               >
                                 {isSelected
-                                  ? t("storageShare.hideActivity", "Hide activity")
-                                  : t("storageShare.viewActivity", "View activity")}
+                                  ? t(
+                                      "storageShare.hideActivity",
+                                      "Hide activity",
+                                    )
+                                  : t(
+                                      "storageShare.viewActivity",
+                                      "View activity",
+                                    )}
                               </Button>
                               {confirmRevokeToken === link.token ? (
                                 <Group gap="xs">
@@ -653,7 +882,11 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                                   >
                                     {t("confirm", "Confirm")}
                                   </Button>
-                                  <Button variant="default" size="xs" onClick={() => setConfirmRevokeToken(null)}>
+                                  <Button
+                                    variant="default"
+                                    size="xs"
+                                    onClick={() => setConfirmRevokeToken(null)}
+                                  >
                                     {t("cancel", "Cancel")}
                                   </Button>
                                 </Group>
@@ -662,8 +895,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                                   variant="light"
                                   size="xs"
                                   color="red"
-                                  leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                                  onClick={() => setConfirmRevokeToken(link.token)}
+                                  leftSection={
+                                    <DeleteIcon style={{ fontSize: 16 }} />
+                                  }
+                                  onClick={() =>
+                                    setConfirmRevokeToken(link.token)
+                                  }
                                   disabled={isLoading}
                                 >
                                   {t("storageShare.removeLink", "Remove link")}
@@ -707,13 +944,28 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({ opened, onC
                     <Stack gap="xs">
                       {(selectedActivity ?? []).length > 0 ? (
                         selectedActivity?.map((entry, index) => (
-                          <Paper key={`${selectedActivityToken}-${index}`} radius="md" p="xs" withBorder>
+                          <Paper
+                            key={`${selectedActivityToken}-${index}`}
+                            radius="md"
+                            p="xs"
+                            withBorder
+                          >
                             <Group justify="space-between">
                               <Stack gap={2}>
                                 <Text size="xs" c="dimmed">
-                                  {entry.accessedAt ? new Date(entry.accessedAt).toLocaleString() : t("unknown", "Unknown")}
+                                  {entry.accessedAt
+                                    ? new Date(
+                                        entry.accessedAt,
+                                      ).toLocaleString()
+                                    : t("unknown", "Unknown")}
                                 </Text>
-                                <Text size="sm">{entry.username || t("storageShare.unknownUser", "Unknown user")}</Text>
+                                <Text size="sm">
+                                  {entry.username ||
+                                    t(
+                                      "storageShare.unknownUser",
+                                      "Unknown user",
+                                    )}
+                                </Text>
                               </Stack>
                               <Badge size="sm" variant="light">
                                 {entry.accessType === "VIEW"

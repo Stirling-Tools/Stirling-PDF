@@ -8,5 +8,9 @@ import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
 export function useGroupSigningEnabled(): boolean {
   const { config } = useAppConfig();
   const { isSelfHosted, isAuthenticated } = useSelfHostedAuth();
-  return isSelfHosted && isAuthenticated && config?.storageGroupSigningEnabled === true;
+  return (
+    isSelfHosted &&
+    isAuthenticated &&
+    config?.storageGroupSigningEnabled === true
+  );
 }

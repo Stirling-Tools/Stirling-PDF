@@ -14,6 +14,8 @@ spotless {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
+        suppressLintsFor { setStep('google-java-format') }
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         trimTrailingWhitespace()
@@ -176,6 +178,7 @@ springBoot {
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
+def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
 def frontendDir = file('../../frontend')
 def frontendDistDir = file('../../frontend/dist')
 def resourcesStaticDir = file('src/main/resources/static')
@@ -243,9 +246,8 @@ tasks.register('npmBuild', Exec) {
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Build frontend application'
-    workingDir frontendDir
-    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build']
-    dependsOn npmInstall
+    workingDir file('../..')
+    commandLine = buildPrototypes ? ['task', 'frontend:build:prototypes'] : ['task', 'frontend:build']
     inputs.dir(new File(frontendDir, 'src'))
     inputs.dir(new File(frontendDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))

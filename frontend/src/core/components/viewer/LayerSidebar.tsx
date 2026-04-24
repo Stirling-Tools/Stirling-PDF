@@ -1,11 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Box, ScrollArea, Text, Checkbox, Stack, Loader, ActionIcon, Tooltip } from "@mantine/core";
+import {
+  Box,
+  ScrollArea,
+  Text,
+  Checkbox,
+  Stack,
+  Loader,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/LayerSidebar.css";
-import { readPdfLayers, applyOCGVisibilityToPdf, collectLeafIds } from "@app/components/viewer/layerUtils";
+import {
+  readPdfLayers,
+  applyOCGVisibilityToPdf,
+  collectLeafIds,
+} from "@app/components/viewer/layerUtils";
 
 import type { LayerInfo } from "@app/components/viewer/layerUtils";
 export type { LayerInfo };
@@ -101,7 +114,9 @@ export function LayerSidebar({
       .catch((err) => {
         if (cancelled) return;
         setStatus("error");
-        setLoadError(err instanceof Error ? err.message : "Failed to read PDF layers");
+        setLoadError(
+          err instanceof Error ? err.message : "Failed to read PDF layers",
+        );
         onLayersDetected?.(false);
       });
 
@@ -118,7 +133,8 @@ export function LayerSidebar({
 
   // Auto-apply: debounce visibility changes from user interaction
   useEffect(() => {
-    if (!userChangedRef.current || !file || isApplying || layers.length === 0) return;
+    if (!userChangedRef.current || !file || isApplying || layers.length === 0)
+      return;
 
     const timer = setTimeout(async () => {
       setIsApplying(true);
@@ -136,8 +152,13 @@ export function LayerSidebar({
         collectNames(layers);
 
         const arrayBuffer = await file.arrayBuffer();
-        const modifiedBytes = await applyOCGVisibilityToPdf(arrayBuffer, nameVisibility);
-        const blob = new Blob([new Uint8Array(modifiedBytes)], { type: "application/pdf" });
+        const modifiedBytes = await applyOCGVisibilityToPdf(
+          arrayBuffer,
+          nameVisibility,
+        );
+        const blob = new Blob([new Uint8Array(modifiedBytes)], {
+          type: "application/pdf",
+        });
 
         await onApplyLayers(blob);
       } catch (err) {
@@ -189,13 +210,17 @@ export function LayerSidebar({
 
     const isVisible = isLeaf
       ? (visibility[layer.id] ?? layer.visible)
-      : collectLeafIds(layer.children ?? []).every((id) => visibility[id] ?? true);
+      : collectLeafIds(layer.children ?? []).every(
+          (id) => visibility[id] ?? true,
+        );
 
     return (
       <div
         key={layer.id}
         className="layer-item-wrapper"
-        style={{ marginLeft: layer.depth > 0 ? `${layer.depth * 0.875}rem` : "0" }}
+        style={{
+          marginLeft: layer.depth > 0 ? `${layer.depth * 0.875}rem` : "0",
+        }}
       >
         <div
           className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}
@@ -228,11 +253,21 @@ export function LayerSidebar({
               }}
             >
               {isExpanded ? (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="currentColor"
+                >
                   <path d="M2 4l4 4 4-4z" />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="currentColor"
+                >
                   <path d="M4 2l4 4-4 4z" />
                 </svg>
               )}
@@ -251,14 +286,21 @@ export function LayerSidebar({
             />
           )}
 
-          <Tooltip label={layer.name} position="left" withinPortal disabled={layer.name.length < 20}>
+          <Tooltip
+            label={layer.name}
+            position="left"
+            withinPortal
+            disabled={layer.name.length < 20}
+          >
             <span className="layer-item__label">{layer.name}</span>
           </Tooltip>
         </div>
 
         {hasChildren && isExpanded && (
           <div className="layer-item__children">
-            {(layer.children ?? []).map((child) => renderLayer({ ...child, depth: 0 }))}
+            {(layer.children ?? []).map((child) =>
+              renderLayer({ ...child, depth: 0 }),
+            )}
           </div>
         )}
       </div>
@@ -333,7 +375,13 @@ export function LayerSidebar({
           )}
 
           {status === "loading" && (
-            <Stack gap="md" align="center" c="dimmed" py="xl" className="sidebar-base__loading">
+            <Stack
+              gap="md"
+              align="center"
+              c="dimmed"
+              py="xl"
+              className="sidebar-base__loading"
+            >
               <Loader size="md" type="dots" />
               <Text size="sm" ta="center">
                 Loading layers...
@@ -358,7 +406,9 @@ export function LayerSidebar({
           )}
 
           {status === "ready" && layers.length > 0 && (
-            <div className="layer-list">{layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}</div>
+            <div className="layer-list">
+              {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}
+            </div>
           )}
         </Box>
       </ScrollArea>

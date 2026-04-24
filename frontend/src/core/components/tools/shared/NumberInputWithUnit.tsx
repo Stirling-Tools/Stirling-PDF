@@ -11,7 +11,15 @@ interface NumberInputWithUnitProps {
   disabled?: boolean;
 }
 
-const NumberInputWithUnit = ({ label, value, onChange, unit, min, max, disabled = false }: NumberInputWithUnitProps) => {
+const NumberInputWithUnit = ({
+  label,
+  value,
+  onChange,
+  unit,
+  min,
+  max,
+  disabled = false,
+}: NumberInputWithUnitProps) => {
   const [localValue, setLocalValue] = useState<number | string>(value);
 
   // Sync local value when external value changes
@@ -25,7 +33,15 @@ const NumberInputWithUnit = ({ label, value, onChange, unit, min, max, disabled 
 
   return (
     <Stack gap="xs" style={{ flex: 1 }}>
-      <Text size="xs" fw={500} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+      <Text
+        size="xs"
+        fw={500}
+        style={{
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
         {label}
       </Text>
       <NumberInput

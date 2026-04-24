@@ -7,6 +7,8 @@ interface QuickAccessBarFooterExtensionsProps {
   className?: string;
 }
 
-export function QuickAccessBarFooterExtensions(_props: QuickAccessBarFooterExtensionsProps) {
+export function QuickAccessBarFooterExtensions(
+  _props: QuickAccessBarFooterExtensionsProps,
+) {
   return null;
 }

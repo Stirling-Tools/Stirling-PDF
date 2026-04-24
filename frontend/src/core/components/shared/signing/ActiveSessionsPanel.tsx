@@ -21,10 +21,18 @@ interface ActiveSessionsPanelProps {
   onSessionClick: (session: SessionItem) => void;
 }
 
-const ActiveSessionsPanel = ({ sessions, loading, onSessionClick }: ActiveSessionsPanelProps) => {
+const ActiveSessionsPanel = ({
+  sessions,
+  loading,
+  onSessionClick,
+}: ActiveSessionsPanelProps) => {
   const { t } = useTranslation();
 
-  const getStatusColor = (status?: string, itemType?: string, item?: SessionItem): string => {
+  const getStatusColor = (
+    status?: string,
+    itemType?: string,
+    item?: SessionItem,
+  ): string => {
     if (itemType === "mySession" && item) {
       const signedCount = item.signedCount ?? 0;
       const totalCount = item.participantCount ?? 0;
@@ -57,7 +65,11 @@ const ActiveSessionsPanel = ({ sessions, loading, onSessionClick }: ActiveSessio
       }
       // Show progress for all cases (including 0/X)
       if (totalCount > 0) {
-        return t("certSign.signatureProgress", "{{signedCount}}/{{totalCount}} signatures", { signedCount, totalCount });
+        return t(
+          "certSign.signatureProgress",
+          "{{signedCount}}/{{totalCount}} signatures",
+          { signedCount, totalCount },
+        );
       }
       return t("certSign.awaitingSignatures", "Awaiting signatures");
     }
@@ -86,7 +98,10 @@ const ActiveSessionsPanel = ({ sessions, loading, onSessionClick }: ActiveSessio
           {sessions.length === 0 ? (
             <div className="quick-access-popout__section">
               <Text size="sm" c="dimmed" ta="center" py="xl">
-                {t("quickAccess.noActiveSessions", "No pending sign requests or active sessions")}
+                {t(
+                  "quickAccess.noActiveSessions",
+                  "No pending sign requests or active sessions",
+                )}
               </Text>
             </div>
           ) : (
@@ -98,16 +113,20 @@ const ActiveSessionsPanel = ({ sessions, loading, onSessionClick }: ActiveSessio
                   onClick={() => onSessionClick(session)}
                 >
                   <div className="quick-access-popout__sign-request-info">
-                    <div className="quick-access-popout__row-title">{session.documentName}</div>
+                    <div className="quick-access-popout__row-title">
+                      {session.documentName}
+                    </div>
                     <div className="quick-access-popout__row-subtitle">
                       {session.itemType === "signRequest" ? (
                         <>
                           From: {session.ownerUsername}
-                          {session.dueDate && ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
+                          {session.dueDate &&
+                            ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
                         </>
                       ) : (
                         <>
-                          Created: {new Date(session.createdAt).toLocaleDateString()}
+                          Created:{" "}
+                          {new Date(session.createdAt).toLocaleDateString()}
                           {session.signedCount !== undefined &&
                             session.participantCount !== undefined &&
                             ` • ${session.signedCount}/${session.participantCount} signed`}
@@ -116,7 +135,14 @@ const ActiveSessionsPanel = ({ sessions, loading, onSessionClick }: ActiveSessio
                     </div>
                   </div>
                   <div className="quick-access-popout__sign-request-badge">
-                    <Badge size="sm" color={getStatusColor(session.myStatus, session.itemType, session)}>
+                    <Badge
+                      size="sm"
+                      color={getStatusColor(
+                        session.myStatus,
+                        session.itemType,
+                        session,
+                      )}
+                    >
                       {getStatusLabel(session)}
                     </Badge>
                   </div>

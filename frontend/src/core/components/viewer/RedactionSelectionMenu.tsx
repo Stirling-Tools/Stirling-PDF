@@ -1,4 +1,7 @@
-import { useRedaction as useEmbedPdfRedaction, RedactionSelectionMenuProps } from "@embedpdf/plugin-redaction/react";
+import {
+  useRedaction as useEmbedPdfRedaction,
+  RedactionSelectionMenuProps,
+} from "@embedpdf/plugin-redaction/react";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import { ActionIcon, Tooltip, Button, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -19,7 +22,9 @@ export function RedactionSelectionMenu(props: any) {
     return null;
   }
 
-  return <RedactionSelectionMenuInner documentId={activeDocumentId} {...props} />;
+  return (
+    <RedactionSelectionMenuInner documentId={activeDocumentId} {...props} />
+  );
 }
 
 function RedactionSelectionMenuInner({
@@ -29,17 +34,26 @@ function RedactionSelectionMenuInner({
   menuWrapperProps,
 }: RedactionSelectionMenuProps & { documentId: string }) {
   const item =
-    context?.type === "redaction" ? context.item : context?.type === "annotation" ? (context as any).annotation?.object : null;
+    context?.type === "redaction"
+      ? context.item
+      : context?.type === "annotation"
+        ? (context as any).annotation?.object
+        : null;
 
   const isRedaction =
-    context?.type === "redaction" || (context?.type === "annotation" && item?.type === PdfAnnotationSubtype.REDACT);
+    context?.type === "redaction" ||
+    (context?.type === "annotation" &&
+      item?.type === PdfAnnotationSubtype.REDACT);
 
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
   const { setRedactionsApplied } = useRedaction();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback(
@@ -187,7 +201,9 @@ function RedactionSelectionMenuInner({
           pointerEvents: "none",
         }}
       />
-      {typeof document !== "undefined" && menuContent ? createPortal(menuContent, document.body) : null}
+      {typeof document !== "undefined" && menuContent
+        ? createPortal(menuContent, document.body)
+        : null}
     </>
   );
 }

@@ -11,7 +11,12 @@ const ScannerImageSplit = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const scannerImageSplitTips = useScannerImageSplitTips();
 
-  const base = useBaseTool("scannerImageSplit", useScannerImageSplitParameters, useScannerImageSplitOperation, props);
+  const base = useBaseTool(
+    "scannerImageSplit",
+    useScannerImageSplitParameters,
+    useScannerImageSplitOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -22,7 +27,9 @@ const ScannerImageSplit = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: scannerImageSplitTips,
         content: (
           <ScannerImageSplitSettings

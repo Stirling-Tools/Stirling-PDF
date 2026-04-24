@@ -3,6 +3,31 @@ name: PR Deployment via Comment
 on:
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to deploy"
+        required: true
+      enable_prototypes:
+        description: "Build with prototypes frontend"
+        required: false
+        type: boolean
+        default: false
+      enable_pro:
+        description: "Enable pro features"
+        required: false
+        type: boolean
+        default: false
+      enable_enterprise:
+        description: "Enable enterprise features"
+        required: false
+        type: boolean
+        default: false
+      disable_security:
+        description: "Disable security/login"
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -14,23 +39,27 @@ jobs:
     permissions:
       issues: write
     if: |
-      vars.CI_PROFILE != 'lite' &&
-      github.event.issue.pull_request &&
-      (
-        contains(github.event.comment.body, 'prdeploy') ||
-        contains(github.event.comment.body, 'deploypr')
-      )
-      &&
-      (
-        github.event.comment.user.login == 'frooodle' ||
-        github.event.comment.user.login == 'sf298' ||
-        github.event.comment.user.login == 'Ludy87' ||
-        github.event.comment.user.login == 'balazs-szucs' ||
-        github.event.comment.user.login == 'reecebrowne' ||
-        github.event.comment.user.login == 'DarioGii' ||
-        github.event.comment.user.login == 'EthanHealy01' ||
-        github.event.comment.user.login == 'jbrunton96' ||
-        github.event.comment.user.login == 'ConnorYoh'
+      vars.CI_PROFILE != 'lite' && (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.issue.pull_request &&
+          (
+            contains(github.event.comment.body, 'prdeploy') ||
+            contains(github.event.comment.body, 'deploypr')
+          )
+          &&
+          (
+            github.event.comment.user.login == 'frooodle' ||
+            github.event.comment.user.login == 'sf298' ||
+            github.event.comment.user.login == 'Ludy87' ||
+            github.event.comment.user.login == 'balazs-szucs' ||
+            github.event.comment.user.login == 'reecebrowne' ||
+            github.event.comment.user.login == 'DarioGii' ||
+            github.event.comment.user.login == 'EthanHealy01' ||
+            github.event.comment.user.login == 'jbrunton96' ||
+            github.event.comment.user.login == 'ConnorYoh'
+          )
+        )
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
@@ -38,6 +67,7 @@ jobs:
       disable_security: ${{ steps.check-security-flag.outputs.disable_security }}
       enable_pro: ${{ steps.check-pro-flag.outputs.enable_pro }}
       enable_enterprise: ${{ steps.check-pro-flag.outputs.enable_enterprise }}
+      enable_prototypes: ${{ steps.check-prototypes-flag.outputs.enable_prototypes }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -61,7 +91,9 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
-            const prNumber = context.payload.issue.number;
+            const prNumber = context.eventName === 'workflow_dispatch'
+              ? context.payload.inputs.pr_number
+              : context.payload.issue.number;
             console.log(`PR Number: ${prNumber}`);
             core.setOutput('pr_number', prNumber);
 
@@ -69,12 +101,14 @@ jobs:
         id: check-security-flag
         env:
           COMMENT_BODY: ${{ github.event.comment.body }}
+          IS_DISPATCH: ${{ github.event_name == 'workflow_dispatch' }}
+          DISPATCH_DISABLE_SECURITY: ${{ inputs.disable_security }}
         run: |
-          if [[ "$COMMENT_BODY" == *"security"* ]] || [[ "$COMMENT_BODY" == *"login"* ]]; then
-            echo "Security flags detected in comment"
+          if [[ "$IS_DISPATCH" == "true" ]]; then
+            echo "disable_security=$DISPATCH_DISABLE_SECURITY" >> $GITHUB_OUTPUT
+          elif [[ "$COMMENT_BODY" == *"security"* ]] || [[ "$COMMENT_BODY" == *"login"* ]]; then
             echo "disable_security=false" >> $GITHUB_OUTPUT
           else
-            echo "No security flags detected in comment"
             echo "disable_security=true" >> $GITHUB_OUTPUT
           fi
 
@@ -82,22 +116,43 @@ jobs:
         id: check-pro-flag
         env:
           COMMENT_BODY: ${{ github.event.comment.body }}
+          IS_DISPATCH: ${{ github.event_name == 'workflow_dispatch' }}
+          DISPATCH_PRO: ${{ inputs.enable_pro }}
+          DISPATCH_ENTERPRISE: ${{ inputs.enable_enterprise }}
         run: |
-          if [[ "$COMMENT_BODY" == *"pro"* ]] || [[ "$COMMENT_BODY" == *"premium"* ]]; then
-            echo "pro flags detected in comment"
+          if [[ "$IS_DISPATCH" == "true" ]]; then
+            echo "enable_pro=$DISPATCH_PRO" >> $GITHUB_OUTPUT
+            echo "enable_enterprise=$DISPATCH_ENTERPRISE" >> $GITHUB_OUTPUT
+          elif [[ "$COMMENT_BODY" == *"pro"* ]] || [[ "$COMMENT_BODY" == *"premium"* ]]; then
             echo "enable_pro=true" >> $GITHUB_OUTPUT
             echo "enable_enterprise=false" >> $GITHUB_OUTPUT
           elif [[ "$COMMENT_BODY" == *"enterprise"* ]]; then
-            echo "enterprise flags detected in comment"
             echo "enable_enterprise=true" >> $GITHUB_OUTPUT
             echo "enable_pro=true" >> $GITHUB_OUTPUT
           else
-            echo "No pro or enterprise flags detected in comment"
             echo "enable_pro=false" >> $GITHUB_OUTPUT
             echo "enable_enterprise=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check for prototypes flag
+        id: check-prototypes-flag
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          IS_DISPATCH: ${{ github.event_name == 'workflow_dispatch' }}
+          DISPATCH_PROTOTYPES: ${{ inputs.enable_prototypes }}
+        run: |
+          if [[ "$IS_DISPATCH" == "true" ]]; then
+            echo "enable_prototypes=$DISPATCH_PROTOTYPES" >> $GITHUB_OUTPUT
+          elif [[ "$COMMENT_BODY" == *"prototypes"* ]]; then
+            echo "Prototypes flag detected in comment"
+            echo "enable_prototypes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No prototypes flag detected in comment"
+            echo "enable_prototypes=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Add 'in_progress' reaction to comment
+        if: github.event_name == 'issue_comment'
         id: add-eyes-reaction
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
@@ -161,6 +216,8 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
@@ -168,7 +225,7 @@ jobs:
           else
             export DISABLE_ADDITIONAL_FEATURES=false
           fi
-          ./gradlew build
+          task backend:build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -193,7 +250,21 @@ jobs:
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
-          build-args: VERSION_TAG=alpha
+          build-args: |
+            VERSION_TAG=alpha
+            PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
+          platforms: linux/amd64
+
+      - name: Build and push engine image
+        if: needs.check-comment.outputs.enable_prototypes == 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: ./engine
+          file: ./engine/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-engine
+          cache-to: type=gha,mode=max,scope=stirling-pdf-engine
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -231,33 +302,64 @@ jobs:
             PREMIUM_PROFEATURES_AUDIT_ENABLED="false"
           fi
 
+          ENABLE_PROTOTYPES="${{ needs.check-comment.outputs.enable_prototypes }}"
+          PR_NUMBER="${{ needs.check-comment.outputs.pr_number }}"
+          DOCKER_USER="${{ secrets.DOCKER_HUB_USERNAME }}"
+
+          # Build engine env vars for backend (only set when prototypes enabled)
+          if [ "$ENABLE_PROTOTYPES" == "true" ]; then
+            AI_ENGINE_VARS="
+                SYSTEM_AIENGINE_ENABLED: \"true\"
+                SYSTEM_AIENGINE_URL: \"http://stirling-pdf-engine-pr-${PR_NUMBER}:5001\""
+            ENGINE_SERVICE="
+            stirling-pdf-engine:
+              container_name: stirling-pdf-engine-pr-${PR_NUMBER}
+              image: ${DOCKER_USER}/test:engine-pr-${PR_NUMBER}
+              environment:
+                ANTHROPIC_API_KEY: \"${{ secrets.ANTHROPIC_API_KEY }}\"
+              networks:
+                - pr-network
+              restart: on-failure:5"
+            NETWORK_SECTION="
+          networks:
+            pr-network:"
+            BACKEND_NETWORK="
+              networks:
+                - pr-network"
+          else
+            AI_ENGINE_VARS=""
+            ENGINE_SERVICE=""
+            NETWORK_SECTION=""
+            BACKEND_NETWORK=""
+          fi
+
           # First create the docker-compose content locally
           cat > docker-compose.yml << EOF
           version: '3.3'
           services:
             stirling-pdf:
-              container_name: stirling-pdf-pr-${{ needs.check-comment.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+              container_name: stirling-pdf-pr-${PR_NUMBER}
+              image: ${DOCKER_USER}/test:pr-${PR_NUMBER}
               ports:
-                - "${{ needs.check-comment.outputs.pr_number }}:8080"
+                - "${PR_NUMBER}:8080"
               volumes:
-                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/data:/usr/share/tessdata:rw
-                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
-                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
+                - /stirling/PR-${PR_NUMBER}/data:/usr/share/tessdata:rw
+                - /stirling/PR-${PR_NUMBER}/config:/configs:rw
+                - /stirling/PR-${PR_NUMBER}/logs:/logs:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
-                UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
-                UI_HOMEDESCRIPTION: "PR#${{ needs.check-comment.outputs.pr_number }} for Stirling-PDF Latest"
-                UI_APPNAMENAVBAR: "PR#${{ needs.check-comment.outputs.pr_number }}"
+                UI_APPNAME: "Stirling-PDF PR#${PR_NUMBER}"
+                UI_HOMEDESCRIPTION: "PR#${PR_NUMBER} for Stirling-PDF Latest"
+                UI_APPNAMENAVBAR: "PR#${PR_NUMBER}"
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
                 PREMIUM_KEY:                         "${PREMIUM_KEY}"
                 PREMIUM_ENABLED:                     "${PREMIUM_ENABLED}"
-                PREMIUM_PROFEATURES_AUDIT_ENABLED:   "${PREMIUM_PROFEATURES_AUDIT_ENABLED}"
-              restart: on-failure:5
+                PREMIUM_PROFEATURES_AUDIT_ENABLED:   "${PREMIUM_PROFEATURES_AUDIT_ENABLED}"${AI_ENGINE_VARS}
+              restart: on-failure:5${BACKEND_NETWORK}${ENGINE_SERVICE}${NETWORK_SECTION}
           EOF
 
           # Then copy the file and execute commands
@@ -265,13 +367,13 @@ jobs:
 
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
             # Create PR-specific directories
-            mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
+            mkdir -p /stirling/PR-${PR_NUMBER}/{data,config,logs}
 
             # Move docker-compose file to correct location
-            mv /tmp/docker-compose.yml /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/docker-compose.yml
+            mv /tmp/docker-compose.yml /stirling/PR-${PR_NUMBER}/docker-compose.yml
 
             # Start or restart the container
-            cd /stirling/PR-${{ needs.check-comment.outputs.pr_number }}
+            cd /stirling/PR-${PR_NUMBER}
             docker-compose pull
             docker-compose up -d
           ENDSSH
@@ -280,7 +382,7 @@ jobs:
           echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
 
       - name: Add success reaction to comment
-        if: success()
+        if: success() && github.event_name == 'issue_comment'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
@@ -315,7 +417,7 @@ jobs:
             }
 
       - name: Add failure reaction to comment
-        if: failure()
+        if: failure() && github.event_name == 'issue_comment'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}

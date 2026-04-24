@@ -1,4 +1,10 @@
-import { ProcessedFile, ProcessingState, PDFPage, ProcessingConfig, ProcessingMetrics } from "@app/types/processing";
+import {
+  ProcessedFile,
+  ProcessingState,
+  PDFPage,
+  ProcessingConfig,
+  ProcessingMetrics,
+} from "@app/types/processing";
 import { ProcessingCache } from "@app/services/processingCache";
 import { FileHasher } from "@app/utils/fileHash";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
@@ -10,7 +16,9 @@ export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;
   private cache = new ProcessingCache();
   private processing = new Map<string, ProcessingState>();
-  private processingListeners = new Set<(states: Map<string, ProcessingState>) => void>();
+  private processingListeners = new Set<
+    (states: Map<string, ProcessingState>) => void
+  >();
   private metrics: ProcessingMetrics = {
     totalFiles: 0,
     completedFiles: 0,
@@ -33,7 +41,8 @@ export class EnhancedPDFProcessingService {
 
   static getInstance(): EnhancedPDFProcessingService {
     if (!EnhancedPDFProcessingService.instance) {
-      EnhancedPDFProcessingService.instance = new EnhancedPDFProcessingService();
+      EnhancedPDFProcessingService.instance =
+        new EnhancedPDFProcessingService();
     }
     return EnhancedPDFProcessingService.instance;
   }
@@ -41,7 +50,10 @@ export class EnhancedPDFProcessingService {
   /**
    * Process a file with intelligent strategy selection
    */
-  async processFile(file: File, customConfig?: Partial<ProcessingConfig>): Promise<ProcessedFile | null> {
+  async processFile(
+    file: File,
+    customConfig?: Partial<ProcessingConfig>,
+  ): Promise<ProcessedFile | null> {
     const fileKey = await this.generateFileKey(file);
 
     // Check cache first
@@ -70,14 +82,24 @@ export class EnhancedPDFProcessingService {
     };
 
     // Start processing
-    this.startProcessing(file, fileKey, config, analysis.estimatedProcessingTime);
+    this.startProcessing(
+      file,
+      fileKey,
+      config,
+      analysis.estimatedProcessingTime,
+    );
     return null;
   }
 
   /**
    * Start processing a file with the specified configuration
    */
-  private async startProcessing(file: File, fileKey: string, config: ProcessingConfig, estimatedTime: number): Promise<void> {
+  private async startProcessing(
+    file: File,
+    fileKey: string,
+    config: ProcessingConfig,
+    estimatedTime: number,
+  ): Promise<void> {
     // Create cancellation token
     const cancellationToken = new AbortController();
 
@@ -126,7 +148,8 @@ export class EnhancedPDFProcessingService {
     } catch (error) {
       console.error("Processing failed for", file.name, ":", error);
 
-      const processingError = ProcessingErrorHandler.createProcessingError(error);
+      const processingError =
+        ProcessingErrorHandler.createProcessingError(error);
       state.status = "error";
       state.error = processingError;
       this.notifyListeners();
@@ -169,7 +192,11 @@ export class EnhancedPDFProcessingService {
   /**
    * Process all pages immediately (for small files)
    */
-  private async processImmediateFull(file: File, config: ProcessingConfig, state: ProcessingState): Promise<ProcessedFile> {
+  private async processImmediateFull(
+    file: File,
+    config: ProcessingConfig,
+    state: ProcessingState,
+  ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
 
@@ -188,7 +215,10 @@ export class EnhancedPDFProcessingService {
         }
 
         const page = await pdf.getPage(i);
-        const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+        const thumbnail = await this.renderPageThumbnail(
+          page,
+          config.thumbnailQuality,
+        );
 
         const rotation = page.rotate || 0;
 
@@ -217,7 +247,11 @@ export class EnhancedPDFProcessingService {
   /**
    * Process priority pages first, then queue the rest
    */
-  private async processPriorityPages(file: File, config: ProcessingConfig, state: ProcessingState): Promise<ProcessedFile> {
+  private async processPriorityPages(
+    file: File,
+    config: ProcessingConfig,
+    state: ProcessingState,
+  ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
@@ -236,7 +270,10 @@ export class EnhancedPDFProcessingService {
       }
 
       const page = await pdf.getPage(i);
-      const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+      const thumbnail = await this.renderPageThumbnail(
+        page,
+        config.thumbnailQuality,
+      );
 
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
@@ -298,7 +335,10 @@ export class EnhancedPDFProcessingService {
       }
 
       const page = await pdf.getPage(i);
-      const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+      const thumbnail = await this.renderPageThumbnail(
+        page,
+        config.thumbnailQuality,
+      );
 
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
@@ -340,7 +380,11 @@ export class EnhancedPDFProcessingService {
   /**
    * Process metadata only (for very large files)
    */
-  private async processMetadataOnly(file: File, _config: ProcessingConfig, state: ProcessingState): Promise<ProcessedFile> {
+  private async processMetadataOnly(
+    file: File,
+    _config: ProcessingConfig,
+    state: ProcessingState,
+  ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
@@ -370,7 +414,10 @@ export class EnhancedPDFProcessingService {
   /**
    * Render a page thumbnail with specified quality
    */
-  private async renderPageThumbnail(page: any, quality: "low" | "medium" | "high"): Promise<string> {
+  private async renderPageThumbnail(
+    page: any,
+    quality: "low" | "medium" | "high",
+  ): Promise<string> {
     const scales = { low: 0.2, medium: 0.5, high: 0.8 }; // Reduced low quality for page editor
     const scale = scales[quality];
 
@@ -391,7 +438,11 @@ export class EnhancedPDFProcessingService {
   /**
    * Create a ProcessedFile object
    */
-  private createProcessedFile(file: File, pages: PDFPage[], totalPages: number): ProcessedFile {
+  private createProcessedFile(
+    file: File,
+    pages: PDFPage[],
+    totalPages: number,
+  ): ProcessedFile {
     return {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       pages,
@@ -426,7 +477,10 @@ export class EnhancedPDFProcessingService {
   /**
    * Update processing metrics
    */
-  private updateMetrics(event: "started" | "completed" | "failed" | "cacheHit", processingTime?: number): void {
+  private updateMetrics(
+    event: "started" | "completed" | "failed" | "cacheHit",
+    processingTime?: number,
+  ): void {
     switch (event) {
       case "started":
         this.metrics.totalFiles++;
@@ -435,8 +489,12 @@ export class EnhancedPDFProcessingService {
         this.metrics.completedFiles++;
         if (processingTime) {
           // Update rolling average
-          const totalProcessingTime = this.metrics.averageProcessingTime * (this.metrics.completedFiles - 1) + processingTime;
-          this.metrics.averageProcessingTime = totalProcessingTime / this.metrics.completedFiles;
+          const totalProcessingTime =
+            this.metrics.averageProcessingTime *
+              (this.metrics.completedFiles - 1) +
+            processingTime;
+          this.metrics.averageProcessingTime =
+            totalProcessingTime / this.metrics.completedFiles;
         }
         break;
       case "failed":
@@ -445,7 +503,9 @@ export class EnhancedPDFProcessingService {
       case "cacheHit": {
         // Update cache hit rate
         const totalAttempts = this.metrics.totalFiles + 1;
-        this.metrics.cacheHitRate = (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) / totalAttempts;
+        this.metrics.cacheHitRate =
+          (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) /
+          totalAttempts;
         break;
       }
     }
@@ -461,7 +521,9 @@ export class EnhancedPDFProcessingService {
   /**
    * State subscription for components
    */
-  onProcessingChange(callback: (states: Map<string, ProcessingState>) => void): () => void {
+  onProcessingChange(
+    callback: (states: Map<string, ProcessingState>) => void,
+  ): () => void {
     this.processingListeners.add(callback);
     return () => this.processingListeners.delete(callback);
   }
@@ -533,4 +595,5 @@ export class EnhancedPDFProcessingService {
 }
 
 // Export singleton instance
-export const enhancedPDFProcessingService = EnhancedPDFProcessingService.getInstance();
+export const enhancedPDFProcessingService =
+  EnhancedPDFProcessingService.getInstance();

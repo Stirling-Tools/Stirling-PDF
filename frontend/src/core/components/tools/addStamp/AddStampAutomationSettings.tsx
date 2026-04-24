@@ -13,15 +13,26 @@ import StampPositionFormattingSettings from "@app/components/tools/addStamp/Stam
 
 interface AddStampAutomationSettingsProps {
   parameters: AddStampParameters;
-  onParameterChange: <K extends keyof AddStampParameters>(key: K, value: AddStampParameters[K]) => void;
+  onParameterChange: <K extends keyof AddStampParameters>(
+    key: K,
+    value: AddStampParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const AddStampAutomationSettings = ({ parameters, onParameterChange, disabled = false }: AddStampAutomationSettingsProps) => {
+const AddStampAutomationSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: AddStampAutomationSettingsProps) => {
   return (
     <Stack gap="lg">
       {/* Stamp Setup (Type, Text/Image, Page Selection) */}
-      <StampSetupSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+      <StampSetupSettings
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        disabled={disabled}
+      />
 
       {/* Position and Formatting Settings */}
       {parameters.stampType && (

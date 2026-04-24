@@ -1,10 +1,20 @@
 import { useTranslation } from "react-i18next";
-import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { RotateParameters, defaultParameters, normalizeAngle } from "@app/hooks/tools/rotate/useRotateParameters";
+import {
+  RotateParameters,
+  defaultParameters,
+  normalizeAngle,
+} from "@app/hooks/tools/rotate/useRotateParameters";
 
 // Static configuration that can be used by both the hook and automation executor
-export const buildRotateFormData = (parameters: RotateParameters, file: File): FormData => {
+export const buildRotateFormData = (
+  parameters: RotateParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   // Normalize angle for backend (0, 90, 180, 270)
@@ -26,6 +36,8 @@ export const useRotateOperation = () => {
 
   return useToolOperation<RotateParameters>({
     ...rotateOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t("rotate.error.failed", "An error occurred while rotating the PDF.")),
+    getErrorMessage: createStandardErrorHandler(
+      t("rotate.error.failed", "An error occurred while rotating the PDF."),
+    ),
   });
 };

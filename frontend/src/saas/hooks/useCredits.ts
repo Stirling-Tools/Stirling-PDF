@@ -5,7 +5,15 @@ import { useAuth } from "@app/auth/UseSession";
  * Provides easy access to credit balance, subscription info, and validation functions.
  */
 export const useCredits = () => {
-  const { creditBalance, subscription, creditSummary, isPro, hasSufficientCredits, updateCredits, refreshCredits } = useAuth();
+  const {
+    creditBalance,
+    subscription,
+    creditSummary,
+    isPro,
+    hasSufficientCredits,
+    updateCredits,
+    refreshCredits,
+  } = useAuth();
 
   /**
    * Get user-friendly credit status message

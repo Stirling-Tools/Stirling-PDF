@@ -15,7 +15,8 @@
 // Module-level state
 let configured: boolean = false;
 let enableScarf: boolean | null = null;
-let isServiceAccepted: ((service: string, category: string) => boolean) | null = null;
+let isServiceAccepted: ((service: string, category: string) => boolean) | null =
+  null;
 let lastFiredPathname: string | null = null;
 let lastFiredTime = 0;
 
@@ -49,7 +50,8 @@ export function firePixel(pathname: string): void {
   // Dev-mode warning if called before initialization
   if (!configured) {
     console.warn(
-      "[scarfTracking] firePixel() called before setScarfConfig(). " + "Ensure useScarfTracking() hook is mounted in App.tsx.",
+      "[scarfTracking] firePixel() called before setScarfConfig(). " +
+        "Ensure useScarfTracking() hook is mounted in App.tsx.",
     );
     return;
   }
@@ -75,7 +77,9 @@ export function firePixel(pathname: string): void {
   lastFiredTime = now;
 
   const url =
-    "https://static.scarf.sh/a.png?x-pxid=3c1d68de-8945-4e9f-873f-65320b6fabf7" + "&path=" + encodeURIComponent(pathname);
+    "https://static.scarf.sh/a.png?x-pxid=3c1d68de-8945-4e9f-873f-65320b6fabf7" +
+    "&path=" +
+    encodeURIComponent(pathname);
 
   const img = new Image();
   img.referrerPolicy = "no-referrer-when-downgrade";

@@ -1,5 +1,15 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
-import { Text, ActionIcon, CheckboxIndicator, Tooltip, Modal, Button, Group, Stack, Loader } from "@mantine/core";
+import {
+  Text,
+  ActionIcon,
+  CheckboxIndicator,
+  Tooltip,
+  Modal,
+  Button,
+  Group,
+  Stack,
+  Loader,
+} from "@mantine/core";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import { useTranslation } from "react-i18next";
@@ -14,7 +24,10 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
 
@@ -24,7 +37,9 @@ import { useFileState } from "@app/contexts/file/fileHooks";
 import { FileId } from "@app/types/file";
 import { formatFileSize } from "@app/utils/fileUtils";
 import ToolChain from "@app/components/shared/ToolChain";
-import HoverActionMenu, { HoverAction } from "@app/components/shared/HoverActionMenu";
+import HoverActionMenu, {
+  HoverAction,
+} from "@app/components/shared/HoverActionMenu";
 import { downloadFile } from "@app/services/downloadService";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
@@ -42,7 +57,11 @@ interface FileEditorThumbnailProps {
   onCloseFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
   _onSetStatus: (status: string) => void;
-  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onReorderFiles?: (
+    sourceFileId: FileId,
+    targetFileId: FileId,
+    selectedFileIds: FileId[],
+  ) => void;
   onDownloadFile: (fileId: FileId) => void;
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
@@ -67,12 +86,20 @@ const FileEditorThumbnail = ({
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const DownloadOutlinedIcon = icons.download;
-  const { pinFile, unpinFile, isFilePinned, activeFiles, actions: fileActions, openEncryptedUnlockPrompt } = useFileContext();
+  const {
+    pinFile,
+    unpinFile,
+    isFilePinned,
+    activeFiles,
+    actions: fileActions,
+    openEncryptedUnlockPrompt,
+  } = useFileContext();
   const { state, selectors } = useFileState();
   const hasError = state.ui.errorFileIds.includes(file.id);
 
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
   const [showHoverMenu, setShowHoverMenu] = useState(false);
   const isMobile = useIsMobile();
@@ -117,18 +144,29 @@ const FileEditorThumbnail = ({
   const isCBZ = extLower === "cbz";
   const isCBR = extLower === "cbr";
   const uploadEnabled = config?.storageEnabled === true;
-  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
-  const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
+  const sharingEnabled =
+    uploadEnabled && config?.storageSharingEnabled === true;
+  const shareLinksEnabled =
+    sharingEnabled && config?.storageShareLinksEnabled === true;
   const isOwnedOrLocal = file.remoteOwnedByCurrentUser !== false;
-  const isSharedFile = file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink;
+  const isSharedFile =
+    file.remoteOwnedByCurrentUser === false || file.remoteSharedViaLink;
   const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
   const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(file.remoteStorageId);
   const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
-  const canUpload = uploadEnabled && isOwnedOrLocal && file.isLeaf && (!isUploaded || !isUpToDate);
+  const canUpload =
+    uploadEnabled &&
+    isOwnedOrLocal &&
+    file.isLeaf &&
+    (!isUploaded || !isUpToDate);
   const canShare = shareLinksEnabled && isOwnedOrLocal && file.isLeaf;
 
-  const pageLabel = useMemo(() => (pageCount > 0 ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}` : ""), [pageCount]);
+  const pageLabel = useMemo(
+    () =>
+      pageCount > 0 ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}` : "",
+    [pageCount],
+  );
 
   const dateLabel = useMemo(() => {
     const d = new Date(file.lastModified);
@@ -173,7 +211,10 @@ const FileEditorThumbnail = ({
           const sourceData = source.data;
           return sourceData.type === "file" && sourceData.fileId !== file.id;
         },
+        onDragEnter: () => setIsDragOver(true),
+        onDragLeave: () => setIsDragOver(false),
         onDrop: ({ source }) => {
+          setIsDragOver(false);
           const sourceData = source.data;
           if (sourceData.type === "file" && onReorderFiles) {
             const sourceFileId = sourceData.fileId as FileId;
@@ -198,7 +239,12 @@ const FileEditorThumbnail = ({
 
   const handleConfirmClose = useCallback(() => {
     onCloseFile(file.id);
-    alert({ alertType: "neutral", title: `Closed ${file.name}`, expandable: false, durationMs: 3500 });
+    alert({
+      alertType: "neutral",
+      title: `Closed ${file.name}`,
+      expandable: false,
+      durationMs: 3500,
+    });
     setShowCloseModal(false);
   }, [file.id, file.name, onCloseFile]);
 
@@ -222,16 +268,33 @@ const FileEditorThumbnail = ({
         }
       } catch (error) {
         console.error(`Failed to save ${file.name}:`, error);
-        alert({ alertType: "error", title: "Save failed", body: `Could not save ${file.name}`, expandable: true });
+        alert({
+          alertType: "error",
+          title: "Save failed",
+          body: `Could not save ${file.name}`,
+          expandable: true,
+        });
         setShowCloseModal(false);
         return;
       }
     }
     // Then close
     onCloseFile(file.id);
-    alert({ alertType: "success", title: `Saved and closed ${file.name}`, expandable: false, durationMs: 3500 });
+    alert({
+      alertType: "success",
+      title: `Saved and closed ${file.name}`,
+      expandable: false,
+      durationMs: 3500,
+    });
     setShowCloseModal(false);
-  }, [file.id, file.name, file.localFilePath, onCloseFile, selectors, fileActions]);
+  }, [
+    file.id,
+    file.name,
+    file.localFilePath,
+    onCloseFile,
+    selectors,
+    fileActions,
+  ]);
 
   const handleCancelClose = useCallback(() => {
     setShowCloseModal(false);
@@ -298,7 +361,12 @@ const FileEditorThumbnail = ({
           e.stopPropagation();
           if (onUnzipFile) {
             onUnzipFile(file.id);
-            alert({ alertType: "success", title: `Unzipping ${file.name}`, expandable: false, durationMs: 2500 });
+            alert({
+              alertType: "success",
+              title: `Unzipping ${file.name}`,
+              expandable: false,
+              durationMs: 2500,
+            });
           }
         },
         hidden: !isZipFile || !onUnzipFile || isCBZ || isCBR,
@@ -371,7 +439,22 @@ const FileEditorThumbnail = ({
       data-selected={isSelected}
       data-supported={isSupported}
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
-      style={{ opacity: isDragging ? 0.9 : 1 }}
+      style={
+        {
+          opacity: isDragging ? 0.4 : 1,
+          outline: isDragOver
+            ? "3px dashed var(--mantine-color-blue-5, #3b82f6)"
+            : undefined,
+          outlineOffset: isDragOver ? "2px" : undefined,
+          transform: isDragOver ? "scale(1.02)" : undefined,
+          transition:
+            "outline 120ms ease, transform 120ms ease, opacity 120ms ease",
+          // Tag each card with a stable, unique view-transition-name so the
+          // browser can animate the reorder (see FileEditor.handleReorderFiles,
+          // which dispatches reorderFiles inside document.startViewTransition).
+          viewTransitionName: `file-card-${file.id}`,
+        } as React.CSSProperties
+      }
       tabIndex={0}
       role="listitem"
       aria-selected={isSelected}
@@ -381,7 +464,10 @@ const FileEditorThumbnail = ({
       onDoubleClick={handleCardDoubleClick}
     >
       {/* Header bar */}
-      <div className={`${styles.header} ${getHeaderClassName()}`} data-has-error={hasError}>
+      <div
+        className={`${styles.header} ${getHeaderClassName()}`}
+        data-has-error={hasError}
+      >
         {/* Logo/checkbox area */}
         <div className={styles.logoMark}>
           {hasError ? (
@@ -402,16 +488,27 @@ const FileEditorThumbnail = ({
         </div>
 
         {/* Centered index */}
-        <div className={styles.headerIndex} aria-label={`Position ${index + 1}`}>
+        <div
+          className={styles.headerIndex}
+          aria-label={`Position ${index + 1}`}
+        >
           {index + 1}
         </div>
 
         {/* Action buttons group */}
         <div className={styles.headerActions}>
           {isEncrypted && (
-            <Tooltip label={t("encryptedPdfUnlock.unlockPrompt", "Unlock PDF to continue")}>
+            <Tooltip
+              label={t(
+                "encryptedPdfUnlock.unlockPrompt",
+                "Unlock PDF to continue",
+              )}
+            >
               <ActionIcon
-                aria-label={t("encryptedPdfUnlock.unlockPrompt", "Unlock PDF to continue")}
+                aria-label={t(
+                  "encryptedPdfUnlock.unlockPrompt",
+                  "Unlock PDF to continue",
+                )}
                 variant="subtle"
                 className={styles.headerIconButton}
                 onClick={(e) => {
@@ -426,7 +523,9 @@ const FileEditorThumbnail = ({
           {/* Pin/Unpin icon */}
           <Tooltip
             label={
-              isPinned ? t("unpin", "Unpin File (replace after tool run)") : t("pin", "Pin File (keep active after tool run)")
+              isPinned
+                ? t("unpin", "Unpin File (replace after tool run)")
+                : t("pin", "Pin File (keep active after tool run)")
             }
           >
             <ActionIcon
@@ -443,15 +542,29 @@ const FileEditorThumbnail = ({
                 if (actualFile) {
                   if (isPinned) {
                     unpinFile(actualFile);
-                    alert({ alertType: "neutral", title: `Unpinned ${file.name}`, expandable: false, durationMs: 3000 });
+                    alert({
+                      alertType: "neutral",
+                      title: `Unpinned ${file.name}`,
+                      expandable: false,
+                      durationMs: 3000,
+                    });
                   } else {
                     pinFile(actualFile);
-                    alert({ alertType: "success", title: `Pinned ${file.name}`, expandable: false, durationMs: 3000 });
+                    alert({
+                      alertType: "success",
+                      title: `Pinned ${file.name}`,
+                      expandable: false,
+                      durationMs: 3000,
+                    });
                   }
                 }
               }}
             >
-              {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+              {isPinned ? (
+                <PushPinIcon fontSize="small" />
+              ) : (
+                <PushPinOutlinedIcon fontSize="small" />
+              )}
             </ActionIcon>
           </Tooltip>
         </div>
@@ -470,7 +583,13 @@ const FileEditorThumbnail = ({
         <Text size="lg" fw={700} className={styles.title} title={file.name}>
           <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
         </Text>
-        <Text size="sm" c="dimmed" className={styles.meta} lineClamp={3} title={`${extUpper || "FILE"} • ${prettySize}`}>
+        <Text
+          size="sm"
+          c="dimmed"
+          className={styles.meta}
+          lineClamp={3}
+          title={`${extUpper || "FILE"} • ${prettySize}`}
+        >
           {/* e.g.,  v2 - Jan 29, 2025 - PDF file - 3 Pages */}
           {`v${file.versionNumber} - `}
           {dateLabel}
@@ -482,7 +601,11 @@ const FileEditorThumbnail = ({
       {/* Preview area */}
       <div
         className={`${styles.previewBox} mx-6 mb-4 relative flex-1`}
-        style={isSupported || hasError ? undefined : { filter: "grayscale(80%)", opacity: 0.6 }}
+        style={
+          isSupported || hasError
+            ? undefined
+            : { filter: "grayscale(80%)", opacity: 0.6 }
+        }
       >
         <div className={styles.previewPaper}>
           {file.thumbnailUrl ? (
@@ -513,7 +636,12 @@ const FileEditorThumbnail = ({
               />
             </PrivateContent>
           ) : file.type?.startsWith("application/pdf") ? (
-            <Stack align="center" justify="center" gap="xs" style={{ height: "100%" }}>
+            <Stack
+              align="center"
+              justify="center"
+              gap="xs"
+              style={{ height: "100%" }}
+            >
               <Loader size="sm" />
               <Text size="xs" c="dimmed">
                 Loading thumbnail...
@@ -554,7 +682,11 @@ const FileEditorThumbnail = ({
       </div>
 
       {/* Hover Menu */}
-      <HoverActionMenu show={showHoverMenu || isMobile} actions={hoverActions} position="outside" />
+      <HoverActionMenu
+        show={showHoverMenu || isMobile}
+        actions={hoverActions}
+        position="outside"
+      />
 
       {/* Close Confirmation Modal */}
       <Modal
@@ -567,7 +699,9 @@ const FileEditorThumbnail = ({
         <Stack gap="md">
           {file.isDirty && file.localFilePath ? (
             <>
-              <Text size="md">{t("confirmCloseUnsaved", "This file has unsaved changes.")}</Text>
+              <Text size="md">
+                {t("confirmCloseUnsaved", "This file has unsaved changes.")}
+              </Text>
               <Text size="sm" c="dimmed" fw={500}>
                 {file.name}
               </Text>
@@ -575,7 +709,11 @@ const FileEditorThumbnail = ({
                 <Button variant="light" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                <Button
+                  variant="filled"
+                  color="red"
+                  onClick={handleConfirmClose}
+                >
                   {t("confirmCloseDiscard", "Discard changes and close")}
                 </Button>
                 <Button variant="filled" onClick={handleSaveAndClose}>
@@ -585,7 +723,12 @@ const FileEditorThumbnail = ({
             </>
           ) : (
             <>
-              <Text size="md">{t("confirmCloseMessage", "Are you sure you want to close this file?")}</Text>
+              <Text size="md">
+                {t(
+                  "confirmCloseMessage",
+                  "Are you sure you want to close this file?",
+                )}
+              </Text>
               <Text size="sm" c="dimmed" fw={500}>
                 {file.name}
               </Text>
@@ -593,7 +736,11 @@ const FileEditorThumbnail = ({
                 <Button variant="light" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                <Button
+                  variant="filled"
+                  color="red"
+                  onClick={handleConfirmClose}
+                >
                   {t("confirmCloseConfirm", "Close File")}
                 </Button>
               </Group>
@@ -623,8 +770,20 @@ const FileEditorThumbnail = ({
         </Stack>
       </Modal>
 
-      {canUpload && <UploadToServerModal opened={showUploadModal} onClose={() => setShowUploadModal(false)} file={file} />}
-      {canShare && <ShareFileModal opened={showShareModal} onClose={() => setShowShareModal(false)} file={file} />}
+      {canUpload && (
+        <UploadToServerModal
+          opened={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          file={file}
+        />
+      )}
+      {canShare && (
+        <ShareFileModal
+          opened={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          file={file}
+        />
+      )}
     </div>
   );
 };

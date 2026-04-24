@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { Text, Stack, Alert } from "@mantine/core";
-import { springAuth } from "@app/auth/springAuthClient";
+import {
+  setPostLoginRedirectPath,
+  springAuth,
+} from "@app/auth/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
@@ -17,7 +25,10 @@ import { updateSupportedLanguages } from "@app/i18n";
 import LoginHeader from "@app/routes/login/LoginHeader";
 import ErrorMessage from "@app/routes/login/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
-import OAuthButtons, { DEBUG_SHOW_ALL_PROVIDERS, oauthProviderConfig } from "@app/routes/login/OAuthButtons";
+import OAuthButtons, {
+  DEBUG_SHOW_ALL_PROVIDERS,
+  oauthProviderConfig,
+} from "@app/routes/login/OAuthButtons";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import LoggedInState from "@app/routes/login/LoggedInState";
 
@@ -26,6 +37,19 @@ export default function Login() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { session, loading } = useAuth();
+  const resolveReturnPath = (): string | null => {
+    const fromState = (
+      location.state as { from?: { pathname?: string } } | null
+    )?.from?.pathname;
+    if (fromState) return fromState;
+    const fromQuery = searchParams.get("from");
+    if (!fromQuery) return null;
+    try {
+      return decodeURIComponent(fromQuery);
+    } catch {
+      return fromQuery;
+    }
+  };
   const { refetch } = useAppConfig();
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -44,7 +68,8 @@ export default function Login() {
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
-  const loginDisabled = backendProbe.loginDisabled === true || _enableLogin === false;
+  const loginDisabled =
+    backendProbe.loginDisabled === true || _enableLogin === false;
   const autoLoginAttempted = useRef(false);
   const autoLoginErrorRecorded = useRef(false);
   const isUserPassAllowed = loginMethod === "all" || loginMethod === "normal";
@@ -145,16 +170,25 @@ export default function Login() {
       void tick();
     }, 5000);
     return () => window.clearInterval(intervalId);
-  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, refetch, navigate, loginDisabled]);
+  }, [
+    backendProbe.status,
+    backendProbe.loginDisabled,
+    backendProbe.probe,
+    refetch,
+    navigate,
+    loginDisabled,
+  ]);
 
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (!loading && session) {
-      const returnPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
-      console.debug("[Login] User already authenticated, redirecting to home", { returnPath });
+      const returnPath = resolveReturnPath();
+      console.debug("[Login] User already authenticated, redirecting to home", {
+        returnPath,
+      });
       navigate(returnPath || "/", { replace: true });
     }
-  }, [session, loading, navigate, location.state]);
+  }, [session, loading, navigate, location.state, searchParams]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {
@@ -175,7 +209,9 @@ export default function Login() {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response = await apiClient.get("/api/v1/proprietary/ui-data/login");
+        const response = await apiClient.get(
+          "/api/v1/proprietary/ui-data/login",
+        );
         const data = response.data;
 
         // Check if login is disabled - if so, redirect to home
@@ -222,7 +258,9 @@ export default function Login() {
   // Update hasSSOProviders and showEmailForm when enabledProviders or loginMethod changes
   useEffect(() => {
     // In debug mode, check if any providers exist in the config
-    const hasProviders = DEBUG_SHOW_ALL_PROVIDERS ? Object.keys(oauthProviderConfig).length > 0 : enabledProviders.length > 0;
+    const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
+      ? Object.keys(oauthProviderConfig).length > 0
+      : enabledProviders.length > 0;
     setHasSSOProviders(hasProviders);
 
     // Check if username/password authentication is allowed
@@ -243,6 +281,12 @@ export default function Login() {
       setError(null);
       clearLogoutBlock();
 
+      // Don't overwrite a path already stashed by httpErrorHandler on a prior 401.
+      const returnPath = resolveReturnPath();
+      if (returnPath) {
+        setPostLoginRedirectPath(returnPath);
+      }
+
       console.log(`[Login] Signing in with provider: ${provider}`);
 
       // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
@@ -254,13 +298,17 @@ export default function Login() {
 
       if (error) {
         console.error(`[Login] ${provider} error:`, error);
-        setError(t("login.failedToSignIn", { provider, message: error.message }) || `Failed to sign in with ${provider}`);
+        setError(
+          t("login.failedToSignIn", { provider, message: error.message }) ||
+            `Failed to sign in with ${provider}`,
+        );
       }
     } catch (err) {
       console.error(`[Login] Unexpected error:`, err);
       setError(
-        t("login.unexpectedError", { message: err instanceof Error ? err.message : "Unknown error" }) ||
-          "An unexpected error occurred",
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }) || "An unexpected error occurred",
       );
     } finally {
       setIsSigningIn(false);
@@ -279,11 +327,22 @@ export default function Login() {
     const blockedByAttempts = attempts >= MAX_AUTO_LOGIN_ATTEMPTS;
     const blockedByLogout = hasLogoutBlock();
 
-    if (!ssoAutoLogin || loginDisabled || loading || session || backendProbe.status !== "up") {
+    if (
+      !ssoAutoLogin ||
+      loginDisabled ||
+      loading ||
+      session ||
+      backendProbe.status !== "up"
+    ) {
       return;
     }
 
-    if (hasSsoLoginError || blockedByErrors || blockedByAttempts || blockedByLogout) {
+    if (
+      hasSsoLoginError ||
+      blockedByErrors ||
+      blockedByAttempts ||
+      blockedByLogout
+    ) {
       return;
     }
 
@@ -321,22 +380,40 @@ export default function Login() {
       // Check if session expired (401 redirect)
       const expired = searchParams.get("expired");
       if (expired === "true") {
-        setError(t("login.sessionExpired", "Your session has expired. Please sign in again."));
+        setError(
+          t(
+            "login.sessionExpired",
+            "Your session has expired. Please sign in again.",
+          ),
+        );
       }
 
       const messageType = searchParams.get("messageType");
       if (messageType) {
         switch (messageType) {
           case "accountCreated":
-            setSuccessMessage(t("login.accountCreatedSuccess", "Account created successfully! You can now sign in."));
+            setSuccessMessage(
+              t(
+                "login.accountCreatedSuccess",
+                "Account created successfully! You can now sign in.",
+              ),
+            );
             break;
           case "passwordChanged":
             setSuccessMessage(
-              t("login.passwordChangedSuccess", "Password changed successfully! Please sign in with your new password."),
+              t(
+                "login.passwordChangedSuccess",
+                "Password changed successfully! Please sign in with your new password.",
+              ),
             );
             break;
           case "credsUpdated":
-            setSuccessMessage(t("login.credentialsUpdated", "Your credentials have been updated. Please sign in again."));
+            setSuccessMessage(
+              t(
+                "login.credentialsUpdated",
+                "Your credentials have been updated. Please sign in again.",
+              ),
+            );
             break;
         }
       }
@@ -361,9 +438,15 @@ export default function Login() {
   // Set document meta
   useDocumentMeta({
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
-    description: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    description: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
-    ogDescription: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    ogDescription: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
@@ -401,7 +484,11 @@ export default function Login() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}>{t("backendStartup.unreachable")}</p>
+          <p
+            style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}
+          >
+            {t("backendStartup.unreachable")}
+          </p>
           <button
             type="button"
             onClick={handleRetry}
@@ -417,7 +504,9 @@ export default function Login() {
 
   const signInWithEmail = async () => {
     if (!email || !password) {
-      setError(t("login.pleaseEnterBoth") || "Please enter both email and password");
+      setError(
+        t("login.pleaseEnterBoth") || "Please enter both email and password",
+      );
       return;
     }
 
@@ -456,8 +545,9 @@ export default function Login() {
     } catch (err) {
       console.error("[Login] Unexpected error:", err);
       setError(
-        t("login.unexpectedError", { message: err instanceof Error ? err.message : "Unknown error" }) ||
-          "An unexpected error occurred",
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }) || "An unexpected error occurred",
       );
     } finally {
       setIsSigningIn(false);
@@ -471,7 +561,10 @@ export default function Login() {
 
   return (
     <AuthLayout>
-      <LoginHeader title={isSingleSsoOnly ? "" : t("login.login") || "Sign in"} centerOnly={isSingleSsoOnly} />
+      <LoginHeader
+        title={isSingleSsoOnly ? "" : t("login.login") || "Sign in"}
+        centerOnly={isSingleSsoOnly}
+      />
 
       {/* Success message */}
       {successMessage && (
@@ -485,7 +578,9 @@ export default function Login() {
             color: "#16a34a",
           }}
         >
-          <p style={{ margin: 0, fontSize: "0.875rem", textAlign: "center" }}>{successMessage}</p>
+          <p style={{ margin: 0, fontSize: "0.875rem", textAlign: "center" }}>
+            {successMessage}
+          </p>
         </div>
       )}
 
@@ -497,14 +592,20 @@ export default function Login() {
         isSubmitting={isSigningIn}
         layout="vertical"
         enabledProviders={enabledProviders}
-        ctaPrefix={isSsoOnlyMode ? t("login.signInWith", "Sign in with") : undefined}
+        ctaPrefix={
+          isSsoOnlyMode ? t("login.signInWith", "Sign in with") : undefined
+        }
         styleVariant="light"
         useNewStyle={isSsoOnlyMode}
       />
 
       {/* Divider between OAuth and Email - only show if SSO is available and username/password is allowed */}
       {hasSSOProviders && isUserPassAllowed && (
-        <DividerWithText text={t("signup.or", "or")} respondsToDarkMode={false} opacity={0.4} />
+        <DividerWithText
+          text={t("signup.or", "or")}
+          respondsToDarkMode={false}
+          opacity={0.4}
+        />
       )}
 
       {/* Sign in with email button - only show if SSO providers exist and username/password is allowed */}
@@ -535,7 +636,11 @@ export default function Login() {
             requiresMfa={requiresMfa}
             onSubmit={signInWithEmail}
             isSubmitting={isSigningIn}
-            submitButtonText={isSigningIn ? t("login.loggingIn") || "Signing in..." : t("login.login") || "Sign in"}
+            submitButtonText={
+              isSigningIn
+                ? t("login.loggingIn") || "Signing in..."
+                : t("login.login") || "Sign in"
+            }
           />
         </div>
       )}
@@ -544,23 +649,52 @@ export default function Login() {
       {isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed && (
         <Alert color="blue" variant="light" radius="md" mt="xl">
           <Stack gap="xs" align="center">
-            <Text size="sm" fw={600} ta="center" style={{ color: "var(--text-always-dark)" }}>
+            <Text
+              size="sm"
+              fw={600}
+              ta="center"
+              style={{ color: "var(--text-always-dark)" }}
+            >
               {t("login.defaultCredentials", "Default Login Credentials")}
             </Text>
-            <Text size="sm" ta="center" style={{ color: "var(--text-always-dark)" }}>
-              <Text component="span" fw={600} style={{ color: "var(--text-always-dark)" }}>
+            <Text
+              size="sm"
+              ta="center"
+              style={{ color: "var(--text-always-dark)" }}
+            >
+              <Text
+                component="span"
+                fw={600}
+                style={{ color: "var(--text-always-dark)" }}
+              >
                 {t("login.username", "Username")}:
               </Text>{" "}
               admin
             </Text>
-            <Text size="sm" ta="center" style={{ color: "var(--text-always-dark)" }}>
-              <Text component="span" fw={600} style={{ color: "var(--text-always-dark)" }}>
+            <Text
+              size="sm"
+              ta="center"
+              style={{ color: "var(--text-always-dark)" }}
+            >
+              <Text
+                component="span"
+                fw={600}
+                style={{ color: "var(--text-always-dark)" }}
+              >
                 {t("login.password", "Password")}:
               </Text>{" "}
               stirling
             </Text>
-            <Text size="xs" ta="center" mt="xs" style={{ color: "var(--text-always-dark-muted)" }}>
-              {t("login.changePasswordWarning", "Please change your password after logging in for the first time")}
+            <Text
+              size="xs"
+              ta="center"
+              mt="xs"
+              style={{ color: "var(--text-always-dark-muted)" }}
+            >
+              {t(
+                "login.changePasswordWarning",
+                "Please change your password after logging in for the first time",
+              )}
             </Text>
           </Stack>
         </Alert>

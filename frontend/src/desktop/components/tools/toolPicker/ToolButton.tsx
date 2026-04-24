@@ -3,9 +3,10 @@ import CoreToolButton from "@core/components/tools/toolPicker/ToolButton";
 import { getToolDisabledReason } from "@app/components/tools/fullscreen/shared";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import { connectionModeService, type ConnectionMode } from "@app/services/connectionModeService";
-import type { ToolId } from "@app/types/toolId";
+import {
+  connectionModeService,
+  type ConnectionMode,
+} from "@app/services/connectionModeService";
 
 type CoreToolButtonProps = React.ComponentProps<typeof CoreToolButton>;
 
@@ -20,16 +21,20 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   const { toolAvailability, handleToolSelectForced } = useToolWorkflow();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
-  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(null);
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
+    null,
+  );
 
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
-    return connectionModeService.subscribeToModeChanges((cfg) => setConnectionMode(cfg.mode));
+    return connectionModeService.subscribeToModeChanges((cfg) =>
+      setConnectionMode(cfg.mode),
+    );
   }, []);
 
   const disabledReason = getToolDisabledReason(
-    props.id as string,
-    props.tool as ToolRegistryEntry,
+    props.id,
+    props.tool,
     toolAvailability,
     premiumEnabled,
   );
@@ -39,11 +44,15 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   // user can see the settings; the disabled execute button handles the sign-in prompt.
   // comingSoon and selfHostedOffline tools remain dimmed — they have no usable UI to show.
   const handleUnavailableClick =
-    connectionMode === "local" && disabledReason !== "comingSoon" && disabledReason !== "selfHostedOffline"
-      ? () => handleToolSelectForced(props.id as ToolId)
+    connectionMode === "local" &&
+    disabledReason !== "comingSoon" &&
+    disabledReason !== "selfHostedOffline"
+      ? () => handleToolSelectForced(props.id)
       : undefined;
 
-  return <CoreToolButton {...props} onUnavailableClick={handleUnavailableClick} />;
+  return (
+    <CoreToolButton {...props} onUnavailableClick={handleUnavailableClick} />
+  );
 };
 
 export default ToolButton;

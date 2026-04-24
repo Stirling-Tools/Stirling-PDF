@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -25,6 +27,17 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertImgPDFControllerTest {
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;

@@ -1,13 +1,30 @@
-import { Modal, Stack, Card, Text, Group, Badge, Button, Alert } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Card,
+  Text,
+  Group,
+  Badge,
+  Button,
+  Alert,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import { BILLING_CONFIG, getCurrencySymbol, getFormattedOveragePrice } from "@app/config/billing";
+import {
+  BILLING_CONFIG,
+  getCurrencySymbol,
+  getFormattedOveragePrice,
+} from "@app/config/billing";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { CreditUsageBanner } from "@app/components/shared/modals/CreditUsageBanner";
 import { FeatureListItem } from "@app/components/shared/modals/FeatureListItem";
-import { FREE_PLAN_FEATURES, TEAM_PLAN_FEATURES, ENTERPRISE_PLAN_FEATURES } from "@app/config/planFeatures";
+import {
+  FREE_PLAN_FEATURES,
+  TEAM_PLAN_FEATURES,
+  ENTERPRISE_PLAN_FEATURES,
+} from "@app/config/planFeatures";
 import { useSaaSCheckout } from "@app/contexts/SaaSCheckoutContext";
 import { useEnableMeteredBilling } from "@app/hooks/useEnableMeteredBilling";
 
@@ -21,17 +38,18 @@ interface CreditExhaustedModalProps {
  * Shows upgrade options when user runs out of credits
  * Routes to different UI based on user status (free/team/managed member)
  */
-export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalProps) {
+export function CreditExhaustedModal({
+  opened,
+  onClose,
+}: CreditExhaustedModalProps) {
   const { t } = useTranslation();
-  const { creditBalance, tier, plans, refreshBilling, isManagedTeamMember } = useSaaSBilling();
+  const { creditBalance, tier, plans, refreshBilling, isManagedTeamMember } =
+    useSaaSBilling();
   const { isTeamLeader } = useSaaSTeam();
   const { openCheckout } = useSaaSCheckout();
 
-  const { enablingMetering, meteringError, handleEnableMetering } = useEnableMeteredBilling(
-    refreshBilling,
-    onClose,
-    "CreditExhaustedModal",
-  );
+  const { enablingMetering, meteringError, handleEnableMetering } =
+    useEnableMeteredBilling(refreshBilling, onClose, "CreditExhaustedModal");
 
   // Managed team members have unlimited credits via team
   if (isManagedTeamMember) {
@@ -65,8 +83,12 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
   if (tier === "team") {
     const teamPlan = plans.get("team");
     const teamCurrency = teamPlan?.currency ?? "$";
-    const overagePrice = teamPlan?.overagePrice ?? BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT;
-    const formattedOveragePrice = getFormattedOveragePrice(teamCurrency, overagePrice);
+    const overagePrice =
+      teamPlan?.overagePrice ?? BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT;
+    const formattedOveragePrice = getFormattedOveragePrice(
+      teamCurrency,
+      overagePrice,
+    );
 
     return (
       <Modal
@@ -82,10 +104,16 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
         title={
           <Stack gap="sm">
             <Text size="lg" fw={450}>
-              {t("credits.modal.titleExhaustedPro", "You have run out of credits")}
+              {t(
+                "credits.modal.titleExhaustedPro",
+                "You have run out of credits",
+              )}
             </Text>
             <Text size="sm" c="dimmed">
-              {t("credits.modal.subtitlePro", "Enable automatic overage billing to never run out of credits.")}
+              {t(
+                "credits.modal.subtitlePro",
+                "Enable automatic overage billing to never run out of credits.",
+              )}
             </Text>
           </Stack>
         }
@@ -103,7 +131,10 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
         }}
       >
         <Stack gap="lg">
-          <CreditUsageBanner currentCredits={creditBalance} totalCredits={BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} />
+          <CreditUsageBanner
+            currentCredits={creditBalance}
+            totalCredits={BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH}
+          />
 
           {meteringError && (
             <Alert color="red" ml="lg" mr="lg">
@@ -126,9 +157,14 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
           >
             <Stack gap="md">
               <Group gap="xs" align="center">
-                <TrendingUpIcon sx={{ fontSize: 24, color: "var(--color-primary-600)" }} />
+                <TrendingUpIcon
+                  sx={{ fontSize: 24, color: "var(--color-primary-600)" }}
+                />
                 <Text size="lg" fw={600}>
-                  {t("credits.modal.meteringTitle", "Pay-What-You-Use Overage Billing")}
+                  {t(
+                    "credits.modal.meteringTitle",
+                    "Pay-What-You-Use Overage Billing",
+                  )}
                 </Text>
               </Group>
 
@@ -147,18 +183,31 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
                   })}
                 </FeatureListItem>
                 <FeatureListItem included>
-                  {t("credits.modal.meteringPrice", "Additional credits at {{price}}/credit", {
-                    price: formattedOveragePrice,
-                  })}
+                  {t(
+                    "credits.modal.meteringPrice",
+                    "Additional credits at {{price}}/credit",
+                    {
+                      price: formattedOveragePrice,
+                    },
+                  )}
                 </FeatureListItem>
                 <FeatureListItem included>
-                  {t("credits.modal.meteringPayAsYouGo", "Only pay for what you use")}
+                  {t(
+                    "credits.modal.meteringPayAsYouGo",
+                    "Only pay for what you use",
+                  )}
                 </FeatureListItem>
                 <FeatureListItem included>
-                  {t("credits.modal.meteringNoCommitment", "No commitment, cancel anytime")}
+                  {t(
+                    "credits.modal.meteringNoCommitment",
+                    "No commitment, cancel anytime",
+                  )}
                 </FeatureListItem>
                 <FeatureListItem included>
-                  {t("credits.modal.meteringNeverRunOut", "Never run out of credits")}
+                  {t(
+                    "credits.modal.meteringNeverRunOut",
+                    "Never run out of credits",
+                  )}
                 </FeatureListItem>
               </Stack>
 
@@ -199,10 +248,20 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
             </Button>
             {!isTeamLeader && (
               <Text size="xs" c="dimmed" ta="center">
-                {t("credits.modal.teamLeaderOnly", "Only team leaders can enable overage billing")}
+                {t(
+                  "credits.modal.teamLeaderOnly",
+                  "Only team leaders can enable overage billing",
+                )}
               </Text>
             )}
-            <Button onClick={onClose} variant="subtle" fullWidth size="md" c="dimmed" disabled={enablingMetering}>
+            <Button
+              onClick={onClose}
+              variant="subtle"
+              fullWidth
+              size="md"
+              c="dimmed"
+              disabled={enablingMetering}
+            >
               {t("credits.maybeLater", "Maybe later")}
             </Button>
           </Stack>
@@ -215,7 +274,8 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
   const teamPlan = plans.get("team");
   const teamPrice = teamPlan?.price ?? 20;
   const teamCurrency = teamPlan?.currency ?? "$";
-  const overagePrice = teamPlan?.overagePrice ?? BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT;
+  const overagePrice =
+    teamPlan?.overagePrice ?? BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT;
 
   const currencySymbol = getCurrencySymbol(teamCurrency);
   const formattedOveragePrice = `${currencySymbol}${overagePrice.toFixed(2)}`;
@@ -237,7 +297,10 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
             {t("credits.modal.titleExhausted", "You've used your free credits")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("credits.modal.subtitle", "Upgrade to Team for 10x the credits and faster processing.")}
+            {t(
+              "credits.modal.subtitle",
+              "Upgrade to Team for 10x the credits and faster processing.",
+            )}
           </Text>
         </Stack>
       }
@@ -255,7 +318,10 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
       }}
     >
       <Stack gap="lg">
-        <CreditUsageBanner currentCredits={creditBalance} totalCredits={BILLING_CONFIG.FREE_CREDITS_PER_MONTH} />
+        <CreditUsageBanner
+          currentCredits={creditBalance}
+          totalCredits={BILLING_CONFIG.FREE_CREDITS_PER_MONTH}
+        />
 
         <Group gap="md" ml="lg" mr="lg" align="stretch" grow>
           {/* Free Plan Card */}
@@ -284,7 +350,8 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
                   </Text>
                 </Group>
                 <Text size="sm" c="dimmed" mt="xs">
-                  {BILLING_CONFIG.FREE_CREDITS_PER_MONTH} {t("credits.modal.monthlyCredits", "monthly credits")}
+                  {BILLING_CONFIG.FREE_CREDITS_PER_MONTH}{" "}
+                  {t("credits.modal.monthlyCredits", "monthly credits")}
                 </Text>
               </div>
 
@@ -293,7 +360,11 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
                   {t("credits.modal.forRegularWork", "For regular PDF work:")}
                 </Text>
                 {FREE_PLAN_FEATURES.map((feature, index) => (
-                  <FeatureListItem key={index} included color="var(--mantine-color-gray-6)">
+                  <FeatureListItem
+                    key={index}
+                    included
+                    color="var(--mantine-color-gray-6)"
+                  >
                     {t(feature.translationKey, feature.defaultText)}
                   </FeatureListItem>
                 ))}
@@ -335,11 +406,13 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
             onClick={() => openCheckout("pro")}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 12px 48px rgba(59, 130, 246, 0.3)";
+              e.currentTarget.style.boxShadow =
+                "0 12px 48px rgba(59, 130, 246, 0.3)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.1)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(59, 130, 246, 0.1)";
             }}
           >
             <Badge
@@ -366,7 +439,11 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
                   {t("credits.modal.teamSubscription", "Team")}
                 </Text>
                 <Group gap="xs" align="baseline" mt="xs">
-                  <Text size="1.75rem" fw={700} style={{ color: "var(--text-primary)" }}>
+                  <Text
+                    size="1.75rem"
+                    fw={700}
+                    style={{ color: "var(--text-primary)" }}
+                  >
                     {currencySymbol}
                     {teamPrice}
                   </Text>
@@ -375,14 +452,19 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
                   </Text>
                 </Group>
                 <Text size="sm" c="dimmed" mt="xs">
-                  {BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} {t("credits.modal.monthlyCredits", "monthly credits")} +{" "}
-                  {formattedOveragePrice}/{t("credits.modal.overage", "overage")}
+                  {BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH}{" "}
+                  {t("credits.modal.monthlyCredits", "monthly credits")} +{" "}
+                  {formattedOveragePrice}/
+                  {t("credits.modal.overage", "overage")}
                 </Text>
               </div>
 
               <Stack gap="xs" style={{ flex: 1 }}>
                 <Text size="sm" fw={500} mb="xs">
-                  {t("credits.modal.everythingInFree", "Everything in Free, plus:")}
+                  {t(
+                    "credits.modal.everythingInFree",
+                    "Everything in Free, plus:",
+                  )}
                 </Text>
                 {TEAM_PLAN_FEATURES.map((feature, index) => (
                   <FeatureListItem key={index} included>
@@ -432,7 +514,10 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
 
               <Stack gap="xs" style={{ flex: 1 }}>
                 <Text size="sm" fw={500} mb="xs">
-                  {t("credits.modal.everythingInCredits", "Everything in Credits, plus:")}
+                  {t(
+                    "credits.modal.everythingInCredits",
+                    "Everything in Credits, plus:",
+                  )}
                 </Text>
                 {ENTERPRISE_PLAN_FEATURES.map((feature, index) => (
                   <FeatureListItem key={index} included>
@@ -468,7 +553,10 @@ export function CreditExhaustedModal({ opened, onClose }: CreditExhaustedModalPr
             target="_blank"
             rel="noopener noreferrer"
             size="sm"
-            style={{ color: "var(--mantine-color-blue-6)", textDecoration: "none" }}
+            style={{
+              color: "var(--mantine-color-blue-6)",
+              textDecoration: "none",
+            }}
             onMouseEnter={(e) => {
               e.currentTarget.style.textDecoration = "underline";
             }}

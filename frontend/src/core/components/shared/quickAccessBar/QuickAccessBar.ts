@@ -14,8 +14,12 @@ export const isNavButtonActive = (
   selectedToolKey?: string | null,
   leftPanelView?: "toolPicker" | "toolContent" | "hidden",
 ): boolean => {
-  const isActiveByLocalState = config.type === "navigation" && activeButton === config.id;
-  const isActiveByContext = config.type === "navigation" && leftPanelView === "toolContent" && selectedToolKey === config.id;
+  const isActiveByLocalState =
+    config.type === "navigation" && activeButton === config.id;
+  const isActiveByContext =
+    config.type === "navigation" &&
+    leftPanelView === "toolContent" &&
+    selectedToolKey === config.id;
   const isActiveByModal =
     (config.type === "modal" && config.id === "files" && isFilesModalOpen) ||
     (config.type === "modal" && config.id === "config" && configModalOpen);
@@ -34,7 +38,14 @@ export const getNavButtonStyle = (
   selectedToolKey?: string | null,
   leftPanelView?: "toolPicker" | "toolContent" | "hidden",
 ) => {
-  const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+  const isActive = isNavButtonActive(
+    config,
+    activeButton,
+    isFilesModalOpen,
+    configModalOpen,
+    selectedToolKey,
+    leftPanelView,
+  );
 
   if (isActive) {
     return {
@@ -57,7 +68,10 @@ export const getNavButtonStyle = (
 /**
  * Determine the active nav button based on current tool state and registry
  */
-export const getActiveNavButton = (selectedToolKey: string | null, readerMode: boolean): string => {
+export const getActiveNavButton = (
+  selectedToolKey: string | null,
+  readerMode: boolean,
+): string => {
   // Reader mode takes precedence and should highlight the Read nav item
   if (readerMode) {
     return "read";

@@ -64,6 +64,7 @@
     "license-report": "^6.8.0",
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
+    "pixelmatch": "^7.1.0",
     "posthog-js": "^1.268.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
@@ -137,7 +138,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install",
-    "update:minor": "npm outdated || npm update --before=$(date -v-7d +%Y-%m-%d) && (npm audit fix --before=$(date -v-7d +%Y-%m-%d) || true) && npm test",
+    "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
     "update:minor-strict": "npx npm-check-updates -u --target minor && npm install"

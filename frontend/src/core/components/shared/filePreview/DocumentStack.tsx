@@ -6,7 +6,10 @@ export interface DocumentStackProps {
   children: React.ReactNode;
 }
 
-const DocumentStack: React.FC<DocumentStackProps> = ({ totalFiles, children }) => {
+const DocumentStack: React.FC<DocumentStackProps> = ({
+  totalFiles,
+  children,
+}) => {
   const stackDocumentBaseStyle = {
     position: "absolute" as const,
     width: "100%",

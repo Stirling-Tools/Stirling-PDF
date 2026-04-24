@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef } from "react";
 import { PlanTierGroup } from "@app/services/licenseService";
-import { CheckoutState, PollingStatus, CheckoutStage } from "@app/components/shared/stripeCheckout/types/checkout";
+import {
+  CheckoutState,
+  PollingStatus,
+  CheckoutStage,
+} from "@app/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Centralized state management hook for checkout flow
@@ -13,9 +17,13 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
   const [stageHistory, setStageHistory] = useState<CheckoutStage[]>([]);
   const [emailInput, setEmailInput] = useState<string>("");
   const [emailError, setEmailError] = useState<string>("");
-  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">(planGroup.yearly ? "yearly" : "monthly");
+  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "yearly">(
+    planGroup.yearly ? "yearly" : "monthly",
+  );
   const [installationId, setInstallationId] = useState<string | null>(null);
-  const [currentLicenseKey, setCurrentLicenseKey] = useState<string | null>(null);
+  const [currentLicenseKey, setCurrentLicenseKey] = useState<string | null>(
+    null,
+  );
   const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [pollingStatus, setPollingStatus] = useState<PollingStatus>("idle");
 
@@ -24,7 +32,8 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
   const pollingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get the selected plan based on period
-  const selectedPlan = selectedPeriod === "yearly" ? planGroup.yearly : planGroup.monthly;
+  const selectedPlan =
+    selectedPeriod === "yearly" ? planGroup.yearly : planGroup.monthly;
 
   const resetState = useCallback(() => {
     setState({

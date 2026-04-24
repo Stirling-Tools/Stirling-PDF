@@ -8,7 +8,9 @@ interface ManageBillingButtonProps {
   returnUrl?: string;
 }
 
-export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({ returnUrl = window.location.href }) => {
+export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
+  returnUrl = window.location.href,
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
@@ -20,11 +22,16 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({ return
       const licenseInfo = await licenseService.getLicenseInfo();
 
       if (!licenseInfo.licenseKey) {
-        throw new Error("No license key found. Please activate a license first.");
+        throw new Error(
+          "No license key found. Please activate a license first.",
+        );
       }
 
       // Create billing portal session with license key
-      const response = await licenseService.createBillingPortalSession(returnUrl, licenseInfo.licenseKey);
+      const response = await licenseService.createBillingPortalSession(
+        returnUrl,
+        licenseInfo.licenseKey,
+      );
 
       // Open billing portal in new tab
       window.open(response.url, "_blank");
@@ -34,7 +41,9 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({ return
       alert({
         alertType: "error",
         title: t("billing.portal.error", "Failed to open billing portal"),
-        body: (error instanceof Error ? error.message : undefined) || "Please try again or contact support.",
+        body:
+          (error instanceof Error ? error.message : undefined) ||
+          "Please try again or contact support.",
       });
       setLoading(false);
     }

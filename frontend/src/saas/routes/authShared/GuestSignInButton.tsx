@@ -8,7 +8,11 @@ interface GuestSignInButtonProps {
   disabled?: boolean;
 }
 
-export default function GuestSignInButton({ label, onClick, disabled }: GuestSignInButtonProps) {
+export default function GuestSignInButton({
+  label,
+  onClick,
+  disabled,
+}: GuestSignInButtonProps) {
   return (
     <button
       type="button"

@@ -10,7 +10,10 @@ import { Modal, Stack, ActionIcon } from "@mantine/core";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 
-import type { SlideDefinition, ButtonAction } from "@app/components/onboarding/onboardingFlowConfig";
+import type {
+  SlideDefinition,
+  ButtonAction,
+} from "@app/components/onboarding/onboardingFlowConfig";
 import type { OnboardingRuntimeState } from "@app/components/onboarding/orchestrator/onboardingConfig";
 import type { SlideConfig } from "@app/types/types";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
@@ -47,7 +50,11 @@ export default function OnboardingModalSlide({
       return (
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
-            <img src={`${BASE_PATH}/modern-logo/logo512.png`} alt="Stirling icon" className={styles.downloadIcon} />
+            <img
+              src={`${BASE_PATH}/modern-logo/logo512.png`}
+              alt="Stirling icon"
+              className={styles.downloadIcon}
+            />
           </div>
         </div>
       );
@@ -56,20 +63,45 @@ export default function OnboardingModalSlide({
     return (
       <div className={styles.heroLogoCircle}>
         {slideDefinition.hero.type === "rocket" && (
-          <LocalIcon icon="rocket-launch" width={64} height={64} className={styles.heroIcon} />
+          <LocalIcon
+            icon="rocket-launch"
+            width={64}
+            height={64}
+            className={styles.heroIcon}
+          />
         )}
         {slideDefinition.hero.type === "shield" && (
-          <LocalIcon icon="verified-user-outline" width={64} height={64} className={styles.heroIcon} />
+          <LocalIcon
+            icon="verified-user-outline"
+            width={64}
+            height={64}
+            className={styles.heroIcon}
+          />
         )}
         {slideDefinition.hero.type === "lock" && (
-          <LocalIcon icon="lock-outline" width={64} height={64} className={styles.heroIcon} />
+          <LocalIcon
+            icon="lock-outline"
+            width={64}
+            height={64}
+            className={styles.heroIcon}
+          />
         )}
         {slideDefinition.hero.type === "analytics" && (
-          <LocalIcon icon="analytics" width={64} height={64} className={styles.heroIcon} />
+          <LocalIcon
+            icon="analytics"
+            width={64}
+            height={64}
+            className={styles.heroIcon}
+          />
         )}
-        {slideDefinition.hero.type === "diamond" && <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />}
+        {slideDefinition.hero.type === "diamond" && (
+          <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />
+        )}
         {slideDefinition.hero.type === "logo" && (
-          <img src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`} alt="Stirling logo" />
+          <img
+            src={`${BASE_PATH}/branding/StirlingPDFLogoNoTextLightHC.svg`}
+            alt="Stirling logo"
+          />
         )}
       </div>
     );
@@ -88,7 +120,12 @@ export default function OnboardingModalSlide({
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       styles={{
         body: { padding: 0, maxHeight: "90vh", overflow: "hidden" },
-        content: { overflow: "hidden", border: "none", background: "var(--bg-surface)", maxHeight: "90vh" },
+        content: {
+          overflow: "hidden",
+          border: "none",
+          background: "var(--bg-surface)",
+          maxHeight: "90vh",
+        },
       }}
     >
       <Stack gap={0} className={styles.modalContent}>
@@ -129,20 +166,34 @@ export default function OnboardingModalSlide({
           </div>
         </div>
 
-        <div className={styles.modalBody} style={{ overflowY: "auto", maxHeight: "calc(90vh - 220px)" }}>
+        <div
+          className={styles.modalBody}
+          style={{ overflowY: "auto", maxHeight: "calc(90vh - 220px)" }}
+        >
           <Stack gap={16}>
-            <div key={`title-${slideContent.key}`} className={`${styles.title} ${styles.titleText}`}>
+            <div
+              key={`title-${slideContent.key}`}
+              className={`${styles.title} ${styles.titleText}`}
+            >
               {slideContent.title}
             </div>
 
             <div className={styles.bodyText}>
-              <div key={`body-${slideContent.key}`} className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
+              <div
+                key={`body-${slideContent.key}`}
+                className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}
+              >
                 {slideContent.body}
               </div>
               <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
             </div>
 
-            {modalSlideCount > 1 && <OnboardingStepper totalSteps={modalSlideCount} activeStep={currentModalSlideIndex} />}
+            {modalSlideCount > 1 && (
+              <OnboardingStepper
+                totalSteps={modalSlideCount}
+                activeStep={currentModalSlideIndex}
+              />
+            )}
 
             <div className={styles.buttonContainer}>
               <SlideButtons

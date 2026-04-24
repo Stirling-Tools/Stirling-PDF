@@ -1,4 +1,9 @@
-import { ProcessedFile, CacheConfig, CacheEntry, CacheStats } from "@app/types/processing";
+import {
+  ProcessedFile,
+  CacheConfig,
+  CacheEntry,
+  CacheStats,
+} from "@app/types/processing";
 
 export class ProcessingCache {
   private cache = new Map<string, CacheEntry>();
@@ -62,7 +67,10 @@ export class ProcessingCache {
 
   private makeRoom(neededSize: number): void {
     // Remove oldest entries until we have space
-    while (this.cache.size >= this.config.maxFiles || this.totalSize + neededSize > this.config.maxSizeBytes) {
+    while (
+      this.cache.size >= this.config.maxFiles ||
+      this.totalSize + neededSize > this.config.maxSizeBytes
+    ) {
       const oldestKey = this.findOldestEntry();
       if (oldestKey) {
         this.delete(oldestKey);

@@ -3,10 +3,15 @@ package stirling.software.SPDF.controller.api.security;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -30,6 +35,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,13 +45,27 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @DisplayName("SanitizeController Tests")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SanitizeControllerTest {
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private SanitizeController sanitizeController;
 
@@ -52,6 +73,18 @@ class SanitizeControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
@@ -139,7 +172,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(jsBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
 
             assertNotNull(response.getBody());
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -167,7 +200,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
     }
@@ -196,9 +229,9 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(linkBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            assertTrue(drainBody(response).length > 0);
         }
     }
 
@@ -226,7 +259,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(metaBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -252,7 +285,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
     }
@@ -283,7 +316,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
     }
@@ -312,9 +345,9 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(jsBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            assertTrue(drainBody(response).length > 0);
         }
 
         @Test
@@ -339,7 +372,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -360,7 +393,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -386,7 +419,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -412,7 +445,7 @@ class SanitizeControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = sanitizeController.sanitizePDF(request);
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }

@@ -1,7 +1,14 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { buildRedactFormData, redactOperationConfig, useRedactOperation } from "@app/hooks/tools/redact/useRedactOperation";
-import { defaultParameters, RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import {
+  buildRedactFormData,
+  redactOperationConfig,
+  useRedactOperation,
+} from "@app/hooks/tools/redact/useRedactOperation";
+import {
+  defaultParameters,
+  RedactParameters,
+} from "@app/hooks/tools/redact/useRedactParameters";
 
 // Mock the useToolOperation hook
 vi.mock("../shared/useToolOperation", async () => {
@@ -14,7 +21,9 @@ vi.mock("../shared/useToolOperation", async () => {
 
 // Mock the translation hook
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: vi.fn((_key: string, fallback: string) => fallback) }),
+  useTranslation: () => ({
+    t: vi.fn((_key: string, fallback: string) => fallback),
+  }),
 }));
 
 // Mock the error handler utility
@@ -23,7 +32,9 @@ vi.mock("../../../utils/toolErrorHandler", () => ({
 }));
 
 describe("buildRedactFormData", () => {
-  const mockFile = new File(["test content"], "test.pdf", { type: "application/pdf" });
+  const mockFile = new File(["test content"], "test.pdf", {
+    type: "application/pdf",
+  });
 
   test("should build form data for automatic mode", () => {
     const parameters: RedactParameters = {
@@ -73,8 +84,16 @@ describe("buildRedactFormData", () => {
   });
 
   test.each([
-    { description: "remove hash from redact color", redactColor: "#123456", expected: "123456" },
-    { description: "handle redact color without hash", redactColor: "ABCDEF", expected: "ABCDEF" },
+    {
+      description: "remove hash from redact color",
+      redactColor: "#123456",
+      expected: "123456",
+    },
+    {
+      description: "handle redact color without hash",
+      redactColor: "ABCDEF",
+      expected: "ABCDEF",
+    },
   ])("should $description", ({ redactColor, expected }) => {
     const parameters: RedactParameters = {
       ...defaultParameters,
@@ -120,7 +139,8 @@ describe("useRedactOperation", () => {
   });
 
   test("should call useToolOperation with correct configuration", async () => {
-    const { useToolOperation } = await import("@app/hooks/tools/shared/useToolOperation");
+    const { useToolOperation } =
+      await import("@app/hooks/tools/shared/useToolOperation");
     const mockUseToolOperation = vi.mocked(useToolOperation);
 
     renderHook(() => useRedactOperation());
@@ -132,7 +152,8 @@ describe("useRedactOperation", () => {
   });
 
   test("should provide error handler to useToolOperation", async () => {
-    const { useToolOperation } = await import("@app/hooks/tools/shared/useToolOperation");
+    const { useToolOperation } =
+      await import("@app/hooks/tools/shared/useToolOperation");
     const mockUseToolOperation = vi.mocked(useToolOperation);
 
     renderHook(() => useRedactOperation());

@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Stack, Loader, Alert, Button, Center, Text, Flex } from "@mantine/core";
+import {
+  Stack,
+  Loader,
+  Alert,
+  Button,
+  Center,
+  Text,
+  Flex,
+} from "@mantine/core";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -54,9 +62,11 @@ export function SaasPlanSection() {
     checkMode();
 
     // Subscribe to mode changes
-    const unsubscribe = connectionModeService.subscribeToModeChanges(async (config) => {
-      setIsSaasMode(config.mode === "saas");
-    });
+    const unsubscribe = connectionModeService.subscribeToModeChanges(
+      async (config) => {
+        setIsSaasMode(config.mode === "saas");
+      },
+    );
 
     return unsubscribe;
   }, []);
@@ -88,7 +98,11 @@ export function SaasPlanSection() {
   if (isSaasMode === false) {
     return (
       <Center p="xl">
-        <Alert color="blue" variant="light" icon={<ErrorOutlineIcon sx={{ fontSize: 16 }} />}>
+        <Alert
+          color="blue"
+          variant="light"
+          icon={<ErrorOutlineIcon sx={{ fontSize: 16 }} />}
+        >
           <Text size="sm">
             {t(
               "settings.planBilling.notAvailable",
@@ -117,7 +131,10 @@ export function SaasPlanSection() {
         <Stack align="center" gap="md">
           <Loader size="md" />
           <Text size="sm" c="dimmed">
-            {t("settings.planBilling.loading", "Loading billing information...")}
+            {t(
+              "settings.planBilling.loading",
+              "Loading billing information...",
+            )}
           </Text>
         </Stack>
       </Center>
@@ -132,11 +149,19 @@ export function SaasPlanSection() {
           color="red"
           variant="light"
           icon={<ErrorOutlineIcon sx={{ fontSize: 16 }} />}
-          title={t("settings.planBilling.errors.fetchFailed", "Unable to fetch billing data")}
+          title={t(
+            "settings.planBilling.errors.fetchFailed",
+            "Unable to fetch billing data",
+          )}
         >
           <Stack gap="sm">
             <Text size="sm">{error}</Text>
-            <Button variant="light" leftSection={<RefreshIcon sx={{ fontSize: 16 }} />} onClick={refreshBilling} size="xs">
+            <Button
+              variant="light"
+              leftSection={<RefreshIcon sx={{ fontSize: 16 }} />}
+              onClick={refreshBilling}
+              size="xs"
+            >
               {t("settings.planBilling.errors.retry", "Retry")}
             </Button>
           </Stack>
@@ -151,7 +176,13 @@ export function SaasPlanSection() {
       <div>
         {/* Header with title and Manage Billing button */}
         <Flex justify="space-between" align="center" mb="md">
-          <h3 style={{ margin: 0, color: "var(--mantine-color-text)", fontSize: "1rem" }}>
+          <h3
+            style={{
+              margin: 0,
+              color: "var(--mantine-color-text)",
+              fontSize: "1rem",
+            }}
+          >
             {t("settings.planBilling.currentPlan", "Active Plan")}
           </h3>
           {tier !== "free" && !isManagedTeamMember && (
@@ -162,34 +193,43 @@ export function SaasPlanSection() {
               loading={isOpeningPortal}
               disabled={isOpeningPortal}
             >
-              {t("settings.planBilling.billing.manageBilling", "Manage Billing")}
+              {t(
+                "settings.planBilling.billing.manageBilling",
+                "Manage Billing",
+              )}
             </Button>
           )}
         </Flex>
 
         {/* Trial Status Alert */}
-        {isTrialing && trialDaysRemaining !== undefined && subscription?.currentPeriodEnd && (
-          <Alert
-            color="blue"
-            icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-            mt="md"
-            mb="md"
-            title={t("settings.planBilling.trial.title", "Free Trial Active")}
-          >
-            <Text size="sm">
-              {t("settings.planBilling.trial.daysRemainingFull", "Your trial ends in {{days}} days", {
-                days: trialDaysRemaining,
-                defaultValue: `Your trial ends in ${trialDaysRemaining} days`,
-              })}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t("settings.planBilling.trial.endDate", "Expires: {{date}}", {
-                date: formatDate(subscription.currentPeriodEnd),
-                defaultValue: `Expires: ${formatDate(subscription.currentPeriodEnd)}`,
-              })}
-            </Text>
-          </Alert>
-        )}
+        {isTrialing &&
+          trialDaysRemaining !== undefined &&
+          subscription?.currentPeriodEnd && (
+            <Alert
+              color="blue"
+              icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
+              mt="md"
+              mb="md"
+              title={t("settings.planBilling.trial.title", "Free Trial Active")}
+            >
+              <Text size="sm">
+                {t(
+                  "settings.planBilling.trial.daysRemainingFull",
+                  "Your trial ends in {{days}} days",
+                  {
+                    days: trialDaysRemaining,
+                    defaultValue: `Your trial ends in ${trialDaysRemaining} days`,
+                  },
+                )}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {t("settings.planBilling.trial.endDate", "Expires: {{date}}", {
+                  date: formatDate(subscription.currentPeriodEnd),
+                  defaultValue: `Expires: ${formatDate(subscription.currentPeriodEnd)}`,
+                })}
+              </Text>
+            </Alert>
+          )}
 
         {/* Plan cards */}
         <Stack gap="lg">
@@ -207,7 +247,12 @@ export function SaasPlanSection() {
           />
 
           {/* Available plans grid */}
-          <SaaSAvailablePlansSection plans={plans} currentTier={tier} loading={plansLoading} error={plansError} />
+          <SaaSAvailablePlansSection
+            plans={plans}
+            currentTier={tier}
+            loading={plansLoading}
+            error={plansError}
+          />
         </Stack>
       </div>
     </SaaSCheckoutProvider>

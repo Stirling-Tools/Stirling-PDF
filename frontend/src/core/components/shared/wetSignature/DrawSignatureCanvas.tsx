@@ -9,7 +9,11 @@ interface DrawSignatureCanvasProps {
   disabled?: boolean;
 }
 
-export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({ signature, onChange, disabled = false }) => {
+export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
+  signature,
+  onChange,
+  disabled = false,
+}) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -90,7 +94,10 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({ signat
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        {t("certSign.collab.signRequest.drawSignature", "Draw your signature below")}
+        {t(
+          "certSign.collab.signRequest.drawSignature",
+          "Draw your signature below",
+        )}
       </Text>
 
       <canvas
@@ -116,11 +123,18 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({ signat
           <Text size="xs" mb={4}>
             {t("certSign.collab.signRequest.penColor", "Pen Color")}
           </Text>
-          <ColorPicker value={penColor} onChange={setPenColor} format="hex" size="xs" />
+          <ColorPicker
+            value={penColor}
+            onChange={setPenColor}
+            format="hex"
+            size="xs"
+          />
         </div>
         <div style={{ flex: 2 }}>
           <Text size="xs" mb={4}>
-            {t("certSign.collab.signRequest.penSize", "Pen Size: {{size}}px", { size: penSize })}
+            {t("certSign.collab.signRequest.penSize", "Pen Size: {{size}}px", {
+              size: penSize,
+            })}
           </Text>
           <Slider
             value={penSize}

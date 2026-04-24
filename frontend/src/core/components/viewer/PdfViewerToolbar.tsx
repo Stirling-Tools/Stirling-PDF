@@ -20,7 +20,11 @@ interface PdfViewerToolbarProps {
   onPageChange?: (page: number) => void;
 }
 
-export function PdfViewerToolbar({ currentPage = 1, totalPages: _totalPages = 1, onPageChange }: PdfViewerToolbarProps) {
+export function PdfViewerToolbar({
+  currentPage = 1,
+  totalPages: _totalPages = 1,
+  onPageChange,
+}: PdfViewerToolbarProps) {
   const { t } = useTranslation();
   const {
     getScrollState,
@@ -39,15 +43,23 @@ export function PdfViewerToolbar({ currentPage = 1, totalPages: _totalPages = 1,
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const spreadState = getSpreadState();
-  const [pageInput, setPageInput] = useState(scrollState.currentPage || currentPage);
-  const [displayZoomPercent, setDisplayZoomPercent] = useState(zoomState.zoomPercent || 140);
-  const [isDualPageActive, setIsDualPageActive] = useState(spreadState.isDualPage);
+  const [pageInput, setPageInput] = useState(
+    scrollState.currentPage || currentPage,
+  );
+  const [displayZoomPercent, setDisplayZoomPercent] = useState(
+    zoomState.zoomPercent || 140,
+  );
+  const [isDualPageActive, setIsDualPageActive] = useState(
+    spreadState.isDualPage,
+  );
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
-    const unregister = registerImmediateScrollUpdate((currentPage, _totalPages) => {
-      setPageInput(currentPage);
-    });
+    const unregister = registerImmediateScrollUpdate(
+      (currentPage, _totalPages) => {
+        setPageInput(currentPage);
+      },
+    );
     setPageInput(scrollState.currentPage);
     return () => {
       unregister?.();
@@ -174,11 +186,18 @@ export function PdfViewerToolbar({ currentPage = 1, totalPages: _totalPages = 1,
         max={scrollState.totalPages}
         hideControls
         styles={{
-          input: { width: 48, textAlign: "center", fontWeight: 500, fontSize: 16 },
+          input: {
+            width: 48,
+            textAlign: "center",
+            fontWeight: 500,
+            fontSize: 16,
+          },
         }}
       />
 
-      <span style={{ fontWeight: 500, fontSize: 16 }}>/ {scrollState.totalPages}</span>
+      <span style={{ fontWeight: 500, fontSize: 16 }}>
+        / {scrollState.totalPages}
+      </span>
 
       {/* Next Page Button */}
       <Button
@@ -213,7 +232,9 @@ export function PdfViewerToolbar({ currentPage = 1, totalPages: _totalPages = 1,
       {/* Dual Page Toggle */}
       <Tooltip
         content={
-          isDualPageActive ? t("viewer.singlePageView", "Single Page View") : t("viewer.dualPageView", "Dual Page View")
+          isDualPageActive
+            ? t("viewer.singlePageView", "Single Page View")
+            : t("viewer.dualPageView", "Dual Page View")
         }
         position="top"
         arrow
@@ -227,7 +248,11 @@ export function PdfViewerToolbar({ currentPage = 1, totalPages: _totalPages = 1,
           disabled={scrollState.totalPages <= 1}
           style={{ minWidth: "2.5rem" }}
         >
-          {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
+          {isDualPageActive ? (
+            <DescriptionIcon fontSize="small" />
+          ) : (
+            <ViewWeekIcon fontSize="small" />
+          )}
         </Button>
       </Tooltip>
 
@@ -277,7 +302,9 @@ export function PdfViewerToolbar({ currentPage = 1, totalPages: _totalPages = 1,
         >
           −
         </Button>
-        <span style={{ minWidth: "2.5rem", textAlign: "center" }}>{displayZoomPercent}%</span>
+        <span style={{ minWidth: "2.5rem", textAlign: "center" }}>
+          {displayZoomPercent}%
+        </span>
         <Button
           variant="subtle"
           color="blue"

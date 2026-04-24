@@ -12,7 +12,10 @@ interface RotateSettingsProps {
   disabled?: boolean;
 }
 
-const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) => {
+const RotateSettings = ({
+  parameters,
+  disabled = false,
+}: RotateSettingsProps) => {
   const { t } = useTranslation();
   const { selectedFileStubs } = useSelectedFiles();
 

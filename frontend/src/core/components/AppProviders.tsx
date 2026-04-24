@@ -7,7 +7,10 @@ import { FilesModalProvider } from "@app/contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
-import { PreferencesProvider, usePreferences } from "@app/contexts/PreferencesContext";
+import {
+  PreferencesProvider,
+  usePreferences,
+} from "@app/contexts/PreferencesContext";
 import {
   AppConfigProvider,
   AppConfigProviderProps,
@@ -68,7 +71,10 @@ function BrandingAssetManager() {
 }
 
 // Avoid requirement to have props which are required in app providers anyway
-type AppConfigProviderOverrides = Omit<AppConfigProviderProps, "children" | "retryOptions">;
+type AppConfigProviderOverrides = Omit<
+  AppConfigProviderProps,
+  "children" | "retryOptions"
+>;
 
 export interface AppProvidersProps {
   children: ReactNode;
@@ -85,7 +91,8 @@ function ServerDefaultsSync() {
     if (config) {
       const serverDefaults = {
         hideUnavailableTools: config.defaultHideUnavailableTools ?? false,
-        hideUnavailableConversions: config.defaultHideUnavailableConversions ?? false,
+        hideUnavailableConversions:
+          config.defaultHideUnavailableConversions ?? false,
       };
       updateServerDefaults(serverDefaults);
     }
@@ -98,20 +105,30 @@ function ServerDefaultsSync() {
  * Core application providers
  * Contains all providers needed for the core
  */
-export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {
+export function AppProviders({
+  children,
+  appConfigRetryOptions,
+  appConfigProviderProps,
+}: AppProvidersProps) {
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
-            <AppConfigProvider retryOptions={appConfigRetryOptions} {...appConfigProviderProps}>
+            <AppConfigProvider
+              retryOptions={appConfigRetryOptions}
+              {...appConfigProviderProps}
+            >
               <ScarfTrackingInitializer />
               <AppConfigLoader />
               <ServerDefaultsSync />
               {/* Auto-popup on startup when a newer Stirling-PDF release is available.
                   No-ops inside Tauri — the desktop popup handles that flow. */}
               <UpdateStartupPopup />
-              <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+              <FileContextProvider
+                enableUrlSync={true}
+                enablePersistence={true}
+              >
                 <AppInitializer />
                 <BrandingAssetManager />
                 <ToolRegistryProvider>
@@ -128,7 +145,9 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                       <AnnotationProvider>
                                         <RightRailProvider>
                                           <TourOrchestrationProvider>
-                                            <AdminTourOrchestrationProvider>{children}</AdminTourOrchestrationProvider>
+                                            <AdminTourOrchestrationProvider>
+                                              {children}
+                                            </AdminTourOrchestrationProvider>
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>
                                       </AnnotationProvider>

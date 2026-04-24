@@ -1,10 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Button, Checkbox, CloseButton, Group, Modal, PasswordInput, Stack, Text, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Checkbox,
+  CloseButton,
+  Group,
+  Modal,
+  PasswordInput,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
-import { ChangeUserPasswordRequest, User, userManagementService } from "@app/services/userManagementService";
+import {
+  ChangeUserPasswordRequest,
+  User,
+  userManagementService,
+} from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface ChangeUserPasswordModalProps {
@@ -16,7 +31,8 @@ interface ChangeUserPasswordModalProps {
 }
 
 function generateSecurePassword() {
-  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789@$!%*?&";
+  const charset =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789@$!%*?&";
   const length = 14;
   let password = "";
   const charsetLength = charset.length;
@@ -63,7 +79,12 @@ export default function ChangeUserPasswordModal({
 
   const handleGeneratePassword = () => {
     const generated = generateSecurePassword();
-    setForm((prev) => ({ ...prev, newPassword: generated, confirmPassword: generated, generateRandom: true }));
+    setForm((prev) => ({
+      ...prev,
+      newPassword: generated,
+      confirmPassword: generated,
+      generateRandom: true,
+    }));
   };
 
   const handleCopyPassword = async () => {
@@ -72,10 +93,19 @@ export default function ChangeUserPasswordModal({
       await navigator.clipboard.writeText(form.newPassword);
       alert({
         alertType: "success",
-        title: t("workspace.people.changePassword.copiedToClipboard", "Password copied to clipboard"),
+        title: t(
+          "workspace.people.changePassword.copiedToClipboard",
+          "Password copied to clipboard",
+        ),
       });
     } catch (_error) {
-      alert({ alertType: "error", title: t("workspace.people.changePassword.copyFailed", "Failed to copy password") });
+      alert({
+        alertType: "error",
+        title: t(
+          "workspace.people.changePassword.copyFailed",
+          "Failed to copy password",
+        ),
+      });
     }
   };
 
@@ -102,13 +132,22 @@ export default function ChangeUserPasswordModal({
     if (!form.generateRandom && !form.newPassword.trim()) {
       alert({
         alertType: "error",
-        title: t("workspace.people.changePassword.passwordRequired", "Please enter a new password"),
+        title: t(
+          "workspace.people.changePassword.passwordRequired",
+          "Please enter a new password",
+        ),
       });
       return;
     }
 
     if (!form.generateRandom && form.newPassword !== form.confirmPassword) {
-      alert({ alertType: "error", title: t("workspace.people.changePassword.passwordMismatch", "Passwords do not match") });
+      alert({
+        alertType: "error",
+        title: t(
+          "workspace.people.changePassword.passwordMismatch",
+          "Passwords do not match",
+        ),
+      });
       return;
     }
 
@@ -124,14 +163,25 @@ export default function ChangeUserPasswordModal({
     try {
       setProcessing(true);
       await userManagementService.changeUserPassword(payload);
-      alert({ alertType: "success", title: t("workspace.people.changePassword.success", "Password updated successfully") });
+      alert({
+        alertType: "success",
+        title: t(
+          "workspace.people.changePassword.success",
+          "Password updated successfully",
+        ),
+      });
       onSuccess();
       handleClose();
     } catch (error: unknown) {
       const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message || error.response?.data?.error || error.message
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
         : (error instanceof Error ? error.message : undefined) ||
-          t("workspace.people.changePassword.error", "Failed to update password");
+          t(
+            "workspace.people.changePassword.error",
+            "Failed to update password",
+          );
       alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
@@ -188,39 +238,80 @@ export default function ChangeUserPasswordModal({
         />
         <Stack gap="lg" pt="md">
           <Stack gap="md" align="center">
-            <LocalIcon icon="lock" width="3rem" height="3rem" style={{ color: "var(--mantine-color-gray-6)" }} />
+            <LocalIcon
+              icon="lock"
+              width="3rem"
+              height="3rem"
+              style={{ color: "var(--mantine-color-gray-6)" }}
+            />
             <Text size="xl" fw={600} ta="center">
               {t("workspace.people.changePassword.title", "Change password")}
             </Text>
             <Text size="sm" c="dimmed" ta="center">
-              {t("workspace.people.changePassword.subtitle", "Update the password for")} <strong>{user?.username}</strong>
+              {t(
+                "workspace.people.changePassword.subtitle",
+                "Update the password for",
+              )}{" "}
+              <strong>{user?.username}</strong>
             </Text>
           </Stack>
 
           <Stack gap="sm">
             <PasswordInput
-              label={t("workspace.people.changePassword.newPassword", "New password")}
-              placeholder={t("workspace.people.changePassword.placeholder", "Enter a new password")}
+              label={t(
+                "workspace.people.changePassword.newPassword",
+                "New password",
+              )}
+              placeholder={t(
+                "workspace.people.changePassword.placeholder",
+                "Enter a new password",
+              )}
               value={form.newPassword}
-              onChange={(event) => setForm({ ...form, newPassword: event.currentTarget.value, generateRandom: false })}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  newPassword: event.currentTarget.value,
+                  generateRandom: false,
+                })
+              }
               disabled={processing || disabled || form.generateRandom}
               data-autofocus
             />
             <PasswordInput
-              label={t("workspace.people.changePassword.confirmPassword", "Confirm password")}
-              placeholder={t("workspace.people.changePassword.confirmPlaceholder", "Re-enter the new password")}
+              label={t(
+                "workspace.people.changePassword.confirmPassword",
+                "Confirm password",
+              )}
+              placeholder={t(
+                "workspace.people.changePassword.confirmPlaceholder",
+                "Re-enter the new password",
+              )}
               value={form.confirmPassword}
-              onChange={(event) => setForm({ ...form, confirmPassword: event.currentTarget.value, generateRandom: false })}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  confirmPassword: event.currentTarget.value,
+                  generateRandom: false,
+                })
+              }
               disabled={processing || disabled || form.generateRandom}
               error={
-                !form.generateRandom && form.confirmPassword && form.newPassword !== form.confirmPassword
-                  ? t("workspace.people.changePassword.passwordMismatch", "Passwords do not match")
+                !form.generateRandom &&
+                form.confirmPassword &&
+                form.newPassword !== form.confirmPassword
+                  ? t(
+                      "workspace.people.changePassword.passwordMismatch",
+                      "Passwords do not match",
+                    )
                   : undefined
               }
             />
             <Group justify="space-between">
               <Checkbox
-                label={t("workspace.people.changePassword.generateRandom", "Generate secure password")}
+                label={t(
+                  "workspace.people.changePassword.generateRandom",
+                  "Generate secure password",
+                )}
                 checked={form.generateRandom}
                 disabled={processing || disabled}
                 onChange={(event) => {
@@ -234,12 +325,30 @@ export default function ChangeUserPasswordModal({
               {passwordPreview && (
                 <Group gap="xs" align="center">
                   <Text size="xs" c="dimmed">
-                    {t("workspace.people.changePassword.generatedPreview", "Generated password:")}{" "}
+                    {t(
+                      "workspace.people.changePassword.generatedPreview",
+                      "Generated password:",
+                    )}{" "}
                     <strong>{passwordPreview}</strong>
                   </Text>
-                  <Tooltip label={t("workspace.people.changePassword.copyTooltip", "Copy to clipboard")}>
-                    <ActionIcon size="sm" variant="subtle" color="gray" onClick={handleCopyPassword} disabled={processing}>
-                      <LocalIcon icon="content-copy" width="0.9rem" height="0.9rem" />
+                  <Tooltip
+                    label={t(
+                      "workspace.people.changePassword.copyTooltip",
+                      "Copy to clipboard",
+                    )}
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="gray"
+                      onClick={handleCopyPassword}
+                      disabled={processing}
+                    >
+                      <LocalIcon
+                        icon="content-copy"
+                        width="0.9rem"
+                        height="0.9rem"
+                      />
                     </ActionIcon>
                   </Tooltip>
                 </Group>
@@ -249,21 +358,42 @@ export default function ChangeUserPasswordModal({
 
           <Stack gap="xs">
             <Checkbox
-              label={t("workspace.people.changePassword.sendEmail", "Email the user about this change")}
+              label={t(
+                "workspace.people.changePassword.sendEmail",
+                "Email the user about this change",
+              )}
               checked={canEmail && form.sendEmail}
-              onChange={(event) => setForm({ ...form, sendEmail: event.currentTarget.checked })}
+              onChange={(event) =>
+                setForm({ ...form, sendEmail: event.currentTarget.checked })
+              }
               disabled={!canEmail || processing}
             />
             <Checkbox
-              label={t("workspace.people.changePassword.includePassword", "Include the new password in the email")}
+              label={t(
+                "workspace.people.changePassword.includePassword",
+                "Include the new password in the email",
+              )}
               checked={canEmail && form.sendEmail && form.includePassword}
-              onChange={(event) => setForm({ ...form, includePassword: event.currentTarget.checked })}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  includePassword: event.currentTarget.checked,
+                })
+              }
               disabled={!canEmail || !form.sendEmail || processing}
             />
             <Checkbox
-              label={t("workspace.people.changePassword.forcePasswordChange", "Force user to change password on next login")}
+              label={t(
+                "workspace.people.changePassword.forcePasswordChange",
+                "Force user to change password on next login",
+              )}
               checked={form.forcePasswordChange}
-              onChange={(event) => setForm({ ...form, forcePasswordChange: event.currentTarget.checked })}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  forcePasswordChange: event.currentTarget.checked,
+                })
+              }
               disabled={processing || disabled}
             />
             {!canEmail && (
@@ -289,7 +419,14 @@ export default function ChangeUserPasswordModal({
             )}
           </Stack>
 
-          <Button onClick={handleSubmit} loading={processing} fullWidth size="md" disabled={disabled} mt="md">
+          <Button
+            onClick={handleSubmit}
+            loading={processing}
+            fullWidth
+            size="md"
+            disabled={disabled}
+            mt="md"
+          >
             {t("workspace.people.changePassword.submit", "Update password")}
           </Button>
         </Stack>

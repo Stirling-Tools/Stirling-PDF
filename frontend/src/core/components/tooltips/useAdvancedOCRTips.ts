@@ -10,7 +10,10 @@ export const useAdvancedOCRTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("ocr.tooltip.advanced.compatibility.title", "Compatibility Mode"),
+        title: t(
+          "ocr.tooltip.advanced.compatibility.title",
+          "Compatibility Mode",
+        ),
         description: t(
           "ocr.tooltip.advanced.compatibility.text",
           "Uses OCR 'sandwich PDF' mode: results in larger files, but more reliable with certain languages and older PDF software. By default we use hOCR for smaller, modern PDFs.",

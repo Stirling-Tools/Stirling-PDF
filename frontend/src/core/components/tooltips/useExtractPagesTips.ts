@@ -10,7 +10,10 @@ export const useExtractPagesTips = (): TooltipContent => {
     header: base.header,
     tips: [
       {
-        description: t("extractPages.tooltip.description", "Extracts the selected pages into a new PDF, preserving order."),
+        description: t(
+          "extractPages.tooltip.description",
+          "Extracts the selected pages into a new PDF, preserving order.",
+        ),
       },
       ...(base.tips || []),
     ],

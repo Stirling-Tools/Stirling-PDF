@@ -1,9 +1,12 @@
 import { Group } from "@mantine/core";
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
-import { PdfAnnotationSubtype, type PdfAnnotationObject } from "@embedpdf/models";
+import {
+  PdfAnnotationSubtype,
+  type PdfAnnotationObject,
+} from "@embedpdf/models";
 import type { AnnotationObject } from "@app/components/viewer/viewerTypes";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -31,7 +34,9 @@ export interface AnnotationSelectionMenuProps {
 export function AnnotationSelectionMenu(props: AnnotationSelectionMenuProps) {
   const activeDocumentId = useActiveDocumentId();
   if (!activeDocumentId) return null;
-  return <AnnotationSelectionMenuInner documentId={activeDocumentId} {...props} />;
+  return (
+    <AnnotationSelectionMenuInner documentId={activeDocumentId} {...props} />
+  );
 }
 
 function AnnotationSelectionMenuInner({
@@ -42,10 +47,13 @@ function AnnotationSelectionMenuInner({
 }: AnnotationSelectionMenuProps & { documentId: string }) {
   const annotation = context?.annotation;
   const pageIndex = context?.pageIndex;
-  const { provides } = useAnnotation(documentId);
+  const { state, provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   const handlers = useAnnotationMenuHandlers({
     annotation,
@@ -57,19 +65,60 @@ function AnnotationSelectionMenuInner({
     wrapperRef,
   });
 
+  // Read isInSidebar from live EmbedPDF state rather than annotation.object, which can be
+  // stale after updateAnnotation() is called while the annotation is selected.
+  // Also checks non-empty contents: customData.isComment is not persisted to PDF, but
+  // contents is a standard PDF field and survives save/reload.
+  const isInSidebar = useMemo(() => {
+    const annId = (annotation?.object as AnnotationObject | undefined)?.id;
+    if (!annId) return false;
+    for (const tracked of Object.values(state.byUid)) {
+      const obj = tracked.object;
+      if (obj.id !== annId) continue;
+      const { type } = obj;
+      // TEXT and CARET are standalone comment annotations — they use CommentButton,
+      // not AttachCommentButton, so isInSidebar is irrelevant for them.
+      if (
+        type === PdfAnnotationSubtype.TEXT ||
+        type === PdfAnnotationSubtype.CARET
+      )
+        return false;
+      // customData is a runtime field EmbedPDF adds but doesn't declare in its TS types
+      const customData = (
+        obj as unknown as { customData?: Record<string, unknown> }
+      ).customData;
+      const isExplicit = customData?.isComment === true;
+      // customData (incl. toolId/isComment) is not persisted to PDF; contents is.
+      // Any non-TEXT/FreeText/CARET annotation with non-empty contents has a comment.
+      const hasContents =
+        type !== PdfAnnotationSubtype.FREETEXT &&
+        !obj.inReplyToId &&
+        (obj.contents ?? "").trim().length > 0;
+      return isExplicit || hasContents;
+    }
+    return false;
+  }, [state, annotation?.object]);
+
   // Auto-open the comments sidebar when a comment annotation is selected
   useEffect(() => {
     const annObj = annotation?.object as AnnotationObject | undefined;
     const annId = annObj?.id;
     if (!selected || !annId || pageIndex === undefined) return;
-    const toolId = annObj?.customData?.toolId;
     const annType = annObj?.type;
+    // TEXT (type 1) = textComment; CARET (type 14) = insertText/replaceText.
+    // These are always comment annotations regardless of toolId (lost after reload).
     const isComment =
-      (annType === PdfAnnotationSubtype.TEXT && toolId === "textComment") ||
-      (annType === PdfAnnotationSubtype.CARET && (toolId === "insertText" || toolId === "replaceText"));
+      annType === PdfAnnotationSubtype.TEXT ||
+      annType === PdfAnnotationSubtype.CARET ||
+      isInSidebar;
     if (!isComment) return;
-    requestCommentFocus(documentId, pageIndex, annId, (annObj?.contents ?? "").trim().length > 0);
-  }, [selected, annotation?.object]);
+    requestCommentFocus(
+      documentId,
+      pageIndex,
+      annId,
+      (annObj?.contents ?? "").trim().length > 0,
+    );
+  }, [selected, annotation?.object, isInSidebar]);
 
   // Click outside to deselect
   useEffect(() => {
@@ -108,13 +157,19 @@ function AnnotationSelectionMenuInner({
         return;
       }
       const rect = wrapper.getBoundingClientRect();
-      setMenuPosition({ top: rect.bottom + 8, left: rect.left + rect.width / 2 });
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
+      });
     };
 
     updatePosition();
 
     const observer = new MutationObserver(updatePosition);
-    observer.observe(wrapperRef.current, { attributes: true, attributeFilter: ["style"] });
+    observer.observe(wrapperRef.current, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
     window.addEventListener("scroll", updatePosition, true);
     window.addEventListener("resize", updatePosition);
 
@@ -150,6 +205,7 @@ function AnnotationSelectionMenuInner({
       <Group gap="sm" wrap="nowrap" justify="center">
         <AnnotationTypeButtons
           {...handlers}
+          isInSidebar={isInSidebar}
           annotation={annotation}
           documentId={documentId}
           pageIndex={pageIndex}
@@ -162,8 +218,17 @@ function AnnotationSelectionMenuInner({
   return (
     <>
       {/* Invisible wrapper for EmbedPDF positioning — pointer-events:none so drag still works */}
-      <div ref={setRef} style={{ ...menuWrapperProps?.style, opacity: 0, pointerEvents: "none" }} />
-      {typeof document !== "undefined" && menuContent ? createPortal(menuContent, document.body) : null}
+      <div
+        ref={setRef}
+        style={{
+          ...menuWrapperProps?.style,
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
+      {typeof document !== "undefined" && menuContent
+        ? createPortal(menuContent, document.body)
+        : null}
     </>
   );
 }

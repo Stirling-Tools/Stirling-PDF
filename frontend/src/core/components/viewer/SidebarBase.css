@@ -9,8 +9,14 @@
     color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
     color-mix(in srgb, var(--bg-background) 90%, transparent)
   );
-  border-left: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
-  box-shadow: -2px 0 16px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%, transparent);
+  border-left: 1px solid
+    color-mix(in srgb, var(--border-subtle) 75%, transparent);
+  box-shadow: -2px 0 16px
+    color-mix(
+      in srgb,
+      var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%,
+      transparent
+    );
   backdrop-filter: blur(12px);
 }
 
@@ -41,7 +47,8 @@
 /* Search Section (used by bookmark & attachment sidebars) */
 .sidebar-base__search {
   background: var(--tool-panel-search-bg, var(--bg-toolbar));
-  border-bottom: 1px solid var(--tool-panel-search-border-bottom, var(--border-subtle));
+  border-bottom: 1px solid
+    var(--tool-panel-search-border-bottom, var(--border-subtle));
   padding-top: 0.75rem !important;
 }
 

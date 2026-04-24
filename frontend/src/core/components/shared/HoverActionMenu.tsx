@@ -20,7 +20,12 @@ interface HoverActionMenuProps {
   className?: string;
 }
 
-const HoverActionMenu: React.FC<HoverActionMenuProps> = ({ show, actions, position = "inside", className = "" }) => {
+const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
+  show,
+  actions,
+  position = "inside",
+  className = "",
+}) => {
   const visibleActions = actions.filter((action) => !action.hidden);
 
   if (visibleActions.length === 0) {

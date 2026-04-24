@@ -3,8 +3,16 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { supabase } from "@app/auth/supabase";
 import { authService } from "@app/services/authService";
 import { connectionModeService } from "@app/services/connectionModeService";
-import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL, SUPABASE_KEY } from "@app/constants/connection";
-import type { TierLevel, SubscriptionStatus, StripePlanId } from "@app/types/billing";
+import {
+  STIRLING_SAAS_URL,
+  STIRLING_SAAS_BACKEND_API_URL,
+  SUPABASE_KEY,
+} from "@app/constants/connection";
+import type {
+  TierLevel,
+  SubscriptionStatus,
+  StripePlanId,
+} from "@app/types/billing";
 import { getCurrencySymbol } from "@app/config/billing";
 
 /**
@@ -66,7 +74,10 @@ export class SaasBillingService {
       const isAuthenticated = await authService.isAuthenticated();
       return mode === "saas" && isAuthenticated;
     } catch (error) {
-      console.error("[Desktop Billing] Failed to check billing availability:", error);
+      console.error(
+        "[Desktop Billing] Failed to check billing availability:",
+        error,
+      );
       return false;
     }
   }
@@ -105,7 +116,9 @@ export class SaasBillingService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("[Desktop Billing] RPC error response:", errorText);
-        throw new Error(`RPC call failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `RPC call failed: ${response.status} ${response.statusText}`,
+        );
       }
 
       // RPC may return an array or a single object — normalise to array then take first element
@@ -132,15 +145,16 @@ export class SaasBillingService {
       if (isPro) {
         // Fetch usage details
         try {
-          const { data: usageData, error: usageError } = await supabase.functions.invoke<{
-            subscription: BillingStatus["subscription"];
-            meterUsage: BillingStatus["meterUsage"];
-          }>("get-usage-billing", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: {},
-          });
+          const { data: usageData, error: usageError } =
+            await supabase.functions.invoke<{
+              subscription: BillingStatus["subscription"];
+              meterUsage: BillingStatus["meterUsage"];
+            }>("get-usage-billing", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: {},
+            });
 
           if (!usageError && usageData) {
             subscription = usageData.subscription;
@@ -154,7 +168,10 @@ export class SaasBillingService {
             }
           }
         } catch (usageError) {
-          console.warn("[Desktop Billing] Failed to fetch usage data:", usageError);
+          console.warn(
+            "[Desktop Billing] Failed to fetch usage data:",
+            usageError,
+          );
         }
       }
 
@@ -177,11 +194,18 @@ export class SaasBillingService {
           creditBalance = typeof credits === "number" ? credits : 0;
         } else {
           const errorText = await creditResponse.text();
-          console.warn("[Desktop Billing] Failed to fetch credit balance:", creditResponse.status, errorText);
+          console.warn(
+            "[Desktop Billing] Failed to fetch credit balance:",
+            creditResponse.status,
+            errorText,
+          );
           creditBalance = 0;
         }
       } catch (error) {
-        console.error("[Desktop Billing] Error fetching credit balance:", error);
+        console.error(
+          "[Desktop Billing] Error fetching credit balance:",
+          error,
+        );
         creditBalance = 0;
       }
 
@@ -225,18 +249,27 @@ export class SaasBillingService {
 
     try {
       // Call Supabase edge function to get Stripe portal URL
-      const { data, error } = await supabase.functions.invoke<ManageBillingResponse>("manage-billing", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: {
-          return_url: returnUrl,
-        },
-      });
+      const { data, error } =
+        await supabase.functions.invoke<ManageBillingResponse>(
+          "manage-billing",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              return_url: returnUrl,
+            },
+          },
+        );
 
       if (error) {
-        console.error("[Desktop Billing] Error creating billing portal session:", error);
-        throw new Error(error.message || "Failed to create billing portal session");
+        console.error(
+          "[Desktop Billing] Error creating billing portal session:",
+          error,
+        );
+        throw new Error(
+          error.message || "Failed to create billing portal session",
+        );
       }
 
       if (!data || !data.url) {
@@ -260,7 +293,9 @@ export class SaasBillingService {
    * Fetch available plan pricing from Stripe
    * Calls stripe-price-lookup edge function to get current pricing for all plans
    */
-  async getAvailablePlans(currencyCode: string = "usd"): Promise<Map<string, PlanPrice>> {
+  async getAvailablePlans(
+    currencyCode: string = "usd",
+  ): Promise<Map<string, PlanPrice>> {
     // Check if in SaaS mode
     const isAvailable = await this.isBillingAvailable();
     if (!isAvailable) {
@@ -335,21 +370,27 @@ export class SaasBillingService {
     try {
       // Call Supabase edge function to create checkout session
       // Use 'hosted' mode for browser redirect instead of 'embedded'
-      const { data, error } = await supabase.functions.invoke<{ url: string }>("create-checkout", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const { data, error } = await supabase.functions.invoke<{ url: string }>(
+        "create-checkout",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: {
+            ui_mode: "hosted",
+            success_url: `${returnUrl}/checkout/success`,
+            cancel_url: `${returnUrl}/checkout/cancel`,
+            purchase_type: "subscription",
+            plan: planId,
+          },
         },
-        body: {
-          ui_mode: "hosted",
-          success_url: `${returnUrl}/checkout/success`,
-          cancel_url: `${returnUrl}/checkout/cancel`,
-          purchase_type: "subscription",
-          plan: planId,
-        },
-      });
+      );
 
       if (error) {
-        console.error("[Desktop Billing] Error creating checkout session:", error);
+        console.error(
+          "[Desktop Billing] Error creating checkout session:",
+          error,
+        );
         throw new Error(error.message || "Failed to create checkout session");
       }
 
@@ -361,7 +402,10 @@ export class SaasBillingService {
       // Open in system browser (same pattern as billing portal)
       await shellOpen(data.url);
     } catch (error) {
-      console.error("[Desktop Billing] Failed to create checkout session:", error);
+      console.error(
+        "[Desktop Billing] Failed to create checkout session:",
+        error,
+      );
 
       if (error instanceof Error) {
         throw error;

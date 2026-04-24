@@ -4,11 +4,18 @@ import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters
 
 interface ConvertToCbzSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertToCbzSettings = ({ parameters, onParameterChange, disabled = false }: ConvertToCbzSettingsProps) => {
+const ConvertToCbzSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertToCbzSettingsProps) => {
   const { t } = useTranslation();
 
   return (

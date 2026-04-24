@@ -1,8 +1,18 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { springAuth } from "@app/auth/springAuthClient";
+import {
+  consumePostLoginRedirectPath,
+  isSafePostLoginRedirect,
+  POST_LOGIN_REDIRECT_STORAGE_KEY,
+  setPostLoginRedirectPath,
+  springAuth,
+} from "@app/auth/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
-import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import {
+  AxiosError,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -64,13 +74,19 @@ describe("SpringAuthClient", () => {
       const mockToken = "invalid-jwt-token";
       localStorage.setItem("stirling_jwt", mockToken);
 
-      const mockError = new AxiosError("Unauthorized", "ERR_BAD_REQUEST", undefined, undefined, {
-        status: 401,
-        statusText: "Unauthorized",
-        data: {},
-        headers: {},
-        config: {} as InternalAxiosRequestConfig,
-      });
+      const mockError = new AxiosError(
+        "Unauthorized",
+        "ERR_BAD_REQUEST",
+        undefined,
+        undefined,
+        {
+          status: 401,
+          statusText: "Unauthorized",
+          data: {},
+          headers: {},
+          config: {} as InternalAxiosRequestConfig,
+        },
+      );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
 
@@ -86,13 +102,19 @@ describe("SpringAuthClient", () => {
       const mockToken = "forbidden-jwt-token";
       localStorage.setItem("stirling_jwt", mockToken);
 
-      const mockError = new AxiosError("Forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
-        status: 403,
-        statusText: "Forbidden",
-        data: {},
-        headers: {},
-        config: {} as InternalAxiosRequestConfig,
-      });
+      const mockError = new AxiosError(
+        "Forbidden",
+        "ERR_BAD_REQUEST",
+        undefined,
+        undefined,
+        {
+          status: 403,
+          statusText: "Forbidden",
+          data: {},
+          headers: {},
+          config: {} as InternalAxiosRequestConfig,
+        },
+      );
 
       vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
 
@@ -145,7 +167,9 @@ describe("SpringAuthClient", () => {
         { withCredentials: true },
       );
       expect(localStorage.getItem("stirling_jwt")).toBe(mockToken);
-      expect(dispatchEventSpy).toHaveBeenCalledWith(expect.objectContaining({ type: "jwt-available" }));
+      expect(dispatchEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "jwt-available" }),
+      );
       expect(result.user).toEqual(mockUser);
       expect(result.session?.access_token).toBe(mockToken);
       expect(result.error).toBeNull();
@@ -336,7 +360,9 @@ describe("SpringAuthClient", () => {
         options: { redirectTo: "/auth/callback" },
       });
 
-      expect(startOAuthNavigation).toHaveBeenCalledWith("/oauth2/authorization/github");
+      expect(startOAuthNavigation).toHaveBeenCalledWith(
+        "/oauth2/authorization/github",
+      );
       expect(mockAssign).toHaveBeenCalledWith("/oauth2/authorization/github");
       expect(result.error).toBeNull();
     });
@@ -355,9 +381,102 @@ describe("SpringAuthClient", () => {
         options: { redirectTo: "/auth/callback" },
       });
 
-      expect(startOAuthNavigation).toHaveBeenCalledWith("/oauth2/authorization/github");
+      expect(startOAuthNavigation).toHaveBeenCalledWith(
+        "/oauth2/authorization/github",
+      );
       expect(mockAssign).not.toHaveBeenCalled();
       expect(result.error).toBeNull();
+    });
+  });
+
+  describe("post-login redirect path", () => {
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    describe("isSafePostLoginRedirect", () => {
+      it("accepts same-origin paths with a single leading slash", () => {
+        expect(isSafePostLoginRedirect("/share/abc123")).toBe(true);
+        expect(isSafePostLoginRedirect("/workbench")).toBe(true);
+        expect(isSafePostLoginRedirect("/share/abc?x=1")).toBe(true);
+      });
+
+      it("rejects empty, null, or non-string values", () => {
+        expect(isSafePostLoginRedirect("")).toBe(false);
+        expect(isSafePostLoginRedirect(null)).toBe(false);
+        expect(isSafePostLoginRedirect(undefined)).toBe(false);
+        expect(isSafePostLoginRedirect(42 as unknown)).toBe(false);
+      });
+
+      it("rejects protocol-relative and absolute URLs (open-redirect guard)", () => {
+        expect(isSafePostLoginRedirect("//evil.example")).toBe(false);
+        expect(isSafePostLoginRedirect("http://evil.example")).toBe(false);
+        expect(isSafePostLoginRedirect("https://evil.example/x")).toBe(false);
+        expect(isSafePostLoginRedirect("/\\evil")).toBe(false);
+      });
+
+      it("rejects auth-plumbing paths to avoid login loops", () => {
+        expect(isSafePostLoginRedirect("/login")).toBe(false);
+        expect(isSafePostLoginRedirect("/login?foo=1")).toBe(false);
+        expect(isSafePostLoginRedirect("/auth/callback")).toBe(false);
+        expect(isSafePostLoginRedirect("/oauth2/authorization/google")).toBe(
+          false,
+        );
+        expect(isSafePostLoginRedirect("/saml2/authenticate/x")).toBe(false);
+      });
+    });
+
+    describe("setPostLoginRedirectPath", () => {
+      it("stores a safe path in sessionStorage", () => {
+        setPostLoginRedirectPath("/share/abc123");
+        expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBe(
+          "/share/abc123",
+        );
+      });
+
+      it("clears any existing entry when given an unsafe value", () => {
+        sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, "/share/old");
+        setPostLoginRedirectPath("//evil.example");
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+
+      it("clears any existing entry when given null", () => {
+        sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, "/share/old");
+        setPostLoginRedirectPath(null);
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+    });
+
+    describe("consumePostLoginRedirectPath", () => {
+      it("returns the stored path and clears it (single-use)", () => {
+        sessionStorage.setItem(
+          POST_LOGIN_REDIRECT_STORAGE_KEY,
+          "/share/abc123",
+        );
+        expect(consumePostLoginRedirectPath()).toBe("/share/abc123");
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+
+      it("returns null (and still clears) when the stored value is unsafe", () => {
+        sessionStorage.setItem(
+          POST_LOGIN_REDIRECT_STORAGE_KEY,
+          "//evil.example",
+        );
+        expect(consumePostLoginRedirectPath()).toBeNull();
+        expect(
+          sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY),
+        ).toBeNull();
+      });
+
+      it("returns null when nothing is stored", () => {
+        expect(consumePostLoginRedirectPath()).toBeNull();
+      });
     });
   });
 });

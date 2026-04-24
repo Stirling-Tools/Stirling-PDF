@@ -12,13 +12,19 @@ interface AuthLayoutProps {
   isEmailFormExpanded?: boolean;
 }
 
-export default function AuthLayout({ children, isEmailFormExpanded = false }: AuthLayoutProps) {
+export default function AuthLayout({
+  children,
+  isEmailFormExpanded = false,
+}: AuthLayoutProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const leftPanelRef = useRef<HTMLDivElement | null>(null);
   const [hideRightPanel, setHideRightPanel] = useState(false);
   const logoVariant = useLogoVariant();
-  const imageSlides = useMemo(() => buildLoginSlides(logoVariant, t), [logoVariant, t]);
+  const imageSlides = useMemo(
+    () => buildLoginSlides(logoVariant, t),
+    [logoVariant, t],
+  );
   const isOverflowing = useIsOverflowing(leftPanelRef);
 
   // Use either overflow detection or email form expansion to determine scrollable state
@@ -27,7 +33,9 @@ export default function AuthLayout({ children, isEmailFormExpanded = false }: Au
   // Force light mode on auth pages
   useEffect(() => {
     const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute("data-mantine-color-scheme");
+    const previousColorScheme = htmlElement.getAttribute(
+      "data-mantine-color-scheme",
+    );
 
     // Set light mode
     htmlElement.setAttribute("data-mantine-color-scheme", "light");
@@ -35,7 +43,10 @@ export default function AuthLayout({ children, isEmailFormExpanded = false }: Au
     // Cleanup: restore previous theme when leaving auth pages
     return () => {
       if (previousColorScheme) {
-        htmlElement.setAttribute("data-mantine-color-scheme", previousColorScheme);
+        htmlElement.setAttribute(
+          "data-mantine-color-scheme",
+          previousColorScheme,
+        );
       }
     };
   }, []);
@@ -63,17 +74,33 @@ export default function AuthLayout({ children, isEmailFormExpanded = false }: Au
   return (
     <div className={styles.authContainer}>
       <div className={styles.authMain}>
-        <div ref={cardRef} className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}>
+        <div
+          ref={cardRef}
+          className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}
+        >
           <div
             ref={leftPanelRef}
             className={`${styles.authLeftPanel} ${shouldBeScrollable ? styles.authLeftPanelScrollable : styles.authLeftPanelCentered}`}
           >
             <div className={styles.authContent}>{children}</div>
           </div>
-          {!hideRightPanel && <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />}
+          {!hideRightPanel && (
+            <LoginRightCarousel
+              imageSlides={imageSlides}
+              initialSeconds={5}
+              slideSeconds={8}
+            />
+          )}
         </div>
       </div>
-      <div style={{ width: "100vw", marginTop: "auto", marginLeft: "-1.5rem", marginRight: "-1.5rem" }}>
+      <div
+        style={{
+          width: "100vw",
+          marginTop: "auto",
+          marginLeft: "-1.5rem",
+          marginRight: "-1.5rem",
+        }}
+      >
         <Footer forceLightMode={true} analyticsEnabled />
       </div>
     </div>

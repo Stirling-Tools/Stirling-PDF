@@ -27,7 +27,12 @@ const FileUploadButton = ({
   const defaultPlaceholder = t("chooseFile", "Choose File");
 
   return (
-    <FileButton resetRef={resetRef} onChange={onChange} accept={accept} disabled={disabled}>
+    <FileButton
+      resetRef={resetRef}
+      onChange={onChange}
+      accept={accept}
+      disabled={disabled}
+    >
       {(props) => (
         <Button {...props} variant={variant} fullWidth={fullWidth} color="blue">
           {file ? file.name : placeholder || defaultPlaceholder}
