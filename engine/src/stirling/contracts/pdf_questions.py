@@ -10,14 +10,13 @@ from .common import (
     AiFile,
     ConversationMessage,
     ExtractedFileText,
-    NeedContentResponse,
+    NeedIngestResponse,
     WorkflowOutcome,
 )
 
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    page_text: list[ExtractedFileText] = Field(default_factory=list)
     files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
@@ -35,6 +34,6 @@ class PdfQuestionNotFoundResponse(ApiModel):
 
 type PdfQuestionTerminalResponse = PdfQuestionAnswerResponse | PdfQuestionNotFoundResponse
 type PdfQuestionResponse = Annotated[
-    PdfQuestionTerminalResponse | NeedContentResponse,
+    PdfQuestionTerminalResponse | NeedIngestResponse,
     Field(discriminator="outcome"),
 ]

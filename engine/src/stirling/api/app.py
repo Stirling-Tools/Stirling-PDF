@@ -12,7 +12,6 @@ from stirling.agents import (
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
-    SummaryAgent,
     UserSpecAgent,
 )
 from stirling.agents.ledger import MathAuditorAgent
@@ -25,7 +24,6 @@ from stirling.api.routes import (
     pdf_edit_router,
     pdf_question_router,
     rag_router,
-    summary_router,
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
@@ -49,7 +47,6 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.orchestrator_agent = OrchestratorAgent(runtime)
     fast_api.state.pdf_edit_agent = PdfEditAgent(runtime)
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
-    fast_api.state.summary_agent = SummaryAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
@@ -67,7 +64,6 @@ app.add_middleware(UserIdMiddleware)
 app.include_router(orchestrator_router)
 app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
-app.include_router(summary_router)
 app.include_router(agent_draft_router)
 app.include_router(execution_router)
 app.include_router(rag_router)

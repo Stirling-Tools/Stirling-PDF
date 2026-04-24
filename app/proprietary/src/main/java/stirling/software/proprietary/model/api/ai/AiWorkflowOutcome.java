@@ -20,9 +20,7 @@ public enum AiWorkflowOutcome {
     TOOL_CALL("tool_call"),
     COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),
-    CANNOT_CONTINUE("cannot_continue"),
-    SUMMARY_ANSWER("summary_answer"),
-    SUMMARY_NOT_FOUND("summary_not_found");
+    CANNOT_CONTINUE("cannot_continue");
 
     private final String value;
 

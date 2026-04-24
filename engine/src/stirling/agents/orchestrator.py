@@ -10,7 +10,6 @@ from pydantic_ai.tools import RunContext
 
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
-from stirling.agents.summary import SummaryAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftRequest,
@@ -22,8 +21,6 @@ from stirling.contracts import (
     PdfEditResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
-    SummaryRequest,
-    SummaryResponse,
     SupportedCapability,
     ToolOperationStep,
     UnsupportedCapabilityResponse,
@@ -60,11 +57,6 @@ class OrchestratorAgent:
                     description="Delegate questions about PDF contents and return the PDF question result.",
                 ),
                 ToolOutput(
-                    self.delegate_pdf_summary,
-                    name="delegate_pdf_summary",
-                    description="Delegate requests to summarise one or more PDFs and return the summary result.",
-                ),
-                ToolOutput(
                     self.delegate_user_spec,
                     name="delegate_user_spec",
                     description="Delegate requests to create or revise a user agent spec and return the draft result.",
@@ -88,8 +80,8 @@ class OrchestratorAgent:
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
-                "Use delegate_pdf_question for questions about PDF contents. "
-                "Use delegate_pdf_summary for requests to summarise PDFs. "
+                "Use delegate_pdf_question for questions about PDF contents, including "
+                "summaries, explanations, or any request that needs to read the document. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
@@ -122,8 +114,6 @@ class OrchestratorAgent:
                 return await self._run_pdf_question(request)
             case SupportedCapability.PDF_EDIT:
                 return await self._run_pdf_edit(request)
-            case SupportedCapability.PDF_SUMMARY:
-                return await self._run_pdf_summary(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
             case (
@@ -154,24 +144,10 @@ class OrchestratorAgent:
         return await self._run_pdf_question(ctx.deps.request)
 
     async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse:
-        extracted_text = self._get_extracted_text_artifact(request)
         return await PdfQuestionAgent(self.runtime).handle(
             PdfQuestionRequest(
                 question=request.user_message,
                 files=request.files,
-                page_text=extracted_text.files if extracted_text is not None else [],
-                conversation_history=request.conversation_history,
-            )
-        )
-
-    async def delegate_pdf_summary(self, ctx: RunContext[OrchestratorDeps]) -> SummaryResponse:
-        return await self._run_pdf_summary(ctx.deps.request)
-
-    async def _run_pdf_summary(self, request: OrchestratorRequest) -> SummaryResponse:
-        return await SummaryAgent(self.runtime).handle(
-            SummaryRequest(
-                files=request.files,
-                focus=request.user_message,
                 conversation_history=request.conversation_history,
             )
         )

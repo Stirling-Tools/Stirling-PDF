@@ -7,7 +7,6 @@ from stirling.agents import (
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
-    SummaryAgent,
     UserSpecAgent,
 )
 from stirling.agents.ledger import MathAuditorAgent
@@ -29,10 +28,6 @@ def get_pdf_edit_agent(request: Request) -> PdfEditAgent:
 
 def get_pdf_question_agent(request: Request) -> PdfQuestionAgent:
     return request.app.state.pdf_question_agent
-
-
-def get_summary_agent(request: Request) -> SummaryAgent:
-    return request.app.state.summary_agent
 
 
 def get_user_spec_agent(request: Request) -> UserSpecAgent:

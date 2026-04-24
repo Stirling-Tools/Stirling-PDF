@@ -274,7 +274,7 @@ class AiWorkflowServiceTest {
                                 return """
                                        {
                                          "outcome":"need_ingest",
-                                         "resumeWith":"pdf_summary",
+                                         "resumeWith":"pdf_question",
                                          "reason":"ingest first",
                                          "filesToIngest":[{"id":"report-id","name":"report.pdf"}],
                                          "contentTypes":["page_text"]
@@ -282,13 +282,13 @@ class AiWorkflowServiceTest {
                                        """;
                             }
                             return """
-                                   {"outcome":"summary_answer","tldr":"done","keyPoints":[],"sections":[]}
+                                   {"outcome":"answer","answer":"done","evidence":[]}
                                    """;
                         });
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
-        assertEquals(AiWorkflowOutcome.SUMMARY_ANSWER, result.getOutcome());
+        assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
         verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/rag/documents"), anyString());
         verify(aiEngineClient, times(2)).post(eq("/api/v1/orchestrator"), anyString());
     }

@@ -135,9 +135,7 @@ public class AiWorkflowService {
                     DRAFT,
                     COMPLETED,
                     UNSUPPORTED_CAPABILITY,
-                    CANNOT_CONTINUE,
-                    SUMMARY_ANSWER,
-                    SUMMARY_NOT_FOUND ->
+                    CANNOT_CONTINUE ->
                     new WorkflowState.Terminal(response);
         };
     }

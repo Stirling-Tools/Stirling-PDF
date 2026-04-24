@@ -85,10 +85,4 @@ public class AiWorkflowResponse {
 
     @Schema(description = "AI engine capability to resume with on the next turn")
     private String resumeWith;
-
-    @Schema(
-            description =
-                    "Structured summary payload. Populated on summary_answer outcomes, null"
-                            + " otherwise.")
-    private AiSummaryResult summaryResult;
 }

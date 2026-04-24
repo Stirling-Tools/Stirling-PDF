@@ -59,8 +59,6 @@ class WorkflowOutcome(StrEnum):
     COMPLETED = "completed"
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
-    SUMMARY_ANSWER = "summary_answer"
-    SUMMARY_NOT_FOUND = "summary_not_found"
 
 
 class ArtifactKind(StrEnum):
@@ -83,7 +81,6 @@ class SupportedCapability(StrEnum):
     ORCHESTRATE = "orchestrate"
     PDF_EDIT = "pdf_edit"
     PDF_QUESTION = "pdf_question"
-    PDF_SUMMARY = "pdf_summary"
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"

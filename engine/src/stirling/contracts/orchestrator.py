@@ -20,7 +20,6 @@ from .common import (
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditTerminalResponse
 from .pdf_questions import PdfQuestionTerminalResponse
-from .summary import SummaryTerminalResponse
 
 
 class ExtractedTextArtifact(ApiModel):
@@ -48,7 +47,6 @@ class UnsupportedCapabilityResponse(ApiModel):
 type OrchestratorResponse = Annotated[
     PdfEditTerminalResponse
     | PdfQuestionTerminalResponse
-    | SummaryTerminalResponse
     | NeedContentResponse
     | NeedIngestResponse
     | AgentDraftResponse
