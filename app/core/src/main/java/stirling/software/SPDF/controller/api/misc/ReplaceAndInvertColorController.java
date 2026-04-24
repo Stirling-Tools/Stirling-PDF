@@ -2,8 +2,6 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -11,7 +9,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -26,8 +23,6 @@ import stirling.software.SPDF.service.misc.TextColorReplacementService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -36,7 +31,6 @@ public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
     private final TextColorReplacementService textColorReplacementService;
-    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -46,7 +40,7 @@ public class ReplaceAndInvertColorController {
             description =
                     "This endpoint accepts a PDF file and provides options to invert all colors, replace"
                             + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> replaceAndInvertColor(
+    public ResponseEntity<byte[]> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 
         InputStreamResource resource =
@@ -57,20 +51,16 @@ public class ReplaceAndInvertColorController {
                         request.getBackGroundColor(),
                         request.getTextColor());
 
-        // Return the modified PDF as a downloadable file
         String filename =
                 GeneralUtils.generateFilename(
                         request.getFileInput().getOriginalFilename(), "_inverted.pdf");
 
-        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+        byte[] bytes;
         try (InputStream in = resource.getInputStream()) {
-            Files.copy(in, tempOut.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            tempOut.close();
-            throw e;
+            bytes = in.readAllBytes();
         }
 
-        return WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
+        return WebResponseUtils.bytesToWebResponse(bytes, filename);
     }
 
     @AutoJobPostMapping(
@@ -95,17 +85,18 @@ public class ReplaceAndInvertColorController {
             summary = "Replace specific PDF text colours",
             description =
                     "Replaces selected source text colours with a single target colour while leaving non-text content unchanged. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> replaceTextColors(
+    public ResponseEntity<byte[]> replaceTextColors(
             @ModelAttribute ReplaceTextColorsRequest request) throws IOException {
-        PDDocument output =
+        try (PDDocument output =
                 textColorReplacementService.replaceTextColors(
                         request.getFileInput(),
                         request.getSourceColors(),
-                        request.getTargetColor());
-        return WebResponseUtils.pdfDocToWebResponse(
-                output,
-                GeneralUtils.generateFilename(
-                        request.getFileInput().getOriginalFilename(), "_text-colours-replaced.pdf"),
-                tempFileManager);
+                        request.getTargetColor())) {
+            return WebResponseUtils.pdfDocToWebResponse(
+                    output,
+                    GeneralUtils.generateFilename(
+                            request.getFileInput().getOriginalFilename(),
+                            "_text-colours-replaced.pdf"));
+        }
     }
 }
