@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useViewer } from "@app/contexts/ViewerContext";
+import {
+  POINT_TO_UNIT,
+  isImperialUnit,
+  convertUnit,
+} from "@app/utils/measurementUtils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Point {
   x: number;
@@ -37,6 +41,7 @@ interface RulerOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
   isActive: boolean;
   pageMeasureScales?: PageMeasureScales | null;
+  customScale?: MeasureScale | null;
 }
 
 // ─── Math ─────────────────────────────────────────────────────────────────────
@@ -75,12 +80,12 @@ function formatInches(pts: number): string {
 }
 
 export interface MeasureScale {
-  /** real_world_value = pdf_points * factor */
+  /** Raw PDF factor (PDF points -> unit). Used directly for precise calculations. */
   factor: number;
-  /** e.g. "ft", "m" */
+  /** Computed ratio (factor / baseFactor). Used ONLY for display labels. null if unit unknown. */
+  ratio: number | null;
+  /** e.g. "ft", "m", "cm", etc. */
   unit: string;
-  /** Human-readable ratio from PDF, e.g. "1 in = 10 ft" */
-  ratioLabel: string;
 }
 
 export interface ViewportScale {
@@ -99,14 +104,19 @@ export type PageMeasureScales = Map<number, PageScaleInfo>;
 
 /**
  * Given the start/end PagePoints of a measurement, find the scale from the
- * viewport whose BBox contains the midpoint. Falls back to the first viewport
- * if none contains it (handles whole-page viewports with bbox=null).
+ * viewport whose BBox contains the midpoint. Falls back to customScale if provided,
+ * then to the first viewport if none contains it (handles whole-page viewports with bbox=null).
  */
 function pickScale(
   start: PagePoint,
   end: PagePoint,
-  pageMeasureScales: PageMeasureScales,
+  pageMeasureScales: PageMeasureScales | null | undefined,
+  customScale?: MeasureScale | null,
 ): MeasureScale | null {
+  // Priority 1: Use custom scale if provided
+  if (customScale) return customScale;
+
+  if (!pageMeasureScales) return null;
   if (start.pageIndex !== end.pageIndex) return null;
   const info = pageMeasureScales.get(start.pageIndex);
   if (!info?.viewports.length) return null;
@@ -131,55 +141,69 @@ function pickScale(
   return null;
 }
 
+/**
+ * Determine decimal places based on value magnitude
+ * Ensures small values show precision and large values stay readable
+ */
+function getDecimalPlaces(value: number): number {
+  const absVal = Math.abs(value);
+  
+  const decimalRanges = [
+    { threshold: 1000000, decimals: 0 },
+    { threshold: 1000, decimals: 2 },
+    { threshold: 1, decimals: 3 },
+    { threshold: 0.1, decimals: 3 },
+    { threshold: 0.01, decimals: 4 },
+    { threshold: 0.001, decimals: 5 },
+  ];
+  
+  return decimalRanges.find((r) => absVal >= r.threshold)?.decimals ?? 6;
+}
+
 function formatScaled(pts: number, scale: MeasureScale): string {
+  // Use raw PDF factor directly for maximum precision
   const val = pts * scale.factor;
-  if (val >= 1000) return `${val.toFixed(0)} ${scale.unit}`;
-  if (val >= 100) return `${val.toFixed(1)} ${scale.unit}`;
-  if (val >= 10) return `${val.toFixed(2)} ${scale.unit}`;
-  return `${val.toFixed(3)} ${scale.unit}`;
-}
-
-// Conversion factors to metres for known units
-const TO_METRES: Record<string, number> = {
-  m: 1,
-  cm: 0.01,
-  mm: 0.001,
-  km: 1000,
-  ft: 0.3048,
-  in: 0.0254,
-  yd: 0.9144,
-  mi: 1609.344,
-};
-
-function isImperialUnit(unit: string): boolean {
-  return ["ft", "in", "yd", "mi"].includes(unit.toLowerCase().trim());
-}
-
-function formatMetricFromMetres(m: number): string {
-  if (m >= 1000) return `${(m / 1000).toFixed(2)} km`;
-  if (m >= 1) return `${m.toFixed(1)} m`;
-  if (m >= 0.1) return `${(m * 100).toFixed(1)} cm`;
-  return `${(m * 1000).toFixed(1)} mm`;
-}
-
-function formatImperialFromFeet(ft: number): string {
-  if (ft >= 1) return `${ft.toFixed(2)} ft`;
-  return `${(ft * 12).toFixed(2)} in`;
+  if (val === 0) return `0 ${scale.unit}`;
+  
+  const decimals = getDecimalPlaces(val);
+  
+  return `${val.toFixed(decimals)} ${scale.unit}`;
 }
 
 /**
  * Returns the scaled real-world value in the *other* unit system, or null if
  * the unit is not a recognised metric/imperial unit.
- * e.g. 72 pts, scale {factor:0.138889, unit:"ft"} → "3.048 m"
- *      72 pts, scale {factor:0.352778, unit:"m"}  → "1.157 ft" (approx)
+ *
+ * Uses raw PDF factor for precise calculations, then converts to opposite system
+ * using the generic convertUnit function.
+ *
+ * Guarantees consistent units:
+ *   - If PDF scale is imperial → show metric in metres
+ *   - If PDF scale is metric → show imperial in feet
  */
 function scaledCross(pts: number, scale: MeasureScale): string | null {
-  const toM = TO_METRES[scale.unit.toLowerCase().trim()];
-  if (!toM) return null;
-  const metres = pts * scale.factor * toM;
-  return isImperialUnit(scale.unit)
-    ? formatMetricFromMetres(metres)
-    : formatImperialFromFeet(metres / 0.3048);
+  const unit = scale.unit.toLowerCase().trim();
+  
+  // Validate unit is known
+  if (!(unit in POINT_TO_UNIT)) return null;
+  
+  // Get the value in the PDF's own unit system using raw factor
+  const valueInUnit = pts * scale.factor;
+  
+  // Convert to opposite system using generic convertUnit function
+  if (isImperialUnit(scale.unit)) {
+    // PDF is imperial (ft, in, yd, mi) → convert to meters
+    const meters = convertUnit(valueInUnit, scale.unit, "m");
+    if (meters === null) return null;
+    const decimals = getDecimalPlaces(meters);
+    return `${meters.toFixed(decimals)} m`;
+  } else {
+    // PDF is metric (m, cm, mm, km) → convert to feet
+    const feet = convertUnit(valueInUnit, scale.unit, "ft");
+    if (feet === null) return null;
+    const decimals = getDecimalPlaces(feet);
+    return `${feet.toFixed(decimals)} ft`;
+  }
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -305,30 +329,33 @@ function MeasurementLine({
     : formatDist(distPts);
 
   // Hover line 1 — both real-world values ordered by PDF unit system:
-  //   imperial PDF: "10.000 ft / 3.048 m"
-  //   metric PDF:   "142.5 m / 467.5 ft"
-  //   no scale:     "25.4 mm / 1.00 in"  (metric first, default)
+  //   imperial PDF: "Scaled: 10.000 ft / 3.048 m"
+  //   metric PDF:   "Scaled: 142.5 m / 467.5 ft"
+  //   no scale:     "25.4 mm / 1.00 in"  (metric first, default — no label)
   const hoverLine1 = measureScale
     ? (() => {
         const primary = formatScaled(distPts, measureScale);
         const cross = scaledCross(distPts, measureScale);
-        return cross ? `${primary} / ${cross}` : primary;
+        return cross ? `Scaled: ${primary} / ${cross}` : `Scaled: ${primary}`;
       })()
     : `${formatDist(distPts)} / ${formatInches(distPts)}`;
 
   // Hover line 2 — both physical paper values, same order as line 1:
-  //   imperial PDF: "1.00 in / 25.4 mm"
-  //   metric PDF or no scale: "25.4 mm / 1.00 in"
+  //   imperial PDF: "PDF: 1.00 in / 25.4 mm"
+  //   metric PDF or no scale: "PDF: 25.4 mm / 1.00 in"
   const hoverLine2 = measureScale
     ? imperialFirst
-      ? `${formatInches(distPts)} / ${formatDist(distPts)}`
-      : `${formatDist(distPts)} / ${formatInches(distPts)}`
+      ? `PDF: ${formatInches(distPts)} / ${formatDist(distPts)}`
+      : `PDF: ${formatDist(distPts)} / ${formatInches(distPts)}`
     : null;
 
-  // Hover line 3 (scaled) / line 2 (no scale) — ratio label + angle
-  const contextLabel = measureScale?.ratioLabel
-    ? `${measureScale.ratioLabel}   ${angLabel}`
-    : angLabel;
+  // Hover line 3 (scaled) / line 2 (no scale) — scale label + angle
+  const scaleLabel = measureScale
+    ? measureScale.ratio
+      ? `1:${Math.round(measureScale.ratio)} ${measureScale.unit}`
+      : measureScale.unit
+    : null;
+  const contextLabel = scaleLabel ? `${scaleLabel}   ${angLabel}` : angLabel;
 
   const maxHoverLh = measureScale ? LH3 : LH2;
   const lh = hovered ? maxHoverLh : LH;
@@ -637,7 +664,7 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
 export const RulerOverlay = React.forwardRef<
   RulerOverlayHandle,
   RulerOverlayProps
->(({ containerRef, isActive, pageMeasureScales }, ref) => {
+>(({ containerRef, isActive, pageMeasureScales, customScale }, ref) => {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
   /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
@@ -924,9 +951,12 @@ export const RulerOverlay = React.forwardRef<
         const startS = pagePointToScreen(m.start);
         const endS = pagePointToScreen(m.end);
         if (!startS || !endS) return null;
-        const mScale = pageMeasureScales
-          ? pickScale(m.start, m.end, pageMeasureScales)
-          : null;
+        const mScale = pickScale(
+          m.start,
+          m.end,
+          pageMeasureScales,
+          customScale,
+        );
         return (
           <MeasurementLine
             key={m.id}
@@ -949,8 +979,8 @@ export const RulerOverlay = React.forwardRef<
           endS={cursorS}
           zoom={zoom}
           measureScale={
-            pageMeasureScales && firstPt && cursorDoc
-              ? pickScale(firstPt, cursorDoc, pageMeasureScales)
+            firstPt && cursorDoc
+              ? pickScale(firstPt, cursorDoc, pageMeasureScales, customScale)
               : null
           }
         />
