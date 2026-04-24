@@ -255,7 +255,7 @@ def main() -> None:
 
     print(f"Generated {len(result.tools)} tool models from {spec_path.name}")
     for tool in result.tools:
-        print(f"  {tool.enum_name}: {tool.path} → {tool.class_name}")
+        print(f"  {tool.enum_name}: {tool.path} -> {tool.class_name}")
 
 
 if __name__ == "__main__":

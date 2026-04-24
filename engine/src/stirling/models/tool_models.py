@@ -18,63 +18,13 @@ class AddAttachmentsParams(ApiModel):
     )
 
 
-class CommentSpec(ApiModel):
-    """Sticky-note comment spec sent to /api/v1/misc/add-comments.
-
-    Supply either absolute ``x/y/width/height`` coordinates or an ``anchor_text`` hint. When
-    ``anchor_text`` is provided the server locates the first line on ``page_index`` whose text
-    contains it (tolerant match) and anchors the icon at that line's bounding box; the absolute
-    coordinates then serve only as a fallback if no match is found.
-    """
-
-    page_index: int = Field(description="0-indexed page number.")
-    x: float = Field(description="Bottom-left x coord of the sticky-note icon (PDF user-space).")
-    y: float = Field(description="Bottom-left y coord of the sticky-note icon (PDF user-space).")
-    width: float = Field(description="Width of the sticky-note icon, in user-space units.")
-    height: float = Field(description="Height of the sticky-note icon, in user-space units.")
-    text: str = Field(description="Comment body shown in the popup.")
-    author: str | None = Field(default=None, description="Optional author label; default used when absent.")
-    subject: str | None = Field(default=None, description="Optional subject/title; default used when absent.")
-    anchor_text: str | None = Field(
-        default=None,
-        description=(
-            "Optional text snippet to locate on the page; when set, the server anchors the icon"
-            " at the first matching line and ignores the x/y coords (fallback if no match)."
-        ),
-    )
-
-
 class AddCommentsParams(ApiModel):
-    """Parameters for /api/v1/misc/add-comments.
-
-    Java expects ``comments`` as a JSON-encoded string in the multipart form body. We serialise
-    the :class:`CommentSpec` list when emitting the plan step so the wire format matches.
-    """
-
-    comments: str = Field(description="JSON-encoded array of CommentSpec objects.")
-
-
-class PdfCommentAgentParams(ApiModel):
-    """Parameters for /api/v1/ai/tools/pdf-comment-agent (composed AI tool).
-
-    Takes a user prompt; the tool extracts text chunks, calls the engine's
-    :class:`PdfCommentAgent`, resolves chunk ids to absolute positions, and annotates the PDF.
-    """
-
-    prompt: str = Field(description="The end-user prompt describing what the AI should comment on.")
-
-
-class MathAuditorAgentParams(ApiModel):
-    """Parameters for /api/v1/ai/tools/math-auditor-agent.
-
-    Always returns a JSON Verdict. Presentation (chat-style summary, PDF annotations, etc.) is
-    the caller's responsibility — see ``delegate_pdf_question`` and ``delegate_pdf_review``
-    in the orchestrator.
-    """
-
-    tolerance: str = Field(
-        default="0.01",
-        description="Arithmetic tolerance; differences smaller than this are ignored.",
+    comments: str | None = Field(
+        None,
+        description="JSON array of comment specs. Each element has: {pageIndex, x, y, width, height, text, author?, subject?}. Coordinates are PDF user-space with origin at the page's bottom-left.",
+        examples=[
+            '[{"pageIndex":0,"x":72,"y":720,"width":20,"height":20,"text":"Check this paragraph","author":"Reviewer","subject":"Unclear wording"}]'
+        ],
     )
 
 
@@ -1157,6 +1107,7 @@ class Model(
         | SplitPdfByChaptersParams
         | SplitPdfBySectionsParams
         | AddAttachmentsParams
+        | AddCommentsParams
         | AddImageParams
         | AddPageNumbersParams
         | AddStampParams
@@ -1221,6 +1172,7 @@ class Model(
         | SplitPdfByChaptersParams
         | SplitPdfBySectionsParams
         | AddAttachmentsParams
+        | AddCommentsParams
         | AddImageParams
         | AddPageNumbersParams
         | AddStampParams
@@ -1297,9 +1249,7 @@ type ParamToolModel = (
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
-    | MathAuditorAgentParams
     | OcrPdfParams
-    | PdfCommentAgentParams
     | RemoveBlanksParams
     | RenameAttachmentParams
     | ReplaceInvertPdfParams
@@ -1366,9 +1316,7 @@ class ToolEndpoint(StrEnum):
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
-    MATH_AUDITOR_AGENT = "/api/v1/ai/tools/math-auditor-agent"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
-    PDF_COMMENT_AGENT = "/api/v1/ai/tools/pdf-comment-agent"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
@@ -1386,9 +1334,6 @@ class ToolEndpoint(StrEnum):
 
 
 OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
-    ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
-    ToolEndpoint.MATH_AUDITOR_AGENT: MathAuditorAgentParams,
-    ToolEndpoint.PDF_COMMENT_AGENT: PdfCommentAgentParams,
     ToolEndpoint.CBR_TO_PDF: CbrToPdfParams,
     ToolEndpoint.CBZ_TO_PDF: CbzToPdfParams,
     ToolEndpoint.EBOOK_TO_PDF: EbookToPdfParams,
@@ -1425,6 +1370,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SPLIT_PDF_BY_CHAPTERS: SplitPdfByChaptersParams,
     ToolEndpoint.SPLIT_PDF_BY_SECTIONS: SplitPdfBySectionsParams,
     ToolEndpoint.ADD_ATTACHMENTS: AddAttachmentsParams,
+    ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
     ToolEndpoint.ADD_IMAGE: AddImageParams,
     ToolEndpoint.ADD_PAGE_NUMBERS: AddPageNumbersParams,
     ToolEndpoint.ADD_STAMP: AddStampParams,
