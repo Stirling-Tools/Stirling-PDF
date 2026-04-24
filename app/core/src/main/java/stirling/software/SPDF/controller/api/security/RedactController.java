@@ -698,8 +698,8 @@ public class RedactController {
                     "Unified redaction endpoint that accepts exact strings, regex patterns, and "
                             + "page numbers in a single request. Supports execution strategy hints. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> executeRedaction(
-            @ModelAttribute RedactExecuteRequest request) throws IOException {
+    public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
+            throws IOException {
 
         boolean hasTexts =
                 request.getTextsToRedact() != null && !request.getTextsToRedact().isBlank();
