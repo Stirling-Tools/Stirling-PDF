@@ -9,6 +9,7 @@ the chunk bounding boxes it already holds; the agent never sees the PDF.
 
 from __future__ import annotations
 
+import json
 import logging
 from collections import defaultdict
 
@@ -105,20 +106,19 @@ class PdfCommentAgent:
     def _build_prompt(request: PdfCommentRequest) -> str:
         """Build a structured prompt with chunks grouped by page.
 
-        Uses ``model_dump_json`` on each chunk so any quote or newline
-        characters in the extracted text are properly JSON-escaped; this
-        prevents PDF-controlled text from breaking out of the prompt
-        structure or attempting prompt injection.
+        Both the user's free-text prompt and each chunk's text are JSON-
+        encoded so any quotes, newlines, or stray delimiters in attacker-
+        influenced content (the user message or PDF-derived chunks) are
+        escaped and cannot break out of the prompt structure or spoof
+        additional chunk records.
         """
         by_page: dict[int, list[TextChunk]] = defaultdict(list)
         for chunk in request.chunks:
             by_page[chunk.page].append(chunk)
 
         lines: list[str] = [
-            "User prompt (verbatim, between triple quotes):",
-            '"""',
-            request.user_message,
-            '"""',
+            "User prompt (JSON-encoded, untrusted input):",
+            json.dumps(request.user_message),
             "",
             f"Chunks ({len(request.chunks)} total across {len(by_page)} page(s)).",
             "Each chunk is a JSON object; the `id` field is what you must echo",

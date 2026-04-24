@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 
 import org.springframework.http.HttpStatus;
@@ -23,13 +24,19 @@ public class AiEngineClient {
     private final HttpClient httpClient;
 
     public AiEngineClient(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-        this.httpClient =
+        this(
+                applicationProperties,
                 HttpClient.newBuilder()
                         .connectTimeout(
                                 Duration.ofSeconds(
                                         applicationProperties.getAiEngine().getTimeoutSeconds()))
-                        .build();
+                        .build());
+    }
+
+    /** Package-private constructor that accepts an HttpClient directly; intended for tests. */
+    AiEngineClient(ApplicationProperties applicationProperties, HttpClient httpClient) {
+        this.applicationProperties = applicationProperties;
+        this.httpClient = httpClient;
     }
 
     public String post(String path, String jsonBody) throws IOException {
@@ -86,6 +93,14 @@ public class AiEngineClient {
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (HttpTimeoutException e) {
+            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
+        } catch (IOException e) {
+            // Connection refused, DNS failure, socket reset, etc. — surface as
+            // SERVICE_UNAVAILABLE so every caller of this client sees a structured
+            // status rather than a raw 500 from an unhandled IOException.
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ResponseStatusException(
