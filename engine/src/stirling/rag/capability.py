@@ -12,11 +12,6 @@ from stirling.rag.store import SearchResult
 
 logger = logging.getLogger(__name__)
 
-# Default cap on ``search_knowledge`` calls per agent run. After this many calls the
-# tool is removed from the agent's toolset for subsequent turns, forcing it to answer
-# from what it has already retrieved rather than looping indefinitely.
-DEFAULT_MAX_SEARCHES = 5
-
 
 class RagCapability:
     """Bundles RAG instructions and the ``search_knowledge`` toolset for agent injection.
@@ -32,6 +27,9 @@ class RagCapability:
 
     When no collections are pinned, the instructions are generated dynamically at
     run time so the agent sees the current list of collections in the store.
+
+    Lifecycle: a ``RagCapability`` instance is intended to live for the duration of a
+    single agent run.
     """
 
     def __init__(
@@ -39,7 +37,7 @@ class RagCapability:
         rag_service: RagService,
         collections: list[FileId] | None = None,
         top_k: int = 5,
-        max_searches: int = DEFAULT_MAX_SEARCHES,
+        max_searches: int = 5,
     ) -> None:
         self._rag_service = rag_service
         self._collections = collections

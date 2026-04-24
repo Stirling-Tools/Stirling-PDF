@@ -47,7 +47,7 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "'search_knowledge', or other implementation details.\n"
     "- Be honest about the actual limitation. For questions that require full-document "
     "analysis (shortest chapter, word counts, etc.), explain that the document is too "
-    "long to analyse end-to-end — you can only look up specific passages, and that's "
+    "long to analyse end-to-end: you can only look up specific passages, and that's "
     "not enough to compare every part of the document against every other.\n"
     "- For questions where the answer just isn't in the document, say so directly: "
     "'I couldn't find that information in the document.'\n"
@@ -89,6 +89,7 @@ class PdfQuestionAgent:
             rag_service=self.runtime.rag_service,
             collections=[file.id for file in request.files],
             top_k=self.runtime.settings.rag_default_top_k,
+            max_searches=self.runtime.settings.rag_max_searches,
         )
         agent = Agent(
             model=self.runtime.smart_model,

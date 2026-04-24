@@ -282,3 +282,27 @@ class TestRagCapability:
         assert "[Result 1" in output
         assert "[Result 2" in output
         assert "[Result 3" not in output
+
+    @pytest.mark.anyio
+    async def test_search_knowledge_tool_is_hidden_after_budget_exhausted(self, rag_service: RagService) -> None:
+        """The prepare callback must return None once max_searches has been reached
+        so the agent can no longer call the tool on subsequent turns."""
+        await rag_service.index_text(FileId("docs"), "Some content.", source="x.pdf")
+        cap = RagCapability(rag_service, max_searches=2)
+        tool_def = _dummy_tool_def()
+
+        # Budget intact: prepare returns the tool definition.
+        assert await cap._prepare_search_knowledge(None, tool_def) is tool_def  # type: ignore[arg-type]
+
+        # Use the budget.
+        await _invoke_search_knowledge(cap, "content")
+        await _invoke_search_knowledge(cap, "content")
+
+        # Budget spent: prepare returns None, removing the tool from the agent's next turn.
+        assert await cap._prepare_search_knowledge(None, tool_def) is None  # type: ignore[arg-type]
+
+
+def _dummy_tool_def() -> object:
+    """Sentinel passed to ``_prepare_search_knowledge``. The callback only inspects
+    ``_search_count``; it doesn't read anything off the tool_def or context."""
+    return object()
