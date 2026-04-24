@@ -189,7 +189,12 @@ async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime
 
     assert isinstance(response, NeedContentResponse)
     assert response.resume_with == SupportedCapability.PDF_EDIT
-    assert response.files == [NeedContentFileRequest(file_name="report.pdf", content_types=[PdfContentType.PAGE_TEXT])]
+    assert response.files == [
+        NeedContentFileRequest(
+            file=AiFile(id=FileId("report-id"), name="report.pdf"),
+            content_types=[PdfContentType.PAGE_TEXT],
+        )
+    ]
     assert response.max_pages == runtime.settings.max_pages
     assert response.max_characters == runtime.settings.max_characters
     assert parameter_selector.calls == []

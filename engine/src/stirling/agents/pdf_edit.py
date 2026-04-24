@@ -225,8 +225,7 @@ class PdfEditAgent:
         request: PdfEditRequest,
     ) -> NeedContentResponse:
         files = selection.files or [
-            NeedContentFileRequest(file_name=file.name, content_types=[PdfContentType.PAGE_TEXT])
-            for file in request.files
+            NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
         ]
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_EDIT,

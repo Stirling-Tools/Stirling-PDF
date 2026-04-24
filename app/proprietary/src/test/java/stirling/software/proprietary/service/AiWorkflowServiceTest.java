@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -86,12 +87,18 @@ class AiWorkflowServiceTest {
     private AiWorkflowService service;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         ApplicationProperties props = new ApplicationProperties();
         props.getSystem().getTempFileManagement().setBaseTmpDir(tempDir.toString());
         props.getSystem().getTempFileManagement().setPrefix("ai-test-");
         tempFileManager = new TempFileManager(new TempFileRegistry(), props);
         objectMapper = JsonMapper.builder().build();
+
+        // Mock strategy yields the filename as id so each MockMultipartFile in a test gets a
+        // distinct collection key. Real strategy (ByteHashFileIdStrategy) hashes bytes.
+        lenient()
+                .when(fileIdStrategy.idFor(any(MultipartFile.class)))
+                .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
         service =
                 new AiWorkflowService(

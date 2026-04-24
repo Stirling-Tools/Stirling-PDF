@@ -127,7 +127,7 @@ class ExtractedFileText(ApiModel):
 
 
 class NeedContentFileRequest(ApiModel):
-    file_name: str
+    file: AiFile
     page_numbers: list[int] = Field(default_factory=list)
     content_types: list[PdfContentType]
 
