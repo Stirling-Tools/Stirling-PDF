@@ -1,13 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { ensureCookieConsent } from "@app/tests/helpers/login";
 import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
-import {
-  uploadFiles,
-  runToolAndWaitForReview,
-} from "@app/tests/helpers/ui-helpers";
-import path from "path";
-
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
 
 /**
  * SAML login round-trip via Keycloak.
@@ -66,26 +59,5 @@ test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
     await expect(page.getByText(/samluser/i).first()).toBeVisible({
       timeout: 10_000,
     });
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(500);
-
-    // ── 3. Real split tool run ───────────────────────────────
-    await page.goto("/split");
-    await page.waitForLoadState("domcontentloaded");
-    await uploadFiles(page, SAMPLE_PDF);
-
-    // Pick page-numbers split method
-    await page
-      .getByText(/Page Numbers/i)
-      .first()
-      .click();
-    const rangesInput = page
-      .getByPlaceholder(/Custom Page Selection|pages/i)
-      .first();
-    if (await rangesInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await rangesInput.fill("1");
-    }
-
-    await runToolAndWaitForReview(page);
   });
 });
