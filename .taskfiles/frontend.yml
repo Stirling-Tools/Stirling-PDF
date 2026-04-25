@@ -22,9 +22,8 @@ tasks:
       - npx tsx scripts/setup-env.ts
     sources:
       - scripts/setup-env.ts
-      - config/.env.example
     generates:
-      - .env
+      - .env.local
 
   prepare:env:saas:
     desc: "Generate .env and .env.saas from examples if missing"
@@ -34,11 +33,9 @@ tasks:
       - npx tsx scripts/setup-env.ts --saas
     sources:
       - scripts/setup-env.ts
-      - config/.env.example
-      - config/.env.saas.example
     generates:
-      - .env
-      - .env.saas
+      - .env.local
+      - .env.saas.local
 
   prepare:env:desktop:
     desc: "Generate .env and .env.desktop from examples if missing"
@@ -48,11 +45,9 @@ tasks:
       - npx tsx scripts/setup-env.ts --desktop
     sources:
       - scripts/setup-env.ts
-      - config/.env.example
-      - config/.env.desktop.example
     generates:
-      - .env
-      - .env.desktop
+      - .env.local
+      - .env.desktop.local
 
   prepare:icons:
     desc: "Generate icon bundle from source references"
