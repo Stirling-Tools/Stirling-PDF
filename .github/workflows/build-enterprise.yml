@@ -89,71 +89,132 @@ jobs:
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
 
+      # Helper function used by all phases — boots `:stirling-pdf:bootRun`
+      # with the React frontend baked in (-PbuildWithFrontend=true) so the
+      # SPA serves on :8080 and OAuth/SAML callbacks land on the same host
+      # that the browser is interacting with.
+      - name: Define helpers
+        run: |
+          {
+            echo 'wait_for_backend() {'
+            echo '  start=$SECONDS'
+            echo '  for i in $(seq 1 300); do'
+            echo '    if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then'
+            echo '      echo "Backend up after $((SECONDS - start))s"; return 0'
+            echo '    fi; sleep 2'
+            echo '  done'
+            echo '  tail -200 /tmp/backend.log || true; return 1'
+            echo '}'
+            echo 'stop_backend() {'
+            echo '  if [ -f /tmp/backend.pid ]; then'
+            echo '    kill "$(cat /tmp/backend.pid)" 2>/dev/null || true'
+            echo '    rm -f /tmp/backend.pid'
+            echo '  fi'
+            echo '  pkill -f "gradlew :stirling-pdf:bootRun" 2>/dev/null || true'
+            echo '  for i in $(seq 1 30); do'
+            echo '    curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1 || return 0'
+            echo '    sleep 1'
+            echo '  done'
+            echo '}'
+          } > /tmp/helpers.sh
+          chmod +x /tmp/helpers.sh
+
       # ───────── OAuth round-trip ─────────
-      - name: Bring up Keycloak + Stirling-PDF (OAuth)
+      - name: Bring up Keycloak (OAuth realm)
         working-directory: testing/compose
-        run: docker compose -f docker-compose-keycloak-oauth.yml up -d --build
-      - name: Wait for OAuth stack ready
+        run: docker compose -f docker-compose-keycloak-oauth.yml up -d --no-deps keycloak-oauth-db keycloak-oauth
+      - name: Wait for Keycloak (OAuth) ready
         working-directory: testing/compose
         run: |
           for i in $(seq 1 60); do
-            if bash validate-oauth-test.sh; then
-              exit 0
-            fi
+            bash validate-oauth-test.sh 2>/dev/null && exit 0 || true
+            # validate script also pings stirling on :8080 — accept just the
+            # keycloak realm as our gate here, stirling boots in the next step
+            curl -fsS http://localhost:9080/realms/stirling-oauth >/dev/null 2>&1 && exit 0
             sleep 5
           done
-          docker compose -f docker-compose-keycloak-oauth.yml logs --tail=200
+          docker compose -f docker-compose-keycloak-oauth.yml logs --tail=200 keycloak-oauth
           exit 1
+      - name: Boot Stirling-PDF (frontend baked in, OAuth env)
+        env:
+          SECURITY_ENABLELOGIN: "true"
+          SECURITY_LOGINMETHOD: "all"
+          SECURITY_OAUTH2_ENABLED: "true"
+          SECURITY_OAUTH2_AUTOCREATEUSER: "true"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_ISSUER: "http://localhost:9080/realms/stirling-oauth"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTID: "stirling-pdf-client"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTSECRET: "test-client-secret-change-in-production"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_USEASUSERNAME: "email"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_SCOPES: "openid,profile,email"
+        run: |
+          source /tmp/helpers.sh
+          nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
         run: task frontend:test:e2e -- --project=enterprise --grep "OAuth"
-      - name: Tear down OAuth stack
+      - name: Stop backend + tear down OAuth Keycloak
         if: always()
-        working-directory: testing/compose
-        run: docker compose -f docker-compose-keycloak-oauth.yml down -v
+        run: |
+          source /tmp/helpers.sh
+          stop_backend
+          (cd testing/compose && docker compose -f docker-compose-keycloak-oauth.yml down -v)
 
       # ───────── SAML round-trip ─────────
-      - name: Bring up Keycloak + Stirling-PDF (SAML)
+      - name: Bring up Keycloak (SAML realm)
         working-directory: testing/compose
-        run: docker compose -f docker-compose-keycloak-saml.yml up -d --build
-      - name: Wait for SAML stack ready
+        run: docker compose -f docker-compose-keycloak-saml.yml up -d --no-deps keycloak-saml-db keycloak-saml
+      - name: Wait for Keycloak (SAML) ready
         working-directory: testing/compose
         run: |
           for i in $(seq 1 60); do
-            if bash validate-saml-test.sh; then
-              exit 0
-            fi
+            curl -fsS http://localhost:9080/realms/stirling-saml >/dev/null 2>&1 && exit 0
             sleep 5
           done
-          docker compose -f docker-compose-keycloak-saml.yml logs --tail=200
+          docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
           exit 1
+      - name: Boot Stirling-PDF (frontend baked in, SAML env)
+        env:
+          SECURITY_ENABLELOGIN: "true"
+          SECURITY_LOGINMETHOD: "all"
+          SECURITY_SAML2_ENABLED: "true"
+          SECURITY_SAML2_AUTOCREATEUSER: "true"
+          SECURITY_SAML2_PROVIDER: "keycloak"
+          SECURITY_SAML2_REGISTRATIONID: "keycloak"
+          SECURITY_SAML2_IDP_ISSUER: "http://localhost:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_ENTITYID: "http://localhost:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_METADATAURI: "http://localhost:9080/realms/stirling-saml/protocol/saml/descriptor"
+          SECURITY_SAML2_IDPSINGLELOGINURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDP_CERT: "${{ github.workspace }}/testing/compose/keycloak-saml-cert.pem"
+          SECURITY_SAML2_PRIVATEKEY: "${{ github.workspace }}/testing/compose/saml-private-key.key"
+          SECURITY_SAML2_SP_CERT: "${{ github.workspace }}/testing/compose/saml-public-cert.crt"
+          SECURITY_SAML2_SP_ENTITYID: "http://localhost:8080"
+          SECURITY_SAML2_SP_ACS: "http://localhost:8080/login/saml2/sso/keycloak"
+          SECURITY_SAML2_SP_SLS: "http://localhost:8080/logout/saml2/slo"
+        run: |
+          source /tmp/helpers.sh
+          nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
         run: task frontend:test:e2e -- --project=enterprise --grep "SAML"
-      - name: Tear down SAML stack
+      - name: Stop backend + tear down SAML Keycloak
         if: always()
-        working-directory: testing/compose
-        run: docker compose -f docker-compose-keycloak-saml.yml down -v
+        run: |
+          source /tmp/helpers.sh
+          stop_backend
+          (cd testing/compose && docker compose -f docker-compose-keycloak-saml.yml down -v)
 
       # ───────── License-gated feature tests (no IdP needed) ─────────
-      - name: Start backend for feature tests (premium-enabled, no SSO)
-        env:
-          SYSTEM_ENABLEANALYTICS: "false"
+      - name: Boot Stirling-PDF (frontend baked in, premium only)
         run: |
-          nohup ./gradlew :stirling-pdf:bootRun > /tmp/backend-ent.log 2>&1 &
-          echo $! > /tmp/backend-ent.pid
-      - name: Wait for backend ready
-        run: |
-          start=$SECONDS
-          for i in $(seq 1 300); do
-            if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then
-              echo "Backend up after $((SECONDS - start))s"
-              exit 0
-            fi
-            sleep 2
-          done
-          tail -200 /tmp/backend-ent.log || true
-          exit 1
+          source /tmp/helpers.sh
+          nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
         run: task frontend:test:e2e -- --project=enterprise --grep "Enterprise license"
@@ -161,14 +222,13 @@ jobs:
         if: failure()
         run: |
           echo "::group::Enterprise backend log"
-          tail -500 /tmp/backend-ent.log || true
+          tail -500 /tmp/backend.log || true
           echo "::endgroup::"
-      - name: Stop backend
+      - name: Stop backend (final)
         if: always()
         run: |
-          if [ -f /tmp/backend-ent.pid ]; then
-            kill "$(cat /tmp/backend-ent.pid)" 2>/dev/null || true
-          fi
+          source /tmp/helpers.sh
+          stop_backend
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

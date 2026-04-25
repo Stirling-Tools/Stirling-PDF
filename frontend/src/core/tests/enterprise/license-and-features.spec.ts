@@ -7,15 +7,10 @@ import { openSettings } from "@app/tests/helpers/ui-helpers";
  * License-gated feature surface validation. Drives the actual UI rather
  * than poking endpoints — every assertion is on what the user sees in
  * the admin settings + tool surfaces. Requires a backend booted with a
- * real `PREMIUM_KEY` (premium.enabled=true) and the live-suite admin
- * user (admin/adminadmin) provisioned.
- *
- * Unlike the SSO specs, this suite uses the Vite dev server on :5173 (the
- * full SPA) rather than the docker-served frontend on :8080 — `bootRun`
- * alone doesn't serve the built React app, so we go through Vite which
- * proxies API calls to localhost:8080.
+ * real `PREMIUM_KEY` (premium.enabled=true), `-PbuildWithFrontend=true`
+ * so the SPA is served from :8080, and the live-suite admin user
+ * (admin/adminadmin) provisioned.
  */
-test.use({ baseURL: "http://localhost:5173" });
 
 const ADMIN = "admin";
 const PASSWORD = "adminadmin";
