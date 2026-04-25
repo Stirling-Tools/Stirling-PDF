@@ -37,11 +37,19 @@ export async function skipOnboarding(page: Page): Promise<void> {
 /**
  * Shared login helper for Stirling-PDF E2E tests.
  * Logs in with the given credentials and waits for the dashboard to load.
+ *
+ * Default credentials are `admin / adminadmin` — set by the live-setup
+ * bootstrap spec, which performs the real first-login password change from
+ * the backend's default `admin / stirling` (min 8 chars per
+ * FirstLoginSlide validation).
  */
+export const DEFAULT_TEST_USERNAME = "admin";
+export const DEFAULT_TEST_PASSWORD = "adminadmin";
+
 export async function login(
   page: Page,
-  username = "admin",
-  password = "admin",
+  username = DEFAULT_TEST_USERNAME,
+  password = DEFAULT_TEST_PASSWORD,
 ): Promise<void> {
   await ensureCookieConsent(page);
   // Skip onboarding before navigating so the modal never appears
@@ -111,8 +119,8 @@ export async function dismissCookieConsent(page: Page): Promise<void> {
  */
 export async function loginAndSetup(
   page: Page,
-  username = "admin",
-  password = "admin",
+  username = DEFAULT_TEST_USERNAME,
+  password = DEFAULT_TEST_PASSWORD,
 ): Promise<void> {
   await login(page, username, password);
   // Cookie consent may appear on top, dismiss it first

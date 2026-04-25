@@ -43,7 +43,7 @@ test.describe("1. Authentication and Login", () => {
       await usernameInput.fill("admin");
 
       // Step 8: Enter a valid password into the password field
-      await passwordInput.fill("admin");
+      await passwordInput.fill("adminadmin");
 
       // Step 9: Confirm the "Sign In" button becomes enabled
       await expect(signInButton).toBeEnabled();
@@ -85,7 +85,7 @@ test.describe("1. Authentication and Login", () => {
 
       // Step 5-6: Clear username; enter only a password value; verify button remains disabled
       await usernameInput.clear();
-      await passwordInput.fill("admin");
+      await passwordInput.fill("adminadmin");
       await expect(signInButton).toBeDisabled();
     });
   });
@@ -129,7 +129,7 @@ test.describe("1. Authentication and Login", () => {
 
       // Step 5: Log in with valid credentials
       await page.locator("#email").fill("admin");
-      await page.locator("#password").fill("admin");
+      await page.locator("#password").fill("adminadmin");
       await page.locator('button[type="submit"]').click();
 
       // Step 6: Verify the user is redirected back to /merge or home.
