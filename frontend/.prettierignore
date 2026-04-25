@@ -9,6 +9,7 @@ public/css/cookieconsent.css
 *.min.*
 *.md
 *.wxs
+/**/*.wxs
 src/output.css
 .gradle-home/
 .venv*/
