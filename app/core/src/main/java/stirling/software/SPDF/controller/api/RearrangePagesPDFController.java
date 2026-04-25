@@ -8,11 +8,11 @@ import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -47,8 +47,8 @@ public class RearrangePagesPDFController {
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
                             + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> deletePages(
-            @ModelAttribute PDFWithPageNums request) throws IOException {
+    public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request)
+            throws IOException {
 
         MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
@@ -228,8 +228,8 @@ public class RearrangePagesPDFController {
                             + " order or custom mode. Users can provide a page order as a"
                             + " comma-separated list of page numbers or page ranges, or a custom mode."
                             + " Input:PDF Output:PDF")
-    public ResponseEntity<StreamingResponseBody> rearrangePages(
-            @ModelAttribute RearrangePagesRequest request) throws IOException {
+    public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
+            throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();

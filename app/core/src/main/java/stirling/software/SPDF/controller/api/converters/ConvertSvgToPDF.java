@@ -9,12 +9,13 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,8 +55,7 @@ public class ConvertSvgToPDF {
                             + "SVG dimensions (width/height) determine the PDF page size; defaults to A4 if not specified. "
                             + "SVG content is sanitized to prevent XSS attacks. "
                             + "Input: SVG file(s), Output: PDF file(s) or ZIP. Type: MIMO")
-    public ResponseEntity<StreamingResponseBody> convertSvgToPdf(
-            @ModelAttribute SvgToPdfRequest request) {
+    public ResponseEntity<Resource> convertSvgToPdf(@ModelAttribute SvgToPdfRequest request) {
 
         MultipartFile[] inputFiles = request.getFileInput();
         boolean combineIntoSinglePdf = Boolean.TRUE.equals(request.getCombineIntoSinglePdf());
@@ -95,10 +95,7 @@ public class ConvertSvgToPDF {
                     filenames.add(Filenames.toSimpleFileName(originalFilename));
 
                 } catch (IOException e) {
-                    log.error(
-                            "SVG sanitization/reading failed for {}: {}",
-                            originalFilename,
-                            e.getMessage());
+                    log.error("SVG sanitization/reading failed for {}", originalFilename, e);
                 }
             }
 
@@ -121,17 +118,14 @@ public class ConvertSvgToPDF {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> errorResponse(HttpStatus status, String message) {
+    private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        StreamingResponseBody streaming =
-                os -> {
-                    os.write(body);
-                    os.flush();
-                };
-        return ResponseEntity.status(status).body(streaming);
+        return ResponseEntity.status(status)
+                .contentLength(body.length)
+                .body(new ByteArrayResource(body));
     }
 
-    private ResponseEntity<StreamingResponseBody> handleCombinedConversion(
+    private ResponseEntity<Resource> handleCombinedConversion(
             List<byte[]> sanitizedSvgs, List<String> filenames) {
         try {
             log.info("Combining {} SVG files into single PDF", sanitizedSvgs.size());
@@ -169,7 +163,7 @@ public class ConvertSvgToPDF {
         }
     }
 
-    private ResponseEntity<StreamingResponseBody> handleSeparateConversion(
+    private ResponseEntity<Resource> handleSeparateConversion(
             List<byte[]> sanitizedSvgs, List<String> filenames) {
         List<ConvertedPdf> convertedPdfs = new ArrayList<>();
 
