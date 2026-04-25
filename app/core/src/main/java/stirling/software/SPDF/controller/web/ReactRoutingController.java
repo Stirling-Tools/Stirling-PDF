@@ -149,6 +149,11 @@ public class ReactRoutingController {
         return serveIndexHtml(request);
     }
 
+    @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
+        return serveIndexHtml(request);
+    }
+
     @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
         // cachedCallbackHtml is always initialized in @PostConstruct

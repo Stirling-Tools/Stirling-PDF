@@ -32,13 +32,13 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -928,8 +928,8 @@ public class CompressController {
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
                             + " parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> optimizePdf(
-            @ModelAttribute OptimizePdfRequest request) throws Exception {
+    public ResponseEntity<Resource> optimizePdf(@ModelAttribute OptimizePdfRequest request)
+            throws Exception {
         MultipartFile inputFile = request.getFileInput();
 
         // Validate input file
