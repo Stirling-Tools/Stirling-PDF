@@ -217,8 +217,8 @@ class GetInfoOnPDFTest {
                 Assertions.assertTrue(jsonNode.has("Permissions"));
 
                 JsonNode metadata = jsonNode.get("Metadata");
-                Assertions.assertEquals("Test Title", metadata.get("Title").asText(""));
-                Assertions.assertEquals("Test Author", metadata.get("Author").asText(""));
+                Assertions.assertEquals("Test Title", metadata.get("Title").asString(""));
+                Assertions.assertEquals("Test Author", metadata.get("Author").asString(""));
             }
         }
 
@@ -316,12 +316,12 @@ class GetInfoOnPDFTest {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode metadata = jsonNode.get("Metadata");
 
-            Assertions.assertEquals("Test Title", metadata.get("Title").asText(""));
-            Assertions.assertEquals("Test Author", metadata.get("Author").asText(""));
-            Assertions.assertEquals("Test Subject", metadata.get("Subject").asText(""));
-            Assertions.assertEquals("test, pdf, metadata", metadata.get("Keywords").asText(""));
-            Assertions.assertEquals("Test Creator", metadata.get("Creator").asText(""));
-            Assertions.assertEquals("Test Producer", metadata.get("Producer").asText(""));
+            Assertions.assertEquals("Test Title", metadata.get("Title").asString(""));
+            Assertions.assertEquals("Test Author", metadata.get("Author").asString(""));
+            Assertions.assertEquals("Test Subject", metadata.get("Subject").asString(""));
+            Assertions.assertEquals("test, pdf, metadata", metadata.get("Keywords").asString(""));
+            Assertions.assertEquals("Test Creator", metadata.get("Creator").asString(""));
+            Assertions.assertEquals("Test Producer", metadata.get("Producer").asString(""));
             Assertions.assertTrue(metadata.has("CreationDate"));
             Assertions.assertTrue(metadata.has("ModificationDate"));
 
@@ -513,10 +513,10 @@ class GetInfoOnPDFTest {
             JsonNode page1 = perPageInfo.get("Page 1");
             Assertions.assertTrue(page1.has("Size"));
             Assertions.assertTrue(page1.get("Size").has("Standard Page"));
-            Assertions.assertEquals("A4", page1.get("Size").get("Standard Page").asText(""));
+            Assertions.assertEquals("A4", page1.get("Size").get("Standard Page").asString(""));
 
             JsonNode page2 = perPageInfo.get("Page 2");
-            Assertions.assertEquals("Letter", page2.get("Size").get("Standard Page").asText(""));
+            Assertions.assertEquals("Letter", page2.get("Size").get("Standard Page").asString(""));
 
             loadedDoc.close();
         }
@@ -571,7 +571,7 @@ class GetInfoOnPDFTest {
 
             Assertions.assertTrue(jsonNode.has("error"));
             Assertions.assertTrue(
-                    jsonNode.get("error").asText("").contains("PDF file is required"));
+                    jsonNode.get("error").asString("").contains("PDF file is required"));
         }
 
         @Test
@@ -647,7 +647,7 @@ class GetInfoOnPDFTest {
 
             Assertions.assertTrue(jsonNode.has("error"));
             Assertions.assertTrue(
-                    jsonNode.get("error").asText("").contains("exceeds maximum allowed size"));
+                    jsonNode.get("error").asString("").contains("exceeds maximum allowed size"));
         }
     }
 
