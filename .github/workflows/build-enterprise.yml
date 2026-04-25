@@ -243,6 +243,14 @@ jobs:
 
       # ───────── License-gated feature tests (no IdP needed) ─────────
       - name: Boot Stirling-PDF (frontend baked in, premium only)
+        env:
+          # Provision admin/adminadmin directly so the feature tests can log in
+          # without going through the live-suite bootstrap (which isn't part
+          # of the enterprise project).
+          SECURITY_INITIALLOGIN_USERNAME: admin
+          SECURITY_INITIALLOGIN_PASSWORD: adminadmin
+          SECURITY_ENABLELOGIN: "true"
+          SECURITY_LOGINMETHOD: "all"
         run: |
           source /tmp/helpers.sh
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
