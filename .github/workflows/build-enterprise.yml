@@ -62,6 +62,10 @@ jobs:
       PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
       PREMIUM_ENABLED: "true"
       SYSTEM_ENABLEANALYTICS: "false"
+      # The compose stacks default KEYCLOAK_HOST to kubernetes.docker.internal,
+      # which only resolves on Docker Desktop. Override to localhost so the
+      # Keycloak-issued redirect URLs are reachable from the GHA runner.
+      KEYCLOAK_HOST: localhost
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
