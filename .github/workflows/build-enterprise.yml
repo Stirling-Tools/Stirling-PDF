@@ -220,7 +220,10 @@ jobs:
           SECURITY_SAML2_IDP_CERT: "${{ github.workspace }}/testing/compose/keycloak-saml-cert.pem"
           SECURITY_SAML2_PRIVATEKEY: "${{ github.workspace }}/testing/compose/saml-private-key.key"
           SECURITY_SAML2_SP_CERT: "${{ github.workspace }}/testing/compose/saml-public-cert.crt"
-          SECURITY_SAML2_SP_ENTITYID: "http://localhost:8080"
+          # Realm registers the SP entity as the metadata URL — see
+          # keycloak-realm-saml.json `clientId`. Match it here so Keycloak
+          # accepts the AuthnRequest issuer.
+          SECURITY_SAML2_SP_ENTITYID: "http://localhost:8080/saml2/service-provider-metadata/keycloak"
           SECURITY_SAML2_SP_ACS: "http://localhost:8080/login/saml2/sso/keycloak"
           SECURITY_SAML2_SP_SLS: "http://localhost:8080/logout/saml2/slo"
         run: |
