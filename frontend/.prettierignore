@@ -6,8 +6,16 @@ public/vendor/
 public/pdfjs*/
 public/js/thirdParty/
 public/css/cookieconsent.css
-src-tauri/target/
 *.min.*
 *.md
 *.wxs
 src/output.css
+.gradle-home/
+.venv*/
+.venv/
+app/common/build/
+app/core/build/
+app/proprietary/build/
+app/common/bin/
+app/core/bin/
+app/proprietary/bin/

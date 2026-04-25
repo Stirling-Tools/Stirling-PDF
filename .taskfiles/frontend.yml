@@ -5,12 +5,12 @@ tasks:
     desc: "Install dependencies"
     run: once
     cmds:
-      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install{{ end }}'
+      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install || npm install{{ end }}'
     sources:
       - package-lock.json
       - package.json
     status:
-      - test -d node_modules
+      - npm ls --depth=0 --silent
     env:
       CI: '{{ .CI | default "false" }}'
 
@@ -183,13 +183,13 @@ tasks:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - npx prettier --write . --ignore-path frontend/.prettierignore
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - npx prettier --check . --ignore-path frontend/.prettierignore
 
   fix:
     desc: "Auto-fix lint and format"
