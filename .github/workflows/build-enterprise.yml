@@ -52,12 +52,9 @@ jobs:
 
   playwright-e2e-enterprise:
     # Run on PRs only if relevant files changed; always run on push-to-main,
-    # cron, and manual dispatch. Auto-skipped when the secret is missing.
-    if: |
-      secrets.PREMIUM_KEY_ENTERPRISE != '' && (
-        github.event_name != 'pull_request' ||
-        needs.files-changed.outputs.proprietary == 'true'
-      )
+    # cron, and manual dispatch. Fork PRs without the secret will fail at
+    # the compose step (PREMIUM_KEY empty) — that's intentional, not silent.
+    if: github.event_name != 'pull_request' || needs.files-changed.outputs.proprietary == 'true'
     needs: files-changed
     runs-on: ubuntu-latest
     timeout-minutes: 45
