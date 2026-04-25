@@ -242,11 +242,16 @@ jobs:
           (cd testing/compose && docker compose -f docker-compose-keycloak-saml.yml down -v)
 
       # ───────── License-gated feature tests (no IdP needed) ─────────
+      - name: Wipe DB so InitialSecuritySetup re-runs with admin/adminadmin
+        # Earlier phases (OAuth, SAML) create the default admin/stirling user.
+        # InitialSecuritySetup only honours SECURITY_INITIALLOGIN_* when the
+        # admin user doesn't already exist, so the persisted DB has to be
+        # cleared between phases for the feature env vars to take effect.
+        run: |
+          rm -f app/core/configs/stirling-pdf-DB*.mv.db
+          rm -rf app/core/configs/backup
       - name: Boot Stirling-PDF (frontend baked in, premium only)
         env:
-          # Provision admin/adminadmin directly so the feature tests can log in
-          # without going through the live-suite bootstrap (which isn't part
-          # of the enterprise project).
           SECURITY_INITIALLOGIN_USERNAME: admin
           SECURITY_INITIALLOGIN_PASSWORD: adminadmin
           SECURITY_ENABLELOGIN: "true"
