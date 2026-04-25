@@ -72,10 +72,14 @@ test.describe("Live-suite bootstrap", () => {
       page.getByText(/must change your password|set your password/i).first(),
     ).toBeVisible({ timeout: 15_000 });
 
-    const newPasswordInput = page.getByLabel(/^new password$/i);
-    const confirmPasswordInput = page.getByLabel(/confirm new password/i);
-    await newPasswordInput.fill(DEFAULT_TEST_PASSWORD);
-    await confirmPasswordInput.fill(DEFAULT_TEST_PASSWORD);
+    // Mantine's PasswordInput label association doesn't match getByLabel
+    // cleanly across builds — use the placeholder which is stable.
+    await page
+      .getByPlaceholder(/enter new password.*characters/i)
+      .fill(DEFAULT_TEST_PASSWORD);
+    await page
+      .getByPlaceholder(/re-enter new password/i)
+      .fill(DEFAULT_TEST_PASSWORD);
 
     const submitBtn = page.getByRole("button", { name: /change password/i });
     await expect(submitBtn).toBeEnabled();
