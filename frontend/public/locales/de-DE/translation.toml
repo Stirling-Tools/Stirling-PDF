@@ -1294,7 +1294,7 @@ label = "Desktop-Token-Gültigkeitsdauer (Minuten)"
 
 [admin.settings.security.jwt.allowedClockSkewSeconds]
 description = "Toleranz für Zeitabweichung zwischen Client und Server bei der Token-Validierung (Standard: 60 Sekunden)"
-label = "Uhrzeit-Toleranz (Sekunden)"
+label = "Zeitabweichungs-Toleranz (Sekunden)"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Token-Erneuerung innerhalb dieser Anzahl von Minuten nach Ablauflimit zulassen (Standard: 15 Minuten, max. 3 Versuche)"
@@ -2091,11 +2091,11 @@ numbers = "Zahlen/Bereiche: 5, 10-20"
 progressions = "Progressionen: 3n, 4n+1"
 
 [chat.progress]
-analyzing = "Analysiere Ihre Anfrage..."
+analyzing = "Ihre Anfrage wird analysiert..."
 calling_engine = "KI denkt nach..."
 extracting_content = "Inhalt wird aus Ihren Dokumenten extrahiert..."
 processing = "Extrahierter Inhalt wird verarbeitet..."
-thinking = "Denke nach..."
+thinking = "Wird verarbeitet..."
 
 [certSign]
 allSigned = "Alle Teilnehmer haben signiert. Bereit zum Finalisieren."
@@ -3820,7 +3820,7 @@ xmp = "XMPMetadata"
 annotations = "Anmerkungen"
 fonts = "Schriftarten"
 images = "Bilder"
-links = "Verknüpfungen"
+links = "Links"
 multimedia = "Multimedia"
 size = "Größe"
 xobjects = "XObject-Anzahl"
@@ -4313,7 +4313,7 @@ addFiles = "Dateien hinzufügen"
 mobileUpload = "Von Mobilgerät hochladen"
 openFromComputer = "Vom Computer öffnen"
 uploadFromComputer = "Vom Computer hochladen"
-heroSubtitle = "PDF einfügen oder eine vorhandene Datei hinzufügen, um loszulegen."
+heroSubtitle = "PDF ablegen oder eine vorhandene Datei hinzufügen, um loszulegen."
 heroTitle = "Stirling PDF"
 
 [language]
@@ -4909,7 +4909,7 @@ renderMarkdown = "Markdown rendern"
 [viewer.attachments]
 title = "Anhänge"
 searchPlaceholder = "Anhänge durchsuchen"
-noSupport = "Anhangsunterstützung ist für diese Ansicht nicht verfügbar."
+noSupport = "Anhänge werden für diesen Viewer nicht unterstützt."
 noDocument = "Öffnen Sie ein PDF, um dessen Anhänge anzuzeigen."
 loading = "Anhänge werden geladen..."
 empty = "Keine Anhänge in diesem Dokument"
@@ -6733,7 +6733,7 @@ fullscreen = "Vollbild"
 sidebar = "Seitenleiste"
 
 [settings.general.startupView]
-automate = "Automatisieren"
+automate = "Automatisierung"
 read = "Leser"
 tools = "Werkzeuge"
 
@@ -7606,7 +7606,7 @@ invalidParams = "Erforderliche Einstellungen ausfüllen."
 noFiles = "Fügen Sie eine Datei hinzu, um zu beginnen."
 scopeFiles = "Dateien"
 scopeThisFile = "diese Datei"
-selectFilesHint = "Dateien in Aktive Dateien auswählen, um dieses Tool auszuführen"
+selectFilesHint = "Dateien in „Aktive Dateien" auswählen, um dieses Tool auszuführen"
 singleFileScope = "Wird nur angewendet auf: {{fileName}}"
 viewerMode = "Wechseln Sie zum Datei-Editor, um mehrere Dateien auszuwählen."
 
