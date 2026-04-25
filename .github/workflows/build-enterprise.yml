@@ -181,6 +181,29 @@ jobs:
           done
           docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
           exit 1
+      - name: Generate SAML SP certs + fetch Keycloak IdP cert
+        # The .pem/.crt/.key files are gitignored (test-only certs); the
+        # docker-based start-saml-test.sh generates them at runtime, so do
+        # the same in CI before bootRun reads them.
+        working-directory: testing/compose
+        run: |
+          openssl req -x509 -newkey rsa:2048 \
+            -keyout saml-private-key.key \
+            -out saml-public-cert.crt \
+            -days 3650 -nodes \
+            -subj "/CN=stirling-pdf-saml-sp" >/dev/null 2>&1
+          # Fetch Keycloak's SAML signing cert from the realm descriptor
+          CERT_BODY=$(curl -sf http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml/descriptor \
+            | awk 'BEGIN{RS="<[^>]*X509Certificate>|</[^>]*X509Certificate>"} NR==2{gsub(/[[:space:]]+/,""); print; exit}')
+          {
+            echo "-----BEGIN CERTIFICATE-----"
+            echo "$CERT_BODY"
+            echo "-----END CERTIFICATE-----"
+          } > keycloak-saml-cert.pem
+          test -s saml-private-key.key
+          test -s saml-public-cert.crt
+          test -s keycloak-saml-cert.pem
+          echo "✓ SAML certs prepared"
       - name: Boot Stirling-PDF (frontend baked in, SAML env)
         env:
           SECURITY_ENABLELOGIN: "true"
