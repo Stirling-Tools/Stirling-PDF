@@ -12,6 +12,7 @@ public/css/cookieconsent.css
 *.md
 *.wxs
 /**/*.wxs
+src/assets/material-symbols-icons.d.ts
 src/output.css
 .gradle-home/
 .venv*/
