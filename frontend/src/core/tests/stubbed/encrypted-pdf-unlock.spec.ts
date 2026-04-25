@@ -20,6 +20,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { mockAppApis } from "@app/tests/helpers/api-stubs";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
@@ -31,46 +32,6 @@ const FAKE_UNLOCKED_PDF = Buffer.from(
     "xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n" +
     "0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n190\n%%EOF",
 );
-
-async function mockAppApis(page: Page) {
-  await page.route("**/api/v1/info/status", (route) =>
-    route.fulfill({ json: { status: "UP" } }),
-  );
-  await page.route("**/api/v1/config/app-config", (route) =>
-    route.fulfill({
-      json: {
-        enableLogin: false,
-        languages: ["en-GB"],
-        defaultLocale: "en-GB",
-      },
-    }),
-  );
-  await page.route("**/api/v1/auth/me", (route) =>
-    route.fulfill({
-      json: {
-        id: 1,
-        username: "testuser",
-        email: "test@example.com",
-        roles: ["ROLE_USER"],
-      },
-    }),
-  );
-  await page.route("**/api/v1/config/endpoints-availability", (route) =>
-    route.fulfill({ json: {} }),
-  );
-  await page.route("**/api/v1/config/endpoint-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-  await page.route("**/api/v1/config/group-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-  await page.route("**/api/v1/ui-data/footer-info", (route) =>
-    route.fulfill({ json: {} }),
-  );
-  await page.route("**/api/v1/proprietary/**", (route) =>
-    route.fulfill({ json: {} }),
-  );
-}
 
 function mockRemovePasswordSuccess(page: Page) {
   return page.route("**/api/v1/security/remove-password", (route) =>

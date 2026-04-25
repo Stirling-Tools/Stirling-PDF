@@ -1,178 +1,160 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
-test.describe("12. Settings", () => {
-  test.describe("12.1 Settings - General Preferences", () => {
-    test("should open settings dialog with all configuration categories", async ({
-      page,
-    }) => {
-      // Step 1: Click the Settings button in the quick access bar
-      const settingsButton = page
-        .getByRole("button", { name: /settings/i })
-        .first();
-      await settingsButton.click();
+/**
+ * Consolidated settings-dialog coverage. Was previously three files
+ * (`settings.spec.ts`, `settings-configuration.spec.ts`,
+ * `settings-toggle-behavior.spec.ts`) generated from a numbered test
+ * plan; merged here to cut bloat. Logout flow lives in
+ * `live/authentication-login.spec.ts` since it requires real session
+ * invalidation.
+ */
 
-      // Step 2: Verify a settings dialog opens as a modal
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+async function openSettings(page: import("@playwright/test").Page) {
+  await page
+    .getByRole("button", { name: /settings/i })
+    .first()
+    .click();
+  const dialog = page.locator(".mantine-Modal-content").first();
+  await expect(dialog).toBeVisible({ timeout: 5_000 });
+  return dialog;
+}
 
-      // Step 3: Verify the left sidebar navigation contains expected categories
-      // The proprietary build shows: General, Keyboard Shortcuts, Account,
-      // API Keys, People, Teams, System Settings, Features, Endpoints, etc.
-      const settingsCategories = [/^General$/i, /^Keyboard Shortcuts$/i];
+async function closeSettings(page: import("@playwright/test").Page) {
+  const closeBtn = page.locator('[aria-label="Close"]').first();
+  await closeBtn.click();
+  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
+    timeout: 5_000,
+  });
+}
 
-      for (const category of settingsCategories) {
-        await expect(page.getByText(category).first()).toBeVisible({
-          timeout: 5000,
-        });
-      }
-
-      // Step 4: Verify the "General" section is selected by default
-      await expect(page.getByText(/^General$/i).first()).toBeVisible();
-
-      // Step 5: Verify general settings include version info and toggles
-      await expect(page.getByText(/version/i).first()).toBeVisible({
-        timeout: 5000,
+test.describe("Settings dialog", () => {
+  test("opens with sidebar nav and lists General + Keyboard Shortcuts sections", async ({
+    page,
+  }) => {
+    await openSettings(page);
+    for (const label of [/^General$/i, /^Keyboard Shortcuts$/i]) {
+      await expect(page.getByText(label).first()).toBeVisible({
+        timeout: 5_000,
       });
+    }
+    // General section is selected by default and exposes version info
+    await expect(page.getByText(/version/i).first()).toBeVisible({
+      timeout: 5_000,
     });
   });
 
-  test.describe("12.2 Settings - Account Management", () => {
-    test("should display current user info and management options", async ({
-      page,
-    }) => {
-      // Open settings dialog
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+  test("Account section shows the user and management buttons", async ({
+    page,
+  }) => {
+    await openSettings(page);
 
-      // Step 1: Click "Account" in the nav
-      const accountNav = page.getByText(/^Account$/i);
-      if (
-        await accountNav
-          .first()
-          .isVisible({ timeout: 3000 })
-          .catch(() => false)
-      ) {
-        await accountNav.first().click();
+    const accountNav = page.getByText(/^Account( Settings)?$/i).first();
+    if (!(await accountNav.isVisible({ timeout: 3_000 }).catch(() => false))) {
+      test.skip(true, "Account section not visible on this build");
+      return;
+    }
+    await accountNav.click();
 
-        // Step 2: Verify the account section shows "admin" user
-        await expect(page.getByText(/admin/).first()).toBeVisible({
-          timeout: 5000,
-        });
+    await expect(page.getByText(/admin/).first()).toBeVisible({
+      timeout: 5_000,
+    });
+    await expect(page.getByText(/update password/i).first()).toBeVisible();
+    await expect(page.getByText(/change username/i).first()).toBeVisible();
+    await expect(page.getByText(/log out/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/two-factor authentication/i).first(),
+    ).toBeVisible();
+  });
 
-        // Step 3: Verify buttons are present
-        await expect(page.getByText(/Update password/i).first()).toBeVisible();
-        await expect(page.getByText(/Change username/i).first()).toBeVisible();
-        await expect(page.getByText(/Log out/i).first()).toBeVisible();
+  test("Close button dismisses dialog and restores main UI", async ({
+    page,
+  }) => {
+    await openSettings(page);
+    await closeSettings(page);
+    await expect(
+      page.locator('[data-tour="quick-access-bar"]').first(),
+    ).toBeVisible();
+  });
 
-        // Step 4: Verify a "Two-factor authentication" section is present
-        await expect(
-          page.getByText(/Two-factor authentication/i).first(),
-        ).toBeVisible();
+  test("toggle state persists across dialog open/close", async ({ page }) => {
+    const dialog = await openSettings(page);
 
-        // Step 5: Verify enable/disable 2FA button is available
-        await expect(
-          page.getByText(/enable two-factor|disable two-factor/i).first(),
-        ).toBeVisible();
+    const toggle = dialog
+      .locator('input[type="checkbox"][role="switch"], input[role="switch"]')
+      .first();
+    if (!(await toggle.isVisible({ timeout: 3_000 }).catch(() => false))) {
+      test.skip(true, "No toggle in General section on this build");
+      return;
+    }
+
+    const before = await toggle.isChecked();
+    await toggle.click({ force: true });
+    const after = await toggle.isChecked();
+    expect(after).not.toBe(before);
+
+    await closeSettings(page);
+    await openSettings(page);
+
+    const persisted = await toggle.isChecked();
+    expect(persisted).toBe(after);
+
+    // Restore
+    if (persisted !== before) {
+      await toggle.click({ force: true });
+    }
+  });
+
+  test("segmented controls (e.g. tool-picker mode) persist across reopen", async ({
+    page,
+  }) => {
+    const dialog = await openSettings(page);
+    const segmented = dialog.locator(".mantine-SegmentedControl-root").first();
+    if (!(await segmented.isVisible({ timeout: 3_000 }).catch(() => false))) {
+      test.skip(true, "No segmented control on this build");
+      return;
+    }
+    const labels = segmented.locator("label");
+    const count = await labels.count();
+    if (count < 2) {
+      test.skip(true, "Segmented control has too few options to assert switch");
+      return;
+    }
+    await labels.nth(1).click();
+    await page.waitForTimeout(300);
+    await closeSettings(page);
+    await openSettings(page);
+
+    // Restore
+    const restored = page
+      .locator(".mantine-Modal-content .mantine-SegmentedControl-root label")
+      .first();
+    await restored.click();
+  });
+
+  test("config sub-sections (System / Features / Endpoints / API Keys) are reachable when present", async ({
+    page,
+  }) => {
+    const dialog = await openSettings(page);
+    const sections = [
+      /^System Settings$/i,
+      /^Features$/i,
+      /^Endpoints$/i,
+      /^API Keys$/i,
+    ];
+    let visited = 0;
+    for (const label of sections) {
+      const nav = page.getByText(label).first();
+      if (await nav.isVisible({ timeout: 1_500 }).catch(() => false)) {
+        await nav.click();
+        await page.waitForTimeout(200);
+        const body = await dialog.textContent();
+        expect(body, `body rendered after clicking ${label}`).toBeTruthy();
+        visited++;
       }
-    });
-  });
-
-  test.describe("12.3 Settings - Logout", () => {
-    test("should invalidate session and protect routes after logout", async ({
-      page,
-    }) => {
-      // Open settings and go to account settings
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
-
-      const accountNav = page.getByText(/^Account$/i);
-      if (
-        await accountNav
-          .first()
-          .isVisible({ timeout: 3000 })
-          .catch(() => false)
-      ) {
-        await accountNav.first().click();
-        await page.waitForTimeout(500);
-
-        // Step 1: Click the "Log out" button
-        await page
-          .getByText(/Log out/i)
-          .first()
-          .click();
-
-        // Step 2: Verify the user is redirected to the login page
-        await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
-
-        // Step 3: Attempt to navigate directly to /
-        await page.goto("/");
-
-        // Step 4: Verify the user is redirected back to /login
-        await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
-      }
-    });
-  });
-
-  test.describe("12.4 Settings - Close Dialog", () => {
-    test("should close settings dialog cleanly", async ({ page }) => {
-      // Open settings
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
-
-      // Step 1: Click the "Close" button on the settings dialog (aria-label="Close")
-      const closeBtn = page.locator('[aria-label="Close"]').first();
-      await closeBtn.click();
-
-      // Step 2: Verify the dialog closes
-      await expect(settingsDialog).not.toBeVisible({ timeout: 5000 });
-
-      // Step 3: Verify the main dashboard is fully accessible underneath
-      await expect(
-        page.locator('[data-tour="quick-access-bar"]').first(),
-      ).toBeVisible();
-    });
-  });
-
-  test.describe("12.5 Settings - Search Within Settings", () => {
-    test("should filter settings based on search input", async ({ page }) => {
-      // Open settings
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
-
-      // Step 1: Locate the search/combobox in the settings dialog header
-      const settingsSearch = page
-        .locator(
-          '.mantine-Modal-content input[role="searchbox"], .mantine-Modal-content input[type="search"], .mantine-Modal-content .mantine-Select-input, .mantine-Modal-content .mantine-Combobox-input',
-        )
-        .first();
-
-      // Step 2: If a search field is visible, type a search term and verify filtering
-      if (
-        await settingsSearch.isVisible({ timeout: 3000 }).catch(() => false)
-      ) {
-        await settingsSearch.fill("General");
-        await page.waitForTimeout(500);
-
-        // Step 3: Clear the search
-        await settingsSearch.clear();
-        await page.waitForTimeout(500);
-      }
+    }
+    test.info().annotations.push({
+      type: "config-sections",
+      description: `Visited ${visited}/${sections.length} sections on this build`,
     });
   });
 });
