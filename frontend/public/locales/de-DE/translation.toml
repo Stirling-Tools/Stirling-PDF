@@ -7606,7 +7606,7 @@ invalidParams = "Erforderliche Einstellungen ausfüllen."
 noFiles = "Fügen Sie eine Datei hinzu, um zu beginnen."
 scopeFiles = "Dateien"
 scopeThisFile = "diese Datei"
-selectFilesHint = "Dateien in „Aktive Dateien" auswählen, um dieses Tool auszuführen"
+selectFilesHint = "Dateien in „Aktive Dateien“ auswählen, um dieses Tool auszuführen"
 singleFileScope = "Wird nur angewendet auf: {{fileName}}"
 viewerMode = "Wechseln Sie zum Datei-Editor, um mehrere Dateien auszuwählen."
 
