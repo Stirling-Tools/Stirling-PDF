@@ -176,7 +176,7 @@ jobs:
         working-directory: testing/compose
         run: |
           for i in $(seq 1 60); do
-            curl -fsS http://kubernetes.docker.internal:9080/realms/stirling-saml >/dev/null 2>&1 && exit 0
+            curl -fsS http://localhost:9080/realms/stirling-saml >/dev/null 2>&1 && exit 0
             sleep 5
           done
           docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
@@ -193,7 +193,7 @@ jobs:
             -days 3650 -nodes \
             -subj "/CN=stirling-pdf-saml-sp" >/dev/null 2>&1
           # Fetch Keycloak's SAML signing cert from the realm descriptor
-          CERT_BODY=$(curl -sf http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml/descriptor \
+          CERT_BODY=$(curl -sf http://localhost:9080/realms/stirling-saml/protocol/saml/descriptor \
             | awk 'BEGIN{RS="<[^>]*X509Certificate>|</[^>]*X509Certificate>"} NR==2{gsub(/[[:space:]]+/,""); print; exit}')
           {
             echo "-----BEGIN CERTIFICATE-----"
@@ -212,11 +212,11 @@ jobs:
           SECURITY_SAML2_AUTOCREATEUSER: "true"
           SECURITY_SAML2_PROVIDER: "keycloak"
           SECURITY_SAML2_REGISTRATIONID: "keycloak"
-          SECURITY_SAML2_IDP_ISSUER: "http://kubernetes.docker.internal:9080/realms/stirling-saml"
-          SECURITY_SAML2_IDP_ENTITYID: "http://kubernetes.docker.internal:9080/realms/stirling-saml"
-          SECURITY_SAML2_IDP_METADATAURI: "http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml/descriptor"
-          SECURITY_SAML2_IDPSINGLELOGINURL: "http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml"
-          SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDP_ISSUER: "http://localhost:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_ENTITYID: "http://localhost:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_METADATAURI: "http://localhost:9080/realms/stirling-saml/protocol/saml/descriptor"
+          SECURITY_SAML2_IDPSINGLELOGINURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
           SECURITY_SAML2_IDP_CERT: "${{ github.workspace }}/testing/compose/keycloak-saml-cert.pem"
           SECURITY_SAML2_PRIVATEKEY: "${{ github.workspace }}/testing/compose/saml-private-key.key"
           SECURITY_SAML2_SP_CERT: "${{ github.workspace }}/testing/compose/saml-public-cert.crt"
