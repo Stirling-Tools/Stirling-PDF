@@ -21,6 +21,7 @@ const IGNORED_FILE_PATTERNS = [
 const IGNORED_KEYS = new Set<string>([
   // If the script has found a false-positive that shouldn't be in the translations, include it here
 ]);
+const LIKELY_TRANSLATION_USAGE_RE = /(?:^|[^\w$])t\s*\(|\.t\s*\(|\bi18nKey\b/;
 
 type FoundKey = {
   key: string;
@@ -90,6 +91,10 @@ const getScriptKind = (file: string): ts.ScriptKind => {
  */
 const extractKeys = (file: string): FoundKey[] => {
   const code = fs.readFileSync(file, "utf8");
+  if (!LIKELY_TRANSLATION_USAGE_RE.test(code)) {
+    return [];
+  }
+
   const sourceFile = ts.createSourceFile(
     file,
     code,
