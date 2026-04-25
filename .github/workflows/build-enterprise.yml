@@ -62,10 +62,6 @@ jobs:
       PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
       PREMIUM_ENABLED: "true"
       SYSTEM_ENABLEANALYTICS: "false"
-      # The compose stacks default KEYCLOAK_HOST to kubernetes.docker.internal,
-      # which only resolves on Docker Desktop. Override to localhost so the
-      # Keycloak-issued redirect URLs are reachable from the GHA runner.
-      KEYCLOAK_HOST: localhost
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -88,6 +84,14 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
+
+      - name: Resolve kubernetes.docker.internal to localhost
+        # The compose stacks set KC_HOSTNAME=kubernetes.docker.internal so
+        # Keycloak issues redirect URIs against that host. Docker Desktop
+        # auto-resolves it; GHA runners don't. Map it to 127.0.0.1 so the
+        # browser-driven OAuth flow lands back on Stirling-PDF correctly.
+        run: |
+          echo "127.0.0.1 kubernetes.docker.internal" | sudo tee -a /etc/hosts
 
       # Helper function used by all phases — boots `:stirling-pdf:bootRun`
       # with the React frontend baked in (-PbuildWithFrontend=true) so the
@@ -141,7 +145,10 @@ jobs:
           SECURITY_LOGINMETHOD: "all"
           SECURITY_OAUTH2_ENABLED: "true"
           SECURITY_OAUTH2_AUTOCREATEUSER: "true"
-          SECURITY_OAUTH2_CLIENT_KEYCLOAK_ISSUER: "http://localhost:9080/realms/stirling-oauth"
+          # Keycloak issues redirect URIs against KC_HOSTNAME, which the
+          # compose default sets to kubernetes.docker.internal. Match here
+          # (resolves to localhost via /etc/hosts mapping above).
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_ISSUER: "http://kubernetes.docker.internal:9080/realms/stirling-oauth"
           SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTID: "stirling-pdf-client"
           SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTSECRET: "test-client-secret-change-in-production"
           SECURITY_OAUTH2_CLIENT_KEYCLOAK_USEASUSERNAME: "email"
@@ -169,7 +176,7 @@ jobs:
         working-directory: testing/compose
         run: |
           for i in $(seq 1 60); do
-            curl -fsS http://localhost:9080/realms/stirling-saml >/dev/null 2>&1 && exit 0
+            curl -fsS http://kubernetes.docker.internal:9080/realms/stirling-saml >/dev/null 2>&1 && exit 0
             sleep 5
           done
           docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
@@ -182,11 +189,11 @@ jobs:
           SECURITY_SAML2_AUTOCREATEUSER: "true"
           SECURITY_SAML2_PROVIDER: "keycloak"
           SECURITY_SAML2_REGISTRATIONID: "keycloak"
-          SECURITY_SAML2_IDP_ISSUER: "http://localhost:9080/realms/stirling-saml"
-          SECURITY_SAML2_IDP_ENTITYID: "http://localhost:9080/realms/stirling-saml"
-          SECURITY_SAML2_IDP_METADATAURI: "http://localhost:9080/realms/stirling-saml/protocol/saml/descriptor"
-          SECURITY_SAML2_IDPSINGLELOGINURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
-          SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDP_ISSUER: "http://kubernetes.docker.internal:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_ENTITYID: "http://kubernetes.docker.internal:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_METADATAURI: "http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml/descriptor"
+          SECURITY_SAML2_IDPSINGLELOGINURL: "http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://kubernetes.docker.internal:9080/realms/stirling-saml/protocol/saml"
           SECURITY_SAML2_IDP_CERT: "${{ github.workspace }}/testing/compose/keycloak-saml-cert.pem"
           SECURITY_SAML2_PRIVATEKEY: "${{ github.workspace }}/testing/compose/saml-private-key.key"
           SECURITY_SAML2_SP_CERT: "${{ github.workspace }}/testing/compose/saml-public-cert.crt"
