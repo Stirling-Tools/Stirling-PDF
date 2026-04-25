@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { ensureCookieConsent } from "@app/tests/helpers/login";
+import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
+import {
+  uploadFiles,
+  runToolAndWaitForReview,
+} from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
@@ -19,15 +24,7 @@ const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
  */
 test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      try {
-        sessionStorage.setItem("onboarding::bypass-all", "true");
-        localStorage.setItem("onboarding::completed", "true");
-        localStorage.setItem("onboarding::tours-tooltip-shown", "true");
-      } catch {
-        /* ignore */
-      }
-    });
+    await bypassOnboarding(page);
     await ensureCookieConsent(page);
   });
 
@@ -75,19 +72,7 @@ test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
     // ── 3. Real split tool run ───────────────────────────────
     await page.goto("/split");
     await page.waitForLoadState("domcontentloaded");
-
-    // Upload before selecting a method (cards/options only render
-    // after the workbench has a file).
-    await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
-    await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10_000,
-    });
+    await uploadFiles(page, SAMPLE_PDF);
 
     // Pick page-numbers split method
     await page
@@ -101,14 +86,6 @@ test.describe("Enterprise SAML (Keycloak) — full SSO flow", () => {
       await rangesInput.fill("1");
     }
 
-    const runBtn = page.locator('[data-tour="run-button"]');
-    await expect(runBtn).toBeEnabled({ timeout: 15_000 });
-    await runBtn.click();
-
-    // Result lands in the review panel — visible review = backend processed
-    // the request successfully under the SAML user's session.
-    await expect(
-      page.locator('[data-testid="review-panel-container"]'),
-    ).toBeVisible({ timeout: 60_000 });
+    await runToolAndWaitForReview(page);
   });
 });

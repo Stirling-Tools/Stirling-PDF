@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
@@ -21,17 +22,7 @@ test.describe("Add Page Numbers tool — config validation", () => {
     await expect(runBtn).toBeVisible({ timeout: 5_000 });
     await expect(runBtn).toBeDisabled();
 
-    // Upload via the files modal
-    await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
-    await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10_000,
-    });
+    await uploadFiles(page, SAMPLE_PDF);
 
     // After upload the run button should enable (default position selected)
     await expect(runBtn).toBeEnabled({ timeout: 5_000 });

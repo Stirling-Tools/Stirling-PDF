@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
@@ -28,17 +29,7 @@ test.describe("CertSign tool — wizard surface", () => {
 
     await page.goto("/cert-sign");
     await page.waitForLoadState("domcontentloaded");
-
-    await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
-    await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10_000,
-    });
+    await uploadFiles(page, SAMPLE_PDF);
 
     await expect(page).toHaveURL(/\/cert-sign/);
     await expect(page.locator("body").first()).not.toBeEmpty();

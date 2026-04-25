@@ -1,5 +1,10 @@
 import { test, expect } from "@app/tests/helpers/test-base";
 import { loginAndSetup } from "@app/tests/helpers/login";
+import {
+  uploadFiles,
+  switchToEditorIfViewerMode,
+  runToolAndWaitForReview,
+} from "@app/tests/helpers/ui-helpers";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -53,46 +58,9 @@ function testingFile(filename: string): string {
   );
 }
 
-// Helper: upload file(s) via the hidden file input on a tool page
-async function uploadFiles(
-  page: import("@playwright/test").Page,
-  filePaths: string[],
-) {
-  const fileInput = page
-    .locator('[data-testid="file-input"], input[type="file"]')
-    .first();
-  await fileInput.setInputFiles(filePaths);
-
-  // Wait for files to be registered - look for the "Selected" confirmation text
-  // The UI shows "✓ Selected: filename.pdf" when files are loaded
-  await expect(page.getByText(/selected/i).first()).toBeVisible({
-    timeout: 15000,
-  });
-}
-
-// Helper: click the execute/run button and wait for results.
-// Some tools (e.g. Merge) land in viewer mode after upload and require
-// switching to file editor before the run button becomes enabled. If the
-// viewer-mode hint button is visible, click it first.
-async function executeAndWaitForResults(
-  page: import("@playwright/test").Page,
-  timeout = 60000,
-) {
-  const goToFileEditor = page.getByRole("button", {
-    name: /go to file editor/i,
-  });
-  if (await goToFileEditor.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await goToFileEditor.click();
-  }
-
-  const runButton = page.locator('[data-tour="run-button"]');
-  await expect(runButton).toBeEnabled({ timeout: 10000 });
-  await runButton.click();
-
-  // Wait for the review/results panel to appear
-  await expect(
-    page.locator('[data-testid="review-panel-container"]'),
-  ).toBeVisible({ timeout });
+async function executeAndWaitForResults(page: import("@playwright/test").Page) {
+  await switchToEditorIfViewerMode(page);
+  await runToolAndWaitForReview(page);
 }
 
 test.describe("E2E PDF Operations", () => {

@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { ensureCookieConsent } from "@app/tests/helpers/login";
+import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 /**
  * License-gated feature surface validation. Drives the actual UI rather
@@ -12,14 +14,7 @@ const ADMIN = "admin";
 const PASSWORD = "adminadmin";
 
 async function uiLogin(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    try {
-      sessionStorage.setItem("onboarding::bypass-all", "true");
-      localStorage.setItem("onboarding::completed", "true");
-    } catch {
-      /* ignore */
-    }
-  });
+  await bypassOnboarding(page);
   await ensureCookieConsent(page);
   await page.goto("/login", { waitUntil: "domcontentloaded" });
   await page.locator("#email").fill(ADMIN);
@@ -29,14 +24,6 @@ async function uiLogin(page: import("@playwright/test").Page) {
   await expect(
     page.getByRole("link", { name: /^Tools$/i }).first(),
   ).toBeVisible({ timeout: 15_000 });
-}
-
-async function openSettings(page: import("@playwright/test").Page) {
-  await page.locator('[data-testid="config-button"]').first().click();
-  // Settings dialog renders a side nav with sections; wait for it
-  await expect(page.getByText(/General$/i).first()).toBeVisible({
-    timeout: 10_000,
-  });
 }
 
 test.describe("Enterprise license — admin settings UI", () => {

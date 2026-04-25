@@ -1,5 +1,11 @@
-import { test, expect } from "@app/tests/helpers/test-base";
+import { test } from "@app/tests/helpers/test-base";
 import { loginAndSetup } from "@app/tests/helpers/login";
+import {
+  switchToEditorIfViewerMode,
+  runToolAndWaitForReview,
+  waitForModalOpen,
+  waitForModalClose,
+} from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
@@ -27,15 +33,12 @@ test.describe("Encrypted PDF: unlock then merge", () => {
     await page.waitForLoadState("domcontentloaded");
 
     await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
+    await waitForModalOpen(page);
     await page
       .locator('[data-testid="file-input"]')
       .setInputFiles([ENCRYPTED_PDF, SAMPLE_PDF]);
 
-    // Encrypted unlock modal appears
+    // Encrypted unlock modal appears (the files modal may still be closing)
     const passwordInput = page.getByPlaceholder(/password/i).first();
     if (
       !(await passwordInput.isVisible({ timeout: 10_000 }).catch(() => false))
@@ -52,28 +55,8 @@ test.describe("Encrypted PDF: unlock then merge", () => {
       .first()
       .click();
 
-    // After unlock the modal closes and the workbench has both files
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 15_000,
-    });
-
-    // Switch out of viewer mode if needed
-    const goToEditor = page.getByRole("button", {
-      name: /go to file editor/i,
-    });
-    if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-      await goToEditor.click();
-    }
-
-    const runBtn = page.locator('[data-tour="run-button"]');
-    await expect(runBtn).toBeEnabled({ timeout: 15_000 });
-
-    const [download] = await Promise.all([
-      page.waitForEvent("download", { timeout: 45_000 }),
-      runBtn.click(),
-    ]);
-
-    expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
+    await waitForModalClose(page, 15_000);
+    await switchToEditorIfViewerMode(page);
+    await runToolAndWaitForReview(page);
   });
 });

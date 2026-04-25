@@ -217,6 +217,26 @@ export async function skipOnboarding(page: Page): Promise<void> {
 }
 
 /**
+ * Stronger variant of {@link skipOnboarding}: also sets the session
+ * `onboarding::bypass-all` flag honoured by `useBypassOnboarding`. This
+ * suppresses the analytics opt-in modal, MFA setup prompt, and any other
+ * onboarding step the orchestrator may try to render. Use this in specs
+ * where SSO callbacks land on a page that would otherwise show overlays
+ * intercepting clicks.
+ */
+export async function bypassOnboarding(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    try {
+      sessionStorage.setItem("onboarding::bypass-all", "true");
+      localStorage.setItem("onboarding::completed", "true");
+      localStorage.setItem("onboarding::tours-tooltip-shown", "true");
+    } catch {
+      /* sessionStorage may be unavailable in some contexts — ignore */
+    }
+  });
+}
+
+/**
  * Seed the cookie-consent cookie so the banner (#cc-main) never renders.
  * The banner overlays the viewport and intercepts clicks on firefox/webkit.
  */

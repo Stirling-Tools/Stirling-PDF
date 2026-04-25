@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
@@ -18,17 +19,7 @@ test.describe("Unsaved changes navigation guard", () => {
   }) => {
     await page.goto("/merge");
     await page.waitForLoadState("domcontentloaded");
-
-    await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
-    await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10_000,
-    });
+    await uploadFiles(page, SAMPLE_PDF);
 
     // Triggering a tool-level navigation while files are loaded should
     // either prompt or clear-and-navigate cleanly. A regression that

@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { ensureCookieConsent } from "@app/tests/helpers/login";
+import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
+import {
+  uploadFiles,
+  switchToEditorIfViewerMode,
+  runToolAndWaitForReview,
+} from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
 const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
@@ -22,19 +28,7 @@ const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
  */
 test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
   test.beforeEach(async ({ page }) => {
-    // Pre-set the bypassOnboarding flag so welcome/analytics modals
-    // never render and intercept tool clicks. The orchestrator reads
-    // sessionStorage on every render, so this needs to fire before
-    // every navigation in the test.
-    await page.addInitScript(() => {
-      try {
-        sessionStorage.setItem("onboarding::bypass-all", "true");
-        localStorage.setItem("onboarding::completed", "true");
-        localStorage.setItem("onboarding::tours-tooltip-shown", "true");
-      } catch {
-        /* ignore — quota etc */
-      }
-    });
+    await bypassOnboarding(page);
     await ensureCookieConsent(page);
   });
 
@@ -81,34 +75,8 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
     // ── 3. Real merge tool run ────────────────────────────────
     await page.goto("/merge");
     await page.waitForLoadState("domcontentloaded");
-
-    await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
-    await page
-      .locator('[data-testid="file-input"]')
-      .setInputFiles([SAMPLE_PDF, SAMPLE_PDF]);
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10_000,
-    });
-
-    const goToEditor = page.getByRole("button", {
-      name: /go to file editor/i,
-    });
-    if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-      await goToEditor.click();
-    }
-
-    const runBtn = page.locator('[data-tour="run-button"]');
-    await expect(runBtn).toBeEnabled({ timeout: 15_000 });
-    await runBtn.click();
-
-    // Merge result lands in the review panel
-    await expect(
-      page.locator('[data-testid="review-panel-container"]'),
-    ).toBeVisible({ timeout: 60_000 });
+    await uploadFiles(page, [SAMPLE_PDF, SAMPLE_PDF]);
+    await switchToEditorIfViewerMode(page);
+    await runToolAndWaitForReview(page);
   });
 });

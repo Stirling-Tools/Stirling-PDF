@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { openSettings, closeSettings } from "@app/tests/helpers/ui-helpers";
 
 /**
  * Consolidated settings-dialog coverage. Was previously three files
@@ -8,24 +9,6 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
  * `live/authentication-login.spec.ts` since it requires real session
  * invalidation.
  */
-
-async function openSettings(page: import("@playwright/test").Page) {
-  await page
-    .getByRole("button", { name: /settings/i })
-    .first()
-    .click();
-  const dialog = page.locator(".mantine-Modal-content").first();
-  await expect(dialog).toBeVisible({ timeout: 5_000 });
-  return dialog;
-}
-
-async function closeSettings(page: import("@playwright/test").Page) {
-  const closeBtn = page.locator('[aria-label="Close"]').first();
-  await closeBtn.click();
-  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
-    timeout: 5_000,
-  });
-}
 
 test.describe("Settings dialog", () => {
   test("opens with sidebar nav and lists General + Keyboard Shortcuts sections", async ({
