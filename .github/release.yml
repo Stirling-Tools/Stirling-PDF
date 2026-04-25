@@ -1,20 +1,3 @@
-# Rules for generating release notes via GitHub's auto-generated changelog.
-# Docs: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
-#
-# Notes for maintainers:
-# - Labels are applied by the auto-labeler (see .github/labeler-config-srvaroa.yml).
-# - GitHub assigns a PR to the FIRST matching category (top-down). Order matters.
-# - Stack/location labels (Java, Front End, Back End, Tauri, API, Bugfix location labels,
-#   etc.) describe WHERE code lives, not WHAT changed, so they are intentionally NOT used
-#   to categorize entries - otherwise almost every PR collapses into a single bucket.
-# - Significance comes from conventional-commit labels (enhancement, Bugfix, perf,
-#   refactor, chore, ...) or the manual `break-change` label on PRs.
-# - Changes limited to the `engine/` folder are excluded from public release notes
-#   via the `engine` label (applied by the labeler based on file paths).
-#   NOTE: the engine is not currently live / shipped to end users, so surfacing
-#   its changes in release notes would be noise. Remove the `engine` entry from
-#   the exclude list once the engine ships and its changes are user-facing.
-
 changelog:
   exclude:
     labels:
@@ -28,57 +11,36 @@ changelog:
       labels:
         - break-change
 
-    - title: New Features & Enhancements
-      labels:
-        - enhancement
-
     - title: Bug Fixes
       labels:
         - Bugfix
         - Bug
 
-    - title: Performance Improvements
+    - title: Enhancements
       labels:
-        - perf
+        - enhancement
+        - Java
+        - Front End
+        - Back End
+        - Tauri
 
-    - title: Security
+    - title: Minor Enhancements
       labels:
-        - Security
-
-    - title: Refactoring
-      labels:
+        - chore
+        - style
         - refactor
-
-    - title: Documentation
-      labels:
-        - Documentation
-
-    - title: Translation Changes
-      labels:
-        - Translation
 
     - title: Docker Updates
       labels:
         - Docker
 
-    - title: Dependencies
+    - title: Translation Changes
       labels:
-        - dependencies
+        - Translation
 
-    - title: Minor Changes
-      labels:
-        - chore
-        - style
-        - revert
-
-    - title: Development & CI
+    - title: Development Tools
       labels:
         - Devtools
-        - ci
-        - build
-        - Github
-        - Gradle
-        - Test
 
     - title: Other Changes
       labels:
