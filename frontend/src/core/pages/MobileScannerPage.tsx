@@ -20,14 +20,9 @@ import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
 import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import { loadJscanify } from "@app/utils/loadJscanify";
 
-// jscanify is loaded via script tag in index.html as a global
-declare global {
-  interface Window {
-    jscanify: any;
-    cv: any;
-  }
-}
+// window.cv and window.jscanify are declared as globals in loadJscanify.ts
 
 /**
  * MobileScannerPage
@@ -136,69 +131,40 @@ export default function MobileScannerPage() {
     validateSession();
   }, [sessionId, t]);
 
-  // Initialize jscanify scanner and wait for OpenCV (loaded via script tags in index.html)
+  // Dynamically load OpenCV.js + jscanify on demand. Previously these were
+  // <script> tags in index.html, which meant ~2.8 MB of opencv.js and ~630ms
+  // of main-thread script evaluation on every page load even for users who
+  // never open the scanner.
   useEffect(() => {
-    let retryCount = 0;
-    const MAX_RETRIES = 50; // 5 seconds max wait
+    let cancelled = false;
 
-    const initScanner = () => {
-      // Check if both OpenCV and jscanify are loaded
-      if (!(window as any).cv || !(window as any).cv.Mat) {
-        retryCount++;
-        if (retryCount < MAX_RETRIES) {
-          if (retryCount % 10 === 1) {
-            setLoadingStatus(
-              `Loading OpenCV... (${retryCount}/${MAX_RETRIES})`,
-            );
-            console.log(
-              `[${retryCount}/${MAX_RETRIES}] Waiting for OpenCV to load...`,
-            );
-          }
-          setTimeout(initScanner, 100);
-        } else {
-          const error =
-            "OpenCV failed to load after 5 seconds. Check that /vendor/jscanify/opencv.js is accessible.";
-          setLoadingStatus("OpenCV load failed ✗");
-          console.error(error);
+    loadJscanify({
+      onStatus: (status) => {
+        if (!cancelled) setLoadingStatus(status);
+      },
+    })
+      .then(() => {
+        if (cancelled) return;
+        try {
+          scannerRef.current = new window.jscanify!();
+          setOpenCvReady(true);
+          console.log("✓ jscanify initialized with OpenCV");
+        } catch (err) {
+          setLoadingStatus("jscanify init failed ✗");
+          console.error("Failed to initialize jscanify:", err);
         }
-        return;
-      }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadingStatus(
+          `Scanner library failed to load ✗: ${(err as Error).message}`,
+        );
+        console.error("Failed to load jscanify:", err);
+      });
 
-      if (!window.jscanify) {
-        retryCount++;
-        if (retryCount < MAX_RETRIES) {
-          if (retryCount % 10 === 1) {
-            setLoadingStatus(
-              `Loading jscanify... (${retryCount}/${MAX_RETRIES})`,
-            );
-            console.log(
-              `[${retryCount}/${MAX_RETRIES}] Waiting for jscanify to load...`,
-            );
-          }
-          setTimeout(initScanner, 100);
-        } else {
-          const error =
-            "jscanify failed to load after 5 seconds. Check that /vendor/jscanify/jscanify.js is accessible.";
-          setLoadingStatus("jscanify load failed ✗");
-          console.error(error);
-        }
-        return;
-      }
-
-      try {
-        scannerRef.current = new window.jscanify();
-        setOpenCvReady(true);
-        // Don't set status here - let camera/detection effects control status from now on
-        console.log("✓ jscanify initialized with OpenCV");
-      } catch (err) {
-        setLoadingStatus("jscanify init failed ✗");
-        console.error("Failed to initialize jscanify:", err);
-      }
+    return () => {
+      cancelled = true;
     };
-
-    // Start initialization
-    setLoadingStatus("Loading OpenCV...");
-    initScanner();
   }, []);
 
   // Initialize camera
