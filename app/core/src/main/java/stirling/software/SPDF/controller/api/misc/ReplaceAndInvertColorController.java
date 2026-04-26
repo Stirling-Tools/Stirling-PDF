@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -41,7 +40,7 @@ public class ReplaceAndInvertColorController {
             description =
                     "This endpoint accepts a PDF file and provides options to invert all colors, replace"
                             + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> replaceAndInvertColor(
+    public ResponseEntity<byte[]> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 
         InputStreamResource resource =
