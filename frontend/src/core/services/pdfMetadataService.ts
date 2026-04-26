@@ -119,36 +119,74 @@ function decodePdfHexString(raw: string): string {
   return result;
 }
 
+function matchBytesAt(
+  bytes: Uint8Array,
+  pattern: Uint8Array,
+  pos: number,
+): boolean {
+  if (pos + pattern.length > bytes.length) return false;
+  for (let i = 0; i < pattern.length; i++) {
+    if (bytes[pos + i] !== pattern[i]) return false;
+  }
+  return true;
+}
+
+function findLastBytes(bytes: Uint8Array, pattern: Uint8Array): number {
+  for (let i = bytes.length - pattern.length; i >= 0; i--) {
+    if (matchBytesAt(bytes, pattern, i)) return i;
+  }
+  return -1;
+}
+
 /**
  * Extract non-standard key-value pairs from the PDF document Info dictionary.
- * PDFium's FPDF_GetMetaText can only read by key name; this function parses
- * the raw Info object to enumerate all keys so custom entries are not lost.
- * Returns empty array gracefully for PDFs that cannot be parsed (e.g. xref streams).
+ * Scans only the trailer tail and a small window around the Info object rather
+ * than decoding the entire file, so memory stays proportional to those sections
+ * regardless of PDF size.
  */
 function extractInfoDictCustomEntries(
   arrayBuffer: ArrayBuffer,
 ): CustomMetadataEntry[] {
-  const text = new TextDecoder("latin1").decode(new Uint8Array(arrayBuffer));
+  const bytes = new Uint8Array(arrayBuffer);
+  const enc = new TextEncoder();
+  const dec = new TextDecoder("latin1");
 
-  const trailerIdx = text.lastIndexOf("trailer");
-  if (trailerIdx === -1) return [];
+  // Search only the last 4 KB for the trailer dictionary
+  const tailBytes = bytes.subarray(Math.max(0, bytes.length - 4096));
+  const trailerPattern = enc.encode("trailer");
+  let trailerRelIdx = -1;
+  for (let i = tailBytes.length - trailerPattern.length; i >= 0; i--) {
+    if (matchBytesAt(tailBytes, trailerPattern, i)) {
+      trailerRelIdx = i;
+      break;
+    }
+  }
+  if (trailerRelIdx === -1) return [];
 
-  const trailerChunk = text.slice(
-    trailerIdx,
-    Math.min(trailerIdx + 4096, text.length),
+  const trailerStr = dec.decode(
+    tailBytes.subarray(trailerRelIdx, trailerRelIdx + 512),
   );
-  const infoRef = trailerChunk.match(/\/Info\s+(\d+)\s+(\d+)\s+R/);
+  const infoRef = trailerStr.match(/\/Info\s+(\d+)\s+(\d+)\s+R/);
   if (!infoRef) return [];
 
   const [, objNum, genNum] = infoRef;
-  const objHeader = `${objNum} ${genNum} obj`;
-  const objIdx = text.lastIndexOf(objHeader);
+  const objHeaderPattern = enc.encode(`${objNum} ${genNum} obj`);
+
+  // Scan full bytes for the last occurrence (handles incremental updates)
+  const objIdx = findLastBytes(bytes, objHeaderPattern);
   if (objIdx === -1) return [];
 
-  const endobjIdx = text.indexOf("endobj", objIdx);
-  if (endobjIdx === -1) return [];
+  // Decode only a 2 KB window — Info dicts are small
+  const headerLen = `${objNum} ${genNum} obj`.length;
+  const objStr = dec.decode(
+    bytes.subarray(objIdx, Math.min(objIdx + 2048, bytes.length)),
+  );
+  const endobjIdx = objStr.indexOf("endobj");
+  const objBody = objStr.slice(
+    headerLen,
+    endobjIdx === -1 ? undefined : endobjIdx,
+  );
 
-  const objBody = text.slice(objIdx + objHeader.length, endobjIdx);
   const dictOpen = objBody.indexOf("<<");
   if (dictOpen === -1) return [];
 
