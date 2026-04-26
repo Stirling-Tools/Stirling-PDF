@@ -18,11 +18,11 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.google.zxing.*;
 import com.google.zxing.common.GlobalHistogramBinarizer;
@@ -276,8 +276,8 @@ public class AutoSplitPdfController {
                             + " splits the document at the QR code boundaries. The output is a zip"
                             + " file containing each separate PDF document. Input:PDF Output:ZIP-PDF"
                             + " Type:SISO")
-    public ResponseEntity<StreamingResponseBody> autoSplitPdf(
-            @ModelAttribute AutoSplitPdfRequest request) throws IOException {
+    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
+            throws IOException {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
 

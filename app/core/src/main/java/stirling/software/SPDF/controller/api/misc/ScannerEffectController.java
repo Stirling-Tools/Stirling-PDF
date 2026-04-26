@@ -30,11 +30,11 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -564,7 +564,7 @@ public class ScannerEffectController {
             summary = "Apply scanner effect to PDF",
             description =
                     "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> scannerEffect(
+    public ResponseEntity<Resource> scannerEffect(
             @Valid @ModelAttribute ScannerEffectRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
 
