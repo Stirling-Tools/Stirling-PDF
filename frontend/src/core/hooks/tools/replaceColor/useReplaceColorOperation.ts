@@ -42,10 +42,31 @@ export const buildReplaceColorFormData = (
 
 export const replaceColorOperationConfig = {
   toolType: ToolType.custom,
-  buildFormData: buildReplaceColorFormData,
   operationType: "replaceColor",
-  endpoint: "/api/v1/misc/replace-invert-pdf",
-  multiFileEndpoint: false,
+  customProcessor: async (params: ReplaceColorParameters, files: File[]) => {
+    const outputFiles: File[] = [];
+    for (const file of files) {
+      const formData = buildReplaceColorFormData(params, file);
+      const endpoint =
+        params.mode === "TEXT_COLOR_REPLACEMENT"
+          ? "/api/v1/misc/replace-text-colors"
+          : "/api/v1/misc/replace-invert-pdf";
+
+      const response = await apiClient.post(endpoint, formData, {
+        responseType: "blob",
+      });
+
+      outputFiles.push(
+        new File([response.data], file.name, {
+          type: "application/pdf",
+        }),
+      );
+    }
+
+    return {
+      files: outputFiles,
+    };
+  },
   defaultParameters,
 } as const;
 
@@ -54,30 +75,6 @@ export const useReplaceColorOperation = () => {
 
   return useToolOperation<ReplaceColorParameters>({
     ...replaceColorOperationConfig,
-    customProcessor: async (params, files) => {
-      const outputFiles: File[] = [];
-      for (const file of files) {
-        const formData = buildReplaceColorFormData(params, file);
-        const endpoint =
-          params.mode === "TEXT_COLOR_REPLACEMENT"
-            ? "/api/v1/misc/replace-text-colors"
-            : "/api/v1/misc/replace-invert-pdf";
-
-        const response = await apiClient.post(endpoint, formData, {
-          responseType: "blob",
-        });
-
-        outputFiles.push(
-          new File([response.data], file.name, {
-            type: "application/pdf",
-          }),
-        );
-      }
-
-      return {
-        files: outputFiles,
-      };
-    },
     getErrorMessage: createStandardErrorHandler(
       t(
         "replaceColor.error.failed",

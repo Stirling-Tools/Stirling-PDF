@@ -209,9 +209,9 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
-  const [stampImagePreviewUrl, setStampImagePreviewUrl] = useState<string | null>(
-    null,
-  );
+  const [stampImagePreviewUrl, setStampImagePreviewUrl] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!parameters.stampImage) {

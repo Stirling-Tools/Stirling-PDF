@@ -1,52 +1,55 @@
-# Test Report for Fixed Changes
+# Test report — Replace Color & related frontend fixes
 
-## Scope of fixed changes
+## Scope of changes
 
-The following files were modified during this fix and validation cycle:
+| File | Change summary |
+|------|----------------|
+| `frontend/src/core/hooks/tools/replaceColor/useReplaceColorOperation.ts` | **Behavior preserved, structure fixed:** `customProcessor` (mode-based endpoint selection, blob response → `File`) now lives on `replaceColorOperationConfig` only. Removed redundant `buildFormData` / `endpoint` / `multiFileEndpoint` entries and the duplicate `customProcessor` inside `useReplaceColorOperation`. |
+| `frontend/src/core/components/tools/replaceColor/ReplaceColorSettings.tsx` | Formatting only (line breaks / Prettier). |
+| `frontend/src/core/tools/ReplaceColor.tsx` | Formatting only (`useState` generic layout). |
+| `frontend/src/core/components/tools/addStamp/StampSetupSettings.tsx` | Formatting only (`useState` generic layout). |
 
-- `.github/workflows/build.yml`
-- `app/core/src/main/java/stirling/software/SPDF/controller/api/misc/ReplaceAndInvertColorController.java`
-- `app/core/src/test/java/stirling/software/SPDF/controller/api/misc/ReplaceAndInvertColorControllerTest.java`
-- `gradlew`
+### API routing (unchanged logic, now single source of truth)
 
-## Test commands run
+- **`TEXT_COLOR_REPLACEMENT`** → `POST /api/v1/misc/replace-text-colors`
+- **Other modes** → `POST /api/v1/misc/replace-invert-pdf`
 
-1. `./gradlew :stirling-pdf:test -PnoSpotless`
-   - Result: **FAILED**
-   - Failure reason: `:stirling-pdf:compileJava` could not delete `app/core/build/classes/java/main` because another Gradle process was writing there concurrently.
+Each input file is posted with `responseType: "blob"` and re-wrapped as a PDF `File` with the original name.
 
-2. `./gradlew :stirling-pdf:compileJava -PnoSpotless`
-   - Result: **PASSED** (`BUILD SUCCESSFUL`)
-   - Note: confirms main source compilation succeeded with current changes.
+---
 
-3. Re-run `./gradlew :stirling-pdf:test -PnoSpotless` (after concurrent build finished)
-   - Result: **FAILED**
-   - Failure stage: `:stirling-pdf:compileTestJava`
-   - Error type: widespread `cannot find symbol` errors in test sources.
+## Automated checks (executed)
 
-4. Added wrapper-level Gradle process lock and re-ran `./gradlew :stirling-pdf:test -PnoSpotless`
-   - Result: **FAILED** (same `:stirling-pdf:compileTestJava` symbol errors)
-   - Key point: the previous output-directory deletion race condition did **not** recur.
+| Command | Result |
+|---------|--------|
+| `task frontend:typecheck` | **Passed** |
+| `task frontend:test` | **Passed** — 48 test files, 633 tests (~9 s) |
 
-5. Forced full recompilation: `./gradlew :stirling-pdf:compileTestJava -PnoSpotless --rerun-tasks`
-   - Result: **FAILED**
-   - Root cause surfaced: compile errors in `ReplaceAndInvertColorControllerTest` (duplicate local variables and stale `ResponseEntity<Resource>` typing after controller return type update to `ResponseEntity<byte[]>`).
+---
 
-6. Applied test fixes and re-ran `./gradlew :stirling-pdf:compileTestJava -PnoSpotless`
-   - Result: **PASSED** (`BUILD SUCCESSFUL`)
+## Manual QA — Replace Color
 
-7. Final validation: `./gradlew :stirling-pdf:test -PnoSpotless`
-   - Result: **PASSED** (`BUILD SUCCESSFUL`)
-   - Coverage summary:
-     - LINE: **33.40%** (PASS, target >= 13.00%)
-     - INSTRUCTION: **33.91%** (PASS, target >= 14.00%)
-     - BRANCH: **26.79%** (PASS, target >= 9.00%)
+Run the app with a working backend (`task dev` or equivalent), then:
+
+1. **Invert / replace (non-text mode)**  
+   Upload a PDF, use a mode that is *not* text-colour replacement, run the tool.  
+   **Expect:** request goes to `/api/v1/misc/replace-invert-pdf`; download opens as a valid PDF.
+
+2. **Text colour replacement**  
+   Switch to text colour replacement, optionally use **Scan** to populate detected colours, select sources and a replacement, run.  
+   **Expect:** request goes to `/api/v1/misc/replace-text-colors`; output PDF reflects colour changes.
+
+3. **Multiple files**  
+   Queue several PDFs and process.  
+   **Expect:** one processed file per input; no mixed-up filenames.
+
+4. **Regression smoke**  
+   Open **Add Stamp** settings and confirm stamp image preview still works (file only touched for formatting).
+
+---
 
 ## Assessment
 
-- The production code changes compile successfully.
-- The wrapper-level lock mitigates the previously observed concurrent Gradle output race.
-- The backend test block was resolved by fixing `ReplaceAndInvertColorControllerTest` to match current controller behavior and response type.
-- Full backend module tests now pass with coverage gates passing.
-- CI workflow YAML changes remain locally unexecuted (they are GitHub Actions runtime behavior), but they are syntactically valid in diff context.
-
+- Replace Color processing is **centralized** in `replaceColorOperationConfig`, avoiding drift between the config object and the hook.
+- Typecheck and the full frontend unit suite **pass** with these changes.
+- Deep validation still depends on **manual** runs against a live backend for both replace endpoints.

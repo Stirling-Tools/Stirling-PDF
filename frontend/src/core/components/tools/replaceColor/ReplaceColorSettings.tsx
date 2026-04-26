@@ -91,10 +91,7 @@ const ReplaceColorSettings = ({
           value={parameters.mode}
           onChange={(value) =>
             value &&
-            onParameterChange(
-              "mode",
-              value as ReplaceColorParameters["mode"],
-            )
+            onParameterChange("mode", value as ReplaceColorParameters["mode"])
           }
           data={[
             {
@@ -124,14 +121,19 @@ const ReplaceColorSettings = ({
         <>
           <Group justify="space-between" align="center">
             <Text size="sm" fw={500}>
-              {t("replaceColor.labels.detectedTextColours", "Detected text colours")}
+              {t(
+                "replaceColor.labels.detectedTextColours",
+                "Detected text colours",
+              )}
             </Text>
             <Button
               size="xs"
               variant="light"
               onClick={onScanTextColors}
               disabled={disabled || isScanningTextColors}
-              leftSection={isScanningTextColors ? <Loader size="xs" /> : undefined}
+              leftSection={
+                isScanningTextColors ? <Loader size="xs" /> : undefined
+              }
             >
               {t("replaceColor.actions.scanTextColours", "Scan")}
             </Button>
@@ -147,7 +149,9 @@ const ReplaceColorSettings = ({
           ) : (
             <Stack gap="xs">
               {detectedTextColors.map((color) => {
-                const selected = parameters.sourceColors.includes(color.hexColor);
+                const selected = parameters.sourceColors.includes(
+                  color.hexColor,
+                );
                 return (
                   <Checkbox
                     key={color.hexColor}
@@ -156,7 +160,9 @@ const ReplaceColorSettings = ({
                       const checked = event.currentTarget.checked;
                       const updated = checked
                         ? [...parameters.sourceColors, color.hexColor]
-                        : parameters.sourceColors.filter((c) => c !== color.hexColor);
+                        : parameters.sourceColors.filter(
+                            (c) => c !== color.hexColor,
+                          );
                       onParameterChange("sourceColors", updated);
                     }}
                     disabled={disabled}
@@ -279,7 +285,9 @@ const ReplaceColorSettings = ({
                 </Text>
                 <ColorInput
                   value={parameters.backGroundColor}
-                  onChange={(value) => onParameterChange("backGroundColor", value)}
+                  onChange={(value) =>
+                    onParameterChange("backGroundColor", value)
+                  }
                   format="hex"
                   disabled={disabled}
                   popoverProps={{
