@@ -26,7 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.model.api.SplitPagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
 
@@ -74,7 +74,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("3");
 
@@ -93,7 +93,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("1,2,3");
 
@@ -112,7 +112,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("1");
 
@@ -131,7 +131,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("3,7");
 
@@ -150,7 +150,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("2");
 
@@ -171,7 +171,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("5");
 
@@ -190,7 +190,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("all");
 
@@ -209,7 +209,7 @@ class SplitPDFControllerTest {
                 new MockMultipartFile(
                         "fileInput", "no_extension", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        PDFWithPageNums request = new PDFWithPageNums();
+        SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
         request.setPageNumbers("1");
 

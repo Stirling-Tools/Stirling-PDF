@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum, StrEnum
-from typing import Any
 
 from pydantic import Field, RootModel, SecretStr
 
@@ -313,6 +312,13 @@ class CropParams(ApiModel):
 
 class DeleteAttachmentParams(ApiModel):
     attachment_name: str | None = Field(None, description="The name of the attachment to delete")
+
+
+class DetectTextColorsParams(ApiModel):
+    source_colors: list[str] | None = Field(
+        None, description="List of source text colours to replace (hex format, e.g. #FF0000)"
+    )
+    target_color: str | None = Field(None, description="Target text colour in hex format (e.g. #000000)")
 
 
 class EmbedAllFonts(Enum):
@@ -756,6 +762,15 @@ class RearrangePagesParams(ApiModel):
     )
 
 
+class RedactionArea(ApiModel):
+    color: str | None = Field(None, description="The color used to redact the specified area.")
+    height: float | None = Field(None, description="The height of the area to be redacted.")
+    page: int | None = Field(None, description="The page on which the area should be redacted.")
+    width: float | None = Field(None, description="The width of the area to be redacted.")
+    x: float | None = Field(None, description="The left edge point of the area to be redacted.")
+    y: float | None = Field(None, description="The top edge point of the area to be redacted.")
+
+
 class RemoveBlanksParams(ApiModel):
     threshold: int | None = Field(10, description="The threshold value to determine blank pages", ge=0, le=255)
     white_percent: float | None = Field(
@@ -817,6 +832,13 @@ class ReplaceInvertPdfParams(ApiModel):
         None,
         description="If CUSTOM_COLOR option selected, then pick the custom color for text. Expected color value should be 24bit decimal value of a color",
     )
+
+
+class ReplaceTextColorsParams(ApiModel):
+    source_colors: list[str] | None = Field(
+        None, description="List of source text colours to replace (hex format, e.g. #FF0000)"
+    )
+    target_color: str | None = Field(None, description="Target text colour in hex format (e.g. #000000)")
 
 
 class Angle(IntEnum):
@@ -949,7 +971,7 @@ class SplitForPosterPrintParams(ApiModel):
 class SplitPagesParams(ApiModel):
     page_numbers: str | None = Field(
         "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
+        description='Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.',
     )
 
 
@@ -1041,10 +1063,6 @@ class VectorToPdfParams(ApiModel):
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
-class RedactionArea(RootModel[Any]):
-    root: Any
-
-
 class RedactParams(ApiModel):
     convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to an image")
     page_numbers: str | None = Field(
@@ -1100,6 +1118,7 @@ class Model(
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
+        | DetectTextColorsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
@@ -1107,6 +1126,7 @@ class Model(
         | RemoveBlanksParams
         | RenameAttachmentParams
         | ReplaceInvertPdfParams
+        | ReplaceTextColorsParams
         | ScannerEffectParams
         | UpdateMetadataParams
         | AddPasswordParams
@@ -1164,6 +1184,7 @@ class Model(
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
+        | DetectTextColorsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
@@ -1171,6 +1192,7 @@ class Model(
         | RemoveBlanksParams
         | RenameAttachmentParams
         | ReplaceInvertPdfParams
+        | ReplaceTextColorsParams
         | ScannerEffectParams
         | UpdateMetadataParams
         | AddPasswordParams
@@ -1229,6 +1251,7 @@ type ParamToolModel = (
     | AutoSplitPdfParams
     | CompressPdfParams
     | DeleteAttachmentParams
+    | DetectTextColorsParams
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
@@ -1236,6 +1259,7 @@ type ParamToolModel = (
     | RemoveBlanksParams
     | RenameAttachmentParams
     | ReplaceInvertPdfParams
+    | ReplaceTextColorsParams
     | ScannerEffectParams
     | UpdateMetadataParams
     | AddPasswordParams
@@ -1295,6 +1319,7 @@ class ToolEndpoint(StrEnum):
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
+    DETECT_TEXT_COLORS = "/api/v1/misc/detect-text-colors"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
@@ -1302,6 +1327,7 @@ class ToolEndpoint(StrEnum):
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
+    REPLACE_TEXT_COLORS = "/api/v1/misc/replace-text-colors"
     SCANNER_EFFECT = "/api/v1/misc/scanner-effect"
     UPDATE_METADATA = "/api/v1/misc/update-metadata"
     ADD_PASSWORD = "/api/v1/security/add-password"
@@ -1359,6 +1385,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
+    ToolEndpoint.DETECT_TEXT_COLORS: DetectTextColorsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
     ToolEndpoint.FLATTEN: FlattenParams,
@@ -1366,6 +1393,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.REMOVE_BLANKS: RemoveBlanksParams,
     ToolEndpoint.RENAME_ATTACHMENT: RenameAttachmentParams,
     ToolEndpoint.REPLACE_INVERT_PDF: ReplaceInvertPdfParams,
+    ToolEndpoint.REPLACE_TEXT_COLORS: ReplaceTextColorsParams,
     ToolEndpoint.SCANNER_EFFECT: ScannerEffectParams,
     ToolEndpoint.UPDATE_METADATA: UpdateMetadataParams,
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,

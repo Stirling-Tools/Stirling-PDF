@@ -629,11 +629,12 @@ public class FormUtils {
             }
             log.debug("Skipping form fill because document has no AcroForm");
             if (flatten) {
-                flattenEntireDocument(document, null, false);
+                flattenEntireDocument(document, null, false, false);
             }
             return;
         }
 
+        boolean valuesProvided = values != null && !values.isEmpty();
         boolean valuesApplied = false;
         if (values != null && !values.isEmpty()) {
             acroForm.setCacheFields(true);
@@ -679,7 +680,7 @@ public class FormUtils {
         repairWidgetGeometry(document, acroForm);
 
         if (flatten) {
-            flattenEntireDocument(document, acroForm, valuesApplied);
+            flattenEntireDocument(document, acroForm, valuesApplied, valuesProvided);
         }
     }
 
@@ -726,15 +727,16 @@ public class FormUtils {
     // Forcing appearance regeneration via setNeedAppearances(true) drives
     // PDFBox into refreshAppearances inside flatten(), where it can hang on
     // certain documents (PDFBOX-5962). We therefore only regenerate when we
-    // actually wrote new values, or when some widgets are missing appearance
-    // streams and would otherwise flatten blank.
+    // actually wrote new values, or when the request included values and the
+    // document has widgets without appearance streams.
     private void flattenEntireDocument(
-            PDDocument document, PDAcroForm acroForm, boolean valuesWritten) throws IOException {
+            PDDocument document, PDAcroForm acroForm, boolean valuesWritten, boolean valuesProvided)
+            throws IOException {
         if (document == null || acroForm == null) {
             return;
         }
 
-        if (valuesWritten || hasWidgetWithoutAppearance(acroForm)) {
+        if (valuesWritten || (valuesProvided && hasWidgetWithoutAppearance(acroForm))) {
             ensureAppearances(acroForm);
         } else {
             acroForm.setNeedAppearances(false);
