@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +30,19 @@ import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
 import stirling.software.SPDF.service.misc.TextColorReplacementService;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ReplaceAndInvertColorControllerTest {
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
+    }
+
     @Mock private ReplaceAndInvertColorService replaceAndInvertColorService;
     @Mock private TextColorReplacementService textColorReplacementService;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private ReplaceAndInvertColorController controller;
 
@@ -42,6 +51,18 @@ class ReplaceAndInvertColorControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -71,13 +92,14 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
             ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
@@ -105,13 +127,14 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
             ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
@@ -137,13 +160,14 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
             ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
@@ -174,15 +198,20 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             controller.replaceAndInvertColor(request);
 
-            mockedWebResponse.verify(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()));
+            mockedWebResponse.verify(
+                    () ->
+                            WebResponseUtils.pdfFileToWebResponse(
+                                    any(TempFile.class), eq("test_inverted.pdf")));
         }
     }
 }
