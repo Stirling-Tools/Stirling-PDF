@@ -15,7 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,11 +72,13 @@ class ReplaceAndInvertColorControllerTest {
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
             ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
+            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -102,11 +106,13 @@ class ReplaceAndInvertColorControllerTest {
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
             ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
+            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -132,11 +138,13 @@ class ReplaceAndInvertColorControllerTest {
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
             ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
+            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -167,6 +175,7 @@ class ReplaceAndInvertColorControllerTest {
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
             ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
+            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
             mockedWebResponse
                     .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
