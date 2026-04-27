@@ -8,7 +8,7 @@ from stirling.agents._page_text import (
     get_extracted_text_artifact,
     has_page_text,
 )
-from stirling.agents.math_presentation import extract_math_verdict
+from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.contracts import (
     EditPlanResponse,
     NeedContentFileRequest,
@@ -67,6 +67,7 @@ class PdfQuestionAgent:
             system_prompt=_MATH_SYNTH_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )
+        self._math_intent_classifier = MathIntentClassifier(runtime)
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         if not has_page_text(request.page_text):
@@ -85,19 +86,14 @@ class PdfQuestionAgent:
             )
         return await self._run_answer_agent(request)
 
-    async def orchestrate(
-        self,
-        request: OrchestratorRequest,
-        consult_math_auditor: bool = False,
-    ) -> PdfQuestionResponse:
+    async def orchestrate(self, request: OrchestratorRequest) -> PdfQuestionResponse:
         """Entry point for the orchestrator delegate.
 
-        ``consult_math_auditor`` is set by the orchestrator's top-level LLM (so the
-        decision is language-agnostic). When True, consult the math-auditor specialist
-        first via an :class:`EditPlanResponse` embedded on the answer response, then
-        digest the resulting :class:`Verdict` on the resume turn into a localised
-        prose answer. Resume turns are detected by the presence of a Verdict artifact
-        regardless of the flag.
+        Decides math intent locally via a small classifier LLM (language-agnostic).
+        On a math first turn, embeds an :class:`EditPlanResponse` in the answer
+        response; on the resume turn, digests the captured :class:`Verdict` into
+        a localised prose answer. Non-math first turns fall through to the
+        text-grounded :meth:`handle` pipeline.
         """
         verdict = extract_math_verdict(request)
         if verdict is not None:
@@ -107,7 +103,7 @@ class PdfQuestionAgent:
             answer = await self._synthesise_math_answer(request.user_message, verdict)
             return PdfQuestionAnswerResponse(answer=answer, evidence=[])
 
-        if consult_math_auditor:
+        if await self._math_intent_classifier.classify(request.user_message):
             # First turn — ask the caller to run the math specialist and come back.
             # The plan rides on the answer response as a nullable member; ``answer``
             # is empty on this turn and the caller resumes once the plan is run.

@@ -1,4 +1,4 @@
-"""Tests for ``PdfQuestionAgent.orchestrate`` — flag-driven first-turn
+"""Tests for ``PdfQuestionAgent.orchestrate`` — classifier-driven first-turn
 routing and prompt pinning. The legacy text-grounded ``handle`` path is
 covered separately in ``tests/test_pdf_question_agent.py``.
 """
@@ -6,7 +6,7 @@ covered separately in ``tests/test_pdf_question_agent.py``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -49,18 +49,18 @@ def _make_verdict() -> Verdict:
 
 
 @pytest.mark.anyio
-async def test_orchestrate_consult_math_embeds_plan_in_answer(runtime: AppRuntime) -> None:
-    """First turn with consult_math_auditor=True and no Verdict artifact should
-    return a PdfQuestionAnswerResponse with the math-auditor plan attached as a
-    nullable ``edit_plan`` field. The answer field is empty on this turn — the
-    caller runs the embedded plan and resumes the orchestrator."""
+async def test_orchestrate_classifier_true_embeds_plan_in_answer(runtime: AppRuntime) -> None:
+    """First turn — classifier says math; the response is a PdfQuestionAnswerResponse
+    with the math-auditor plan attached as a nullable ``edit_plan`` field. The
+    answer is empty on this turn; the caller runs the embedded plan and resumes."""
     agent = PdfQuestionAgent(runtime)
     request = OrchestratorRequest(
         user_message="ist die mathematik korrekt?",
         file_names=["report.pdf"],
     )
 
-    response = await agent.orchestrate(request, consult_math_auditor=True)
+    with patch.object(agent._math_intent_classifier, "classify", AsyncMock(return_value=True)):
+        response = await agent.orchestrate(request)
 
     assert isinstance(response, PdfQuestionAnswerResponse)
     assert response.answer == ""
@@ -71,9 +71,12 @@ async def test_orchestrate_consult_math_embeds_plan_in_answer(runtime: AppRuntim
 
 
 @pytest.mark.anyio
-async def test_orchestrate_resume_synthesises_answer_in_users_language(runtime: AppRuntime) -> None:
+async def test_orchestrate_resume_synthesises_answer_without_calling_classifier(
+    runtime: AppRuntime,
+) -> None:
     """Resume turn — Verdict in artifacts. The math-synth LLM is mocked; we
-    verify the answer is plumbed through to PdfQuestionAnswerResponse."""
+    verify the answer is plumbed through and that the classifier is short-
+    circuited (no point asking 'is this math?' when we already have a Verdict)."""
     agent = PdfQuestionAgent(runtime)
     verdict = _make_verdict()
     request = OrchestratorRequest(
@@ -87,11 +90,14 @@ async def test_orchestrate_resume_synthesises_answer_in_users_language(runtime: 
         ],
     )
     canned_answer = "Die Summe stimmt nicht: angegeben $215,000, erwartet $215,500."
+    classifier_mock = AsyncMock(return_value=False)
     with patch.object(agent._math_synth_agent, "run", return_value=_StubResult(output=canned_answer)):
-        response = await agent.orchestrate(request, consult_math_auditor=False)
+        with patch.object(agent._math_intent_classifier, "classify", classifier_mock):
+            response = await agent.orchestrate(request)
 
     assert isinstance(response, PdfQuestionAnswerResponse)
     assert response.answer == canned_answer
+    classifier_mock.assert_not_called()
 
 
 def test_math_synth_prompt_requires_verbatim_quoting() -> None:

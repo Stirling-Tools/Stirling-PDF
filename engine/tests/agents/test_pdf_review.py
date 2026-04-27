@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -135,18 +135,19 @@ async def test_payload_serialises_anchor_text_as_camel_case(runtime: AppRuntime)
 
 
 # ---------------------------------------------------------------------------
-# orchestrate() — flag-driven first-turn routing
+# orchestrate() — classifier-driven first-turn routing
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.anyio
-async def test_orchestrate_consult_math_emits_math_audit_plan(runtime: AppRuntime) -> None:
-    """First turn with consult_math_auditor=True and no Verdict artifact should
-    emit a one-step plan calling the math auditor with resume_with=PDF_REVIEW."""
+async def test_orchestrate_classifier_true_emits_math_audit_plan(runtime: AppRuntime) -> None:
+    """First turn — when the math-intent classifier says yes, emit a one-step plan
+    calling the math auditor with resume_with=PDF_REVIEW."""
     agent = PdfReviewAgent(runtime)
     request = OrchestratorRequest(user_message="vérifie les totaux", file_names=["report.pdf"])
 
-    response = await agent.orchestrate(request, consult_math_auditor=True)
+    with patch.object(agent._math_intent_classifier, "classify", AsyncMock(return_value=True)):
+        response = await agent.orchestrate(request)
 
     assert isinstance(response, EditPlanResponse)
     assert response.resume_with == SupportedCapability.PDF_REVIEW
@@ -155,15 +156,16 @@ async def test_orchestrate_consult_math_emits_math_audit_plan(runtime: AppRuntim
 
 
 @pytest.mark.anyio
-async def test_orchestrate_no_math_routes_to_pdf_comment_agent(runtime: AppRuntime) -> None:
-    """consult_math_auditor=False (no Verdict) should delegate to pdf-comment-agent."""
+async def test_orchestrate_classifier_false_routes_to_pdf_comment_agent(runtime: AppRuntime) -> None:
+    """When the classifier says no math, delegate to pdf-comment-agent for prose review."""
     agent = PdfReviewAgent(runtime)
     request = OrchestratorRequest(
         user_message="review the invoices for ambiguous wording",
         file_names=["contract.pdf"],
     )
 
-    response = await agent.orchestrate(request, consult_math_auditor=False)
+    with patch.object(agent._math_intent_classifier, "classify", AsyncMock(return_value=False)):
+        response = await agent.orchestrate(request)
 
     assert isinstance(response, EditPlanResponse)
     assert response.resume_with is None
@@ -174,9 +176,11 @@ async def test_orchestrate_no_math_routes_to_pdf_comment_agent(runtime: AppRunti
 
 
 @pytest.mark.anyio
-async def test_orchestrate_resume_uses_verdict_regardless_of_flag(runtime: AppRuntime) -> None:
-    """Resume turns are detected by Verdict-artifact presence; the flag is not
-    required to be True for the localiser path to fire."""
+async def test_orchestrate_resume_uses_verdict_without_calling_classifier(
+    runtime: AppRuntime,
+) -> None:
+    """Resume turns are detected by Verdict-artifact presence and bypass the
+    classifier entirely (saves an LLM call when we already know the answer)."""
     from stirling.contracts import ToolReportArtifact
 
     agent = PdfReviewAgent(runtime)
@@ -194,13 +198,16 @@ async def test_orchestrate_resume_uses_verdict_regardless_of_flag(runtime: AppRu
     canned = _LocalisedVerdict(
         comments=[_LocalisedComment(discrepancy_index=0, subject="Wrong", text="Off.")],
     )
+    classifier_mock = AsyncMock(return_value=False)
     with patch.object(agent._localiser_agent, "run", return_value=_StubResult(output=canned)):
-        response = await agent.orchestrate(request, consult_math_auditor=False)
+        with patch.object(agent._math_intent_classifier, "classify", classifier_mock):
+            response = await agent.orchestrate(request)
 
     assert isinstance(response, EditPlanResponse)
     assert response.resume_with is None
     assert len(response.steps) == 1
     assert response.steps[0].tool == ToolEndpoint.ADD_COMMENTS
+    classifier_mock.assert_not_called()  # short-circuit on Verdict
 
 
 # ---------------------------------------------------------------------------

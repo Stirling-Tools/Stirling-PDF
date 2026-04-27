@@ -18,7 +18,7 @@ import json
 from pydantic import Field
 from pydantic_ai import Agent
 
-from stirling.agents.math_presentation import extract_math_verdict
+from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.contracts import (
     CommentSpec,
     EditPlanResponse,
@@ -78,19 +78,16 @@ class PdfReviewAgent:
             system_prompt=_LOCALISER_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )
+        self._math_intent_classifier = MathIntentClassifier(runtime)
 
-    async def orchestrate(
-        self,
-        request: OrchestratorRequest,
-        consult_math_auditor: bool = False,
-    ) -> EditPlanResponse:
+    async def orchestrate(self, request: OrchestratorRequest) -> EditPlanResponse:
         """Entry point for the orchestrator delegate.
 
-        ``consult_math_auditor`` is set by the orchestrator's top-level LLM (so the
-        decision is language-agnostic). When True, consult the math-auditor specialist
-        first and project the resulting Verdict into localised sticky-note specs.
-        Resume turns are detected by the presence of a Verdict artifact regardless
-        of the flag.
+        Decides math intent locally via a small classifier LLM (language-agnostic).
+        On a math first turn, emits a plan to consult the math auditor; on the
+        resume turn, projects the captured :class:`Verdict` into localised
+        sticky-note specs. Non-math review prompts route to the composed
+        ``pdf-comment-agent`` tool for prose review.
         """
         verdict = extract_math_verdict(request)
         if verdict is not None:
@@ -105,7 +102,7 @@ class PdfReviewAgent:
                 ],
             )
 
-        if consult_math_auditor:
+        if await self._math_intent_classifier.classify(request.user_message):
             return EditPlanResponse(
                 summary="",
                 steps=[

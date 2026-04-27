@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -42,7 +43,13 @@ async def test_delegate_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime
     )
     ctx = SimpleNamespace(deps=_FakeDeps(request=request))
 
-    response = await orchestrator.delegate_pdf_review(ctx, consult_math_auditor=False)  # type: ignore[arg-type]
+    # PdfReviewAgent now classifies math intent locally via a tiny LLM. Stub it
+    # to false so this test stays focused on the prose-review wire contract.
+    with patch(
+        "stirling.agents.pdf_review.MathIntentClassifier.classify",
+        new=AsyncMock(return_value=False),
+    ):
+        response = await orchestrator.delegate_pdf_review(ctx)  # type: ignore[arg-type]
 
     assert isinstance(response, EditPlanResponse)
     assert len(response.steps) == 1
