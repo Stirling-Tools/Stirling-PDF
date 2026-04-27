@@ -89,14 +89,15 @@ class PdfQuestionAgent:
         self,
         request: OrchestratorRequest,
         consult_math_auditor: bool = False,
-    ) -> PdfQuestionResponse | EditPlanResponse:
+    ) -> PdfQuestionResponse:
         """Entry point for the orchestrator delegate.
 
         ``consult_math_auditor`` is set by the orchestrator's top-level LLM (so the
         decision is language-agnostic). When True, consult the math-auditor specialist
-        first (via a plan step + resume), then digest the :class:`Verdict` into a
-        localised prose answer. Resume turns are detected by the presence of a
-        Verdict artifact regardless of the flag.
+        first via an :class:`EditPlanResponse` embedded on the answer response, then
+        digest the resulting :class:`Verdict` on the resume turn into a localised
+        prose answer. Resume turns are detected by the presence of a Verdict artifact
+        regardless of the flag.
         """
         verdict = extract_math_verdict(request)
         if verdict is not None:
@@ -107,16 +108,22 @@ class PdfQuestionAgent:
             return PdfQuestionAnswerResponse(answer=answer, evidence=[])
 
         if consult_math_auditor:
-            # First turn — ask Java to run the math specialist and come back.
-            return EditPlanResponse(
-                summary="",
-                steps=[
-                    ToolOperationStep(
-                        tool=AgentToolId.MATH_AUDITOR_AGENT,
-                        parameters=MathAuditorAgentParams(),
-                    )
-                ],
-                resume_with=SupportedCapability.PDF_QUESTION,
+            # First turn — ask the caller to run the math specialist and come back.
+            # The plan rides on the answer response as a nullable member; ``answer``
+            # is empty on this turn and the caller resumes once the plan is run.
+            return PdfQuestionAnswerResponse(
+                answer="",
+                evidence=[],
+                edit_plan=EditPlanResponse(
+                    summary="",
+                    steps=[
+                        ToolOperationStep(
+                            tool=AgentToolId.MATH_AUDITOR_AGENT,
+                            parameters=MathAuditorAgentParams(),
+                        )
+                    ],
+                    resume_with=SupportedCapability.PDF_QUESTION,
+                ),
             )
 
         extracted_text = get_extracted_text_artifact(request)

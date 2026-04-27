@@ -160,14 +160,14 @@ class OrchestratorAgent:
         self,
         ctx: RunContext[OrchestratorDeps],
         consult_math_auditor: bool,
-    ) -> PdfQuestionResponse | EditPlanResponse:
+    ) -> PdfQuestionResponse:
         return await self._run_pdf_question(ctx.deps.request, consult_math_auditor)
 
     async def _run_pdf_question(
         self,
         request: OrchestratorRequest,
         consult_math_auditor: bool = False,
-    ) -> PdfQuestionResponse | EditPlanResponse:
+    ) -> PdfQuestionResponse:
         return await PdfQuestionAgent(self.runtime).orchestrate(request, consult_math_auditor)
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:

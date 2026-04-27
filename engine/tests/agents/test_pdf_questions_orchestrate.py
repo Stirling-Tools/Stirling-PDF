@@ -12,7 +12,6 @@ import pytest
 
 from stirling.agents.pdf_questions import _MATH_SYNTH_SYSTEM_PROMPT, PdfQuestionAgent
 from stirling.contracts import (
-    EditPlanResponse,
     OrchestratorRequest,
     PdfQuestionAnswerResponse,
     SupportedCapability,
@@ -50,9 +49,11 @@ def _make_verdict() -> Verdict:
 
 
 @pytest.mark.anyio
-async def test_orchestrate_consult_math_emits_math_audit_plan(runtime: AppRuntime) -> None:
+async def test_orchestrate_consult_math_embeds_plan_in_answer(runtime: AppRuntime) -> None:
     """First turn with consult_math_auditor=True and no Verdict artifact should
-    emit a plan calling the math auditor with resume_with=PDF_QUESTION."""
+    return a PdfQuestionAnswerResponse with the math-auditor plan attached as a
+    nullable ``edit_plan`` field. The answer field is empty on this turn — the
+    caller runs the embedded plan and resumes the orchestrator."""
     agent = PdfQuestionAgent(runtime)
     request = OrchestratorRequest(
         user_message="ist die mathematik korrekt?",
@@ -61,10 +62,12 @@ async def test_orchestrate_consult_math_emits_math_audit_plan(runtime: AppRuntim
 
     response = await agent.orchestrate(request, consult_math_auditor=True)
 
-    assert isinstance(response, EditPlanResponse)
-    assert response.resume_with == SupportedCapability.PDF_QUESTION
-    assert len(response.steps) == 1
-    assert response.steps[0].tool == AgentToolId.MATH_AUDITOR_AGENT
+    assert isinstance(response, PdfQuestionAnswerResponse)
+    assert response.answer == ""
+    assert response.edit_plan is not None
+    assert response.edit_plan.resume_with == SupportedCapability.PDF_QUESTION
+    assert len(response.edit_plan.steps) == 1
+    assert response.edit_plan.steps[0].tool == AgentToolId.MATH_AUDITOR_AGENT
 
 
 @pytest.mark.anyio

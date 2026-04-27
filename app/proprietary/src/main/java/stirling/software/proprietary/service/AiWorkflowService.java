@@ -36,6 +36,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
+import stirling.software.proprietary.model.api.ai.AiWorkflowEditPlan;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -131,8 +132,8 @@ public class AiWorkflowService {
             case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener);
             case TOOL_CALL -> onToolCall(response, filesByName, listener);
             case PLAN -> onPlan(response, filesByName, request, listener);
-            case ANSWER,
-                    NOT_FOUND,
+            case ANSWER -> onAnswer(response, filesByName, request, listener);
+            case NOT_FOUND,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
                     DRAFT,
@@ -248,13 +249,49 @@ public class AiWorkflowService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private WorkflowState onPlan(
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesByName,
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
-        List<Map<String, Object>> steps = response.getSteps();
+        return runPlan(
+                response.getSteps(),
+                response.getResumeWith(),
+                response.getSummary(),
+                filesByName,
+                previousRequest,
+                listener);
+    }
+
+    private WorkflowState onAnswer(
+            AiWorkflowResponse response,
+            Map<String, MultipartFile> filesByName,
+            WorkflowTurnRequest previousRequest,
+            ProgressListener listener) {
+        AiWorkflowEditPlan plan = response.getEditPlan();
+        if (plan != null) {
+            // The engine wants us to run a side-quest before the answer is final.
+            // Run the embedded plan and resume the orchestrator with the captured
+            // report; the real answer arrives on the resume turn.
+            return runPlan(
+                    plan.getSteps(),
+                    plan.getResumeWith(),
+                    plan.getSummary(),
+                    filesByName,
+                    previousRequest,
+                    listener);
+        }
+        return new WorkflowState.Terminal(response);
+    }
+
+    @SuppressWarnings("unchecked")
+    private WorkflowState runPlan(
+            List<Map<String, Object>> steps,
+            String resumeWith,
+            String summary,
+            Map<String, MultipartFile> filesByName,
+            WorkflowTurnRequest previousRequest,
+            ProgressListener listener) {
         if (steps == null || steps.isEmpty()) {
             return new WorkflowState.Terminal(
                     cannotContinue("AI engine returned a plan with no steps."));
@@ -291,7 +328,6 @@ public class AiWorkflowService {
 
             // Multi-turn: if the plan was emitted with resume_with set, the delegate wants
             // Java to re-invoke the orchestrator with any captured report as an artifact.
-            String resumeWith = response.getResumeWith();
             if (resumeWith != null && !resumeWith.isBlank() && lastReport != null) {
                 WorkflowTurnRequest resumeRequest = new WorkflowTurnRequest();
                 resumeRequest.setUserMessage(previousRequest.getUserMessage());
@@ -309,7 +345,7 @@ public class AiWorkflowService {
 
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            response.getSummary(),
+                            summary,
                             currentFiles,
                             new ArrayList<>(filesByName.keySet()),
                             lastReport));

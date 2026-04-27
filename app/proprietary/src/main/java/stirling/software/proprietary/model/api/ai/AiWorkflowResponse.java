@@ -89,4 +89,11 @@ public class AiWorkflowResponse {
                             + " body or via the X-Stirling-Tool-Report header. May be null for tools"
                             + " that produce only a file.")
     private JsonNode report;
+
+    @Schema(
+            description =
+                    "Optional plan attached to an answer outcome. When non-null on outcome=ANSWER,"
+                            + " run the plan steps before delivering the answer; the resumed call"
+                            + " produces the real answer.")
+    private AiWorkflowEditPlan editPlan;
 }
