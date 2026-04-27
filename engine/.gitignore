@@ -33,10 +33,6 @@ data/
 output/
 logs/
 
-# Local OpenTelemetry / pydantic-ai trace dumps (see services/tracking.py)
-trace
-trace.*
-
 # IDE
 .vscode/
 .idea/
