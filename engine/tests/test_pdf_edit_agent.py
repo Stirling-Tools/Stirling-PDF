@@ -328,13 +328,18 @@ async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRun
     page_text = [
         ExtractedFileText(
             file_name="memo.pdf",
-            pages=[PdfTextSelection(page_number=3, text="A typo: teh quick brown fox jumpd over.")],
+            pages=[
+                PdfTextSelection(
+                    page_number=3,
+                    text="The quick brown fox jumps over the lazy dog.",
+                )
+            ],
         )
     ]
     params = EditTextParams(
         edits=[
-            EditTextOperation(find="teh", replace="the"),
-            EditTextOperation(find="jumpd", replace="jumped"),
+            EditTextOperation(find="quick", replace="slow"),
+            EditTextOperation(find="lazy", replace="energetic"),
         ],
         page_numbers="3",
         use_regex=False,
