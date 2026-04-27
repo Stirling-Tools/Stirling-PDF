@@ -20,50 +20,11 @@
 
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
+import { mockAppApis } from "@app/tests/helpers/api-stubs";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const PDF_A = path.join(FIXTURES_DIR, "compare_sample_a.pdf");
 const PDF_B = path.join(FIXTURES_DIR, "compare_sample_b.pdf");
-
-async function mockAppApis(page: Page) {
-  await page.route("**/api/v1/info/status", (route) =>
-    route.fulfill({ json: { status: "UP" } }),
-  );
-  await page.route("**/api/v1/config/app-config", (route) =>
-    route.fulfill({
-      json: {
-        enableLogin: false,
-        languages: ["en-GB"],
-        defaultLocale: "en-GB",
-      },
-    }),
-  );
-  await page.route("**/api/v1/auth/me", (route) =>
-    route.fulfill({
-      json: {
-        id: 1,
-        username: "testuser",
-        email: "test@example.com",
-        roles: ["ROLE_USER"],
-      },
-    }),
-  );
-  await page.route("**/api/v1/config/endpoints-availability", (route) =>
-    route.fulfill({ json: { compare: { enabled: true } } }),
-  );
-  await page.route("**/api/v1/config/endpoint-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-  await page.route("**/api/v1/config/group-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-  await page.route("**/api/v1/ui-data/footer-info", (route) =>
-    route.fulfill({ json: {} }),
-  );
-  await page.route("**/api/v1/proprietary/**", (route) =>
-    route.fulfill({ json: {} }),
-  );
-}
 
 async function navigateToCompare(page: Page) {
   await page.locator('[data-tour="tool-button-compare"]').first().click();
