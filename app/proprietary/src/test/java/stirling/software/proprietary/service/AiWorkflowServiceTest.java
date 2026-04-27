@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
@@ -232,6 +233,89 @@ class AiWorkflowServiceTest {
         assertEquals("input.pdf", result.getResultFiles().get(0).getFileName());
         verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
         verify(internalApiClient, times(1)).post(eq(COMPRESS_ENDPOINT), any());
+    }
+
+    @Test
+    void parameterListOfStructuredObjectsIsJsonEncodedAsSingleField() throws IOException {
+        // Endpoints like /general/edit-text and /security/redact bind a List<StructuredObject>
+        // from a single JSON form field via a property editor. The plan executor must
+        // pre-serialize such lists rather than splitting them into repeated form fields.
+        String editTextEndpoint = "/api/v1/general/edit-text";
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"Find and replace",
+                  "steps":[
+                    {"tool":"%s","parameters":{
+                      "edits":[{"find":"foo","replace":"bar"},{"find":"baz","replace":"qux"}],
+                      "useRegex":false
+                    }}
+                  ]
+                }
+                """
+                        .formatted(editTextEndpoint));
+        when(toolMetadataService.isMultiInput(editTextEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(editTextEndpoint)).thenReturn(false);
+        stubEndpoint(editTextEndpoint, pdfResource("edited", "edited.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(input, "find and replace"));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(editTextEndpoint), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+
+        // The structured-list field must be serialized as ONE JSON-string entry, not multiple
+        // entries.
+        List<Object> editsValues = body.get("edits");
+        assertNotNull(editsValues);
+        assertEquals(1, editsValues.size());
+        assertEquals(
+                "[{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}]",
+                editsValues.get(0));
+
+        // Primitive fields keep the original behavior (single value, not JSON-wrapped).
+        List<Object> useRegex = body.get("useRegex");
+        assertNotNull(useRegex);
+        assertEquals(1, useRegex.size());
+        assertEquals(false, useRegex.get(0));
+    }
+
+    @Test
+    void parameterListOfPrimitivesIsSentAsRepeatedFormFields() throws IOException {
+        // Endpoints like /misc/ocr-pdf bind List<String> via Spring's repeated-form-field
+        // convention. The executor must preserve that behavior for primitive lists.
+        String ocrEndpoint = "/api/v1/misc/ocr-pdf";
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"OCR the document",
+                  "steps":[
+                    {"tool":"%s","parameters":{"languages":["eng","fra","deu"]}}
+                  ]
+                }
+                """
+                        .formatted(ocrEndpoint));
+        when(toolMetadataService.isMultiInput(ocrEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ocrEndpoint)).thenReturn(false);
+        stubEndpoint(ocrEndpoint, pdfResource("ocred", "ocred.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(input, "ocr"));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(ocrEndpoint), bodyCaptor.capture());
+        List<Object> languages = bodyCaptor.getValue().get("languages");
+        assertNotNull(languages);
+        assertEquals(List.of("eng", "fra", "deu"), languages);
     }
 
     @Test
