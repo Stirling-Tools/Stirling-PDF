@@ -1,6 +1,43 @@
 version: '3'
 
 tasks:
+  "e2e:live":
+    desc: "Auto-spawn backend in parallel and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
+    summary: |
+      Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
+      The runner blocks until http://localhost:8080/api/v1/info/status is UP,
+      then executes `npx playwright test --project=live`. The backend keeps
+      running after tests finish — Ctrl-C to stop it (same convention as
+      `task dev`).
+
+      Pass extra Playwright flags via -- :
+        task testing:e2e:live -- --headed --grep merge
+    deps:
+      - ":backend:dev"
+      - "e2e:live:runner"
+
+  "e2e:live:runner":
+    internal: true
+    deps: [":frontend:prepare"]
+    dir: frontend
+    cmds:
+      - |
+        echo "Waiting for backend on :8080 (up to 5min)..."
+        WAITED=0
+        while [ $WAITED -lt 300 ]; do
+          if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
+            echo "Backend ready — starting Playwright"
+            break
+          fi
+          sleep 2
+          WAITED=$((WAITED + 2))
+        done
+        if [ $WAITED -ge 300 ]; then
+          echo "Backend did not become ready within 5min — aborting"
+          exit 1
+        fi
+      - npx playwright test --project=live {{.CLI_ARGS}}
+
   docker:
     desc: "Run full Docker integration test suite (testing/test.sh)"
     ignore_error: true
