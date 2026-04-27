@@ -87,7 +87,10 @@ jobs:
       - name: Build frontend (needed for playwright's vite preview webServer)
         # Enterprise tests target :8080 (Spring Boot's bundled frontend), but
         # playwright's webServer config still launches `vite preview --port 5173`
-        # before any test run, which needs dist/ to exist.
+        # before any test run, which needs dist/ to exist. VITE_BUILD_FOR_PREVIEW
+        # forces absolute asset paths so vite preview can serve deep SPA routes.
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
 
       - name: Resolve kubernetes.docker.internal to localhost

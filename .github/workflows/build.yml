@@ -365,6 +365,12 @@ jobs:
         # Playwright's webServer runs `vite preview` in CI so the heavy tool
         # pages don't pay vite's on-demand transform cost on first hit. The
         # build output (dist/) is what `vite preview` serves.
+        # VITE_BUILD_FOR_PREVIEW=1 forces absolute asset paths (base="/") so
+        # deep SPA routes (e.g. /workflow/sign/<token>) resolve assets to
+        # /assets/... instead of /workflow/sign/<token>/assets/... (which the
+        # SPA fallback would serve as index.html, breaking React mount).
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
       - name: Run stubbed E2E tests (chromium)
         run: task frontend:test:e2e:stubbed -- --workers=3
@@ -407,6 +413,10 @@ jobs:
       - name: Build frontend (production bundle for vite preview)
         # Playwright's webServer runs `vite preview` in CI; live tests still
         # hit the Spring Boot backend at :8080 via vite's preview proxy.
+        # VITE_BUILD_FOR_PREVIEW=1 forces absolute asset paths so deep SPA
+        # routes don't serve index.html as JS via the SPA fallback.
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
       - name: Start Spring Boot backend (background)
         env:

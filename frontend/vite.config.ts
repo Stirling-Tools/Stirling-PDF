@@ -142,6 +142,17 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: backendProxy,
     },
-    base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
+    // base: "./" produces relative asset URLs which work when dist/ is served
+    // at any path (e.g. Spring Boot bundling the frontend at /). But under
+    // `vite preview` for deep SPA routes (e.g. /workflow/sign/<token>), the
+    // browser resolves ./assets/X.js relative to the current path → 404, then
+    // SPA fallback returns index.html as text/html and React never mounts.
+    // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
+    // an absolute base so deep-route asset paths resolve to /assets/...
+    base: env.RUN_SUBPATH
+      ? `/${env.RUN_SUBPATH}`
+      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
+        ? "/"
+        : "./",
   };
 });
