@@ -15,7 +15,6 @@ is_free() {
     if [ "$p" = "$port" ]; then return 1; fi
   done
   if (exec 3<>"/dev/tcp/127.0.0.1/$port") >/dev/null 2>&1; then
-    exec 3<&- 2>/dev/null || true
     return 1
   fi
   return 0

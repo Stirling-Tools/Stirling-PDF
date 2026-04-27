@@ -37,5 +37,5 @@ foreach ($p in $Preferred) {
 }
 
 foreach ($p in $script:picked) {
-    Write-Output $p
+    [Console]::Out.Write("$p`n")
 }
