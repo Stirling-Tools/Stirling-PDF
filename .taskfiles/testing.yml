@@ -8,10 +8,16 @@ tasks:
       - bash testing/test.sh {{.CLI_ARGS}}
 
   oauth:
-    desc: "Start Keycloak + Stirling OAuth test environment (pass `-- --license-key <KEY>` for premium)"
+    desc: "Start Keycloak + Stirling OAuth test environment (set LICENSE_KEY=<KEY> for premium)"
+    summary: |
+      Start the OAuth keycloak compose stack.
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task testing:oauth LICENSE_KEY=abc123
+      Pass extra flags (e.g. --auto, --nobuild) via -- :
+        task testing:oauth -- --auto
     ignore_error: true
     cmds:
-      - bash testing/compose/start-oauth-test.sh {{.CLI_ARGS}}
+      - bash testing/compose/start-oauth-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
 
   oauth:down:
     desc: "Stop the OAuth test environment and remove volumes"
@@ -19,10 +25,16 @@ tasks:
       - docker compose -f testing/compose/docker-compose-keycloak-oauth.yml down -v
 
   saml:
-    desc: "Start Keycloak + Stirling SAML test environment (pass `-- --license-key <KEY>` for premium)"
+    desc: "Start Keycloak + Stirling SAML test environment (set LICENSE_KEY=<KEY> for premium)"
+    summary: |
+      Start the SAML keycloak compose stack.
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task testing:saml LICENSE_KEY=abc123
+      Pass extra flags (e.g. --auto, --with-storage, --nobuild, --language sv-SE) via -- :
+        task testing:saml -- --auto --with-storage
     ignore_error: true
     cmds:
-      - bash testing/compose/start-saml-test.sh {{.CLI_ARGS}}
+      - bash testing/compose/start-saml-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
 
   saml:down:
     desc: "Stop the SAML test environment and remove volumes"
