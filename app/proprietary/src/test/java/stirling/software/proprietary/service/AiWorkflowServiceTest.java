@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,6 +40,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -316,6 +318,75 @@ class AiWorkflowServiceTest {
         List<Object> languages = bodyCaptor.getValue().get("languages");
         assertNotNull(languages);
         assertEquals(List.of("eng", "fra", "deu"), languages);
+    }
+
+    @Test
+    void toolTimeoutSurfacesAsCannotContinueWithFriendlyMessage() throws IOException {
+        // When an internal tool hangs, InternalApiClient throws InternalApiTimeoutException after
+        // its read timeout fires. The workflow must convert that into a clean CANNOT_CONTINUE
+        // outcome so the user sees an actionable message rather than the request hanging forever.
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE_ENDPOINT), any()))
+                .thenThrow(
+                        new InternalApiTimeoutException(
+                                ROTATE_ENDPOINT,
+                                java.time.Duration.ofSeconds(300),
+                                new java.io.IOException("Read timed out")));
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate"));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertNotNull(result.getReason());
+        assertTrue(
+                result.getReason().contains(ROTATE_ENDPOINT),
+                "reason should mention the failing tool path: " + result.getReason());
+        assertTrue(
+                result.getReason().contains("300"),
+                "reason should mention the timeout duration: " + result.getReason());
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
+    @Test
+    void planTimeoutOnLaterStepStillSurfacesCleanly() throws IOException {
+        // Multi-step plans must also handle a hung tool gracefully (no partial leaks) and the
+        // failure message must identify which step failed so the user can iterate.
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"Rotate then compress",
+                  "steps":[
+                    {"tool":"%s","parameters":{"angle":90}},
+                    {"tool":"%s","parameters":{}}
+                  ]
+                }
+                """
+                        .formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
+        // No fileStorage stub here: the second step times out before any output reaches storage.
+        when(internalApiClient.post(eq(COMPRESS_ENDPOINT), any()))
+                .thenThrow(
+                        new InternalApiTimeoutException(
+                                COMPRESS_ENDPOINT,
+                                java.time.Duration.ofSeconds(300),
+                                new java.io.IOException("Read timed out")));
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate then compress"));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertTrue(result.getReason().contains(COMPRESS_ENDPOINT));
+        // The first step actually executed; the failure happened on the second.
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+        verify(internalApiClient, times(1)).post(eq(COMPRESS_ENDPOINT), any());
     }
 
     @Test

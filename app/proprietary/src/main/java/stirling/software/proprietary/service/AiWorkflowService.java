@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -227,10 +228,12 @@ public class AiWorkflowService {
                             response.getRationale(),
                             results,
                             new ArrayList<>(filesByName.keySet())));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
+            return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue("Tool execution failed: " + e.getMessage()));
+            return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
         }
     }
 
@@ -271,11 +274,29 @@ public class AiWorkflowService {
                             response.getSummary(),
                             currentFiles,
                             new ArrayList<>(filesByName.keySet())));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
+            return new WorkflowState.Terminal(
+                    cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue("Plan execution failed: " + e.getMessage()));
         }
+    }
+
+    private static String toolTimeoutMessage(String endpointPath, InternalApiTimeoutException e) {
+        return String.format(
+                "The %s tool did not respond within %d seconds and was aborted. The underlying"
+                        + " operation may be hung; try again, run on a smaller file, or use a"
+                        + " different approach.",
+                endpointPath, e.getReadTimeout().toSeconds());
+    }
+
+    private static String toolFailureMessage(String endpointPath, Throwable cause) {
+        String reason =
+                cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        return String.format("The %s tool failed: %s", endpointPath, reason);
     }
 
     /**
