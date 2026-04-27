@@ -10,6 +10,15 @@ tasks:
       - cmd: ./gradlew :stirling-pdf:bootRun
         platforms: [linux, darwin]
 
+  dev:bundled:
+    desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
+    ignore_error: true
+    cmds:
+      - cmd: cmd /c gradlew.bat clean bootRun -PbuildWithFrontend=true
+        platforms: [windows]
+      - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
+        platforms: [linux, darwin]
+
   build:
     desc: "Full backend build"
     cmds:

@@ -15,27 +15,52 @@ echo ""
 AUTO_LOGIN=false
 FORCE_ALL_LOGIN=false
 COMPOSE_UP_ARGS=(-d --build)
-for arg in "$@"; do
-    case "$arg" in
+while [[ $# -gt 0 ]]; do
+    case "$1" in
         --auto)
             AUTO_LOGIN=true
+            shift
             ;;
         --all)
             FORCE_ALL_LOGIN=true
+            shift
             ;;
         --nobuild)
             COMPOSE_UP_ARGS=(-d)
+            shift
+            ;;
+        --license-key)
+            if [[ -z "${2:-}" ]]; then
+                echo -e "${RED}Missing value for --license-key${NC}"
+                exit 1
+            fi
+            export PREMIUM_KEY="$2"
+            shift 2
+            ;;
+        --license-key=*)
+            export PREMIUM_KEY="${1#*=}"
+            shift
+            ;;
+        -k)
+            if [[ -z "${2:-}" ]]; then
+                echo -e "${RED}Missing value for -k${NC}"
+                exit 1
+            fi
+            export PREMIUM_KEY="$2"
+            shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [--auto] [--nobuild]"
+            echo "Usage: $0 [--auto] [--all] [--nobuild] [--license-key <KEY>]"
             echo ""
-            echo "  --auto     Enable SSO auto-login and force OAuth-only login method"
-            echo "  --all      Force login method to allow all providers (overrides --auto)"
-            echo "  --nobuild  Skip building images (use existing images)"
+            echo "  --auto                Enable SSO auto-login and force OAuth-only login method"
+            echo "  --all                 Force login method to allow all providers (overrides --auto)"
+            echo "  --nobuild             Skip building images (use existing images)"
+            echo "  --license-key <KEY>   Premium license key (skips the interactive prompt)"
+            echo "                        Equivalent to setting PREMIUM_KEY in the environment."
             exit 0
             ;;
         *)
-            echo -e "${RED}Unknown option: $arg${NC}"
+            echo -e "${RED}Unknown option: $1${NC}"
             exit 1
             ;;
     esac

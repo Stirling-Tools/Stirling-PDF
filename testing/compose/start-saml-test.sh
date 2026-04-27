@@ -55,14 +55,36 @@ while [[ $# -gt 0 ]]; do
             DEFAULT_LANGUAGE="$2"
             shift 2
             ;;
+        --license-key)
+            if [[ -z "${2:-}" ]]; then
+                echo -e "${RED}Missing value for --license-key${NC}"
+                exit 1
+            fi
+            export PREMIUM_KEY="$2"
+            shift 2
+            ;;
+        --license-key=*)
+            export PREMIUM_KEY="${1#*=}"
+            shift
+            ;;
+        -k)
+            if [[ -z "${2:-}" ]]; then
+                echo -e "${RED}Missing value for -k${NC}"
+                exit 1
+            fi
+            export PREMIUM_KEY="$2"
+            shift 2
+            ;;
         -h|--help)
-            echo "Usage: $0 [--auto] [--with-storage] [--nobuild] [--language <locale>]"
+            echo "Usage: $0 [--auto] [--with-storage] [--nobuild] [--language <locale>] [--license-key <KEY>]"
             echo ""
-            echo "  --auto          Enable SSO auto-login and force SAML-only login method"
-            echo "  --with-storage  Enable the file storage + link-sharing feature"
-            echo "                  (required to test /share/<token> flows)"
-            echo "  --nobuild       Skip building images (use existing images)"
-            echo "  --language      Set system default locale (e.g. de-DE, sv-SE)"
+            echo "  --auto                Enable SSO auto-login and force SAML-only login method"
+            echo "  --with-storage        Enable the file storage + link-sharing feature"
+            echo "                        (required to test /share/<token> flows)"
+            echo "  --nobuild             Skip building images (use existing images)"
+            echo "  --language            Set system default locale (e.g. de-DE, sv-SE)"
+            echo "  --license-key <KEY>   Premium license key (skips the interactive prompt)"
+            echo "                        Equivalent to setting PREMIUM_KEY in the environment."
             exit 0
             ;;
         *)

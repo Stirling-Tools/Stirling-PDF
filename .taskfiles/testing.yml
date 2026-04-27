@@ -1,0 +1,30 @@
+version: '3'
+
+tasks:
+  docker:
+    desc: "Run full Docker integration test suite (testing/test.sh)"
+    ignore_error: true
+    cmds:
+      - bash testing/test.sh {{.CLI_ARGS}}
+
+  oauth:
+    desc: "Start Keycloak + Stirling OAuth test environment (pass `-- --license-key <KEY>` for premium)"
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-oauth-test.sh {{.CLI_ARGS}}
+
+  oauth:down:
+    desc: "Stop the OAuth test environment and remove volumes"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-oauth.yml down -v
+
+  saml:
+    desc: "Start Keycloak + Stirling SAML test environment (pass `-- --license-key <KEY>` for premium)"
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-saml-test.sh {{.CLI_ARGS}}
+
+  saml:down:
+    desc: "Stop the SAML test environment and remove volumes"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-saml.yml down -v
