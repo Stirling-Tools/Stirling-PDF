@@ -1,75 +1,104 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
+ * Stirling-PDF E2E Test Configuration
+ *
+ * The suite is split into two projects:
+ *   - `stubbed` — backend-free specs that mock `/api/v1/*` via `page.route()`.
+ *                 Safe to run in CI without the Spring Boot server. Lives in
+ *                 `src/core/tests/stubbed/**`.
+ *   - `live`    — specs that require a real backend on `localhost:8080`
+ *                 (auth, admin mutation, real tool round-trips). Lives in
+ *                 `src/core/tests/live/**`.
+ *
+ * Run one:
+ *   npx playwright test --project=stubbed
+ *   npx playwright test --project=live
+ *
  * @see https://playwright.dev/docs/test-configuration
  */
+const chromiumViewport = {
+  ...devices["Desktop Chrome"],
+  viewport: { width: 1920, height: 1080 },
+};
+
 export default defineConfig({
   testDir: "./src/core/tests",
   testMatch: "**/*.spec.ts",
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:5173",
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : "50%",
+  reporter: [["html", { open: "never" }], ["list"]],
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+
+  use: {
+    baseURL: "http://localhost:5173",
     trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "on-first-retry",
+    actionTimeout: 10_000,
+    navigationTimeout: 30_000,
   },
 
-  /* Configure projects for major browsers */
   projects: [
+    // Stubbed — no backend required, chromium-only for CI speed
     {
-      name: "chromium",
+      name: "stubbed",
+      testDir: "./src/core/tests/stubbed",
+      use: chromiumViewport,
+    },
+
+    // Live setup — runs once before the live suite to perform the real
+    // forced-password-change first-login flow against a freshly-booted
+    // backend. The live project depends on it.
+    {
+      name: "live-setup",
+      testDir: "./src/core/tests/live-setup",
+      testMatch: /.*\.setup\.ts$/,
+      use: chromiumViewport,
+    },
+
+    // Live backend — auth + admin-mutation + real-tool smoke
+    {
+      name: "live",
+      testDir: "./src/core/tests/live",
+      use: chromiumViewport,
+      dependencies: ["live-setup"],
+    },
+
+    // Enterprise — license-gated SSO/SAML/audit/teams against keycloak compose
+    // Uses port 8080 directly (the docker compose stack publishes the
+    // backend's built-in frontend there); the Vite dev server is bypassed
+    // because the OAuth/SAML callback URLs are registered against 8080.
+    {
+      name: "enterprise",
+      testDir: "./src/core/tests/enterprise",
       use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1920, height: 1080 },
+        ...chromiumViewport,
+        baseURL: "http://localhost:8080",
       },
     },
 
+    // Cross-browser coverage for the stubbed suite (opt-in locally)
     {
-      name: "firefox",
+      name: "stubbed-firefox",
+      testDir: "./src/core/tests/stubbed",
       use: { ...devices["Desktop Firefox"] },
     },
-
     {
-      name: "webkit",
+      name: "stubbed-webkit",
+      testDir: "./src/core/tests/stubbed",
       use: { ...devices["Desktop Safari"] },
     },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
 
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: "npx vite",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
   },
 });
