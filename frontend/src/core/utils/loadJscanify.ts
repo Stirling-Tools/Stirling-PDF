@@ -83,9 +83,7 @@ export interface LoadJscanifyOptions {
   onStatus?: (status: string) => void;
 }
 
-export function loadJscanify(
-  options: LoadJscanifyOptions = {},
-): Promise<void> {
+export function loadJscanify(options: LoadJscanifyOptions = {}): Promise<void> {
   const { onStatus } = options;
 
   if (loadPromise) return loadPromise;
