@@ -22,8 +22,6 @@ import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateR
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { loadJscanify } from "@app/utils/loadJscanify";
 
-// window.cv and window.jscanify are declared as globals in loadJscanify.ts
-
 /**
  * MobileScannerPage
  *
@@ -131,10 +129,6 @@ export default function MobileScannerPage() {
     validateSession();
   }, [sessionId, t]);
 
-  // Dynamically load OpenCV.js + jscanify on demand. Previously these were
-  // <script> tags in index.html, which meant ~2.8 MB of opencv.js and ~630ms
-  // of main-thread script evaluation on every page load even for users who
-  // never open the scanner.
   useEffect(() => {
     let cancelled = false;
 
