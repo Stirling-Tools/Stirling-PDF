@@ -252,6 +252,17 @@ public class PdfJsonConversionService {
         convertPdfToJson(file, null, false, out);
     }
 
+    /**
+     * Converts a PDF to the editable {@link PdfJsonDocument} model. Convenience wrapper around
+     * {@link #convertPdfToJson(MultipartFile, OutputStream)} for callers that need to inspect or
+     * mutate the document in memory before round-tripping it back to PDF.
+     */
+    public PdfJsonDocument convertPdfToJsonDocument(MultipartFile file) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        convertPdfToJson(file, null, false, buffer);
+        return objectMapper.readValue(buffer.toByteArray(), PdfJsonDocument.class);
+    }
+
     public void convertPdfToJson(MultipartFile file, boolean lightweight, OutputStream out)
             throws IOException {
         convertPdfToJson(file, null, lightweight, out);
@@ -620,6 +631,13 @@ public class PdfJsonConversionService {
         }
         byte[] jsonBytes = file.getBytes();
         PdfJsonDocument pdfJson = objectMapper.readValue(jsonBytes, PdfJsonDocument.class);
+        convertJsonToPdf(pdfJson, out);
+    }
+
+    public void convertJsonToPdf(PdfJsonDocument pdfJson, OutputStream out) throws IOException {
+        if (pdfJson == null) {
+            throw ExceptionUtils.createNullArgumentException("document");
+        }
 
         List<PdfJsonFont> fontModels = pdfJson.getFonts();
         if (fontModels == null) {
