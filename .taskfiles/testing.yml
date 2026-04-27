@@ -13,8 +13,17 @@ tasks:
       Pass extra Playwright flags via -- :
         task testing:e2e:live -- --headed --grep merge
     deps:
-      - ":backend:dev"
+      - "e2e:live:bootrun"
       - "e2e:live:runner"
+
+  "e2e:live:bootrun":
+    internal: true
+    ignore_error: true
+    cmds:
+      # bash gradlew (the sh wrapper) works on Linux/macOS/Windows-with-Git-Bash,
+      # and avoids the cmd /c gradlew.bat cwd quirk on Windows where Task's
+      # mvdan/sh launches cmd.exe in %TEMP%, not the project dir.
+      - bash gradlew :stirling-pdf:bootRun
 
   "e2e:live:runner":
     internal: true
@@ -22,9 +31,9 @@ tasks:
     dir: frontend
     cmds:
       - |
-        echo "Waiting for backend on :8080 (up to 5min)..."
+        echo "Waiting for backend on :8080 (up to 10min — first compile can be slow)..."
         WAITED=0
-        while [ $WAITED -lt 300 ]; do
+        while [ $WAITED -lt 600 ]; do
           if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
             echo "Backend ready — starting Playwright"
             break
@@ -32,8 +41,8 @@ tasks:
           sleep 2
           WAITED=$((WAITED + 2))
         done
-        if [ $WAITED -ge 300 ]; then
-          echo "Backend did not become ready within 5min — aborting"
+        if [ $WAITED -ge 600 ]; then
+          echo "Backend did not become ready within 10min — aborting"
           exit 1
         fi
       - npx playwright test --project=live {{.CLI_ARGS}}
