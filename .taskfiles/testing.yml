@@ -13,17 +13,8 @@ tasks:
       Pass extra Playwright flags via -- :
         task testing:e2e:live -- --headed --grep merge
     deps:
-      - "e2e:live:bootrun"
+      - ":backend:dev"
       - "e2e:live:runner"
-
-  "e2e:live:bootrun":
-    internal: true
-    ignore_error: true
-    cmds:
-      # bash gradlew (the sh wrapper) works on Linux/macOS/Windows-with-Git-Bash,
-      # and avoids the cmd /c gradlew.bat cwd quirk on Windows where Task's
-      # mvdan/sh launches cmd.exe in %TEMP%, not the project dir.
-      - bash gradlew :stirling-pdf:bootRun
 
   "e2e:live:runner":
     internal: true
