@@ -30,13 +30,15 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
             "stirling.software.proprietary.security.repository",
             "stirling.software.proprietary.repository",
             "stirling.software.proprietary.storage.repository",
-            "stirling.software.proprietary.workflow.repository"
+            "stirling.software.proprietary.workflow.repository",
+            "stirling.software.proprietary.aiformfill.repository"
         })
 @EntityScan({
     "stirling.software.proprietary.security.model",
     "stirling.software.proprietary.model",
     "stirling.software.proprietary.storage.model",
-    "stirling.software.proprietary.workflow.model"
+    "stirling.software.proprietary.workflow.model",
+    "stirling.software.proprietary.aiformfill.model"
 })
 public class DatabaseConfig {
 

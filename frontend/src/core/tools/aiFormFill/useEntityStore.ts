@@ -1,9 +1,20 @@
 /**
- * Entity store — localStorage-backed typed entity management.
- * Replaces the flat profile store. Migrates v1 profiles to v2 entities on first load.
+ * Entity store — typed entity management.
+ *
+ * Authoritative state lives server-side (see FormFillEntityController) when the user is
+ * logged in. localStorage remains the anonymous/offline fallback and first-paint cache so
+ * the UI stays synchronous. Mutations update local state instantly and fire to the server
+ * in the background; server failures don't block the UI.
  */
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useAuth } from '@app/auth/UseSession';
 import type { Entity, EntityType, EntityStoreData } from './entityTypes';
+import {
+  fetchEntities,
+  upsertEntity as upsertEntityRemote,
+  deleteEntityRemote,
+  importEntities as importEntitiesRemote,
+} from './entityApiClient';
 
 const STORAGE_KEY = 'stirling-pdf-ai-profiles';
 
@@ -113,7 +124,48 @@ export interface EntityStore {
 }
 
 export function useEntityStore(): EntityStore {
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const [data, setData] = useState<EntityStoreData>(loadFromStorage);
+
+  // Stable ref so async callbacks can read the latest state without re-binding.
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
+  // Hydrate from server on login. Server wins over local when it has rows; if the server
+  // is empty and local has entries, push local up as a one-shot migration.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const remote = await fetchEntities();
+        if (cancelled) return;
+        if (remote.length > 0) {
+          const entities: Record<string, Entity> = {};
+          for (const e of remote) entities[e.id] = e;
+          const localDefault = dataRef.current.defaultEntityId;
+          const defaultEntityId =
+            localDefault && entities[localDefault]
+              ? localDefault
+              : remote[0]?.id ?? null;
+          const next: EntityStoreData = { version: 2, entities, defaultEntityId };
+          setData(next);
+          saveToStorage(next);
+        } else {
+          const localEntities = Object.values(dataRef.current.entities);
+          if (localEntities.length > 0) {
+            importEntitiesRemote(localEntities).catch(() => {});
+          }
+        }
+      } catch {
+        /* offline or server unavailable — keep local state */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   const update = useCallback((fn: (prev: EntityStoreData) => EntityStoreData) => {
     setData((prev) => {
@@ -122,6 +174,22 @@ export function useEntityStore(): EntityStore {
       return next;
     });
   }, []);
+
+  const syncEntity = useCallback(
+    (entity: Entity) => {
+      if (!isAuthenticated) return;
+      upsertEntityRemote(entity).catch(() => {});
+    },
+    [isAuthenticated],
+  );
+
+  const syncDelete = useCallback(
+    (id: string) => {
+      if (!isAuthenticated) return;
+      deleteEntityRemote(id).catch(() => {});
+    },
+    [isAuthenticated],
+  );
 
   const entities = useMemo(() => Object.values(data.entities), [data.entities]);
 
@@ -153,22 +221,23 @@ export function useEntityStore(): EntityStore {
       ...prev,
       entities: { ...prev.entities, [entity.id]: entity },
     }));
+    syncEntity(entity);
     return entity;
-  }, [update]);
+  }, [update, syncEntity]);
 
   const updateEntity = useCallback((id: string, updates: Partial<Pick<Entity, 'name' | 'type'>>) => {
+    let updated: Entity | undefined;
     update((prev) => {
       const entity = prev.entities[id];
       if (!entity) return prev;
+      updated = { ...entity, ...updates, updatedAt: Date.now() };
       return {
         ...prev,
-        entities: {
-          ...prev.entities,
-          [id]: { ...entity, ...updates, updatedAt: Date.now() },
-        },
+        entities: { ...prev.entities, [id]: updated },
       };
     });
-  }, [update]);
+    if (updated) syncEntity(updated);
+  }, [update, syncEntity]);
 
   const deleteEntity = useCallback((id: string) => {
     update((prev) => {
@@ -182,7 +251,8 @@ export function useEntityStore(): EntityStore {
           : prev.defaultEntityId,
       };
     });
-  }, [update]);
+    syncDelete(id);
+  }, [update, syncDelete]);
 
   const duplicateEntity = useCallback((id: string, newName: string): Entity => {
     const source = data.entities[id];
@@ -198,78 +268,79 @@ export function useEntityStore(): EntityStore {
       ...prev,
       entities: { ...prev.entities, [entity.id]: entity },
     }));
+    syncEntity(entity);
     return entity;
-  }, [data.entities, update]);
+  }, [data.entities, update, syncEntity]);
 
   const setDefaultEntity = useCallback((id: string) => {
     update((prev) => ({ ...prev, defaultEntityId: id }));
   }, [update]);
 
   const setField = useCallback((entityId: string, key: string, value: string) => {
+    let updated: Entity | undefined;
     update((prev) => {
       const entity = prev.entities[entityId];
       if (!entity) return prev;
+      updated = {
+        ...entity,
+        fields: { ...entity.fields, [key]: value },
+        updatedAt: Date.now(),
+      };
       return {
         ...prev,
-        entities: {
-          ...prev.entities,
-          [entityId]: {
-            ...entity,
-            fields: { ...entity.fields, [key]: value },
-            updatedAt: Date.now(),
-          },
-        },
+        entities: { ...prev.entities, [entityId]: updated },
       };
     });
-  }, [update]);
+    if (updated) syncEntity(updated);
+  }, [update, syncEntity]);
 
   const setManyFields = useCallback((entityId: string, fields: Record<string, string>) => {
+    let updated: Entity | undefined;
     update((prev) => {
       const entity = prev.entities[entityId];
       if (!entity) return prev;
+      updated = {
+        ...entity,
+        fields: { ...entity.fields, ...fields },
+        updatedAt: Date.now(),
+      };
       return {
         ...prev,
-        entities: {
-          ...prev.entities,
-          [entityId]: {
-            ...entity,
-            fields: { ...entity.fields, ...fields },
-            updatedAt: Date.now(),
-          },
-        },
+        entities: { ...prev.entities, [entityId]: updated },
       };
     });
-  }, [update]);
+    if (updated) syncEntity(updated);
+  }, [update, syncEntity]);
 
   const removeField = useCallback((entityId: string, key: string) => {
+    let updated: Entity | undefined;
     update((prev) => {
       const entity = prev.entities[entityId];
       if (!entity) return prev;
       const fields = { ...entity.fields };
       delete fields[key];
+      updated = { ...entity, fields, updatedAt: Date.now() };
       return {
         ...prev,
-        entities: {
-          ...prev.entities,
-          [entityId]: { ...entity, fields, updatedAt: Date.now() },
-        },
+        entities: { ...prev.entities, [entityId]: updated },
       };
     });
-  }, [update]);
+    if (updated) syncEntity(updated);
+  }, [update, syncEntity]);
 
   const clearFields = useCallback((entityId: string) => {
+    let updated: Entity | undefined;
     update((prev) => {
       const entity = prev.entities[entityId];
       if (!entity) return prev;
+      updated = { ...entity, fields: {}, updatedAt: Date.now() };
       return {
         ...prev,
-        entities: {
-          ...prev.entities,
-          [entityId]: { ...entity, fields: {}, updatedAt: Date.now() },
-        },
+        entities: { ...prev.entities, [entityId]: updated },
       };
     });
-  }, [update]);
+    if (updated) syncEntity(updated);
+  }, [update, syncEntity]);
 
   const selectData = useMemo(() => {
     const groups: Array<{ group: string; items: Array<{ value: string; label: string }> }> = [];

@@ -116,6 +116,16 @@ export function useBatchFormFillFlow(
           return true;
         });
 
+        if (dedupedRequests.length === 0) {
+          setState((s) => ({
+            ...s,
+            phase: 'error',
+            error:
+              'Nothing to fill yet — assign an entity to at least one role before filling.',
+          }));
+          return;
+        }
+
         // Build batch request — one entry per file, with merged knowledge
         const rawKnowledge = dedupedRequests[0]?.mergeResult.knowledge || {};
         const batchRequest = {

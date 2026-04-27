@@ -1,7 +1,18 @@
 /**
  * Saved workflow templates — remember form + role + entity mappings for repeat use.
  * Also handles dynamic values ({{today}}, date formatting) and quick fill.
+ *
+ * Server-side storage is used via {@link useWorkflowStore} when the user is logged in;
+ * {@link createWorkflowStore} remains the local-only factory for anonymous contexts.
  */
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAuth } from '@app/auth/UseSession';
+import {
+  fetchWorkflowTemplates,
+  upsertWorkflowTemplate,
+  touchWorkflowTemplateRemote,
+  deleteWorkflowTemplateRemote,
+} from './workflowTemplateApiClient';
 
 const TEMPLATES_STORAGE_KEY = 'stirling-pdf-ai-workflows';
 
@@ -94,6 +105,107 @@ export function createWorkflowStore(): WorkflowStore {
       templates = [];
       saveTemplates(templates);
     },
+  };
+}
+
+/**
+ * React hook variant of {@link createWorkflowStore} that syncs with the server-side store when
+ * the user is authenticated. Follows the same pattern as {@code useEntityStore}: local-first for
+ * synchronous UI, server mutations fired in the background, server state wins on hydrate.
+ */
+export function useWorkflowStore(): WorkflowStore {
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+  const [templates, setTemplates] = useState<WorkflowTemplate[]>(() => loadTemplates());
+  const templatesRef = useRef(templates);
+  templatesRef.current = templates;
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const remote = await fetchWorkflowTemplates();
+        if (cancelled) return;
+        if (remote.length > 0) {
+          setTemplates(remote);
+          saveTemplates(remote);
+        } else if (templatesRef.current.length > 0) {
+          for (const t of templatesRef.current) {
+            upsertWorkflowTemplate(t).catch(() => {});
+          }
+        }
+      } catch {
+        /* offline / unauthorised — keep local state */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  const persist = useCallback((next: WorkflowTemplate[]) => {
+    setTemplates(next);
+    saveTemplates(next);
+  }, []);
+
+  const findBySignature = useCallback(
+    (signature: string) => templates.find((t) => t.formSignature === signature),
+    [templates],
+  );
+
+  const save = useCallback(
+    (template: Omit<WorkflowTemplate, 'id' | 'createdAt' | 'lastUsedAt'>): WorkflowTemplate => {
+      const full: WorkflowTemplate = {
+        ...template,
+        id: crypto.randomUUID(),
+        createdAt: Date.now(),
+        lastUsedAt: Date.now(),
+      };
+      persist([...templatesRef.current, full]);
+      if (isAuthenticated) upsertWorkflowTemplate(full).catch(() => {});
+      return full;
+    },
+    [persist, isAuthenticated],
+  );
+
+  const updateLastUsed = useCallback(
+    (id: string) => {
+      persist(
+        templatesRef.current.map((t) =>
+          t.id === id ? { ...t, lastUsedAt: Date.now() } : t,
+        ),
+      );
+      if (isAuthenticated) touchWorkflowTemplateRemote(id).catch(() => {});
+    },
+    [persist, isAuthenticated],
+  );
+
+  const remove = useCallback(
+    (id: string) => {
+      persist(templatesRef.current.filter((t) => t.id !== id));
+      if (isAuthenticated) deleteWorkflowTemplateRemote(id).catch(() => {});
+    },
+    [persist, isAuthenticated],
+  );
+
+  const removeAll = useCallback(() => {
+    const ids = templatesRef.current.map((t) => t.id);
+    persist([]);
+    if (isAuthenticated) {
+      for (const id of ids) deleteWorkflowTemplateRemote(id).catch(() => {});
+    }
+  }, [persist, isAuthenticated]);
+
+  return {
+    get templates() {
+      return templates;
+    },
+    findBySignature,
+    save,
+    updateLastUsed,
+    remove,
+    removeAll,
   };
 }
 

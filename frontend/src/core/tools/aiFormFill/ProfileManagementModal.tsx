@@ -23,10 +23,14 @@ export function ProfileManagementModal({ opened, onClose, knowledge }: ProfileMa
       opened={opened}
       onClose={onClose}
       title="Entity Management"
-      size="lg"
+      size="90%"
       centered
+      styles={{
+        content: { height: '90vh', display: 'flex', flexDirection: 'column' },
+        body: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
+      }}
     >
-      <Stack gap="md">
+      <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
         <SegmentedControl
           value={activeTab}
           onChange={setActiveTab}
@@ -37,11 +41,13 @@ export function ProfileManagementModal({ opened, onClose, knowledge }: ProfileMa
           fullWidth
         />
 
-        {activeTab === 'entities' ? (
-          <EntitiesTab store={knowledge.entityStore} />
-        ) : (
-          <ImportTab documentImport={documentImport} knowledge={knowledge} />
-        )}
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {activeTab === 'entities' ? (
+            <EntitiesTab store={knowledge.entityStore} />
+          ) : (
+            <ImportTab documentImport={documentImport} knowledge={knowledge} />
+          )}
+        </div>
       </Stack>
     </Modal>
   );

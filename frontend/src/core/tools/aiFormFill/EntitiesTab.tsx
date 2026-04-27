@@ -1,7 +1,7 @@
 /**
  * Entities tab — two-column layout: entity list grouped by type (left) + fields table (right).
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Stack,
   Group,
@@ -14,6 +14,7 @@ import {
   Table,
   Menu,
   Select,
+  Alert,
 } from '@mantine/core';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -28,6 +29,7 @@ import {
   importEntitiesFromJson,
   importCsvToStore,
 } from './entityImportExport';
+import { checkExpiryDates } from './workflowTemplates';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
@@ -77,11 +79,54 @@ export function EntitiesTab({ store }: { store: EntityStore }) {
     label: ENTITY_TYPE_LABELS[t],
   }));
 
+  const expiryWarnings = useMemo(
+    () => checkExpiryDates(store.entities),
+    [store.entities],
+  );
+  const expiringByEntityName = useMemo(() => {
+    const byName: Record<string, number> = {};
+    for (const w of expiryWarnings) byName[w.entityName] = (byName[w.entityName] ?? 0) + 1;
+    return byName;
+  }, [expiryWarnings]);
+  const hasExpired = expiryWarnings.some((w) => w.isExpired);
+
   return (
     <div style={{ display: 'flex', gap: '1rem', height: '100%', minHeight: 400 }}>
       {/* Left: entity list grouped by type */}
       <div style={{ width: '35%', borderRight: '1px solid var(--mantine-color-default-border)', paddingRight: '0.75rem', overflowY: 'auto' }}>
         <Stack gap="xs">
+          {expiryWarnings.length > 0 && (
+            <Alert color={hasExpired ? 'red' : 'yellow'} variant="light" p="xs">
+              <Stack gap={2}>
+                <Text size="xs" fw={600}>
+                  {hasExpired ? 'Expired credentials' : 'Expiring soon'}
+                </Text>
+                {expiryWarnings.map((w, i) => {
+                  const entity = store.entities.find((e) => e.name === w.entityName);
+                  const label = `${w.entityName} — ${w.fieldKey}: ${
+                    w.isExpired
+                      ? `expired ${Math.abs(w.daysUntilExpiry)} days ago`
+                      : `expires in ${w.daysUntilExpiry} days`
+                  }`;
+                  return entity ? (
+                    <Text
+                      key={i}
+                      size="xs"
+                      style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => setSelectedId(entity.id)}
+                    >
+                      {label}
+                    </Text>
+                  ) : (
+                    <Text key={i} size="xs">
+                      {label}
+                    </Text>
+                  );
+                })}
+              </Stack>
+            </Alert>
+          )}
+
           {/* Create new entity */}
           <Group gap={4}>
             <Select

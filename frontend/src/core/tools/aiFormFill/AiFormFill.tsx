@@ -32,7 +32,7 @@ import { ProfileManagementModal } from './ProfileManagementModal';
 import { RoleSection } from './RoleSection';
 import { FillPreview } from './FillPreview';
 import { usePassiveLearning } from './usePassiveLearning';
-import { checkExpiryDates, checkCrossFormConsistency } from './workflowTemplates';
+import { checkCrossFormConsistency } from './workflowTemplates';
 import type { CleanedLabel } from './types';
 import styles from './AiFormFill.module.css';
 
@@ -45,12 +45,6 @@ const AiFormFill = (_props: BaseToolProps) => {
   const passiveLearning = usePassiveLearning();
   const [modalOpened, setModalOpened] = useState(false);
   const [viewMode, setViewMode] = useState<string>('roles');
-
-  // Expiry warnings
-  const expiryWarnings = useMemo(
-    () => checkExpiryDates(knowledge.entityStore.entities),
-    [knowledge.entityStore.entities]
-  );
 
   const allFiles = useMemo(() => {
     const files = selectors.getFiles();
@@ -136,21 +130,6 @@ const AiFormFill = (_props: BaseToolProps) => {
                 ? `${allFiles.length} file${allFiles.length > 1 ? 's' : ''} loaded. Analyse to detect form roles and fields.`
                 : t('aiFormFill.noFile', 'Open PDF forms to get started.')}
             </Text>
-            {/* Expiry warnings */}
-            {expiryWarnings.length > 0 && (
-              <Alert color={expiryWarnings.some((w) => w.isExpired) ? 'red' : 'yellow'} variant="light">
-                <Stack gap={2}>
-                  <Text size="xs" fw={600}>
-                    {expiryWarnings.some((w) => w.isExpired) ? 'Expired credentials!' : 'Expiring soon'}
-                  </Text>
-                  {expiryWarnings.map((w, i) => (
-                    <Text key={i} size="xs">
-                      {w.entityName} — {w.fieldKey}: {w.isExpired ? `expired ${Math.abs(w.daysUntilExpiry)} days ago` : `expires in ${w.daysUntilExpiry} days`}
-                    </Text>
-                  ))}
-                </Stack>
-              </Alert>
-            )}
           </Stack>
         </div>
         <div className={styles.footer}>
@@ -399,6 +378,17 @@ const AiFormFill = (_props: BaseToolProps) => {
 
       <div className={styles.content}>
         <Stack gap="sm">
+          {batchFill.error && (
+            <Alert
+              icon={<WarningAmberIcon />}
+              color="red"
+              variant="light"
+              withCloseButton
+              onClose={batchFill.reset}
+            >
+              {batchFill.error}
+            </Alert>
+          )}
           {viewMode === 'roles' ? (
             // Role-grouped view
             roles.map((role) => (
