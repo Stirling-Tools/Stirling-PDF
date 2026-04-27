@@ -295,7 +295,6 @@ async def test_pdf_edit_agent_supports_literal_find_replace(runtime: AppRuntime)
     params = EditTextParams(
         edits=[EditTextOperation(find="2025", replace="2026")],
         page_numbers="all",
-        use_regex=False,
         whole_word_search=False,
     )
     parameter_selector = RecordingParameterSelector([params])
@@ -342,7 +341,6 @@ async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRun
             EditTextOperation(find="lazy", replace="energetic"),
         ],
         page_numbers="3",
-        use_regex=False,
         whole_word_search=False,
     )
     parameter_selector = RecordingParameterSelector([params])
@@ -392,7 +390,6 @@ async def test_pdf_edit_agent_supports_natural_language_directed_edit(runtime: A
     params = EditTextParams(
         edits=[EditTextOperation(find="OldCompany Inc.", replace="Acme Corp")],
         page_numbers="all",
-        use_regex=False,
         whole_word_search=False,
     )
     parameter_selector = RecordingParameterSelector([params])
@@ -429,7 +426,6 @@ async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: 
     edit_params = EditTextParams(
         edits=[EditTextOperation(find="DRAFT", replace="")],
         page_numbers="all",
-        use_regex=False,
         whole_word_search=False,
     )
     parameter_selector = RecordingParameterSelector([edit_params, RotatePdfParams(angle=Angle(90))])

@@ -26,12 +26,6 @@ public class EditTextRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Whether to interpret the find string of each edit as a regular expression",
-            defaultValue = "false")
-    private Boolean useRegex;
-
-    @Schema(
-            description =
                     "Whether matches must be whole words (boundaries determined by non-word"
                             + " characters)",
             defaultValue = "false")

@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -116,19 +115,8 @@ public class EditTextController {
             }
         }
 
-        boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearch = Boolean.TRUE.equals(request.getWholeWordSearch());
-
-        List<CompiledEdit> compiledEdits;
-        try {
-            compiledEdits = compileEdits(edits, useRegex, wholeWordSearch);
-        } catch (PatternSyntaxException ex) {
-            log.warn("Invalid regex in edit-text request: {}", ex.getMessage());
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.editText.invalid.regex",
-                    "Invalid regular expression in find string: {0}",
-                    ex.getDescription());
-        }
+        List<CompiledEdit> compiledEdits = compileEdits(edits, wholeWordSearch);
 
         PdfJsonDocument document = pdfJsonConversionService.convertPdfToJsonDocument(inputFile);
         Set<Integer> pageFilter = resolvePageFilter(request, document);
@@ -153,20 +141,23 @@ public class EditTextController {
     }
 
     private List<CompiledEdit> compileEdits(
-            List<EditTextOperation> edits, boolean useRegex, boolean wholeWordSearch) {
-        return edits.stream().map(edit -> compileEdit(edit, useRegex, wholeWordSearch)).toList();
+            List<EditTextOperation> edits, boolean wholeWordSearch) {
+        return edits.stream().map(edit -> compileEdit(edit, wholeWordSearch)).toList();
     }
 
-    private CompiledEdit compileEdit(
-            EditTextOperation edit, boolean useRegex, boolean wholeWordSearch) {
+    private CompiledEdit compileEdit(EditTextOperation edit, boolean wholeWordSearch) {
+        // Always treat the user-supplied find string as a literal: Pattern.quote escapes any
+        // regex metacharacters, so the constructed pattern can only ever do a literal match
+        // (optionally bounded by our own word-boundary anchors). This rules out catastrophic
+        // backtracking from a malicious find string.
         String findRaw = edit.getFind();
         String replacement = Objects.toString(edit.getReplace(), "");
-        String regex = useRegex ? findRaw : Pattern.quote(findRaw);
+        String regex = Pattern.quote(findRaw);
         if (wholeWordSearch) {
             regex = "\\b(?:" + regex + ")\\b";
         }
         Pattern pattern = Pattern.compile(regex);
-        String safeReplacement = useRegex ? replacement : Matcher.quoteReplacement(replacement);
+        String safeReplacement = Matcher.quoteReplacement(replacement);
         return new CompiledEdit(pattern, safeReplacement);
     }
 

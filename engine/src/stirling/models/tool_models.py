@@ -364,11 +364,8 @@ class EditTableOfContentsParams(ApiModel):
 
 
 class EditTextOperation(ApiModel):
-    find: str = Field(..., description="The text to find. Treated as a literal string unless useRegex is true.")
-    replace: str = Field(
-        ...,
-        description="The replacement text. May be empty to delete the matched text. When useRegex is true, supports backreferences such as $1.",
-    )
+    find: str = Field(..., description="The literal text to find.")
+    replace: str = Field(..., description="The replacement text. May be empty to delete the matched text.")
 
 
 class EditTextParams(ApiModel):
@@ -379,9 +376,6 @@ class EditTextParams(ApiModel):
     page_numbers: str | None = Field(
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
-    )
-    use_regex: bool | None = Field(
-        False, description="Whether to interpret the find string of each edit as a regular expression"
     )
     whole_word_search: bool | None = Field(
         False, description="Whether matches must be whole words (boundaries determined by non-word characters)"

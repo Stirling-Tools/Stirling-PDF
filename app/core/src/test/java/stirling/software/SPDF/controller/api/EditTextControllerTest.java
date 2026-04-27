@@ -158,13 +158,25 @@ class EditTextControllerTest {
     }
 
     @Test
-    void editText_invalidRegexThrows() throws Exception {
+    void editText_findStringWithRegexMetacharsIsTreatedLiterally() throws Exception {
+        // Find strings are always treated as literals (Pattern.quote'd internally) — no ReDoS
+        // exposure from regex metacharacters supplied by the caller.
         EditTextRequest request = new EditTextRequest();
         request.setFileInput(pdfFile());
-        request.setEdits(List.of(edit("(unclosed", "x")));
-        request.setUseRegex(true);
+        request.setEdits(List.of(edit("(unclosed", "fixed")));
 
-        assertThrows(IllegalArgumentException.class, () -> controller.editText(request));
+        PdfJsonDocument input = documentWithText("text with (unclosed paren");
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        assertEquals(
+                "text with fixed paren",
+                captor.getValue().getPages().get(0).getTextElements().get(0).getText());
     }
 
     @Test
@@ -193,27 +205,6 @@ class EditTextControllerTest {
         assertEquals("no match here", mutated.getPages().get(1).getTextElements().get(0).getText());
         // Char codes preserved on unmodified spans.
         assertNotNull(mutated.getPages().get(1).getTextElements().get(0).getCharCodes());
-    }
-
-    @Test
-    void editText_regexFindReplace_supportsBackreferences() throws Exception {
-        EditTextRequest request = new EditTextRequest();
-        request.setFileInput(pdfFile());
-        request.setEdits(List.of(edit("(\\w+)@example\\.com", "$1@stirling.com")));
-        request.setUseRegex(true);
-
-        PdfJsonDocument input = documentWithText("contact alice@example.com today");
-        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
-                .thenReturn(input);
-
-        controller.editText(request);
-
-        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
-        org.mockito.Mockito.verify(pdfJsonConversionService)
-                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
-        assertEquals(
-                "contact alice@stirling.com today",
-                captor.getValue().getPages().get(0).getTextElements().get(0).getText());
     }
 
     @Test
