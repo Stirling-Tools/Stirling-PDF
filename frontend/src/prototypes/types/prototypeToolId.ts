@@ -13,7 +13,12 @@
  */
 
 export const PROTOTYPE_REGULAR_TOOL_IDS = ["pdfCommentAgent"] as const;
-export const PROTOTYPE_SUPER_TOOL_IDS = [] as const;
+// "ai-workflow" is a generic marker stamped onto files produced by the AI
+// orchestrator (which may invoke one or more underlying tools). Lives here as
+// a super-tool so ``ToolOperation.toolId`` stays typed; not user-pickable —
+// see ChatContext.tsx. The prototype tool registry doesn't include it as an
+// entry, which is fine since the registry uses an ``as`` cast.
+export const PROTOTYPE_SUPER_TOOL_IDS = ["ai-workflow"] as const;
 export const PROTOTYPE_LINK_TOOL_IDS = [] as const;
 
 export type PrototypeRegularToolId =
