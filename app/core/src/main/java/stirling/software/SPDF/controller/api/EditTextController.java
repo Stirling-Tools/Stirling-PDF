@@ -38,7 +38,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.common.util.propertyeditor.StringToEditTextOperationListPropertyEditor;
+import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
 
 /**
  * Find/replace text editing for PDFs. Round-trips through {@link PdfJsonConversionService}: the
@@ -62,7 +62,9 @@ public class EditTextController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
-                List.class, "edits", new StringToEditTextOperationListPropertyEditor());
+                List.class,
+                "edits",
+                new StringToArrayListPropertyEditor<>(EditTextOperation.class));
     }
 
     @AutoJobPostMapping(consumes = "multipart/form-data", value = "/edit-text")
