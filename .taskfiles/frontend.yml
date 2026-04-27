@@ -58,10 +58,9 @@ tasks:
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
       OPEN: '{{.OPEN | default ""}}'
     env:
-      VITE_DEV_PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite --mode {{.MODE}}{{if .OPEN}} --open{{end}}
+      - npx vite --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
   dev:
     desc: "Start frontend dev server"
