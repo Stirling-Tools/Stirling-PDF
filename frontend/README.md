@@ -15,11 +15,15 @@ For desktop app development, see the [Tauri](#tauri) section below.
 
 ## Environment Variables
 
-The frontend requires environment variables to be set before running. `task frontend:dev` will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
+Environment variables live in committed `.env` files at the frontend root:
 
-If you need to configure specific services (Google Drive, Supabase, Stripe, PostHog), edit your local `.env` file. The values in `config/.env.example` show what each variable does and provides sensible defaults where applicable.
+- `.env` — used by all builds (core, proprietary, and as the base for desktop/SaaS)
+- `.env.desktop` — additional vars loaded in desktop (Tauri) mode
+- `.env.saas` — additional vars loaded in SaaS mode
 
-For desktop (Tauri) development, `task desktop:dev` will additionally create a `.env.desktop` file from `config/.env.desktop.example`.
+These files contain non-secret defaults and are checked into Git, so most dev work needs no further setup.
+
+To override values locally (API keys, machine-specific settings), create an uncommitted sibling `.env.local` / `.env.desktop.local` / `.env.saas.local`. Vite automatically layers these on top of the committed files.
 
 ## Docker Setup
 
@@ -72,8 +76,3 @@ task desktop:clean
 ```
 
 Removes all desktop build artifacts including JLink runtime, bundled JARs, Cargo build, and dist/build directories.
-
-> [!NOTE]
->
-> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
-> above - `task desktop:dev` will set these up automatically from `config/.env.desktop.example` on first run.
