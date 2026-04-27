@@ -160,7 +160,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "OAuth"
+        run: task frontend:test:e2e:enterprise -- --grep "OAuth"
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
         run: |
@@ -233,7 +233,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "SAML"
+        run: task frontend:test:e2e:enterprise -- --grep "SAML"
       - name: Stop backend + tear down SAML Keycloak
         if: always()
         run: |
@@ -263,7 +263,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "Enterprise license"
+        run: task frontend:test:e2e:enterprise -- --grep "Enterprise license"
       - name: Print backend log on failure
         if: failure()
         run: |

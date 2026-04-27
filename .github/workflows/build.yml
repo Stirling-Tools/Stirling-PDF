@@ -362,7 +362,7 @@ jobs:
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
       - name: Run stubbed E2E tests (chromium)
-        run: task frontend:test:e2e -- --project=stubbed --workers=3
+        run: task frontend:test:e2e:stubbed -- --workers=3
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -431,7 +431,7 @@ jobs:
           exit 1
       - name: Run live E2E tests (chromium)
         id: live-tests
-        run: task frontend:test:e2e -- --project=live
+        run: task frontend:test:e2e:live
       - name: Print backend log on failure
         if: failure() && steps.live-tests.conclusion == 'failure'
         run: |
