@@ -1,14 +1,15 @@
 """Tests for ``stirling.agents.math_presentation``.
 
-Only language-agnostic helpers live in this module now: intent detection
-and Verdict-artifact extraction. Verdict → prose / sticky-note text are
-the consumer agents' responsibility (they speak the user's language via
-their own LLM calls), so those projections are tested with each consumer.
+Only one helper lives in this module now: Verdict-artifact extraction
+on the resume turn. Math intent itself is decided by the orchestrator's
+top-level LLM and passed in as a flag, so there's no English regex to
+test here. Verdict → prose / sticky-note text are the consumer agents'
+responsibility — those projections are tested with each consumer.
 """
 
 from __future__ import annotations
 
-from stirling.agents.math_presentation import extract_math_verdict, is_math_intent
+from stirling.agents.math_presentation import extract_math_verdict
 from stirling.contracts import OrchestratorRequest, ToolReportArtifact, WorkflowArtifact
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
 from stirling.models.agent_tool_models import AgentToolId
@@ -23,13 +24,6 @@ def _make_verdict(discrepancies: list[Discrepancy]) -> Verdict:
         summary="Test verdict.",
         clean=not discrepancies,
     )
-
-
-def test_is_math_intent_matches_math_keywords() -> None:
-    assert is_math_intent("Is the math in this document correct?")
-    assert is_math_intent("Please audit the invoice totals.")
-    assert not is_math_intent("Summarise this document.")
-    assert not is_math_intent("")
 
 
 # ---------------------------------------------------------------------------

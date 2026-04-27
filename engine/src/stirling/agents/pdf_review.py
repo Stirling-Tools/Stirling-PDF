@@ -18,7 +18,7 @@ import json
 from pydantic import Field
 from pydantic_ai import Agent
 
-from stirling.agents.math_presentation import extract_math_verdict, is_math_intent
+from stirling.agents.math_presentation import extract_math_verdict
 from stirling.contracts import (
     CommentSpec,
     EditPlanResponse,
@@ -52,7 +52,10 @@ _LOCALISER_SYSTEM_PROMPT = (
     "the user would care about. Each entry carries the discrepancy's index "
     "in the input list, a short subject (a few words), and a body of one or "
     "two sentences. Reply in the SAME LANGUAGE as the user's request. Do "
-    "not invent figures; only restate what the Verdict already says."
+    "not invent figures; only restate what the Verdict already says. "
+    "When a Discrepancy carries `stated` or `expected` values, quote them "
+    "verbatim in the comment body — do not paraphrase, abbreviate, or "
+    "convert units."
 )
 
 
@@ -76,20 +79,21 @@ class PdfReviewAgent:
             model_settings=runtime.fast_model_settings,
         )
 
-    async def orchestrate(self, request: OrchestratorRequest) -> EditPlanResponse:
-        if is_math_intent(request.user_message):
-            verdict = extract_math_verdict(request)
-            if verdict is None:
-                return EditPlanResponse(
-                    summary="",
-                    steps=[
-                        ToolOperationStep(
-                            tool=AgentToolId.MATH_AUDITOR_AGENT,
-                            parameters=MathAuditorAgentParams(),
-                        )
-                    ],
-                    resume_with=SupportedCapability.PDF_REVIEW,
-                )
+    async def orchestrate(
+        self,
+        request: OrchestratorRequest,
+        consult_math_auditor: bool = False,
+    ) -> EditPlanResponse:
+        """Entry point for the orchestrator delegate.
+
+        ``consult_math_auditor`` is set by the orchestrator's top-level LLM (so the
+        decision is language-agnostic). When True, consult the math-auditor specialist
+        first and project the resulting Verdict into localised sticky-note specs.
+        Resume turns are detected by the presence of a Verdict artifact regardless
+        of the flag.
+        """
+        verdict = extract_math_verdict(request)
+        if verdict is not None:
             comments_json = await self._build_localised_comments_payload(request.user_message, verdict)
             return EditPlanResponse(
                 summary="",
@@ -99,6 +103,18 @@ class PdfReviewAgent:
                         parameters=AddCommentsParams(comments=comments_json),
                     )
                 ],
+            )
+
+        if consult_math_auditor:
+            return EditPlanResponse(
+                summary="",
+                steps=[
+                    ToolOperationStep(
+                        tool=AgentToolId.MATH_AUDITOR_AGENT,
+                        parameters=MathAuditorAgentParams(),
+                    )
+                ],
+                resume_with=SupportedCapability.PDF_REVIEW,
             )
 
         return EditPlanResponse(

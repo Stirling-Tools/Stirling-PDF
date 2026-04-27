@@ -42,7 +42,7 @@ async def test_delegate_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime
     )
     ctx = SimpleNamespace(deps=_FakeDeps(request=request))
 
-    response = await orchestrator.delegate_pdf_review(ctx)  # type: ignore[arg-type]
+    response = await orchestrator.delegate_pdf_review(ctx, consult_math_auditor=False)  # type: ignore[arg-type]
 
     assert isinstance(response, EditPlanResponse)
     assert len(response.steps) == 1

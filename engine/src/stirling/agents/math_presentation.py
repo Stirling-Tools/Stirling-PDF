@@ -1,17 +1,13 @@
 """
-Math-auditor presentation helpers.
+Math-auditor presentation helper.
 
-Used by ``PdfQuestionAgent`` and ``PdfReviewAgent`` to decide when to consult
-the math auditor and to pull a Verdict back out of the resume-turn artifacts.
-
-Deliberately language-agnostic: rendering a Verdict as prose or as sticky-note
-text is the consumer's job (it has the user's prompt and a small LLM that
-can answer in any language). This module emits no user-facing strings.
+Used by ``PdfQuestionAgent`` and ``PdfReviewAgent`` to pull a Verdict back
+out of the resume-turn artifacts. Math intent itself is decided by the
+orchestrator's top-level LLM (so it works in any language) and passed in
+as a flag — this module no longer does its own English-only intent guess.
 """
 
 from __future__ import annotations
-
-import re
 
 from stirling.contracts import (
     OrchestratorRequest,
@@ -19,36 +15,6 @@ from stirling.contracts import (
     Verdict,
 )
 from stirling.models.agent_tool_models import AgentToolId
-
-# Keywords that suggest the user wants math/arithmetic/accounting analysis.
-# Kept deliberately narrow — false positives send harmless traffic to the
-# auditor; false negatives degrade to general Q&A which is also reasonable.
-_MATH_KEYWORDS = re.compile(
-    r"\b("
-    r"math|maths|arithmetic|calculation|calculate|calculating|"
-    r"sum|sums|total|totals|subtotal|"
-    r"tally|tallies|add\s+up|adds\s+up|"
-    r"percentage|percentages|"
-    r"balance|balances|"
-    r"invoice|invoices|ledger|accounting|accounts|financial|"
-    r"audit|auditing|reconcile|reconciling|"
-    r"figure|figures|number|numbers"
-    r")\b",
-    re.IGNORECASE,
-)
-
-
-def is_math_intent(user_message: str) -> bool:
-    """Return True if the prompt reads like a math/accounting query.
-
-    Simple keyword match — the orchestrator's top-level LLM has already routed
-    the request to pdf_question/pdf_review based on question vs review intent;
-    this just decides whether to pull in the math specialist inside the
-    meta-agent. Good enough for an MVP; can upgrade to a tiny classifier later.
-    """
-    if not user_message:
-        return False
-    return _MATH_KEYWORDS.search(user_message) is not None
 
 
 def extract_math_verdict(request: OrchestratorRequest) -> Verdict | None:

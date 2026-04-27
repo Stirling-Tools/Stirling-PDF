@@ -15,11 +15,15 @@ from unittest.mock import patch
 import pytest
 
 from stirling.agents.pdf_review import (
+    _LOCALISER_SYSTEM_PROMPT,
     PdfReviewAgent,
     _LocalisedComment,
     _LocalisedVerdict,
 )
+from stirling.contracts import EditPlanResponse, OrchestratorRequest, SupportedCapability
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
+from stirling.models import ToolEndpoint
+from stirling.models.agent_tool_models import AgentToolId, PdfCommentAgentParams
 from stirling.services.runtime import AppRuntime
 
 
@@ -128,3 +132,83 @@ async def test_payload_serialises_anchor_text_as_camel_case(runtime: AppRuntime)
     assert payload[0]["anchorText"] == "110"
     assert payload[0]["pageIndex"] == 2
     assert payload[0]["text"] == "Subtotal wrong."
+
+
+# ---------------------------------------------------------------------------
+# orchestrate() — flag-driven first-turn routing
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.anyio
+async def test_orchestrate_consult_math_emits_math_audit_plan(runtime: AppRuntime) -> None:
+    """First turn with consult_math_auditor=True and no Verdict artifact should
+    emit a one-step plan calling the math auditor with resume_with=PDF_REVIEW."""
+    agent = PdfReviewAgent(runtime)
+    request = OrchestratorRequest(user_message="vérifie les totaux", file_names=["report.pdf"])
+
+    response = await agent.orchestrate(request, consult_math_auditor=True)
+
+    assert isinstance(response, EditPlanResponse)
+    assert response.resume_with == SupportedCapability.PDF_REVIEW
+    assert len(response.steps) == 1
+    assert response.steps[0].tool == AgentToolId.MATH_AUDITOR_AGENT
+
+
+@pytest.mark.anyio
+async def test_orchestrate_no_math_routes_to_pdf_comment_agent(runtime: AppRuntime) -> None:
+    """consult_math_auditor=False (no Verdict) should delegate to pdf-comment-agent."""
+    agent = PdfReviewAgent(runtime)
+    request = OrchestratorRequest(
+        user_message="review the invoices for ambiguous wording",
+        file_names=["contract.pdf"],
+    )
+
+    response = await agent.orchestrate(request, consult_math_auditor=False)
+
+    assert isinstance(response, EditPlanResponse)
+    assert response.resume_with is None
+    assert len(response.steps) == 1
+    assert response.steps[0].tool == AgentToolId.PDF_COMMENT_AGENT
+    assert isinstance(response.steps[0].parameters, PdfCommentAgentParams)
+    assert response.steps[0].parameters.prompt == request.user_message
+
+
+@pytest.mark.anyio
+async def test_orchestrate_resume_uses_verdict_regardless_of_flag(runtime: AppRuntime) -> None:
+    """Resume turns are detected by Verdict-artifact presence; the flag is not
+    required to be True for the localiser path to fire."""
+    from stirling.contracts import ToolReportArtifact
+
+    agent = PdfReviewAgent(runtime)
+    verdict = _make_verdict([_discrepancy(page=0, stated="$100")])
+    request = OrchestratorRequest(
+        user_message="flag math errors",
+        file_names=["report.pdf"],
+        artifacts=[
+            ToolReportArtifact(
+                source_tool=AgentToolId.MATH_AUDITOR_AGENT,
+                report=verdict.model_dump(mode="json"),
+            )
+        ],
+    )
+    canned = _LocalisedVerdict(
+        comments=[_LocalisedComment(discrepancy_index=0, subject="Wrong", text="Off.")],
+    )
+    with patch.object(agent._localiser_agent, "run", return_value=_StubResult(output=canned)):
+        response = await agent.orchestrate(request, consult_math_auditor=False)
+
+    assert isinstance(response, EditPlanResponse)
+    assert response.resume_with is None
+    assert len(response.steps) == 1
+    assert response.steps[0].tool == ToolEndpoint.ADD_COMMENTS
+
+
+# ---------------------------------------------------------------------------
+# Prompt pinning — guard against accidental drift
+# ---------------------------------------------------------------------------
+
+
+def test_localiser_prompt_requires_verbatim_quoting() -> None:
+    """If this prompt is rephrased and drops the verbatim rule, the LLM may
+    paraphrase numeric values like ``$215,000`` as 'about $215k'."""
+    assert "verbatim" in _LOCALISER_SYSTEM_PROMPT.lower()

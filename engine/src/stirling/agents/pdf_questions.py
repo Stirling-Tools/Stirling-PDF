@@ -8,7 +8,7 @@ from stirling.agents._page_text import (
     get_extracted_text_artifact,
     has_page_text,
 )
-from stirling.agents.math_presentation import extract_math_verdict, is_math_intent
+from stirling.agents.math_presentation import extract_math_verdict
 from stirling.contracts import (
     EditPlanResponse,
     NeedContentFileRequest,
@@ -32,7 +32,9 @@ _MATH_SYNTH_SYSTEM_PROMPT = (
     "original question. Answer the question in plain prose using only "
     "facts from the Verdict; do not invent figures or pages. "
     "Reply in the SAME LANGUAGE as the user's question. Keep the answer "
-    "concise — a sentence or short paragraph."
+    "concise — a sentence or short paragraph. "
+    "Quote any stated/expected numeric values from the Verdict verbatim — "
+    "do not paraphrase, abbreviate, or convert units."
 )
 
 
@@ -83,32 +85,39 @@ class PdfQuestionAgent:
             )
         return await self._run_answer_agent(request)
 
-    async def orchestrate(self, request: OrchestratorRequest) -> PdfQuestionResponse | EditPlanResponse:
+    async def orchestrate(
+        self,
+        request: OrchestratorRequest,
+        consult_math_auditor: bool = False,
+    ) -> PdfQuestionResponse | EditPlanResponse:
         """Entry point for the orchestrator delegate.
 
-        When the prompt smells like math, consults the math-auditor specialist first (via a
-        plan step + resume), then digests the :class:`Verdict` into a prose answer. All other
-        prompts fall through to the normal :meth:`handle` pipeline.
+        ``consult_math_auditor`` is set by the orchestrator's top-level LLM (so the
+        decision is language-agnostic). When True, consult the math-auditor specialist
+        first (via a plan step + resume), then digest the :class:`Verdict` into a
+        localised prose answer. Resume turns are detected by the presence of a
+        Verdict artifact regardless of the flag.
         """
-        if is_math_intent(request.user_message):
-            verdict = extract_math_verdict(request)
-            if verdict is None:
-                # First turn — ask Java to run the math specialist and come back.
-                return EditPlanResponse(
-                    summary="",
-                    steps=[
-                        ToolOperationStep(
-                            tool=AgentToolId.MATH_AUDITOR_AGENT,
-                            parameters=MathAuditorAgentParams(),
-                        )
-                    ],
-                    resume_with=SupportedCapability.PDF_QUESTION,
-                )
-            # Second turn — Verdict in hand. Synthesise a localised answer from
+        verdict = extract_math_verdict(request)
+        if verdict is not None:
+            # Resume turn — Verdict in hand. Synthesise a localised answer from
             # the structured verdict via a small LLM that mirrors the user's
             # language; no English glue in the response.
             answer = await self._synthesise_math_answer(request.user_message, verdict)
             return PdfQuestionAnswerResponse(answer=answer, evidence=[])
+
+        if consult_math_auditor:
+            # First turn — ask Java to run the math specialist and come back.
+            return EditPlanResponse(
+                summary="",
+                steps=[
+                    ToolOperationStep(
+                        tool=AgentToolId.MATH_AUDITOR_AGENT,
+                        parameters=MathAuditorAgentParams(),
+                    )
+                ],
+                resume_with=SupportedCapability.PDF_QUESTION,
+            )
 
         extracted_text = get_extracted_text_artifact(request)
         return await self.handle(

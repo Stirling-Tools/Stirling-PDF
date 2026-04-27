@@ -88,7 +88,13 @@ class OrchestratorAgent:
                 " 'leave feedback on the PDF'. If the user is asking a question about the PDF"
                 " contents (and does NOT want comments written onto the document) use"
                 " delegate_pdf_question instead. "
-                "Use unsupported_capability only when none of the other outputs fit."
+                "Use unsupported_capability only when none of the other outputs fit. "
+                "When calling delegate_pdf_question or delegate_pdf_review, set"
+                " consult_math_auditor=true if the request is about checking, auditing,"
+                " recalculating, or verifying numerical content (totals, sums, percentages,"
+                " balances, arithmetic, financial figures). Set it to false for any"
+                " non-numerical review or question. Decide from the meaning of the request,"
+                " not specific keywords; the request may be in any language."
             ),
             model_settings=runtime.fast_model_settings,
         )
@@ -150,11 +156,19 @@ class OrchestratorAgent:
             )
         )
 
-    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse | EditPlanResponse:
-        return await self._run_pdf_question(ctx.deps.request)
+    async def delegate_pdf_question(
+        self,
+        ctx: RunContext[OrchestratorDeps],
+        consult_math_auditor: bool,
+    ) -> PdfQuestionResponse | EditPlanResponse:
+        return await self._run_pdf_question(ctx.deps.request, consult_math_auditor)
 
-    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse | EditPlanResponse:
-        return await PdfQuestionAgent(self.runtime).orchestrate(request)
+    async def _run_pdf_question(
+        self,
+        request: OrchestratorRequest,
+        consult_math_auditor: bool = False,
+    ) -> PdfQuestionResponse | EditPlanResponse:
+        return await PdfQuestionAgent(self.runtime).orchestrate(request, consult_math_auditor)
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
         return await self._run_agent_draft(ctx.deps.request)
@@ -167,11 +181,19 @@ class OrchestratorAgent:
             )
         )
 
-    async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
-        return await self._run_pdf_review(ctx.deps.request)
+    async def delegate_pdf_review(
+        self,
+        ctx: RunContext[OrchestratorDeps],
+        consult_math_auditor: bool,
+    ) -> EditPlanResponse:
+        return await self._run_pdf_review(ctx.deps.request, consult_math_auditor)
 
-    async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse:
-        return await PdfReviewAgent(self.runtime).orchestrate(request)
+    async def _run_pdf_review(
+        self,
+        request: OrchestratorRequest,
+        consult_math_auditor: bool = False,
+    ) -> EditPlanResponse:
+        return await PdfReviewAgent(self.runtime).orchestrate(request, consult_math_auditor)
 
     async def unsupported_capability(
         self,
