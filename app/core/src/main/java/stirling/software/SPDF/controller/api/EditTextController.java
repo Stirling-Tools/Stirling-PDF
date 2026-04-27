@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -45,9 +46,12 @@ import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEdi
  * input PDF is parsed into the editable JSON model, find/replace operations are applied to the
  * {@code text} field of each text element, and the mutated model is rebuilt into a PDF.
  *
- * <p>Matching is per-element. A find string that spans multiple text spans (which can happen for
- * phrases broken across kerning, font runs, or layout boundaries) will not match: callers should
- * keep find strings short, ideally individual words, when reliability matters.
+ * <p>Matching joins all text elements on a page into a single string before searching, so find
+ * strings can span multiple visual runs (titles split per word, kerning-broken phrases, etc.). When
+ * a match crosses element boundaries the full replacement is written into the first matched
+ * element, the trailing portion is preserved on the last matched element, and any intermediate
+ * elements are emptied. Visual layout may shift slightly for cross-element replacements because
+ * each element keeps its original X/Y position.
  */
 @Slf4j
 @GeneralApi
@@ -76,9 +80,11 @@ public class EditTextController {
                             + " returns the edited PDF. Useful for find-and-replace, bulk renames"
                             + " (e.g. updating a company name throughout a document), and copy"
                             + " editing where the AI agent has identified specific replacements."
-                            + " Matching is per-text-span, so find strings that span multiple"
-                            + " visual runs may not match (prefer short find strings)."
-                            + " Input:PDF Output:PDF Type:SISO")
+                            + " Matching is performed against the joined text of each page, so"
+                            + " find strings can span multiple visual runs (titles split per word,"
+                            + " kerning-broken phrases). Visual layout may shift slightly for"
+                            + " cross-element replacements because each element keeps its original"
+                            + " X/Y position. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<Resource> editText(@ModelAttribute EditTextRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -178,28 +184,130 @@ public class EditTextController {
             if (pageFilter != null && !pageFilter.contains(pageNumber)) {
                 continue;
             }
-            if (page.getTextElements() == null) {
-                continue;
-            }
-            for (PdfJsonTextElement element : page.getTextElements()) {
-                String original = element.getText();
-                if (original == null || original.isEmpty()) {
-                    continue;
-                }
-                String mutated = original;
-                for (CompiledEdit edit : edits) {
-                    mutated = edit.pattern().matcher(mutated).replaceAll(edit.replacement());
-                }
-                if (!mutated.equals(original)) {
-                    element.setText(mutated);
-                    // Char codes were captured for the original glyph sequence; clear them so the
-                    // rebuild re-encodes from the new text via the font.
-                    element.setCharCodes(null);
-                    modifiedSpans++;
-                }
-            }
+            modifiedSpans += applyEditsToPage(page, edits);
         }
         return modifiedSpans;
+    }
+
+    private int applyEditsToPage(PdfJsonPage page, List<CompiledEdit> edits) {
+        List<PdfJsonTextElement> elements = page.getTextElements();
+        if (elements == null || elements.isEmpty()) {
+            return 0;
+        }
+        Set<Integer> modifiedIndices = new HashSet<>();
+        for (CompiledEdit edit : edits) {
+            applyEditToPage(elements, edit, modifiedIndices);
+        }
+        for (Integer index : modifiedIndices) {
+            // Char codes were captured for the original glyph sequence; clear them so the rebuild
+            // re-encodes from the new text via the font.
+            elements.get(index).setCharCodes(null);
+        }
+        return modifiedIndices.size();
+    }
+
+    /**
+     * Apply a single edit across the page by matching against the concatenation of all element
+     * texts, then writing the replacement back into the originating element(s).
+     */
+    private void applyEditToPage(
+            List<PdfJsonTextElement> elements, CompiledEdit edit, Set<Integer> modifiedIndices) {
+        StringBuilder joined = new StringBuilder();
+        int[] starts = new int[elements.size()];
+        int[] ends = new int[elements.size()];
+        for (int i = 0; i < elements.size(); i++) {
+            starts[i] = joined.length();
+            String text = elements.get(i).getText();
+            if (text != null) {
+                joined.append(text);
+            }
+            ends[i] = joined.length();
+        }
+
+        Matcher matcher = edit.pattern().matcher(joined);
+        List<MatchSpan> spans = new ArrayList<>();
+        StringBuffer interpolation = new StringBuffer();
+        int previousAppendPosition = 0;
+        while (matcher.find()) {
+            if (matcher.start() == matcher.end()) {
+                // Skip zero-length matches (e.g. /a*/ on empty input) — they cannot be applied.
+                continue;
+            }
+            int sizeBefore = interpolation.length();
+            matcher.appendReplacement(interpolation, edit.replacement());
+            int prefixLength = matcher.start() - previousAppendPosition;
+            String actualReplacement =
+                    interpolation.substring(sizeBefore + prefixLength, interpolation.length());
+            spans.add(new MatchSpan(matcher.start(), matcher.end(), actualReplacement));
+            previousAppendPosition = matcher.end();
+        }
+
+        // Apply right-to-left so earlier match positions stay valid as we mutate elements.
+        for (int i = spans.size() - 1; i >= 0; i--) {
+            MatchSpan span = spans.get(i);
+            int firstElement = findElementForCharIndex(starts, ends, span.start());
+            int lastElement = findElementForCharIndex(starts, ends, span.end() - 1);
+            if (firstElement < 0 || lastElement < 0) {
+                continue;
+            }
+            applyMatchToElements(
+                    elements, starts, span, firstElement, lastElement, modifiedIndices);
+        }
+    }
+
+    /**
+     * Find the element whose text covers the character at {@code charIndex} in the joined string.
+     * Returns -1 if no element covers that index (which should not happen for valid match spans).
+     */
+    private static int findElementForCharIndex(int[] starts, int[] ends, int charIndex) {
+        for (int i = 0; i < starts.length; i++) {
+            if (starts[i] <= charIndex && charIndex < ends[i]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static void applyMatchToElements(
+            List<PdfJsonTextElement> elements,
+            int[] starts,
+            MatchSpan span,
+            int firstElement,
+            int lastElement,
+            Set<Integer> modifiedIndices) {
+        if (firstElement == lastElement) {
+            PdfJsonTextElement element = elements.get(firstElement);
+            String text = nullToEmpty(element.getText());
+            int matchStartInElement = span.start() - starts[firstElement];
+            int matchEndInElement = span.end() - starts[firstElement];
+            element.setText(
+                    text.substring(0, matchStartInElement)
+                            + span.replacement()
+                            + text.substring(matchEndInElement));
+            modifiedIndices.add(firstElement);
+            return;
+        }
+
+        PdfJsonTextElement first = elements.get(firstElement);
+        String firstText = nullToEmpty(first.getText());
+        int firstSplit = span.start() - starts[firstElement];
+        first.setText(firstText.substring(0, firstSplit) + span.replacement());
+        modifiedIndices.add(firstElement);
+
+        for (int mid = firstElement + 1; mid < lastElement; mid++) {
+            elements.get(mid).setText("");
+            modifiedIndices.add(mid);
+        }
+
+        PdfJsonTextElement last = elements.get(lastElement);
+        String lastText = nullToEmpty(last.getText());
+        int lastSplit = span.end() - starts[lastElement];
+        last.setText(lastText.substring(lastSplit));
+        modifiedIndices.add(lastElement);
+    }
+
+    private static String nullToEmpty(String value) {
+        return value != null ? value : "";
     }
 
     private String buildOutputFilename(MultipartFile inputFile) {
@@ -214,4 +322,6 @@ public class EditTextController {
     }
 
     private record CompiledEdit(Pattern pattern, String replacement) {}
+
+    private record MatchSpan(int start, int end, String replacement) {}
 }

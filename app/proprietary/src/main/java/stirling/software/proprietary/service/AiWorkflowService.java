@@ -311,8 +311,15 @@ public class AiWorkflowService {
         }
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
-                for (Object item : list) {
-                    body.add(entry.getKey(), item);
+                if (containsStructuredElements(list)) {
+                    // Endpoints binding lists of structured objects (e.g. /security/redact's
+                    // redactions, /general/edit-text's edits) parse a single JSON string field via
+                    // a property editor. Pre-serialize the whole list so binding succeeds.
+                    body.add(entry.getKey(), objectMapper.writeValueAsString(list));
+                } else {
+                    for (Object item : list) {
+                        body.add(entry.getKey(), item);
+                    }
                 }
             } else {
                 body.add(entry.getKey(), entry.getValue());
@@ -328,6 +335,15 @@ public class AiWorkflowService {
             return ZipExtractionUtils.extractZip(resource, tempFileManager);
         }
         return List.of(resource);
+    }
+
+    private static boolean containsStructuredElements(List<?> list) {
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> || item instanceof List<?>) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesByName) throws IOException {

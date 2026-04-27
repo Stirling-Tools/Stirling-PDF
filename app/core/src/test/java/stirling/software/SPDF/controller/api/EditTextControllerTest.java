@@ -79,6 +79,22 @@ class EditTextControllerTest {
         return op;
     }
 
+    private static PdfJsonTextElement textElement(String text) {
+        PdfJsonTextElement el = new PdfJsonTextElement();
+        el.setText(text);
+        el.setCharCodes(new int[] {1, 2, 3});
+        return el;
+    }
+
+    private static PdfJsonDocument documentWithElements(List<PdfJsonTextElement> elements) {
+        PdfJsonDocument doc = new PdfJsonDocument();
+        PdfJsonPage page = new PdfJsonPage();
+        page.setPageNumber(1);
+        page.setTextElements(new ArrayList<>(elements));
+        doc.setPages(new ArrayList<>(List.of(page)));
+        return doc;
+    }
+
     private static PdfJsonDocument documentWithText(String... textsByPage) {
         PdfJsonDocument doc = new PdfJsonDocument();
         List<PdfJsonPage> pages = new ArrayList<>();
@@ -392,6 +408,152 @@ class EditTextControllerTest {
         PdfJsonDocument mutated = captor.getValue();
         assertNull(mutated.getPages().get(0).getTextElements().get(0).getText());
         assertEquals("bar here", mutated.getPages().get(0).getTextElements().get(1).getText());
+    }
+
+    @Test
+    void editText_crossElement_matchSpansTwoElements() throws Exception {
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(List.of(edit("Hello World", "Goodbye Earth")));
+
+        PdfJsonDocument input =
+                documentWithElements(List.of(textElement("Hello "), textElement("World")));
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
+
+        // First element absorbs the full replacement; last element is emptied (nothing remained
+        // after the matched portion). Char codes cleared on both modified elements.
+        assertEquals("Goodbye Earth", elements.get(0).getText());
+        assertEquals("", elements.get(1).getText());
+        assertNull(elements.get(0).getCharCodes());
+        assertNull(elements.get(1).getCharCodes());
+    }
+
+    @Test
+    void editText_crossElement_matchSpansFiveElementsLikeFragmentedTitle() throws Exception {
+        // Reproduces the real-world case: a multi-word title fragmented one word per text span.
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(
+                List.of(edit("The Free Adobe Acrobat Alternative", "The PDF automation pipeline")));
+
+        PdfJsonDocument input =
+                documentWithElements(
+                        List.of(
+                                textElement("The "),
+                                textElement("Free "),
+                                textElement("Adobe "),
+                                textElement("Acrobat "),
+                                textElement("Alternative")));
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
+
+        assertEquals("The PDF automation pipeline", elements.get(0).getText());
+        assertEquals("", elements.get(1).getText());
+        assertEquals("", elements.get(2).getText());
+        assertEquals("", elements.get(3).getText());
+        assertEquals("", elements.get(4).getText());
+    }
+
+    @Test
+    void editText_crossElement_preservesPrefixAndSuffix() throws Exception {
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(List.of(edit("Hello World", "Goodbye Earth")));
+
+        PdfJsonDocument input =
+                documentWithElements(
+                        List.of(textElement("Greeting: Hello "), textElement("World! And more")));
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
+
+        assertEquals("Greeting: Goodbye Earth", elements.get(0).getText());
+        assertEquals("! And more", elements.get(1).getText());
+    }
+
+    @Test
+    void editText_matchInOneElementOfMany_onlyTouchesThatElement() throws Exception {
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(List.of(edit("World", "Earth")));
+
+        PdfJsonDocument input =
+                documentWithElements(
+                        List.of(
+                                textElement("Hello "),
+                                textElement("World!"),
+                                textElement(" Goodbye")));
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
+
+        assertEquals("Hello ", elements.get(0).getText());
+        assertEquals("Earth!", elements.get(1).getText());
+        assertEquals(" Goodbye", elements.get(2).getText());
+        // Only the modified element's char codes get cleared.
+        assertNotNull(elements.get(0).getCharCodes());
+        assertNull(elements.get(1).getCharCodes());
+        assertNotNull(elements.get(2).getCharCodes());
+    }
+
+    @Test
+    void editText_crossElement_multipleMatchesAppliedRightToLeft() throws Exception {
+        // Two matches in the same page text. Right-to-left application keeps earlier indices
+        // valid as later matches are written.
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(List.of(edit("foo bar", "X")));
+
+        PdfJsonDocument input =
+                documentWithElements(
+                        List.of(
+                                textElement("foo "),
+                                textElement("bar baz "),
+                                textElement("foo "),
+                                textElement("bar")));
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
+
+        // Joined was "foo bar baz foo bar"; both "foo bar" runs replaced with "X".
+        StringBuilder joined = new StringBuilder();
+        for (PdfJsonTextElement el : elements) {
+            joined.append(el.getText() == null ? "" : el.getText());
+        }
+        assertEquals("X baz X", joined.toString());
     }
 
     @Test
