@@ -1,20 +1,14 @@
 """Tests for ``stirling.agents.math_presentation``.
 
-Focus is on the Verdict → CommentSpec projection — specifically that each spec
-carries an ``anchor_text`` value so the ``/api/v1/misc/add-comments`` server can
-place the sticky note at the line where the discrepancy was flagged instead of
-the fixed right-margin fallback.
+Only language-agnostic helpers live in this module now: intent detection
+and Verdict-artifact extraction. Verdict → prose / sticky-note text are
+the consumer agents' responsibility (they speak the user's language via
+their own LLM calls), so those projections are tested with each consumer.
 """
 
 from __future__ import annotations
 
-from stirling.agents.math_presentation import (
-    extract_math_verdict,
-    is_math_intent,
-    verdict_to_add_comments_payload,
-    verdict_to_comment_specs,
-    verdict_to_prose,
-)
+from stirling.agents.math_presentation import extract_math_verdict, is_math_intent
 from stirling.contracts import OrchestratorRequest, ToolReportArtifact, WorkflowArtifact
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
 from stirling.models.agent_tool_models import AgentToolId
@@ -29,89 +23,6 @@ def _make_verdict(discrepancies: list[Discrepancy]) -> Verdict:
         summary="Test verdict.",
         clean=not discrepancies,
     )
-
-
-def test_specs_prefer_stated_as_anchor_text() -> None:
-    verdict = _make_verdict(
-        [
-            Discrepancy(
-                page=0,
-                kind=DiscrepancyKind.TALLY,
-                severity=Severity.ERROR,
-                description="Column total is wrong.",
-                stated="$215,000",
-                expected="$215,500",
-                context="Total row",
-            )
-        ]
-    )
-
-    specs = verdict_to_comment_specs(verdict)
-    assert len(specs) == 1
-    assert specs[0].anchor_text == "$215,000"
-
-
-def test_specs_fall_back_to_context_when_stated_missing() -> None:
-    verdict = _make_verdict(
-        [
-            Discrepancy(
-                page=1,
-                kind=DiscrepancyKind.STATEMENT,
-                severity=Severity.WARNING,
-                description="Claim contradicts numbers.",
-                stated="",
-                expected="",
-                context="We grew 15% this year",
-            )
-        ]
-    )
-
-    specs = verdict_to_comment_specs(verdict)
-    assert specs[0].anchor_text == "We grew 15% this year"
-
-
-def test_specs_anchor_text_none_when_no_hints() -> None:
-    verdict = _make_verdict(
-        [
-            Discrepancy(
-                page=0,
-                kind=DiscrepancyKind.TALLY,
-                severity=Severity.ERROR,
-                description="Column total is wrong.",
-                stated="",
-                expected="500",
-                context="",
-            )
-        ]
-    )
-
-    specs = verdict_to_comment_specs(verdict)
-    assert specs[0].anchor_text is None
-
-
-def test_payload_serialises_anchor_text_as_camel_case() -> None:
-    verdict = _make_verdict(
-        [
-            Discrepancy(
-                page=2,
-                kind=DiscrepancyKind.ARITHMETIC,
-                severity=Severity.ERROR,
-                description="Off by ten.",
-                stated="110",
-                expected="100",
-                context="Line 3",
-            )
-        ]
-    )
-
-    import json as _json
-
-    payload = _json.loads(verdict_to_add_comments_payload(verdict))
-    assert len(payload) == 1
-    # Java deserialises via record-component names (camelCase), so the JSON
-    # key must be ``anchorText`` not ``anchor_text``.
-    assert payload[0]["anchorText"] == "110"
-    assert payload[0]["pageIndex"] == 2
 
 
 def test_is_math_intent_matches_math_keywords() -> None:
@@ -191,53 +102,3 @@ def test_extract_math_verdict_degrades_gracefully_on_malformed_report() -> None:
     )
     request = _orchestrator_request_with_artifacts([malformed])
     assert extract_math_verdict(request) is None
-
-
-# ---------------------------------------------------------------------------
-# Prose rendering — pdf_question math path
-# ---------------------------------------------------------------------------
-
-
-def test_verdict_to_prose_announces_clean_verdict() -> None:
-    verdict = Verdict(
-        session_id="s1",
-        discrepancies=[],
-        pages_examined=[0, 1],
-        rounds_taken=1,
-        summary="All totals reconcile.",
-        clean=True,
-    )
-    prose = verdict_to_prose(verdict)
-    assert "No mathematical issues" in prose
-    assert "2 page" in prose
-    assert "All totals reconcile." in prose
-
-
-def test_verdict_to_prose_lists_errors_and_warnings() -> None:
-    verdict = _make_verdict(
-        [
-            Discrepancy(
-                page=0,
-                kind=DiscrepancyKind.TALLY,
-                severity=Severity.ERROR,
-                description="Subtotal wrong.",
-                stated="110",
-                expected="100",
-                context="Line 3",
-            ),
-            Discrepancy(
-                page=1,
-                kind=DiscrepancyKind.STATEMENT,
-                severity=Severity.WARNING,
-                description="Growth claim unverified.",
-                stated="",
-                expected="",
-                context="Paragraph 2",
-            ),
-        ]
-    )
-    prose = verdict_to_prose(verdict)
-    assert "1 error" in prose
-    assert "1 warning" in prose
-    assert "Page 1" in prose and "Page 2" in prose  # 1-indexed pages
-    assert "stated 110, expected 100" in prose

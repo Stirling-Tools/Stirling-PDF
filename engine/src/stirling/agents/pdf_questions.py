@@ -8,11 +8,7 @@ from stirling.agents._page_text import (
     get_extracted_text_artifact,
     has_page_text,
 )
-from stirling.agents.math_presentation import (
-    extract_math_verdict,
-    is_math_intent,
-    verdict_to_prose,
-)
+from stirling.agents.math_presentation import extract_math_verdict, is_math_intent
 from stirling.contracts import (
     EditPlanResponse,
     NeedContentFileRequest,
@@ -25,10 +21,19 @@ from stirling.contracts import (
     PdfQuestionResponse,
     SupportedCapability,
     ToolOperationStep,
+    Verdict,
     format_conversation_history,
 )
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
+
+_MATH_SYNTH_SYSTEM_PROMPT = (
+    "You are given a math-audit Verdict (structured JSON) and the user's "
+    "original question. Answer the question in plain prose using only "
+    "facts from the Verdict; do not invent figures or pages. "
+    "Reply in the SAME LANGUAGE as the user's question. Keep the answer "
+    "concise — a sentence or short paragraph."
+)
 
 
 class PdfQuestionAgent:
@@ -47,11 +52,18 @@ class PdfQuestionAgent:
                 "Answer questions about PDFs using only the extracted page text provided in the prompt. "
                 "Do not guess or use outside knowledge. "
                 "If the answer is not supported by the provided text, return not_found. "
-                "When answering, include a short list of evidence snippets with their page numbers."
+                "When answering, include a short list of evidence snippets with their page numbers. "
+                "Reply in the SAME LANGUAGE as the question."
             ),
             instructions=rag.instructions,
             toolsets=[rag.toolset],
             model_settings=runtime.smart_model_settings,
+        )
+        self._math_synth_agent: Agent[None, str] = Agent(
+            model=runtime.fast_model,
+            output_type=str,
+            system_prompt=_MATH_SYNTH_SYSTEM_PROMPT,
+            model_settings=runtime.fast_model_settings,
         )
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
@@ -83,7 +95,7 @@ class PdfQuestionAgent:
             if verdict is None:
                 # First turn — ask Java to run the math specialist and come back.
                 return EditPlanResponse(
-                    summary="Consulting the math auditor to answer the question...",
+                    summary="",
                     steps=[
                         ToolOperationStep(
                             tool=AgentToolId.MATH_AUDITOR_AGENT,
@@ -92,11 +104,11 @@ class PdfQuestionAgent:
                     ],
                     resume_with=SupportedCapability.PDF_QUESTION,
                 )
-            # Second turn — Verdict in hand, render as a prose answer.
-            return PdfQuestionAnswerResponse(
-                answer=verdict_to_prose(verdict),
-                evidence=[],
-            )
+            # Second turn — Verdict in hand. Synthesise a localised answer from
+            # the structured verdict via a small LLM that mirrors the user's
+            # language; no English glue in the response.
+            answer = await self._synthesise_math_answer(request.user_message, verdict)
+            return PdfQuestionAnswerResponse(answer=answer, evidence=[])
 
         extracted_text = get_extracted_text_artifact(request)
         return await self.handle(
@@ -110,6 +122,15 @@ class PdfQuestionAgent:
 
     async def _run_answer_agent(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         result = await self.agent.run(self._build_prompt(request))
+        return result.output
+
+    async def _synthesise_math_answer(self, user_message: str, verdict: Verdict) -> str:
+        """Use a small LLM to render the structured Verdict as a natural-language
+        answer in the same language as the user's question. The system prompt
+        forbids invented figures; the LLM only restates Verdict facts.
+        """
+        prompt = f"User question:\n{user_message}\n\nMath audit Verdict (JSON):\n{verdict.model_dump_json()}"
+        result = await self._math_synth_agent.run(prompt)
         return result.output
 
     def _build_prompt(self, request: PdfQuestionRequest) -> str:
