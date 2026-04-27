@@ -361,6 +361,11 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
+      - name: Build frontend (production bundle for vite preview)
+        # Playwright's webServer runs `vite preview` in CI so the heavy tool
+        # pages don't pay vite's on-demand transform cost on first hit. The
+        # build output (dist/) is what `vite preview` serves.
+        run: task frontend:build
       - name: Run stubbed E2E tests (chromium)
         run: task frontend:test:e2e:stubbed -- --workers=3
       - name: Upload Playwright report
@@ -399,6 +404,10 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
+      - name: Build frontend (production bundle for vite preview)
+        # Playwright's webServer runs `vite preview` in CI; live tests still
+        # hit the Spring Boot backend at :8080 via vite's preview proxy.
+        run: task frontend:build
       - name: Start Spring Boot backend (background)
         env:
           # Suppress the analytics opt-in modal that fires on first admin login when

@@ -84,6 +84,11 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
+      - name: Build frontend (needed for playwright's vite preview webServer)
+        # Enterprise tests target :8080 (Spring Boot's bundled frontend), but
+        # playwright's webServer config still launches `vite preview --port 5173`
+        # before any test run, which needs dist/ to exist.
+        run: task frontend:build
 
       - name: Resolve kubernetes.docker.internal to localhost
         # The compose stacks set KC_HOSTNAME=kubernetes.docker.internal so

@@ -39,6 +39,56 @@ export default defineConfig(({ mode }) => {
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
+  // Shared between `vite` (dev) and `vite preview` (production-build serve, used
+  // in CI/E2E) so the live test suite still resolves /api → :8080.
+  const backendProxy =
+    effectiveMode === "desktop"
+      ? undefined
+      : {
+          "/api": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+          "/oauth2": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+          "/saml2": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+          "/login/oauth2": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+          "/login/saml2": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+          "/swagger-ui": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+          "/v1/api-docs": {
+            target: "http://localhost:8080",
+            changeOrigin: true,
+            secure: false,
+            xfwd: true,
+          },
+        };
+
   return {
     plugins: [
       react(),
@@ -84,53 +134,13 @@ export default defineConfig(({ mode }) => {
         ignored: ["**/src-tauri/**"],
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
-      proxy:
-        effectiveMode === "desktop"
-          ? undefined
-          : {
-              "/api": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/oauth2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/saml2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/login/oauth2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/login/saml2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/swagger-ui": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/v1/api-docs": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-            },
+      proxy: backendProxy,
+    },
+    preview: {
+      host: true,
+      port: 5173,
+      strictPort: true,
+      proxy: backendProxy,
     },
     base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
   };
