@@ -64,3 +64,22 @@ licenses-frontend: &licenses-frontend
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - *build
+
+# Files that can affect premium / enterprise behaviour. Gate the enterprise
+# Playwright job on changes to any of these on PRs.
+proprietary: &proprietary
+  - app/proprietary/**
+  - frontend/src/proprietary/**
+  - frontend/src/core/tests/enterprise/**
+  - testing/compose/docker-compose-keycloak-oauth.yml
+  - testing/compose/docker-compose-keycloak-saml.yml
+  - testing/compose/keycloak-realm-oauth.json
+  - testing/compose/keycloak-realm-saml.json
+  - testing/compose/start-oauth-test.sh
+  - testing/compose/start-saml-test.sh
+  - testing/compose/validate-oauth-test.sh
+  - testing/compose/validate-saml-test.sh
+  - configs/settings.yml.template
+  - build.gradle
+  - app/proprietary/build.gradle
+  - .github/workflows/build-enterprise.yml

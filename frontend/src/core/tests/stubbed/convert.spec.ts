@@ -7,96 +7,19 @@
 
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
+import { mockAppApis } from "@app/tests/helpers/api-stubs";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 
 // ---------------------------------------------------------------------------
-// Endpoint availability map — all conversion endpoints enabled
+// Helper: dismiss the tour tooltip that can intercept clicks on firefox/webkit
 // ---------------------------------------------------------------------------
-const MOCK_ENDPOINTS_AVAILABILITY = Object.fromEntries(
-  [
-    "pdf-to-img",
-    "img-to-pdf",
-    "pdf-to-word",
-    "file-to-pdf",
-    "pdf-to-text",
-    "pdf-to-html",
-    "pdf-to-xml",
-    "pdf-to-csv",
-    "pdf-to-xlsx",
-    "pdf-to-pdfa",
-    "pdf-to-pdfx",
-    "pdf-to-presentation",
-    "pdf-to-markdown",
-    "pdf-to-cbz",
-    "pdf-to-cbr",
-    "pdf-to-epub",
-    "html-to-pdf",
-    "svg-to-pdf",
-    "markdown-to-pdf",
-    "eml-to-pdf",
-    "cbz-to-pdf",
-    "cbr-to-pdf",
-  ].map((k) => [k, { enabled: true }]),
-);
-
-// ---------------------------------------------------------------------------
-// Helper: mock all standard app APIs needed to load the main UI
-// ---------------------------------------------------------------------------
-async function mockAppApis(page: Page) {
-  // Backend probe — must return UP so Landing shows app in anonymous mode
-  await page.route("**/api/v1/info/status", (route) =>
-    route.fulfill({ json: { status: "UP" } }),
-  );
-
-  // App config — enableLogin:false puts the app in anonymous mode
-  await page.route("**/api/v1/config/app-config", (route) =>
-    route.fulfill({
-      json: {
-        enableLogin: false,
-        languages: ["en-GB"],
-        defaultLocale: "en-GB",
-      },
-    }),
-  );
-
-  // Auth — fallback if anything calls auth/me
-  await page.route("**/api/v1/auth/me", (route) =>
-    route.fulfill({
-      json: {
-        id: 1,
-        username: "testuser",
-        email: "test@example.com",
-        roles: ["ROLE_USER"],
-      },
-    }),
-  );
-
-  // Endpoint availability — queried by ConvertSettings
-  await page.route("**/api/v1/config/endpoints-availability", (route) =>
-    route.fulfill({ json: MOCK_ENDPOINTS_AVAILABILITY }),
-  );
-
-  // Single-endpoint check — queried by Convert.tsx for the execute button
-  await page.route("**/api/v1/config/endpoint-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-
-  // Group-enabled check
-  await page.route("**/api/v1/config/group-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-
-  // Footer info — non-critical
-  await page.route("**/api/v1/ui-data/footer-info", (route) =>
-    route.fulfill({ json: {} }),
-  );
-
-  // Proprietary endpoints — silence proxy errors in the Vite dev server
-  await page.route("**/api/v1/proprietary/**", (route) =>
-    route.fulfill({ json: {} }),
-  );
+async function dismissTourTooltip(page: Page) {
+  const closeBtn = page.getByRole("button", { name: /close tooltip/i }).first();
+  if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    await closeBtn.click();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -192,6 +115,7 @@ test.describe("Convert Tool", () => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
     await selectToFormat(page, "png");
+    await dismissTourTooltip(page);
     await page.getByTestId("convert-button").click();
 
     await expect(page.getByTestId("download-result-button")).toBeVisible({
@@ -211,6 +135,7 @@ test.describe("Convert Tool", () => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
     await selectToFormat(page, "png");
+    await dismissTourTooltip(page);
     await page.getByTestId("convert-button").click();
 
     // Mantine Notification renders as role="alert"
