@@ -125,7 +125,7 @@
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.12",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
@@ -134,7 +134,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
-    "vite": "^7.1.7",
+    "vite": "^7.3.2",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
