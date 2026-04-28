@@ -3,6 +3,8 @@ name: Build and Test Workflow
 on:
   pull_request:
     branches: ["main"]
+  merge_group:
+    branches: ["main"]
   workflow_dispatch:
 
 # cancel in-progress jobs if a new job is triggered
@@ -98,7 +100,9 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
       - name: Comment on Java formatting failure
-        if: steps.spotless-check.outcome == 'failure'
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.spotless-check.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
@@ -195,6 +199,9 @@ jobs:
           if-no-files-found: warn
 
       - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
+        # The action only supports the pull_request event (it posts a PR comment),
+        # so skip it for merge_group runs and workflow_dispatch.
+        if: github.event_name == 'pull_request'
         id: jacoco
         uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
         with:
@@ -282,7 +289,9 @@ jobs:
         run: task frontend:check:all
         continue-on-error: true
       - name: Comment on frontend check failure
-        if: steps.frontend-check.outcome == 'failure'
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.frontend-check.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:

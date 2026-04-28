@@ -15,42 +15,21 @@ tasks:
       CI: '{{ .CI | default "false" }}'
 
   prepare:env:
-    desc: "Generate .env from example if missing"
-    run: once
+    internal: true
+    run: when_changed
     deps: [install]
+    vars:
+      MODE: '{{.MODE | default ""}}'
     cmds:
-      - npx tsx scripts/setup-env.ts
+      - npx tsx scripts/setup-env.ts{{if .MODE}} --{{.MODE}}{{end}}
     sources:
       - scripts/setup-env.ts
     generates:
       - .env.local
-
-  prepare:env:saas:
-    desc: "Generate .env and .env.saas from examples if missing"
-    run: once
-    deps: [install]
-    cmds:
-      - npx tsx scripts/setup-env.ts --saas
-    sources:
-      - scripts/setup-env.ts
-    generates:
-      - .env.local
-      - .env.saas.local
-
-  prepare:env:desktop:
-    desc: "Generate .env and .env.desktop from examples if missing"
-    run: once
-    deps: [install]
-    cmds:
-      - npx tsx scripts/setup-env.ts --desktop
-    sources:
-      - scripts/setup-env.ts
-    generates:
-      - .env.local
-      - .env.desktop.local
+      - .env{{if .MODE}}.{{.MODE}}{{end}}.local
 
   prepare:icons:
-    desc: "Generate icon bundle from source references"
+    internal: true
     run: once
     deps: [install]
     cmds:
@@ -58,64 +37,75 @@ tasks:
 
   prepare:
     desc: "Set up dev environment"
-    run: once
-    deps: [prepare:env, prepare:icons]
-
-  prepare:saas:
-    desc: "Prepare for SaaS mode"
-    run: once
-    deps: [prepare:env:saas, prepare:icons]
-
-  prepare:desktop:
-    desc: "Prepare for desktop mode"
-    run: once
-    deps: [prepare:env:desktop, prepare:icons]
+    run: when_changed
+    vars:
+      MODE: '{{.MODE | default ""}}'
+    deps:
+      - task: prepare:env
+        vars: { MODE: '{{.MODE}}' }
+      - prepare:icons
 
   # ============================================================
   # Development
   # ============================================================
 
+  dev:_run:
+    internal: true
+    ignore_error: true
+    vars:
+      MODE: '{{.MODE}}'
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
+    cmds:
+      - npx vite --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+
   dev:
     desc: "Start frontend dev server"
-    deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite
+      - task: dev:proprietary
+        vars: { PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:core:
     desc: "Start frontend dev server in core mode"
     deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite --mode core
+      - task: dev:_run
+        vars: { MODE: core, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:proprietary:
     desc: "Start frontend dev server in proprietary mode"
     deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite --mode proprietary
+      - task: dev:_run
+        vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode"
-    deps: [prepare:saas]
-    ignore_error: true
+    deps:
+      - task: prepare
+        vars: { MODE: saas }
     cmds:
-      - npx vite --mode saas
+      - task: dev:_run
+        vars: { MODE: saas, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
-    deps: [prepare:desktop]
-    ignore_error: true
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
     cmds:
-      - npx vite --mode desktop
+      - task: dev:_run
+        vars: { MODE: desktop, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:prototypes:
     desc: "Start frontend dev server in prototypes mode"
     deps: [prepare]
-    ignore_error: true
     cmds:
-      - npx vite --mode prototypes
+      - task: dev:_run
+        vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   # ============================================================
   # Build
@@ -141,13 +131,17 @@ tasks:
 
   build:saas:
     desc: "Build for SaaS mode"
-    deps: [prepare:saas]
+    deps:
+      - task: prepare
+        vars: { MODE: saas }
     cmds:
       - npx vite build --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
-    deps: [prepare:desktop]
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
     cmds:
       - npx vite build --mode desktop
 
@@ -211,13 +205,17 @@ tasks:
 
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
-    deps: [prepare:saas]
+    deps:
+      - task: prepare
+        vars: { MODE: saas }
     cmds:
       - npx tsc --noEmit --project src/saas/tsconfig.json
 
   typecheck:desktop:
     desc: "Typecheck desktop build variant"
-    deps: [prepare:desktop]
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
     cmds:
       - npx tsc --noEmit --project src/desktop/tsconfig.json
 

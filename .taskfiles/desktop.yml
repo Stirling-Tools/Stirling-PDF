@@ -6,7 +6,11 @@ vars:
 tasks:
   prepare:
     desc: "Prepare desktop build dependencies"
-    deps: [jlink, ":frontend:prepare:desktop", provisioner]
+    deps:
+      - jlink
+      - task: ":frontend:prepare"
+        vars: { MODE: desktop }
+      - provisioner
 
   provisioner:
     desc: "Build installer provisioner"
