@@ -17,11 +17,11 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -65,7 +65,7 @@ public class ExtractImageScansController {
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
-    public ResponseEntity<StreamingResponseBody> extractImageScans(
+    public ResponseEntity<Resource> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -198,7 +198,7 @@ public class ExtractImageScansController {
                     }
                 }
 
-                ResponseEntity<StreamingResponseBody> response =
+                ResponseEntity<Resource> response =
                         WebResponseUtils.zipFileToWebResponse(finalOutput, outputZipFilename);
                 finalOutputOwnershipTransferred = true;
                 return response;
@@ -215,7 +215,7 @@ public class ExtractImageScansController {
                     out.write(imageBytes);
                 }
 
-                ResponseEntity<StreamingResponseBody> response =
+                ResponseEntity<Resource> response =
                         WebResponseUtils.fileToWebResponse(
                                 finalOutput,
                                 GeneralUtils.generateFilename(fileName, ".png"),

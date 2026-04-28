@@ -24,11 +24,11 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -59,8 +59,8 @@ public class SanitizeController {
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
                             + " provided options. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> sanitizePDF(
-            @ModelAttribute SanitizePdfRequest request) throws IOException {
+    public ResponseEntity<Resource> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
+            throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean removeJavaScript = Boolean.TRUE.equals(request.getRemoveJavaScript());
         boolean removeEmbeddedFiles = Boolean.TRUE.equals(request.getRemoveEmbeddedFiles());
