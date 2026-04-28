@@ -98,11 +98,6 @@ class WorkflowService {
     const response = await api.post(
       "/api/v1/workflow/participant/submit-signature",
       formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
     );
     return response.data;
   }
