@@ -229,6 +229,55 @@ class EditTextControllerTest {
     }
 
     @Test
+    void editText_wholeWordSearch_matchesFindStartingWithNonWordChar() throws Exception {
+        // Regression: \b only fires on a word/non-word transition. A find that starts with a
+        // non-word char (e.g. "-foo") preceded by another non-word char in the source (a space)
+        // would never match under \b. The lookaround-based bound handles this correctly.
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(List.of(edit("-foo", "-bar")));
+        request.setWholeWordSearch(true);
+
+        PdfJsonDocument input = documentWithText("space then -foo here");
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        assertEquals(
+                "space then -bar here",
+                captor.getValue().getPages().get(0).getTextElements().get(0).getText());
+    }
+
+    @Test
+    void editText_wholeWordSearch_doesNotMatchWhenAdjacentToWordChar() throws Exception {
+        // The lookaround bound must still reject matches that are part of a larger word.
+        EditTextRequest request = new EditTextRequest();
+        request.setFileInput(pdfFile());
+        request.setEdits(List.of(edit("-foo", "-bar")));
+        request.setWholeWordSearch(true);
+
+        PdfJsonDocument input = documentWithText("inline-foo should not match");
+        when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
+                .thenReturn(input);
+
+        controller.editText(request);
+
+        ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
+        org.mockito.Mockito.verify(pdfJsonConversionService)
+                .convertJsonToPdf(captor.capture(), any(OutputStream.class));
+        // "inline-foo" has 'e' (word) before '-foo' so the lookbehind blocks the match. The
+        // trailing 'o' is followed by a space (non-word) so the trailing lookahead would pass on
+        // its own; the leading lookbehind is what rejects it.
+        assertEquals(
+                "inline-foo should not match",
+                captor.getValue().getPages().get(0).getTextElements().get(0).getText());
+    }
+
+    @Test
     void editText_pageFilter_onlyAffectsListedPages() throws Exception {
         EditTextRequest request = new EditTextRequest();
         request.setFileInput(pdfFile());

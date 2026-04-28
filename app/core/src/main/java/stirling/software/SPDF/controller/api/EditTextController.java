@@ -148,7 +148,11 @@ public class EditTextController {
         String replacement = Objects.toString(edit.getReplace(), "");
         String regex = Pattern.quote(findRaw);
         if (wholeWordSearch) {
-            regex = "\\b(?:" + regex + ")\\b";
+            // Use lookarounds rather than \b so the bound works even when the find string starts
+            // or ends with a non-word character (e.g. "-foo" or "$id"). \b only fires at a
+            // word/non-word transition, which would never trigger for a find that starts with a
+            // non-word char and was preceded by another non-word char in the source text.
+            regex = "(?<!\\w)(?:" + regex + ")(?!\\w)";
         }
         Pattern pattern = Pattern.compile(regex);
         String safeReplacement = Matcher.quoteReplacement(replacement);
@@ -170,18 +174,21 @@ public class EditTextController {
 
     private int applyEdits(
             PdfJsonDocument document, List<CompiledEdit> edits, Set<Integer> pageFilter) {
-        if (document.getPages() == null) {
+        List<PdfJsonPage> pages = document.getPages();
+        if (pages == null) {
             return 0;
         }
         int modifiedSpans = 0;
-        int pageIndex = 0;
-        for (PdfJsonPage page : document.getPages()) {
-            int pageNumber = page.getPageNumber() != null ? page.getPageNumber() : pageIndex + 1;
-            pageIndex++;
-            if (pageFilter != null && !pageFilter.contains(pageNumber)) {
+        // The page filter is built from parsePageList against pages.size(), so it returns 1-based
+        // positional page numbers. Match against the same positional numbering here rather than
+        // the per-page pageNumber field, which can become non-sequential after split/merge round
+        // trips and would misalign the filter.
+        for (int i = 0; i < pages.size(); i++) {
+            int positionalPageNumber = i + 1;
+            if (pageFilter != null && !pageFilter.contains(positionalPageNumber)) {
                 continue;
             }
-            modifiedSpans += applyEditsToPage(page, edits);
+            modifiedSpans += applyEditsToPage(pages.get(i), edits);
         }
         return modifiedSpans;
     }

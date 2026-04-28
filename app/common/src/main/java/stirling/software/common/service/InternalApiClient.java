@@ -48,8 +48,8 @@ public class InternalApiClient {
     private final UserServiceInterface userService;
     private final TempFileManager tempFileManager;
     private final Environment environment;
-    private final Duration connectTimeout;
     private final Duration readTimeout;
+    private final RestTemplate restTemplate;
 
     public InternalApiClient(
             ServletContext servletContext,
@@ -62,8 +62,15 @@ public class InternalApiClient {
         this.tempFileManager = tempFileManager;
         this.environment = environment;
         ApplicationProperties.InternalApi internalApi = applicationProperties.getInternalApi();
-        this.connectTimeout = Duration.ofSeconds(internalApi.getConnectTimeoutSeconds());
+        // A bounded read timeout is what protects the workflow when an internal tool hangs
+        // (e.g. an infinite loop in a PDF processing service). The connect timeout is short
+        // because this is a loopback call; if connecting takes longer than a few seconds the
+        // local server is itself unhealthy.
         this.readTimeout = Duration.ofSeconds(internalApi.getReadTimeoutSeconds());
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(internalApi.getConnectTimeoutSeconds()));
+        factory.setReadTimeout(readTimeout);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     /**
@@ -78,14 +85,6 @@ public class InternalApiClient {
         validateUrl(endpointPath);
         String url = getBaseUrl() + endpointPath;
 
-        // A bounded read timeout is what protects the workflow when an internal tool hangs
-        // (e.g. an infinite loop in a PDF processing service). The connect timeout is short
-        // because this is a loopback call; if connecting takes longer than a few seconds the
-        // local server is itself unhealthy.
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(connectTimeout);
-        factory.setReadTimeout(readTimeout);
-        RestTemplate restTemplate = new RestTemplate(factory);
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
         if (apiKey != null && !apiKey.isEmpty()) {

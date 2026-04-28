@@ -44,15 +44,19 @@ class InternalApiClientTest {
     @BeforeEach
     void setUp() {
         lenient().when(servletContext.getContextPath()).thenReturn("");
+        client = newClient();
+    }
+
+    /**
+     * Build a fresh client. Tests that use {@link org.mockito.Mockito#mockConstruction} to
+     * intercept {@link RestTemplate} must call this from inside their {@code mockConstruction}
+     * block, since the client now caches one RestTemplate per instance at construction time.
+     */
+    private InternalApiClient newClient() {
         MockEnvironment environment = new MockEnvironment().withProperty("server.port", "8080");
         ApplicationProperties applicationProperties = new ApplicationProperties();
-        client =
-                new InternalApiClient(
-                        servletContext,
-                        userService,
-                        tempFileManager,
-                        environment,
-                        applicationProperties);
+        return new InternalApiClient(
+                servletContext, userService, tempFileManager, environment, applicationProperties);
     }
 
     @Test
@@ -84,7 +88,10 @@ class InternalApiClientTest {
                                     .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
                         })) {
 
-            ResponseEntity<Resource> response = client.post("/api/v1/general/merge-pdfs", body);
+            // Reconstruct the client so its cached RestTemplate is the mocked one.
+            InternalApiClient mockedClient = newClient();
+            ResponseEntity<Resource> response =
+                    mockedClient.post("/api/v1/general/merge-pdfs", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -116,10 +123,11 @@ class InternalApiClientTest {
                                                     "I/O error on POST request: Read timed out"));
                         })) {
 
+            InternalApiClient mockedClient = newClient();
             InternalApiTimeoutException thrown =
                     assertThrows(
                             InternalApiTimeoutException.class,
-                            () -> client.post("/api/v1/general/merge-pdfs", body));
+                            () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
 
             assertEquals("/api/v1/general/merge-pdfs", thrown.getEndpointPath());
             assertNotNull(thrown.getReadTimeout());
