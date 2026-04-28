@@ -13,6 +13,8 @@ updates:
       - "/app/proprietary"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: "docker"
@@ -25,12 +27,16 @@ updates:
       - "/docker/engine"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: npm
@@ -39,6 +45,8 @@ updates:
       - /frontend
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: cargo
@@ -48,10 +56,14 @@ updates:
       - /frontend/src-tauri/provisioner
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: pip
     directory: /testing/cucumber
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"

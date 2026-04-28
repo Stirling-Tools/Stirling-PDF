@@ -6,6 +6,8 @@ This file provides guidance to AI Agents when working with code in this reposito
 
 This project uses [Task](https://taskfile.dev/) as a unified command runner. All build, dev, test, lint, and docker commands can be run from the repo root via `task <command>`. Run `task --list` to see all available commands.
 
+Task `desc:` fields should describe **what** the task does, not **how** it does it. Keep them generic and stable: don't reference implementation details like aliases, internal helpers, mode flags, or which other task delegates to which. The description is for users picking a command from `task --list`, not a changelog of refactors.
+
 ### Quick Reference
 - `task install` — install all dependencies
 - `task dev` — start backend + frontend concurrently
@@ -136,12 +138,14 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
   - **Development**: `task desktop:dev` for desktop dev mode
 
 #### Environment Variables
-- All `VITE_*` variables must be declared in the appropriate example file:
-  - `frontend/config/.env.example` — core, proprietary, and shared vars
-  - `frontend/config/.env.saas.example` — SaaS-only vars
-  - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
-- Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
-- `task frontend:prepare` / `prepare:saas` / `prepare:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
+- All `VITE_*` variables must be declared in the appropriate committed env file:
+  - `frontend/.env` — core, proprietary, and shared vars
+  - `frontend/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
+  - `frontend/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
+- These files are committed to Git and must not contain private keys
+- Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
+- Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
+- `task frontend:prepare` creates empty `.local` override files on first run; pass `MODE=saas` or `MODE=desktop` to also create the mode-specific `.local` file
 - Prepare runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
 - See `frontend/README.md#environment-variables` for full documentation
 

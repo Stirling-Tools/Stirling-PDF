@@ -1,0 +1,286 @@
+name: Enterprise E2E (Playwright)
+
+# Enterprise Playwright suite — exercises premium-key gated features (audit,
+# teams, analytics) plus full OAuth + SAML logins via the Keycloak compose
+# stacks under testing/compose. Slow and secret-gated, so it runs in three
+# situations:
+#
+#   - PRs that touch proprietary / premium / SSO compose / enterprise tests
+#     (path-filtered against .github/config/.files.yaml `proprietary`),
+#   - every push to main (post-merge safety net),
+#   - on a nightly cron schedule (catches Keycloak image drift, license
+#     expiry, upstream proprietary changes),
+#   - manual workflow_dispatch.
+#
+# Auto-skipped when secrets.PREMIUM_KEY_ENTERPRISE is missing (forks, dependabot).
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  merge_group:
+    branches: ["main"]
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  files-changed:
+    name: detect what files changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      proprietary: ${{ steps.changes.outputs.proprietary }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Check for file changes
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: changes
+        with:
+          filters: .github/config/.files.yaml
+
+  playwright-e2e-enterprise:
+    # Run on PRs only if relevant files changed; always run on push-to-main,
+    # cron, and manual dispatch. Fork PRs without the secret will fail at
+    # the compose step (PREMIUM_KEY empty) — that's intentional, not silent.
+    if: github.event_name != 'pull_request' || needs.files-changed.outputs.proprietary == 'true'
+    needs: files-changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
+      PREMIUM_ENABLED: "true"
+      SYSTEM_ENABLEANALYTICS: "false"
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Install Playwright (chromium only)
+        run: task frontend:test:e2e:install -- chromium
+
+      - name: Resolve kubernetes.docker.internal to localhost
+        # The compose stacks set KC_HOSTNAME=kubernetes.docker.internal so
+        # Keycloak issues redirect URIs against that host. Docker Desktop
+        # auto-resolves it; GHA runners don't. Map it to 127.0.0.1 so the
+        # browser-driven OAuth flow lands back on Stirling-PDF correctly.
+        run: |
+          echo "127.0.0.1 kubernetes.docker.internal" | sudo tee -a /etc/hosts
+
+      # Helper function used by all phases — boots `:stirling-pdf:bootRun`
+      # with the React frontend baked in (-PbuildWithFrontend=true) so the
+      # SPA serves on :8080 and OAuth/SAML callbacks land on the same host
+      # that the browser is interacting with.
+      - name: Define helpers
+        run: |
+          {
+            echo 'wait_for_backend() {'
+            echo '  start=$SECONDS'
+            echo '  for i in $(seq 1 300); do'
+            echo '    if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then'
+            echo '      echo "Backend up after $((SECONDS - start))s"; return 0'
+            echo '    fi; sleep 2'
+            echo '  done'
+            echo '  tail -200 /tmp/backend.log || true; return 1'
+            echo '}'
+            echo 'stop_backend() {'
+            echo '  if [ -f /tmp/backend.pid ]; then'
+            echo '    kill "$(cat /tmp/backend.pid)" 2>/dev/null || true'
+            echo '    rm -f /tmp/backend.pid'
+            echo '  fi'
+            echo '  pkill -f "gradlew :stirling-pdf:bootRun" 2>/dev/null || true'
+            echo '  for i in $(seq 1 30); do'
+            echo '    curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1 || return 0'
+            echo '    sleep 1'
+            echo '  done'
+            echo '}'
+          } > /tmp/helpers.sh
+          chmod +x /tmp/helpers.sh
+
+      # ───────── OAuth round-trip ─────────
+      - name: Bring up Keycloak (OAuth realm)
+        working-directory: testing/compose
+        run: docker compose -f docker-compose-keycloak-oauth.yml up -d --no-deps keycloak-oauth-db keycloak-oauth
+      - name: Wait for Keycloak (OAuth) ready
+        working-directory: testing/compose
+        run: |
+          for i in $(seq 1 60); do
+            bash validate-oauth-test.sh 2>/dev/null && exit 0 || true
+            # validate script also pings stirling on :8080 — accept just the
+            # keycloak realm as our gate here, stirling boots in the next step
+            curl -fsS http://localhost:9080/realms/stirling-oauth >/dev/null 2>&1 && exit 0
+            sleep 5
+          done
+          docker compose -f docker-compose-keycloak-oauth.yml logs --tail=200 keycloak-oauth
+          exit 1
+      - name: Boot Stirling-PDF (frontend baked in, OAuth env)
+        env:
+          SECURITY_ENABLELOGIN: "true"
+          SECURITY_LOGINMETHOD: "all"
+          SECURITY_OAUTH2_ENABLED: "true"
+          SECURITY_OAUTH2_AUTOCREATEUSER: "true"
+          # Keycloak issues redirect URIs against KC_HOSTNAME, which the
+          # compose default sets to kubernetes.docker.internal. Match here
+          # (resolves to localhost via /etc/hosts mapping above).
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_ISSUER: "http://kubernetes.docker.internal:9080/realms/stirling-oauth"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTID: "stirling-pdf-client"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_CLIENTSECRET: "test-client-secret-change-in-production"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_USEASUSERNAME: "email"
+          SECURITY_OAUTH2_CLIENT_KEYCLOAK_SCOPES: "openid,profile,email"
+        run: |
+          source /tmp/helpers.sh
+          nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          wait_for_backend
+      - name: Run enterprise OAuth Playwright tests
+        id: oauth-tests
+        run: task frontend:test:e2e -- --project=enterprise --grep "OAuth"
+      - name: Stop backend + tear down OAuth Keycloak
+        if: always()
+        run: |
+          source /tmp/helpers.sh
+          stop_backend
+          (cd testing/compose && docker compose -f docker-compose-keycloak-oauth.yml down -v)
+
+      # ───────── SAML round-trip ─────────
+      - name: Bring up Keycloak (SAML realm)
+        working-directory: testing/compose
+        run: docker compose -f docker-compose-keycloak-saml.yml up -d --no-deps keycloak-saml-db keycloak-saml
+      - name: Wait for Keycloak (SAML) ready
+        working-directory: testing/compose
+        run: |
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:9080/realms/stirling-saml >/dev/null 2>&1 && exit 0
+            sleep 5
+          done
+          docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
+          exit 1
+      - name: Generate SAML SP certs + fetch Keycloak IdP cert
+        # The .pem/.crt/.key files are gitignored (test-only certs); the
+        # docker-based start-saml-test.sh generates them at runtime, so do
+        # the same in CI before bootRun reads them.
+        working-directory: testing/compose
+        run: |
+          openssl req -x509 -newkey rsa:2048 \
+            -keyout saml-private-key.key \
+            -out saml-public-cert.crt \
+            -days 3650 -nodes \
+            -subj "/CN=stirling-pdf-saml-sp" >/dev/null 2>&1
+          # Fetch Keycloak's SAML signing cert from the realm descriptor
+          CERT_BODY=$(curl -sf http://localhost:9080/realms/stirling-saml/protocol/saml/descriptor \
+            | awk 'BEGIN{RS="<[^>]*X509Certificate>|</[^>]*X509Certificate>"} NR==2{gsub(/[[:space:]]+/,""); print; exit}')
+          {
+            echo "-----BEGIN CERTIFICATE-----"
+            echo "$CERT_BODY"
+            echo "-----END CERTIFICATE-----"
+          } > keycloak-saml-cert.pem
+          test -s saml-private-key.key
+          test -s saml-public-cert.crt
+          test -s keycloak-saml-cert.pem
+          echo "✓ SAML certs prepared"
+      - name: Boot Stirling-PDF (frontend baked in, SAML env)
+        env:
+          SECURITY_ENABLELOGIN: "true"
+          SECURITY_LOGINMETHOD: "all"
+          SECURITY_SAML2_ENABLED: "true"
+          SECURITY_SAML2_AUTOCREATEUSER: "true"
+          SECURITY_SAML2_PROVIDER: "keycloak"
+          SECURITY_SAML2_REGISTRATIONID: "keycloak"
+          SECURITY_SAML2_IDP_ISSUER: "http://localhost:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_ENTITYID: "http://localhost:9080/realms/stirling-saml"
+          SECURITY_SAML2_IDP_METADATAURI: "http://localhost:9080/realms/stirling-saml/protocol/saml/descriptor"
+          SECURITY_SAML2_IDPSINGLELOGINURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDPSINGLELOGOUTURL: "http://localhost:9080/realms/stirling-saml/protocol/saml"
+          SECURITY_SAML2_IDP_CERT: "${{ github.workspace }}/testing/compose/keycloak-saml-cert.pem"
+          SECURITY_SAML2_PRIVATEKEY: "${{ github.workspace }}/testing/compose/saml-private-key.key"
+          SECURITY_SAML2_SP_CERT: "${{ github.workspace }}/testing/compose/saml-public-cert.crt"
+          # Realm registers the SP entity as the metadata URL — see
+          # keycloak-realm-saml.json `clientId`. Match it here so Keycloak
+          # accepts the AuthnRequest issuer.
+          SECURITY_SAML2_SP_ENTITYID: "http://localhost:8080/saml2/service-provider-metadata/keycloak"
+          SECURITY_SAML2_SP_ACS: "http://localhost:8080/login/saml2/sso/keycloak"
+          SECURITY_SAML2_SP_SLS: "http://localhost:8080/logout/saml2/slo"
+        run: |
+          source /tmp/helpers.sh
+          nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          wait_for_backend
+      - name: Run enterprise SAML Playwright tests
+        id: saml-tests
+        run: task frontend:test:e2e -- --project=enterprise --grep "SAML"
+      - name: Stop backend + tear down SAML Keycloak
+        if: always()
+        run: |
+          source /tmp/helpers.sh
+          stop_backend
+          (cd testing/compose && docker compose -f docker-compose-keycloak-saml.yml down -v)
+
+      # ───────── License-gated feature tests (no IdP needed) ─────────
+      - name: Wipe DB so InitialSecuritySetup re-runs with admin/adminadmin
+        # Earlier phases (OAuth, SAML) create the default admin/stirling user.
+        # InitialSecuritySetup only honours SECURITY_INITIALLOGIN_* when the
+        # admin user doesn't already exist, so the persisted DB has to be
+        # cleared between phases for the feature env vars to take effect.
+        run: |
+          rm -f app/core/configs/stirling-pdf-DB*.mv.db
+          rm -rf app/core/configs/backup
+      - name: Boot Stirling-PDF (frontend baked in, premium only)
+        env:
+          SECURITY_INITIALLOGIN_USERNAME: admin
+          SECURITY_INITIALLOGIN_PASSWORD: adminadmin
+          SECURITY_ENABLELOGIN: "true"
+          SECURITY_LOGINMETHOD: "all"
+        run: |
+          source /tmp/helpers.sh
+          nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          wait_for_backend
+      - name: Run enterprise feature Playwright tests
+        id: feature-tests
+        run: task frontend:test:e2e -- --project=enterprise --grep "Enterprise license"
+      - name: Print backend log on failure
+        if: failure()
+        run: |
+          echo "::group::Enterprise backend log"
+          tail -500 /tmp/backend.log || true
+          echo "::endgroup::"
+      - name: Stop backend (final)
+        if: always()
+        run: |
+          source /tmp/helpers.sh
+          stop_backend
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-report-enterprise-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 7
