@@ -1,9 +1,6 @@
 import { HotkeyBinding } from "@app/utils/hotkeys";
 
-export const HOTKEY_ACTION_IDS = [
-  "file.cycleNext",
-  "file.cyclePrev",
-] as const;
+export const HOTKEY_ACTION_IDS = ["file.cycleNext", "file.cyclePrev"] as const;
 
 export type HotkeyActionId = (typeof HOTKEY_ACTION_IDS)[number];
 

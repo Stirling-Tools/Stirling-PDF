@@ -191,8 +191,7 @@ const HotkeysSection: React.FC = () => {
         ? defaultParts.join(" + ")
         : t("settings.hotkeys.none", "Not assigned");
     const hasCustom =
-      Boolean(currentBinding) &&
-      !bindingEquals(currentBinding, defaultBinding);
+      Boolean(currentBinding) && !bindingEquals(currentBinding, defaultBinding);
     const resetDisabled = bindingEquals(currentBinding, defaultBinding);
 
     return (
@@ -216,11 +215,9 @@ const HotkeysSection: React.FC = () => {
                   </Badge>
                 )}
                 <Text size="xs" c="dimmed">
-                  {t(
-                    "settings.hotkeys.defaultLabel",
-                    "Default: {{shortcut}}",
-                    { shortcut: defaultLabel },
-                  )}
+                  {t("settings.hotkeys.defaultLabel", "Default: {{shortcut}}", {
+                    shortcut: defaultLabel,
+                  })}
                 </Text>
               </Group>
             </div>
@@ -312,7 +309,11 @@ const HotkeysSection: React.FC = () => {
             ) : (
               filteredTools.map(([toolId, tool], index) =>
                 renderRow(
-                  { key: toolId, name: tool.name, description: tool.description },
+                  {
+                    key: toolId,
+                    name: tool.name,
+                    description: tool.description,
+                  },
                   index === filteredTools.length - 1,
                 ),
               )
