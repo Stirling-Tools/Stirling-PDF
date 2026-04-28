@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from stirling.models import ApiModel
+from stirling.models import ApiModel, ToolEndpoint
 
 from .agent_drafts import AgentDraftResponse
 from .common import (
@@ -34,6 +34,7 @@ class OrchestratorRequest(ApiModel):
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
+    disabled_endpoints: list[ToolEndpoint] = Field(default_factory=list)
 
 
 class UnsupportedCapabilityResponse(ApiModel):
