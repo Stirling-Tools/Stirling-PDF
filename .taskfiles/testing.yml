@@ -1,0 +1,79 @@
+version: '3'
+
+tasks:
+  "e2e:live":
+    desc: "Auto-spawn backend in parallel and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
+    summary: |
+      Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
+      The runner blocks until http://localhost:8080/api/v1/info/status is UP,
+      then executes `npx playwright test --project=live`. The backend keeps
+      running after tests finish — Ctrl-C to stop it (same convention as
+      `task dev`).
+
+      Pass extra Playwright flags via -- :
+        task testing:e2e:live -- --headed --grep merge
+    deps:
+      - ":backend:dev"
+      - "e2e:live:runner"
+
+  "e2e:live:runner":
+    internal: true
+    deps: [":frontend:prepare"]
+    dir: frontend
+    cmds:
+      - |
+        echo "Waiting for backend on :8080 (up to 10min — first compile can be slow)..."
+        WAITED=0
+        while [ $WAITED -lt 600 ]; do
+          if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
+            echo "Backend ready — starting Playwright"
+            break
+          fi
+          sleep 2
+          WAITED=$((WAITED + 2))
+        done
+        if [ $WAITED -ge 600 ]; then
+          echo "Backend did not become ready within 10min — aborting"
+          exit 1
+        fi
+      - npx playwright test --project=live {{.CLI_ARGS}}
+
+  docker:
+    desc: "Run full Docker integration test suite (testing/test.sh)"
+    ignore_error: true
+    cmds:
+      - bash testing/test.sh {{.CLI_ARGS}}
+
+  oauth:
+    desc: "Start Keycloak + Stirling OAuth test environment (set LICENSE_KEY=<KEY> for premium)"
+    summary: |
+      Start the OAuth keycloak compose stack.
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task testing:oauth LICENSE_KEY=abc123
+      Pass extra flags (e.g. --auto, --nobuild) via -- :
+        task testing:oauth -- --auto
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-oauth-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  oauth:down:
+    desc: "Stop the OAuth test environment and remove volumes"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-oauth.yml down -v
+
+  saml:
+    desc: "Start Keycloak + Stirling SAML test environment (set LICENSE_KEY=<KEY> for premium)"
+    summary: |
+      Start the SAML keycloak compose stack.
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task testing:saml LICENSE_KEY=abc123
+      Pass extra flags (e.g. --auto, --with-storage, --nobuild, --language sv-SE) via -- :
+        task testing:saml -- --auto --with-storage
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-saml-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  saml:down:
+    desc: "Stop the SAML test environment and remove volumes"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-saml.yml down -v

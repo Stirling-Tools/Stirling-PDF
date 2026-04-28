@@ -18,6 +18,9 @@ includes:
   desktop:
     taskfile: .taskfiles/desktop.yml
     dir: frontend
+  testing:
+    taskfile: .taskfiles/testing.yml
+    dir: .
 
 tasks:
   # ============================================================

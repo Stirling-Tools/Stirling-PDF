@@ -291,6 +291,24 @@ tasks:
     cmds:
       - npx playwright test {{.CLI_ARGS}}
 
+  test:e2e:stubbed:
+    desc: "Run stubbed E2E tests (mocked /api/v1/*, no backend required)"
+    deps: [prepare]
+    cmds:
+      - npx playwright test --project=stubbed {{.CLI_ARGS}}
+
+  test:e2e:live:
+    desc: "Run live E2E tests (requires backend on :8080)"
+    deps: [prepare]
+    cmds:
+      - npx playwright test --project=live {{.CLI_ARGS}}
+
+  test:e2e:enterprise:
+    desc: "Run enterprise E2E tests (requires keycloak compose stack on :8080)"
+    deps: [prepare]
+    cmds:
+      - npx playwright test --project=enterprise {{.CLI_ARGS}}
+
   test:e2e:install:
     desc: "Install E2E test browsers"
     deps: [install]

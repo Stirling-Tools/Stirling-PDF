@@ -363,8 +363,19 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
+      - name: Build frontend (production bundle for vite preview)
+        # Playwright's webServer runs `vite preview` in CI so the heavy tool
+        # pages don't pay vite's on-demand transform cost on first hit. The
+        # build output (dist/) is what `vite preview` serves.
+        # VITE_BUILD_FOR_PREVIEW=1 forces absolute asset paths (base="/") so
+        # deep SPA routes (e.g. /workflow/sign/<token>) resolve assets to
+        # /assets/... instead of /workflow/sign/<token>/assets/... (which the
+        # SPA fallback would serve as index.html, breaking React mount).
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
       - name: Run stubbed E2E tests (chromium)
-        run: task frontend:test:e2e -- --project=stubbed --workers=3
+        run: task frontend:test:e2e:stubbed -- --workers=3
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -401,6 +412,14 @@ jobs:
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
         run: task frontend:test:e2e:install -- chromium
+      - name: Build frontend (production bundle for vite preview)
+        # Playwright's webServer runs `vite preview` in CI; live tests still
+        # hit the Spring Boot backend at :8080 via vite's preview proxy.
+        # VITE_BUILD_FOR_PREVIEW=1 forces absolute asset paths so deep SPA
+        # routes don't serve index.html as JS via the SPA fallback.
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
       - name: Start Spring Boot backend (background)
         env:
           # Suppress the analytics opt-in modal that fires on first admin login when
@@ -433,7 +452,7 @@ jobs:
           exit 1
       - name: Run live E2E tests (chromium)
         id: live-tests
-        run: task frontend:test:e2e -- --project=live
+        run: task frontend:test:e2e:live
       - name: Print backend log on failure
         if: failure() && steps.live-tests.conclusion == 'failure'
         run: |
