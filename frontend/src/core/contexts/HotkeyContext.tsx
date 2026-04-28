@@ -237,15 +237,6 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const handler = (event: KeyboardEvent) => {
       if (event.repeat) return;
-      // eslint-disable-next-line no-console
-      console.log("[Hotkeys] keydown", {
-        code: event.code,
-        ctrl: event.ctrlKey,
-        alt: event.altKey,
-        shift: event.shiftKey,
-        meta: event.metaKey,
-        ignored: shouldIgnoreTarget(event.target),
-      });
       if (shouldIgnoreTarget(event.target)) return;
 
       const entries = Object.entries(resolved) as [HotkeyKey, HotkeyBinding][];
@@ -253,22 +244,14 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
         if (bindingMatchesEvent(binding, event)) {
           if (isHotkeyActionId(key)) {
             const actionHandler = actionHandlersRef.current.get(key);
-            // eslint-disable-next-line no-console
-            console.log(
-              "[Hotkeys] action match",
-              key,
-              "handlerRegistered:",
-              Boolean(actionHandler),
-            );
             if (!actionHandler) {
+              // No handler registered yet (e.g. registrar not mounted on this route).
               return;
             }
             event.preventDefault();
             event.stopPropagation();
             actionHandler();
           } else {
-            // eslint-disable-next-line no-console
-            console.log("[Hotkeys] tool match", key);
             event.preventDefault();
             event.stopPropagation();
             handleToolSelect(key as ToolId);
