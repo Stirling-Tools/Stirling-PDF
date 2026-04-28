@@ -12,7 +12,7 @@ math path the same as "check the totals".
 
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, ValidationError
 from pydantic_ai import Agent
 
 from stirling.contracts import (
@@ -39,7 +39,9 @@ def extract_math_verdict(request: OrchestratorRequest) -> Verdict | None:
             continue
         try:
             return Verdict.model_validate(artifact.report)
-        except Exception:  # noqa: BLE001 — malformed report degrades gracefully
+        except ValidationError:
+            # Malformed payload from the auditor — degrade gracefully and let
+            # the consumer fall through to the non-math path.
             return None
     return None
 
