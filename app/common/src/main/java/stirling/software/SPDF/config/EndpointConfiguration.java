@@ -89,9 +89,9 @@ public class EndpointConfiguration {
     }
 
     /**
-     * Convenience wrapper around {@link #isEndpointEnabled(String)} that accepts a full request
-     * URI and translates it to the endpoint key. Falls back to treating the URI itself as a key
-     * for non-{@code /api/v1/...} paths so callers can pass arbitrary URIs.
+     * Convenience wrapper around {@link #isEndpointEnabled(String)} that accepts a full request URI
+     * and translates it to the endpoint key. Falls back to treating the URI itself as a key for
+     * non-{@code /api/v1/...} paths so callers can pass arbitrary URIs.
      */
     public boolean isEndpointEnabledForUri(String uri) {
         String key = endpointKeyForUri(uri);

@@ -16,9 +16,9 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Resolves the set of AI engine endpoint URLs that should be marked as disabled for a given
- * request. The engine publishes its full set of known URLs at {@code /api/v1/known-endpoints};
- * this service fetches it lazily, caches it, and returns the URLs that {@link
- * EndpointConfiguration} reports as disabled.
+ * request. The engine publishes its full set of known URLs at {@code /api/v1/known-endpoints}; this
+ * service fetches it lazily, caches it, and returns the URLs that {@link EndpointConfiguration}
+ * reports as disabled.
  */
 @Slf4j
 @Service
