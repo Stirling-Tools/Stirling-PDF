@@ -4,9 +4,6 @@ import {
   AdjustPageScaleParameters,
   Orientation,
   PageSize,
-  getBasePageSize,
-  isLandscapePageSize,
-  withOrientation,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
@@ -26,10 +23,6 @@ const AdjustPageScaleSettings = ({
 }: AdjustPageScaleSettingsProps) => {
   const { t } = useTranslation();
 
-  const baseSize = getBasePageSize(parameters.pageSize);
-  const orientation: Orientation = isLandscapePageSize(parameters.pageSize)
-    ? "LANDSCAPE"
-    : "PORTRAIT";
   const isKeepSelected = parameters.pageSize === PageSize.KEEP;
 
   const pageSizeOptions = [
@@ -85,15 +78,12 @@ const AdjustPageScaleSettings = ({
 
       <Select
         label={t("adjustPageScale.pageSize.label", "Target Page Size")}
-        value={baseSize}
+        value={parameters.pageSize}
         onChange={(value) => {
           if (!value) return;
-          const selectedBase = value as PageSize;
-          if (!Object.values(PageSize).includes(selectedBase)) return;
-          onParameterChange(
-            "pageSize",
-            withOrientation(selectedBase, orientation),
-          );
+          const next = value as PageSize;
+          if (!Object.values(PageSize).includes(next)) return;
+          onParameterChange("pageSize", next);
         }}
         data={pageSizeOptions}
         disabled={disabled}
@@ -105,12 +95,9 @@ const AdjustPageScaleSettings = ({
 
       <SegmentedControl
         aria-label={t("adjustPageScale.orientation.label", "Page orientation")}
-        value={orientation}
+        value={parameters.orientation}
         onChange={(value) =>
-          onParameterChange(
-            "pageSize",
-            withOrientation(baseSize, value as Orientation),
-          )
+          onParameterChange("orientation", value as Orientation)
         }
         data={orientationOptions}
         disabled={disabled || isKeepSelected}

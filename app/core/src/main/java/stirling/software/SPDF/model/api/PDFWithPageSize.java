@@ -13,30 +13,16 @@ public class PDFWithPageSize extends PDFFile {
 
     @Schema(
             description =
-                    "The scale of pages in the output PDF. Acceptable values are A0-A6 (with"
-                            + " optional _LANDSCAPE suffix), LETTER, LETTER_LANDSCAPE, LEGAL,"
-                            + " LEGAL_LANDSCAPE, KEEP.",
+                    "The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER,"
+                            + " LEGAL, KEEP.",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            allowableValues = {
-                "A0",
-                "A1",
-                "A2",
-                "A3",
-                "A4",
-                "A5",
-                "A6",
-                "A0_LANDSCAPE",
-                "A1_LANDSCAPE",
-                "A2_LANDSCAPE",
-                "A3_LANDSCAPE",
-                "A4_LANDSCAPE",
-                "A5_LANDSCAPE",
-                "A6_LANDSCAPE",
-                "LETTER",
-                "LEGAL",
-                "LETTER_LANDSCAPE",
-                "LEGAL_LANDSCAPE",
-                "KEEP"
-            })
+            allowableValues = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL", "KEEP"})
     private String pageSize;
+
+    @Schema(
+            description =
+                    "Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+            defaultValue = "PORTRAIT",
+            allowableValues = {"PORTRAIT", "LANDSCAPE"})
+    private String orientation = "PORTRAIT";
 }

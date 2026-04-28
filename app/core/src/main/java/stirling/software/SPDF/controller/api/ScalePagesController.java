@@ -39,7 +39,8 @@ public class ScalePagesController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    private static PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
+    private static PDRectangle getTargetSize(
+            String targetPDRectangle, String orientation, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
                 throw ExceptionUtils.createInvalidPageSizeException("KEEP");
@@ -56,18 +57,19 @@ public class ScalePagesController {
         }
 
         Map<String, PDRectangle> sizeMap = getSizeMap();
-
-        if (sizeMap.containsKey(targetPDRectangle)) {
-            return sizeMap.get(targetPDRectangle);
+        PDRectangle base = sizeMap.get(targetPDRectangle);
+        if (base == null) {
+            throw ExceptionUtils.createInvalidPageSizeException(targetPDRectangle);
         }
 
-        throw ExceptionUtils.createInvalidPageSizeException(targetPDRectangle);
+        if ("LANDSCAPE".equalsIgnoreCase(orientation)) {
+            return new PDRectangle(base.getHeight(), base.getWidth());
+        }
+        return base;
     }
 
     private static Map<String, PDRectangle> getSizeMap() {
         Map<String, PDRectangle> sizeMap = new HashMap<>();
-
-        // Portrait sizes (A0-A6)
         sizeMap.put("A0", PDRectangle.A0);
         sizeMap.put("A1", PDRectangle.A1);
         sizeMap.put("A2", PDRectangle.A2);
@@ -75,42 +77,8 @@ public class ScalePagesController {
         sizeMap.put("A4", PDRectangle.A4);
         sizeMap.put("A5", PDRectangle.A5);
         sizeMap.put("A6", PDRectangle.A6);
-
-        // Landscape sizes (A0-A6)
-        sizeMap.put(
-                "A0_LANDSCAPE",
-                new PDRectangle(PDRectangle.A0.getHeight(), PDRectangle.A0.getWidth()));
-        sizeMap.put(
-                "A1_LANDSCAPE",
-                new PDRectangle(PDRectangle.A1.getHeight(), PDRectangle.A1.getWidth()));
-        sizeMap.put(
-                "A2_LANDSCAPE",
-                new PDRectangle(PDRectangle.A2.getHeight(), PDRectangle.A2.getWidth()));
-        sizeMap.put(
-                "A3_LANDSCAPE",
-                new PDRectangle(PDRectangle.A3.getHeight(), PDRectangle.A3.getWidth()));
-        sizeMap.put(
-                "A4_LANDSCAPE",
-                new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth()));
-        sizeMap.put(
-                "A5_LANDSCAPE",
-                new PDRectangle(PDRectangle.A5.getHeight(), PDRectangle.A5.getWidth()));
-        sizeMap.put(
-                "A6_LANDSCAPE",
-                new PDRectangle(PDRectangle.A6.getHeight(), PDRectangle.A6.getWidth()));
-
-        // Portrait US sizes
         sizeMap.put("LETTER", PDRectangle.LETTER);
         sizeMap.put("LEGAL", PDRectangle.LEGAL);
-
-        // Landscape US sizes
-        sizeMap.put(
-                "LETTER_LANDSCAPE",
-                new PDRectangle(PDRectangle.LETTER.getHeight(), PDRectangle.LETTER.getWidth()));
-        sizeMap.put(
-                "LEGAL_LANDSCAPE",
-                new PDRectangle(PDRectangle.LEGAL.getHeight(), PDRectangle.LEGAL.getWidth()));
-
         return sizeMap;
     }
 
@@ -124,13 +92,14 @@ public class ScalePagesController {
             throws IOException {
         MultipartFile file = request.getFileInput();
         String targetPDRectangle = request.getPageSize();
+        String orientation = request.getOrientation();
         float scaleFactor = request.getScaleFactor();
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
                 PDDocument outputDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
-            PDRectangle targetSize = getTargetSize(targetPDRectangle, sourceDocument);
+            PDRectangle targetSize = getTargetSize(targetPDRectangle, orientation, sourceDocument);
 
             // Create LayerUtility once outside the loop for better performance
             LayerUtility layerUtility = new LayerUtility(outputDocument);
