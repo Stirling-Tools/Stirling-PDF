@@ -462,11 +462,6 @@ const licenseService = {
       const response = await apiClient.post(
         "/api/v1/admin/license-file",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
       );
 
       return response.data;
