@@ -132,7 +132,7 @@ class PdfCommentAgent:
         )
         logger.debug(
             "RESPONSE (pdf-comment-agent generate)\n%s",
-            Pretty(response.model_dump()),
+            Pretty(response),
         )
         return response
 
