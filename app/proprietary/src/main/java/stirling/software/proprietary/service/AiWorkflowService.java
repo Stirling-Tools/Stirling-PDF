@@ -62,6 +62,7 @@ public class AiWorkflowService {
     private final FileStorage fileStorage;
     private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
+    private final AiEngineEndpointResolver endpointResolver;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -97,6 +98,7 @@ public class AiWorkflowService {
                 request.getConversationHistory() == null
                         ? new ArrayList<>()
                         : new ArrayList<>(request.getConversationHistory()));
+        initialRequest.setDisabledEndpoints(endpointResolver.getDisabledEndpointUrls());
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -191,6 +193,7 @@ public class AiWorkflowService {
             nextRequest.setConversationHistory(request.getConversationHistory());
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
+            nextRequest.setDisabledEndpoints(request.getDisabledEndpoints());
             return new WorkflowState.Pending(nextRequest);
         } finally {
             for (LoadedFile lf : loadedFiles) {
@@ -424,5 +427,6 @@ public class AiWorkflowService {
         private List<AiConversationMessage> conversationHistory = new ArrayList<>();
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
+        private List<String> disabledEndpoints = new ArrayList<>();
     }
 }
