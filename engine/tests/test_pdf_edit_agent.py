@@ -72,6 +72,7 @@ class StubPdfEditAgent(PdfEditAgent):
         self,
         request: PdfEditRequest,
         supported_operations: list[ToolEndpoint],
+        disabled_operations: list[ToolEndpoint],
         *,
         allow_need_content: bool = True,
     ) -> PdfEditPlanOutput:
@@ -203,7 +204,12 @@ async def test_pdf_edit_agent_builds_selection_agent_matching_content_availabili
     agent = PdfEditAgent(runtime)
     captured: list[bool] = []
 
-    def record(supported_operations: list[ToolEndpoint], *, allow_need_content: bool) -> PdfEditSelectionAgent:
+    def record(
+        supported_operations: list[ToolEndpoint],
+        disabled_operations: list[ToolEndpoint],
+        *,
+        allow_need_content: bool,
+    ) -> PdfEditSelectionAgent:
         captured.append(allow_need_content)
         raise _StopSelectionError()
 
@@ -211,7 +217,7 @@ async def test_pdf_edit_agent_builds_selection_agent_matching_content_availabili
 
     supported = list(OPERATIONS)
     with pytest.raises(_StopSelectionError):
-        await agent._select_plan(PdfEditRequest(user_message="Rotate."), supported)
+        await agent._select_plan(PdfEditRequest(user_message="Rotate."), supported, [])
     with pytest.raises(_StopSelectionError):
         await agent._select_plan(
             PdfEditRequest(
@@ -224,9 +230,10 @@ async def test_pdf_edit_agent_builds_selection_agent_matching_content_availabili
                 ],
             ),
             supported,
+            [],
         )
     with pytest.raises(_StopSelectionError):
-        await agent._select_plan(PdfEditRequest(user_message="Rotate."), supported, allow_need_content=False)
+        await agent._select_plan(PdfEditRequest(user_message="Rotate."), supported, [], allow_need_content=False)
 
     assert captured == [True, False, False]
 
@@ -332,6 +339,22 @@ async def test_pdf_edit_agent_returns_cannot_do_when_all_operations_disabled(
     assert isinstance(response, EditCannotDoResponse)
 
 
+def test_pdf_edit_selection_prompt_includes_disabled_operations(runtime: AppRuntime) -> None:
+    agent = PdfEditAgent(runtime)
+    request = PdfEditRequest(
+        user_message="Run OCR.",
+        disabled_endpoints=[ToolEndpoint.OCR_PDF],
+    )
+    supported = agent._supported_operations(request)
+    disabled = list(request.disabled_endpoints)
+
+    prompt = agent._build_selection_prompt(request, supported, disabled)
+
+    assert "Disabled operations" in prompt
+    assert "OCR_PDF" in prompt
+    assert ToolEndpoint.OCR_PDF.value in prompt
+
+
 @pytest.mark.anyio
 async def test_pdf_edit_agent_rejects_plan_referencing_disabled_operations(
     runtime: AppRuntime,
@@ -354,4 +377,6 @@ async def test_pdf_edit_agent_rejects_plan_referencing_disabled_operations(
     )
 
     assert isinstance(response, EditCannotDoResponse)
+    assert "disabled on this server" in response.reason
+    assert "COMPRESS_PDF" in response.reason
     assert parameter_selector.calls == []
