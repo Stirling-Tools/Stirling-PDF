@@ -185,7 +185,16 @@ export const SignatureAPIBridge = forwardRef<
     isPlacementMode,
     placementPreviewSize,
     setSignaturesApplied,
+    placeMultiple,
+    setPlacementMode,
   } = useSignature();
+  // Track latest placeMultiple in a ref so the long-lived onAnnotationEvent
+  // subscription always reads the current value without re-subscribing on every
+  // toggle change (which would race with mid-flight create events).
+  const placeMultipleRef = useRef(placeMultiple);
+  useEffect(() => {
+    placeMultipleRef.current = placeMultiple;
+  }, [placeMultiple]);
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
   const [currentZoom, setCurrentZoom] = useState(
@@ -555,6 +564,18 @@ export const SignatureAPIBridge = forwardRef<
       // Mark signatures as not applied when a new signature is placed
       if (event.type === "create") {
         setSignaturesApplied(false);
+
+        // Auto-exit placement mode after a single STAMP placement unless the
+        // user opted into "place multiple". Only stamps trigger this — ink
+        // strokes (signatureInk) are also create events but a multi-stroke
+        // signature would break if we deactivated after the first stroke.
+        const annotationType =
+          annotation?.type ?? annotation?.object?.type ?? null;
+        const isStamp = annotationType === PdfAnnotationSubtype.STAMP;
+        if (isStamp && !placeMultipleRef.current) {
+          annotationApi.setActiveTool(null);
+          setPlacementMode(false);
+        }
       }
 
       const directData =
@@ -576,7 +597,13 @@ export const SignatureAPIBridge = forwardRef<
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+  }, [
+    annotationApi,
+    storeImageData,
+    setSignaturesApplied,
+    setPlacementMode,
+    documentReady,
+  ]);
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {
