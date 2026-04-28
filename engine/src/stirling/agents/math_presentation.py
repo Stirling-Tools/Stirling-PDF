@@ -12,16 +12,15 @@ math path the same as "check the totals".
 
 from __future__ import annotations
 
-from pydantic import Field, ValidationError
+from pydantic import Field
 from pydantic_ai import Agent
 
 from stirling.contracts import (
+    MathAuditorToolReportArtifact,
     OrchestratorRequest,
-    ToolReportArtifact,
     Verdict,
 )
 from stirling.models import ApiModel
-from stirling.models.agent_tool_models import AgentToolId
 from stirling.services import AppRuntime
 
 
@@ -29,20 +28,13 @@ def extract_math_verdict(request: OrchestratorRequest) -> Verdict | None:
     """Find a math-auditor Verdict in the request's artifacts, if any.
 
     Meta-agents call this on resume to detect whether the specialist has
-    already run. Returns ``None`` on the first turn (before the plan fires)
-    and a hydrated :class:`Verdict` on the resume turn.
+    already run. The Verdict is already type-validated by the time it lands
+    in :class:`MathAuditorToolReportArtifact` — pydantic rejected the whole
+    request earlier if the payload was malformed.
     """
     for artifact in request.artifacts:
-        if not isinstance(artifact, ToolReportArtifact):
-            continue
-        if artifact.source_tool != AgentToolId.MATH_AUDITOR_AGENT:
-            continue
-        try:
-            return Verdict.model_validate(artifact.report)
-        except ValidationError:
-            # Malformed payload from the auditor — degrade gracefully and let
-            # the consumer fall through to the non-math path.
-            return None
+        if isinstance(artifact, MathAuditorToolReportArtifact):
+            return artifact.report
     return None
 
 

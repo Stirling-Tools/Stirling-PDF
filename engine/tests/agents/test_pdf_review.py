@@ -181,19 +181,14 @@ async def test_orchestrate_resume_uses_verdict_without_calling_classifier(
 ) -> None:
     """Resume turns are detected by Verdict-artifact presence and bypass the
     classifier entirely (saves an LLM call when we already know the answer)."""
-    from stirling.contracts import ToolReportArtifact
+    from stirling.contracts import MathAuditorToolReportArtifact
 
     agent = PdfReviewAgent(runtime)
     verdict = _make_verdict([_discrepancy(page=0, stated="$100")])
     request = OrchestratorRequest(
         user_message="flag math errors",
         file_names=["report.pdf"],
-        artifacts=[
-            ToolReportArtifact(
-                source_tool=AgentToolId.MATH_AUDITOR_AGENT,
-                report=verdict.model_dump(mode="json"),
-            )
-        ],
+        artifacts=[MathAuditorToolReportArtifact(report=verdict)],
     )
     canned = _LocalisedVerdict(
         comments=[_LocalisedComment(discrepancy_index=0, subject="Wrong", text="Off.")],

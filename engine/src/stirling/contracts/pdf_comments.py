@@ -127,3 +127,24 @@ class PdfCommentResponse(ApiModel):
         max_length=1_000,
         description="One-sentence summary describing the agent's overall approach for traceability/logging.",
     )
+
+
+class PdfCommentReport(ApiModel):
+    """Structured report surfaced by the pdf-comment-agent tool alongside the
+    annotated PDF body. Mirrors the JSON shape the controller builds in
+    ``PdfCommentAgentController.buildReportHeader``.
+
+    Lands as the top-level ``AiWorkflowResponse.report`` on the COMPLETED
+    outcome (the pdf-comment-agent flow terminates without ``resume_with``,
+    so this never re-enters the orchestrator as a resume artifact).
+    """
+
+    annotations_applied: int = Field(
+        ge=0, description="Number of sticky-note annotations actually written into the PDF."
+    )
+    instructions_received: int = Field(
+        ge=0, description="Number of comment instructions the engine produced before filtering."
+    )
+    rationale: str | None = Field(
+        default=None, description="One-sentence summary the engine emitted alongside the comments."
+    )

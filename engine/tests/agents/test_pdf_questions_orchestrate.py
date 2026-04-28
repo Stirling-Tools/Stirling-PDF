@@ -12,10 +12,10 @@ import pytest
 
 from stirling.agents.pdf_questions import _MATH_SYNTH_SYSTEM_PROMPT, PdfQuestionAgent
 from stirling.contracts import (
+    MathAuditorToolReportArtifact,
     OrchestratorRequest,
     PdfQuestionAnswerResponse,
     SupportedCapability,
-    ToolReportArtifact,
 )
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
 from stirling.models.agent_tool_models import AgentToolId
@@ -82,12 +82,7 @@ async def test_orchestrate_resume_synthesises_answer_without_calling_classifier(
     request = OrchestratorRequest(
         user_message="ist die mathematik korrekt?",
         file_names=["report.pdf"],
-        artifacts=[
-            ToolReportArtifact(
-                source_tool=AgentToolId.MATH_AUDITOR_AGENT,
-                report=verdict.model_dump(mode="json"),
-            )
-        ],
+        artifacts=[MathAuditorToolReportArtifact(report=verdict)],
     )
     canned_answer = "Die Summe stimmt nicht: angegeben $215,000, erwartet $215,500."
     classifier_mock = AsyncMock(return_value=False)

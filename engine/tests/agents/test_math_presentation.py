@@ -9,10 +9,18 @@ responsibility — those projections are tested with each consumer.
 
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from stirling.agents.math_presentation import extract_math_verdict
-from stirling.contracts import OrchestratorRequest, ToolReportArtifact, WorkflowArtifact
+from stirling.contracts import (
+    ExtractedFileText,
+    ExtractedTextArtifact,
+    MathAuditorToolReportArtifact,
+    OrchestratorRequest,
+    WorkflowArtifact,
+)
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
-from stirling.models.agent_tool_models import AgentToolId
 
 
 def _make_verdict(discrepancies: list[Discrepancy]) -> Verdict:
@@ -56,10 +64,7 @@ def test_extract_math_verdict_roundtrips_a_math_auditor_report() -> None:
             )
         ]
     )
-    artifact = ToolReportArtifact(
-        source_tool=AgentToolId.MATH_AUDITOR_AGENT,
-        report=original.model_dump(mode="json"),
-    )
+    artifact = MathAuditorToolReportArtifact(report=original)
     request = _orchestrator_request_with_artifacts([artifact])
 
     verdict = extract_math_verdict(request)
@@ -76,23 +81,26 @@ def test_extract_math_verdict_returns_none_when_no_artifacts_present() -> None:
     assert extract_math_verdict(request) is None
 
 
-def test_extract_math_verdict_ignores_artifacts_from_other_tools() -> None:
-    """Only reports from the math-auditor count; reports from other specialists
-    should be ignored here so meta-agents don't misinterpret them."""
-    unrelated = ToolReportArtifact(
-        source_tool=AgentToolId.PDF_COMMENT_AGENT,
-        report={"annotationsApplied": 3, "rationale": "irrelevant"},
+def test_extract_math_verdict_ignores_other_artifact_kinds() -> None:
+    """Only MathAuditorToolReportArtifact counts. Other artifact kinds (e.g.
+    extracted page text from a NeedContent round-trip) must be ignored here so
+    meta-agents don't misinterpret them as math reports."""
+    unrelated = ExtractedTextArtifact(
+        files=[ExtractedFileText(file_name="report.pdf", pages=[])],
     )
     request = _orchestrator_request_with_artifacts([unrelated])
     assert extract_math_verdict(request) is None
 
 
-def test_extract_math_verdict_degrades_gracefully_on_malformed_report() -> None:
-    """A corrupt report JSON must not crash the orchestrator; the meta-agent will
-    fall back to the non-math path."""
-    malformed = ToolReportArtifact(
-        source_tool=AgentToolId.MATH_AUDITOR_AGENT,
-        report={"not_a_verdict_field": "garbage"},
-    )
-    request = _orchestrator_request_with_artifacts([malformed])
-    assert extract_math_verdict(request) is None
+def test_malformed_math_auditor_report_is_rejected_at_validation_time() -> None:
+    """The discriminated-union contract validates the report payload as a
+    :class:`Verdict` on receipt — a corrupt body raises at construction time
+    rather than silently surviving until the meta-agent tries to read it."""
+    with pytest.raises(ValidationError):
+        MathAuditorToolReportArtifact.model_validate(
+            {
+                "kind": "tool_report",
+                "source_tool": "math_auditor_agent",
+                "report": {"not_a_verdict_field": "garbage"},
+            }
+        )
