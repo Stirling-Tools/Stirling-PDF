@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from stirling.models import ApiModel
+from stirling.models import ApiModel, ToolEndpoint
 
 from .common import ConversationMessage, ExtractedFileText, NeedContentResponse, ToolOperationStep, WorkflowOutcome
 
@@ -14,6 +14,7 @@ class PdfEditRequest(ApiModel):
     file_names: list[str] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     page_text: list[ExtractedFileText] = Field(default_factory=list)
+    disabled_endpoints: list[ToolEndpoint] = Field(default_factory=list)
 
 
 class EditPlanResponse(ApiModel):

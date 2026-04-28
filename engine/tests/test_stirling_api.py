@@ -87,6 +87,16 @@ def test_health_route() -> None:
     assert response.json()["status"] == "ok"
 
 
+def test_known_endpoints_route() -> None:
+    from stirling.models import ToolEndpoint
+
+    response = client.get("/api/v1/known-endpoints")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body["endpoints"]) == {member.value for member in ToolEndpoint}
+
+
 def test_orchestrator_route() -> None:
     response = client.post("/api/v1/orchestrator", json={"userMessage": "route this", "fileNames": ["test.pdf"]})
 
