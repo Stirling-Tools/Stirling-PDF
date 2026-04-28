@@ -89,6 +89,7 @@ jobs:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -293,9 +294,7 @@ jobs:
           EOF
 
       - name: Import release GPG signing key (Linux)
-        if: matrix.platform == 'ubuntu-22.04'
-        env:
-          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+        if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         run: |
           echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
@@ -327,7 +326,8 @@ jobs:
           #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
           #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
           # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
-          SIGN: "1"
+          # Mirror the Windows/macOS gate: only sign when secret is present AND ref is main (skips PRs from forks/Dependabot).
+          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -343,7 +343,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Clear release GPG key from runner keyring (Linux)
-        if: always() && matrix.platform == 'ubuntu-22.04'
+        if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         env:
           RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
         run: |
