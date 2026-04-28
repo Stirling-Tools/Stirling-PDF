@@ -85,9 +85,7 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
-                " 'leave feedback on the PDF'. If the user is asking a question about the PDF"
-                " contents (and does NOT want comments written onto the document) use"
-                " delegate_pdf_question instead. "
+                " 'leave feedback on the PDF'. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
