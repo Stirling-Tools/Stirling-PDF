@@ -7,13 +7,14 @@ from pydantic import Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents._page_text import format_page_text, has_page_text
+from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
     NeedContentFileRequest,
     NeedContentResponse,
+    OrchestratorRequest,
     PdfContentType,
     PdfEditRequest,
     PdfEditResponse,
@@ -141,6 +142,22 @@ class PdfEditAgent:
         self.runtime = runtime
         self.supported_operations = list(OPERATIONS)
         self.parameter_selector = PdfEditParameterSelector(runtime)
+
+    async def orchestrate(self, request: OrchestratorRequest) -> PdfEditResponse:
+        """Entry point for the orchestrator delegate — adapts the orchestrator's
+        request shape into a :class:`PdfEditRequest` and runs the standard
+        :meth:`handle` pipeline. Direct API callers continue to use ``handle``
+        with a typed :class:`PdfEditRequest`.
+        """
+        extracted_text = get_extracted_text_artifact(request)
+        return await self.handle(
+            PdfEditRequest(
+                user_message=request.user_message,
+                file_names=request.file_names,
+                conversation_history=request.conversation_history,
+                page_text=extracted_text.files if extracted_text is not None else [],
+            )
+        )
 
     @overload
     async def handle(self, request: PdfEditRequest, allow_need_content: Literal[False]) -> PdfEditTerminalResponse: ...

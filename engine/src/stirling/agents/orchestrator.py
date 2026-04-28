@@ -8,18 +8,15 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
-from stirling.agents._page_text import get_extracted_text_artifact
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
-    AgentDraftRequest,
     AgentDraftWorkflowResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
-    PdfEditRequest,
     PdfEditResponse,
     PdfQuestionResponse,
     SupportedCapability,
@@ -138,15 +135,7 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        extracted_text = get_extracted_text_artifact(request)
-        return await PdfEditAgent(self.runtime).handle(
-            PdfEditRequest(
-                user_message=request.user_message,
-                file_names=request.file_names,
-                conversation_history=request.conversation_history,
-                page_text=extracted_text.files if extracted_text is not None else [],
-            )
-        )
+        return await PdfEditAgent(self.runtime).orchestrate(request)
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
         return await self._run_pdf_question(ctx.deps.request)
@@ -158,12 +147,7 @@ class OrchestratorAgent:
         return await self._run_agent_draft(ctx.deps.request)
 
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
-        return await UserSpecAgent(self.runtime).draft(
-            AgentDraftRequest(
-                user_message=request.user_message,
-                conversation_history=request.conversation_history,
-            )
-        )
+        return await UserSpecAgent(self.runtime).orchestrate(request)
 
     async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
         return await self._run_pdf_review(ctx.deps.request)
