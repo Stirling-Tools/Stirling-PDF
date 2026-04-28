@@ -21,7 +21,7 @@ public class WorkflowMapper {
 
     /** Converts a WorkflowSession entity to a response DTO. */
     public static WorkflowSessionResponse toResponse(WorkflowSession session) {
-        return toResponse(session, null);
+        return toResponse(session, null, true);
     }
 
     /**
@@ -34,6 +34,21 @@ public class WorkflowMapper {
      */
     public static WorkflowSessionResponse toResponse(
             WorkflowSession session, ObjectMapper objectMapper) {
+        return toResponse(session, objectMapper, true);
+    }
+
+    /**
+     * Converts a WorkflowSession entity to a response DTO.
+     *
+     * @param session The workflow session entity
+     * @param objectMapper ObjectMapper for JSON processing (null to skip wet signature extraction)
+     * @param includeShareTokens Whether to include each participant's share token in the response.
+     *     Owner-facing endpoints set this to true so the owner can distribute share links;
+     *     participant-facing endpoints set this to false so a single participant's token cannot be
+     *     used to enumerate peer bearer tokens (GHSA-qgg6-mxw4-xg62).
+     */
+    public static WorkflowSessionResponse toResponse(
+            WorkflowSession session, ObjectMapper objectMapper, boolean includeShareTokens) {
         if (session == null) {
             return null;
         }
@@ -64,12 +79,12 @@ public class WorkflowMapper {
         if (objectMapper != null) {
             response.setParticipants(
                     session.getParticipants().stream()
-                            .map(p -> toParticipantResponse(p, objectMapper))
+                            .map(p -> toParticipantResponse(p, objectMapper, includeShareTokens))
                             .collect(Collectors.toList()));
         } else {
             response.setParticipants(
                     session.getParticipants().stream()
-                            .map(WorkflowMapper::toParticipantResponse)
+                            .map(p -> toParticipantResponse(p, includeShareTokens))
                             .collect(Collectors.toList()));
         }
 
@@ -88,8 +103,21 @@ public class WorkflowMapper {
         return response;
     }
 
-    /** Converts a WorkflowParticipant entity to a response DTO. */
+    /** Converts a WorkflowParticipant entity to a response DTO, including the share token. */
     public static ParticipantResponse toParticipantResponse(WorkflowParticipant participant) {
+        return toParticipantResponse(participant, true);
+    }
+
+    /**
+     * Converts a WorkflowParticipant entity to a response DTO.
+     *
+     * @param participant The participant entity
+     * @param includeShareToken Whether to include the participant's share token in the response.
+     *     Owner-facing endpoints set this to true; participant-facing endpoints set this to false
+     *     so the response cannot be used to enumerate peer bearer tokens (GHSA-qgg6-mxw4-xg62).
+     */
+    public static ParticipantResponse toParticipantResponse(
+            WorkflowParticipant participant, boolean includeShareToken) {
         if (participant == null) {
             return null;
         }
@@ -102,7 +130,9 @@ public class WorkflowMapper {
         response.setEmail(participant.getEmail());
         response.setName(participant.getName());
         response.setStatus(participant.getStatus());
-        response.setShareToken(participant.getShareToken());
+        if (includeShareToken) {
+            response.setShareToken(participant.getShareToken());
+        }
         response.setAccessRole(participant.getAccessRole());
         response.setExpiresAt(participant.getExpiresAt());
         response.setLastUpdated(participant.getLastUpdated());
@@ -122,7 +152,19 @@ public class WorkflowMapper {
      */
     public static ParticipantResponse toParticipantResponse(
             WorkflowParticipant participant, ObjectMapper objectMapper) {
-        ParticipantResponse response = toParticipantResponse(participant);
+        return toParticipantResponse(participant, objectMapper, true);
+    }
+
+    /**
+     * Converts a WorkflowParticipant entity to a response DTO with wet signatures extracted.
+     *
+     * @param participant The participant entity
+     * @param objectMapper ObjectMapper for JSON processing
+     * @param includeShareToken Whether to include the participant's share token in the response.
+     */
+    public static ParticipantResponse toParticipantResponse(
+            WorkflowParticipant participant, ObjectMapper objectMapper, boolean includeShareToken) {
+        ParticipantResponse response = toParticipantResponse(participant, includeShareToken);
         if (response != null) {
             response.setWetSignatures(extractWetSignatures(participant, objectMapper));
         }

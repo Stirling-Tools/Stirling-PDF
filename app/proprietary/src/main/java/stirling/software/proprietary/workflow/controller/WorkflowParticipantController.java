@@ -101,7 +101,9 @@ public class WorkflowParticipantController {
         }
 
         WorkflowSession session = participant.getWorkflowSession();
-        return ResponseEntity.ok(WorkflowMapper.toResponse(session));
+        // Strip peer share tokens — a single participant token must not enumerate peer bearer
+        // tokens (GHSA-qgg6-mxw4-xg62).
+        return ResponseEntity.ok(WorkflowMapper.toResponse(session, null, false));
     }
 
     @Operation(
@@ -122,7 +124,7 @@ public class WorkflowParticipantController {
                                                 HttpStatus.FORBIDDEN,
                                                 "Invalid or expired participant token"));
 
-        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
+        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
     @Operation(
@@ -181,7 +183,7 @@ public class WorkflowParticipantController {
                     participant.getEmail(),
                     participant.getWorkflowSession().getSessionId());
 
-            return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
+            return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
 
         } catch (ResponseStatusException e) {
             throw e;
@@ -235,7 +237,7 @@ public class WorkflowParticipantController {
                 participant.getEmail(),
                 participant.getWorkflowSession().getSessionId());
 
-        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
+        return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
     @Operation(
