@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -17,25 +18,38 @@ import {
   serializeBindings,
 } from "@app/utils/hotkeys";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { ToolId } from "@app/types/toolId";
+import { ToolId, isValidToolId } from "@app/types/toolId";
 import { ToolCategoryId, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import {
+  HOTKEY_ACTIONS,
+  HotkeyActionId,
+  generateDefaultActionBindings,
+  isHotkeyActionId,
+} from "@app/data/hotkeyActions";
 
-type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
+export type HotkeyKey = ToolId | HotkeyActionId;
+type Bindings = Partial<Record<HotkeyKey, HotkeyBinding>>;
+
+type ActionHandler = () => void;
 
 interface HotkeyContextValue {
   hotkeys: Bindings;
   defaults: Bindings;
   isMac: boolean;
-  updateHotkey: (toolId: ToolId, binding: HotkeyBinding) => void;
-  resetHotkey: (toolId: ToolId) => void;
+  updateHotkey: (key: HotkeyKey, binding: HotkeyBinding) => void;
+  resetHotkey: (key: HotkeyKey) => void;
   isBindingAvailable: (
     binding: HotkeyBinding,
-    excludeToolId?: ToolId,
+    excludeKey?: HotkeyKey,
   ) => boolean;
   pauseHotkeys: () => void;
   resumeHotkeys: () => void;
   areHotkeysPaused: boolean;
   getDisplayParts: (binding: HotkeyBinding | null | undefined) => string[];
+  registerActionHandler: (
+    actionId: HotkeyActionId,
+    handler: ActionHandler,
+  ) => () => void;
 }
 
 const HotkeyContext = createContext<HotkeyContextValue | undefined>(undefined);
@@ -68,7 +82,9 @@ const generateDefaultHotkeys = (
     }
   });
 
-  // All other tools have no default (will be undefined in the record)
+  // Action defaults (e.g. file cycling). May be empty in browser builds.
+  Object.assign(defaults, generateDefaultActionBindings(macLike));
+
   return defaults;
 };
 
@@ -94,6 +110,9 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
     return deserializeBindings(window.localStorage?.getItem(STORAGE_KEY));
   });
   const [areHotkeysPaused, setHotkeysPaused] = useState(false);
+  const actionHandlersRef = useRef<Map<HotkeyActionId, ActionHandler>>(
+    new Map(),
+  );
 
   const toolEntries = useMemo(
     () => Object.entries(toolRegistry),
@@ -105,15 +124,19 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
     [toolRegistry, isMac],
   );
 
-  // Remove bindings for tools that are no longer present
+  // Drop persisted bindings whose key is no longer recognised. Tools may be
+  // removed by feature flags / build flavour; actions are removed if their ID
+  // is retired. Keep everything else untouched.
   useEffect(() => {
     setCustomBindings((prev) => {
       const next: Bindings = {};
       let changed = false;
-      (Object.entries(prev) as [ToolId, HotkeyBinding][]).forEach(
-        ([toolId, binding]) => {
-          if (toolRegistry[toolId]) {
-            next[toolId] = binding;
+      (Object.entries(prev) as [HotkeyKey, HotkeyBinding][]).forEach(
+        ([key, binding]) => {
+          const isKnownTool = isValidToolId(key) && Boolean(toolRegistry[key]);
+          const isKnownAction = isHotkeyActionId(key);
+          if (isKnownTool || isKnownAction) {
+            next[key] = binding;
           } else {
             changed = true;
           }
@@ -125,17 +148,18 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resolved = useMemo(() => {
     const merged: Bindings = {};
-    toolEntries.forEach(([toolId, _]) => {
-      const custom = customBindings[toolId];
-      const defaultBinding = defaults[toolId];
-
-      // Only add to resolved if there's a custom binding or a default binding
+    const keys = new Set<HotkeyKey>([
+      ...(toolEntries.map(([id]) => id) as HotkeyKey[]),
+      ...(Object.keys(HOTKEY_ACTIONS) as HotkeyKey[]),
+    ]);
+    keys.forEach((key) => {
+      const custom = customBindings[key];
+      const defaultBinding = defaults[key];
       if (custom) {
-        merged[toolId] = normalizeBinding(custom);
+        merged[key] = normalizeBinding(custom);
       } else if (defaultBinding) {
-        merged[toolId] = defaultBinding;
+        merged[key] = defaultBinding;
       }
-      // If neither exists, don't add to merged (tool has no hotkey)
     });
     return merged;
   }, [customBindings, defaults, toolEntries]);
@@ -148,28 +172,30 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [customBindings]);
 
   const isBindingAvailable = useCallback(
-    (binding: HotkeyBinding, excludeToolId?: ToolId) => {
+    (binding: HotkeyBinding, excludeKey?: HotkeyKey) => {
       const normalized = normalizeBinding(binding);
-      return Object.entries(resolved).every(([toolId, existing]) => {
-        if (toolId === excludeToolId) {
-          return true;
-        }
-        return !bindingEquals(existing, normalized);
-      });
+      return (Object.entries(resolved) as [HotkeyKey, HotkeyBinding][]).every(
+        ([key, existing]) => {
+          if (key === excludeKey) {
+            return true;
+          }
+          return !bindingEquals(existing, normalized);
+        },
+      );
     },
     [resolved],
   );
 
   const updateHotkey = useCallback(
-    (toolId: ToolId, binding: HotkeyBinding) => {
+    (key: HotkeyKey, binding: HotkeyBinding) => {
       setCustomBindings((prev) => {
         const normalized = normalizeBinding(binding);
-        const defaultsForTool = defaults[toolId];
+        const defaultsForKey = defaults[key];
         const next = { ...prev };
-        if (defaultsForTool && bindingEquals(defaultsForTool, normalized)) {
-          delete next[toolId];
+        if (defaultsForKey && bindingEquals(defaultsForKey, normalized)) {
+          delete next[key];
         } else {
-          next[toolId] = normalized;
+          next[key] = normalized;
         }
         return next;
       });
@@ -177,19 +203,32 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
     [defaults],
   );
 
-  const resetHotkey = useCallback((toolId: ToolId) => {
+  const resetHotkey = useCallback((key: HotkeyKey) => {
     setCustomBindings((prev) => {
-      if (!(toolId in prev)) {
+      if (!(key in prev)) {
         return prev;
       }
       const next = { ...prev };
-      delete next[toolId];
+      delete next[key];
       return next;
     });
   }, []);
 
   const pauseHotkeys = useCallback(() => setHotkeysPaused(true), []);
   const resumeHotkeys = useCallback(() => setHotkeysPaused(false), []);
+
+  const registerActionHandler = useCallback(
+    (actionId: HotkeyActionId, handler: ActionHandler) => {
+      actionHandlersRef.current.set(actionId, handler);
+      return () => {
+        const current = actionHandlersRef.current.get(actionId);
+        if (current === handler) {
+          actionHandlersRef.current.delete(actionId);
+        }
+      };
+    },
+    [],
+  );
 
   useEffect(() => {
     if (areHotkeysPaused) {
@@ -198,14 +237,42 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const handler = (event: KeyboardEvent) => {
       if (event.repeat) return;
+      // eslint-disable-next-line no-console
+      console.log("[Hotkeys] keydown", {
+        code: event.code,
+        ctrl: event.ctrlKey,
+        alt: event.altKey,
+        shift: event.shiftKey,
+        meta: event.metaKey,
+        ignored: shouldIgnoreTarget(event.target),
+      });
       if (shouldIgnoreTarget(event.target)) return;
 
-      const entries = Object.entries(resolved) as [ToolId, HotkeyBinding][];
-      for (const [toolId, binding] of entries) {
+      const entries = Object.entries(resolved) as [HotkeyKey, HotkeyBinding][];
+      for (const [key, binding] of entries) {
         if (bindingMatchesEvent(binding, event)) {
-          event.preventDefault();
-          event.stopPropagation();
-          handleToolSelect(toolId);
+          if (isHotkeyActionId(key)) {
+            const actionHandler = actionHandlersRef.current.get(key);
+            // eslint-disable-next-line no-console
+            console.log(
+              "[Hotkeys] action match",
+              key,
+              "handlerRegistered:",
+              Boolean(actionHandler),
+            );
+            if (!actionHandler) {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            actionHandler();
+          } else {
+            // eslint-disable-next-line no-console
+            console.log("[Hotkeys] tool match", key);
+            event.preventDefault();
+            event.stopPropagation();
+            handleToolSelect(key as ToolId);
+          }
           break;
         }
       }
@@ -229,6 +296,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
       resumeHotkeys,
       areHotkeysPaused,
       getDisplayParts: (binding) => getDisplayParts(binding ?? null, isMac),
+      registerActionHandler,
     }),
     [
       resolved,
@@ -240,6 +308,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
       pauseHotkeys,
       resumeHotkeys,
       areHotkeysPaused,
+      registerActionHandler,
     ],
   );
 

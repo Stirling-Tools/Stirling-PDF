@@ -6802,6 +6802,7 @@ fitPage = "Fit page"
 fitWidth = "Fit width"
 
 [settings.hotkeys]
+actionsTitle = "Actions"
 capturing = "Press keys… (Esc to cancel)"
 change = "Change shortcut"
 customBadge = "Custom"
@@ -6814,6 +6815,15 @@ reset = "Reset"
 searchPlaceholder = "Search tools..."
 shortcut = "Shortcut"
 title = "Keyboard Shortcuts"
+toolsTitle = "Tools"
+
+[settings.hotkeys.actions.fileCycleNext]
+description = "Cycle to the next open PDF"
+name = "Switch to next file"
+
+[settings.hotkeys.actions.fileCyclePrev]
+description = "Cycle to the previous open PDF"
+name = "Switch to previous file"
 
 [settings.hotkeys.errorModifier]
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
