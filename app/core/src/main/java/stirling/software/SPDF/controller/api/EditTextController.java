@@ -48,19 +48,14 @@ import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEdi
  * <p>Matching joins all text elements on a page into a single string before searching, so find
  * strings can span multiple visual runs (titles split per word, kerning-broken phrases, etc.).
  *
- * <p>For cross-element matches, the algorithm picks one of two strategies based on whether the
- * matched original elements are roughly word-sized:
- *
- * <ul>
- *   <li><b>Word distribution</b> when the matched text contains at least as many words as elements:
- *       replacement words are spread across the original element X positions, preserving centering
- *       for titles and similar layouts.
- *   <li><b>Single-element placement</b> when elements are sub-word (e.g. character-by-character
- *       Type3 glyph runs): the entire replacement is written into the first matched element and all
- *       others are emptied. This avoids visual overlap from placing multiple wide words at
- *       closely-spaced glyph X positions, at the cost of some left-shift relative to the original
- *       (centered) layout.
- * </ul>
+ * <p>For cross-element matches the entire replacement is written into the first matched element,
+ * any intermediate elements are emptied, and the suffix of the last matched element is preserved.
+ * This anchors the new text at the leftmost match position and lets the font lay it out as one run,
+ * which is more visually reliable than redistributing words to the original per-element X positions
+ * (those positions are calibrated to the original word widths and rarely match the replacement
+ * widths). Centered or tracked layouts will become left-aligned at the original first-word position
+ * when their text is replaced - the trade-off is accepted in favour of avoiding glyph overlaps and
+ * gaps from variable-width word distribution.
  */
 @Slf4j
 @GeneralApi
@@ -91,11 +86,10 @@ public class EditTextController {
                             + " editing where the AI agent has identified specific replacements."
                             + " Matching is performed against the joined text of each page, so"
                             + " find strings can span multiple visual runs (titles split per word,"
-                            + " kerning-broken phrases). For cross-element matches, replacement"
-                            + " words are distributed across the original element positions so"
-                            + " that centered or tracked layouts (titles, headers, etc.) remain"
-                            + " visually aligned: there is no need to pad the replacement with"
-                            + " extra spaces. Input:PDF Output:PDF Type:SISO")
+                            + " kerning-broken phrases). Cross-element matches are written as a"
+                            + " single replacement run anchored at the leftmost matched position;"
+                            + " centered or tracked text may shift left when its content changes."
+                            + " Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<Resource> editText(@ModelAttribute EditTextRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -291,183 +285,24 @@ public class EditTextController {
             return;
         }
 
-        // Cross-element match. Compute prefix/suffix once for both strategies.
+        // Cross-element match: write the whole replacement into the first matched element, empty
+        // any intermediate elements, and keep only the suffix of the last matched element. The
+        // JSON->PDF rebuild concatenates per-token text, so the font lays out the replacement as
+        // one continuous run anchored at the first element's X position.
         String firstText = nullToEmpty(elements.get(firstElement).getText());
         int firstSplit = span.start() - starts[firstElement];
-        String firstPrefix = firstText.substring(0, firstSplit);
-
-        String lastText = nullToEmpty(elements.get(lastElement).getText());
-        int lastSplit = span.end() - starts[lastElement];
-        String lastSuffix = lastText.substring(lastSplit);
-
-        int numElements = lastElement - firstElement + 1;
-        String replacement = span.replacement();
-        String[] words = splitWordsForDistribution(replacement);
-
-        // Decide between word distribution and single-element placement. When the matched text
-        // has fewer words than elements (typical of character-level glyph runs in Type3 fonts),
-        // distributing replacement words to the spread-out element X positions causes overlap
-        // because each word is much wider than the gap between adjacent glyph positions. In
-        // that case we fall back to placing the entire replacement in the first matched element.
-        int matchedWordCount = countWords(joinedSubstring(elements, starts, span));
-        if (words.length == 0 || matchedWordCount < numElements) {
-            applyAsSingleBlock(
-                    elements,
-                    firstElement,
-                    lastElement,
-                    firstPrefix,
-                    lastSuffix,
-                    replacement,
-                    modifiedIndices);
-            return;
-        }
-
-        applyAsDistributedWords(
-                elements,
-                firstElement,
-                numElements,
-                firstPrefix,
-                lastSuffix,
-                words,
-                modifiedIndices);
-    }
-
-    private static String joinedSubstring(
-            List<PdfJsonTextElement> elements, int[] starts, MatchSpan span) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < elements.size(); i++) {
-            String text = elements.get(i).getText();
-            if (text == null || text.isEmpty()) {
-                continue;
-            }
-            int elementStart = starts[i];
-            int elementEnd = elementStart + text.length();
-            int captureStart = Math.max(elementStart, span.start());
-            int captureEnd = Math.min(elementEnd, span.end());
-            if (captureStart < captureEnd) {
-                sb.append(text, captureStart - elementStart, captureEnd - elementStart);
-            }
-        }
-        return sb.toString();
-    }
-
-    private static int countWords(String text) {
-        if (text == null || text.isEmpty()) {
-            return 0;
-        }
-        String trimmed = text.trim();
-        if (trimmed.isEmpty()) {
-            return 0;
-        }
-        return trimmed.split("\\s+").length;
-    }
-
-    private static void applyAsSingleBlock(
-            List<PdfJsonTextElement> elements,
-            int firstElement,
-            int lastElement,
-            String firstPrefix,
-            String lastSuffix,
-            String replacement,
-            Set<Integer> modifiedIndices) {
-        elements.get(firstElement).setText(firstPrefix + replacement);
+        elements.get(firstElement).setText(firstText.substring(0, firstSplit) + span.replacement());
         modifiedIndices.add(firstElement);
+
         for (int mid = firstElement + 1; mid < lastElement; mid++) {
             elements.get(mid).setText("");
             modifiedIndices.add(mid);
         }
-        elements.get(lastElement).setText(lastSuffix);
+
+        String lastText = nullToEmpty(elements.get(lastElement).getText());
+        int lastSplit = span.end() - starts[lastElement];
+        elements.get(lastElement).setText(lastText.substring(lastSplit));
         modifiedIndices.add(lastElement);
-    }
-
-    private static void applyAsDistributedWords(
-            List<PdfJsonTextElement> elements,
-            int firstElement,
-            int numElements,
-            String firstPrefix,
-            String lastSuffix,
-            String[] words,
-            Set<Integer> modifiedIndices) {
-        int totalWords = words.length;
-        int[] wordsPerSlot = computeWordsPerSlot(totalWords, numElements);
-        boolean[] hasLaterWords = new boolean[numElements];
-        for (int i = numElements - 2; i >= 0; i--) {
-            hasLaterWords[i] = wordsPerSlot[i + 1] > 0 || hasLaterWords[i + 1];
-        }
-
-        int wordIndex = 0;
-        for (int i = 0; i < numElements; i++) {
-            int targetIndex = firstElement + i;
-            int wordsForThisSlot = wordsPerSlot[i];
-
-            StringBuilder sb = new StringBuilder();
-            if (i == 0) {
-                sb.append(firstPrefix);
-            }
-            for (int j = 0; j < wordsForThisSlot; j++) {
-                if (j > 0) {
-                    sb.append(' ');
-                }
-                sb.append(words[wordIndex++]);
-            }
-            if (wordsForThisSlot > 0 && hasLaterWords[i]) {
-                sb.append(' ');
-            }
-            if (i == numElements - 1) {
-                sb.append(lastSuffix);
-            }
-
-            elements.get(targetIndex).setText(sb.toString());
-            modifiedIndices.add(targetIndex);
-        }
-    }
-
-    /**
-     * Decide how many words to place in each of {@code numElements} slots when distributing {@code
-     * totalWords} replacement words. Aim is to keep the new text visually centered within the
-     * original element bounding box, since the original layout typically reflects centering or
-     * tracking on a line. When the replacement has fewer words than slots, the words are placed in
-     * the central run of slots (with ties resolved toward the right). When it has more words than
-     * slots, words spread evenly with overflow going to the right-most slots.
-     */
-    private static int[] computeWordsPerSlot(int totalWords, int numElements) {
-        int[] wordsPerSlot = new int[numElements];
-        if (numElements == 0 || totalWords == 0) {
-            return wordsPerSlot;
-        }
-        int baseCount = totalWords / numElements;
-        int extras = totalWords - baseCount * numElements;
-        int firstExtraSlot;
-        if (totalWords <= numElements) {
-            // Centered placement; tie-break toward the right slot.
-            firstExtraSlot = (numElements - extras + 1) / 2;
-        } else {
-            // Overflow: extras land in the last slots so the start of the line stays anchored.
-            firstExtraSlot = numElements - extras;
-        }
-        for (int i = 0; i < numElements; i++) {
-            wordsPerSlot[i] = baseCount;
-            if (i >= firstExtraSlot && i < firstExtraSlot + extras) {
-                wordsPerSlot[i]++;
-            }
-        }
-        return wordsPerSlot;
-    }
-
-    /**
-     * Split a replacement string on whitespace runs, dropping empty tokens. Returns an empty array
-     * for replacements that are empty or whitespace-only — the caller treats this as "no words to
-     * distribute" and uses prefix/suffix only.
-     */
-    private static String[] splitWordsForDistribution(String replacement) {
-        if (replacement == null || replacement.isEmpty()) {
-            return new String[0];
-        }
-        String[] parts = replacement.trim().split("\\s+");
-        if (parts.length == 1 && parts[0].isEmpty()) {
-            return new String[0];
-        }
-        return parts;
     }
 
     private static String nullToEmpty(String value) {

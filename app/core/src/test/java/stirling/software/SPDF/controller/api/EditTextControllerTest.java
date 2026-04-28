@@ -419,11 +419,11 @@ class EditTextControllerTest {
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
         List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
 
-        // Replacement words distributed across the original element positions: first word goes
-        // to the first slot (with a separating space since more words follow), last word to the
-        // last slot. This preserves each element's original X/Y position.
-        assertEquals("Goodbye ", elements.get(0).getText());
-        assertEquals("Earth", elements.get(1).getText());
+        // Whole replacement lands in the first matched element; the second is emptied. The
+        // JSON->PDF rebuild concatenates per-token text so the font lays out the replacement as
+        // one run anchored at the first element's X position.
+        assertEquals("Goodbye Earth", elements.get(0).getText());
+        assertEquals("", elements.get(1).getText());
         assertNull(elements.get(0).getCharCodes());
         assertNull(elements.get(1).getCharCodes());
     }
@@ -454,15 +454,12 @@ class EditTextControllerTest {
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
         List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
 
-        // Four replacement words distributed across the five original word-positions, centered
-        // within the bounding box: the empty slot is the leftmost so the new title sits closer
-        // to where the original (centered) title was visually centered. The visible words land
-        // at the original X positions of words 2-5, preserving tracking/kerning.
-        assertEquals("", elements.get(0).getText());
-        assertEquals("The ", elements.get(1).getText());
-        assertEquals("PDF ", elements.get(2).getText());
-        assertEquals("automation ", elements.get(3).getText());
-        assertEquals("pipeline", elements.get(4).getText());
+        // Whole replacement is written into the first matched element; the remaining four are
+        // emptied. Centered titles will become left-aligned at the original first-word X position.
+        assertEquals("The PDF automation pipeline", elements.get(0).getText());
+        for (int i = 1; i < elements.size(); i++) {
+            assertEquals("", elements.get(i).getText(), "element " + i + " should be empty");
+        }
     }
 
     @Test
@@ -484,10 +481,10 @@ class EditTextControllerTest {
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
         List<PdfJsonTextElement> elements = captor.getValue().getPages().get(0).getTextElements();
 
-        // First element keeps its prefix and gets the first distributed word; last element keeps
-        // its suffix and gets the second word.
-        assertEquals("Greeting: Goodbye ", elements.get(0).getText());
-        assertEquals("Earth! And more", elements.get(1).getText());
+        // First element keeps its prefix and gets the entire replacement; last element keeps its
+        // suffix only.
+        assertEquals("Greeting: Goodbye Earth", elements.get(0).getText());
+        assertEquals("! And more", elements.get(1).getText());
     }
 
     @Test
@@ -555,11 +552,10 @@ class EditTextControllerTest {
     }
 
     @Test
-    void editText_subWordFragmentation_fallsBackToSingleElementPlacement() throws Exception {
+    void editText_subWordFragmentation_writesIntoFirstElement() throws Exception {
         // When the matched text is split into many character-level spans (typical of Type3 glyph
-        // runs), distributing replacement words across them places multiple wide words at
-        // closely-spaced original X positions and they overlap visually. The fallback strategy
-        // dumps the whole replacement into the first matched element instead.
+        // runs), the whole replacement is dumped into the first matched element and the rest are
+        // emptied. The font lays out the replacement as one run at the first glyph's X position.
         EditTextRequest request = new EditTextRequest();
         request.setFileInput(pdfFile());
         request.setEdits(List.of(edit("Hello World", "Goodbye Earth")));
