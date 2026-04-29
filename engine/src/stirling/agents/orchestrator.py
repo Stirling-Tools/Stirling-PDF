@@ -27,7 +27,7 @@ from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams, PdfToMarkdownAgentParams
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,11 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
+                    self.delegate_pdf_to_markdown,
+                    name="delegate_pdf_to_markdown",
+                    description=("Delegate requests to reconstruct a PDF as a Markdown document."),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -83,6 +88,8 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
+                "Use delegate_pdf_to_markdown for any request to convert a PDF to Markdown "
+                "or reconstruct its content as readable text. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
@@ -115,12 +122,16 @@ class OrchestratorAgent:
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
             case (
-                SupportedCapability.ORCHESTRATE
+                SupportedCapability.PDF_TO_MARKDOWN
+                | SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
                 | SupportedCapability.AGENT_NEXT_ACTION
                 | SupportedCapability.MATH_AUDITOR_AGENT
             ):
-                raise ValueError(f"Cannot resume orchestrator with capability: {capability}")
+                return UnsupportedCapabilityResponse(
+                    capability=capability.value,
+                    message=f"Capability {capability.value!r} cannot be resumed via the orchestrator.",
+                )
             case _ as unreachable:
                 assert_never(unreachable)
 
@@ -161,6 +172,20 @@ class OrchestratorAgent:
                 user_message=request.user_message,
                 conversation_history=request.conversation_history,
             )
+        )
+
+    async def delegate_pdf_to_markdown(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        """Return a plan step that tells Java to reconstruct the document as Markdown."""
+        return EditPlanResponse(
+            summary="Reconstructed the document as a clean Markdown file.",
+            steps=[
+                ToolOperationStep(
+                    tool=AgentToolId.PDF_TO_MARKDOWN_AGENT,
+                    parameters=PdfToMarkdownAgentParams(
+                        user_message=ctx.deps.request.user_message,
+                    ),
+                )
+            ],
         )
 
     async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:

@@ -65,6 +65,16 @@ from .pdf_questions import (
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
 )
+from .pdf_to_markdown import (
+    LayoutFragment,
+    LayoutLine,
+    PageLayout,
+    ParsedTable,
+    PdfToMarkdownCannotDoResponse,
+    PdfToMarkdownRequest,
+    PdfToMarkdownResponse,
+    PdfToMarkdownSuccessResponse,
+)
 from .rag import (
     MAX_INDEX_TEXT_LENGTH,
     RagCollectionsResponse,
@@ -94,6 +104,10 @@ __all__ = [
     "CannotContinueExecutionAction",
     "CompletedExecutionAction",
     "ConversationMessage",
+    "PdfToMarkdownCannotDoResponse",
+    "PdfToMarkdownRequest",
+    "PdfToMarkdownResponse",
+    "PdfToMarkdownSuccessResponse",
     "Discrepancy",
     "DiscrepancyKind",
     "EditCannotDoResponse",
@@ -114,6 +128,10 @@ __all__ = [
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",
+    "LayoutFragment",
+    "LayoutLine",
+    "PageLayout",
+    "ParsedTable",
     "PdfContentType",
     "PdfEditRequest",
     "PdfEditResponse",

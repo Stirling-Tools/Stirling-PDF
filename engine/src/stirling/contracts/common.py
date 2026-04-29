@@ -58,6 +58,7 @@ class WorkflowOutcome(StrEnum):
     COMPLETED = "completed"
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
+    DOCUMENT_RECONSTRUCTED = "document_reconstructed"
 
 
 class ArtifactKind(StrEnum):
@@ -84,6 +85,7 @@ class SupportedCapability(StrEnum):
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
     MATH_AUDITOR_AGENT = "math_auditor_agent"
+    PDF_TO_MARKDOWN = "pdf_to_markdown"
 
 
 class ConversationMessage(ApiModel):

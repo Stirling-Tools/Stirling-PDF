@@ -72,6 +72,7 @@ class AiWorkflowServiceTest {
     @Mock private InternalApiClient internalApiClient;
     @Mock private FileStorage fileStorage;
     @Mock private ToolMetadataService toolMetadataService;
+    @Mock private PdfToMarkdownOrchestrator pdfToMarkdownOrchestrator;
 
     @TempDir Path tempDir;
 
@@ -96,7 +97,8 @@ class AiWorkflowServiceTest {
                         internalApiClient,
                         fileStorage,
                         toolMetadataService,
-                        tempFileManager);
+                        tempFileManager,
+                        pdfToMarkdownOrchestrator);
     }
 
     @Test
