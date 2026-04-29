@@ -34,7 +34,9 @@ import {
   type PageMeasureScales,
   type PageScaleInfo,
   type ViewportScale,
+  type MeasureScale,
 } from "@app/components/viewer/RulerOverlay";
+import { POINT_TO_UNIT } from "@app/utils/measurementUtils";
 import type { PDFDict, PDFNumber } from "@cantoo/pdf-lib";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
@@ -61,13 +63,9 @@ async function extractPageMeasureScales(
     });
 
     // Parse a Measure dict into a MeasureScale, or return null if malformed.
+    // Stores the raw factor from PDF for precise calculations, derives ratio only when needed.
     const parseScale = (measureObj: unknown) => {
       if (!(measureObj instanceof PDFDict)) return null;
-      const rObj = measureObj.lookup(PDFName.of("R"));
-      const ratioLabel =
-        rObj instanceof PDFString || rObj instanceof PDFHexString
-          ? rObj.decodeText()
-          : "";
       // D = distance array, X = x-axis fallback
       let fmtArray = measureObj.lookup(PDFName.of("D"));
       if (!(fmtArray instanceof PDFArray))
@@ -82,7 +80,19 @@ async function extractPageMeasureScales(
         uObj instanceof PDFString || uObj instanceof PDFHexString
           ? uObj.decodeText()
           : "units";
-      return { factor: cObj.asNumber(), unit, ratioLabel };
+
+      // Store raw PDF factor (PDF points -> unit) for precise calculations
+      // Ratio is derived from factor only when needed for display labels
+      const factor = cObj.asNumber();
+      const normalized = unit.toLowerCase().trim();
+      const baseFactor = POINT_TO_UNIT[normalized];
+
+      const ratio =
+        typeof baseFactor === "number" && baseFactor > 0
+          ? factor / baseFactor
+          : null;
+
+      return { factor, ratio, unit };
     };
 
     const result: PageMeasureScales = new Map();
@@ -1107,6 +1117,7 @@ const EmbedPdfViewerContent = ({
   const [isRulerActive, setIsRulerActive] = useState(false);
   const [pageMeasureScales, setPageMeasureScales] =
     useState<PageMeasureScales | null>(null);
+  const [customScale, setCustomScale] = useState<MeasureScale | null>(null);
 
   useEffect(() => {
     const file = effectiveFile?.file;
@@ -1124,7 +1135,12 @@ const EmbedPdfViewerContent = ({
   }, [effectiveFile]);
 
   // Register viewer right-rail buttons
-  useViewerRightRailButtons(isRulerActive, setIsRulerActive);
+  useViewerRightRailButtons(
+    isRulerActive,
+    setIsRulerActive,
+    customScale,
+    setCustomScale,
+  );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses PDFium WASM (frontend-only).
@@ -1296,6 +1312,7 @@ const EmbedPdfViewerContent = ({
               containerRef={pdfContainerRef}
               isActive={isRulerActive}
               pageMeasureScales={pageMeasureScales}
+              customScale={customScale}
             />
           </Box>
         </>

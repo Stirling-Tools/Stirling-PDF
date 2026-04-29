@@ -25,11 +25,16 @@ import StraightenIcon from "@mui/icons-material/Straighten";
 import LayersIcon from "@mui/icons-material/Layers";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
+import type { MeasureScale } from "@app/components/viewer/RulerOverlay";
 
 export function useViewerRightRailButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
+  customScale?: MeasureScale | null,
+  setCustomScale?: (scale: MeasureScale | null) => void,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -239,6 +244,65 @@ export function useViewerRightRailButtons(
           }
         },
       },
+      // Ruler scale settings button - only visible when ruler is active
+      ...(isRulerActive
+        ? [
+            {
+              id: "viewer-ruler-settings",
+              icon: <SettingsIcon sx={{ fontSize: "1.5rem" }} />,
+              tooltip: t("rightRail.rulerSettings", "Scale Settings"),
+              ariaLabel: t("rightRail.rulerSettings", "Scale Settings"),
+              section: "top" as const,
+              order: 25.5,
+              render: ({ disabled }: { disabled?: boolean }) => (
+                <Popover
+                  position={tooltipPosition}
+                  withArrow
+                  shadow="md"
+                  offset={8}
+                  withinPortal
+                >
+                  <Popover.Target>
+                    <div style={{ display: "inline-flex" }}>
+                      <Tooltip
+                        content={t("rightRail.rulerSettings", "Scale Settings")}
+                        position={tooltipPosition}
+                        offset={12}
+                        arrow
+                        portalTarget={document.body}
+                      >
+                        <ActionIcon
+                          variant="filled"
+                          color="blue"
+                          radius="md"
+                          className="right-rail-icon"
+                          disabled={disabled}
+                          aria-label={t(
+                            "rightRail.rulerSettings",
+                            "Scale Settings",
+                          )}
+                        >
+                          <SettingsIcon sx={{ fontSize: "1.5rem" }} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </div>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <ScaleSettingsPanel
+                      currentScale={customScale}
+                      onApplyScale={(scale) => {
+                        setCustomScale?.(scale);
+                      }}
+                      onResetScale={() => {
+                        setCustomScale?.(null);
+                      }}
+                    />
+                  </Popover.Dropdown>
+                </Popover>
+              ),
+            },
+          ]
+        : []),
       {
         id: "viewer-rotate-left",
         icon: <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />,
@@ -572,6 +636,8 @@ export function useViewerRightRailButtons(
     rulerLabel,
     isRulerActive,
     setIsRulerActive,
+    customScale,
+    setCustomScale,
     readAloudLabel,
     readAloudSpeedLabel,
     isReadingAloud,
