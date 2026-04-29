@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileBackedResource;
 import stirling.software.common.util.TempFileManager;
 
 /**
@@ -62,7 +62,10 @@ public class InternalApiClient {
      *
      * @param endpointPath API path (e.g. {@code /api/v1/general/rotate-pdf})
      * @param body multipart form body (fileInput + parameters)
-     * @return response with the result file as a {@link TempFileResource} body
+     * @return response whose body is an unmanaged {@link TempFileBackedResource}. The backing temp
+     *     file survives {@code InputStream#close()} so callers can read it multiple times (e.g.
+     *     chain it into the next pipeline step). Cleanup is handled by the pipeline's registered
+     *     temp-file tracker or the background registry sweep.
      */
     public ResponseEntity<Resource> post(String endpointPath, MultiValueMap<String, Object> body) {
         validateUrl(endpointPath);
@@ -90,7 +93,8 @@ public class InternalApiClient {
                                 tempFile.getPath(),
                                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                         String filename = extractFilename(response.getHeaders());
-                        TempFileResource resource = new TempFileResource(tempFile, filename);
+                        TempFileBackedResource resource =
+                                TempFileBackedResource.unmanaged(tempFile, filename);
                         return ResponseEntity.status(response.getStatusCode())
                                 .headers(response.getHeaders())
                                 .body(resource);
@@ -148,37 +152,6 @@ public class InternalApiClient {
             log.warn("Blocked internal API request to disallowed path: {}", endpointPath);
             throw new SecurityException(
                     "Internal API dispatch not permitted for endpoint: " + endpointPath);
-        }
-    }
-
-    /**
-     * A {@link FileSystemResource} that holds a reference to its backing {@link TempFile}.
-     *
-     * <p>If a display filename is supplied (typically parsed from the upstream response's {@code
-     * Content-Disposition} header), it is returned from {@link #getFilename()} instead of the
-     * underlying temp file's path-based name.
-     */
-    public static class TempFileResource extends FileSystemResource {
-        private final TempFile tempFile;
-        private final String displayFilename;
-
-        public TempFileResource(TempFile tempFile) {
-            this(tempFile, null);
-        }
-
-        public TempFileResource(TempFile tempFile, String displayFilename) {
-            super(tempFile.getFile());
-            this.tempFile = tempFile;
-            this.displayFilename = displayFilename;
-        }
-
-        public TempFile getTempFile() {
-            return tempFile;
-        }
-
-        @Override
-        public String getFilename() {
-            return displayFilename != null ? displayFilename : super.getFilename();
         }
     }
 }
