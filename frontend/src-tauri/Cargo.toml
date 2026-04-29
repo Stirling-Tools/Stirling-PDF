@@ -18,7 +18,7 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.5.3", features = [] }
+tauri-build = { version = "2.5.6", features = [] }
 
 [dependencies]
 serde_json = "1.0"
