@@ -1,4 +1,4 @@
-import { useAuth } from '@app/auth/UseSession'
+import { useAuth } from "@app/auth/UseSession";
 
 /**
  * Hook for credit management and checking in tools.
@@ -12,22 +12,21 @@ export const useCredits = () => {
     isPro,
     hasSufficientCredits,
     updateCredits,
-    refreshCredits
-  } = useAuth()
-
+    refreshCredits,
+  } = useAuth();
 
   /**
    * Get user-friendly credit status message
    */
   const getCreditStatusMessage = (): string => {
     if (creditBalance === 0) {
-      return 'No credits remaining'
+      return "No credits remaining";
     }
     if (creditBalance === null) {
-      return 'Credits loading...'
+      return "Credits loading...";
     }
-    return `${creditBalance} credits available`
-  }
+    return `${creditBalance} credits available`;
+  };
 
   return {
     // State
@@ -42,6 +41,6 @@ export const useCredits = () => {
 
     // Utilities
     getCreditStatusMessage,
-    hasSufficientCredits
-  }
-}
+    hasSufficientCredits,
+  };
+};

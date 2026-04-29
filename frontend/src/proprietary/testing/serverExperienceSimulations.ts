@@ -1,5 +1,5 @@
-import type { AppConfig } from '@app/types/appConfig';
-import type { LicenseInfo } from '@app/types/license';
+import type { AppConfig } from "@app/types/appConfig";
+import type { LicenseInfo } from "@app/types/license";
 
 interface WauResponse {
   trackingSince: string;
@@ -40,7 +40,7 @@ const DEV_TESTING_MODE = false;
 const SIMULATION_INDEX = 0;
 
 const FREE_LICENSE_INFO: LicenseInfo = {
-  licenseType: 'NORMAL',
+  licenseType: "NORMAL",
   enabled: false,
   maxUsers: 5,
   hasKey: false,
@@ -48,7 +48,7 @@ const FREE_LICENSE_INFO: LicenseInfo = {
 
 const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableAnalytics: true,
-  appVersion: '2.7.1',
+  appVersion: "2.10.0",
   serverCertificateEnabled: false,
   enableAlphaFunctionality: false,
   enableDesktopInstallSlide: true,
@@ -59,9 +59,9 @@ const BASE_NO_LOGIN_CONFIG: AppConfig = {
   enableLogin: false,
   activeSecurity: false,
   languages: [],
-  contextPath: '/',
-  license: 'NORMAL',
-  baseUrl: 'http://localhost',
+  contextPath: "/",
+  license: "NORMAL",
+  baseUrl: "http://localhost",
   enableEmailInvites: true,
 };
 
@@ -73,12 +73,12 @@ const BASE_LOGIN_CONFIG: AppConfig = {
 
 const SIMULATION_SCENARIOS: SimulationScenario[] = [
   {
-    label: 'no-login-user-under-limit (no-license)',
+    label: "no-login-user-under-limit (no-license)",
     appConfig: {
       ...BASE_NO_LOGIN_CONFIG,
     },
     wau: {
-      trackingSince: '2025-11-18T23:20:12.520884200Z',
+      trackingSince: "2025-11-18T23:20:12.520884200Z",
       daysOnline: 0,
       totalUniqueBrowsers: 3,
       weeklyActiveUsers: 3,
@@ -86,12 +86,12 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'no-login-admin-under-limit (no-license)',
+    label: "no-login-admin-under-limit (no-license)",
     appConfig: {
       ...BASE_NO_LOGIN_CONFIG,
     },
     wau: {
-      trackingSince: '2025-10-01T00:00:00Z',
+      trackingSince: "2025-10-01T00:00:00Z",
       daysOnline: 14,
       totalUniqueBrowsers: 4,
       weeklyActiveUsers: 4,
@@ -99,12 +99,12 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'no-login-user-over-limit (no-license)',
+    label: "no-login-user-over-limit (no-license)",
     appConfig: {
       ...BASE_NO_LOGIN_CONFIG,
     },
     wau: {
-      trackingSince: '2025-09-01T00:00:00Z',
+      trackingSince: "2025-09-01T00:00:00Z",
       daysOnline: 30,
       totalUniqueBrowsers: 12,
       weeklyActiveUsers: 9,
@@ -112,12 +112,12 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'no-login-admin-over-limit (no-license)',
+    label: "no-login-admin-over-limit (no-license)",
     appConfig: {
       ...BASE_NO_LOGIN_CONFIG,
     },
     wau: {
-      trackingSince: '2025-08-15T00:00:00Z',
+      trackingSince: "2025-08-15T00:00:00Z",
       daysOnline: 45,
       totalUniqueBrowsers: 18,
       weeklyActiveUsers: 12,
@@ -125,14 +125,14 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'login-user-under-limit (no-license)',
+    label: "login-user-under-limit (no-license)",
     appConfig: {
       ...BASE_LOGIN_CONFIG,
       isAdmin: false,
     },
     // Non-admin users use WAU estimate (not adminUsage)
     wau: {
-      trackingSince: '2025-11-18T23:20:12.520884200Z',
+      trackingSince: "2025-11-18T23:20:12.520884200Z",
       daysOnline: 0,
       totalUniqueBrowsers: 3,
       weeklyActiveUsers: 3,
@@ -140,7 +140,7 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'login-admin-under-limit (no-license)',
+    label: "login-admin-under-limit (no-license)",
     appConfig: {
       ...BASE_LOGIN_CONFIG,
       isAdmin: true,
@@ -151,14 +151,14 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'login-user-over-limit (no-license)',
+    label: "login-user-over-limit (no-license)",
     appConfig: {
       ...BASE_LOGIN_CONFIG,
       isAdmin: false,
     },
     // Non-admin users use WAU estimate (not adminUsage)
     wau: {
-      trackingSince: '2025-09-01T00:00:00Z',
+      trackingSince: "2025-09-01T00:00:00Z",
       daysOnline: 30,
       totalUniqueBrowsers: 12,
       weeklyActiveUsers: 9,
@@ -166,7 +166,7 @@ const SIMULATION_SCENARIOS: SimulationScenario[] = [
     licenseInfo: { ...FREE_LICENSE_INFO },
   },
   {
-    label: 'login-admin-over-limit (no-license)',
+    label: "login-admin-over-limit (no-license)",
     appConfig: {
       ...BASE_LOGIN_CONFIG,
       isAdmin: true,
@@ -184,10 +184,14 @@ function getActiveScenario(): SimulationScenario | null {
   }
   const scenario = SIMULATION_SCENARIOS[SIMULATION_INDEX];
   if (!scenario) {
-    console.warn('[Simulation] SIMULATION_INDEX out of range, using live backend.');
+    console.warn(
+      "[Simulation] SIMULATION_INDEX out of range, using live backend.",
+    );
     return null;
   }
-  console.warn(`[Simulation] Using scenario #${SIMULATION_INDEX} (${scenario.label}).`);
+  console.warn(
+    `[Simulation] Using scenario #${SIMULATION_INDEX} (${scenario.label}).`,
+  );
   return scenario;
 }
 

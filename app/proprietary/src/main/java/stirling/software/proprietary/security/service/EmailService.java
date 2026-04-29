@@ -161,7 +161,7 @@ public class EmailService {
         String subject = "Welcome to Stirling PDF";
 
         String body =
-                        """
+                """
                 <html><body style="margin: 0; padding: 0;">
                 <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
                   <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
@@ -220,7 +220,7 @@ public class EmailService {
         String subject = "You've been invited to Stirling PDF";
 
         String body =
-                        """
+                """
                 <html><body style="margin: 0; padding: 0;">
                 <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
                   <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
@@ -269,8 +269,7 @@ public class EmailService {
         String passwordSection =
                 newPassword == null
                         ? ""
-                        :
-                                """
+                        : """
                           <div style=\"background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; border-radius: 4px;\">
                             <p style=\"margin: 0;\"><strong>Temporary Password:</strong> %s</p>
                           </div>
@@ -278,7 +277,7 @@ public class EmailService {
                                 .formatted(newPassword);
 
         String body =
-                        """
+                """
                 <html><body style=\"margin: 0; padding: 0;\">
                 <div style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;\">
                   <div style=\"max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;\">

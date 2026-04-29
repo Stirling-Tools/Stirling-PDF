@@ -1,8 +1,8 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { NavKey } from '@app/components/shared/config/types';
-import HotkeysSection from '@app/components/shared/config/configSections/HotkeysSection';
-import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { NavKey } from "@app/components/shared/config/types";
+import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
+import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -11,6 +11,8 @@ export interface ConfigNavItem {
   component: React.ReactNode;
   disabled?: boolean;
   disabledTooltip?: string;
+  badge?: string;
+  badgeColor?: string;
 }
 
 export interface ConfigNavSection {
@@ -31,25 +33,25 @@ export interface ConfigColors {
 export const useConfigNavSections = (
   _isAdmin: boolean = false,
   _runningEE: boolean = false,
-  _loginEnabled: boolean = false
+  _loginEnabled: boolean = false,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
   const sections: ConfigNavSection[] = [
     {
-      title: t('settings.preferences.title', 'Preferences'),
+      title: t("settings.preferences.title", "Preferences"),
       items: [
         {
-          key: 'general',
-          label: t('settings.general.title', 'General'),
-          icon: 'settings-rounded',
-          component: <GeneralSection />
+          key: "general",
+          label: t("settings.general.title", "General"),
+          icon: "settings-rounded",
+          component: <GeneralSection />,
         },
         {
-          key: 'hotkeys',
-          label: t('settings.hotkeys.title', 'Keyboard Shortcuts'),
-          icon: 'keyboard-rounded',
-          component: <HotkeysSection />
+          key: "hotkeys",
+          label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
+          icon: "keyboard-rounded",
+          component: <HotkeysSection />,
         },
       ],
     },
@@ -62,24 +64,26 @@ export const useConfigNavSections = (
 export const createConfigNavSections = (
   _isAdmin: boolean = false,
   _runningEE: boolean = false,
-  _loginEnabled: boolean = false
+  _loginEnabled: boolean = false,
 ): ConfigNavSection[] => {
-  console.warn('createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.');
+  console.warn(
+    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
+  );
   const sections: ConfigNavSection[] = [
     {
-      title: 'Preferences',
+      title: "Preferences",
       items: [
         {
-          key: 'general',
-          label: 'General',
-          icon: 'settings-rounded',
-          component: <GeneralSection />
+          key: "general",
+          label: "General",
+          icon: "settings-rounded",
+          component: <GeneralSection />,
         },
         {
-          key: 'hotkeys',
-          label: 'Keyboard Shortcuts',
-          icon: 'keyboard-rounded',
-          component: <HotkeysSection />
+          key: "hotkeys",
+          label: "Keyboard Shortcuts",
+          icon: "keyboard-rounded",
+          component: <HotkeysSection />,
         },
       ],
     },

@@ -1,15 +1,19 @@
 package stirling.software.common.service;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -141,6 +145,59 @@ public class FileStorage {
         long size = Files.copy(inputStream, filePath);
         log.debug("Stored input stream with ID: {}", fileId);
         return new StoredFile(fileId, size);
+    }
+
+    public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
+            throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        boolean success = false;
+        try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(filePath))) {
+            body.writeTo(os);
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
+            }
+        }
+        log.debug("Stored StreamingResponseBody with ID: {}", fileId);
+        return fileId;
+    }
+
+    /**
+     * Persist a {@link Resource} body to disk, returning the generated file ID. Used by the async
+     * job pipeline to capture {@code ResponseEntity<Resource>} results produced by controllers.
+     */
+    public String storeFromResource(Resource resource, String originalName) throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        boolean success = false;
+        try (InputStream in = resource.getInputStream()) {
+            Files.copy(in, filePath);
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
+            }
+        }
+        log.debug("Stored Resource with ID: {}", fileId);
+        return fileId;
     }
 
     /**

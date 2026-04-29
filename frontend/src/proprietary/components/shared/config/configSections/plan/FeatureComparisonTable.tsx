@@ -1,7 +1,7 @@
-import React from 'react';
-import { Card, Badge, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { PlanFeature } from '@app/services/licenseService';
+import React from "react";
+import { Card, Badge, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { PlanFeature } from "@app/services/licenseService";
 
 interface PlanWithFeatures {
   name: string;
@@ -12,50 +12,58 @@ interface PlanWithFeatures {
 
 interface FeatureComparisonTableProps {
   plans: PlanWithFeatures[];
-  currentTier?: 'free' | 'server' | 'enterprise' | null;
+  currentTier?: "free" | "server" | "enterprise" | null;
 }
 
-const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans, currentTier }) => {
+const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({
+  plans,
+  currentTier,
+}) => {
   const { t } = useTranslation();
 
   return (
-    <Card padding="lg" radius="md" withBorder style={{ marginTop: '1rem' }}>
+    <Card padding="lg" radius="md" withBorder style={{ marginTop: "1rem" }}>
       <Text size="lg" fw={600} mb="md">
-        {t('plan.featureComparison', 'Feature Comparison')}
+        {t("plan.featureComparison", "Feature Comparison")}
       </Text>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid var(--mantine-color-gray-3)' }}>
-              <th style={{ textAlign: 'left', padding: '0.75rem' }}>
-                {t('plan.feature.title', 'Feature')}
+            <tr
+              style={{ borderBottom: "2px solid var(--mantine-color-gray-3)" }}
+            >
+              <th style={{ textAlign: "left", padding: "0.75rem" }}>
+                {t("plan.feature.title", "Feature")}
               </th>
               {plans.map((plan, index) => (
                 <th
                   key={plan.tier || plan.name || index}
                   style={{
-                    textAlign: 'center',
-                    padding: '0.75rem',
-                    minWidth: '8rem',
-                    position: 'relative'
+                    textAlign: "center",
+                    padding: "0.75rem",
+                    minWidth: "8rem",
+                    position: "relative",
                   }}
                 >
                   {plan.name}
-                  {plan.popular && !(plan.tier === 'server' && currentTier === 'enterprise') && (
-                    <Badge
-                      color="blue"
-                      variant="filled"
-                      size="xs"
-                      style={{
-                        position: 'absolute',
-                        top: '0.5rem',
-                        right: '0.5rem',
-                      }}
-                    >
-                      {t('plan.popular', 'Popular')}
-                    </Badge>
-                  )}
+                  {plan.popular &&
+                    !(
+                      plan.tier === "server" && currentTier === "enterprise"
+                    ) && (
+                      <Badge
+                        color="blue"
+                        variant="filled"
+                        size="xs"
+                        style={{
+                          position: "absolute",
+                          top: "0.5rem",
+                          right: "0.5rem",
+                        }}
+                      >
+                        {t("plan.popular", "Popular")}
+                      </Badge>
+                    )}
                 </th>
               ))}
             </tr>
@@ -64,13 +72,18 @@ const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans, 
             {plans[0]?.features.map((_, featureIndex) => (
               <tr
                 key={featureIndex}
-                style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}
+                style={{
+                  borderBottom: "1px solid var(--mantine-color-gray-3)",
+                }}
               >
-                <td style={{ padding: '0.75rem' }}>
+                <td style={{ padding: "0.75rem" }}>
                   {plans[0].features[featureIndex].name}
                 </td>
                 {plans.map((plan, planIndex) => (
-                  <td key={planIndex} style={{ textAlign: 'center', padding: '0.75rem' }}>
+                  <td
+                    key={planIndex}
+                    style={{ textAlign: "center", padding: "0.75rem" }}
+                  >
                     {plan.features[featureIndex]?.included ? (
                       <Text c="green" fw={600} size="lg">
                         ✓

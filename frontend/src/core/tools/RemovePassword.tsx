@@ -12,10 +12,10 @@ const RemovePassword = (props: BaseToolProps) => {
   const removePasswordTips = useRemovePasswordTips();
 
   const base = useBaseTool(
-    'removePassword',
+    "removePassword",
     useRemovePasswordParameters,
     useRemovePasswordOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const RemovePassword = (props: BaseToolProps) => {
       {
         title: t("removePassword.password.stepTitle", "Remove Password"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: removePasswordTips,
         content: (
           <RemovePasswordSettings
@@ -43,7 +45,8 @@ const RemovePassword = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

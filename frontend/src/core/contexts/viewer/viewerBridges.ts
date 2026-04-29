@@ -1,5 +1,5 @@
-import { SpreadMode } from '@embedpdf/plugin-spread/react';
-import { PdfBookmarkObject, PdfAttachmentObject } from '@embedpdf/models';
+import { SpreadMode } from "@embedpdf/plugin-spread/react";
+import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
 
 export enum PdfPermissionFlag {
   Print = 0x0004,
@@ -34,7 +34,10 @@ export interface DocumentPermissionsAPIWrapper {
 }
 
 export interface ScrollAPIWrapper {
-  scrollToPage: (params: { pageNumber: number; behavior?: ScrollBehavior }) => void;
+  scrollToPage: (params: {
+    pageNumber: number;
+    behavior?: ScrollBehavior;
+  }) => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
 }
@@ -86,7 +89,10 @@ export interface PrintAPIWrapper {
 }
 
 export interface ThumbnailAPIWrapper {
-  renderThumb: (pageIndex: number, scale: number) => {
+  renderThumb: (
+    pageIndex: number,
+    scale: number,
+  ) => {
     toPromise: () => Promise<Blob>;
   };
 }
@@ -98,14 +104,20 @@ export interface ExportAPIWrapper {
 export interface BookmarkAPIWrapper {
   fetchBookmarks: () => Promise<PdfBookmarkObject[]>;
   clearBookmarks: () => void;
-  setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
+  setLocalBookmarks: (
+    bookmarks: PdfBookmarkObject[] | null,
+    error?: string | null,
+  ) => void;
 }
 
 export interface AttachmentAPIWrapper {
   getAttachments: () => Promise<PdfAttachmentObject[]>;
   downloadAttachment: (attachment: PdfAttachmentObject) => void;
   clearAttachments: () => void;
-  setLocalAttachments: (attachments: PdfAttachmentObject[] | null, error?: string | null) => void;
+  setLocalAttachments: (
+    attachments: PdfAttachmentObject[] | null,
+    error?: string | null,
+  ) => void;
 }
 
 export interface ScrollState {
@@ -226,7 +238,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
 export function registerBridge<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
+  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null,
 ): void {
   registry[type] = ref as ViewerBridgeRegistry[K];
 }
@@ -234,14 +246,14 @@ export function registerBridge<K extends BridgeKey>(
 export function getBridgeState<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  fallback: BridgeStateMap[K]
+  fallback: BridgeStateMap[K],
 ): BridgeStateMap[K] {
   return registry[type]?.state ?? fallback;
 }
 
 export function getBridgeApi<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
-  type: K
+  type: K,
 ): BridgeApiMap[K] | null {
   return registry[type]?.api ?? null;
 }

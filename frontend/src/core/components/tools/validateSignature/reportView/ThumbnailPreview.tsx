@@ -1,5 +1,5 @@
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import '@app/components/tools/validateSignature/reportView/styles.css';
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import "@app/components/tools/validateSignature/reportView/styles.css";
 
 const ThumbnailPreview = ({
   thumbnailUrl,

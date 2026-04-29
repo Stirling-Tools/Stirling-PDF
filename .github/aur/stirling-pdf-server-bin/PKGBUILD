@@ -1,0 +1,77 @@
+# Maintainer: Stirling PDF Inc <contact@stirlingpdf.com>
+pkgname=stirling-pdf-server-bin
+pkgver=2.10.0
+pkgrel=1
+pkgdesc="Locally hosted, web-based PDF manipulation tool (server JAR, prebuilt)"
+arch=('any')
+url="https://www.stirling.com"
+license=('MIT' 'LicenseRef-Stirling-PDF-Proprietary')
+depends=('java-runtime>=25')
+provides=('stirling-pdf-server')
+conflicts=('stirling-pdf-server' 'stirling-pdf-server-git')
+backup=('etc/stirling-pdf-server/settings.yml')
+
+source=("Stirling-PDF-with-login-${pkgver}.jar::https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${pkgver}/Stirling-PDF-with-login.jar")
+sha256sums=('PLACEHOLDER_JAR_SHA256')
+
+package() {
+    # JAR
+    install -Dm644 "Stirling-PDF-with-login-${pkgver}.jar" \
+        "${pkgdir}/usr/share/stirling-pdf-server/stirling-pdf-server.jar"
+
+    # Wrapper script
+    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/stirling-pdf-server" << 'EOF'
+#!/bin/sh
+exec java $JAVA_OPTS -jar /usr/share/stirling-pdf-server/stirling-pdf-server.jar "$@"
+EOF
+
+    # systemd unit
+    install -Dm644 /dev/stdin "${pkgdir}/usr/lib/systemd/system/stirling-pdf-server.service" << 'EOF'
+[Unit]
+Description=Stirling-PDF Server
+After=network.target
+
+[Service]
+Type=simple
+User=stirling-pdf
+Group=stirling-pdf
+WorkingDirectory=/var/lib/stirling-pdf-server
+ExecStart=/usr/bin/java -jar /usr/share/stirling-pdf-server/stirling-pdf-server.jar
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stirling-pdf-server
+Environment=JAVA_OPTS=-Xmx512m
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # sysusers
+    install -Dm644 /dev/stdin "${pkgdir}/usr/lib/sysusers.d/stirling-pdf-server.conf" << 'EOF'
+u stirling-pdf - "Stirling-PDF Server" /var/lib/stirling-pdf-server -
+EOF
+
+    # tmpfiles
+    install -Dm644 /dev/stdin "${pkgdir}/usr/lib/tmpfiles.d/stirling-pdf-server.conf" << 'EOF'
+d /var/lib/stirling-pdf-server 0750 stirling-pdf stirling-pdf -
+d /var/log/stirling-pdf-server 0750 stirling-pdf stirling-pdf -
+EOF
+
+    # Default config stub
+    install -dm755 "${pkgdir}/etc/stirling-pdf-server"
+    install -Dm644 /dev/stdin "${pkgdir}/etc/stirling-pdf-server/settings.yml" << 'EOF'
+# Stirling-PDF Server configuration
+# See https://github.com/Stirling-Tools/Stirling-PDF for all options
+server:
+  port: 8080
+EOF
+
+    # License
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE" << 'EOF'
+MIT License with proprietary carve-outs (open-core).
+SPDX: MIT AND LicenseRef-Stirling-PDF-Proprietary
+See https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+EOF
+}

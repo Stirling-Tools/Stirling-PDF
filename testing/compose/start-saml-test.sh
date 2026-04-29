@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Stop Git Bash / MSYS from mangling Unix-style paths (e.g. /storage) passed
+# to docker-compose.exe. No-op on native Linux/macOS.
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -13,12 +18,17 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 AUTO_LOGIN=false
+WITH_STORAGE=false
 DEFAULT_LANGUAGE="en-US"
 COMPOSE_UP_ARGS=(-d --build)
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --auto)
             AUTO_LOGIN=true
+            shift
+            ;;
+        --with-storage)
+            WITH_STORAGE=true
             shift
             ;;
         --nobuild)
@@ -46,11 +56,13 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [--auto] [--nobuild] [--language <locale>]"
+            echo "Usage: $0 [--auto] [--with-storage] [--nobuild] [--language <locale>]"
             echo ""
-            echo "  --auto     Enable SSO auto-login and force SAML-only login method"
-            echo "  --nobuild  Skip building images (use existing images)"
-            echo "  --language Set system default locale (e.g. de-DE, sv-SE)"
+            echo "  --auto          Enable SSO auto-login and force SAML-only login method"
+            echo "  --with-storage  Enable the file storage + link-sharing feature"
+            echo "                  (required to test /share/<token> flows)"
+            echo "  --nobuild       Skip building images (use existing images)"
+            echo "  --language      Set system default locale (e.g. de-DE, sv-SE)"
             exit 0
             ;;
         *)
@@ -86,6 +98,26 @@ if [ "$AUTO_LOGIN" = true ]; then
     export SECURITY_LOGINMETHOD=saml2
     COMPOSE_UP_ARGS+=(--force-recreate)
     echo -e "${GREEN}✓ SSO auto-login enabled (SAML-only)${NC}"
+    echo ""
+fi
+
+if [ "$WITH_STORAGE" = true ]; then
+    export STORAGE_ENABLED=true
+    export STORAGE_PROVIDER=local
+    export STORAGE_LOCAL_BASEPATH=/storage
+    export STORAGE_SHARING_ENABLED=true
+    export STORAGE_SHARING_LINKENABLED=true
+    export STORAGE_SHARING_EMAILENABLED=true
+    export STORAGE_SHARING_LINKEXPIRATIONDAYS=3
+    # storage.signing is a sibling of storage.sharing, not nested under it
+    export STORAGE_SIGNING_ENABLED=true
+    # Required for share-link creation (FileStorageService.isShareLinksEnabled)
+    export SYSTEM_FRONTENDURL="http://localhost:8080"
+    # Force recreate so env changes apply even with --nobuild
+    if [[ ! " ${COMPOSE_UP_ARGS[*]} " =~ " --force-recreate " ]]; then
+        COMPOSE_UP_ARGS+=(--force-recreate)
+    fi
+    echo -e "${GREEN}✓ Storage + link sharing enabled${NC}"
     echo ""
 fi
 
@@ -199,6 +231,14 @@ echo -e "   1. Go to ${GREEN}http://localhost:8080${NC}"
 echo -e "   2. Click 'Login' and select SAML"
 echo -e "   3. Login with test credentials"
 echo ""
+if [ "$WITH_STORAGE" = true ]; then
+    echo -e "${BLUE}🔗 Test share links:${NC}"
+    echo -e "   1. Log in as ${GREEN}samluser@example.com${NC}, upload a PDF"
+    echo -e "   2. Create a share link from the file manager"
+    echo -e "   3. Open the share URL in an incognito/private window"
+    echo -e "   4. Verify you land on the share page (not the home page) after SSO"
+    echo ""
+fi
 echo -e "${BLUE}📊 View logs:${NC}"
 echo -e "   docker-compose -f docker-compose-keycloak-saml.yml logs -f"
 echo ""

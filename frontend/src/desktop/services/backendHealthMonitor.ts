@@ -1,6 +1,6 @@
-import i18n from '@app/i18n';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import type { BackendHealthState } from '@app/types/backendHealth';
+import i18n from "@app/i18n";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import type { BackendHealthState } from "@app/types/backendHealth";
 
 type Listener = (state: BackendHealthState) => void;
 
@@ -11,7 +11,7 @@ class BackendHealthMonitor {
   private state: BackendHealthState = {
     status: tauriBackendService.getBackendStatus(),
     error: null,
-    isOnline: tauriBackendService.getBackendStatus() === 'healthy',
+    isOnline: tauriBackendService.getBackendStatus() === "healthy",
   };
 
   constructor(pollingInterval = 5000) {
@@ -21,10 +21,12 @@ class BackendHealthMonitor {
     tauriBackendService.subscribeToStatus((status) => {
       this.updateState({
         status,
-        error: status === 'healthy' ? null : this.state.error,
-        message: status === 'healthy'
-          ? i18n.t('backendHealth.online', 'Backend Online')
-          : this.state.message ?? i18n.t('backendHealth.offline', 'Backend Offline'),
+        error: status === "healthy" ? null : this.state.error,
+        message:
+          status === "healthy"
+            ? i18n.t("backendHealth.online", "Backend Online")
+            : (this.state.message ??
+              i18n.t("backendHealth.offline", "Backend Offline")),
       });
     });
   }
@@ -35,7 +37,7 @@ class BackendHealthMonitor {
       ...this.state,
       ...partial,
       status: nextStatus,
-      isOnline: nextStatus === 'healthy',
+      isOnline: nextStatus === "healthy",
     };
 
     // Only notify listeners if meaningful state changed
@@ -73,24 +75,24 @@ class BackendHealthMonitor {
       const healthy = await tauriBackendService.checkBackendHealth();
       if (healthy) {
         this.updateState({
-          status: 'healthy',
-          message: i18n.t('backendHealth.online', 'Backend Online'),
+          status: "healthy",
+          message: i18n.t("backendHealth.online", "Backend Online"),
           error: null,
         });
       } else {
         this.updateState({
-          status: 'unhealthy',
-          message: i18n.t('backendHealth.offline', 'Backend Offline'),
-          error: i18n.t('backendHealth.offline', 'Backend Offline'),
+          status: "unhealthy",
+          message: i18n.t("backendHealth.offline", "Backend Offline"),
+          error: i18n.t("backendHealth.offline", "Backend Offline"),
         });
       }
       return healthy;
     } catch (error) {
-      console.error('[BackendHealthMonitor] Health check failed:', error);
+      console.error("[BackendHealthMonitor] Health check failed:", error);
       this.updateState({
-        status: 'unhealthy',
-        message: 'Backend is unavailable',
-        error: 'Backend offline',
+        status: "unhealthy",
+        message: "Backend is unavailable",
+        error: "Backend offline",
       });
       return false;
     }

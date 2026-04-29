@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Button, Paper, Group, NumberInput } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import DescriptionIcon from '@mui/icons-material/Description';
-import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import { useState, useEffect } from "react";
+import { Button, Paper, Group, NumberInput } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import FirstPageIcon from "@mui/icons-material/FirstPage";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import LastPageIcon from "@mui/icons-material/LastPage";
+import DescriptionIcon from "@mui/icons-material/Description";
+import ViewWeekIcon from "@mui/icons-material/ViewWeek";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import WbSunnyIcon from "@mui/icons-material/WbSunny";
+import WbTwilightIcon from "@mui/icons-material/WbTwilight";
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -33,20 +36,30 @@ export function PdfViewerToolbar({
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
+    pdfRenderMode,
+    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
   const spreadState = getSpreadState();
-  const [pageInput, setPageInput] = useState(scrollState.currentPage || currentPage);
-  const [displayZoomPercent, setDisplayZoomPercent] = useState(zoomState.zoomPercent || 140);
-  const [isDualPageActive, setIsDualPageActive] = useState(spreadState.isDualPage);
+  const [pageInput, setPageInput] = useState(
+    scrollState.currentPage || currentPage,
+  );
+  const [displayZoomPercent, setDisplayZoomPercent] = useState(
+    zoomState.zoomPercent || 140,
+  );
+  const [isDualPageActive, setIsDualPageActive] = useState(
+    spreadState.isDualPage,
+  );
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
-    const unregister = registerImmediateScrollUpdate((currentPage, _totalPages) => {
-      setPageInput(currentPage);
-    });
+    const unregister = registerImmediateScrollUpdate(
+      (currentPage, _totalPages) => {
+        setPageInput(currentPage);
+      },
+    );
     setPageInput(scrollState.currentPage);
     return () => {
       unregister?.();
@@ -97,11 +110,13 @@ export function PdfViewerToolbar({
   };
 
   const handlePreviousPage = () => {
-    scrollActions.scrollToPreviousPage();
+    const { currentPage: cur } = getScrollState();
+    if (cur > 1) scrollActions.scrollToPage(cur - 1);
   };
 
   const handleNextPage = () => {
-    scrollActions.scrollToNextPage();
+    const { currentPage: cur, totalPages: tot } = getScrollState();
+    if (cur < tot) scrollActions.scrollToPage(cur + 1);
   };
 
   const handleLastPage = () => {
@@ -110,156 +125,198 @@ export function PdfViewerToolbar({
 
   return (
     <Paper
-        radius="xl xl 0 0"
-        shadow="sm"
-        p={12}
-        pb={12}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
-          boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
-          pointerEvents: "auto",
-          minWidth: '26.5rem',
-        }}
+      radius="xl xl 0 0"
+      shadow="sm"
+      p={12}
+      pb={12}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
+        pointerEvents: "auto",
+        minWidth: "30rem",
+      }}
+    >
+      {/* First Page Button */}
+      <Button
+        variant="subtle"
+        color="blue"
+        size="md"
+        px={8}
+        radius="xl"
+        onClick={handleFirstPage}
+        disabled={scrollState.currentPage === 1}
+        style={{ minWidth: "2.5rem" }}
+        title={t("viewer.firstPage", "First Page")}
       >
-        {/* First Page Button */}
-        <Button
-          variant="subtle"
-          color="blue"
-          size="md"
-          px={8}
-          radius="xl"
-          onClick={handleFirstPage}
-          disabled={scrollState.currentPage === 1}
-          style={{ minWidth: '2.5rem' }}
-          title={t("viewer.firstPage", "First Page")}
-        >
-          <FirstPageIcon fontSize="small" />
-        </Button>
+        <FirstPageIcon fontSize="small" />
+      </Button>
 
-        {/* Previous Page Button */}
-        <Button
-          variant="subtle"
-          color="blue"
-          size="md"
-          px={8}
-          radius="xl"
-          onClick={handlePreviousPage}
-          disabled={scrollState.currentPage === 1}
-          style={{ minWidth: '2.5rem' }}
-          title={t("viewer.previousPage", "Previous Page")}
-        >
-          <ArrowBackIosIcon fontSize="small" />
-        </Button>
+      {/* Previous Page Button */}
+      <Button
+        variant="subtle"
+        color="blue"
+        size="md"
+        px={8}
+        radius="xl"
+        onClick={handlePreviousPage}
+        disabled={scrollState.currentPage === 1}
+        style={{ minWidth: "2.5rem" }}
+        title={t("viewer.previousPage", "Previous Page")}
+      >
+        <ArrowBackIosIcon fontSize="small" />
+      </Button>
 
-        {/* Page Input */}
-        <NumberInput
-          value={pageInput}
-          onChange={(value) => {
-            const page = Number(value);
-            setPageInput(page);
-            if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
-              handlePageNavigation(page);
-            }
-          }}
-          min={1}
-          max={scrollState.totalPages}
-          hideControls
-          styles={{
-            input: { width: 48, textAlign: "center", fontWeight: 500, fontSize: 16 },
-          }}
-        />
-
-        <span style={{ fontWeight: 500, fontSize: 16 }}>
-          / {scrollState.totalPages}
-        </span>
-
-        {/* Next Page Button */}
-        <Button
-          variant="subtle"
-          color="blue"
-          size="md"
-          px={8}
-          radius="xl"
-          onClick={handleNextPage}
-          disabled={scrollState.currentPage === scrollState.totalPages}
-          style={{ minWidth: '2.5rem' }}
-          title={t("viewer.nextPage", "Next Page")}
-        >
-          <ArrowForwardIosIcon fontSize="small" />
-        </Button>
-
-        {/* Last Page Button */}
-        <Button
-          variant="subtle"
-          color="blue"
-          size="md"
-          px={8}
-          radius="xl"
-          onClick={handleLastPage}
-          disabled={scrollState.currentPage === scrollState.totalPages}
-          style={{ minWidth: '2.5rem' }}
-          title={t("viewer.lastPage", "Last Page")}
-        >
-          <LastPageIcon fontSize="small" />
-        </Button>
-
-        {/* Dual Page Toggle */}
-        <Tooltip
-          content={
-            isDualPageActive
-              ? t("viewer.singlePageView", "Single Page View")
-              : t("viewer.dualPageView", "Dual Page View")
+      {/* Page Input */}
+      <NumberInput
+        value={pageInput}
+        onChange={(value) => {
+          const page = Number(value);
+          setPageInput(page);
+          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
+            handlePageNavigation(page);
           }
-          position="top"
-          arrow
-        >
-          <Button
-            variant={isDualPageActive ? "filled" : "light"}
-            color="blue"
-            size="md"
-            radius="xl"
-            onClick={handleDualPageToggle}
-            disabled={scrollState.totalPages <= 1}
-            style={{ minWidth: '2.5rem' }}
-          >
-            {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
-          </Button>
-        </Tooltip>
+        }}
+        min={1}
+        max={scrollState.totalPages}
+        hideControls
+        styles={{
+          input: {
+            width: 48,
+            textAlign: "center",
+            fontWeight: 500,
+            fontSize: 16,
+          },
+        }}
+      />
 
-        {/* Zoom Controls */}
-        <Group gap={4} align="center" style={{ marginLeft: 16 }}>
-          <Button
-            variant="subtle"
-            color="blue"
-            size="md"
-            radius="xl"
-            onClick={handleZoomOut}
-            style={{ minWidth: '2rem', padding: 0 }}
-            title={t("viewer.zoomOut", "Zoom out")}
-          >
-            −
-          </Button>
-          <span style={{ minWidth: '2.5rem', textAlign: "center" }}>
-            {displayZoomPercent}%
-          </span>
-          <Button
-            variant="subtle"
-            color="blue"
-            size="md"
-            radius="xl"
-            onClick={handleZoomIn}
-            style={{ minWidth: '2rem', padding: 0 }}
-            title={t("viewer.zoomIn", "Zoom in")}
-          >
-            +
-          </Button>
-        </Group>
-      </Paper>
+      <span style={{ fontWeight: 500, fontSize: 16 }}>
+        / {scrollState.totalPages}
+      </span>
+
+      {/* Next Page Button */}
+      <Button
+        variant="subtle"
+        color="blue"
+        size="md"
+        px={8}
+        radius="xl"
+        onClick={handleNextPage}
+        disabled={scrollState.currentPage === scrollState.totalPages}
+        style={{ minWidth: "2.5rem" }}
+        title={t("viewer.nextPage", "Next Page")}
+      >
+        <ArrowForwardIosIcon fontSize="small" />
+      </Button>
+
+      {/* Last Page Button */}
+      <Button
+        variant="subtle"
+        color="blue"
+        size="md"
+        px={8}
+        radius="xl"
+        onClick={handleLastPage}
+        disabled={scrollState.currentPage === scrollState.totalPages}
+        style={{ minWidth: "2.5rem" }}
+        title={t("viewer.lastPage", "Last Page")}
+      >
+        <LastPageIcon fontSize="small" />
+      </Button>
+
+      {/* Dual Page Toggle */}
+      <Tooltip
+        content={
+          isDualPageActive
+            ? t("viewer.singlePageView", "Single Page View")
+            : t("viewer.dualPageView", "Dual Page View")
+        }
+        position="top"
+        arrow
+      >
+        <Button
+          variant={isDualPageActive ? "filled" : "light"}
+          color="blue"
+          size="md"
+          radius="xl"
+          onClick={handleDualPageToggle}
+          disabled={scrollState.totalPages <= 1}
+          style={{ minWidth: "2.5rem" }}
+        >
+          {isDualPageActive ? (
+            <DescriptionIcon fontSize="small" />
+          ) : (
+            <ViewWeekIcon fontSize="small" />
+          )}
+        </Button>
+      </Tooltip>
+
+      {/* PDF Render Mode Toggle */}
+      <Tooltip
+        content={
+          pdfRenderMode === "normal"
+            ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+            : pdfRenderMode === "dark"
+              ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+              : t("viewer.disableColorFilter", "Disable Color Filter")
+        }
+        position="top"
+        arrow
+      >
+        <Button
+          variant={pdfRenderMode !== "normal" ? "filled" : "light"}
+          color="blue"
+          size="md"
+          radius="xl"
+          onClick={cyclePdfRenderMode}
+          style={{ minWidth: "2.5rem" }}
+          aria-label={
+            pdfRenderMode === "normal"
+              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+              : pdfRenderMode === "dark"
+                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                : t("viewer.disableColorFilter", "Disable Color Filter")
+          }
+        >
+          {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
+          {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
+          {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
+        </Button>
+      </Tooltip>
+
+      {/* Zoom Controls */}
+      <Group gap={4} align="center" style={{ marginLeft: 16 }}>
+        <Button
+          variant="subtle"
+          color="blue"
+          size="md"
+          radius="xl"
+          onClick={handleZoomOut}
+          style={{ minWidth: "2rem", padding: 0 }}
+          title={t("viewer.zoomOut", "Zoom out")}
+        >
+          −
+        </Button>
+        <span style={{ minWidth: "2.5rem", textAlign: "center" }}>
+          {displayZoomPercent}%
+        </span>
+        <Button
+          variant="subtle"
+          color="blue"
+          size="md"
+          radius="xl"
+          onClick={handleZoomIn}
+          style={{ minWidth: "2rem", padding: 0 }}
+          title={t("viewer.zoomIn", "Zoom in")}
+        >
+          +
+        </Button>
+      </Group>
+    </Paper>
   );
 }

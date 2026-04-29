@@ -12,4 +12,4 @@ export interface TooltipContent {
   };
   tips?: TooltipTip[];
   content?: React.ReactNode;
-} 
+}

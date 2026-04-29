@@ -2,13 +2,13 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "4.0.3"
+    id "org.springframework.boot" version "4.0.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
-    id "com.diffplug.spotless" version "8.1.0"
-    id "com.github.jk1.dependency-license-report" version "3.0.1"
+    id "com.diffplug.spotless" version "8.4.0"
+    id "com.github.jk1.dependency-license-report" version "3.1.2"
     //id "nebula.lint" version "19.0.3"
-    id "org.sonarqube" version "7.2.2.6593"
+    id "org.sonarqube" version "7.2.3.7755"
 }
 
 import com.github.jk1.license.render.*
@@ -20,17 +20,17 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
-    springBootVersion = "4.0.3"
-    pdfboxVersion = "3.0.6"
+    springBootVersion = "4.0.5"
+    pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
-    lombokVersion = "1.18.42"
+    lombokVersion = "1.18.44"
     bouncycastleVersion = "1.83"
-    springSecuritySamlVersion = "7.0.2"
+    springSecuritySamlVersion = "7.0.4"
     openSamlVersion = "5.2.1"
-    commonmarkVersion = "0.27.1"
-    googleJavaFormatVersion = "1.35.0"
+    commonmarkVersion = "0.28.0"
+    googleJavaFormatVersion = "1.28.0"
     logback = "1.5.32"
-    junitPlatformVersion = "1.12.2"
+    // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 21
 }
 
@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.7.2'
+    version = '2.10.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -89,10 +89,12 @@ def appVersionStr = project.version.toString()
 def tauriConfigPath = layout.projectDirectory.file('frontend/src-tauri/tauri.conf.json').asFile.path
 def sim1Path = layout.projectDirectory.file('frontend/src/core/testing/serverExperienceSimulations.ts').asFile.path
 def sim2Path = layout.projectDirectory.file('frontend/src/proprietary/testing/serverExperienceSimulations.ts').asFile.path
+def aurDesktopPkgbuildPath = layout.projectDirectory.file('.github/aur/stirling-pdf-desktop/PKGBUILD').asFile.path
+def aurServerPkgbuildPath = layout.projectDirectory.file('.github/aur/stirling-pdf-server-bin/PKGBUILD').asFile.path
 
 tasks.register('syncAppVersion') {
     group = 'versioning'
-    description = 'Synchronizes app version across desktop and simulation configs.'
+    description = 'Synchronizes app version across desktop, simulation, and AUR PKGBUILD configs.'
 
     doLast {
         println "Synchronizing application version to ${appVersionStr}"
@@ -110,11 +112,25 @@ tasks.register('syncAppVersion') {
         [new File(sim1Path), new File(sim2Path)].each { f ->
             if (f.exists()) {
                 def content = f.getText('UTF-8')
-                def matcher = (content =~ /(appVersion:\s*')([^']*)(')/)
+                def matcher = (content =~ /(appVersion:\s*(['"]))(.*?)(\2)/)
                 if (!matcher.find()) {
                     throw new GradleException("Could not locate appVersion in ${f} for synchronization")
                 }
-                def updatedContent = matcher.replaceFirst("${matcher.group(1)}${appVersionStr}${matcher.group(3)}")
+                def updatedContent = matcher.replaceFirst("${matcher.group(1)}${appVersionStr}${matcher.group(4)}")
+                if (content != updatedContent) {
+                    f.write(updatedContent, 'UTF-8')
+                }
+            }
+        }
+
+        [new File(aurDesktopPkgbuildPath), new File(aurServerPkgbuildPath)].each { f ->
+            if (f.exists()) {
+                def content = f.getText('UTF-8')
+                def matcher = (content =~ /(?m)^(pkgver=)(.*)$/)
+                if (!matcher.find()) {
+                    throw new GradleException("Could not locate pkgver in ${f} for synchronization")
+                }
+                def updatedContent = matcher.replaceFirst("\$1${appVersionStr}")
                 if (content != updatedContent) {
                     f.write(updatedContent, 'UTF-8')
                 }
@@ -177,8 +193,7 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
-        // Force a compatible Guava version for spotless
-        resolutionStrategy.force 'com.google.guava:guava:33.0.0-jre'
+
 
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:
@@ -199,6 +214,10 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+        }
+        dependencies {
+            // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
+            dependency 'org.apache.commons:commons-lang3:3.20.0'
         }
     }
 
@@ -525,7 +544,7 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
     testImplementation "com.squareup.okhttp3:mockwebserver"

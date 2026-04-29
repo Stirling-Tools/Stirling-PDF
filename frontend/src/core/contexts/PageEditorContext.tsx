@@ -1,9 +1,18 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useRef, useEffect } from 'react';
-import { FileId } from '@app/types/file';
-import { useFileActions, useFileState } from '@app/contexts/FileContext';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
-import { MAX_PAGE_EDITOR_FILES } from '@app/components/pageEditor/fileColors';
-import { useNavigationState } from '@app/contexts/NavigationContext';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
+import { FileId } from "@app/types/file";
+import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { PDFDocument, PDFPage } from "@app/types/pageEditor";
+import { MAX_PAGE_EDITOR_FILES } from "@app/components/pageEditor/fileColors";
+import { useNavigationState } from "@app/contexts/NavigationContext";
 
 // PageEditorFile is now defined locally in consuming components
 // Components should derive file list directly from FileContext
@@ -29,7 +38,7 @@ function computeFileOrderFromPages(pages: PDFPage[]): FileId[] {
   // Sort files by their first page position
   const fileOrder = Array.from(fileFirstPagePositions.entries())
     .sort((a, b) => a[1] - b[1])
-    .map(entry => entry[0]);
+    .map((entry) => entry[0]);
 
   return fileOrder;
 }
@@ -46,7 +55,7 @@ function reorderPagesForFileMove(
   currentPages: PDFPage[],
   fromIndex: number,
   toIndex: number,
-  orderedFileIds: FileId[]
+  orderedFileIds: FileId[],
 ): PDFPage[] {
   // Get the file ID being moved
   const movedFileId = orderedFileIds[fromIndex];
@@ -56,7 +65,7 @@ function reorderPagesForFileMove(
   const movedFilePages: PDFPage[] = [];
   const remainingPages: PDFPage[] = [];
 
-  currentPages.forEach(page => {
+  currentPages.forEach((page) => {
     if (page.originalFileId === movedFileId) {
       movedFilePages.push(page);
     } else {
@@ -92,13 +101,13 @@ function reorderPagesForFileMove(
   const reorderedPages = [
     ...remainingPages.slice(0, insertionIndex),
     ...movedFilePages,
-    ...remainingPages.slice(insertionIndex)
+    ...remainingPages.slice(insertionIndex),
   ];
 
   // Renumber all pages sequentially (clone to avoid mutation)
   return reorderedPages.map((page, index) => ({
     ...page,
-    pageNumber: index + 1
+    pageNumber: index + 1,
   }));
 }
 
@@ -136,7 +145,9 @@ interface PageEditorContextValue {
   clearPersistedDocument: () => void;
 }
 
-const PageEditorContext = createContext<PageEditorContextValue | undefined>(undefined);
+const PageEditorContext = createContext<PageEditorContextValue | undefined>(
+  undefined,
+);
 
 interface PageEditorProviderProps {
   children: ReactNode;
@@ -146,16 +157,22 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   const [currentPages, setCurrentPages] = useState<PDFPage[] | null>(null);
   const [reorderedPages, setReorderedPages] = useState<PDFPage[] | null>(null);
 
-  const [persistedDocument, setPersistedDocument] = useState<PDFDocument | null>(null);
-  const [persistedDocumentSignature, setPersistedDocumentSignature] = useState<string | null>(null);
+  const [persistedDocument, setPersistedDocument] =
+    useState<PDFDocument | null>(null);
+  const [persistedDocumentSignature, setPersistedDocumentSignature] = useState<
+    string | null
+  >(null);
 
-  const savePersistedDocument = useCallback((document: PDFDocument, signature: string) => {
-    setPersistedDocument(document);
-    setPersistedDocumentSignature(signature);
-  }, []);
+  const savePersistedDocument = useCallback(
+    (document: PDFDocument, signature: string) => {
+      setPersistedDocument(document);
+      setPersistedDocumentSignature(signature);
+    },
+    [],
+  );
 
   const clearPersistedDocument = useCallback(() => {
-    console.log('[PageEditorContext] Clearing persisted document');
+    console.log("[PageEditorContext] Clearing persisted document");
     setPersistedDocument(null);
     setPersistedDocumentSignature(null);
     setCurrentPages(null);
@@ -173,8 +190,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
   useEffect(() => {
     const prevWorkbench = prevWorkbenchRef.current;
     const nextWorkbench = navigationState.workbench;
-    const isLeavingPageEditor = prevWorkbench === 'pageEditor' && nextWorkbench !== 'pageEditor';
-    const isEnteringPageEditor = prevWorkbench !== 'pageEditor' && nextWorkbench === 'pageEditor';
+    const isLeavingPageEditor =
+      prevWorkbench === "pageEditor" && nextWorkbench !== "pageEditor";
+    const isEnteringPageEditor =
+      prevWorkbench !== "pageEditor" && nextWorkbench === "pageEditor";
 
     if (isLeavingPageEditor) {
       clearPersistedDocument();
@@ -184,9 +203,11 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       prevFileContextIdsRef.current = state.files.ids;
       setReorderedPages(null);
       setCurrentPages(null); // Force clear current pages when entering
-      setFileOrder(currentOrder => {
-        const validOrder = currentOrder.filter(id => state.files.ids.includes(id));
-        const newIds = state.files.ids.filter(id => !validOrder.includes(id));
+      setFileOrder((currentOrder) => {
+        const validOrder = currentOrder.filter((id) =>
+          state.files.ids.includes(id),
+        );
+        const newIds = state.files.ids.filter((id) => !validOrder.includes(id));
         if (newIds.length === 0 && validOrder.length === currentOrder.length) {
           return currentOrder;
         }
@@ -206,8 +227,8 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
 
   const fileContextSignature = useMemo(() => {
     return state.files.ids
-      .map(id => `${id}:${state.files.byId[id]?.versionNumber ?? 0}`)
-      .join(',');
+      .map((id) => `${id}:${state.files.byId[id]?.versionNumber ?? 0}`)
+      .join(",");
   }, [state.files.ids, state.files.byId]);
 
   const prevFileContextSignature = useRef<string | null>(null);
@@ -228,7 +249,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const prevFileIds = prevFileContextIdsRef.current;
     const idsChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
 
-    if (!idsChanged && prevFileContextSignature.current === fileContextSignature) {
+    if (
+      !idsChanged &&
+      prevFileContextSignature.current === fileContextSignature
+    ) {
       return;
     }
 
@@ -240,10 +264,13 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       return;
     }
 
-    console.log('[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:', {
-      prev: previousSignature?.substring(0, 50),
-      current: fileContextSignature.substring(0, 50),
-    });
+    console.log(
+      "[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:",
+      {
+        prev: previousSignature?.substring(0, 50),
+        current: fileContextSignature.substring(0, 50),
+      },
+    );
     clearPersistedDocument();
   }, [fileContextSignature, clearPersistedDocument, state.files.ids]);
 
@@ -262,17 +289,20 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const prevFileIds = prevFileContextIdsRef.current;
 
     // Only react to FileContext changes, not our own fileOrder changes
-    const fileContextChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
+    const fileContextChanged = haveFileIdSetsChanged(
+      prevFileIds,
+      currentFileIds,
+    );
 
     if (!fileContextChanged) {
       return;
     }
 
-    console.log('[PageEditorContext] FileContext files changed:', {
+    console.log("[PageEditorContext] FileContext files changed:", {
       prevCount: prevFileIds.length,
       currentCount: currentFileIds.length,
-      added: currentFileIds.filter(id => !prevFileIds.includes(id)).length,
-      removed: prevFileIds.filter(id => !currentFileIds.includes(id)).length,
+      added: currentFileIds.filter((id) => !prevFileIds.includes(id)).length,
+      removed: prevFileIds.filter((id) => !currentFileIds.includes(id)).length,
     });
 
     clearPersistedDocument();
@@ -283,15 +313,22 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     let newFileIdsToProcess: FileId[] = [];
 
     // Use functional setState to read latest fileOrder without depending on it
-    setFileOrder(currentOrder => {
+    setFileOrder((currentOrder) => {
       // Identify new files
-      const newFileIds = currentFileIds.filter(id => !currentOrder.includes(id));
+      const newFileIds = currentFileIds.filter(
+        (id) => !currentOrder.includes(id),
+      );
       newFileIdsToProcess = newFileIds; // Store for cleanup
 
       // Remove deleted files
-      const validFileOrder = currentOrder.filter(id => currentFileIds.includes(id));
+      const validFileOrder = currentOrder.filter((id) =>
+        currentFileIds.includes(id),
+      );
 
-      if (newFileIds.length === 0 && validFileOrder.length === currentOrder.length) {
+      if (
+        newFileIds.length === 0 &&
+        validFileOrder.length === currentOrder.length
+      ) {
         return currentOrder; // No changes needed
       }
 
@@ -302,14 +339,16 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
 
     // Clear insertAfterPageId after a delay to allow usePageDocument to consume it first
     setTimeout(() => {
-      newFileIdsToProcess.forEach(fileId => {
+      newFileIdsToProcess.forEach((fileId) => {
         const stub = state.files.byId[fileId];
         if (stub?.insertAfterPageId) {
-          fileActions.updateStirlingFileStub(fileId, { insertAfterPageId: undefined });
+          fileActions.updateStirlingFileStub(fileId, {
+            insertAfterPageId: undefined,
+          });
         }
       });
     }, 100);
-    }, [state.files.ids, state.files.byId, fileActions]);
+  }, [state.files.ids, state.files.byId, fileActions]);
 
   const updateCurrentPages = useCallback((pages: PDFPage[] | null) => {
     setCurrentPages(pages);
@@ -319,47 +358,66 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     setReorderedPages(null);
   }, []);
 
-  const setFileSelection = useCallback((fileId: FileId, selected: boolean) => {
-    const currentSelection = stateRef.current.ui.selectedFileIds;
-    const isAlreadySelected = currentSelection.includes(fileId);
+  const setFileSelection = useCallback(
+    (fileId: FileId, selected: boolean) => {
+      const currentSelection = stateRef.current.ui.selectedFileIds;
+      const isAlreadySelected = currentSelection.includes(fileId);
 
-    // Check if we're trying to select when at limit
-    if (selected && !isAlreadySelected && currentSelection.length >= MAX_PAGE_EDITOR_FILES) {
-      console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
-      return;
-    }
+      // Check if we're trying to select when at limit
+      if (
+        selected &&
+        !isAlreadySelected &&
+        currentSelection.length >= MAX_PAGE_EDITOR_FILES
+      ) {
+        console.warn(
+          `Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`,
+        );
+        return;
+      }
 
-    // Update FileContext selection
-    const newSelectedIds = selected
-      ? [...currentSelection, fileId]
-      : currentSelection.filter(id => id !== fileId);
+      // Update FileContext selection
+      const newSelectedIds = selected
+        ? [...currentSelection, fileId]
+        : currentSelection.filter((id) => id !== fileId);
 
-    fileActions.setSelectedFiles(newSelectedIds);
-  }, [fileActions]);
+      fileActions.setSelectedFiles(newSelectedIds);
+    },
+    [fileActions],
+  );
 
-  const toggleFileSelection = useCallback((fileId: FileId) => {
-    const currentSelection = stateRef.current.ui.selectedFileIds;
-    const isCurrentlySelected = currentSelection.includes(fileId);
+  const toggleFileSelection = useCallback(
+    (fileId: FileId) => {
+      const currentSelection = stateRef.current.ui.selectedFileIds;
+      const isCurrentlySelected = currentSelection.includes(fileId);
 
-    // If toggling on and at limit, don't allow
-    if (!isCurrentlySelected && currentSelection.length >= MAX_PAGE_EDITOR_FILES) {
-      console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`);
-      return;
-    }
+      // If toggling on and at limit, don't allow
+      if (
+        !isCurrentlySelected &&
+        currentSelection.length >= MAX_PAGE_EDITOR_FILES
+      ) {
+        console.warn(
+          `Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Cannot select more files.`,
+        );
+        return;
+      }
 
-    // Update FileContext selection
-    const newSelectedIds = isCurrentlySelected
-      ? currentSelection.filter(id => id !== fileId)
-      : [...currentSelection, fileId];
+      // Update FileContext selection
+      const newSelectedIds = isCurrentlySelected
+        ? currentSelection.filter((id) => id !== fileId)
+        : [...currentSelection, fileId];
 
-    fileActions.setSelectedFiles(newSelectedIds);
-  }, [fileActions]);
+      fileActions.setSelectedFiles(newSelectedIds);
+    },
+    [fileActions],
+  );
 
   const selectAll = useCallback(() => {
     const allFileIds = stateRef.current.files.ids;
 
     if (allFileIds.length > MAX_PAGE_EDITOR_FILES) {
-      console.warn(`Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Only first ${MAX_PAGE_EDITOR_FILES} files will be selected.`);
+      console.warn(
+        `Page editor supports maximum ${MAX_PAGE_EDITOR_FILES} files. Only first ${MAX_PAGE_EDITOR_FILES} files will be selected.`,
+      );
       fileActions.setSelectedFiles(allFileIds.slice(0, MAX_PAGE_EDITOR_FILES));
     } else {
       fileActions.setSelectedFiles(allFileIds);
@@ -370,44 +428,57 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     fileActions.setSelectedFiles([]);
   }, [fileActions]);
 
-  const reorderFiles = useCallback((fromIndex: number, toIndex: number) => {
-    // Reorder local fileOrder array (page editor workspace only)
-    const newOrder = [...fileOrder];
-    const [movedFileId] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, movedFileId);
-    setFileOrder(newOrder);
+  const reorderFiles = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      // Reorder local fileOrder array (page editor workspace only)
+      const newOrder = [...fileOrder];
+      const [movedFileId] = newOrder.splice(fromIndex, 1);
+      newOrder.splice(toIndex, 0, movedFileId);
+      setFileOrder(newOrder);
 
-    // If current pages available, reorder them based on file move
-    if (currentPages && currentPages.length > 0 && fromIndex !== toIndex) {
-      // Get the current file order from pages (files that have pages loaded)
-      const currentFileOrder: FileId[] = [];
-      const filesSeen = new Set<FileId>();
-      currentPages.forEach(page => {
-        const fileId = page.originalFileId;
-        if (fileId && !filesSeen.has(fileId)) {
-          filesSeen.add(fileId);
-          currentFileOrder.push(fileId);
+      // If current pages available, reorder them based on file move
+      if (currentPages && currentPages.length > 0 && fromIndex !== toIndex) {
+        // Get the current file order from pages (files that have pages loaded)
+        const currentFileOrder: FileId[] = [];
+        const filesSeen = new Set<FileId>();
+        currentPages.forEach((page) => {
+          const fileId = page.originalFileId;
+          if (fileId && !filesSeen.has(fileId)) {
+            filesSeen.add(fileId);
+            currentFileOrder.push(fileId);
+          }
+        });
+
+        // Get the target file ID from the NEW order (after the move)
+        // When moving down: we want to position after the file at toIndex-1 (file just before insertion)
+        // When moving up: we want to position before the file at toIndex+1 (file just after insertion)
+        const targetFileId =
+          fromIndex < toIndex
+            ? newOrder[toIndex - 1] // Moving down: target is the file just before where we inserted
+            : newOrder[toIndex + 1]; // Moving up: target is the file just after where we inserted
+
+        // Find their positions in the current page order (not the full file list)
+        const pageOrderFromIndex = currentFileOrder.findIndex(
+          (id) => id === movedFileId,
+        );
+        const pageOrderToIndex = currentFileOrder.findIndex(
+          (id) => id === targetFileId,
+        );
+
+        // Only reorder pages if both files have pages loaded
+        if (pageOrderFromIndex >= 0 && pageOrderToIndex >= 0) {
+          const reorderedPagesResult = reorderPagesForFileMove(
+            currentPages,
+            pageOrderFromIndex,
+            pageOrderToIndex,
+            currentFileOrder,
+          );
+          setReorderedPages(reorderedPagesResult);
         }
-      });
-
-      // Get the target file ID from the NEW order (after the move)
-      // When moving down: we want to position after the file at toIndex-1 (file just before insertion)
-      // When moving up: we want to position before the file at toIndex+1 (file just after insertion)
-      const targetFileId = fromIndex < toIndex
-        ? newOrder[toIndex - 1]  // Moving down: target is the file just before where we inserted
-        : newOrder[toIndex + 1];  // Moving up: target is the file just after where we inserted
-
-      // Find their positions in the current page order (not the full file list)
-      const pageOrderFromIndex = currentFileOrder.findIndex(id => id === movedFileId);
-      const pageOrderToIndex = currentFileOrder.findIndex(id => id === targetFileId);
-
-      // Only reorder pages if both files have pages loaded
-      if (pageOrderFromIndex >= 0 && pageOrderToIndex >= 0) {
-        const reorderedPagesResult = reorderPagesForFileMove(currentPages, pageOrderFromIndex, pageOrderToIndex, currentFileOrder);
-        setReorderedPages(reorderedPagesResult);
       }
-    }
-  }, [fileOrder, currentPages]);
+    },
+    [fileOrder, currentPages],
+  );
 
   const updateFileOrderFromPages = useCallback((pages: PDFPage[]) => {
     if (!pages || pages.length === 0) return;
@@ -421,41 +492,43 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     }
   }, []);
 
-
-  const value: PageEditorContextValue = useMemo(() => ({
-    currentPages,
-    updateCurrentPages,
-    reorderedPages,
-    clearReorderedPages,
-    fileOrder,
-    setFileOrder,
-    setFileSelection,
-    toggleFileSelection,
-    selectAll,
-    deselectAll,
-    reorderFiles,
-    updateFileOrderFromPages,
-    persistedDocument,
-    persistedDocumentSignature,
-    savePersistedDocument,
-    clearPersistedDocument,
-  }), [
-    currentPages,
-    updateCurrentPages,
-    reorderedPages,
-    clearReorderedPages,
-    fileOrder,
-    setFileSelection,
-    toggleFileSelection,
-    selectAll,
-    deselectAll,
-    reorderFiles,
-    updateFileOrderFromPages,
-    persistedDocument,
-    persistedDocumentSignature,
-    savePersistedDocument,
-    clearPersistedDocument,
-  ]);
+  const value: PageEditorContextValue = useMemo(
+    () => ({
+      currentPages,
+      updateCurrentPages,
+      reorderedPages,
+      clearReorderedPages,
+      fileOrder,
+      setFileOrder,
+      setFileSelection,
+      toggleFileSelection,
+      selectAll,
+      deselectAll,
+      reorderFiles,
+      updateFileOrderFromPages,
+      persistedDocument,
+      persistedDocumentSignature,
+      savePersistedDocument,
+      clearPersistedDocument,
+    }),
+    [
+      currentPages,
+      updateCurrentPages,
+      reorderedPages,
+      clearReorderedPages,
+      fileOrder,
+      setFileSelection,
+      toggleFileSelection,
+      selectAll,
+      deselectAll,
+      reorderFiles,
+      updateFileOrderFromPages,
+      persistedDocument,
+      persistedDocumentSignature,
+      savePersistedDocument,
+      clearPersistedDocument,
+    ],
+  );
 
   return (
     <PageEditorContext.Provider value={value}>
@@ -467,7 +540,7 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
 export function usePageEditor() {
   const context = useContext(PageEditorContext);
   if (!context) {
-    throw new Error('usePageEditor must be used within PageEditorProvider');
+    throw new Error("usePageEditor must be used within PageEditorProvider");
   }
   return context;
 }

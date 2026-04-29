@@ -1,13 +1,16 @@
-import { useRedaction as useEmbedPdfRedaction, RedactionSelectionMenuProps } from '@embedpdf/plugin-redaction/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { ActionIcon, Tooltip, Button, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { createPortal } from 'react-dom';
-import { useEffect, useState, useRef, useCallback } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { useRedaction } from '@app/contexts/RedactionContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
+import {
+  useRedaction as useEmbedPdfRedaction,
+  RedactionSelectionMenuProps,
+} from "@embedpdf/plugin-redaction/react";
+import { PdfAnnotationSubtype } from "@embedpdf/models";
+import { ActionIcon, Tooltip, Button, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { createPortal } from "react-dom";
+import { useEffect, useState, useRef, useCallback } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useRedaction } from "@app/contexts/RedactionContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 
 export type { RedactionSelectionMenuProps };
 
@@ -20,10 +23,7 @@ export function RedactionSelectionMenu(props: any) {
   }
 
   return (
-    <RedactionSelectionMenuInner
-      documentId={activeDocumentId}
-      {...props}
-    />
+    <RedactionSelectionMenuInner documentId={activeDocumentId} {...props} />
   );
 }
 
@@ -33,25 +33,37 @@ function RedactionSelectionMenuInner({
   selected,
   menuWrapperProps,
 }: RedactionSelectionMenuProps & { documentId: string }) {
-  const item = context?.type === 'redaction'
-    ? context.item
-    : (context?.type === 'annotation' ? (context as any).annotation?.object : null);
+  const item =
+    context?.type === "redaction"
+      ? context.item
+      : context?.type === "annotation"
+        ? (context as any).annotation?.object
+        : null;
 
-  const isRedaction = context?.type === 'redaction' || (context?.type === 'annotation' && item?.type === PdfAnnotationSubtype.REDACT);
+  const isRedaction =
+    context?.type === "redaction" ||
+    (context?.type === "annotation" &&
+      item?.type === PdfAnnotationSubtype.REDACT);
 
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
   const { setRedactionsApplied } = useRedaction();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
-  const setRef = useCallback((node: HTMLDivElement | null) => {
-    wrapperRef.current = node;
-    // Call the EmbedPDF ref callback
-    menuWrapperProps?.ref?.(node);
-  }, [menuWrapperProps]);
+  const setRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      wrapperRef.current = node;
+      // Call the EmbedPDF ref callback
+      menuWrapperProps?.ref?.(node);
+    },
+    [menuWrapperProps],
+  );
 
   const handleRemove = useCallback(() => {
     if (provides?.removePending && item && pageIndex !== undefined) {
@@ -95,12 +107,12 @@ function RedactionSelectionMenuInner({
     updatePosition();
 
     // Update position on scroll/resize
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [selected, item]);
 
@@ -110,68 +122,71 @@ function RedactionSelectionMenuInner({
   const menuContent = menuPosition ? (
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: `${menuPosition.top}px`,
         left: `${menuPosition.left}px`,
-        transform: 'translateX(-50%)',
-        pointerEvents: 'auto',
+        transform: "translateX(-50%)",
+        pointerEvents: "auto",
         zIndex: 10000, // Very high z-index to appear above everything
-        backgroundColor: 'var(--mantine-color-body)',
+        backgroundColor: "var(--mantine-color-body)",
         borderRadius: 8,
-        padding: '8px 12px',
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.25)',
-        border: '1px solid var(--mantine-color-default-border)',
+        padding: "8px 12px",
+        boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
+        border: "1px solid var(--mantine-color-default-border)",
         // Fixed size to prevent browser zoom affecting layout
-        fontSize: '14px',
-        minWidth: '180px',
+        fontSize: "14px",
+        minWidth: "180px",
       }}
     >
-        <Group gap="sm" wrap="nowrap" justify="center">
-          <Tooltip label="Remove this mark">
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="md"
-              onClick={handleRemove}
-              styles={{
-                root: {
-                  flexShrink: 0,
-                  backgroundColor: 'var(--bg-raised)',
-                  border: '1px solid var(--border-default)',
-                  color: 'var(--text-secondary)',
-                  '&:hover': {
-                    backgroundColor: 'var(--hover-bg)',
-                    borderColor: 'var(--border-strong)',
-                    color: 'var(--text-primary)',
-                  },
+      <Group gap="sm" wrap="nowrap" justify="center">
+        <Tooltip label="Remove this mark">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="md"
+            onClick={handleRemove}
+            styles={{
+              root: {
+                flexShrink: 0,
+                backgroundColor: "var(--bg-raised)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-secondary)",
+                "&:hover": {
+                  backgroundColor: "var(--hover-bg)",
+                  borderColor: "var(--border-strong)",
+                  color: "var(--text-primary)",
                 },
-              }}
-            >
-              <DeleteIcon style={{ fontSize: 18 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip
-            label={t('redact.manual.applyWarning', '⚠️ Permanent application, cannot be undone and the data underneath will be deleted')}
-            withArrow
-            position="top"
+              },
+            }}
           >
-            <Button
-              variant="filled"
-              color="red"
-              size="xs"
-              onClick={handleApply}
-              leftSection={<CheckCircleIcon style={{ fontSize: 16 }} />}
-              styles={{
-                root: { flexShrink: 0, whiteSpace: 'nowrap' },
-              }}
-            >
-              Apply (permanent)
-            </Button>
-          </Tooltip>
-        </Group>
-      </div>
-    ) : null;
+            <DeleteIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
+        </Tooltip>
+
+        <Tooltip
+          label={t(
+            "redact.manual.applyWarning",
+            "⚠️ Permanent application, cannot be undone and the data underneath will be deleted",
+          )}
+          withArrow
+          position="top"
+        >
+          <Button
+            variant="filled"
+            color="red"
+            size="xs"
+            onClick={handleApply}
+            leftSection={<CheckCircleIcon style={{ fontSize: 16 }} />}
+            styles={{
+              root: { flexShrink: 0, whiteSpace: "nowrap" },
+            }}
+          >
+            Apply (permanent)
+          </Button>
+        </Tooltip>
+      </Group>
+    </div>
+  ) : null;
 
   return (
     <>
@@ -183,10 +198,10 @@ function RedactionSelectionMenuInner({
           ...menuWrapperProps?.style,
           // Keep the wrapper invisible but still occupying space for positioning
           opacity: 0,
-          pointerEvents: 'none',
+          pointerEvents: "none",
         }}
       />
-      {typeof document !== 'undefined' && menuContent
+      {typeof document !== "undefined" && menuContent
         ? createPortal(menuContent, document.body)
         : null}
     </>

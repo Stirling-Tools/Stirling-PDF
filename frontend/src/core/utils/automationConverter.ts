@@ -2,10 +2,10 @@
  * Utility functions for converting between automation formats
  */
 
-import { AutomationConfig } from '@app/types/automation';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { downloadFile } from '@app/services/downloadService';
-import { ToolId } from '@app/types/toolId';
+import { AutomationConfig } from "@app/types/automation";
+import { ToolRegistry } from "@app/data/toolsTaxonomy";
+import { downloadFile } from "@app/services/downloadService";
+import { ToolId } from "@app/types/toolId";
 
 /**
  * Pipeline configuration format used by folder scanning
@@ -32,11 +32,11 @@ interface FolderScanningPipeline {
  */
 export function convertToFolderScanningConfig(
   automation: AutomationConfig,
-  toolRegistry: Partial<ToolRegistry>
+  toolRegistry: Partial<ToolRegistry>,
 ): FolderScanningPipeline {
   return {
     name: automation.name,
-    pipeline: automation.operations.map(op => {
+    pipeline: automation.operations.map((op) => {
       // Map operationType to full API endpoint path
       const toolId = op.operation as ToolId;
       const toolEntry = toolRegistry[toolId];
@@ -44,17 +44,17 @@ export function convertToFolderScanningConfig(
 
       let endpoint: string | undefined;
 
-      if (typeof endpointConfig === 'string') {
+      if (typeof endpointConfig === "string") {
         endpoint = endpointConfig;
-      } else if (typeof endpointConfig === 'function') {
+      } else if (typeof endpointConfig === "function") {
         // For dynamic endpoints, call with the saved parameters
         try {
           endpoint = endpointConfig(op.parameters);
         } catch (error) {
           console.warn(
             `Failed to resolve dynamic endpoint for operation "${op.operation}". ` +
-            `This may happen if the tool requires specific parameters. ` +
-            `Error: ${error}`
+              `This may happen if the tool requires specific parameters. ` +
+              `Error: ${error}`,
           );
         }
       }
@@ -62,8 +62,8 @@ export function convertToFolderScanningConfig(
       if (!endpoint) {
         console.warn(
           `No endpoint found for operation "${op.operation}". ` +
-          `This operation may fail in folder scanning. ` +
-          `Using operation type as fallback.`
+            `This operation may fail in folder scanning. ` +
+            `Using operation type as fallback.`,
         );
       }
 
@@ -71,16 +71,16 @@ export function convertToFolderScanningConfig(
         operation: endpoint || op.operation,
         parameters: {
           ...op.parameters,
-          fileInput: "automated"
-        }
+          fileInput: "automated",
+        },
       };
     }),
     _examples: {
       outputDir: "{outputFolder}/{folderName}",
-      outputFileName: "{filename}-{pipelineName}-{date}-{time}"
+      outputFileName: "{filename}-{pipelineName}-{date}-{time}",
     },
     outputDir: "{outputFolder}",
-    outputFileName: "{filename}"
+    outputFileName: "{filename}",
   };
 }
 
@@ -91,10 +91,10 @@ export function convertToFolderScanningConfig(
  */
 export function downloadFolderScanningConfig(
   automation: AutomationConfig,
-  toolRegistry: Partial<ToolRegistry>
+  toolRegistry: Partial<ToolRegistry>,
 ): void {
   const config = convertToFolderScanningConfig(automation, toolRegistry);
   const json = JSON.stringify(config, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
+  const blob = new Blob([json], { type: "application/json" });
   void downloadFile({ data: blob, filename: `${automation.name}.json` });
 }

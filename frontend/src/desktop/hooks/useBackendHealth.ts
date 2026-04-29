@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
-import { backendHealthMonitor } from '@app/services/backendHealthMonitor';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { connectionModeService } from '@app/services/connectionModeService';
-import type { BackendHealthState } from '@app/types/backendHealth';
+import { useEffect, useState, useCallback } from "react";
+import { backendHealthMonitor } from "@app/services/backendHealthMonitor";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { connectionModeService } from "@app/services/connectionModeService";
+import type { BackendHealthState } from "@app/types/backendHealth";
 
 /**
  * Hook to read backend health state for UI (Run button, BackendHealthIndicator).
@@ -19,17 +19,22 @@ import type { BackendHealthState } from '@app/types/backendHealth';
  * - Self-hosted mode (server offline, local port unknown): false
  */
 export function useBackendHealth() {
-  const [health, setHealth] = useState<BackendHealthState>(() => backendHealthMonitor.getSnapshot());
-  const [serverStatus, setServerStatus] = useState(
-    () => selfHostedServerMonitor.getSnapshot().status
+  const [health, setHealth] = useState<BackendHealthState>(() =>
+    backendHealthMonitor.getSnapshot(),
   );
-  const [localUrl, setLocalUrl] = useState<string | null>(
-    () => tauriBackendService.getBackendUrl()
+  const [serverStatus, setServerStatus] = useState(
+    () => selfHostedServerMonitor.getSnapshot().status,
+  );
+  const [localUrl, setLocalUrl] = useState<string | null>(() =>
+    tauriBackendService.getBackendUrl(),
   );
   const [connectionMode, setConnectionMode] = useState<string | null>(null);
 
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
+    return connectionModeService.subscribeToModeChanges((config) =>
+      setConnectionMode(config.mode),
+    );
   }, []);
 
   useEffect(() => {
@@ -37,7 +42,9 @@ export function useBackendHealth() {
   }, []);
 
   useEffect(() => {
-    return selfHostedServerMonitor.subscribe(state => setServerStatus(state.status));
+    return selfHostedServerMonitor.subscribe((state) =>
+      setServerStatus(state.status),
+    );
   }, []);
 
   useEffect(() => {
@@ -51,8 +58,8 @@ export function useBackendHealth() {
   }, []);
 
   const isOnline =
-    connectionMode === 'selfhosted'
-      ? serverStatus !== 'offline' || !!localUrl
+    connectionMode === "selfhosted"
+      ? serverStatus !== "offline" || !!localUrl
       : health.isOnline;
 
   return {

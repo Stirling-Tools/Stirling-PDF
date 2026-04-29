@@ -14,7 +14,12 @@ import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOpera
 import { BaseToolProps } from "@app/types/tool";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { useSavedAutomations } from "@app/hooks/tools/automate/useSavedAutomations";
-import { AutomationConfig, AutomationStepData, AutomationMode, AutomationStep } from "@app/types/automation";
+import {
+  AutomationConfig,
+  AutomationStepData,
+  AutomationMode,
+  AutomationStep,
+} from "@app/types/automation";
 import { AUTOMATION_STEPS } from "@app/constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
@@ -23,13 +28,24 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { actions } = useNavigationActions();
   const { registerToolReset } = useToolWorkflow();
 
-  const [currentStep, setCurrentStep] = useState<AutomationStep>(AUTOMATION_STEPS.SELECTION);
-  const [stepData, setStepData] = useState<AutomationStepData>({ step: AUTOMATION_STEPS.SELECTION });
+  const [currentStep, setCurrentStep] = useState<AutomationStep>(
+    AUTOMATION_STEPS.SELECTION,
+  );
+  const [stepData, setStepData] = useState<AutomationStepData>({
+    step: AUTOMATION_STEPS.SELECTION,
+  });
 
   const automateOperation = useAutomateOperation();
   const { regularTools: toolRegistry } = useToolRegistry();
-  const hasResults = automateOperation.files.length > 0 || automateOperation.downloadUrl !== null;
-  const { savedAutomations, deleteAutomation, refreshAutomations, copyFromSuggested } = useSavedAutomations();
+  const hasResults =
+    automateOperation.files.length > 0 ||
+    automateOperation.downloadUrl !== null;
+  const {
+    savedAutomations,
+    deleteAutomation,
+    refreshAutomations,
+    copyFromSuggested,
+  } = useSavedAutomations();
 
   // Use ref to store the latest reset function to avoid closure issues
   const resetFunctionRef = React.useRef<() => void>(null);
@@ -55,12 +71,15 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       }
     };
 
-    registerToolReset('automate', stableResetFunction);
+    registerToolReset("automate", stableResetFunction);
   }, [registerToolReset]); // Only depend on registerToolReset which should be stable
 
   const handleStepChange = (data: AutomationStepData) => {
     // If navigating away from run step, reset automation results
-    if (currentStep === AUTOMATION_STEPS.RUN && data.step !== AUTOMATION_STEPS.RUN) {
+    if (
+      currentStep === AUTOMATION_STEPS.RUN &&
+      data.step !== AUTOMATION_STEPS.RUN
+    ) {
       automateOperation.resetResults();
     }
 
@@ -71,8 +90,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }
 
     // If navigating to run step with a different automation, reset results
-    if (data.step === AUTOMATION_STEPS.RUN && data.automation &&
-        stepData.automation && data.automation.id !== stepData.automation.id) {
+    if (
+      data.step === AUTOMATION_STEPS.RUN &&
+      data.automation &&
+      stepData.automation &&
+      data.automation.id !== stepData.automation.id
+    ) {
       automateOperation.resetResults();
     }
 
@@ -96,14 +119,27 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         return (
           <AutomationSelection
             savedAutomations={savedAutomations}
-            onCreateNew={() => handleStepChange({ step: AUTOMATION_STEPS.CREATION, mode: AutomationMode.CREATE })}
-            onRun={(automation: AutomationConfig) => handleStepChange({ step: AUTOMATION_STEPS.RUN, automation })}
-            onEdit={(automation: AutomationConfig) => handleStepChange({ step: AUTOMATION_STEPS.CREATION, mode: AutomationMode.EDIT, automation })}
+            onCreateNew={() =>
+              handleStepChange({
+                step: AUTOMATION_STEPS.CREATION,
+                mode: AutomationMode.CREATE,
+              })
+            }
+            onRun={(automation: AutomationConfig) =>
+              handleStepChange({ step: AUTOMATION_STEPS.RUN, automation })
+            }
+            onEdit={(automation: AutomationConfig) =>
+              handleStepChange({
+                step: AUTOMATION_STEPS.CREATION,
+                mode: AutomationMode.EDIT,
+                automation,
+              })
+            }
             onDelete={async (automation: AutomationConfig) => {
               try {
                 await deleteAutomation(automation.id);
               } catch (error) {
-                console.error('Failed to delete automation:', error);
+                console.error("Failed to delete automation:", error);
                 onError?.(`Failed to delete automation: ${automation.name}`);
               }
             }}
@@ -111,8 +147,10 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               try {
                 await copyFromSuggested(suggestedAutomation);
               } catch (error) {
-                console.error('Failed to copy suggested automation:', error);
-                onError?.(`Failed to copy automation: ${suggestedAutomation.name}`);
+                console.error("Failed to copy suggested automation:", error);
+                onError?.(
+                  `Failed to copy automation: ${suggestedAutomation.name}`,
+                );
               }
             }}
             toolRegistry={toolRegistry}
@@ -121,14 +159,16 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
       case AUTOMATION_STEPS.CREATION:
         if (!stepData.mode) {
-          console.error('Creation mode is undefined');
+          console.error("Creation mode is undefined");
           return null;
         }
         return (
           <AutomationCreation
             mode={stepData.mode}
             existingAutomation={stepData.automation}
-            onBack={() => handleStepChange({ step: AUTOMATION_STEPS.SELECTION })}
+            onBack={() =>
+              handleStepChange({ step: AUTOMATION_STEPS.SELECTION })
+            }
             onComplete={() => {
               refreshAutomations();
               handleStepChange({ step: AUTOMATION_STEPS.SELECTION });
@@ -139,7 +179,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
       case AUTOMATION_STEPS.RUN:
         if (!stepData.automation) {
-          console.error('Automation config is undefined');
+          console.error("Automation config is undefined");
           return null;
         }
         return (
@@ -151,14 +191,18 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         );
 
       default:
-        return <div>{t('automate.invalidStep', 'Invalid step')}</div>;
+        return <div>{t("automate.invalidStep", "Invalid step")}</div>;
     }
   };
 
-  const createStep = (title: string, props: any, content?: React.ReactNode) => ({
+  const createStep = (
+    title: string,
+    props: any,
+    content?: React.ReactNode,
+  ) => ({
     title,
     ...props,
-    content
+    content,
   });
 
   // Always create files step to avoid conditional hook calls
@@ -168,35 +212,47 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 
   const automationSteps = [
-    createStep(t('automate.selection.title', 'Automation Selection'), {
-      isVisible: true,
-      isCollapsed: currentStep !== AUTOMATION_STEPS.SELECTION,
-      onCollapsedClick: () => {
-        // Clear results when clicking back to selection
-        automateOperation.resetResults();
-        setCurrentStep(AUTOMATION_STEPS.SELECTION);
-        setStepData({ step: AUTOMATION_STEPS.SELECTION });
-      }
-    }, currentStep === AUTOMATION_STEPS.SELECTION ? renderCurrentStep() : null),
+    createStep(
+      t("automate.selection.title", "Automation Selection"),
+      {
+        isVisible: true,
+        isCollapsed: currentStep !== AUTOMATION_STEPS.SELECTION,
+        onCollapsedClick: () => {
+          // Clear results when clicking back to selection
+          automateOperation.resetResults();
+          setCurrentStep(AUTOMATION_STEPS.SELECTION);
+          setStepData({ step: AUTOMATION_STEPS.SELECTION });
+        },
+      },
+      currentStep === AUTOMATION_STEPS.SELECTION ? renderCurrentStep() : null,
+    ),
 
-    createStep(stepData.mode === AutomationMode.EDIT
-      ? t('automate.creation.editTitle', 'Edit Automation')
-      : t('automate.creation.createTitle', 'Create Automation'), {
-      isVisible: currentStep === AUTOMATION_STEPS.CREATION,
-      isCollapsed: false
-    }, currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null),
+    createStep(
+      stepData.mode === AutomationMode.EDIT
+        ? t("automate.creation.editTitle", "Edit Automation")
+        : t("automate.creation.createTitle", "Create Automation"),
+      {
+        isVisible: currentStep === AUTOMATION_STEPS.CREATION,
+        isCollapsed: false,
+      },
+      currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null,
+    ),
 
     // Files step - only visible during run mode
     {
       ...filesStep,
-      isVisible: currentStep === AUTOMATION_STEPS.RUN
+      isVisible: currentStep === AUTOMATION_STEPS.RUN,
     },
 
     // Run step
-    createStep(t('automate.run.title', 'Run Automation'), {
-      isVisible: currentStep === AUTOMATION_STEPS.RUN,
-      isCollapsed: hasResults,
-    }, currentStep === AUTOMATION_STEPS.RUN ? renderCurrentStep() : null)
+    createStep(
+      t("automate.run.title", "Run Automation"),
+      {
+        isVisible: currentStep === AUTOMATION_STEPS.RUN,
+        isCollapsed: hasResults,
+      },
+      currentStep === AUTOMATION_STEPS.RUN ? renderCurrentStep() : null,
+    ),
   ];
 
   return createToolFlow({
@@ -209,13 +265,13 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     review: {
       isVisible: hasResults && currentStep === AUTOMATION_STEPS.RUN,
       operation: automateOperation,
-      title: t('automate.reviewTitle', 'Automation Results'),
+      title: t("automate.reviewTitle", "Automation Results"),
       onFileClick: (file: File) => {
         onPreviewFile?.(file);
-        actions.setWorkbench('viewer');
+        actions.setWorkbench("viewer");
       },
-      onUndo: handleUndo
-    }
+      onUndo: handleUndo,
+    },
   });
 };
 

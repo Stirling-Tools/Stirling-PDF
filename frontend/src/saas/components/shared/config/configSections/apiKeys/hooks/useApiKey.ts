@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
+
+type ApiKeyResponse = string | { apiKey?: string };
 
 export function useApiKey() {
   const { session, loading, user } = useAuth();
@@ -17,24 +20,32 @@ export function useApiKey() {
     setError(null);
     try {
       // Backend is POST for get and update
-      const res = await apiClient.post("/api/v1/user/get-api-key");
-      const value = typeof res.data === "string" ? res.data : res.data?.apiKey;
+      const res = await apiClient.post<ApiKeyResponse>(
+        "/api/v1/user/get-api-key",
+      );
+      const value = typeof res.data === "string" ? res.data : res.data.apiKey;
       if (typeof value === "string") setApiKey(value);
-    } catch (e: any) {
+    } catch (e: unknown) {
       // If not found, try to create one by calling update endpoint
-      if (e?.response?.status === 404) {
+      if (isAxiosError(e) && e.response?.status === 404) {
         try {
-          const createRes = await apiClient.post("/api/v1/user/update-api-key");
+          const createRes = await apiClient.post<ApiKeyResponse>(
+            "/api/v1/user/update-api-key",
+          );
           const created =
             typeof createRes.data === "string"
               ? createRes.data
-              : createRes.data?.apiKey;
+              : createRes.data.apiKey;
           if (typeof created === "string") setApiKey(created);
-        } catch (createErr: any) {
-          setError(createErr);
+        } catch (createErr: unknown) {
+          setError(
+            createErr instanceof Error
+              ? createErr
+              : new Error(String(createErr)),
+          );
         }
       } else {
-        setError(e);
+        setError(e instanceof Error ? e : new Error(String(e)));
       }
     } finally {
       setIsLoading(false);
@@ -46,11 +57,13 @@ export function useApiKey() {
     setIsRefreshing(true);
     setError(null);
     try {
-      const res = await apiClient.post("/api/v1/user/update-api-key");
-      const value = typeof res.data === "string" ? res.data : res.data?.apiKey;
+      const res = await apiClient.post<ApiKeyResponse>(
+        "/api/v1/user/update-api-key",
+      );
+      const value = typeof res.data === "string" ? res.data : res.data.apiKey;
       if (typeof value === "string") setApiKey(value);
-    } catch (e: any) {
-      setError(e);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e : new Error(String(e)));
     } finally {
       setIsRefreshing(false);
     }
@@ -62,9 +75,15 @@ export function useApiKey() {
     }
   }, [loading, session, hasAttempted, isAnonymous, fetchKey]);
 
-  return { apiKey, isLoading, isRefreshing, error, refetch: fetchKey, refresh, hasAttempted } as const;
+  return {
+    apiKey,
+    isLoading,
+    isRefreshing,
+    error,
+    refetch: fetchKey,
+    refresh,
+    hasAttempted,
+  } as const;
 }
 
 export default useApiKey;
-
-

@@ -149,6 +149,11 @@ public class ReactRoutingController {
         return serveIndexHtml(request);
     }
 
+    @GetMapping(value = "/share/{token}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveShareLinkPage(HttpServletRequest request) {
+        return serveIndexHtml(request);
+    }
+
     @GetMapping(value = "/auth/callback/tauri", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> serveTauriAuthCallback(HttpServletRequest request) {
         // cachedCallbackHtml is always initialized in @PostConstruct
@@ -178,8 +183,7 @@ public class ReactRoutingController {
         String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
-        return
-                """
+        return """
                 <!doctype html>
                 <html>
                   <head>
@@ -238,8 +242,7 @@ public class ReactRoutingController {
         String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
-        return
-                """
+        return """
                 <!doctype html>
                 <html>
                   <head>

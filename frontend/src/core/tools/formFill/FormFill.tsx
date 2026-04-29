@@ -9,7 +9,13 @@
  * - CSS module for theme-consistent styling
  * - Status bar at bottom for contextual info
  */
-import React, { useEffect, useCallback, useState, useRef, useMemo } from 'react';
+import React, {
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
 import {
   Button,
   Text,
@@ -20,34 +26,43 @@ import {
   Progress,
   Tooltip,
   ActionIcon,
-} from '@mantine/core';
-import { useFormFill, useAllFormValues } from '@app/tools/formFill/FormFillContext';
-import { useNavigation } from '@app/contexts/NavigationContext';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useFileState } from '@app/contexts/FileContext';
-import { Skeleton } from '@mantine/core';
-import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
-import type { BaseToolProps } from '@app/types/tool';
-import type { FormField } from '@app/tools/formFill/types';
-import { FieldInput } from '@app/tools/formFill/FieldInput';
-import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
-import SaveIcon from '@mui/icons-material/Save';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import PostAddIcon from '@mui/icons-material/PostAdd';
-import FileCopyIcon from '@mui/icons-material/FileCopy';
-import BuildCircleIcon from '@mui/icons-material/BuildCircle';
-import DescriptionIcon from '@mui/icons-material/Description';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import { extractFormFieldsCsv, extractFormFieldsXlsx } from '@app/tools/formFill/formApi';
-import styles from '@app/tools/formFill/FormFill.module.css';
+} from "@mantine/core";
+import {
+  useFormFill,
+  useAllFormValues,
+} from "@app/tools/formFill/FormFillContext";
+import { useNavigation } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useFileState } from "@app/contexts/FileContext";
+import { Skeleton } from "@mantine/core";
+import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import type { BaseToolProps } from "@app/types/tool";
+import type { FormField } from "@app/tools/formFill/types";
+import { FieldInput } from "@app/tools/formFill/FieldInput";
+import {
+  FIELD_TYPE_ICON,
+  FIELD_TYPE_COLOR,
+} from "@app/tools/formFill/fieldMeta";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import PostAddIcon from "@mui/icons-material/PostAdd";
+import FileCopyIcon from "@mui/icons-material/FileCopy";
+import BuildCircleIcon from "@mui/icons-material/BuildCircle";
+import DescriptionIcon from "@mui/icons-material/Description";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import {
+  extractFormFieldsCsv,
+  extractFormFieldsXlsx,
+} from "@app/tools/formFill/formApi";
+import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
 // ---------------------------------------------------------------------------
 
-type FormMode = 'fill' | 'make' | 'batch' | 'modify';
+type FormMode = "fill" | "make" | "batch" | "modify";
 
 interface ModeTabDef {
   id: FormMode;
@@ -57,10 +72,30 @@ interface ModeTabDef {
 }
 
 const _MODE_TABS: ModeTabDef[] = [
-  { id: 'fill', label: 'Fill', icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
-  { id: 'make', label: 'Create', icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
-  { id: 'batch', label: 'Batch', icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
-  { id: 'modify', label: 'Modify', icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: false },
+  {
+    id: "fill",
+    label: "Fill",
+    icon: <EditNoteIcon className={styles.modeTabIcon} />,
+    ready: true,
+  },
+  {
+    id: "make",
+    label: "Create",
+    icon: <PostAddIcon className={styles.modeTabIcon} />,
+    ready: false,
+  },
+  {
+    id: "batch",
+    label: "Batch",
+    icon: <FileCopyIcon className={styles.modeTabIcon} />,
+    ready: false,
+  },
+  {
+    id: "modify",
+    label: "Modify",
+    icon: <BuildCircleIcon className={styles.modeTabIcon} />,
+    ready: false,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -106,14 +141,17 @@ const FormFill = (_props: BaseToolProps) => {
   // Other modes (make, batch, modify) are defined above but not yet exposed in the UI.
   // When ready, uncomment the SegmentedControl and mode state below.
   // const [mode, setMode] = useState<FormMode>('fill');
-  const mode: FormMode = 'fill';
+  const mode: FormMode = "fill";
   const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
-  const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
+  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(
+    null,
+  );
+  const flattenChanged =
+    lastSavedFlatten !== null && flatten !== lastSavedFlatten;
 
   const savingRef = useRef(false);
 
@@ -121,9 +159,9 @@ const FormFill = (_props: BaseToolProps) => {
     setExtracting(true);
     try {
       const data = JSON.stringify(allValues, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
+      const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `form-data-${new Date().getTime()}.json`;
       a.click();
@@ -143,7 +181,7 @@ const FormFill = (_props: BaseToolProps) => {
     if (activeFiles.length === 0) return null;
     if (selectedFileIds.length > 0) {
       const sel = activeFiles.find(
-        (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId)
+        (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId),
       );
       if (sel) return sel;
     }
@@ -156,14 +194,14 @@ const FormFill = (_props: BaseToolProps) => {
     try {
       const blob = await extractFormFieldsCsv(currentFile, allValues);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `form-data-${new Date().getTime()}.csv`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
-      console.error('[FormFill] CSV extraction failed:', err);
-      setSaveError('Failed to extract CSV');
+      console.error("[FormFill] CSV extraction failed:", err);
+      setSaveError("Failed to extract CSV");
     } finally {
       setExtracting(false);
     }
@@ -175,26 +213,26 @@ const FormFill = (_props: BaseToolProps) => {
     try {
       const blob = await extractFormFieldsXlsx(currentFile, allValues);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `form-data-${new Date().getTime()}.xlsx`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
-      console.error('[FormFill] XLSX extraction failed:', err);
-      setSaveError('Failed to extract XLSX');
+      console.error("[FormFill] XLSX extraction failed:", err);
+      setSaveError("Failed to extract XLSX");
     } finally {
       setExtracting(false);
     }
   }, [currentFile, allValues]);
 
-  const isActive = selectedTool === 'formFill';
+  const isActive = selectedTool === "formFill";
 
   useEffect(() => {
     if (formState.activeFieldName && activeFieldRef.current) {
       activeFieldRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
+        behavior: "smooth",
+        block: "center",
       });
     }
   }, [formState.activeFieldName]);
@@ -205,7 +243,7 @@ const FormFill = (_props: BaseToolProps) => {
     if (!currentFile || !isStirlingFile(currentFile)) return;
 
     if (!validateForm()) {
-      setSaveError('Please fill in all required fields');
+      setSaveError("Please fill in all required fields");
       return;
     }
 
@@ -223,16 +261,19 @@ const FormFill = (_props: BaseToolProps) => {
       // This ensures the viewer tracks the new file ID, preserves
       // scroll position and rotation — instead of our own consumeFiles
       // call which would lose the viewer's file tracking context.
-      const event = new CustomEvent('formfill:apply', { detail: { blob: filledBlob } });
+      const event = new CustomEvent("formfill:apply", {
+        detail: { blob: filledBlob },
+      });
       window.dispatchEvent(event);
     } catch (err: any) {
-      const message = err?.response?.status === 413
-        ? 'File too large. Try reducing the PDF size first.'
-        : err?.response?.status === 400
-        ? 'Invalid form data. Please check all fields.'
-        : err?.message || 'Failed to save filled form';
+      const message =
+        err?.response?.status === 413
+          ? "File too large. Try reducing the PDF size first."
+          : err?.response?.status === 400
+            ? "Invalid form data. Please check all fields."
+            : err?.message || "Failed to save filled form";
       setSaveError(message);
-      console.error('[FormFill] Save failed:', err);
+      console.error("[FormFill] Save failed:", err);
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -245,13 +286,13 @@ const FormFill = (_props: BaseToolProps) => {
   useEffect(() => {
     if (!isActive) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         if (isDirtyRef.current || flattenChangedRef.current) handleSave();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isActive, handleSave]);
 
   // Data loss prevention: warn on beforeunload if dirty
@@ -259,11 +300,11 @@ const FormFill = (_props: BaseToolProps) => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (formState.isDirty) {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       }
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [formState.isDirty]);
 
   const handleRefresh = useCallback(() => {
@@ -276,7 +317,7 @@ const FormFill = (_props: BaseToolProps) => {
     (fieldName: string, value: string) => {
       setValue(fieldName, value);
     },
-    [setValue]
+    [setValue],
   );
 
   const handleFieldClick = useCallback(
@@ -286,12 +327,14 @@ const FormFill = (_props: BaseToolProps) => {
         scrollActions.scrollToPage(pageIndex + 1);
       }
     },
-    [setActiveField, scrollActions]
+    [setActiveField, scrollActions],
   );
 
   // Progress tracking
   const fillableFields = useMemo(() => {
-    return formState.fields.filter((f) => f.type !== 'button' && f.type !== 'signature');
+    return formState.fields.filter(
+      (f) => f.type !== "button" && f.type !== "signature",
+    );
   }, [formState.fields]);
 
   // Memoize fillable fields grouped by page (signatures/buttons excluded)
@@ -299,7 +342,9 @@ const FormFill = (_props: BaseToolProps) => {
     const byPage = new Map<number, FormField[]>();
     for (const field of fillableFields) {
       const pageIndex =
-        field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
+        field.widgets && field.widgets.length > 0
+          ? field.widgets[0].pageIndex
+          : 0;
       if (!byPage.has(pageIndex)) {
         byPage.set(pageIndex, []);
       }
@@ -314,7 +359,7 @@ const FormFill = (_props: BaseToolProps) => {
   const filledCount = useMemo(() => {
     return fillableFields.filter((f) => {
       const v = allValues[f.name];
-      return v && v !== 'Off' && v.trim() !== '';
+      return v && v !== "Off" && v.trim() !== "";
     }).length;
   }, [fillableFields, allValues]);
 
@@ -327,7 +372,7 @@ const FormFill = (_props: BaseToolProps) => {
   const filledRequiredCount = useMemo(() => {
     return requiredFields.filter((f) => {
       const v = allValues[f.name];
-      return v && v !== 'Off' && v.trim() !== '';
+      return v && v !== "Off" && v.trim() !== "";
     }).length;
   }, [requiredFields, allValues]);
 
@@ -368,14 +413,20 @@ const FormFill = (_props: BaseToolProps) => {
       {/* !currentModeDef.ready && <ComingSoonPlaceholder mode={currentModeDef} /> */}
 
       {/* ---- Fill Form content ---- */}
-      {mode === 'fill' && (
+      {mode === "fill" && (
         <>
           {/* Header / controls */}
           <div className={styles.header}>
             {/* Loading state */}
             {formState.loading && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
                   <Loader size={14} />
                   <Text size="xs" c="dimmed">
                     Analysing form fields...
@@ -408,7 +459,7 @@ const FormFill = (_props: BaseToolProps) => {
                     <span className={styles.progressLabel}>
                       {filledCount} / {fillableCount} filled
                       {requiredCount > 0 && (
-                        <span style={{ marginLeft: '0.5rem', opacity: 0.7 }}>
+                        <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
                           ({filledRequiredCount}/{requiredCount} req.)
                         </span>
                       )}
@@ -421,10 +472,16 @@ const FormFill = (_props: BaseToolProps) => {
                     </span>
                   </div>
                   <Progress
-                    value={fillableCount > 0 ? (filledCount / fillableCount) * 100 : 0}
+                    value={
+                      fillableCount > 0
+                        ? (filledCount / fillableCount) * 100
+                        : 0
+                    }
                     size={6}
                     radius="xl"
-                    color={filledRequiredCount === requiredCount ? 'teal' : 'blue'}
+                    color={
+                      filledRequiredCount === requiredCount ? "teal" : "blue"
+                    }
                     mt={4}
                   />
                 </div>
@@ -436,7 +493,7 @@ const FormFill = (_props: BaseToolProps) => {
                   onChange={(e) => setFlatten(e.currentTarget.checked)}
                   size="xs"
                   styles={{
-                    label: { fontSize: '0.75rem', cursor: 'pointer' },
+                    label: { fontSize: "0.75rem", cursor: "pointer" },
                   }}
                 />
 
@@ -511,14 +568,16 @@ const FormFill = (_props: BaseToolProps) => {
             )}
 
             {/* Empty state */}
-            {!formState.loading && formState.fields.length === 0 && !formState.error && (
-              <div className={styles.emptyState}>
-                <DescriptionIcon className={styles.emptyStateIcon} />
-                <span className={styles.emptyStateText}>
-                  No fillable form fields found in this PDF.
-                </span>
-              </div>
-            )}
+            {!formState.loading &&
+              formState.fields.length === 0 &&
+              !formState.error && (
+                <div className={styles.emptyState}>
+                  <DescriptionIcon className={styles.emptyStateIcon} />
+                  <span className={styles.emptyStateText}>
+                    No fillable form fields found in this PDF.
+                  </span>
+                </div>
+              )}
           </div>
 
           {/* ---- Scrollable field list ---- */}
@@ -537,7 +596,8 @@ const FormFill = (_props: BaseToolProps) => {
                     </div>
 
                     {fieldsByPage.get(pageIdx)!.map((field) => {
-                      const isFieldActive = formState.activeFieldName === field.name;
+                      const isFieldActive =
+                        formState.activeFieldName === field.name;
                       const hasError = !!validationErrors[field.name];
                       const pageIndex =
                         field.widgets && field.widgets.length > 0
@@ -549,16 +609,18 @@ const FormFill = (_props: BaseToolProps) => {
                           key={field.name}
                           ref={isFieldActive ? activeFieldRef : undefined}
                           className={`${styles.fieldCard} ${
-                            isFieldActive ? styles.fieldCardActive : ''
-                          } ${hasError ? styles.fieldCardError : ''}`}
-                          onClick={() => handleFieldClick(field.name, pageIndex)}
+                            isFieldActive ? styles.fieldCardActive : ""
+                          } ${hasError ? styles.fieldCardError : ""}`}
+                          onClick={() =>
+                            handleFieldClick(field.name, pageIndex)
+                          }
                         >
                           <div className={styles.fieldHeader}>
                             <span
                               className={styles.fieldTypeIcon}
                               style={{
                                 color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                                fontSize: '0.875rem',
+                                fontSize: "0.875rem",
                               }}
                             >
                               {FIELD_TYPE_ICON[field.type]}
@@ -571,16 +633,15 @@ const FormFill = (_props: BaseToolProps) => {
                             )}
                           </div>
 
-                          {field.type !== 'button' && field.type !== 'signature' && (
-                            <div
-                              className={styles.fieldInputWrap}
-                            >
-                              <FieldInput
-                                field={field}
-                                onValueChange={handleValueChange}
-                              />
-                            </div>
-                          )}
+                          {field.type !== "button" &&
+                            field.type !== "signature" && (
+                              <div className={styles.fieldInputWrap}>
+                                <FieldInput
+                                  field={field}
+                                  onValueChange={handleValueChange}
+                                />
+                              </div>
+                            )}
 
                           {hasError && (
                             <div className={styles.fieldError}>
@@ -606,8 +667,12 @@ const FormFill = (_props: BaseToolProps) => {
           {!formState.loading && formState.fields.length > 0 && (
             <div className={styles.statusBar}>
               <span>
-                {(formState.isDirty || flattenChanged) && <span className={styles.unsavedDot} />}
-                {formState.isDirty || flattenChanged ? 'Unsaved changes' : 'All saved'}
+                {(formState.isDirty || flattenChanged) && (
+                  <span className={styles.unsavedDot} />
+                )}
+                {formState.isDirty || flattenChanged
+                  ? "Unsaved changes"
+                  : "All saved"}
               </span>
               <span>Ctrl+S to save</span>
             </div>

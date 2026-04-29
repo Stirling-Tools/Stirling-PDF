@@ -1,10 +1,12 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -30,6 +33,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.controller.api.EditTableOfContentsController.BookmarkItem;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -40,6 +45,7 @@ class EditTableOfContentsControllerTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Mock private ObjectMapper objectMapper;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private EditTableOfContentsController editTableOfContentsController;
 
@@ -53,7 +59,19 @@ class EditTableOfContentsControllerTest {
     private PDOutlineItem mockOutlineItem;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         mockFile =
                 new MockMultipartFile(
                         "file",
@@ -226,18 +244,19 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getNumberOfPages()).thenReturn(5);
         when(mockDocument.getPage(0)).thenReturn(mockPage1);
 
-        // Mock saving behavior
-        doAnswer(
-                        invocation -> {
-                            ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("mocked pdf content".getBytes());
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            File f = inv.getArgument(0);
+                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
                             return null;
                         })
                 .when(mockDocument)
-                .save(any(ByteArrayOutputStream.class));
+                .save(any(File.class));
 
         // When
-        ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<Resource> result =
+                editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
@@ -289,17 +308,19 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getPage(0)).thenReturn(mockPage1);
         when(mockDocument.getPage(1)).thenReturn(mockPage2);
 
-        doAnswer(
-                        invocation -> {
-                            ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("mocked pdf content".getBytes());
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            File f = inv.getArgument(0);
+                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
                             return null;
                         })
                 .when(mockDocument)
-                .save(any(ByteArrayOutputStream.class));
+                .save(any(File.class));
 
         // When
-        ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<Resource> result =
+                editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
@@ -341,17 +362,19 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getPage(0)).thenReturn(mockPage1); // For negative page number
         when(mockDocument.getPage(4)).thenReturn(mockPage2); // For page number exceeding bounds
 
-        doAnswer(
-                        invocation -> {
-                            ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("mocked pdf content".getBytes());
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            File f = inv.getArgument(0);
+                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
                             return null;
                         })
                 .when(mockDocument)
-                .save(any(ByteArrayOutputStream.class));
+                .save(any(File.class));
 
         // When
-        ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<Resource> result =
+                editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);

@@ -1,11 +1,11 @@
-import React from 'react';
-import { Center, ScrollArea, Text, Stack } from '@mantine/core';
-import CloudIcon from '@mui/icons-material/Cloud';
-import { useTranslation } from 'react-i18next';
-import FileListItem from '@app/components/fileManager/FileListItem';
-import FileHistoryGroup from '@app/components/fileManager/FileHistoryGroup';
-import EmptyFilesState from '@app/components/fileManager/EmptyFilesState';
-import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import React from "react";
+import { Center, ScrollArea, Text, Stack } from "@mantine/core";
+import CloudIcon from "@mui/icons-material/Cloud";
+import { useTranslation } from "react-i18next";
+import FileListItem from "@app/components/fileManager/FileListItem";
+import FileHistoryGroup from "@app/components/fileManager/FileHistoryGroup";
+import EmptyFilesState from "@app/components/fileManager/EmptyFilesState";
+import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 
 interface FileListAreaProps {
   scrollAreaHeight: string;
@@ -34,12 +34,12 @@ const FileListArea: React.FC<FileListAreaProps> = ({
   } = useFileManagerContext();
   const { t } = useTranslation();
 
-  if (activeSource === 'recent') {
+  if (activeSource === "recent") {
     return (
       <ScrollArea
         h={scrollAreaHeight}
         style={{
-          ...scrollAreaStyle
+          ...scrollAreaStyle,
         }}
         type="always"
         scrollbarSize={8}
@@ -48,8 +48,10 @@ const FileListArea: React.FC<FileListAreaProps> = ({
           {recentFiles.length === 0 && !isLoading ? (
             <EmptyFilesState />
           ) : recentFiles.length === 0 && isLoading ? (
-            <Center style={{ height: '12.5rem' }}>
-              <Text c="dimmed" ta="center">{t('fileManager.loadingFiles', 'Loading files...')}</Text>
+            <Center style={{ height: "12.5rem" }}>
+              <Text c="dimmed" ta="center">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
             </Center>
           ) : (
             filteredFiles.map((file, index) => {
@@ -93,10 +95,17 @@ const FileListArea: React.FC<FileListAreaProps> = ({
 
   // Google Drive placeholder
   return (
-    <Center style={{ height: '12.5rem' }}>
+    <Center style={{ height: "12.5rem" }}>
       <Stack align="center" gap="sm">
-        <CloudIcon style={{ fontSize: '3rem', color: 'var(--mantine-color-gray-5)' }} />
-        <Text c="dimmed" ta="center">{t('fileManager.googleDriveNotAvailable', 'Google Drive integration coming soon')}</Text>
+        <CloudIcon
+          style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }}
+        />
+        <Text c="dimmed" ta="center">
+          {t(
+            "fileManager.googleDriveNotAvailable",
+            "Google Drive integration coming soon",
+          )}
+        </Text>
       </Stack>
     </Center>
   );

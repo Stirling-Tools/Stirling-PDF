@@ -4,11 +4,11 @@
  * Consolidated file size formatting utility
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 /**
@@ -29,25 +29,23 @@ export function getFileSize(file: File | { size: number }): string {
   return formatFileSize(file.size);
 }
 
-
-
 /**
  * Detects and normalizes file extension from filename
  * @param filename - The filename to extract extension from
  * @returns Normalized file extension in lowercase, empty string if no extension
  */
 export function detectFileExtension(filename: string): string {
-  if (!filename || typeof filename !== 'string') return '';
+  if (!filename || typeof filename !== "string") return "";
 
-  const parts = filename.split('.');
+  const parts = filename.split(".");
   // If there's no extension (no dots or only one part), return empty string
-  if (parts.length <= 1) return '';
+  if (parts.length <= 1) return "";
 
   // Get the last part (extension) in lowercase
   let extension = parts[parts.length - 1].toLowerCase();
 
   // Normalize common extension variants
-  if (extension === 'jpeg') extension = 'jpg';
+  if (extension === "jpeg") extension = "jpg";
 
   return extension;
 }
@@ -65,12 +63,12 @@ export function detectFileExtension(filename: string): string {
  */
 export function getFilenameWithoutExtension(
   filename: string,
-  options: { preserveCase?: boolean } = {}
+  options: { preserveCase?: boolean } = {},
 ): string {
-  if (!filename || typeof filename !== 'string') return '';
+  if (!filename || typeof filename !== "string") return "";
 
   const { preserveCase = false } = options;
-  const withoutExtension = filename.replace(/\.[^.]+$/, '');
+  const withoutExtension = filename.replace(/\.[^.]+$/, "");
 
   return preserveCase ? withoutExtension : withoutExtension.toLowerCase();
 }
@@ -80,20 +78,82 @@ export function getFilenameWithoutExtension(
  * @param file - File or file-like object with name and type properties
  * @returns true if the file appears to be a PDF
  */
-export function isPdfFile(file: { name?: string; type?: string } | File | Blob | null | undefined): boolean {
+export function isPdfFile(
+  file: { name?: string; type?: string } | File | Blob | null | undefined,
+): boolean {
   if (!file) return false;
 
-  const name = 'name' in file ? file.name : undefined;
+  const name = "name" in file ? file.name : undefined;
   const type = file.type;
 
   // Check MIME type first (most reliable)
-  if (type === 'application/pdf') return true;
+  if (type === "application/pdf") return true;
 
   // Check file extension as fallback
   if (name) {
     const ext = detectFileExtension(name);
-    if (ext === 'pdf') return true;
+    if (ext === "pdf") return true;
   }
 
   return false;
+}
+
+export type NonPdfFileType =
+  | "image"
+  | "csv"
+  | "json"
+  | "text"
+  | "markdown"
+  | "html"
+  | "unknown";
+
+const IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "bmp",
+  "svg",
+  "tiff",
+  "tif",
+  "webp",
+]);
+const CSV_EXTENSIONS = new Set(["csv", "tsv"]);
+const JSON_EXTENSIONS = new Set(["json"]);
+const TEXT_EXTENSIONS = new Set(["txt"]);
+const MARKDOWN_EXTENSIONS = new Set(["md", "markdown"]);
+const HTML_EXTENSIONS = new Set(["html", "htm"]);
+
+/**
+ * Detects the non-PDF file type category for viewer routing.
+ * Returns 'unknown' for PDFs or unrecognized formats.
+ */
+export function detectNonPdfFileType(
+  file: { name?: string; type?: string } | File | null | undefined,
+): NonPdfFileType {
+  if (!file) return "unknown";
+
+  const name = "name" in file ? file.name : undefined;
+  const mimeType = file.type ?? "";
+
+  // Check MIME type first
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType === "text/csv") return "csv";
+  if (mimeType === "text/tab-separated-values") return "csv";
+  if (mimeType === "application/json") return "json";
+  if (mimeType === "text/html") return "html";
+  if (mimeType === "text/markdown") return "markdown";
+
+  // Fall back to extension
+  if (name) {
+    const ext = detectFileExtension(name);
+    if (IMAGE_EXTENSIONS.has(ext)) return "image";
+    if (CSV_EXTENSIONS.has(ext)) return "csv";
+    if (JSON_EXTENSIONS.has(ext)) return "json";
+    if (MARKDOWN_EXTENSIONS.has(ext)) return "markdown";
+    if (TEXT_EXTENSIONS.has(ext)) return "text";
+    if (HTML_EXTENSIONS.has(ext)) return "html";
+  }
+
+  return "unknown";
 }

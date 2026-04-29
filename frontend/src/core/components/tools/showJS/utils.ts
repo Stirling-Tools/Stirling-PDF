@@ -42,7 +42,10 @@ const JS_KEYWORDS = new Set([
   "of",
 ]);
 
-export function tokenizeToLines(src: string, keywords: Set<string> = JS_KEYWORDS): ShowJsToken[][] {
+export function tokenizeToLines(
+  src: string,
+  keywords: Set<string> = JS_KEYWORDS,
+): ShowJsToken[][] {
   const lines: ShowJsToken[][] = [];
   let current: ShowJsToken[] = [];
   let i = 0;
@@ -204,7 +207,9 @@ export function tokenizeToLines(src: string, keywords: Set<string> = JS_KEYWORDS
   return lines;
 }
 
-export function computeBlocks(src: string): Array<{ start: number; end: number }> {
+export function computeBlocks(
+  src: string,
+): Array<{ start: number; end: number }> {
   const res: Array<{ start: number; end: number }> = [];
   let i = 0;
   let line = 0;
@@ -351,7 +356,10 @@ export function computeSearchMatches(
   return list;
 }
 
-export async function copyTextToClipboard(text: string, fallbackElement?: HTMLElement | null): Promise<boolean> {
+export async function copyTextToClipboard(
+  text: string,
+  fallbackElement?: HTMLElement | null,
+): Promise<boolean> {
   try {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text || "");
@@ -374,6 +382,9 @@ export async function copyTextToClipboard(text: string, fallbackElement?: HTMLEl
   }
 }
 
-export async function triggerDownload(url: string, filename: string): Promise<void> {
+export async function triggerDownload(
+  url: string,
+  filename: string,
+): Promise<void> {
   await downloadFromUrl(url, filename);
 }

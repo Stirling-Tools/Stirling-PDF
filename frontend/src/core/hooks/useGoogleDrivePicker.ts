@@ -2,14 +2,14 @@
  * React hook for Google Drive file picker
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   getGoogleDrivePickerService,
   isGoogleDriveConfigured,
   getGoogleDriveConfig,
   extractGoogleDriveBackendConfig,
-} from '@app/services/googleDrivePickerService';
+} from "@app/services/googleDrivePickerService";
 
 interface UseGoogleDrivePickerOptions {
   multiple?: boolean;
@@ -36,7 +36,12 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   // Memoize backend config to only track Google Drive specific properties
   const googleDriveBackendConfig = useMemo(
     () => extractGoogleDriveBackendConfig(config),
-    [config?.googleDriveEnabled, config?.googleDriveClientId, config?.googleDriveApiKey, config?.googleDriveAppId]
+    [
+      config?.googleDriveEnabled,
+      config?.googleDriveClientId,
+      config?.googleDriveApiKey,
+      config?.googleDriveAppId,
+    ],
   );
 
   // Check if Google Drive is configured and reset initialization if disabled
@@ -57,7 +62,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
 
     const googleDriveConfig = getGoogleDriveConfig(googleDriveBackendConfig);
     if (!googleDriveConfig) {
-      throw new Error('Google Drive is not configured');
+      throw new Error("Google Drive is not configured");
     }
 
     const service = getGoogleDrivePickerService();
@@ -71,7 +76,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const openPicker = useCallback(
     async (options: UseGoogleDrivePickerOptions = {}): Promise<File[]> => {
       if (!isEnabled) {
-        setError('Google Drive is not configured');
+        setError("Google Drive is not configured");
         return [];
       }
 
@@ -91,15 +96,18 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
 
         return files;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to open Google Drive picker';
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to open Google Drive picker";
         setError(errorMessage);
-        console.error('Google Drive picker error:', err);
+        console.error("Google Drive picker error:", err);
         return [];
       } finally {
         setIsLoading(false);
       }
     },
-    [isEnabled, initializeService]
+    [isEnabled, initializeService],
   );
 
   return {

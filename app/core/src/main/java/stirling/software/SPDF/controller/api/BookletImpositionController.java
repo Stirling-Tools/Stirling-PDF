@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.*;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -30,6 +30,7 @@ import stirling.software.SPDF.model.api.general.BookletImpositionRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -39,6 +40,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class BookletImpositionController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             value = "/booklet-imposition",
@@ -49,7 +51,7 @@ public class BookletImpositionController {
                     "This operation combines page reordering for booklet printing with multi-page layout. "
                             + "It rearranges pages in the correct order for booklet printing and places multiple pages "
                             + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> createBookletImposition(
+    public ResponseEntity<Resource> createBookletImposition(
             @ModelAttribute BookletImpositionRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
@@ -85,15 +87,12 @@ public class BookletImpositionController {
                             duplexPass,
                             flipOnShortEdge)) {
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                newDocument.save(baos);
-
-                byte[] result = baos.toByteArray();
-                return WebResponseUtils.bytesToWebResponse(
-                        result,
+                return WebResponseUtils.pdfDocToWebResponse(
+                        newDocument,
                         GeneralUtils.generateFilename(
                                 Filenames.toSimpleFileName(file.getOriginalFilename()),
-                                "_booklet.pdf"));
+                                "_booklet.pdf"),
+                        tempFileManager);
             }
         }
     }

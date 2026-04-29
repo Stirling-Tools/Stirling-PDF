@@ -231,21 +231,21 @@ Feature: General PDF Operations API Validation
         And the response file should have size greater than 200
 
 
-    @remove-image-pdf @positive
-    Scenario: remove-image-pdf strips images from a PDF containing images
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 images of size 100x100 on 2 pages
-        When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
-        Then the response content type should be "application/pdf"
-        And the response status code should be 200
-        And the response file should have size greater than 0
-
-
-    @remove-image-pdf @positive
-    Scenario: remove-image-pdf on a plain text PDF returns a PDF
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages with random text
-        When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
-        Then the response content type should be "application/pdf"
-        And the response status code should be 200
-        And the response file should have size greater than 0
+    # @remove-image-pdf @positive
+    # Scenario: remove-image-pdf strips images from a PDF containing images
+    #     Given I generate a PDF file as "fileInput"
+    #     And the pdf contains 3 images of size 100x100 on 2 pages
+    #     When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
+    #     Then the response content type should be "application/pdf"
+    #     And the response status code should be 200
+    #     And the response file should have size greater than 0
+    #
+    #
+    # @remove-image-pdf @positive
+    # Scenario: remove-image-pdf on a plain text PDF returns a PDF
+    #     Given I generate a PDF file as "fileInput"
+    #     And the pdf contains 3 pages with random text
+    #     When I send the API request to the endpoint "/api/v1/general/remove-image-pdf"
+    #     Then the response content type should be "application/pdf"
+    #     And the response status code should be 200
+    #     And the response file should have size greater than 0

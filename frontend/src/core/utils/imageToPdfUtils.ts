@@ -1,202 +1,221 @@
-import { PDFDocument, PageSizes } from '@cantoo/pdf-lib';
+import { getPdfiumModule, saveRawDocument } from "@app/services/pdfiumService";
+import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
 
 export interface ImageToPdfOptions {
-  imageResolution?: 'full' | 'reduced';
-  pageFormat?: 'keep' | 'A4' | 'letter';
+  imageResolution?: "full" | "reduced";
+  pageFormat?: "keep" | "A4" | "letter";
   stretchToFit?: boolean;
 }
 
+// Standard page sizes in PDF points (72 dpi)
+const PAGE_SIZES = {
+  A4: [595.276, 841.89] as [number, number],
+  Letter: [612, 792] as [number, number],
+};
+
 /**
- * Convert an image file to a PDF file
- * @param imageFile - The image file to convert (JPEG, PNG, etc.)
- * @param options - Conversion options
- * @returns A Promise that resolves to a PDF File object
+ * Convert an image file to a PDF file using PDFium WASM.
  */
 export async function convertImageToPdf(
   imageFile: File,
-  options: ImageToPdfOptions = {}
+  options: ImageToPdfOptions = {},
 ): Promise<File> {
   const {
-    imageResolution = 'full',
-    pageFormat = 'A4',
+    imageResolution = "full",
+    pageFormat = "A4",
     stretchToFit = false,
   } = options;
-  try {
-    // Create a new PDF document
-    const pdfDoc = await PDFDocument.create();
 
-    // Read the image file as an array buffer
-    let imageBytes = await imageFile.arrayBuffer();
+  try {
+    const m = await getPdfiumModule();
+
+    // Read the image file
+    let imageBlob: Blob = imageFile;
 
     // Apply image resolution reduction if requested
-    if (imageResolution === 'reduced') {
-      const reducedImage = await reduceImageResolution(imageFile, 1200); // Max 1200px on longest side
-      imageBytes = await reducedImage.arrayBuffer();
+    if (imageResolution === "reduced") {
+      imageBlob = await reduceImageResolution(imageFile, 1200);
     }
 
-    // Embed the image based on its type
-    let image;
-    const imageType = imageFile.type.toLowerCase();
-
-    if (imageType === 'image/jpeg' || imageType === 'image/jpg') {
-      image = await pdfDoc.embedJpg(imageBytes);
-    } else if (imageType === 'image/png') {
-      image = await pdfDoc.embedPng(imageBytes);
-    } else {
-      // For other image types, try to convert to PNG first using canvas
-      const convertedImage = await convertImageToPng(imageFile);
-      const convertedBytes = await convertedImage.arrayBuffer();
-      image = await pdfDoc.embedPng(convertedBytes);
+    // Decode image to RGBA pixels via canvas
+    const decoded = await decodeImageToRgba(imageBlob);
+    if (!decoded) {
+      throw new Error("Failed to decode image");
     }
 
-    // Get image dimensions
-    const { width: imageWidth, height: imageHeight } = image;
+    const { rgba, width: imageWidth, height: imageHeight } = decoded;
 
-    // Determine page dimensions based on pageFormat option
+    // Determine page dimensions
     let pageWidth: number;
     let pageHeight: number;
 
-    if (pageFormat === 'keep') {
-      // Use original image dimensions
+    if (pageFormat === "keep") {
       pageWidth = imageWidth;
       pageHeight = imageHeight;
-    } else if (pageFormat === 'letter') {
-      // US Letter: 8.5" x 11" = 612 x 792 points
-      pageWidth = PageSizes.Letter[0];
-      pageHeight = PageSizes.Letter[1];
+    } else if (pageFormat === "letter") {
+      [pageWidth, pageHeight] = PAGE_SIZES.Letter;
     } else {
-      // A4: 210mm x 297mm = 595 x 842 points (default)
-      pageWidth = PageSizes.A4[0];
-      pageHeight = PageSizes.A4[1];
+      [pageWidth, pageHeight] = PAGE_SIZES.A4;
     }
 
-    // Adjust page orientation based on image orientation if using standard page size
-    if (pageFormat !== 'keep') {
+    // Adjust orientation to match image
+    if (pageFormat !== "keep") {
       const imageIsLandscape = imageWidth > imageHeight;
       const pageIsLandscape = pageWidth > pageHeight;
-
-      // Rotate page to match image orientation
       if (imageIsLandscape !== pageIsLandscape) {
         [pageWidth, pageHeight] = [pageHeight, pageWidth];
       }
     }
 
-    // Create a page
-    const page = pdfDoc.addPage([pageWidth, pageHeight]);
-
-    // Calculate image placement based on stretchToFit option
+    // Calculate image placement
     let drawX: number;
     let drawY: number;
     let drawWidth: number;
     let drawHeight: number;
 
-    if (stretchToFit || pageFormat === 'keep') {
-      // Stretch/fill to page
+    if (stretchToFit || pageFormat === "keep") {
       drawX = 0;
       drawY = 0;
       drawWidth = pageWidth;
       drawHeight = pageHeight;
     } else {
-      // Fit within page bounds while preserving aspect ratio
       const imageAspectRatio = imageWidth / imageHeight;
       const pageAspectRatio = pageWidth / pageHeight;
 
       if (imageAspectRatio > pageAspectRatio) {
-        // Image is wider than page - fit to width
         drawWidth = pageWidth;
         drawHeight = pageWidth / imageAspectRatio;
         drawX = 0;
-        drawY = (pageHeight - drawHeight) / 2; // Center vertically
+        drawY = (pageHeight - drawHeight) / 2;
       } else {
-        // Image is taller than page - fit to height
         drawHeight = pageHeight;
         drawWidth = pageHeight * imageAspectRatio;
         drawY = 0;
-        drawX = (pageWidth - drawWidth) / 2; // Center horizontally
+        drawX = (pageWidth - drawWidth) / 2;
       }
     }
 
-    // Draw the image on the page
-    page.drawImage(image, {
-      x: drawX,
-      y: drawY,
-      width: drawWidth,
-      height: drawHeight,
-    });
+    // Create new PDF document
+    const docPtr = m.FPDF_CreateNewDocument();
+    if (!docPtr) throw new Error("PDFium: failed to create document");
 
-    // Save the PDF to bytes
-    const pdfBytes = await pdfDoc.save();
+    try {
+      // Create a page
+      const pagePtr = m.FPDFPage_New(docPtr, 0, pageWidth, pageHeight);
+      if (!pagePtr) throw new Error("PDFium: failed to create page");
 
-    // Create a filename by replacing the image extension with .pdf
-    const pdfFilename = imageFile.name.replace(/\.[^.]+$/, '.pdf');
+      // Create bitmap from RGBA data (PDFium uses BGRA)
+      const bitmapPtr = m.FPDFBitmap_Create(imageWidth, imageHeight, 1);
+      if (!bitmapPtr) throw new Error("PDFium: failed to create bitmap");
 
-    // Create a File object from the PDF bytes
-    const pdfFile = new File([new Uint8Array(pdfBytes)], pdfFilename, {
-      type: 'application/pdf',
-    });
+      const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
+      const stride = m.FPDFBitmap_GetStride(bitmapPtr);
 
-    return pdfFile;
+      // Bulk RGBA → BGRA copy via shared utility
+      copyRgbaToBgraHeap(m, rgba, bufferPtr, imageWidth, imageHeight, stride);
+
+      // Create image page object
+      const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
+      if (!imageObjPtr) {
+        m.FPDFBitmap_Destroy(bitmapPtr);
+        throw new Error("PDFium: failed to create image object");
+      }
+
+      const setBitmapOk = m.FPDFImageObj_SetBitmap(
+        pagePtr,
+        0,
+        imageObjPtr,
+        bitmapPtr,
+      );
+      m.FPDFBitmap_Destroy(bitmapPtr);
+
+      if (!setBitmapOk) {
+        m.FPDFPageObj_Destroy(imageObjPtr);
+        throw new Error("PDFium: failed to set bitmap on image object");
+      }
+
+      // Set transformation matrix: scale + translate
+      // FS_MATRIX: {a, b, c, d, e, f} — 6 floats
+      const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+      m.pdfium.setValue(matrixPtr, drawWidth, "float"); // a = scaleX
+      m.pdfium.setValue(matrixPtr + 4, 0, "float"); // b
+      m.pdfium.setValue(matrixPtr + 8, 0, "float"); // c
+      m.pdfium.setValue(matrixPtr + 12, drawHeight, "float"); // d = scaleY
+      m.pdfium.setValue(matrixPtr + 16, drawX, "float"); // e = translateX
+      m.pdfium.setValue(matrixPtr + 20, drawY, "float"); // f = translateY
+
+      const setMatrixOk = m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr);
+      m.pdfium.wasmExports.free(matrixPtr);
+
+      if (!setMatrixOk) {
+        m.FPDFPageObj_Destroy(imageObjPtr);
+        throw new Error("PDFium: failed to set image matrix");
+      }
+
+      // Insert image into page
+      m.FPDFPage_InsertObject(pagePtr, imageObjPtr);
+
+      // Generate page content stream
+      m.FPDFPage_GenerateContent(pagePtr);
+      m.FPDF_ClosePage(pagePtr);
+
+      // Save document
+      const pdfBytes = await saveRawDocument(docPtr);
+      const pdfFilename = imageFile.name.replace(/\.[^.]+$/, ".pdf");
+
+      return new File([pdfBytes], pdfFilename, { type: "application/pdf" });
+    } finally {
+      m.FPDF_CloseDocument(docPtr);
+    }
   } catch (error) {
-    console.error('Error converting image to PDF:', error);
+    console.error("Error converting image to PDF:", error);
     throw new Error(
-      `Failed to convert image to PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      { cause: error }
+      `Failed to convert image to PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      {
+        cause: error,
+      },
     );
   }
 }
 
 /**
- * Convert an image file to PNG using canvas
- * This is used for image types that pdf-lib doesn't directly support
+ * Decode an image Blob to RGBA pixel data via canvas.
  */
-async function convertImageToPng(imageFile: File): Promise<File> {
-  return new Promise((resolve, reject) => {
+function decodeImageToRgba(
+  imageBlob: Blob,
+): Promise<{ rgba: Uint8Array; width: number; height: number } | null> {
+  return new Promise((resolve) => {
     const img = new Image();
-    const url = URL.createObjectURL(imageFile);
+    const url = URL.createObjectURL(imageBlob);
 
     img.onload = () => {
       try {
-        // Create a canvas with the image dimensions
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-
-        // Draw the image on the canvas
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
-          throw new Error('Failed to get canvas context');
+          URL.revokeObjectURL(url);
+          resolve(null);
+          return;
         }
         ctx.drawImage(img, 0, 0);
-
-        // Convert canvas to blob
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error('Failed to convert canvas to blob'));
-              return;
-            }
-
-            // Create a File object from the blob
-            const pngFilename = imageFile.name.replace(/\.[^.]+$/, '.png');
-            const pngFile = new File([blob], pngFilename, {
-              type: 'image/png',
-            });
-
-            URL.revokeObjectURL(url);
-            resolve(pngFile);
-          },
-          'image/png',
-          1.0
-        );
-      } catch (error) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(url);
-        reject(error);
+        resolve({
+          rgba: new Uint8Array(imageData.data.buffer),
+          width: canvas.width,
+          height: canvas.height,
+        });
+      } catch {
+        URL.revokeObjectURL(url);
+        resolve(null);
       }
     };
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
+      resolve(null);
     };
 
     img.src = url;
@@ -205,13 +224,10 @@ async function convertImageToPng(imageFile: File): Promise<File> {
 
 /**
  * Reduce image resolution to a maximum dimension
- * @param imageFile - The image file to reduce
- * @param maxDimension - Maximum width or height in pixels
- * @returns A Promise that resolves to a reduced resolution image file
  */
 async function reduceImageResolution(
   imageFile: File,
-  maxDimension: number
+  maxDimension: number,
 ): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -221,14 +237,12 @@ async function reduceImageResolution(
       try {
         const { width, height } = img;
 
-        // Check if reduction is needed
         if (width <= maxDimension && height <= maxDimension) {
           URL.revokeObjectURL(url);
-          resolve(imageFile); // No reduction needed
+          resolve(imageFile);
           return;
         }
 
-        // Calculate new dimensions while preserving aspect ratio
         let newWidth: number;
         let newHeight: number;
 
@@ -240,40 +254,32 @@ async function reduceImageResolution(
           newWidth = (width / height) * maxDimension;
         }
 
-        // Create a canvas with the new dimensions
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = newWidth;
         canvas.height = newHeight;
 
-        // Draw the resized image on the canvas
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          throw new Error('Failed to get canvas context');
-        }
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Failed to get canvas context");
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-        // Convert canvas to blob (preserve original format if possible)
-        const outputType = imageFile.type.startsWith('image/')
+        const outputType = imageFile.type.startsWith("image/")
           ? imageFile.type
-          : 'image/jpeg';
+          : "image/jpeg";
 
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(new Error('Failed to convert canvas to blob'));
+              reject(new Error("Failed to convert canvas to blob"));
               return;
             }
-
-            // Create a File object from the blob
             const reducedFile = new File([blob], imageFile.name, {
               type: outputType,
             });
-
             URL.revokeObjectURL(url);
             resolve(reducedFile);
           },
           outputType,
-          0.9 // Quality (only applies to JPEG)
+          0.9,
         );
       } catch (error) {
         URL.revokeObjectURL(url);
@@ -283,7 +289,7 @@ async function reduceImageResolution(
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
     img.src = url;
@@ -294,5 +300,5 @@ async function reduceImageResolution(
  * Check if a file is an image
  */
 export function isImageFile(file: File): boolean {
-  return file.type.startsWith('image/');
+  return file.type.startsWith("image/");
 }

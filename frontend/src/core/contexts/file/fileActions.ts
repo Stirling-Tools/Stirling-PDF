@@ -11,15 +11,16 @@ import {
   createQuickKey,
   createStirlingFile,
   ProcessedFileMetadata,
-} from '@app/types/fileContext';
-import { FileId, ToolOperation } from '@app/types/file';
-import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
-import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
-import { buildQuickKeySet } from '@app/contexts/file/fileSelectors';
-import { StirlingFile } from '@app/types/fileContext';
-import { fileStorage } from '@app/services/fileStorage';
-import { zipFileService } from '@app/services/zipFileService';
-const DEBUG = process.env.NODE_ENV === 'development';
+} from "@app/types/fileContext";
+import { FileId, ToolOperation } from "@app/types/file";
+import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
+import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
+import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
+import { StirlingFile } from "@app/types/fileContext";
+import { fileStorage } from "@app/services/fileStorage";
+import { zipFileService } from "@app/services/zipFileService";
+import { FileAnalyzer } from "@app/services/fileAnalyzer";
+const DEBUG = process.env.NODE_ENV === "development";
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
 const hydrationQueue: Array<() => Promise<void>> = [];
@@ -40,7 +41,7 @@ const drainHydrationQueue = (): void => {
   activeHydrations++;
   nextTask()
     .catch((error) => {
-      console.error('[Hydration] Task failed with error:', error);
+      console.error("[Hydration] Task failed with error:", error);
     })
     .finally(() => {
       activeHydrations--;
@@ -89,7 +90,7 @@ export function createProcessedFile(
   pageCount: number,
   thumbnail?: string,
   pageRotations?: number[],
-  pageDimensions?: Array<{ width: number; height: number }>
+  pageDimensions?: Array<{ width: number; height: number }>,
 ): ProcessedFileMetadata {
   return {
     totalPages: pageCount,
@@ -99,10 +100,10 @@ export function createProcessedFile(
       rotation: pageRotations?.[index] ?? 0,
       splitBefore: false,
       width: pageDimensions?.[index]?.width,
-      height: pageDimensions?.[index]?.height
+      height: pageDimensions?.[index]?.height,
     })),
     thumbnailUrl: thumbnail,
-    lastProcessed: Date.now()
+    lastProcessed: Date.now(),
   };
 }
 
@@ -110,9 +111,11 @@ export function createProcessedFile(
  * Generate fresh ProcessedFileMetadata for a file
  * Used when tools process files to ensure metadata matches actual file content
  */
-export async function generateProcessedFileMetadata(file: File): Promise<ProcessedFileMetadata | undefined> {
+export async function generateProcessedFileMetadata(
+  file: File,
+): Promise<ProcessedFileMetadata | undefined> {
   // Only generate metadata for PDF files
-  if (!file.type.startsWith('application/pdf')) {
+  if (!file.type.startsWith("application/pdf")) {
     return undefined;
   }
 
@@ -127,7 +130,7 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
       unrotatedResult.pageCount,
       unrotatedResult.thumbnail, // Page thumbnails (unrotated)
       unrotatedResult.pageRotations,
-      unrotatedResult.pageDimensions
+      unrotatedResult.pageDimensions,
     );
 
     // Use rotated thumbnail for file manager
@@ -139,7 +142,11 @@ export async function generateProcessedFileMetadata(file: File): Promise<Process
 
     return processedFile;
   } catch (error) {
-    if (DEBUG) console.warn(`📄 Failed to generate processedFileMetadata for ${file.name}:`, error);
+    if (DEBUG)
+      console.warn(
+        `📄 Failed to generate processedFileMetadata for ${file.name}:`,
+        error,
+      );
   }
 
   return undefined;
@@ -161,7 +168,7 @@ export function createChildStub(
   operation: ToolOperation,
   resultingFile: File,
   thumbnail?: string,
-  processedFileMetadata?: ProcessedFileMetadata
+  processedFileMetadata?: ProcessedFileMetadata,
 ): StirlingFileStub {
   const newFileId = createFileId();
 
@@ -200,17 +207,17 @@ export function createChildStub(
     processedFile: processedFileMetadata,
 
     // Mark as dirty if parent has a localFilePath (modified file not yet saved to disk)
-    isDirty: parentStub.localFilePath ? true : undefined
+    isDirty: parentStub.localFilePath ? true : undefined,
   };
 
   if (DEBUG) {
-    console.log('[createChildStub] Created child:', {
+    console.log("[createChildStub] Created child:", {
       childId: newFileId,
       parentId: parentStub.id,
       parentLocalFilePath: parentStub.localFilePath,
       childLocalFilePath: childStub.localFilePath,
       childIsDirty: childStub.isDirty,
-      versionNumber: newVersionNumber
+      versionNumber: newVersionNumber,
     });
   }
 
@@ -221,7 +228,11 @@ interface AddFileOptions {
   files?: File[];
 
   // For 'processed' files
-  filesWithThumbnails?: Array<{ file: File; thumbnail?: string; pageCount?: number }>;
+  filesWithThumbnails?: Array<{
+    file: File;
+    thumbnail?: string;
+    pageCount?: number;
+  }>;
 
   // Insertion position
   insertAfterPageId?: string;
@@ -233,7 +244,11 @@ interface AddFileOptions {
   autoUnzip?: boolean;
   autoUnzipFileLimit?: number;
   skipAutoUnzip?: boolean; // When true: always unzip (except HTML). Used for file uploads. When false: respect autoUnzip/autoUnzipFileLimit preferences. Used for tool outputs.
-  confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
+  confirmLargeExtraction?: (
+    fileCount: number,
+    fileName: string,
+  ) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
+  allowDuplicates?: boolean;
 }
 
 /**
@@ -245,7 +260,7 @@ export async function addFiles(
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
   lifecycleManager: FileLifecycleManager,
-  enablePersistence: boolean = false
+  enablePersistence: boolean = false,
 ): Promise<StirlingFile[]> {
   // Acquire mutex to prevent race conditions
   await addFilesMutex.lock();
@@ -255,178 +270,255 @@ export async function addFiles(
     const stirlingFiles: StirlingFile[] = [];
     // Hydration tasks are scheduled per-file to update thumbnails/metadata without blocking add flow
 
-  // Build quickKey lookup from existing files for deduplication
-  const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
+    // Build quickKey lookup from existing files for deduplication
+    const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
 
-  const { files = [] } = options;
+    const { files = [], allowDuplicates = false } = options;
 
-  // ZIP pre-processing: Extract ZIP files with configurable behavior
-  // - File uploads: skipAutoUnzip=true → always extract (except HTML)
-  // - Tool outputs: skipAutoUnzip=false → respect user preferences
-  const filesToProcess: File[] = [];
-  const autoUnzip = options.autoUnzip ?? true; // Default to true
-  const autoUnzipFileLimit = options.autoUnzipFileLimit ?? 4; // Default limit
-  const skipAutoUnzip = options.skipAutoUnzip ?? false;
-  const confirmLargeExtraction = options.confirmLargeExtraction;
+    // ZIP pre-processing: Extract ZIP files with configurable behavior
+    // - File uploads: skipAutoUnzip=true → always extract (except HTML)
+    // - Tool outputs: skipAutoUnzip=false → respect user preferences
+    const filesToProcess: File[] = [];
+    const autoUnzip = options.autoUnzip ?? true; // Default to true
+    const autoUnzipFileLimit = options.autoUnzipFileLimit ?? 4; // Default limit
+    const skipAutoUnzip = options.skipAutoUnzip ?? false;
+    const confirmLargeExtraction = options.confirmLargeExtraction;
 
-  for (const file of files) {
-    // Check if file is a ZIP
-    if (zipFileService.isZipFile(file)) {
-      try {
-        if (DEBUG) console.log(`📄 addFiles: Detected ZIP file: ${file.name}`);
+    for (const file of files) {
+      // Check if file is a ZIP
+      if (zipFileService.isZipFile(file)) {
+        try {
+          if (DEBUG)
+            console.log(`📄 addFiles: Detected ZIP file: ${file.name}`);
 
-        // Check if ZIP contains HTML files - if so, keep as ZIP
-        const containsHtml = await zipFileService.containsHtmlFiles(file);
-        if (containsHtml) {
-          if (DEBUG) console.log(`📄 addFiles: ZIP contains HTML, keeping as ZIP: ${file.name}`);
+          // Check if ZIP contains HTML files - if so, keep as ZIP
+          const containsHtml = await zipFileService.containsHtmlFiles(file);
+          if (containsHtml) {
+            if (DEBUG)
+              console.log(
+                `📄 addFiles: ZIP contains HTML, keeping as ZIP: ${file.name}`,
+              );
+            filesToProcess.push(file);
+            continue;
+          }
+
+          // Apply extraction with preferences
+          const extractedFiles = await zipFileService.extractWithPreferences(
+            file,
+            {
+              autoUnzip,
+              autoUnzipFileLimit,
+              skipAutoUnzip,
+              confirmLargeExtraction,
+            },
+          );
+
+          if (extractedFiles.length === 1 && extractedFiles[0] === file) {
+            // ZIP was not extracted (over limit or autoUnzip disabled)
+            if (DEBUG)
+              console.log(
+                `📄 addFiles: ZIP not extracted (preferences): ${file.name}`,
+              );
+          } else {
+            // ZIP was extracted
+            if (DEBUG)
+              console.log(
+                `📄 addFiles: Extracted ${extractedFiles.length} files from ZIP: ${file.name}`,
+              );
+          }
+
+          filesToProcess.push(...extractedFiles);
+        } catch (error) {
+          console.error(
+            `📄 addFiles: Failed to process ZIP file ${file.name}:`,
+            error,
+          );
+          // On error, keep the ZIP file as-is
           filesToProcess.push(file);
-          continue;
         }
-
-        // Apply extraction with preferences
-        const extractedFiles = await zipFileService.extractWithPreferences(file, {
-          autoUnzip,
-          autoUnzipFileLimit,
-          skipAutoUnzip,
-          confirmLargeExtraction
-        });
-
-        if (extractedFiles.length === 1 && extractedFiles[0] === file) {
-          // ZIP was not extracted (over limit or autoUnzip disabled)
-          if (DEBUG) console.log(`📄 addFiles: ZIP not extracted (preferences): ${file.name}`);
-        } else {
-          // ZIP was extracted
-          if (DEBUG) console.log(`📄 addFiles: Extracted ${extractedFiles.length} files from ZIP: ${file.name}`);
-        }
-
-        filesToProcess.push(...extractedFiles);
-      } catch (error) {
-        console.error(`📄 addFiles: Failed to process ZIP file ${file.name}:`, error);
-        // On error, keep the ZIP file as-is
+      } else {
+        // Not a ZIP file, add as-is
         filesToProcess.push(file);
       }
-    } else {
-      // Not a ZIP file, add as-is
-      filesToProcess.push(file);
-    }
-  }
-
-  if (DEBUG) console.log(`📄 addFiles: After ZIP processing, ${filesToProcess.length} files to add`);
-
-  for (const file of filesToProcess) {
-    const quickKey = createQuickKey(file);
-
-    // Soft deduplication: Check if file already exists by metadata
-    if (existingQuickKeys.has(quickKey)) {
-      continue;
     }
 
-    const fileId = createFileId();
-    filesRef.current.set(fileId, file);
+    if (DEBUG)
+      console.log(
+        `📄 addFiles: After ZIP processing, ${filesToProcess.length} files to add`,
+      );
 
-    // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
-    const fileStub = createNewStirlingFileStub(file, fileId);
+    for (const file of filesToProcess) {
+      const quickKey = createQuickKey(file);
 
-    // Check for pending file path mapping from Tauri file dialog (desktop only)
-    try {
-      const { pendingFilePathMappings } = await import('@app/contexts/FileManagerContext');
-      console.log(`[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`);
-      console.log(`[FileActions] Available mappings:`, Array.from(pendingFilePathMappings.keys()));
-      const localFilePath = pendingFilePathMappings.get(quickKey);
-      if (localFilePath) {
-        console.log(`[FileActions] ✓ Found localFilePath: ${localFilePath}`);
-        fileStub.localFilePath = localFilePath;
-        pendingFilePathMappings.delete(quickKey); // Clean up after use
-        console.log(`[FileActions] Applied localFilePath to file: ${file.name}`);
-      } else {
-        console.log(`[FileActions] ✗ No localFilePath found for this file`);
-      }
-    } catch (error) {
-      console.log('[FileActions] Could not check for localFilePath:', error);
-      // FileManagerContext may not be available in all contexts
-    }
-
-    // Store insertion position if provided
-    if (options.insertAfterPageId !== undefined) {
-      fileStub.insertAfterPageId = options.insertAfterPageId;
-    }
-
-    existingQuickKeys.add(quickKey);
-    stirlingFileStubs.push(fileStub);
-
-    // Dispatch immediately so each file appears as soon as it is processed
-    dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs: [fileStub] } });
-
-    // Create StirlingFile directly
-    const stirlingFile = createStirlingFile(file, fileId);
-    stirlingFiles.push(stirlingFile);
-
-    // Queue background hydration so add flow doesn't block on thumbnail/metadata work
-    scheduleMetadataHydration(async () => {
-      const targetFile = filesRef.current.get(fileId);
-      if (!targetFile) {
-        return;
+      // Soft deduplication: Check if file already exists by metadata
+      if (!allowDuplicates && existingQuickKeys.has(quickKey)) {
+        continue;
       }
 
-      let processedFileMetadata: ProcessedFileMetadata | undefined;
-      let thumbnail: string | undefined;
+      const fileId = createFileId();
+      filesRef.current.set(fileId, file);
 
-      if (targetFile.type.startsWith('application/pdf')) {
-        processedFileMetadata = await generateProcessedFileMetadata(targetFile);
-        thumbnail = processedFileMetadata?.thumbnailUrl;
-      } else {
+      // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
+      const fileStub = createNewStirlingFileStub(file, fileId);
+
+      // Early encryption detection for PDFs — set the flag before dispatch so the
+      // viewer gate and modal queue pick it up immediately instead of after hydration
+      if (file.type === "application/pdf") {
         try {
-          const { generateThumbnailForFile } = await import('@app/utils/thumbnailUtils');
-          thumbnail = await generateThumbnailForFile(targetFile);
+          if (await FileAnalyzer.isPDFUserPasswordProtected(file)) {
+            fileStub.processedFile = (fileStub.processedFile || {
+              pages: [],
+            }) as any;
+            fileStub.processedFile!.isEncrypted = true;
+          }
         } catch (error) {
-          console.warn(`[addFiles] Thumbnail generation failed for ${fileId}:`, error);
+          // Never block upload on analysis failure — but log so it's debuggable
+          // if an unencrypted file later appears to "hang" during processing.
+          console.warn(
+            "[FileActions] Early encryption detection failed for",
+            file.name,
+            error,
+          );
         }
       }
 
-      const updates: Partial<StirlingFileStub> = {};
-      const primaryThumbnail = thumbnail || processedFileMetadata?.thumbnailUrl || processedFileMetadata?.pages?.[0]?.thumbnail;
-
-      if (processedFileMetadata) {
-        updates.processedFile = processedFileMetadata;
-        updates.thumbnailUrl = primaryThumbnail;
-      } else if (thumbnail) {
-        updates.thumbnailUrl = primaryThumbnail;
-      }
-
-      if (primaryThumbnail && primaryThumbnail.startsWith('blob:')) {
-        lifecycleManager.trackBlobUrl(primaryThumbnail);
-      }
-
-      if (Object.keys(updates).length > 0) {
-        lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
-      }
-    });
-  }
-
-  // Persist to storage if enabled using fileStorage service
-  if (enablePersistence && stirlingFiles.length > 0) {
-    await Promise.all(stirlingFiles.map(async (stirlingFile, index) => {
+      // Check for pending file path mapping from Tauri file dialog (desktop only)
       try {
-        // Get corresponding stub with all metadata
-        const fileStub = stirlingFileStubs[index];
-
-        // Store using the cleaner signature - pass StirlingFile + StirlingFileStub directly
-        await fileStorage.storeStirlingFile(stirlingFile, fileStub);
-
-        if (DEBUG) console.log(`📄 addFiles: Stored file ${stirlingFile.name} with metadata:`, fileStub);
+        const { pendingFilePathMappings } =
+          await import("@app/services/pendingFilePathMappings");
+        console.log(
+          `[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`,
+        );
+        console.log(
+          `[FileActions] Available mappings:`,
+          Array.from(pendingFilePathMappings.keys()),
+        );
+        const localFilePath = pendingFilePathMappings.get(quickKey);
+        if (localFilePath) {
+          console.log(`[FileActions] ✓ Found localFilePath: ${localFilePath}`);
+          fileStub.localFilePath = localFilePath;
+          pendingFilePathMappings.delete(quickKey); // Clean up after use
+          console.log(
+            `[FileActions] Applied localFilePath to file: ${file.name}`,
+          );
+        } else {
+          console.log(`[FileActions] ✗ No localFilePath found for this file`);
+        }
       } catch (error) {
-        console.error('Failed to persist file to storage:', stirlingFile.name, error);
+        console.log("[FileActions] Could not check for localFilePath:", error);
+        // FileManagerContext may not be available in all contexts
       }
-    }));
-  }
 
-  return stirlingFiles;
+      // Store insertion position if provided
+      if (options.insertAfterPageId !== undefined) {
+        fileStub.insertAfterPageId = options.insertAfterPageId;
+      }
+
+      if (!allowDuplicates) {
+        existingQuickKeys.add(quickKey);
+      }
+      stirlingFileStubs.push(fileStub);
+
+      // Dispatch immediately so each file appears as soon as it is processed
+      dispatch({
+        type: "ADD_FILES",
+        payload: { stirlingFileStubs: [fileStub] },
+      });
+
+      // Create StirlingFile directly
+      const stirlingFile = createStirlingFile(file, fileId);
+      stirlingFiles.push(stirlingFile);
+
+      // Queue background hydration so add flow doesn't block on thumbnail/metadata work
+      scheduleMetadataHydration(async () => {
+        const targetFile = filesRef.current.get(fileId);
+        if (!targetFile) {
+          return;
+        }
+
+        let processedFileMetadata: ProcessedFileMetadata | undefined;
+        let thumbnail: string | undefined;
+
+        if (targetFile.type.startsWith("application/pdf")) {
+          if (fileStub.processedFile?.isEncrypted) {
+            // Pre-dispatch detection already flagged this PDF as encrypted; PDF.js
+            // can't produce thumbnails/metadata without the password, so re-parsing
+            // here would just duplicate work. Metadata is refreshed after unlock.
+            processedFileMetadata = fileStub.processedFile;
+          } else {
+            processedFileMetadata =
+              await generateProcessedFileMetadata(targetFile);
+            thumbnail = processedFileMetadata?.thumbnailUrl;
+          }
+        } else {
+          try {
+            const { generateThumbnailForFile } =
+              await import("@app/utils/thumbnailUtils");
+            thumbnail = await generateThumbnailForFile(targetFile);
+          } catch (error) {
+            console.warn(
+              `[addFiles] Thumbnail generation failed for ${fileId}:`,
+              error,
+            );
+          }
+        }
+
+        const updates: Partial<StirlingFileStub> = {};
+        const primaryThumbnail =
+          thumbnail ||
+          processedFileMetadata?.thumbnailUrl ||
+          processedFileMetadata?.pages?.[0]?.thumbnail;
+
+        if (processedFileMetadata) {
+          updates.processedFile = processedFileMetadata;
+          updates.thumbnailUrl = primaryThumbnail;
+        } else if (thumbnail) {
+          updates.thumbnailUrl = primaryThumbnail;
+        }
+
+        if (primaryThumbnail && primaryThumbnail.startsWith("blob:")) {
+          lifecycleManager.trackBlobUrl(primaryThumbnail);
+        }
+
+        if (Object.keys(updates).length > 0) {
+          lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
+        }
+      });
+    }
+
+    // Persist to storage if enabled using fileStorage service
+    if (enablePersistence && stirlingFiles.length > 0) {
+      await Promise.all(
+        stirlingFiles.map(async (stirlingFile, index) => {
+          try {
+            // Get corresponding stub with all metadata
+            const fileStub = stirlingFileStubs[index];
+
+            // Store using the cleaner signature - pass StirlingFile + StirlingFileStub directly
+            await fileStorage.storeStirlingFile(stirlingFile, fileStub);
+
+            if (DEBUG)
+              console.log(
+                `📄 addFiles: Stored file ${stirlingFile.name} with metadata:`,
+                fileStub,
+              );
+          } catch (error) {
+            console.error(
+              "Failed to persist file to storage:",
+              stirlingFile.name,
+              error,
+            );
+          }
+        }),
+      );
+    }
+
+    return stirlingFiles;
   } finally {
     // Always release mutex even if error occurs
     addFilesMutex.unlock();
   }
 }
-
 
 /**
  * Consume files helper - replace unpinned input files with output files
@@ -437,13 +529,18 @@ export async function consumeFiles(
   outputStirlingFiles: StirlingFile[],
   outputStirlingFileStubs: StirlingFileStub[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
-  dispatch: React.Dispatch<FileContextAction>
+  dispatch: React.Dispatch<FileContextAction>,
 ): Promise<FileId[]> {
-  if (DEBUG) console.log(`📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputStirlingFiles.length} output files with pre-created stubs`);
+  if (DEBUG)
+    console.log(
+      `📄 consumeFiles: Processing ${inputFileIds.length} input files, ${outputStirlingFiles.length} output files with pre-created stubs`,
+    );
 
   // Validate that we have matching files and stubs
   if (outputStirlingFiles.length !== outputStirlingFileStubs.length) {
-    throw new Error(`Mismatch between output files (${outputStirlingFiles.length}) and stubs (${outputStirlingFileStubs.length})`);
+    throw new Error(
+      `Mismatch between output files (${outputStirlingFiles.length}) and stubs (${outputStirlingFileStubs.length})`,
+    );
   }
 
   // Store StirlingFiles in filesRef using their existing IDs (no ID generation needed)
@@ -452,25 +549,42 @@ export async function consumeFiles(
     const stub = outputStirlingFileStubs[i];
 
     if (stirlingFile.fileId !== stub.id) {
-      console.warn(`📄 consumeFiles: ID mismatch between StirlingFile (${stirlingFile.fileId}) and stub (${stub.id})`);
+      console.warn(
+        `📄 consumeFiles: ID mismatch between StirlingFile (${stirlingFile.fileId}) and stub (${stub.id})`,
+      );
     }
 
     filesRef.current.set(stirlingFile.fileId, stirlingFile);
 
-    if (DEBUG) console.log(`📄 consumeFiles: Stored StirlingFile ${stirlingFile.name} with ID ${stirlingFile.fileId}`);
+    if (DEBUG)
+      console.log(
+        `📄 consumeFiles: Stored StirlingFile ${stirlingFile.name} with ID ${stirlingFile.fileId}`,
+      );
   }
 
   // Mark input files as processed in storage (no longer leaf nodes)
-  if(!outputStirlingFileStubs.reduce((areAllV1, stub) => areAllV1 && (stub.versionNumber == 1), true)) {
+  if (
+    !outputStirlingFileStubs.reduce(
+      (areAllV1, stub) => areAllV1 && stub.versionNumber == 1,
+      true,
+    )
+  ) {
     await Promise.all(
       inputFileIds.map(async (fileId) => {
         try {
           await fileStorage.markFileAsProcessed(fileId);
-          if (DEBUG) console.log(`📄 Marked file ${fileId} as processed (no longer leaf)`);
+          if (DEBUG)
+            console.log(
+              `📄 Marked file ${fileId} as processed (no longer leaf)`,
+            );
         } catch (error) {
-          if (DEBUG) console.warn(`📄 Failed to mark file ${fileId} as processed:`, error);
+          if (DEBUG)
+            console.warn(
+              `📄 Failed to mark file ${fileId} as processed:`,
+              error,
+            );
         }
-      })
+      }),
     );
   }
 
@@ -483,30 +597,41 @@ export async function consumeFiles(
       // Use fileStorage directly with complete metadata from stub
       await fileStorage.storeStirlingFile(stirlingFile, stub);
 
-      if (DEBUG) console.log(`📄 Saved StirlingFile ${stirlingFile.name} directly to storage with complete metadata:`, {
-        fileId: stirlingFile.fileId,
-        versionNumber: stub.versionNumber,
-        originalFileId: stub.originalFileId,
-        parentFileId: stub.parentFileId,
-        toolChainLength: stub.toolHistory?.length || 0
-      });
+      if (DEBUG)
+        console.log(
+          `📄 Saved StirlingFile ${stirlingFile.name} directly to storage with complete metadata:`,
+          {
+            fileId: stirlingFile.fileId,
+            versionNumber: stub.versionNumber,
+            originalFileId: stub.originalFileId,
+            parentFileId: stub.parentFileId,
+            toolChainLength: stub.toolHistory?.length || 0,
+          },
+        );
     } catch (error) {
-      console.error('Failed to persist output file to fileStorage:', stirlingFile.name, error);
+      console.error(
+        "Failed to persist output file to fileStorage:",
+        stirlingFile.name,
+        error,
+      );
     }
   }
 
   // Dispatch the consume action with pre-created stubs (no processing needed)
   dispatch({
-    type: 'CONSUME_FILES',
+    type: "CONSUME_FILES",
     payload: {
       inputFileIds,
-      outputStirlingFileStubs: outputStirlingFileStubs
-    }
+      outputStirlingFileStubs: outputStirlingFileStubs,
+    },
   });
 
-  if (DEBUG) console.log(`📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputStirlingFileStubs.length} outputs`);
+  if (DEBUG)
+    console.log(
+      `📄 consumeFiles: Successfully consumed files - removed ${inputFileIds.length} inputs, added ${outputStirlingFileStubs.length} outputs`,
+    );
   // Return the output file IDs for undo tracking
-  return outputStirlingFileStubs.map(stub => stub.id);
+  return outputStirlingFileStubs.map((stub) => stub.id);
 }
 
 /**
@@ -516,10 +641,10 @@ async function restoreFilesAndCleanup(
   filesToRestore: Array<{ file: File; record: StirlingFileStub }>,
   fileIdsToRemove: FileId[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
-  indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null
+  indexedDB?: { deleteFile: (fileId: FileId) => Promise<void> } | null,
 ): Promise<void> {
   // Remove files from filesRef
-  fileIdsToRemove.forEach(id => {
+  fileIdsToRemove.forEach((id) => {
     if (filesRef.current.has(id)) {
       if (DEBUG) console.log(`📄 Removing file ${id} from filesRef`);
       filesRef.current.delete(id);
@@ -538,18 +663,21 @@ async function restoreFilesAndCleanup(
       }
 
       // Restore the file to filesRef
-      if (DEBUG) console.log(`📄 Restoring file ${file.name} with id ${record.id} to filesRef`);
+      if (DEBUG)
+        console.log(
+          `📄 Restoring file ${file.name} with id ${record.id} to filesRef`,
+        );
       filesRef.current.set(record.id, file);
     }
   });
 
   // Clean up IndexedDB
   if (indexedDB) {
-    const indexedDBPromises = fileIdsToRemove.map(fileId =>
-      indexedDB.deleteFile(fileId).catch(error => {
-        console.error('Failed to delete file from IndexedDB:', fileId, error);
+    const indexedDBPromises = fileIdsToRemove.map((fileId) =>
+      indexedDB.deleteFile(fileId).catch((error) => {
+        console.error("Failed to delete file from IndexedDB:", fileId, error);
         throw error; // Re-throw to trigger rollback
-      })
+      }),
     );
 
     // Execute all IndexedDB operations
@@ -566,13 +694,25 @@ export async function undoConsumeFiles(
   outputFileIds: FileId[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
-  indexedDB?: { saveFile: (file: File, fileId: FileId, existingThumbnail?: string) => Promise<any>; deleteFile: (fileId: FileId) => Promise<void> } | null
+  indexedDB?: {
+    saveFile: (
+      file: File,
+      fileId: FileId,
+      existingThumbnail?: string,
+    ) => Promise<any>;
+    deleteFile: (fileId: FileId) => Promise<void>;
+  } | null,
 ): Promise<void> {
-  if (DEBUG) console.log(`📄 undoConsumeFiles: Restoring ${inputStirlingFileStubs.length} input files, removing ${outputFileIds.length} output files`);
+  if (DEBUG)
+    console.log(
+      `📄 undoConsumeFiles: Restoring ${inputStirlingFileStubs.length} input files, removing ${outputFileIds.length} output files`,
+    );
 
   // Validate inputs
   if (inputFiles.length !== inputStirlingFileStubs.length) {
-    throw new Error(`Mismatch between input files (${inputFiles.length}) and records (${inputStirlingFileStubs.length})`);
+    throw new Error(
+      `Mismatch between input files (${inputFiles.length}) and records (${inputStirlingFileStubs.length})`,
+    );
   }
 
   // Create a backup of current filesRef state for rollback
@@ -582,7 +722,7 @@ export async function undoConsumeFiles(
     // Prepare files to restore
     const filesToRestore = inputFiles.map((file, index) => ({
       file,
-      record: inputStirlingFileStubs[index]
+      record: inputStirlingFileStubs[index],
     }));
 
     // Restore input files and clean up output files
@@ -590,12 +730,12 @@ export async function undoConsumeFiles(
       filesToRestore,
       outputFileIds,
       filesRef,
-      indexedDB
+      indexedDB,
     );
 
     // Mark restored files as dirty if they have localFilePath
     // (they now differ from what's saved on disk)
-    const stubsWithDirtyMarked = inputStirlingFileStubs.map(stub => {
+    const stubsWithDirtyMarked = inputStirlingFileStubs.map((stub) => {
       if (stub.localFilePath) {
         return { ...stub, isDirty: true };
       }
@@ -604,17 +744,24 @@ export async function undoConsumeFiles(
 
     // Dispatch the undo action (only if everything else succeeded)
     dispatch({
-      type: 'UNDO_CONSUME_FILES',
+      type: "UNDO_CONSUME_FILES",
       payload: {
         inputStirlingFileStubs: stubsWithDirtyMarked,
-        outputFileIds
-      }
+        outputFileIds,
+      },
     });
 
-    if (DEBUG) console.log(`📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputStirlingFileStubs.length} inputs, removed ${outputFileIds.length} outputs`);
+    if (DEBUG)
+      console.log(
+        `📄 undoConsumeFiles: Successfully undone consume operation - restored ${inputStirlingFileStubs.length} inputs, removed ${outputFileIds.length} outputs`,
+      );
   } catch (error) {
     // Rollback filesRef to previous state
-    if (DEBUG) console.error('📄 undoConsumeFiles: Error during undo, rolling back filesRef', error);
+    if (DEBUG)
+      console.error(
+        "📄 undoConsumeFiles: Error during undo, rolling back filesRef",
+        error,
+      );
     filesRef.current.clear();
     backupFilesRef.forEach((file, id) => {
       filesRef.current.set(id, file);
@@ -638,14 +785,17 @@ export async function addStirlingFileStubs(
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
-  lifecycleManager: FileLifecycleManager
+  lifecycleManager: FileLifecycleManager,
 ): Promise<StirlingFile[]> {
   await addFilesMutex.lock();
 
   try {
     // Show loading indicator while preparing files from storage
     if (stirlingFileStubs.length > 0) {
-      dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, progress: 0 } });
+      dispatch({
+        type: "SET_PROCESSING",
+        payload: { isProcessing: true, progress: 0 },
+      });
     }
 
     const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
@@ -655,8 +805,9 @@ export async function addStirlingFileStubs(
     // Process and dispatch files one by one for progressive UI updates
     for (const stub of stirlingFileStubs) {
       // Check for duplicates using quickKey
-      if (existingQuickKeys.has(stub.quickKey || '')) {
-        if (DEBUG) console.log(`📄 Skipping duplicate StirlingFileStub: ${stub.name}`);
+      if (existingQuickKeys.has(stub.quickKey || "")) {
+        if (DEBUG)
+          console.log(`📄 Skipping duplicate StirlingFileStub: ${stub.name}`);
         continue;
       }
 
@@ -668,15 +819,18 @@ export async function addStirlingFileStubs(
         record.insertAfterPageId = options.insertAfterPageId;
       }
 
-      existingQuickKeys.add(stub.quickKey || '');
+      existingQuickKeys.add(stub.quickKey || "");
 
       // Dispatch each file immediately as we process it (progressive loading)
-      dispatch({ type: 'ADD_FILES', payload: { stirlingFileStubs: [record] } });
+      dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [record] } });
 
       // Clear loading indicator after first file appears
       if (!firstFileDispatched) {
         firstFileDispatched = true;
-        dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: false, progress: 0 } });
+        dispatch({
+          type: "SET_PROCESSING",
+          payload: { isProcessing: false, progress: 0 },
+        });
       }
 
       // Load File object and hydrate metadata in background (non-blocking)
@@ -693,31 +847,42 @@ export async function addStirlingFileStubs(
         filesRef.current.set(fileId, stirlingFile);
 
         // Check if processedFile data needs regeneration
-        if (stirlingFile.type.startsWith('application/pdf')) {
-          const needsProcessing = !stub.processedFile ||
-                                  !stub.processedFile.pages ||
-                                  stub.processedFile.pages.length === 0 ||
-                                  stub.processedFile.totalPages !== stub.processedFile.pages.length;
+        if (stirlingFile.type.startsWith("application/pdf")) {
+          const needsProcessing =
+            !stub.processedFile ||
+            !stub.processedFile.pages ||
+            stub.processedFile.pages.length === 0 ||
+            stub.processedFile.totalPages !== stub.processedFile.pages.length;
 
           if (needsProcessing) {
             // Regenerate metadata
-            const processedFileMetadata = await generateProcessedFileMetadata(stirlingFile);
+            const processedFileMetadata =
+              await generateProcessedFileMetadata(stirlingFile);
 
             if (processedFileMetadata) {
               const updates: Partial<StirlingFileStub> = {
-                processedFile: processedFileMetadata
+                processedFile: processedFileMetadata,
               };
 
               // Update thumbnail only if current stub doesn't have one
               const currentStub = stateRef.current.files.byId[fileId];
-              if (!currentStub?.thumbnailUrl && processedFileMetadata.thumbnailUrl) {
+              if (
+                !currentStub?.thumbnailUrl &&
+                processedFileMetadata.thumbnailUrl
+              ) {
                 updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
-                if (processedFileMetadata.thumbnailUrl.startsWith('blob:')) {
-                  lifecycleManager.trackBlobUrl(processedFileMetadata.thumbnailUrl);
+                if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
+                  lifecycleManager.trackBlobUrl(
+                    processedFileMetadata.thumbnailUrl,
+                  );
                 }
               }
 
-              lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
+              lifecycleManager.updateStirlingFileStub(
+                fileId,
+                updates,
+                stateRef,
+              );
             }
           }
         }
@@ -730,17 +895,31 @@ export async function addStirlingFileStubs(
   }
 }
 
-export const createFileActions = (dispatch: React.Dispatch<FileContextAction>) => ({
-  setSelectedFiles: (fileIds: FileId[]) => dispatch({ type: 'SET_SELECTED_FILES', payload: { fileIds } }),
-  setSelectedPages: (pageNumbers: number[]) => dispatch({ type: 'SET_SELECTED_PAGES', payload: { pageNumbers } }),
-  clearSelections: () => dispatch({ type: 'CLEAR_SELECTIONS' }),
-  setProcessing: (isProcessing: boolean, progress = 0) => dispatch({ type: 'SET_PROCESSING', payload: { isProcessing, progress } }),
-  setHasUnsavedChanges: (hasChanges: boolean) => dispatch({ type: 'SET_UNSAVED_CHANGES', payload: { hasChanges } }),
-  pinFile: (fileId: FileId) => dispatch({ type: 'PIN_FILE', payload: { fileId } }),
-  unpinFile: (fileId: FileId) => dispatch({ type: 'UNPIN_FILE', payload: { fileId } }),
-  resetContext: () => dispatch({ type: 'RESET_CONTEXT' }),
-  markFileError: (fileId: FileId) => dispatch({ type: 'MARK_FILE_ERROR', payload: { fileId } }),
-  clearFileError: (fileId: FileId) => dispatch({ type: 'CLEAR_FILE_ERROR', payload: { fileId } }),
-  clearAllFileErrors: () => dispatch({ type: 'CLEAR_ALL_FILE_ERRORS' }),
-  updateStirlingFileStub: (fileId: FileId, updates: Partial<StirlingFileStub>) => dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id: fileId, updates } })
+export const createFileActions = (
+  dispatch: React.Dispatch<FileContextAction>,
+) => ({
+  setSelectedFiles: (fileIds: FileId[]) =>
+    dispatch({ type: "SET_SELECTED_FILES", payload: { fileIds } }),
+  setSelectedPages: (pageNumbers: number[]) =>
+    dispatch({ type: "SET_SELECTED_PAGES", payload: { pageNumbers } }),
+  clearSelections: () => dispatch({ type: "CLEAR_SELECTIONS" }),
+  setProcessing: (isProcessing: boolean, progress = 0) =>
+    dispatch({ type: "SET_PROCESSING", payload: { isProcessing, progress } }),
+  setHasUnsavedChanges: (hasChanges: boolean) =>
+    dispatch({ type: "SET_UNSAVED_CHANGES", payload: { hasChanges } }),
+  pinFile: (fileId: FileId) =>
+    dispatch({ type: "PIN_FILE", payload: { fileId } }),
+  unpinFile: (fileId: FileId) =>
+    dispatch({ type: "UNPIN_FILE", payload: { fileId } }),
+  resetContext: () => dispatch({ type: "RESET_CONTEXT" }),
+  markFileError: (fileId: FileId) =>
+    dispatch({ type: "MARK_FILE_ERROR", payload: { fileId } }),
+  clearFileError: (fileId: FileId) =>
+    dispatch({ type: "CLEAR_FILE_ERROR", payload: { fileId } }),
+  clearAllFileErrors: () => dispatch({ type: "CLEAR_ALL_FILE_ERRORS" }),
+  updateStirlingFileStub: (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) =>
+    dispatch({ type: "UPDATE_FILE_RECORD", payload: { id: fileId, updates } }),
 });

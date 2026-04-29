@@ -1,18 +1,28 @@
-import '@app/components/shared/dividerWithText/DividerWithText.css';
+import "@app/components/shared/dividerWithText/DividerWithText.css";
 
 interface TextDividerProps {
-  text?: string
-  className?: string
-  style?: React.CSSProperties
-  variant?: 'default' | 'subcategory'
-  respondsToDarkMode?: boolean
-  opacity?: number
+  text?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  variant?: "default" | "subcategory";
+  respondsToDarkMode?: boolean;
+  opacity?: number;
 }
 
-export default function DividerWithText({ text, className = '', style, variant = 'default', respondsToDarkMode = true, opacity }: TextDividerProps) {
-  const variantClass = variant === 'subcategory' ? 'subcategory' : '';
-  const themeClass = respondsToDarkMode ? '' : 'force-light';
-  const styleWithOpacity = opacity !== undefined ? { ...(style || {}), ['--text-divider-opacity' as any]: opacity } : style;
+export default function DividerWithText({
+  text,
+  className = "",
+  style,
+  variant = "default",
+  respondsToDarkMode = true,
+  opacity,
+}: TextDividerProps) {
+  const variantClass = variant === "subcategory" ? "subcategory" : "";
+  const themeClass = respondsToDarkMode ? "" : "force-light";
+  const styleWithOpacity =
+    opacity !== undefined
+      ? { ...(style || {}), ["--text-divider-opacity" as string]: opacity }
+      : style;
 
   if (text) {
     return (

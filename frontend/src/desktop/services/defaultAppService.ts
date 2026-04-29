@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 /**
  * Service for managing default PDF handler settings
@@ -10,10 +10,10 @@ export const defaultAppService = {
    */
   async isDefaultPdfHandler(): Promise<boolean> {
     try {
-      const result = await invoke<boolean>('is_default_pdf_handler');
+      const result = await invoke<boolean>("is_default_pdf_handler");
       return result;
     } catch (error) {
-      console.error('[DefaultApp] Failed to check default handler:', error);
+      console.error("[DefaultApp] Failed to check default handler:", error);
       return false;
     }
   },
@@ -22,13 +22,15 @@ export const defaultAppService = {
    * Set or prompt to set Stirling PDF as default PDF handler
    * Returns a status string indicating what happened
    */
-  async setAsDefaultPdfHandler(): Promise<'set_successfully' | 'opened_dialog' | 'error'> {
+  async setAsDefaultPdfHandler(): Promise<
+    "set_successfully" | "opened_dialog" | "error"
+  > {
     try {
-      const result = await invoke<string>('set_as_default_pdf_handler');
-      return result as 'set_successfully' | 'opened_dialog';
+      const result = await invoke<string>("set_as_default_pdf_handler");
+      return result as "set_successfully" | "opened_dialog";
     } catch (error) {
-      console.error('[DefaultApp] Failed to set default handler:', error);
-      return 'error';
+      console.error("[DefaultApp] Failed to set default handler:", error);
+      return "error";
     }
   },
 
@@ -37,8 +39,10 @@ export const defaultAppService = {
    */
   hasUserDismissedPrompt(): boolean {
     try {
-      const dismissed = localStorage.getItem('stirlingpdf_default_app_prompt_dismissed');
-      return dismissed === 'true';
+      const dismissed = localStorage.getItem(
+        "stirlingpdf_default_app_prompt_dismissed",
+      );
+      return dismissed === "true";
     } catch {
       return false;
     }
@@ -49,9 +53,12 @@ export const defaultAppService = {
    */
   setPromptDismissed(dismissed: boolean): void {
     try {
-      localStorage.setItem('stirlingpdf_default_app_prompt_dismissed', dismissed ? 'true' : 'false');
+      localStorage.setItem(
+        "stirlingpdf_default_app_prompt_dismissed",
+        dismissed ? "true" : "false",
+      );
     } catch (error) {
-      console.error('[DefaultApp] Failed to save prompt preference:', error);
+      console.error("[DefaultApp] Failed to save prompt preference:", error);
     }
   },
 

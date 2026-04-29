@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -16,7 +16,7 @@ import { useAdvancedOCRTips } from "@app/components/tooltips/useAdvancedOCRTips"
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
@@ -24,12 +24,16 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const advancedOCRTips = useAdvancedOCRTips();
 
   // Step expansion state management
-  const [expandedStep, setExpandedStep] = useState<"files" | "settings" | "advanced" | null>("files");
+  const [expandedStep, setExpandedStep] = useState<
+    "files" | "settings" | "advanced" | null
+  >("files");
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("ocr-pdf");
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
+  const hasResults =
+    ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
   const hasValidSettings = ocrParams.validateParameters();
 
   useEffect(() => {
@@ -58,7 +62,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : "OCR operation failed");
+        onError(
+          error instanceof Error ? error.message : "OCR operation failed",
+        );
       }
     }
   };
@@ -128,8 +134,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       text: t("ocr.operation.submit", "Process OCR and Review"),
       loadingText: t("loading"),
       onClick: handleOCR,
-      isVisible: hasValidSettings && !hasResults,
-      disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled,
+      isVisible: !hasResults,
+      endpointEnabled: endpointEnabled,
+      paramsValid: hasValidSettings,
     },
     review: {
       isVisible: hasResults,

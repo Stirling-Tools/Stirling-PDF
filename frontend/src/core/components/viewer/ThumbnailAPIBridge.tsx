@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useThumbnailCapability } from '@embedpdf/plugin-thumbnail/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect } from "react";
+import { useThumbnailCapability } from "@embedpdf/plugin-thumbnail/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * ThumbnailAPIBridge - Updated for embedPDF v2.6.0
@@ -14,14 +14,14 @@ export function ThumbnailAPIBridge() {
 
   useEffect(() => {
     if (thumbnail && documentReady) {
-      registerBridge('thumbnail', {
+      registerBridge("thumbnail", {
         state: null, // No state - just provides API
-        api: thumbnail
+        api: thumbnail,
       });
     }
 
     return () => {
-      registerBridge('thumbnail', null);
+      registerBridge("thumbnail", null);
     };
   }, [thumbnail, documentReady, registerBridge]);
 

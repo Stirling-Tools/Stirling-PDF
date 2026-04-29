@@ -7,6 +7,9 @@ on:
   pull_request:
     branches:
       - main
+  merge_group:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
@@ -33,7 +36,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: changes
         with:
           filters: .github/config/.files.yaml
@@ -89,12 +92,13 @@ jobs:
           NPM_CONFIG_IGNORE_SCRIPTS: "true"
         run: npm ci --ignore-scripts --audit=false --fund=false
 
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Generate frontend license report (internal PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        working-directory: frontend
         env:
           PR_IS_FORK: "false"
-        run: npm run generate-licenses
+        run: task frontend:licenses:generate
 
       - name: Generate frontend license report (fork PRs, pinned)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
@@ -273,7 +277,7 @@ jobs:
       - name: Create Pull Request (Push only)
         id: cpr
         if: github.event_name == 'push' && env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.setup-bot.outputs.token }}
           commit-message: "Update Frontend 3rd Party Licenses"
@@ -339,17 +343,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
 
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Check licenses and generate report
         id: license-check
-        run: |
-          # NOTE: --no-parallel is intentional here. Running the license-checking tasks in parallel has
-          # previously caused intermittent concurrency issues in CI (e.g. flaky failures in the license
-          # plugin/Gradle when multiple projects are evaluated concurrently). Disabling parallelism trades
-          # some build speed for more reliable license reports. If the underlying issues are resolved in
-          # future Gradle or plugin versions, this flag can be reconsidered.
-          ./gradlew checkLicense generateLicenseReport --no-parallel || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
+        run: task backend:licenses:generate || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -369,7 +369,7 @@ jobs:
 
       - name: Upload artifact on license issues
         if: env.LICENSE_WARNINGS_EXIST == 'true'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: backend-dependencies-without-allowed-license.json
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
@@ -495,7 +495,7 @@ jobs:
       - name: Create Pull Request (push only)
         if: github.event_name == 'push' && env.CHANGES_DETECTED == 'true'
         id: cpr
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.setup-bot.outputs.token }}
           commit-message: "Update Backend 3rd Party Licenses"

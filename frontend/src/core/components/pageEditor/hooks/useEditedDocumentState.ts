@@ -20,7 +20,9 @@ export const useEditedDocumentState = ({
   fileOrder,
   updateCurrentPages,
 }: UseEditedDocumentStateParams) => {
-  const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
+  const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(
+    null,
+  );
   const editedDocumentRef = useRef<PDFDocument | null>(null);
   const pagePositionCacheRef = useRef<Map<string, number>>(new Map());
   const pageNeighborCacheRef = useRef<Map<string, string | null>>(new Map());
@@ -145,14 +147,14 @@ export const useEditedDocumentState = ({
 
           if (hasRemovals) {
             pages = pages.filter(
-              (page) => sourceIds.has(page.id) || isEphemeralPage(page)
+              (page) => sourceIds.has(page.id) || isEphemeralPage(page),
             );
           }
 
           if (hasAdditions) {
             const mergedIndexMap = new Map<string, number>();
             sourcePages.forEach((page, index) =>
-              mergedIndexMap.set(page.id, index)
+              mergedIndexMap.set(page.id, index),
             );
 
             const additions = newPages
@@ -169,41 +171,46 @@ export const useEditedDocumentState = ({
                 return a.mergedIndex - b.mergedIndex;
               });
 
-            additions.forEach(({ page, neighborId, cachedIndex, mergedIndex }) => {
-              if (pages.some((existing) => existing.id === page.id)) {
-                return;
-              }
+            additions.forEach(
+              ({ page, neighborId, cachedIndex, mergedIndex }) => {
+                if (pages.some((existing) => existing.id === page.id)) {
+                  return;
+                }
 
-              let insertIndex: number;
-              const originalFileId = page.originalFileId;
-              const placeholderIndex =
-                originalFileId !== undefined
-                  ? nextInsertIndexByFile.get(originalFileId)
-                  : undefined;
+                let insertIndex: number;
+                const originalFileId = page.originalFileId;
+                const placeholderIndex =
+                  originalFileId !== undefined
+                    ? nextInsertIndexByFile.get(originalFileId)
+                    : undefined;
 
-              if (originalFileId && placeholderIndex !== undefined) {
-                insertIndex = Math.min(placeholderIndex, pages.length);
-                nextInsertIndexByFile.set(originalFileId, insertIndex + 1);
-              } else if (neighborId === null) {
-                insertIndex = 0;
-              } else if (neighborId) {
-                const neighborIndex = pages.findIndex((p) => p.id === neighborId);
-                if (neighborIndex !== -1) {
-                  insertIndex = neighborIndex + 1;
+                if (originalFileId && placeholderIndex !== undefined) {
+                  insertIndex = Math.min(placeholderIndex, pages.length);
+                  nextInsertIndexByFile.set(originalFileId, insertIndex + 1);
+                } else if (neighborId === null) {
+                  insertIndex = 0;
+                } else if (neighborId) {
+                  const neighborIndex = pages.findIndex(
+                    (p) => p.id === neighborId,
+                  );
+                  if (neighborIndex !== -1) {
+                    insertIndex = neighborIndex + 1;
+                  } else {
+                    const fallbackIndex =
+                      cachedIndex ?? mergedIndex ?? pages.length;
+                    insertIndex = Math.min(fallbackIndex, pages.length);
+                  }
                 } else {
-                  const fallbackIndex = cachedIndex ?? mergedIndex ?? pages.length;
+                  const fallbackIndex =
+                    cachedIndex ?? mergedIndex ?? pages.length;
                   insertIndex = Math.min(fallbackIndex, pages.length);
                 }
-              } else {
-                const fallbackIndex = cachedIndex ?? mergedIndex ?? pages.length;
-                insertIndex = Math.min(fallbackIndex, pages.length);
-              }
 
-              const clonedPage = { ...page };
-              pages.splice(insertIndex, 0, clonedPage);
-            });
+                const clonedPage = { ...page };
+                pages.splice(insertIndex, 0, clonedPage);
+              },
+            );
           }
-
         }
 
         if (shouldResetToMerged || hasAdditions || hasRemovals) {
@@ -240,10 +247,7 @@ export const useEditedDocumentState = ({
 
   const displayDocument = editedDocument || initialDocument;
 
-  const getEditedDocument = useCallback(
-    () => editedDocumentRef.current,
-    []
-  );
+  const getEditedDocument = useCallback(() => editedDocumentRef.current, []);
 
   useEffect(() => {
     updateCurrentPages(displayDocument?.pages ?? null);

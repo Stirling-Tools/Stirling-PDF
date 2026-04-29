@@ -8,10 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,31 +20,17 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
-
-import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.model.api.converters.PdfToVideoRequest;
-import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
-import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempDirectory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
 @RequiredArgsConstructor
@@ -64,6 +47,8 @@ public class ConvertPdfToVideoController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    // ffmpeg disabled due to raised CVEs
+    /*
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/video")
     @Operation(
             summary = "Convert PDF to Video Slideshow",
@@ -163,6 +148,7 @@ public class ConvertPdfToVideoController {
             return WebResponseUtils.bytesToWebResponse(videoBytes, outputName, mediaType);
         }
     }
+    */
 
     private void generateFrames(
             Path inputPdf,

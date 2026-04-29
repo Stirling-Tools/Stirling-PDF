@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Flex } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
+import { useState } from "react";
+import { Flex } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 import {
   appendExpression,
   insertOperatorSmart,
@@ -10,9 +10,9 @@ import {
   everyNthExpression,
   rangeExpression,
   LogicalOperator,
-} from '@app/utils/bulkselection/selectionBuilders';
-import SelectPages from '@app/components/pageEditor/bulkSelectionPanel/SelectPages';
-import OperatorsSection from '@app/components/pageEditor/bulkSelectionPanel/OperatorsSection';
+} from "@app/utils/bulkselection/selectionBuilders";
+import SelectPages from "@app/components/pageEditor/bulkSelectionPanel/SelectPages";
+import OperatorsSection from "@app/components/pageEditor/bulkSelectionPanel/OperatorsSection";
 
 interface AdvancedSelectionPanelProps {
   csvInput: string;
@@ -30,22 +30,22 @@ const AdvancedSelectionPanel = ({
   advancedOpened,
 }: AdvancedSelectionPanelProps) => {
   const { t } = useTranslation();
-  const [rangeEnd, setRangeEnd] = useState<number | ''>('');
+  const [rangeEnd, setRangeEnd] = useState<number | "">("");
 
   const handleRangeEndChange = (val: string | number) => {
-    const next = typeof val === 'number' ? val : '';
+    const next = typeof val === "number" ? val : "";
     setRangeEnd(next);
   };
 
   // Named validation functions
   const validatePositiveNumber = (value: number): string | null => {
-    return value <= 0 ? 'Enter a positive number' : null;
+    return value <= 0 ? "Enter a positive number" : null;
   };
 
   const validateRangeStart = (start: number): string | null => {
-    if (start <= 0) return 'Values must be positive';
-    if (typeof rangeEnd === 'number' && start > rangeEnd) {
-      return 'From must be less than or equal to To';
+    if (start <= 0) return "Values must be positive";
+    if (typeof rangeEnd === "number" && start > rangeEnd) {
+      return "From must be less than or equal to To";
     }
     return null;
   };
@@ -61,7 +61,7 @@ const AdvancedSelectionPanel = ({
     const next = insertOperatorSmart(csvInput, op);
     setCsvInput(next);
     // Trigger visual selection update for 'even' and 'odd' operators
-    if (op === 'even' || op === 'odd') {
+    if (op === "even" || op === "odd") {
       onUpdatePagesFromCSV(next);
     }
   };
@@ -82,10 +82,10 @@ const AdvancedSelectionPanel = ({
   };
 
   const handleRangeApply = (start: number) => {
-    if (typeof rangeEnd !== 'number') return;
+    if (typeof rangeEnd !== "number") return;
     const expr = rangeExpression(start, rangeEnd, maxPages);
     if (expr) applyExpression(expr);
-    setRangeEnd('');
+    setRangeEnd("");
   };
 
   return (
@@ -97,41 +97,53 @@ const AdvancedSelectionPanel = ({
             {/* Cards row */}
             <Flex direction="row" mb="xs" wrap="wrap">
               <SelectPages
-                title={t('bulkSelection.firstNPages.title', 'First N Pages')}
-                placeholder={t('bulkSelection.firstNPages.placeholder', 'Number of pages')}
+                title={t("bulkSelection.firstNPages.title", "First N Pages")}
+                placeholder={t(
+                  "bulkSelection.firstNPages.placeholder",
+                  "Number of pages",
+                )}
                 onApply={handleFirstNApply}
                 maxPages={maxPages}
                 validationFn={validatePositiveNumber}
               />
-              
+
               <SelectPages
-                title={t('bulkSelection.range.title', 'Range')}
-                placeholder={t('bulkSelection.range.fromPlaceholder', 'From')}
+                title={t("bulkSelection.range.title", "Range")}
+                placeholder={t("bulkSelection.range.fromPlaceholder", "From")}
                 onApply={handleRangeApply}
                 maxPages={maxPages}
                 validationFn={validateRangeStart}
                 isRange={true}
                 rangeEndValue={rangeEnd}
                 onRangeEndChange={handleRangeEndChange}
-                rangeEndPlaceholder={t('bulkSelection.range.toPlaceholder', 'To')}
+                rangeEndPlaceholder={t(
+                  "bulkSelection.range.toPlaceholder",
+                  "To",
+                )}
               />
-              
+
               <SelectPages
-                title={t('bulkSelection.lastNPages.title', 'Last N Pages')}
-                placeholder={t('bulkSelection.lastNPages.placeholder', 'Number of pages')}
+                title={t("bulkSelection.lastNPages.title", "Last N Pages")}
+                placeholder={t(
+                  "bulkSelection.lastNPages.placeholder",
+                  "Number of pages",
+                )}
                 onApply={handleLastNApply}
                 maxPages={maxPages}
                 validationFn={validatePositiveNumber}
               />
-              
+
               <SelectPages
-                title={t('bulkSelection.everyNthPage.title', 'Every Nth Page')}
-                placeholder={t('bulkSelection.everyNthPage.placeholder', 'Step size')}
+                title={t("bulkSelection.everyNthPage.title", "Every Nth Page")}
+                placeholder={t(
+                  "bulkSelection.everyNthPage.placeholder",
+                  "Step size",
+                )}
                 onApply={handleEveryNthApply}
                 maxPages={maxPages}
               />
             </Flex>
-            
+
             {/* Operators row at bottom */}
             <OperatorsSection
               csvInput={csvInput}

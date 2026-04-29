@@ -6,8 +6,8 @@
     "lint:css:fix": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
   },
   "devDependencies": {
-    "@stylistic/stylelint-plugin": "^4.0.0",
-    "stylelint": "^17.4.0",
+    "@stylistic/stylelint-plugin": "^5.1.0",
+    "stylelint": "^17.8.0",
     "stylelint-config-standard": "^40.0.0"
   }
 }

@@ -1,12 +1,22 @@
-import { useCallback, useMemo, useState } from 'react';
-import { Alert, Badge, Button, Divider, Group, Loader, Stack, Text, SegmentedControl } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import type { SignatureValidationReportEntry } from '@app/types/validateSignature';
-import type { ValidateSignatureOperationHook } from '@app/hooks/tools/validateSignature/useValidateSignatureOperation';
-import '@app/components/tools/validateSignature/reportView/styles.css';
-import FitText from '@app/components/shared/FitText';
-import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
-import { downloadFile } from '@app/services/downloadService';
+import { useCallback, useMemo, useState } from "react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  SegmentedControl,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import type { SignatureValidationReportEntry } from "@app/types/validateSignature";
+import type { ValidateSignatureOperationHook } from "@app/hooks/tools/validateSignature/useValidateSignatureOperation";
+import "@app/components/tools/validateSignature/reportView/styles.css";
+import FitText from "@app/components/shared/FitText";
+import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
+import { downloadFile } from "@app/services/downloadService";
 
 interface ValidateSignatureResultsProps {
   operation: ValidateSignatureOperationHook;
@@ -56,28 +66,41 @@ const ValidateSignatureResults = ({
   const { t } = useTranslation();
   const summary = useFileSummary(results);
 
-  const pdfFile = useMemo(() => findFileByExtension(operation.files, '.pdf'), [operation.files]);
-  const csvFile = useMemo(() => findFileByExtension(operation.files, '.csv'), [operation.files]);
-  const jsonFile = useMemo(() => findFileByExtension(operation.files, '.json'), [operation.files]);
+  const pdfFile = useMemo(
+    () => findFileByExtension(operation.files, ".pdf"),
+    [operation.files],
+  );
+  const csvFile = useMemo(
+    () => findFileByExtension(operation.files, ".csv"),
+    [operation.files],
+  );
+  const jsonFile = useMemo(
+    () => findFileByExtension(operation.files, ".json"),
+    [operation.files],
+  );
 
-  const [selectedType, setSelectedType] = useState<'pdf' | 'csv' | 'json'>('pdf');
+  const [selectedType, setSelectedType] = useState<"pdf" | "csv" | "json">(
+    "pdf",
+  );
 
   const selectedFile = useMemo(() => {
-    if (selectedType === 'pdf') return pdfFile ?? null;
-    if (selectedType === 'csv') return csvFile ?? null;
+    if (selectedType === "pdf") return pdfFile ?? null;
+    if (selectedType === "csv") return csvFile ?? null;
     return jsonFile ?? null;
   }, [selectedType, pdfFile, csvFile, jsonFile]);
 
   const selectedDownloadLabel = useMemo(() => {
-    if (selectedType === 'pdf') return t('validateSignature.downloadPdf', 'Download PDF Report');
-    if (selectedType === 'csv') return t('validateSignature.downloadCsv', 'Download CSV');
-    return t('validateSignature.downloadJson', 'Download JSON');
+    if (selectedType === "pdf")
+      return t("validateSignature.downloadPdf", "Download PDF Report");
+    if (selectedType === "csv")
+      return t("validateSignature.downloadCsv", "Download CSV");
+    return t("validateSignature.downloadJson", "Download JSON");
   }, [selectedType, t]);
 
   const downloadTypeOptions = [
-    { label: t('validateSignature.downloadType.pdf', 'PDF'), value: 'pdf' },
-    { label: t('validateSignature.downloadType.csv', 'CSV'), value: 'csv' },
-    { label: t('validateSignature.downloadType.json', 'JSON'), value: 'json' },
+    { label: t("validateSignature.downloadType.pdf", "PDF"), value: "pdf" },
+    { label: t("validateSignature.downloadType.csv", "CSV"), value: "csv" },
+    { label: t("validateSignature.downloadType.json", "JSON"), value: "json" },
   ];
 
   const handleDownload = useCallback((file: File) => {
@@ -89,15 +112,26 @@ const ValidateSignatureResults = ({
     return (
       <Group justify="center" gap="sm" py="md">
         <Loader size="sm" />
-        <Text>{t('validateSignature.processing', 'Validating signatures...')}</Text>
+        <Text>
+          {t("validateSignature.processing", "Validating signatures...")}
+        </Text>
       </Group>
     );
   }
 
   if (!isLoading && results.length === 0) {
     return (
-      <Alert color="gray" variant="light" title={t('validateSignature.results', 'Validation Results')}>
-        <Text size="sm">{t('validateSignature.noResults', 'Run the validation to generate a report.')}</Text>
+      <Alert
+        color="gray"
+        variant="light"
+        title={t("validateSignature.results", "Validation Results")}
+      >
+        <Text size="sm">
+          {t(
+            "validateSignature.noResults",
+            "Run the validation to generate a report.",
+          )}
+        </Text>
       </Alert>
     );
   }
@@ -109,7 +143,9 @@ const ValidateSignatureResults = ({
       {isLoading && results.length > 0 && (
         <Group justify="center" gap="xs">
           <Loader size="xs" />
-          <Text size="sm">{t('validateSignature.finalizing', 'Preparing downloads...')}</Text>
+          <Text size="sm">
+            {t("validateSignature.finalizing", "Preparing downloads...")}
+          </Text>
         </Group>
       )}
       {errorMessage && (
@@ -120,62 +156,94 @@ const ValidateSignatureResults = ({
 
       <Group gap="sm">
         <Badge color="blue" variant="light">
-          {t('validateSignature.report.filesEvaluated', '{{count}} files evaluated', {
-            count: summary.fileCount,
-          })}
+          {t(
+            "validateSignature.report.filesEvaluated",
+            "{{count}} files evaluated",
+            {
+              count: summary.fileCount,
+            },
+          )}
         </Badge>
         <Badge color="teal" variant="light">
-          {t('validateSignature.report.signaturesFound', '{{count}} signatures detected', {
-            count: summary.signatureCount,
-          })}
+          {t(
+            "validateSignature.report.signaturesFound",
+            "{{count}} signatures detected",
+            {
+              count: summary.signatureCount,
+            },
+          )}
         </Badge>
         {summary.signatureCount > 0 && (
           <Badge color="green" variant="light">
-            {t('validateSignature.report.signaturesValid', '{{count}} fully valid', {
-              count: summary.fullyValidCount,
-            })}
+            {t(
+              "validateSignature.report.signaturesValid",
+              "{{count}} fully valid",
+              {
+                count: summary.fullyValidCount,
+              },
+            )}
           </Badge>
         )}
       </Group>
 
-      <Stack gap="sm" style={{ maxHeight: '20rem', overflowY: 'auto' }}>
+      <Stack gap="sm" style={{ maxHeight: "20rem", overflowY: "auto" }}>
         {results.map((result) => {
           const hasError = Boolean(result.error);
           const hasSignatures = result.signatures.length > 0;
-          const allValid = hasSignatures && result.signatures.every((signature) => signature.valid);
+          const allValid =
+            hasSignatures &&
+            result.signatures.every((signature) => signature.valid);
           const badgeLabel = hasError
-            ? t('validateSignature.status.invalid', 'Invalid')
+            ? t("validateSignature.status.invalid", "Invalid")
             : hasSignatures
-            ? allValid
-              ? t('validateSignature.status.valid', 'Valid')
-              : t('validateSignature.status.invalid', 'Invalid')
-            : t('validateSignature.noSignaturesShort', 'No signatures');
+              ? allValid
+                ? t("validateSignature.status.valid", "Valid")
+                : t("validateSignature.status.invalid", "Invalid")
+              : t("validateSignature.noSignaturesShort", "No signatures");
           const badgeClass = hasError
-            ? 'status-badge status-badge--invalid'
+            ? "status-badge status-badge--invalid"
             : hasSignatures
-            ? allValid
-              ? 'status-badge status-badge--valid'
-              : 'status-badge status-badge--warning'
-            : 'status-badge status-badge--neutral';
+              ? allValid
+                ? "status-badge status-badge--valid"
+                : "status-badge status-badge--warning"
+              : "status-badge status-badge--neutral";
 
           return (
-            <Stack key={result.fileId} gap={4} p="xs" style={{ borderLeft: '2px solid var(--mantine-color-gray-4)' }}>
+            <Stack
+              key={result.fileId}
+              gap={4}
+              p="xs"
+              style={{ borderLeft: "2px solid var(--mantine-color-gray-4)" }}
+            >
               <Group justify="space-between" align="flex-start">
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <FitText text={result.fileName} lines={2} as="div" minimumFontScale={0.5} style={{ fontWeight: 600 }} />
+                  <FitText
+                    text={result.fileName}
+                    lines={2}
+                    as="div"
+                    minimumFontScale={0.5}
+                    style={{ fontWeight: 600 }}
+                  />
                 </div>
                 <Badge className={badgeClass} variant="light">
                   {badgeLabel}
                 </Badge>
               </Group>
               <Text size="xs" c="dimmed">
-                {t('validateSignature.report.signatureCountLabel', '{{count}} signatures', {
-                  count: result.signatures.length,
-                })}
+                {t(
+                  "validateSignature.report.signatureCountLabel",
+                  "{{count}} signatures",
+                  {
+                    count: result.signatures.length,
+                  },
+                )}
               </Text>
               {!result.error && result.signatures.length === 0 && (
                 <Text size="xs" c="dimmed">
-                  {t('validateSignature.noSignatures', 'No digital signatures found in this document')}
+                  {t(
+                    "validateSignature.noSignatures",
+                    "No digital signatures found in this document",
+                  )}
                 </Text>
               )}
             </Stack>
@@ -187,11 +255,11 @@ const ValidateSignatureResults = ({
 
       <Stack gap="xs">
         <Text size="sm" fw={600}>
-          {t('validateSignature.report.downloads', 'Downloads')}
+          {t("validateSignature.report.downloads", "Downloads")}
         </Text>
         <SegmentedControl
           value={selectedType}
-          onChange={(v) => setSelectedType(v as 'pdf' | 'csv' | 'json')}
+          onChange={(v) => setSelectedType(v as "pdf" | "csv" | "json")}
           data={downloadTypeOptions}
         />
         <Button
@@ -202,9 +270,12 @@ const ValidateSignatureResults = ({
         >
           {selectedDownloadLabel}
         </Button>
-        {selectedType === 'pdf' && !pdfFile && (
+        {selectedType === "pdf" && !pdfFile && (
           <Text size="xs" c="dimmed">
-            {t('validateSignature.report.noPdf', 'PDF report will be available after a successful validation.')}
+            {t(
+              "validateSignature.report.noPdf",
+              "PDF report will be available after a successful validation.",
+            )}
           </Text>
         )}
       </Stack>
