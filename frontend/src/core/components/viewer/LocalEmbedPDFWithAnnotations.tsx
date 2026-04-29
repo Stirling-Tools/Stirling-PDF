@@ -92,6 +92,9 @@ function InteractionPauseBridge({
 
 const DOCUMENT_NAME = "stirling-pdf-signing-viewer";
 
+const TRANSPARENT_PIXEL_PNG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
 export interface SignaturePreview {
   id: string;
   pageIndex: number;
@@ -101,6 +104,8 @@ export interface SignaturePreview {
   height: number;
   signatureData: string; // Base64 PNG image
   signatureType: "canvas" | "image" | "text";
+  /** When set to certificate, the overlay is a resizable placement box (no image). */
+  kind?: "wet" | "certificate";
   color?: string; // Per-participant color (rgb(...) string); falls back to default blue
   participantName?: string; // Shown in tooltip on hover
 }
@@ -110,6 +115,10 @@ interface LocalEmbedPDFWithAnnotationsProps {
   url?: string | null;
   onAnnotationChange?: (annotations: SignaturePreview[]) => void;
   placementMode?: boolean;
+  /** Wet signatures need drawn/uploaded image data; certificate uses a plain placement box. */
+  placementAppearance?: "wet" | "certificate";
+  /** When set to 1, a new placement replaces the previous preview (e.g. certificate widget). */
+  maxSignaturePreviews?: number;
   signatureData?: string;
   signatureType?: "canvas" | "image" | "text";
   onPlaceSignature?: (
@@ -148,6 +157,8 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
       url,
       onAnnotationChange,
       placementMode = false,
+      placementAppearance = "wet",
+      maxSignaturePreviews,
       signatureData,
       signatureType,
       onPlaceSignature,
@@ -165,6 +176,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
     // State for signature preview overlays (support multiple)
     const [signaturePreviews, setSignaturePreviews] =
       useState<SignaturePreview[]>(initialSignatures);
+
+    const placementAllowsWithoutImage = placementAppearance === "certificate";
+    const effectiveSignatureData =
+      placementAppearance === "certificate"
+        ? (signatureData ?? TRANSPARENT_PIXEL_PNG)
+        : signatureData;
 
     // Track if a drag operation just occurred to prevent click from firing
     const isDraggingRef = useRef(false);
@@ -501,7 +518,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                             onDrop={(e) => e.preventDefault()}
                             onDragOver={(e) => e.preventDefault()}
                             onMouseMove={(e) => {
-                              if (!placementMode || !signatureData) return;
+                              if (
+                                !placementMode ||
+                                (!placementAllowsWithoutImage && !signatureData)
+                              )
+                                return;
                               const rect =
                                 e.currentTarget.getBoundingClientRect();
                               setCursorOnPage({
@@ -518,7 +539,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                             onClick={(e) => {
                               if (isDraggingRef.current) return;
 
-                              if (placementMode && onPlaceSignature) {
+                              if (
+                                placementMode &&
+                                (placementAllowsWithoutImage || signatureData)
+                              ) {
                                 const rect =
                                   e.currentTarget.getBoundingClientRect();
                                 // Store as fractions (0–1) of the rendered page so overlays
@@ -536,21 +560,29 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                   Math.min(rawY - sigHeight / 2, 1 - sigHeight),
                                 );
 
-                                const newPreview = {
+                                const newPreview: SignaturePreview = {
                                   id: `sig-preview-${Date.now()}-${Math.random()}`,
                                   pageIndex,
                                   x,
                                   y,
                                   width: sigWidth,
                                   height: sigHeight,
-                                  signatureData: signatureData || "",
+                                  signatureData:
+                                    placementAppearance === "certificate"
+                                      ? TRANSPARENT_PIXEL_PNG
+                                      : signatureData || "",
                                   signatureType: signatureType || "image",
+                                  kind:
+                                    placementAppearance === "certificate"
+                                      ? "certificate"
+                                      : "wet",
                                 };
-                                setSignaturePreviews((prev) => [
-                                  ...prev,
-                                  newPreview,
-                                ]);
-                                onPlaceSignature(
+                                setSignaturePreviews((prev) =>
+                                  maxSignaturePreviews === 1
+                                    ? [newPreview]
+                                    : [...prev, newPreview],
+                                );
+                                onPlaceSignature?.(
                                   newPreview.id,
                                   pageIndex,
                                   x * width,
@@ -589,7 +621,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                 (preview) => preview.pageIndex === pageIndex,
                               )
                               .map((preview) => {
-                                if (!preview.signatureData) return null;
+                                if (
+                                  !preview.signatureData &&
+                                  preview.kind !== "certificate"
+                                )
+                                  return null;
                                 const color =
                                   preview.color ?? "rgb(0, 122, 204)";
                                 const colorOpacity = (opacity: number) =>
@@ -753,16 +789,39 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                               }
                                         }
                                       >
-                                        <img
-                                          src={preview.signatureData}
-                                          alt="Signature preview"
-                                          style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "contain",
-                                            pointerEvents: "none",
-                                          }}
-                                        />
+                                        {preview.kind === "certificate" ? (
+                                          <Center
+                                            style={{
+                                              width: "100%",
+                                              height: "100%",
+                                              pointerEvents: "none",
+                                            }}
+                                          >
+                                            <Text
+                                              size="xs"
+                                              ta="center"
+                                              fw={600}
+                                              c="dimmed"
+                                              style={{
+                                                lineHeight: 1.2,
+                                                padding: 4,
+                                              }}
+                                            >
+                                              Digital signature
+                                            </Text>
+                                          </Center>
+                                        ) : (
+                                          <img
+                                            src={preview.signatureData}
+                                            alt="Signature preview"
+                                            style={{
+                                              width: "100%",
+                                              height: "100%",
+                                              objectFit: "contain",
+                                              pointerEvents: "none",
+                                            }}
+                                          />
+                                        )}
 
                                         {/* Resize handles */}
                                         {[
@@ -949,10 +1008,41 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
 
                             {/* Hover preview: ghost signature following cursor in placement mode */}
                             {placementMode &&
-                              signatureData &&
-                              cursorOnPage?.pageIndex === pageIndex && (
+                              (placementAllowsWithoutImage || signatureData) &&
+                              cursorOnPage?.pageIndex === pageIndex &&
+                              (placementAppearance === "certificate" ? (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    left: Math.max(
+                                      0,
+                                      Math.min(
+                                        cursorOnPage.x - 75,
+                                        width - 150,
+                                      ),
+                                    ),
+                                    top: Math.max(
+                                      0,
+                                      Math.min(
+                                        cursorOnPage.y - 37.5,
+                                        height - 75,
+                                      ),
+                                    ),
+                                    width: 150,
+                                    height: 75,
+                                    opacity: 0.55,
+                                    pointerEvents: "none",
+                                    border:
+                                      "2px dashed rgba(30, 136, 229, 0.85)",
+                                    borderRadius: "4px",
+                                    backgroundColor:
+                                      "rgba(30, 136, 229, 0.08)",
+                                    zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
+                                  }}
+                                />
+                              ) : (
                                 <img
-                                  src={signatureData}
+                                  src={effectiveSignatureData}
                                   alt=""
                                   style={{
                                     position: "absolute",
@@ -981,7 +1071,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                     zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
                                   }}
                                 />
-                              )}
+                              ))}
                           </div>
                         </PagePointerProvider>
                       </Rotate>

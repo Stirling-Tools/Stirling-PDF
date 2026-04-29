@@ -128,7 +128,11 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
+            Boolean showLogo,
+            Double signatureRectX,
+            Double signatureRectY,
+            Double signatureRectWidth,
+            Double signatureRectHeight) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -139,8 +143,17 @@ public class CertSignController {
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                    PDPage page = doc.getPage(pageNumber);
+                    PDRectangle widgetRect =
+                            resolveVisibleSignatureRectangle(
+                                    page,
+                                    signatureRectX,
+                                    signatureRectY,
+                                    signatureRectWidth,
+                                    signatureRectHeight);
                     signatureOptions.setVisualSignature(
-                            instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                            instance.createVisibleSignature(
+                                    doc, signature, pageNumber, showLogo, widgetRect));
                     signatureOptions.setPage(pageNumber);
 
                     doc.addSignature(signature, instance, signatureOptions);
@@ -153,6 +166,55 @@ public class CertSignController {
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
         }
+    }
+
+    /**
+     * Builds the signature widget rectangle in PDF user space (bottom-left origin), or returns the
+     * legacy default (200×50 pt at the page origin) when {@code rect} fractions are not
+     * provided.
+     *
+     * <p>When provided, {@code x}/{@code y}/{@code width}/{@code height} are fractions of the page
+     * media box with a <em>top-left</em> origin for {@code x}/{@code y}, matching wet-signature
+     * metadata in this project.
+     */
+    static PDRectangle resolveVisibleSignatureRectangle(
+            PDPage page,
+            Double fracX,
+            Double fracY,
+            Double fracW,
+            Double fracH) {
+        int setCount = 0;
+        if (fracX != null) setCount++;
+        if (fracY != null) setCount++;
+        if (fracW != null) setCount++;
+        if (fracH != null) setCount++;
+        if (setCount == 0) {
+            return new PDRectangle(0, 0, 200, 50);
+        }
+        if (setCount != 4) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "signature rectangle: all of signatureRectX, signatureRectY,"
+                            + " signatureRectWidth, signatureRectHeight must be provided together");
+        }
+        float pageWidth = page.getMediaBox().getWidth();
+        float pageHeight = page.getMediaBox().getHeight();
+        float xTop = (float) (clampFraction(fracX) * pageWidth);
+        float yTop = (float) (clampFraction(fracY) * pageHeight);
+        float w = (float) (clampSizeFraction(fracW) * pageWidth);
+        float h = (float) (clampSizeFraction(fracH) * pageHeight);
+        float llx = xTop;
+        float lly = pageHeight - yTop - h;
+        return new PDRectangle(llx, lly, w, h);
+    }
+
+    private static double clampFraction(Double v) {
+        return Math.max(0.0, Math.min(1.0, v));
+    }
+
+    private static double clampSizeFraction(Double v) {
+        return Math.max(0.01, Math.min(1.0, v));
     }
 
     @AutoJobPostMapping(
@@ -184,6 +246,10 @@ public class CertSignController {
         // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
         Boolean showLogo = request.getShowLogo();
+        Double signatureRectX = request.getSignatureRectX();
+        Double signatureRectY = request.getSignatureRectY();
+        Double signatureRectWidth = request.getSignatureRectWidth();
+        Double signatureRectHeight = request.getSignatureRectHeight();
 
         if (StringUtils.isBlank(certType)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -263,7 +329,11 @@ public class CertSignController {
                     name,
                     location,
                     reason,
-                    showLogo);
+                    showLogo,
+                    signatureRectX,
+                    signatureRectY,
+                    signatureRectWidth,
+                    signatureRectHeight);
         } catch (IOException e) {
             signedOut.close();
             throw e;
@@ -334,7 +404,11 @@ public class CertSignController {
         }
 
         public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
+                PDDocument srcDoc,
+                PDSignature signature,
+                Integer pageNumber,
+                Boolean showLogo,
+                PDRectangle widgetRect)
                 throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
@@ -350,7 +424,7 @@ public class CertSignController {
                 acroForm.getCOSObject().setDirect(true);
                 acroFormFields.add(signatureField);
 
-                PDRectangle rect = new PDRectangle(0, 0, 200, 50);
+                PDRectangle rect = widgetRect;
 
                 widget.setRectangle(rect);
 
@@ -360,8 +434,9 @@ public class CertSignController {
                 PDResources res = new PDResources();
                 form.setResources(res);
                 form.setFormType(1);
-                PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
-                float height = bbox.getHeight();
+                float boxW = rect.getWidth();
+                float boxH = rect.getHeight();
+                PDRectangle bbox = new PDRectangle(boxW, boxH);
                 form.setBBox(bbox);
                 PDFont font = new PDType1Font(FontName.TIMES_BOLD);
 
@@ -372,7 +447,15 @@ public class CertSignController {
                 appearance.setNormalAppearance(appearanceStream);
                 widget.setAppearance(appearance);
 
+                final float logicalW = 200f;
+                final float logicalH = 50f;
+                float scaleX = boxW / logicalW;
+                float scaleY = boxH / logicalH;
+
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
+                    cs.saveGraphicsState();
+                    cs.transform(Matrix.getScaleInstance(scaleX, scaleY));
+
                     if (Boolean.TRUE.equals(showLogo)) {
                         cs.saveGraphicsState();
                         PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
@@ -386,13 +469,13 @@ public class CertSignController {
                         cs.restoreGraphicsState();
                     }
 
-                    // show text
+                    // show text (coordinates in logical 200×50 space)
                     float fontSize = 10;
                     float leading = fontSize * 1.5f;
                     cs.beginText();
                     cs.setFont(font, fontSize);
                     cs.setNonStrokingColor(Color.black);
-                    cs.newLineAtOffset(fontSize, height - leading);
+                    cs.newLineAtOffset(fontSize, logicalH - leading);
                     cs.setLeading(leading);
 
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
@@ -412,6 +495,7 @@ public class CertSignController {
                     cs.showText(reason);
 
                     cs.endText();
+                    cs.restoreGraphicsState();
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
