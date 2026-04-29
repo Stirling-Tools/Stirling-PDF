@@ -75,3 +75,9 @@ code {
 .viewer-file-tab[data-active] {
   background-color: rgba(147, 197, 253, 0.5);
 }
+
+/* Prevent browser pinch-to-zoom on PDF viewer - let PDF.js handle zoom */
+#viewerContainer,
+.pdfViewer {
+  touch-action: pan-x pan-y;
+}
