@@ -73,7 +73,11 @@ class ToolDiscovery:
         for path, path_item in sorted(self.spec.get("paths", {}).items()):
             if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
                 continue
-            properties = self._get_request_properties(path_item)
+            body_props = self._get_request_properties(path_item) or {}
+            query_props = self._get_query_parameters(path_item)
+            # Body properties win on name collision — body is the canonical param source
+            # for the existing tools; query params are additive.
+            properties = {**query_props, **body_props}
             if not properties:
                 continue
             clean_props = self._filter_properties(properties)
@@ -126,6 +130,26 @@ class ToolDiscovery:
                 if schema:
                     return self._resolve_ref(schema).get("properties")
         return None
+
+    def _get_query_parameters(self, path_item: dict[str, Any]) -> dict[str, Any]:
+        """Extract query parameters as a property map — AI tools expose their main
+        inputs (e.g. ``prompt``, ``tolerance``) here rather than in the request body,
+        and a handful of converters use query strings alongside multipart files.
+        """
+        post = path_item.get("post") or {}
+        props: dict[str, Any] = {}
+        for param in post.get("parameters") or []:
+            if param.get("in") != "query":
+                continue
+            name = param.get("name")
+            schema = param.get("schema")
+            if not name or not schema:
+                continue
+            resolved = dict(self._resolve_ref(schema))
+            if "description" not in resolved and param.get("description"):
+                resolved["description"] = param["description"]
+            props[name] = resolved
+        return props
 
     def _filter_properties(self, properties: dict[str, Any]) -> dict[str, Any]:
         """Remove base-class fields and binary upload fields, resolving any $refs."""
@@ -246,7 +270,7 @@ def main() -> None:
         raise SystemExit(f"OpenAPI spec not found at {spec_path}\nRun 'task engine:tool-models' to generate it.")
     output_path = Path(args.output)
 
-    with open(spec_path) as f:
+    with open(spec_path, encoding="utf-8") as f:
         spec = json.load(f)
 
     result = ToolDiscovery(spec).discover()
@@ -255,7 +279,7 @@ def main() -> None:
 
     print(f"Generated {len(result.tools)} tool models from {spec_path.name}")
     for tool in result.tools:
-        print(f"  {tool.enum_name}: {tool.path} → {tool.class_name}")
+        print(f"  {tool.enum_name}: {tool.path} -> {tool.class_name}")
 
 
 if __name__ == "__main__":

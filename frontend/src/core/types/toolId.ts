@@ -3,6 +3,11 @@ import {
   PROPRIETARY_SUPER_TOOL_IDS,
   PROPRIETARY_LINK_TOOL_IDS,
 } from "@app/types/proprietaryToolId";
+import {
+  PROTOTYPE_REGULAR_TOOL_IDS,
+  PROTOTYPE_SUPER_TOOL_IDS,
+  PROTOTYPE_LINK_TOOL_IDS,
+} from "@app/types/prototypeToolId";
 
 export type ToolKind = "regular" | "super" | "link";
 
@@ -72,16 +77,19 @@ export const CORE_LINK_TOOL_IDS = [
 export const REGULAR_TOOL_IDS = [
   ...CORE_REGULAR_TOOL_IDS,
   ...PROPRIETARY_REGULAR_TOOL_IDS,
+  ...PROTOTYPE_REGULAR_TOOL_IDS,
 ] as const;
 
 export const SUPER_TOOL_IDS = [
   ...CORE_SUPER_TOOL_IDS,
   ...PROPRIETARY_SUPER_TOOL_IDS,
+  ...PROTOTYPE_SUPER_TOOL_IDS,
 ] as const;
 
 export const LINK_TOOL_IDS = [
   ...CORE_LINK_TOOL_IDS,
   ...PROPRIETARY_LINK_TOOL_IDS,
+  ...PROTOTYPE_LINK_TOOL_IDS,
 ] as const;
 
 export const TOOL_IDS = [

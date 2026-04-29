@@ -34,11 +34,17 @@ import stirling.software.common.util.TempFileManager;
 @Slf4j
 public class InternalApiClient {
 
-    // Allowlist for internal dispatch. Matches a fixed namespace prefix,
+    // Allowlist for internal dispatch. Matches fixed namespace prefixes,
     // but rejects traversal (..), URL-encoding (%), query/fragment, backslashes, and any other
     // character that could alter the resolved endpoint on the local Spring server.
+    //
+    // The second alternation carves out `/api/v1/ai/tools/*` specifically — AI tools are
+    // dispatchable, but the broader `/api/v1/ai/` surface (orchestrate, health, etc.) is
+    // intentionally NOT permitted to avoid plan steps re-entering the orchestrator.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
-            Pattern.compile("^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$");
+            Pattern.compile(
+                    "^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$"
+                            + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;

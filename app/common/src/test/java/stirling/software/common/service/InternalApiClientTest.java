@@ -93,6 +93,49 @@ class InternalApiClientTest {
     }
 
     @Test
+    void postRejectsAiEndpointsOutsideToolsSubnamespace() {
+        // /api/v1/ai/orchestrate and other non-tool AI endpoints are not internally
+        // dispatchable. Only /api/v1/ai/tools/* and the general/misc/security/convert/filter
+        // namespaces are on the allowlist — letting a plan step re-enter /orchestrate would
+        // introduce recursion risk.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/ai/orchestrate", body));
+    }
+
+    @Test
+    void postAcceptsAiToolsSubnamespace() throws Exception {
+        // Agent tool paths like /api/v1/ai/tools/pdf-comment-agent are on the allowlist and
+        // should be dispatchable by the orchestrator's plan executor.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        Path tempPath = Files.createTempFile("internal-api-ai-tools-test", ".tmp");
+        TempFile tempFile = mock(TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFile.getFile()).thenReturn(tempPath.toFile());
+        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenReturn((RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
+                        })) {
+
+            ResponseEntity<Resource> response =
+                    client.post("/api/v1/ai/tools/pdf-comment-agent", body);
+
+            assertNotNull(response);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Test
     void postRejectsPathTraversal() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         assertThrows(

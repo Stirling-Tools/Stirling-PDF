@@ -6,7 +6,14 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ConversationMessage, ExtractedFileText, NeedContentResponse, ToolOperationStep, WorkflowOutcome
+from .common import (
+    ConversationMessage,
+    ExtractedFileText,
+    NeedContentResponse,
+    SupportedCapability,
+    ToolOperationStep,
+    WorkflowOutcome,
+)
 
 
 class PdfEditRequest(ApiModel):
@@ -21,6 +28,15 @@ class EditPlanResponse(ApiModel):
     summary: str
     rationale: str | None = None
     steps: list[ToolOperationStep]
+    resume_with: SupportedCapability | None = Field(
+        default=None,
+        description=(
+            "Optional: if set, Java runs the plan steps then re-invokes the orchestrator with"
+            " the captured tool reports attached as ToolReportArtifacts and"
+            " resume_with set to this capability. Used by meta-agents that need to digest a"
+            " specialist's output (e.g. pdf_review consulting math-auditor)."
+        ),
+    )
 
 
 class EditClarificationRequest(ApiModel):
