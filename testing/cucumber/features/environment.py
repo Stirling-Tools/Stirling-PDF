@@ -1,8 +1,11 @@
 import os
+import subprocess
 
 import requests
 
 _BASE_URL = "http://localhost:8080"
+_CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
+_REPORT_DIR = os.environ.get("TEST_REPORT_DIR", "")
 
 # Tags that indicate a scenario requires JWT Bearer auth to be functional.
 # These scenarios are skipped when the server has JWT disabled (V2=false).
@@ -44,6 +47,44 @@ def _check_jwt_available():
         return False
 
 
+def _get_docker_log_line_count():
+    if not _CONTAINER_NAME:
+        return 0
+    try:
+        result = subprocess.run(
+            ["docker", "logs", _CONTAINER_NAME],
+            capture_output=True, text=True, timeout=10,
+        )
+        return len(result.stdout.splitlines()) + len(result.stderr.splitlines())
+    except Exception:
+        return 0
+
+
+def _capture_docker_logs_window(start_line, scenario_name):
+    if not _CONTAINER_NAME or not _REPORT_DIR:
+        return
+    try:
+        result = subprocess.run(
+            ["docker", "logs", _CONTAINER_NAME],
+            capture_output=True, text=True, timeout=10,
+        )
+        all_lines = (result.stdout + result.stderr).splitlines()
+        window = all_lines[start_line:]
+        if not window:
+            return
+
+        safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in scenario_name)
+        log_path = os.path.join(_REPORT_DIR, f"scenario_{safe_name}.log")
+        with open(log_path, "w") as f:
+            f.write(f"=== Docker logs during: {scenario_name} ===\n")
+            f.write(f"Container: {_CONTAINER_NAME}\n")
+            f.write(f"Lines {start_line + 1}-{len(all_lines)} ({len(window)} lines)\n")
+            f.write("---\n")
+            f.write("\n".join(window[-200:]) + "\n")
+    except Exception:
+        pass
+
+
 def before_all(context):
     context.endpoint = None
     context.request_data = None
@@ -81,8 +122,14 @@ def before_scenario(context, scenario):
     # Stored value used by enterprise step definitions for dynamic URL composition
     context.stored_value = None
 
+    context._docker_log_line_count = _get_docker_log_line_count()
+
 
 def after_scenario(context, scenario):
+    if scenario.status == "failed":
+        start_line = getattr(context, "_docker_log_line_count", 0)
+        _capture_docker_logs_window(start_line, scenario.name)
+
     if hasattr(context, "files"):
         for file in context.files.values():
             try:

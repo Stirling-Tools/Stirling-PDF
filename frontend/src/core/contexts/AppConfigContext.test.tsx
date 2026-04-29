@@ -1,18 +1,21 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { waitFor, renderHook, act } from '@testing-library/react';
-import { AppConfigProvider, useAppConfig } from '@app/contexts/AppConfigContext';
-import apiClient from '@app/services/apiClient';
-import { ReactNode } from 'react';
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { waitFor, renderHook, act } from "@testing-library/react";
+import {
+  AppConfigProvider,
+  useAppConfig,
+} from "@app/contexts/AppConfigContext";
+import apiClient from "@app/services/apiClient";
+import { ReactNode } from "react";
 
 // Mock apiClient
-vi.mock('@app/services/apiClient');
+vi.mock("@app/services/apiClient");
 
-describe('AppConfigContext', () => {
+describe("AppConfigContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock window.location.pathname
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/' },
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/" },
       writable: true,
     });
   });
@@ -25,11 +28,11 @@ describe('AppConfigContext', () => {
     <AppConfigProvider>{children}</AppConfigProvider>
   );
 
-  it('should fetch and provide app config on non-auth pages', async () => {
+  it("should fetch and provide app config on non-auth pages", async () => {
     const mockConfig = {
       enableLogin: false,
-      appNameNavbar: 'Stirling PDF',
-      languages: ['en-US', 'en-GB'],
+      appNameNavbar: "Stirling PDF",
+      languages: ["en-US", "en-GB"],
     };
 
     vi.mocked(apiClient.get).mockResolvedValueOnce({
@@ -49,16 +52,16 @@ describe('AppConfigContext', () => {
       expect(result.current.error).toBeNull();
     });
 
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/config/app-config', {
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/config/app-config", {
       suppressErrorToast: true,
       skipAuthRedirect: true,
     });
   });
 
-  it('should skip fetch on auth pages and use default config', async () => {
+  it("should skip fetch on auth pages and use default config", async () => {
     // Mock being on login page
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/login' },
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/login" },
       writable: true,
     });
 
@@ -73,8 +76,8 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).not.toHaveBeenCalled();
   });
 
-  it('should handle 401 error gracefully', async () => {
-    const mockError = Object.assign(new Error('Unauthorized'), {
+  it("should handle 401 error gracefully", async () => {
+    const mockError = Object.assign(new Error("Unauthorized"), {
       response: { status: 401, data: {} },
     });
     vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
@@ -88,8 +91,8 @@ describe('AppConfigContext', () => {
     });
   });
 
-  it('should handle network errors', async () => {
-    const errorMessage = 'Network error occurred';
+  it("should handle network errors", async () => {
+    const errorMessage = "Network error occurred";
     const mockError = new Error(errorMessage);
     // Network errors don't have response property
     // Mock rejection for all retry attempts (default is 3 attempts)
@@ -107,9 +110,9 @@ describe('AppConfigContext', () => {
     });
   });
 
-  it('should skip fetch on signup page', async () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/signup' },
+  it("should skip fetch on signup page", async () => {
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/signup" },
       writable: true,
     });
 
@@ -123,9 +126,9 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).not.toHaveBeenCalled();
   });
 
-  it('should skip fetch on auth callback page', async () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/auth/callback' },
+  it("should skip fetch on auth callback page", async () => {
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/auth/callback" },
       writable: true,
     });
 
@@ -139,9 +142,9 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).not.toHaveBeenCalled();
   });
 
-  it('should skip fetch on invite accept page', async () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/invite/abc123' },
+  it("should skip fetch on invite accept page", async () => {
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/invite/abc123" },
       writable: true,
     });
 
@@ -155,15 +158,15 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).not.toHaveBeenCalled();
   });
 
-  it('should refetch config when jwt-available event is triggered', async () => {
+  it("should refetch config when jwt-available event is triggered", async () => {
     const initialConfig = {
       enableLogin: true,
-      appNameNavbar: 'Stirling PDF',
+      appNameNavbar: "Stirling PDF",
     };
 
     const updatedConfig = {
       enableLogin: true,
-      appNameNavbar: 'Stirling PDF',
+      appNameNavbar: "Stirling PDF",
       isAdmin: true,
       enableAnalytics: true,
     };
@@ -188,7 +191,7 @@ describe('AppConfigContext', () => {
 
     // Trigger jwt-available event wrapped in act
     await act(async () => {
-      window.dispatchEvent(new CustomEvent('jwt-available'));
+      window.dispatchEvent(new CustomEvent("jwt-available"));
       // Wait a tick for event handler to run
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
@@ -200,10 +203,10 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
 
-  it('should provide refetch function', async () => {
+  it("should provide refetch function", async () => {
     const mockConfig = {
       enableLogin: false,
-      appNameNavbar: 'Test App',
+      appNameNavbar: "Test App",
     };
 
     vi.mocked(apiClient.get).mockResolvedValue({
@@ -225,7 +228,7 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
 
-  it('should not fetch twice without force flag', async () => {
+  it("should not fetch twice without force flag", async () => {
     const mockConfig = {
       enableLogin: false,
     };
@@ -245,10 +248,10 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle initial config prop', async () => {
+  it("should handle initial config prop", async () => {
     const initialConfig = {
       enableLogin: false,
-      appNameNavbar: 'Initial App',
+      appNameNavbar: "Initial App",
     };
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
@@ -270,7 +273,7 @@ describe('AppConfigContext', () => {
     expect(apiClient.get).toHaveBeenCalled();
   });
 
-  it('should use suppressErrorToast for all config requests', async () => {
+  it("should use suppressErrorToast for all config requests", async () => {
     const mockConfig = { enableLogin: true };
 
     vi.mocked(apiClient.get).mockResolvedValueOnce({
@@ -281,7 +284,7 @@ describe('AppConfigContext', () => {
     renderHook(() => useAppConfig(), { wrapper });
 
     await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/config/app-config', {
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/config/app-config", {
         suppressErrorToast: true,
         skipAuthRedirect: true,
       });

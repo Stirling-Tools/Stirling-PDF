@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
+import { useState, useEffect, useRef } from "react";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 
 /**
  * Desktop implementation of useSelfHostedToolAvailability.
@@ -15,7 +15,7 @@ import { endpointAvailabilityService } from '@app/services/endpointAvailabilityS
  *  - Local backend port is not yet known
  */
 export function useSelfHostedToolAvailability(
-  tools: Array<{ id: string; endpoints?: string[] }>
+  tools: Array<{ id: string; endpoints?: string[] }>,
 ): Set<string> {
   const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
   // Keep a stable ref to the latest tools list to avoid unnecessary re-subscriptions
@@ -27,13 +27,13 @@ export function useSelfHostedToolAvailability(
 
     const computeUnavailableTools = async () => {
       const mode = await connectionModeService.getCurrentMode();
-      if (mode !== 'selfhosted') {
+      if (mode !== "selfhosted") {
         setUnavailableIds(new Set());
         return;
       }
 
       const { status } = selfHostedServerMonitor.getSnapshot();
-      if (status !== 'offline') {
+      if (status !== "offline") {
         // Idle or checking — not yet confirmed offline; don't mark anything unavailable
         if (!cancelled) setUnavailableIds(new Set());
         return;
@@ -49,20 +49,23 @@ export function useSelfHostedToolAvailability(
       // For each tool, check whether at least one of its endpoints is supported locally
       const unavailable = new Set<string>();
       await Promise.all(
-        toolsRef.current.map(async tool => {
+        toolsRef.current.map(async (tool) => {
           const endpoints = tool.endpoints ?? [];
           if (endpoints.length === 0) return; // No endpoints → always available
 
           const locallySupported = await Promise.all(
-            endpoints.map(ep =>
-              endpointAvailabilityService.isEndpointSupportedLocally(ep, localUrl)
-            )
+            endpoints.map((ep) =>
+              endpointAvailabilityService.isEndpointSupportedLocally(
+                ep,
+                localUrl,
+              ),
+            ),
           );
 
           if (!locallySupported.some(Boolean)) {
             unavailable.add(tool.id);
           }
-        })
+        }),
       );
 
       if (!cancelled) setUnavailableIds(unavailable);

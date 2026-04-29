@@ -1,23 +1,31 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '@app/auth/UseSession'
-import { useAutoAnonymousAuth } from '@app/hooks/useAutoAnonymousAuth'
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "@app/auth/UseSession";
+import { useAutoAnonymousAuth } from "@app/hooks/useAutoAnonymousAuth";
 
 interface RequireAuthProps {
-  fallbackPath?: string
+  fallbackPath?: string;
 }
 
-export function RequireAuth({ fallbackPath = '/login' }: RequireAuthProps) {
-  const { session, loading } = useAuth()
-  const location = useLocation()
-  const { isAutoAuthenticating } = useAutoAnonymousAuth()
+export function RequireAuth({ fallbackPath = "/login" }: RequireAuthProps) {
+  const { session, loading } = useAuth();
+  const location = useLocation();
+  const { isAutoAuthenticating } = useAutoAnonymousAuth();
 
   // Safe development-only auth bypass
-  const isLocalhost = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
-  const devBypassEnabled = Boolean(import.meta.env.DEV && isLocalhost && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true')
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+  const devBypassEnabled = Boolean(
+    import.meta.env.DEV &&
+    isLocalhost &&
+    import.meta.env.VITE_DEV_BYPASS_AUTH === "true",
+  );
 
   if (devBypassEnabled) {
-    console.warn('[RequireAuth] DEV BYPASS ACTIVE — allowing access without session on localhost')
-    return <Outlet />
+    console.warn(
+      "[RequireAuth] DEV BYPASS ACTIVE — allowing access without session on localhost",
+    );
+    return <Outlet />;
   }
 
   // Wait for both auth bootstrap and auto-anon to finish
@@ -29,16 +37,16 @@ export function RequireAuth({ fallbackPath = '/login' }: RequireAuthProps) {
           <p className="text-gray-600">Preparing your session…</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!session) {
     // Change the URL to /login
-    return <Navigate to={fallbackPath} replace state={{ from: location }} />
+    return <Navigate to={fallbackPath} replace state={{ from: location }} />;
   }
 
   // Render protected routes
-  return <Outlet />
+  return <Outlet />;
 }
 
-export default RequireAuth
+export default RequireAuth;

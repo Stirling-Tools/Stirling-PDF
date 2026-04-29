@@ -21,20 +21,20 @@ export const BILLING_CONFIG = {
   PLAN_PRICING_PRELOAD_THRESHOLD: 20,
 
   // Stripe lookup keys
-  PRO_PLAN_LOOKUP_KEY: 'plan:pro',
-  METER_LOOKUP_KEY: 'meter:overage',
+  PRO_PLAN_LOOKUP_KEY: "plan:pro",
+  METER_LOOKUP_KEY: "meter:overage",
 
   // Display formats
   CURRENCY_SYMBOLS: {
-    gbp: '£',
-    usd: '$',
-    eur: '€',
-    cny: '¥',
-    inr: '₹',
-    brl: 'R$',
-    idr: 'Rp',
-    jpy: '¥'
-  } as const
+    gbp: "£",
+    usd: "$",
+    eur: "€",
+    cny: "¥",
+    inr: "₹",
+    brl: "R$",
+    idr: "Rp",
+    jpy: "¥",
+  } as const,
 } as const;
 
 /**
@@ -49,8 +49,14 @@ export function getBillingConfig() {
  * @param currency Currency code (e.g., 'usd', 'gbp')
  * @param price Optional price override (defaults to BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT)
  */
-export function getFormattedOveragePrice(currency: string = 'usd', price?: number): string {
-  const symbol = BILLING_CONFIG.CURRENCY_SYMBOLS[currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS] || '$';
+export function getFormattedOveragePrice(
+  currency: string = "usd",
+  price?: number,
+): string {
+  const symbol =
+    BILLING_CONFIG.CURRENCY_SYMBOLS[
+      currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS
+    ] || "$";
   const amount = price ?? BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT;
   return `${symbol}${amount.toFixed(2)}`;
 }
@@ -59,5 +65,9 @@ export function getFormattedOveragePrice(currency: string = 'usd', price?: numbe
  * Get currency symbol from currency code
  */
 export function getCurrencySymbol(currency: string): string {
-  return BILLING_CONFIG.CURRENCY_SYMBOLS[currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS] || currency.toUpperCase();
+  return (
+    BILLING_CONFIG.CURRENCY_SYMBOLS[
+      currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS
+    ] || currency.toUpperCase()
+  );
 }

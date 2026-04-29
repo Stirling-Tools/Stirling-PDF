@@ -1,63 +1,4 @@
-/* Attachment Sidebar - Modern styling to match AllTools section */
-
-.attachment-sidebar {
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
-    color-mix(in srgb, var(--bg-background) 90%, transparent)
-  );
-  border-left: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
-  box-shadow: -2px 0 16px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%, transparent);
-  backdrop-filter: blur(12px);
-}
-
-/* Header Section */
-.attachment-sidebar__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 0.875rem;
-  background: var(--bg-toolbar);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.attachment-sidebar__header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.attachment-sidebar__header-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--mantine-color-blue-6);
-  font-size: 1.1rem;
-}
-
-/* Search Section */
-.attachment-sidebar__search {
-  background: var(--tool-panel-search-bg, var(--bg-toolbar));
-  border-bottom: 1px solid var(--tool-panel-search-border-bottom, var(--border-subtle));
-  padding-top: 0.75rem !important;
-}
-
-/* Content Section */
-.attachment-sidebar__content {
-  padding-top: 0.5rem !important;
-}
-
-.attachment-sidebar__empty-state,
-.attachment-sidebar__error {
-  padding: 2rem 1rem;
-  text-align: center;
-}
-
-.attachment-sidebar__loading {
-  padding: 2rem 1rem !important;
-}
+/* Attachment Sidebar - Attachment-specific styles (base styles in SidebarBase.css) */
 
 /* Attachment List */
 .attachment-list {
@@ -91,7 +32,11 @@
 
 .attachment-item:hover {
   background: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  border-color: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--text-primary) 20%,
+    var(--border-subtle)
+  );
   transform: translateX(2px);
 }
 
@@ -100,7 +45,8 @@
 }
 
 .attachment-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+  outline: 2px solid
+    color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
   outline-offset: 2px;
 }
 

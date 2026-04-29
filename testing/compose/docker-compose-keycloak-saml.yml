@@ -56,7 +56,7 @@ services:
       context: ../..
       dockerfile: docker/embedded/Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
       timeout: 10s
       retries: 30
@@ -66,6 +66,7 @@ services:
       - ../../../stirling/keycloak-saml-test/data:/usr/share/tessdata:rw
       - ../../../stirling/keycloak-saml-test/config:/configs:rw
       - ../../../stirling/keycloak-saml-test/logs:/logs:rw
+      - ../../../stirling/keycloak-saml-test/storage:/storage:rw
       - ./keycloak-saml-cert.pem:/app/keycloak-saml-cert.pem:ro
       - ./saml-private-key.key:/app/saml-private-key.key:ro
       - ./saml-public-cert.crt:/app/saml-public-cert.crt:ro
@@ -81,6 +82,18 @@ services:
       PREMIUM_KEY: "${PREMIUM_KEY:-00000000-0000-0000-0000-000000000000}"
       PREMIUM_ENABLED: "true"
       PREMIUM_PROFEATURES_SSOAUTOLOGIN: "${PREMIUM_PROFEATURES_SSOAUTOLOGIN:-false}"
+
+      # Storage + sharing (opt-in via start-saml-test.sh --with-storage)
+      STORAGE_ENABLED: "${STORAGE_ENABLED:-false}"
+      STORAGE_PROVIDER: "${STORAGE_PROVIDER:-local}"
+      STORAGE_LOCAL_BASEPATH: "${STORAGE_LOCAL_BASEPATH:-/storage}"
+      STORAGE_SHARING_ENABLED: "${STORAGE_SHARING_ENABLED:-false}"
+      STORAGE_SHARING_LINKENABLED: "${STORAGE_SHARING_LINKENABLED:-false}"
+      STORAGE_SHARING_EMAILENABLED: "${STORAGE_SHARING_EMAILENABLED:-false}"
+      STORAGE_SHARING_LINKEXPIRATIONDAYS: "${STORAGE_SHARING_LINKEXPIRATIONDAYS:-3}"
+      STORAGE_SIGNING_ENABLED: "${STORAGE_SIGNING_ENABLED:-false}"
+      # Required for share-link creation (FileStorageService.isShareLinksEnabled)
+      SYSTEM_FRONTENDURL: "${SYSTEM_FRONTENDURL:-}"
 
       # Debug Logging
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY_SAML2: DEBUG

@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useExportCapability } from '@embedpdf/plugin-export/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect } from "react";
+import { useExportCapability } from "@embedpdf/plugin-export/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * Component that runs inside EmbedPDF context and provides export functionality
@@ -14,16 +14,16 @@ export function ExportAPIBridge() {
   useEffect(() => {
     if (exportApi && documentReady) {
       // Register this bridge with ViewerContext
-      registerBridge('export', {
+      registerBridge("export", {
         state: {
           canExport: true,
         },
-        api: exportApi
+        api: exportApi,
       });
     }
 
     return () => {
-      registerBridge('export', null);
+      registerBridge("export", null);
     };
   }, [exportApi, documentReady, registerBridge]);
 

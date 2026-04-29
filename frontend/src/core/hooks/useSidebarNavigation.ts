@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
-import { useToolNavigation } from '@app/hooks/useToolNavigation';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
+import { useCallback } from "react";
+import { useToolNavigation } from "@app/hooks/useToolNavigation";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
 import { ToolId } from "@app/types/toolId";
 
 export interface SidebarNavigationProps {
@@ -29,24 +29,28 @@ export function useSidebarNavigation(): {
   }, []);
 
   const getHomeNavigation = useCallback((): SidebarNavigationProps => {
-    const href = '/'; // SSR-safe relative path
+    const href = "/"; // SSR-safe relative path
     return { href, onClick: defaultNavClick };
   }, [defaultNavClick]);
 
-  const getToolNavigation = useCallback((toolId: ToolId): SidebarNavigationProps | null => {
-    // Handle special nav sections that aren't tools
-    if (toolId === 'read') return { href: '/read', onClick: defaultNavClick };
-    if (toolId === 'automate') return { href: '/automate', onClick: defaultNavClick };
+  const getToolNavigation = useCallback(
+    (toolId: ToolId): SidebarNavigationProps | null => {
+      // Handle special nav sections that aren't tools
+      if (toolId === "read") return { href: "/read", onClick: defaultNavClick };
+      if (toolId === "automate")
+        return { href: "/automate", onClick: defaultNavClick };
 
-    const tool = getSelectedTool(toolId);
-    if (!tool) return null;
+      const tool = getSelectedTool(toolId);
+      if (!tool) return null;
 
-    // Delegate to useToolNavigation for true tools
-    return getToolNavProps(toolId, tool);
-  }, [getToolNavProps, getSelectedTool, defaultNavClick]);
+      // Delegate to useToolNavigation for true tools
+      return getToolNavProps(toolId, tool);
+    },
+    [getToolNavProps, getSelectedTool, defaultNavClick],
+  );
 
   return {
     getHomeNavigation,
-    getToolNavigation
+    getToolNavigation,
   };
 }

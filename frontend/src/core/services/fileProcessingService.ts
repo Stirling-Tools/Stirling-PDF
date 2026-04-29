@@ -4,9 +4,9 @@
  * Called when files are added to FileContext, before any view sees them
  */
 
-import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { FileId } from '@app/types/file';
+import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { FileId } from "@app/types/file";
 
 export interface ProcessedFileMetadata {
   totalPages: number;
@@ -42,7 +42,9 @@ class FileProcessingService {
     // Check if we're already processing this file
     const existingOperation = this.processingCache.get(fileId);
     if (existingOperation) {
-      console.log(`📁 FileProcessingService: Using cached processing for ${file.name}`);
+      console.log(
+        `📁 FileProcessingService: Using cached processing for ${file.name}`,
+      );
       return existingOperation.promise;
     }
 
@@ -50,12 +52,16 @@ class FileProcessingService {
     const abortController = new AbortController();
 
     // Create processing promise
-    const processingPromise = this.performProcessing(file, fileId, abortController);
+    const processingPromise = this.performProcessing(
+      file,
+      fileId,
+      abortController,
+    );
 
     // Store operation with abort controller
     const operation: ProcessingOperation = {
       promise: processingPromise,
-      abortController
+      abortController,
     };
     this.processingCache.set(fileId, operation);
 
@@ -67,47 +73,58 @@ class FileProcessingService {
     return processingPromise;
   }
 
-  private async performProcessing(file: File, fileId: FileId, abortController: AbortController): Promise<FileProcessingResult> {
-    console.log(`📁 FileProcessingService: Starting processing for ${file.name} (${fileId})`);
+  private async performProcessing(
+    file: File,
+    fileId: FileId,
+    abortController: AbortController,
+  ): Promise<FileProcessingResult> {
+    console.log(
+      `📁 FileProcessingService: Starting processing for ${file.name} (${fileId})`,
+    );
 
     try {
       // Check for cancellation at start
       if (abortController.signal.aborted) {
-        throw new Error('Processing cancelled');
+        throw new Error("Processing cancelled");
       }
 
       let totalPages = 1;
       let thumbnailUrl: string | undefined;
 
       // Handle PDF files
-      if (file.type === 'application/pdf') {
+      if (file.type === "application/pdf") {
         // Read arrayBuffer once and reuse for both PDF.js and fallback
         const arrayBuffer = await file.arrayBuffer();
 
         // Check for cancellation after async operation
         if (abortController.signal.aborted) {
-          throw new Error('Processing cancelled');
+          throw new Error("Processing cancelled");
         }
 
         // Discover page count using PDF.js (most accurate)
         try {
           const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
             disableAutoFetch: true,
-            disableStream: true
+            disableStream: true,
           });
 
           totalPages = pdfDoc.numPages;
-          console.log(`📁 FileProcessingService: PDF.js discovered ${totalPages} pages for ${file.name}`);
+          console.log(
+            `📁 FileProcessingService: PDF.js discovered ${totalPages} pages for ${file.name}`,
+          );
 
           // Clean up immediately
           pdfWorkerManager.destroyDocument(pdfDoc);
 
           // Check for cancellation after PDF.js processing
           if (abortController.signal.aborted) {
-            throw new Error('Processing cancelled');
+            throw new Error("Processing cancelled");
           }
         } catch (pdfError) {
-          console.warn(`📁 FileProcessingService: PDF.js failed for ${file.name}, setting pages to 0:`, pdfError);
+          console.warn(
+            `📁 FileProcessingService: PDF.js failed for ${file.name}, setting pages to 0:`,
+            pdfError,
+          );
           totalPages = 0; // Unknown page count - UI will hide page count display
         }
       }
@@ -115,14 +132,19 @@ class FileProcessingService {
       // Generate page 1 thumbnail
       try {
         thumbnailUrl = await generateThumbnailForFile(file);
-        console.log(`📁 FileProcessingService: Generated thumbnail for ${file.name}`);
+        console.log(
+          `📁 FileProcessingService: Generated thumbnail for ${file.name}`,
+        );
 
         // Check for cancellation after thumbnail generation
         if (abortController.signal.aborted) {
-          throw new Error('Processing cancelled');
+          throw new Error("Processing cancelled");
         }
       } catch (thumbError) {
-        console.warn(`📁 FileProcessingService: Thumbnail generation failed for ${file.name}:`, thumbError);
+        console.warn(
+          `📁 FileProcessingService: Thumbnail generation failed for ${file.name}:`,
+          thumbError,
+        );
       }
 
       // Create page structure
@@ -130,29 +152,34 @@ class FileProcessingService {
         pageNumber: index + 1,
         thumbnail: index === 0 ? thumbnailUrl : undefined, // Only page 1 gets thumbnail initially
         rotation: 0,
-        splitBefore: false
+        splitBefore: false,
       }));
 
       const metadata: ProcessedFileMetadata = {
         totalPages,
         pages,
         thumbnailUrl, // For FileEditor display
-        lastProcessed: Date.now()
+        lastProcessed: Date.now(),
       };
 
-      console.log(`📁 FileProcessingService: Processing complete for ${file.name} - ${totalPages} pages`);
+      console.log(
+        `📁 FileProcessingService: Processing complete for ${file.name} - ${totalPages} pages`,
+      );
 
       return {
         success: true,
-        metadata
+        metadata,
       };
-
     } catch (error) {
-      console.error(`📁 FileProcessingService: Processing failed for ${file.name}:`, error);
+      console.error(
+        `📁 FileProcessingService: Processing failed for ${file.name}:`,
+        error,
+      );
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown processing error'
+        error:
+          error instanceof Error ? error.message : "Unknown processing error",
       };
     }
   }
@@ -178,7 +205,9 @@ class FileProcessingService {
     const operation = this.processingCache.get(fileId);
     if (operation) {
       operation.abortController.abort();
-      console.log(`📁 FileProcessingService: Cancelled processing for ${fileId}`);
+      console.log(
+        `📁 FileProcessingService: Cancelled processing for ${fileId}`,
+      );
       return true;
     }
     return false;
@@ -190,9 +219,13 @@ class FileProcessingService {
   cancelAllProcessing(): void {
     this.processingCache.forEach((operation, fileId) => {
       operation.abortController.abort();
-      console.log(`📁 FileProcessingService: Cancelled processing for ${fileId}`);
+      console.log(
+        `📁 FileProcessingService: Cancelled processing for ${fileId}`,
+      );
     });
-    console.log(`📁 FileProcessingService: Cancelled ${this.processingCache.size} processing operations`);
+    console.log(
+      `📁 FileProcessingService: Cancelled ${this.processingCache.size} processing operations`,
+    );
   }
 
   /**

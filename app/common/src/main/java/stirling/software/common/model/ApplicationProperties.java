@@ -58,6 +58,7 @@ public class ApplicationProperties {
     private Legal legal = new Legal();
     private Security security = new Security();
     private System system = new System();
+    private Storage storage = new Storage();
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
@@ -74,6 +75,7 @@ public class ApplicationProperties {
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
+    private AiEngine aiEngine = new AiEngine();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -150,6 +152,44 @@ public class ApplicationProperties {
     @Data
     public static class AutoPipeline {
         private String outputFolder;
+        private FileReadiness fileReadiness = new FileReadiness();
+
+        /**
+         * Configuration for the {@link stirling.software.common.util.FileReadinessChecker}.
+         * Controls how the pipeline determines whether a file is fully written and stable before
+         * processing begins.
+         */
+        @Data
+        public static class FileReadiness {
+            /**
+             * Master toggle. When {@code false} every readiness check is skipped and all files are
+             * considered immediately ready (preserves legacy behaviour).
+             */
+            private boolean enabled = true;
+
+            /**
+             * How long (in milliseconds) a file must remain unmodified before it is considered
+             * stable. Files modified more recently than this threshold are skipped and retried on
+             * the next scan cycle. Default: 5 000 ms (5 seconds).
+             */
+            private long settleTimeMillis = 5000;
+
+            /**
+             * How long (in milliseconds) to pause between two consecutive file-size reads when
+             * checking whether a file is still being written. If the size differs between the two
+             * reads the file is considered unstable. This catches active copies on Linux/macOS
+             * where advisory locking alone cannot detect a mid-copy file. Default: 500 ms.
+             */
+            private long sizeCheckDelayMillis = 500;
+
+            /**
+             * Optional list of file extensions (without the leading dot, case-insensitive) that are
+             * allowed through the readiness check. An empty list means all extensions are accepted.
+             * Example: {@code ["pdf", "tiff"]} will skip any file whose extension is not {@code
+             * pdf} or {@code tiff}.
+             */
+            private List<String> allowedExtensions = new java.util.ArrayList<>();
+        }
     }
 
     @Data
@@ -193,6 +233,13 @@ public class ApplicationProperties {
     }
 
     @Data
+    public static class AiEngine {
+        private boolean enabled = false;
+        private String url = "http://localhost:5001";
+        private int timeoutSeconds = 120;
+    }
+
+    @Data
     public static class Legal {
         private String termsAndConditions;
         private String privacyPolicy;
@@ -213,6 +260,7 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
+        private Timestamp timestamp = new Timestamp();
         private String xFrameOptions = "DENY";
 
         public Boolean isAltLogin() {
@@ -531,6 +579,12 @@ public class ApplicationProperties {
                 private boolean hardFail = false;
             }
         }
+
+        @Data
+        public static class Timestamp {
+            private String defaultTsaUrl = "http://timestamp.digicert.com";
+            private List<String> customTsaUrls = new ArrayList<>();
+        }
     }
 
     @Data
@@ -586,6 +640,41 @@ public class ApplicationProperties {
         public boolean isScarfEnabled() {
             // Treat null as enabled when analytics is enabled
             return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
+        }
+    }
+
+    @Data
+    public static class Storage {
+        private boolean enabled = false;
+        private String provider = "local";
+        private Local local = new Local();
+        private Quotas quotas = new Quotas();
+        private Sharing sharing = new Sharing();
+        private Signing signing = new Signing();
+
+        @Data
+        public static class Local {
+            private String basePath = InstallationPathConfig.getPath() + "storage";
+        }
+
+        @Data
+        public static class Sharing {
+            private boolean enabled = false;
+            private boolean linkEnabled = false;
+            private boolean emailEnabled = false;
+            private int linkExpirationDays = 3;
+        }
+
+        @Data
+        public static class Quotas {
+            private long maxStorageMbPerUser = -1;
+            private long maxStorageMbTotal = -1;
+            private long maxFileMb = -1;
+        }
+
+        @Data
+        public static class Signing {
+            private boolean enabled = false;
         }
     }
 
@@ -696,8 +785,7 @@ public class ApplicationProperties {
 
         @Override
         public String toString() {
-            return
-                    """
+            return """
             Driver {
               driverName='%s'
             }

@@ -1,7 +1,7 @@
 export enum TrappedStatus {
-  TRUE = 'True',
-  FALSE = 'False',
-  UNKNOWN = 'Unknown'
+  TRUE = "True",
+  FALSE = "False",
+  UNKNOWN = "Unknown",
 }
 
 export interface CustomMetadataEntry {

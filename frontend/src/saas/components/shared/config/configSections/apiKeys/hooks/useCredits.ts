@@ -6,31 +6,33 @@ import { isUserAnonymous } from "@app/auth/supabase";
 
 function coerceNumber(value: unknown, fallback = 0): number {
   const n = typeof value === "string" ? Number(value) : (value as number);
-  return Number.isFinite(n) ? (n as number) : fallback;
+  return Number.isFinite(n) ? n : fallback;
 }
 
-function normalizeCredits(raw: any): ApiCredits {
+function normalizeCredits(raw: Record<string, unknown>): ApiCredits {
   // Accept a variety of possible backend keys to be resilient
   return {
     weeklyCreditsRemaining: coerceNumber(
-      raw?.weeklyCreditsRemaining ?? raw?.weeklyRemaining ?? raw?.weekly_left
+      raw?.weeklyCreditsRemaining ?? raw?.weeklyRemaining ?? raw?.weekly_left,
     ),
     weeklyCreditsAllocated: coerceNumber(
-      raw?.weeklyCreditsAllocated ?? raw?.weeklyAllocated ?? raw?.weekly_total
+      raw?.weeklyCreditsAllocated ?? raw?.weeklyAllocated ?? raw?.weekly_total,
     ),
     boughtCreditsRemaining: coerceNumber(
-      raw?.boughtCreditsRemaining ?? raw?.boughtRemaining ?? raw?.bought_left
+      raw?.boughtCreditsRemaining ?? raw?.boughtRemaining ?? raw?.bought_left,
     ),
     totalBoughtCredits: coerceNumber(
-      raw?.totalBoughtCredits ?? raw?.boughtTotal ?? raw?.bought_total
+      raw?.totalBoughtCredits ?? raw?.boughtTotal ?? raw?.bought_total,
     ),
     totalAvailableCredits: coerceNumber(
-      raw?.totalAvailableCredits ?? raw?.totalRemaining ?? raw?.available_total
+      raw?.totalAvailableCredits ?? raw?.totalRemaining ?? raw?.available_total,
     ),
-    weeklyResetDate:
-      (raw?.weeklyResetDate ?? raw?.weeklyReset ?? raw?.reset_date) || "",
-    lastApiUsage:
-      (raw?.lastApiUsage ?? raw?.lastApiUse ?? raw?.last_used_at) || "",
+    weeklyResetDate: String(
+      raw?.weeklyResetDate ?? raw?.weeklyReset ?? raw?.reset_date ?? "",
+    ),
+    lastApiUsage: String(
+      raw?.lastApiUsage ?? raw?.lastApiUse ?? raw?.last_used_at ?? "",
+    ),
   };
 }
 
@@ -46,19 +48,21 @@ export function useCredits() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get("/api/v1/credits");
+      const res =
+        await apiClient.get<Record<string, unknown>>("/api/v1/credits");
       const normalized = normalizeCredits(res.data);
       // If backend returns an "empty" payload, keep data null so the UI stays in loading/skeleton
-      const isEmpty = !normalized.weeklyCreditsAllocated &&
-                      !normalized.weeklyCreditsRemaining &&
-                      !normalized.totalBoughtCredits &&
-                      !normalized.boughtCreditsRemaining &&
-                      !normalized.totalAvailableCredits &&
-                      !normalized.weeklyResetDate &&
-                      !normalized.lastApiUsage;
+      const isEmpty =
+        !normalized.weeklyCreditsAllocated &&
+        !normalized.weeklyCreditsRemaining &&
+        !normalized.totalBoughtCredits &&
+        !normalized.boughtCreditsRemaining &&
+        !normalized.totalAvailableCredits &&
+        !normalized.weeklyResetDate &&
+        !normalized.lastApiUsage;
       setData(isEmpty ? null : normalized);
-    } catch (e: any) {
-      setError(e);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e : new Error(String(e)));
     } finally {
       setIsLoading(false);
       setHasAttempted(true);
@@ -71,9 +75,13 @@ export function useCredits() {
     }
   }, [loading, session, hasAttempted, isAnonymous, fetchCredits]);
 
-  return { data, isLoading, error, refetch: fetchCredits, hasAttempted } as const;
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchCredits,
+    hasAttempted,
+  } as const;
 }
 
 export default useCredits;
-
-

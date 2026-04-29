@@ -4,9 +4,10 @@
  */
 
 export const CREDIT_EVENTS = {
-  EXHAUSTED: 'credits:exhausted',
-  INSUFFICIENT: 'credits:insufficient',
-  REFRESH_NEEDED: 'credits:refresh-needed',
+  EXHAUSTED: "credits:exhausted",
+  INSUFFICIENT: "credits:insufficient",
+  REFRESH_NEEDED: "credits:refresh-needed",
 } as const;
 
-export type CreditEventType = typeof CREDIT_EVENTS[keyof typeof CREDIT_EVENTS];
+export type CreditEventType =
+  (typeof CREDIT_EVENTS)[keyof typeof CREDIT_EVENTS];

@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { Group, useMantineColorScheme } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import { LogoIcon } from "@app/components/shared/LogoIcon";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import AppsIcon from '@mui/icons-material/AppsRounded';
+import AppsIcon from "@mui/icons-material/AppsRounded";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
@@ -31,9 +34,7 @@ type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const {
-    sidebarRefs,
-  } = useSidebarContext();
+  const { sidebarRefs } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
 
@@ -45,10 +46,10 @@ export default function HomePage() {
     readerMode,
     setLeftPanelView,
     toolAvailability,
+    customWorkbenchViews,
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
-  const { colorScheme } = useMantineColorScheme();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -69,7 +70,7 @@ export default function HomePage() {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
-    console.log('[HomePage] Navigation effect triggered:', {
+    console.log("[HomePage] Navigation effect triggered:", {
       prevCount,
       currentCount,
       currentWorkbench: navigationState.workbench,
@@ -80,19 +81,19 @@ export default function HomePage() {
       prevCount,
       currentCount,
       selectedToolKey,
-      navigationState.workbench
+      navigationState.workbench,
     );
 
-    console.log('[HomePage] Navigation action returned:', action);
+    console.log("[HomePage] Navigation action returned:", action);
 
     if (action) {
-      console.log('[HomePage] Applying navigation:', action);
+      console.log("[HomePage] Applying navigation:", action);
       actions.setWorkbench(action.workbench);
-      if (typeof action.activeFileIndex === 'number') {
+      if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
       }
     } else {
-      console.log('[HomePage] No navigation - staying in current workbench');
+      console.log("[HomePage] No navigation - staying in current workbench");
     }
 
     prevFileCountRef.current = currentCount;
@@ -104,10 +105,12 @@ export default function HomePage() {
     navigationState.workbench,
   ]);
 
+  const hideToolPanel =
+    customWorkbenchViews.find(
+      (v) => v.workbenchId === navigationState.workbench,
+    )?.hideToolPanel ?? false;
+
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = useLogoPath();
-  const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -156,8 +159,11 @@ export default function HomePage() {
       animationFrame = window.requestAnimationFrame(() => {
         const { scrollLeft, offsetWidth } = container;
         const threshold = offsetWidth / 2;
-        const nextView: MobileView = scrollLeft >= threshold ? "workbench" : "tools";
-        setActiveMobileView((current) => (current === nextView ? current : nextView));
+        const nextView: MobileView =
+          scrollLeft >= threshold ? "workbench" : "tools";
+        setActiveMobileView((current) =>
+          current === nextView ? current : nextView,
+        );
       });
     };
 
@@ -173,17 +179,25 @@ export default function HomePage() {
 
   // Automatically switch to workbench when read mode or multiTool is activated in mobile
   useEffect(() => {
-    if (isMobile && (readerMode || selectedToolKey === 'multiTool')) {
-      setActiveMobileView('workbench');
+    if (isMobile && (readerMode || selectedToolKey === "multiTool")) {
+      setActiveMobileView("workbench");
     }
   }, [isMobile, readerMode, selectedToolKey]);
 
+  // Automatically switch to workbench slide when a custom workbench (e.g. signing) is active on mobile.
+  // hideToolPanel is true for all custom workbenches that take over the full screen.
+  useEffect(() => {
+    if (isMobile && hideToolPanel) {
+      setActiveMobileView("workbench");
+    }
+  }, [isMobile, hideToolPanel]);
+
   // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
   useEffect(() => {
-    if (isMobile && activeMobileView === 'tools' && selectedTool) {
+    if (isMobile && activeMobileView === "tools" && selectedTool) {
       // Check if this is a workbench-only tool (has workbench but no component)
       if (selectedTool.workbench && !selectedTool.component) {
-        setLeftPanelView('toolPicker');
+        setLeftPanelView("toolPicker");
       }
     }
   }, [isMobile, activeMobileView, selectedTool, setLeftPanelView]);
@@ -191,14 +205,26 @@ export default function HomePage() {
   const baseUrl = useBaseUrl();
 
   // Update document meta when tool changes
-  const appName = config?.appNameNavbar || 'Stirling PDF';
+  const appName = config?.appNameNavbar || "Stirling PDF";
   useDocumentMeta({
     title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    description: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
+    description:
+      selectedTool?.description ||
+      t(
+        "app.description",
+        "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      ),
     ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    ogDescription: selectedTool?.description || t('app.description', 'The Free Adobe Acrobat alternative (10M+ Downloads)'),
-    ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
-    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl
+    ogDescription:
+      selectedTool?.description ||
+      t(
+        "app.description",
+        "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      ),
+    ogImage: selectedToolKey
+      ? `${baseUrl}/og_images/${selectedToolKey}.png`
+      : `${baseUrl}/og_images/home.png`,
+    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
   });
 
   // Note: File selection limits are now handled directly by individual tools
@@ -211,11 +237,18 @@ export default function HomePage() {
           <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
-                <img src={brandIconSrc} alt="" aria-hidden="true" className="mobile-brand-icon" />
-                <img src={brandTextSrc} alt={brandAltText} className="mobile-brand-text" />
+                <LogoIcon className="mobile-brand-icon" />
+                <Wordmark alt={brandAltText} className="mobile-brand-text" />
               </div>
             </div>
-            <div className="mobile-toggle-buttons" role="tablist" aria-label={t('home.mobile.viewSwitcher', 'Switch workspace view')}>
+            <div
+              className="mobile-toggle-buttons"
+              role="tablist"
+              aria-label={t(
+                "home.mobile.viewSwitcher",
+                "Switch workspace view",
+              )}
+            >
               <button
                 type="button"
                 role="tab"
@@ -223,7 +256,7 @@ export default function HomePage() {
                 className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
                 onClick={() => handleSelectMobileView("tools")}
               >
-                {t('home.mobile.tools', 'Tools')}
+                {t("home.mobile.tools", "Tools")}
               </button>
               <button
                 type="button"
@@ -232,20 +265,29 @@ export default function HomePage() {
                 className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
                 onClick={() => handleSelectMobileView("workbench")}
               >
-                {t('home.mobile.workspace', 'Workspace')}
+                {t("home.mobile.workspace", "Workspace")}
               </button>
             </div>
             <span className="mobile-toggle-hint">
-              {t('home.mobile.swipeHint', 'Swipe left or right to switch views')}
+              {t(
+                "home.mobile.swipeHint",
+                "Swipe left or right to switch views",
+              )}
             </span>
           </div>
           <div ref={sliderRef} className="mobile-slider">
-            <div className="mobile-slide" aria-label={t('home.mobile.toolsSlide', 'Tool selection panel')}>
+            <div
+              className="mobile-slide"
+              aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
+            >
               <div className="mobile-slide-content">
                 <ToolPanel />
               </div>
             </div>
-            <div className="mobile-slide" aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}>
+            <div
+              className="mobile-slide"
+              aria-label={t("home.mobile.workbenchSlide", "Workspace panel")}
+            >
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex">
                   <Workbench />
@@ -257,47 +299,63 @@ export default function HomePage() {
           <div className="mobile-bottom-bar">
             <button
               className="mobile-bottom-button"
-              aria-label={t('quickAccess.allTools', 'Tools')}
+              aria-label={t("quickAccess.allTools", "Tools")}
               onClick={() => {
                 handleBackToTools();
                 if (isMobile) {
-                  setActiveMobileView('tools');
+                  setActiveMobileView("tools");
                 }
               }}
             >
-              <AppsIcon sx={{ fontSize: '1.5rem' }} />
-              <span className="mobile-bottom-button-label">{t('quickAccess.allTools', 'Tools')}</span>
+              <AppsIcon sx={{ fontSize: "1.5rem" }} />
+              <span className="mobile-bottom-button-label">
+                {t("quickAccess.allTools", "Tools")}
+              </span>
             </button>
-            {toolAvailability['automate']?.available !== false && (
+            {toolAvailability["automate"]?.available !== false && (
               <button
                 className="mobile-bottom-button"
-                aria-label={t('quickAccess.automate', 'Automate')}
+                aria-label={t("quickAccess.automate", "Automate")}
                 onClick={() => {
-                  handleToolSelect('automate');
+                  handleToolSelect("automate");
                   if (isMobile) {
-                    setActiveMobileView('tools');
+                    setActiveMobileView("tools");
                   }
                 }}
               >
-                <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
-                <span className="mobile-bottom-button-label">{t('quickAccess.automate', 'Automate')}</span>
+                <LocalIcon
+                  icon="automation-outline"
+                  width="1.5rem"
+                  height="1.5rem"
+                />
+                <span className="mobile-bottom-button-label">
+                  {t("quickAccess.automate", "Automate")}
+                </span>
               </button>
             )}
             <button
               className="mobile-bottom-button"
-              aria-label={t('home.mobile.openFiles', 'Open files')}
+              aria-label={t("home.mobile.openFiles", "Open files")}
               onClick={() => openFilesModal()}
             >
               <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">{t('quickAccess.files', 'Files')}</span>
+              <span className="mobile-bottom-button-label">
+                {t("quickAccess.files", "Files")}
+              </span>
             </button>
             <button
               className="mobile-bottom-button"
-              aria-label={t('quickAccess.config', 'Config')}
+              aria-label={t("quickAccess.config", "Config")}
               onClick={() => setConfigModalOpen(true)}
             >
-              <LocalIcon icon="settings-rounded" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">{t('quickAccess.config', 'Config')}</span>
+              <LocalIcon
+                icon="settings-rounded"
+                width="1.5rem"
+                height="1.5rem"
+              />
+              <span className="mobile-bottom-button-label">
+                {t("quickAccess.config", "Config")}
+              </span>
             </button>
           </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
@@ -307,14 +365,9 @@ export default function HomePage() {
           />
         </div>
       ) : (
-        <Group
-          align="flex-start"
-          gap={0}
-          h="100%"
-          className="flex-nowrap flex"
-        >
+        <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
           <QuickAccessBar ref={quickAccessRef} />
-          <ToolPanel />
+          {!hideToolPanel && <ToolPanel />}
           <Workbench />
           <RightRail />
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />

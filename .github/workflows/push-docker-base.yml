@@ -1,0 +1,122 @@
+name: Push Docker Base Image
+
+on:
+  push:
+    branches:
+      - baseDockerImage
+      - accessIssueFix
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Base image version (e.g., 1.0.0, 1.0.1)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  push-base:
+    if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
+    runs-on: ubuntu-24.04-8core
+    permissions:
+      packages: write
+      id-token: write
+    steps:
+      - name: Verify authorized user
+        run: |
+          if [ "${{ github.actor }}" != "Frooodle" ]; then
+            echo "Error: Only Frooodle is authorized to run this workflow"
+            exit 1
+          fi
+
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ "${{ github.ref_name }}" == "accessIssueFix" ]; then
+            VERSION="1.0.3"
+          else
+            VERSION="1.0.0"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Generate tags for base image
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf-base
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+
+      - name: Build and push base image
+        id: build-push-base
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: docker/base
+          file: ./docker/base/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-base
+          cache-to: type=gha,mode=max,scope=stirling-pdf-base
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        with:
+          cosign-release: "v2.4.1"
+
+      - name: Sign base images
+        env:
+          DIGEST: ${{ steps.build-push-base.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          if [ -n "$COSIGN_PRIVATE_KEY" ]; then
+            echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+              cosign sign --yes \
+                --key env://COSIGN_PRIVATE_KEY \
+                "${tag}@${DIGEST}"
+            done
+          else
+            echo "Warning: COSIGN_PRIVATE_KEY not set, skipping image signing"
+          fi

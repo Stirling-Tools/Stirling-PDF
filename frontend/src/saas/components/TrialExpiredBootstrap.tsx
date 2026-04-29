@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@app/auth/UseSession';
-import { TrialExpiredModal } from '@app/components/shared/TrialExpiredModal';
-import StripeCheckout from '@app/components/shared/StripeCheckoutSaas';
+import { useEffect, useState } from "react";
+import { useAuth } from "@app/auth/UseSession";
+import { TrialExpiredModal } from "@app/components/shared/TrialExpiredModal";
+import StripeCheckout from "@app/components/shared/StripeCheckoutSaas";
 
 /**
  * Bootstrap component that shows the trial expired modal when a user's trial has ended
@@ -16,7 +16,7 @@ export default function TrialExpiredBootstrap() {
     // Close modal if user logs out or session expires
     if (!user) {
       if (showModal) {
-        console.debug('[TrialExpired] User logged out, closing modal');
+        console.debug("[TrialExpired] User logged out, closing modal");
         setShowModal(false);
       }
       if (checkoutOpened) {
@@ -32,13 +32,13 @@ export default function TrialExpiredBootstrap() {
 
     // Build localStorage key unique to this user
     const storageKey = `trialExpiredModalShown_${user.id}`;
-    const hasSeenModal = localStorage.getItem(storageKey) === 'true';
+    const hasSeenModal = localStorage.getItem(storageKey) === "true";
 
     // If user is currently trialing, clear any previous "seen" flag
     // This handles the edge case where a user might re-enter a trial
     if (trialStatus.isTrialing) {
       if (hasSeenModal) {
-        console.debug('[TrialExpired] User is trialing, clearing seen flag');
+        console.debug("[TrialExpired] User is trialing, clearing seen flag");
         localStorage.removeItem(storageKey);
       }
       return;
@@ -46,16 +46,22 @@ export default function TrialExpiredBootstrap() {
 
     // Check if all conditions are met to show the modal
     const isExpired =
-      trialStatus.status === 'incomplete_expired' || trialStatus.status === 'canceled';
-    const hasNoPayment = !trialStatus.hasPaymentMethod && !trialStatus.hasScheduledSub;
+      trialStatus.status === "incomplete_expired" ||
+      trialStatus.status === "canceled";
+    const hasNoPayment =
+      !trialStatus.hasPaymentMethod && !trialStatus.hasScheduledSub;
     const wasDowngraded = !isPro;
     const trialEndedRecently = trialStatus.daysRemaining === 0;
 
     const shouldShowModal =
-      isExpired && hasNoPayment && wasDowngraded && trialEndedRecently && !hasSeenModal;
+      isExpired &&
+      hasNoPayment &&
+      wasDowngraded &&
+      trialEndedRecently &&
+      !hasSeenModal;
 
     if (shouldShowModal) {
-      console.debug('[TrialExpired] Showing trial expired modal', {
+      console.debug("[TrialExpired] Showing trial expired modal", {
         status: trialStatus.status,
         daysRemaining: trialStatus.daysRemaining,
         hasPaymentMethod: trialStatus.hasPaymentMethod,
@@ -69,26 +75,26 @@ export default function TrialExpiredBootstrap() {
   const handleClose = () => {
     if (user) {
       const storageKey = `trialExpiredModalShown_${user.id}`;
-      localStorage.setItem(storageKey, 'true');
-      console.debug('[TrialExpired] Modal dismissed, marking as seen');
+      localStorage.setItem(storageKey, "true");
+      console.debug("[TrialExpired] Modal dismissed, marking as seen");
     }
     setShowModal(false);
   };
 
   const handleSubscribe = () => {
-    console.debug('[TrialExpired] User clicked Subscribe to Pro');
+    console.debug("[TrialExpired] User clicked Subscribe to Pro");
     setCheckoutOpened(true);
   };
 
   const handleCheckoutSuccess = () => {
-    console.debug('[TrialExpired] Subscription successful, refreshing page');
+    console.debug("[TrialExpired] Subscription successful, refreshing page");
     // Close modal and refresh to update subscription status
     handleClose();
     window.location.reload();
   };
 
   const handleCheckoutClose = () => {
-    console.debug('[TrialExpired] Checkout closed');
+    console.debug("[TrialExpired] Checkout closed");
     setCheckoutOpened(false);
   };
 
@@ -109,7 +115,9 @@ export default function TrialExpiredBootstrap() {
           creditsPack={null}
           planName="Pro"
           onSuccess={handleCheckoutSuccess}
-          onError={(error) => console.error('[TrialExpired] Checkout error:', error)}
+          onError={(error) =>
+            console.error("[TrialExpired] Checkout error:", error)
+          }
           isTrialConversion={false} // Trial already ended, so this is not a conversion
         />
       )}

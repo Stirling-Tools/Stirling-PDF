@@ -2,7 +2,7 @@
  * Reusable D3 utility functions for chart creation
  */
 
-import * as d3 from 'd3';
+import * as d3 from "d3";
 
 export interface ChartDimensions {
   width: number;
@@ -28,17 +28,17 @@ export interface AnimationConfig {
  * @returns The created SVG selection
  */
 export function createSVG(
-  container: HTMLElement, 
+  container: HTMLElement,
   dimensions: ChartDimensions,
-  className?: string
+  className?: string,
 ): d3.Selection<SVGSVGElement, unknown, null, undefined> {
   const svg = d3
     .select(container)
-    .append('svg')
-    .attr('width', '100%')
-    .attr('height', dimensions.height)
-    .attr('viewBox', `0 0 ${dimensions.width} ${dimensions.height}`)
-    .attr('class', className || '');
+    .append("svg")
+    .attr("width", "100%")
+    .attr("height", dimensions.height)
+    .attr("viewBox", `0 0 ${dimensions.width} ${dimensions.height}`)
+    .attr("class", className || "");
 
   return svg;
 }
@@ -53,17 +53,17 @@ export function createSVG(
 export function createClipPath(
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
   clipId: string,
-  dimensions: ChartDimensions
+  dimensions: ChartDimensions,
 ): d3.Selection<SVGRectElement, unknown, null, undefined> {
-  const defs = svg.append('defs');
+  const defs = svg.append("defs");
   const clipRect = defs
-    .append('clipPath')
-    .attr('id', clipId)
-    .append('rect')
-    .attr('x', 0)
-    .attr('y', 0)
-    .attr('width', 0)
-    .attr('height', dimensions.height);
+    .append("clipPath")
+    .attr("id", clipId)
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", 0)
+    .attr("height", dimensions.height);
 
   return clipRect;
 }
@@ -77,13 +77,13 @@ export function createClipPath(
 export function animateClipReveal(
   clipRect: d3.Selection<SVGRectElement, unknown, null, undefined>,
   targetWidth: number,
-  config: AnimationConfig
+  config: AnimationConfig,
 ): void {
   clipRect
     .transition()
     .duration(config.duration)
     .ease(config.easing || d3.easeCubicInOut)
-    .attr('width', targetWidth);
+    .attr("width", targetWidth);
 }
 
 /**
@@ -102,48 +102,58 @@ export function createRoundedRectPath(
   width: number,
   height: number,
   radius: number,
-  corners: { topLeft?: boolean; topRight?: boolean; bottomLeft?: boolean; bottomRight?: boolean } = {}
+  corners: {
+    topLeft?: boolean;
+    topRight?: boolean;
+    bottomLeft?: boolean;
+    bottomRight?: boolean;
+  } = {},
 ): string {
-  const { topLeft = true, topRight = true, bottomLeft = true, bottomRight = true } = corners;
-  
-  if (width <= 0 || height <= 0) return '';
-  
+  const {
+    topLeft = true,
+    topRight = true,
+    bottomLeft = true,
+    bottomRight = true,
+  } = corners;
+
+  if (width <= 0 || height <= 0) return "";
+
   const topLeftRadius = topLeft ? radius : 0;
   const topRightRadius = topRight ? radius : 0;
   const bottomRightRadius = bottomRight ? radius : 0;
   const bottomLeftRadius = bottomLeft ? radius : 0;
-  
+
   let path = `M ${x + topLeftRadius} ${y}`;
-  
+
   if (topRight) {
     path += ` L ${x + width - topRightRadius} ${y}`;
     path += ` A ${topRightRadius} ${topRightRadius} 0 0 1 ${x + width} ${y + topRightRadius}`;
   } else {
     path += ` L ${x + width} ${y}`;
   }
-  
+
   if (bottomRight) {
     path += ` L ${x + width} ${y + height - bottomRightRadius}`;
     path += ` A ${bottomRightRadius} ${bottomRightRadius} 0 0 1 ${x + width - bottomRightRadius} ${y + height}`;
   } else {
     path += ` L ${x + width} ${y + height}`;
   }
-  
+
   if (bottomLeft) {
     path += ` L ${x + bottomLeftRadius} ${y + height}`;
     path += ` A ${bottomLeftRadius} ${bottomLeftRadius} 0 0 1 ${x} ${y + height - bottomLeftRadius}`;
   } else {
     path += ` L ${x} ${y + height}`;
   }
-  
+
   if (topLeft) {
     path += ` L ${x} ${y + topLeftRadius}`;
     path += ` A ${topLeftRadius} ${topLeftRadius} 0 0 1 ${x + topLeftRadius} ${y}`;
   } else {
     path += ` L ${x} ${y}`;
   }
-  
-  return path + ' Z';
+
+  return path + " Z";
 }
 
 /**
@@ -162,9 +172,9 @@ export function createScale(domain: [number, number], range: [number, number]) {
  * @param wait The wait time in milliseconds
  * @returns Debounced function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {

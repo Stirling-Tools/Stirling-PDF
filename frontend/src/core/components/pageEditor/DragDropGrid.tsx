@@ -1,14 +1,20 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { Box } from '@mantine/core';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
-import styles from '@app/components/pageEditor/DragDropGrid.module.css';
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import { Box } from "@mantine/core";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { GRID_CONSTANTS } from "@app/components/pageEditor/constants";
+import styles from "@app/components/pageEditor/DragDropGrid.module.css";
 import {
   Z_INDEX_SELECTION_BOX,
   Z_INDEX_DROP_INDICATOR,
   Z_INDEX_DRAG_BADGE,
-} from '@app/styles/zIndex';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
+} from "@app/styles/zIndex";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   DndContext,
   DragEndEvent,
@@ -20,7 +26,7 @@ import {
   closestCenter,
   useDraggable,
   useDroppable,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 
 interface DragDropItem {
   id: string;
@@ -32,16 +38,32 @@ interface DragDropItem {
 
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
-  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, activeDragIds: string[], justMoved: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
-  getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
+  onReorderPages: (
+    sourcePageNumber: number,
+    targetIndex: number,
+    selectedPageIds?: string[],
+  ) => void;
+  renderItem: (
+    item: T,
+    index: number,
+    refs: React.MutableRefObject<Map<string, HTMLDivElement>>,
+    boxSelectedIds: string[],
+    clearBoxSelection: () => void,
+    activeDragIds: string[],
+    justMoved: boolean,
+    dragHandleProps?: any,
+    zoomLevel?: number,
+  ) => React.ReactNode;
+  getThumbnailData?: (
+    itemId: string,
+  ) => { src: string; rotation: number } | null;
   zoomLevel?: number;
   selectedFileIds?: string[];
   selectedPageIds?: string[];
   onVisibleItemsChange?: (items: T[]) => void;
 }
 
-type DropSide = 'left' | 'right' | null;
+type DropSide = "left" | "right" | null;
 
 type ItemRect = { id: string; rect: DOMRect };
 
@@ -61,7 +83,10 @@ function resolveDropHint(
   }
 
   const items: ItemRect[] = Array.from(itemRefs.current.entries())
-    .filter((entry): entry is [string, HTMLDivElement] => !!entry[1] && entry[0] !== activeId)
+    .filter(
+      (entry): entry is [string, HTMLDivElement] =>
+        !!entry[1] && entry[0] !== activeId,
+    )
     .map(([itemId, element]) => ({
       id: itemId,
       rect: element.getBoundingClientRect(),
@@ -84,7 +109,8 @@ function resolveDropHint(
       return;
     }
 
-    const isSameRow = Math.abs(item.rect.top - currentRow[0].rect.top) <= rowTolerance;
+    const isSameRow =
+      Math.abs(item.rect.top - currentRow[0].rect.top) <= rowTolerance;
     if (isSameRow) {
       currentRow.push(item);
     } else {
@@ -131,13 +157,13 @@ function resolveDropHint(
   let dropSide: DropSide;
   if (cursorX < firstItem.rect.left) {
     hoveredItem = firstItem;
-    dropSide = 'left';
+    dropSide = "left";
   } else if (cursorX > lastItem.rect.right) {
     hoveredItem = lastItem;
-    dropSide = 'right';
+    dropSide = "right";
   } else {
     const midpoint = hoveredItem.rect.left + hoveredItem.rect.width / 2;
-    dropSide = cursorX >= midpoint ? 'right' : 'left';
+    dropSide = cursorX >= midpoint ? "right" : "left";
   }
 
   return { hoveredId: hoveredItem.id, dropSide };
@@ -168,15 +194,17 @@ function resolveTargetIndex<T extends DragDropItem>(
   };
 
   if (hoveredId) {
-    const filteredIndex = filteredItems.findIndex(item => item.id === hoveredId);
+    const filteredIndex = filteredItems.findIndex(
+      (item) => item.id === hoveredId,
+    );
     if (filteredIndex !== -1) {
-      const adjustedIndex = filteredIndex + (dropSide === 'right' ? 1 : 0);
+      const adjustedIndex = filteredIndex + (dropSide === "right" ? 1 : 0);
       return convertFilteredIndexToOriginal(adjustedIndex);
     }
   }
 
   if (fallbackIndex !== null && fallbackIndex !== undefined) {
-    const adjustedIndex = fallbackIndex + (dropSide === 'right' ? 1 : 0);
+    const adjustedIndex = fallbackIndex + (dropSide === "right" ? 1 : 0);
     return convertFilteredIndexToOriginal(adjustedIndex);
   }
 
@@ -192,17 +220,45 @@ interface DraggableItemProps<T extends DragDropItem> {
   clearBoxSelection: () => void;
   activeDragIds: string[];
   justMoved: boolean;
-  getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
+  getThumbnailData?: (
+    itemId: string,
+  ) => { src: string; rotation: number } | null;
   onUpdateDropTarget: (itemId: string | null) => void;
-  renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>, boxSelectedIds: string[], clearBoxSelection: () => void, activeDragIds: string[], justMoved: boolean, dragHandleProps?: any, zoomLevel?: number) => React.ReactNode;
+  renderItem: (
+    item: T,
+    index: number,
+    refs: React.MutableRefObject<Map<string, HTMLDivElement>>,
+    boxSelectedIds: string[],
+    clearBoxSelection: () => void,
+    activeDragIds: string[],
+    justMoved: boolean,
+    dragHandleProps?: any,
+    zoomLevel?: number,
+  ) => React.ReactNode;
   zoomLevel: number;
   selectedPageIds?: string[];
 }
 
-const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, activeDragIds, justMoved, getThumbnailData, renderItem, onUpdateDropTarget, zoomLevel }: DraggableItemProps<T>) => {
+const DraggableItemInner = <T extends DragDropItem>({
+  item,
+  index,
+  itemRefs,
+  boxSelectedPageIds,
+  clearBoxSelection,
+  activeDragIds,
+  justMoved,
+  getThumbnailData,
+  renderItem,
+  onUpdateDropTarget,
+  zoomLevel,
+}: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
   const pageNumber = (item as any).pageNumber ?? index + 1;
-  const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+  } = useDraggable({
     id: item.id,
     disabled: isPlaceholder,
     data: {
@@ -215,21 +271,25 @@ const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, box
         }
 
         const element = itemRefs.current.get(item.id);
-        const imgElement = element?.querySelector('img.ph-no-capture') as HTMLImageElement;
+        const imgElement = element?.querySelector(
+          "img.ph-no-capture",
+        ) as HTMLImageElement;
         if (imgElement?.src) {
           return {
             src: imgElement.src,
-            rotation: imgElement.dataset.originalRotation ? parseInt(imgElement.dataset.originalRotation) : 0
+            rotation: imgElement.dataset.originalRotation
+              ? parseInt(imgElement.dataset.originalRotation)
+              : 0,
           };
         }
         return null;
-      }
-    }
+      },
+    },
   });
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: item.id,
-    data: { index, pageNumber: index + 1 }
+    data: { index, pageNumber: index + 1 },
   });
 
   // Notify parent when hover state changes
@@ -241,14 +301,27 @@ const DraggableItemInner = <T extends DragDropItem>({ item, index, itemRefs, box
     }
   }, [isOver, item.id, onUpdateDropTarget]);
 
-  const setNodeRef = useCallback((element: HTMLDivElement | null) => {
-    setDraggableRef(element);
-    setDroppableRef(element);
-  }, [setDraggableRef, setDroppableRef]);
+  const setNodeRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      setDraggableRef(element);
+      setDroppableRef(element);
+    },
+    [setDraggableRef, setDroppableRef],
+  );
 
   return (
     <>
-      {renderItem(item, index, itemRefs, boxSelectedPageIds, clearBoxSelection, activeDragIds, justMoved, { ref: setNodeRef, ...attributes, ...listeners }, zoomLevel)}
+      {renderItem(
+        item,
+        index,
+        itemRefs,
+        boxSelectedPageIds,
+        clearBoxSelection,
+        activeDragIds,
+        justMoved,
+        { ref: setNodeRef, ...attributes, ...listeners },
+        zoomLevel,
+      )}
     </>
   );
 };
@@ -267,8 +340,12 @@ const DraggableItem = React.memo(DraggableItemInner, (prevProps, nextProps) => {
   }
 
   // Check if page selection changed (for checkbox selection, not box selection)
-  const prevSelectedSet = prevProps.selectedPageIds ? new Set(prevProps.selectedPageIds) : null;
-  const nextSelectedSet = nextProps.selectedPageIds ? new Set(nextProps.selectedPageIds) : null;
+  const prevSelectedSet = prevProps.selectedPageIds
+    ? new Set(prevProps.selectedPageIds)
+    : null;
+  const nextSelectedSet = nextProps.selectedPageIds
+    ? new Set(nextProps.selectedPageIds)
+    : null;
 
   if (prevSelectedSet && nextSelectedSet) {
     const prevSelected = prevSelectedSet.has(prevProps.item.id);
@@ -303,41 +380,54 @@ const DragDropGrid = <T extends DragDropItem>({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getScrollElement = useCallback(() => {
-    return containerRef.current?.closest('[data-scrolling-container]') as HTMLElement | null;
+    return containerRef.current?.closest(
+      "[data-scrolling-container]",
+    ) as HTMLElement | null;
   }, []);
 
   // Create stable signature for items to ensure useMemo detects changes
-  const itemsSignature = useMemo(() => items.map(item => item.id).join(','), [items]);
-  const selectedFileIdsSignature = useMemo(() => selectedFileIds?.join(',') || '', [selectedFileIds]);
+  const itemsSignature = useMemo(
+    () => items.map((item) => item.id).join(","),
+    [items],
+  );
+  const selectedFileIdsSignature = useMemo(
+    () => selectedFileIds?.join(",") || "",
+    [selectedFileIds],
+  );
 
-  const { filteredItems: visibleItems, filteredToOriginalIndex } = useMemo(() => {
-    const filtered: T[] = [];
-    const indexMap: number[] = [];
-    const selectedIds =
-      selectedFileIds && selectedFileIds.length > 0 ? new Set(selectedFileIds) : null;
+  const { filteredItems: visibleItems, filteredToOriginalIndex } =
+    useMemo(() => {
+      const filtered: T[] = [];
+      const indexMap: number[] = [];
+      const selectedIds =
+        selectedFileIds && selectedFileIds.length > 0
+          ? new Set(selectedFileIds)
+          : null;
 
-    items.forEach((item, index) => {
-      const isPlaceholder = Boolean(item.isPlaceholder);
-      if (isPlaceholder) {
-        return;
-      }
+      items.forEach((item, index) => {
+        const isPlaceholder = Boolean(item.isPlaceholder);
+        if (isPlaceholder) {
+          return;
+        }
 
-      const belongsToVisibleFile =
-        !selectedIds || !item.originalFileId || selectedIds.has(item.originalFileId);
+        const belongsToVisibleFile =
+          !selectedIds ||
+          !item.originalFileId ||
+          selectedIds.has(item.originalFileId);
 
-      if (!belongsToVisibleFile) {
-        return;
-      }
+        if (!belongsToVisibleFile) {
+          return;
+        }
 
-      filtered.push(item);
-      indexMap.push(index);
-    });
+        filtered.push(item);
+        indexMap.push(index);
+      });
 
-    return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
-  }, [items, selectedFileIds, itemsSignature, selectedFileIdsSignature]);
+      return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
+    }, [items, selectedFileIds, itemsSignature, selectedFileIdsSignature]);
 
   useEffect(() => {
-    const visibleIdSet = new Set(visibleItems.map(item => item.id));
+    const visibleIdSet = new Set(visibleItems.map((item) => item.id));
     itemRefs.current.forEach((_, pageId) => {
       if (!visibleIdSet.has(pageId)) {
         itemRefs.current.delete(pageId);
@@ -346,8 +436,14 @@ const DragDropGrid = <T extends DragDropItem>({
   }, [visibleItems]);
 
   // Box selection state
-  const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
-  const [boxSelectEnd, setBoxSelectEnd] = useState<{ x: number; y: number } | null>(null);
+  const [boxSelectStart, setBoxSelectStart] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [boxSelectEnd, setBoxSelectEnd] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
   const [boxSelectedPageIds, setBoxSelectedPageIds] = useState<string[]>([]);
   const [justMovedIds, setJustMovedIds] = useState<string[]>([]);
@@ -355,7 +451,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Drag state
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [dragPreview, setDragPreview] = useState<{ src: string; rotation: number } | null>(null);
+  const [dragPreview, setDragPreview] = useState<{
+    src: string;
+    rotation: number;
+  } | null>(null);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [dropSide, setDropSide] = useState<DropSide>(null);
 
@@ -366,7 +465,7 @@ const DragDropGrid = <T extends DragDropItem>({
       activationConstraint: {
         distance: 10,
       },
-    })
+    }),
   );
 
   // Throttled pointer move handler for drop indicator
@@ -395,9 +494,11 @@ const DragDropGrid = <T extends DragDropItem>({
       }
     };
 
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
     return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener("pointermove", handlePointerMove);
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }
@@ -406,7 +507,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Responsive grid configuration
   const [itemsPerRow, setItemsPerRow] = useState(4);
-  const OVERSCAN = visibleItems.length > 1000 ? GRID_CONSTANTS.OVERSCAN_LARGE : GRID_CONSTANTS.OVERSCAN_SMALL;
+  const OVERSCAN =
+    visibleItems.length > 1000
+      ? GRID_CONSTANTS.OVERSCAN_LARGE
+      : GRID_CONSTANTS.OVERSCAN_SMALL;
 
   // Calculate items per row based on container width
   const calculateItemsPerRow = useCallback(() => {
@@ -416,8 +520,11 @@ const DragDropGrid = <T extends DragDropItem>({
     if (containerWidth === 0) return 4; // Container not measured yet
 
     // Convert rem to pixels for calculation
-    const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
+    const remToPx = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    const ITEM_WIDTH =
+      parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
     const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
 
     // Calculate how many items fit: (width - gap) / (itemWidth + gap)
@@ -439,7 +546,7 @@ const DragDropGrid = <T extends DragDropItem>({
     updateLayout();
 
     // Listen for window resize
-    window.addEventListener('resize', updateLayout);
+    window.addEventListener("resize", updateLayout);
 
     // Use ResizeObserver for container size changes
     const resizeObserver = new ResizeObserver(updateLayout);
@@ -448,7 +555,7 @@ const DragDropGrid = <T extends DragDropItem>({
     }
 
     return () => {
-      window.removeEventListener('resize', updateLayout);
+      window.removeEventListener("resize", updateLayout);
       resizeObserver.disconnect();
     };
   }, [calculateItemsPerRow, zoomLevel]);
@@ -458,7 +565,9 @@ const DragDropGrid = <T extends DragDropItem>({
     count: Math.ceil(visibleItems.length / itemsPerRow),
     getScrollElement,
     estimateSize: () => {
-      const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const remToPx = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
       return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx * zoomLevel;
     },
     overscan: OVERSCAN,
@@ -481,10 +590,19 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Re-measure virtualizer when zoom or items per row changes
   // Also remeasure when items change (not just length) to handle item additions/removals
-  const visibleItemsSignature = useMemo(() => visibleItems.map(item => item.id).join(','), [visibleItems]);
+  const visibleItemsSignature = useMemo(
+    () => visibleItems.map((item) => item.id).join(","),
+    [visibleItems],
+  );
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [zoomLevel, itemsPerRow, visibleItems.length, visibleItemsSignature, rowVirtualizer]);
+  }, [
+    zoomLevel,
+    itemsPerRow,
+    visibleItems.length,
+    visibleItemsSignature,
+    rowVirtualizer,
+  ]);
 
   // Cleanup highlight timeout on unmount
   useEffect(() => {
@@ -497,76 +615,85 @@ const DragDropGrid = <T extends DragDropItem>({
   }, []);
 
   // Box selection handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return; // Only respond to primary button
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.button !== 0) return; // Only respond to primary button
 
-    const container = containerRef.current;
-    if (!container) return;
+      const container = containerRef.current;
+      if (!container) return;
 
-    const clickTarget = e.target as Node;
-    let clickedPageId: string | null = null;
+      const clickTarget = e.target as Node;
+      let clickedPageId: string | null = null;
 
-    itemRefs.current.forEach((element, pageId) => {
-      if (element.contains(clickTarget)) {
-        clickedPageId = pageId;
+      itemRefs.current.forEach((element, pageId) => {
+        if (element.contains(clickTarget)) {
+          clickedPageId = pageId;
+        }
+      });
+
+      if (clickedPageId) {
+        // Clicking directly on a page shouldn't initiate box selection
+        // but clear previous box selection if clicking outside current group
+        if (
+          boxSelectedPageIds.length > 0 &&
+          !boxSelectedPageIds.includes(clickedPageId)
+        ) {
+          setBoxSelectedPageIds([]);
+        }
+        return;
       }
-    });
 
-    if (clickedPageId) {
-      // Clicking directly on a page shouldn't initiate box selection
-      // but clear previous box selection if clicking outside current group
-      if (boxSelectedPageIds.length > 0 && !boxSelectedPageIds.includes(clickedPageId)) {
-        setBoxSelectedPageIds([]);
-      }
-      return;
-    }
+      e.preventDefault();
 
-    e.preventDefault();
+      const rect = container.getBoundingClientRect();
+      setIsBoxSelecting(true);
+      setBoxSelectStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      setBoxSelectEnd({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      setBoxSelectedPageIds([]);
+    },
+    [boxSelectedPageIds],
+  );
 
-    const rect = container.getBoundingClientRect();
-    setIsBoxSelecting(true);
-    setBoxSelectStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    setBoxSelectEnd({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    setBoxSelectedPageIds([]);
-  }, [boxSelectedPageIds]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isBoxSelecting || !boxSelectStart) return;
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isBoxSelecting || !boxSelectStart) return;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
 
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
+      setBoxSelectEnd({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 
-    setBoxSelectEnd({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      // Calculate which pages intersect with selection box
+      const boxLeft = Math.min(boxSelectStart.x, e.clientX - rect.left);
+      const boxRight = Math.max(boxSelectStart.x, e.clientX - rect.left);
+      const boxTop = Math.min(boxSelectStart.y, e.clientY - rect.top);
+      const boxBottom = Math.max(boxSelectStart.y, e.clientY - rect.top);
 
-    // Calculate which pages intersect with selection box
-    const boxLeft = Math.min(boxSelectStart.x, e.clientX - rect.left);
-    const boxRight = Math.max(boxSelectStart.x, e.clientX - rect.left);
-    const boxTop = Math.min(boxSelectStart.y, e.clientY - rect.top);
-    const boxBottom = Math.max(boxSelectStart.y, e.clientY - rect.top);
+      const selectedIds: string[] = [];
+      itemRefs.current.forEach((pageEl, pageId) => {
+        const pageRect = pageEl.getBoundingClientRect();
+        const pageLeft = pageRect.left - rect.left;
+        const pageRight = pageRect.right - rect.left;
+        const pageTop = pageRect.top - rect.top;
+        const pageBottom = pageRect.bottom - rect.top;
 
-    const selectedIds: string[] = [];
-    itemRefs.current.forEach((pageEl, pageId) => {
-      const pageRect = pageEl.getBoundingClientRect();
-      const pageLeft = pageRect.left - rect.left;
-      const pageRight = pageRect.right - rect.left;
-      const pageTop = pageRect.top - rect.top;
-      const pageBottom = pageRect.bottom - rect.top;
+        // Check if page intersects with selection box
+        const intersects = !(
+          pageRight < boxLeft ||
+          pageLeft > boxRight ||
+          pageBottom < boxTop ||
+          pageTop > boxBottom
+        );
 
-      // Check if page intersects with selection box
-      const intersects = !(
-        pageRight < boxLeft ||
-        pageLeft > boxRight ||
-        pageBottom < boxTop ||
-        pageTop > boxBottom
-      );
+        if (intersects) {
+          selectedIds.push(pageId);
+        }
+      });
 
-      if (intersects) {
-        selectedIds.push(pageId);
-      }
-    });
-
-    setBoxSelectedPageIds(selectedIds);
-  }, [isBoxSelecting, boxSelectStart]);
+      setBoxSelectedPageIds(selectedIds);
+    },
+    [isBoxSelecting, boxSelectStart],
+  );
 
   const handleMouseUp = useCallback(() => {
     if (isBoxSelecting) {
@@ -593,14 +720,16 @@ const DragDropGrid = <T extends DragDropItem>({
     if (getThumbnail) {
       const thumbnailData = getThumbnail();
       if (thumbnailData?.src) {
-        setDragPreview({ src: thumbnailData.src, rotation: thumbnailData.rotation });
+        setDragPreview({
+          src: thumbnailData.src,
+          rotation: thumbnailData.rotation,
+        });
         return;
       }
     }
 
     setDragPreview(null);
   }, []);
-
 
   // Handle drag cancel
   const handleDragCancel = useCallback(() => {
@@ -611,79 +740,99 @@ const DragDropGrid = <T extends DragDropItem>({
   }, []);
 
   // Handle drag end
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    const finalDropSide = dropSide;
-    setActiveId(null);
-    setDragPreview(null);
-    setHoveredItemId(null);
-    setDropSide(null);
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      const finalDropSide = dropSide;
+      setActiveId(null);
+      setDragPreview(null);
+      setHoveredItemId(null);
+      setDropSide(null);
 
-    if (!over || active.id === over.id) {
-      return;
-    }
+      if (!over || active.id === over.id) {
+        return;
+      }
 
-    const activeData = active.data.current;
-    if (!activeData) {
-      return;
-    }
+      const activeData = active.data.current;
+      if (!activeData) {
+        return;
+      }
 
-    const sourcePageNumber = activeData.pageNumber;
+      const sourcePageNumber = activeData.pageNumber;
 
-    const overData = over?.data.current;
-    let targetIndex = resolveTargetIndex(
+      const overData = over?.data.current;
+      let targetIndex = resolveTargetIndex(
+        hoveredItemId,
+        finalDropSide,
+        visibleItems,
+        filteredToOriginalIndex,
+        items.length,
+        overData ? overData.index : null,
+      );
+
+      if (targetIndex === null) {
+        return;
+      }
+      if (targetIndex < 0) targetIndex = 0;
+      if (targetIndex > items.length) targetIndex = items.length;
+
+      // Check if this page is box-selected
+      const isBoxSelected = boxSelectedPageIds.includes(active.id as string);
+      const pagesToDrag =
+        isBoxSelected && boxSelectedPageIds.length > 0
+          ? boxSelectedPageIds
+          : undefined;
+
+      // Call reorder with page number and target index
+      onReorderPages(sourcePageNumber, targetIndex, pagesToDrag);
+
+      // Highlight moved pages briefly
+      const movedIds = pagesToDrag ?? [active.id as string];
+      setJustMovedIds(movedIds);
+      if (highlightTimeoutRef.current) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+      highlightTimeoutRef.current = window.setTimeout(() => {
+        setJustMovedIds([]);
+        highlightTimeoutRef.current = null;
+      }, 1200);
+
+      // Clear box selection after drag
+      if (pagesToDrag) {
+        clearBoxSelection();
+      }
+    },
+    [
+      boxSelectedPageIds,
+      dropSide,
       hoveredItemId,
-      finalDropSide,
       visibleItems,
       filteredToOriginalIndex,
-      items.length,
-      overData ? overData.index : null
-    );
-
-    if (targetIndex === null) {
-      return;
-    }
-    if (targetIndex < 0) targetIndex = 0;
-    if (targetIndex > items.length) targetIndex = items.length;
-
-    // Check if this page is box-selected
-    const isBoxSelected = boxSelectedPageIds.includes(active.id as string);
-    const pagesToDrag = isBoxSelected && boxSelectedPageIds.length > 0 ? boxSelectedPageIds : undefined;
-
-    // Call reorder with page number and target index
-    onReorderPages(sourcePageNumber, targetIndex, pagesToDrag);
-
-    // Highlight moved pages briefly
-    const movedIds = pagesToDrag ?? [active.id as string];
-    setJustMovedIds(movedIds);
-    if (highlightTimeoutRef.current) {
-      window.clearTimeout(highlightTimeoutRef.current);
-    }
-    highlightTimeoutRef.current = window.setTimeout(() => {
-      setJustMovedIds([]);
-      highlightTimeoutRef.current = null;
-    }, 1200);
-
-    // Clear box selection after drag
-    if (pagesToDrag) {
-      clearBoxSelection();
-    }
-  }, [boxSelectedPageIds, dropSide, hoveredItemId, visibleItems, filteredToOriginalIndex, items, onReorderPages, clearBoxSelection]);
+      items,
+      onReorderPages,
+      clearBoxSelection,
+    ],
+  );
 
   // Calculate optimal width for centering
-  const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const remToPx = parseFloat(
+    getComputedStyle(document.documentElement).fontSize,
+  );
   const itemWidth = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
   const itemGap = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
   const gridWidth = itemsPerRow * itemWidth + (itemsPerRow - 1) * itemGap;
 
   // Calculate selection box dimensions
-  const selectionBoxStyle = isBoxSelecting && boxSelectStart && boxSelectEnd ? {
-    left: Math.min(boxSelectStart.x, boxSelectEnd.x),
-    top: Math.min(boxSelectStart.y, boxSelectEnd.y),
-    width: Math.abs(boxSelectEnd.x - boxSelectStart.x),
-    height: Math.abs(boxSelectEnd.y - boxSelectStart.y),
-    zIndex: Z_INDEX_SELECTION_BOX,
-  } : null;
+  const selectionBoxStyle =
+    isBoxSelecting && boxSelectStart && boxSelectEnd
+      ? {
+          left: Math.min(boxSelectStart.x, boxSelectEnd.x),
+          top: Math.min(boxSelectStart.y, boxSelectEnd.y),
+          width: Math.abs(boxSelectEnd.x - boxSelectStart.x),
+          height: Math.abs(boxSelectEnd.y - boxSelectStart.y),
+          zIndex: Z_INDEX_SELECTION_BOX,
+        }
+      : null;
 
   // Calculate drop indicator position
   const dropIndicatorStyle = useMemo(() => {
@@ -698,9 +847,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
     const top = itemRect.top - containerRect.top;
     const height = itemRect.height;
-    const left = dropSide === 'left'
-      ? itemRect.left - containerRect.left - itemGap / 2
-      : itemRect.right - containerRect.left + itemGap / 2;
+    const left =
+      dropSide === "left"
+        ? itemRect.left - containerRect.left - itemGap / 2
+        : itemRect.right - containerRect.left + itemGap / 2;
 
     return {
       left: `${left}px`,
@@ -718,23 +868,26 @@ const DragDropGrid = <T extends DragDropItem>({
     return [activeId];
   }, [activeId, boxSelectedPageIds]);
 
-  const handleWheelWhileDragging = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    if (!activeId) {
-      return;
-    }
+  const handleWheelWhileDragging = useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
+      if (!activeId) {
+        return;
+      }
 
-    const scrollElement = getScrollElement();
-    if (!scrollElement) {
-      return;
-    }
+      const scrollElement = getScrollElement();
+      if (!scrollElement) {
+        return;
+      }
 
-    scrollElement.scrollBy({
-      top: event.deltaY,
-      left: event.deltaX,
-    });
+      scrollElement.scrollBy({
+        top: event.deltaY,
+        left: event.deltaX,
+      });
 
-    event.preventDefault();
-  }, [activeId, getScrollElement]);
+      event.preventDefault();
+    },
+    [activeId, getScrollElement],
+  );
 
   return (
     <DndContext
@@ -753,17 +906,11 @@ const DragDropGrid = <T extends DragDropItem>({
         onWheel={handleWheelWhileDragging}
       >
         {selectionBoxStyle && (
-          <div
-            className={styles.selectionBox}
-            style={selectionBoxStyle}
-          />
+          <div className={styles.selectionBox} style={selectionBoxStyle} />
         )}
 
         {dropIndicatorStyle && (
-          <div
-            className={styles.dropIndicator}
-            style={dropIndicatorStyle}
-          />
+          <div className={styles.dropIndicator} style={dropIndicatorStyle} />
         )}
 
         <div
@@ -771,12 +918,15 @@ const DragDropGrid = <T extends DragDropItem>({
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
             maxWidth: `${gridWidth}px`,
-            margin: '0 auto',
+            margin: "0 auto",
           }}
         >
           {virtualRows.map((virtualRow) => {
             const startIndex = virtualRow.index * itemsPerRow;
-            const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
+            const endIndex = Math.min(
+              startIndex + itemsPerRow,
+              visibleItems.length,
+            );
             const rowItems = visibleItems.slice(startIndex, endIndex);
 
             return (
@@ -825,14 +975,15 @@ const DragDropGrid = <T extends DragDropItem>({
       <DragOverlay>
         {activeId && (
           <div className={styles.dragOverlay}>
-            {boxSelectedPageIds.includes(activeId) && boxSelectedPageIds.length > 1 && (
-              <div
-                className={styles.dragOverlayBadge}
-                style={{ zIndex: Z_INDEX_DRAG_BADGE }}
-              >
-                {boxSelectedPageIds.length}
-              </div>
-            )}
+            {boxSelectedPageIds.includes(activeId) &&
+              boxSelectedPageIds.length > 1 && (
+                <div
+                  className={styles.dragOverlayBadge}
+                  style={{ zIndex: Z_INDEX_DRAG_BADGE }}
+                >
+                  {boxSelectedPageIds.length}
+                </div>
+              )}
             {dragPreview ? (
               <img
                 src={dragPreview.src}
@@ -840,9 +991,9 @@ const DragDropGrid = <T extends DragDropItem>({
                 style={{
                   width: `calc(20rem * ${zoomLevel})`,
                   height: `calc(20rem * ${zoomLevel})`,
-                  objectFit: 'contain',
+                  objectFit: "contain",
                   transform: `rotate(${dragPreview.rotation}deg)`,
-                  pointerEvents: 'none',
+                  pointerEvents: "none",
                   opacity: 0.5,
                 }}
               />
@@ -852,11 +1003,11 @@ const DragDropGrid = <T extends DragDropItem>({
                 style={{
                   width: `calc(20rem * ${zoomLevel})`,
                   height: `calc(20rem * ${zoomLevel})`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  color: 'var(--mantine-color-dimmed)',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2rem",
+                  color: "var(--mantine-color-dimmed)",
                 }}
               >
                 <LocalIcon icon="description" width="3rem" height="3rem" />

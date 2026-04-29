@@ -1,5 +1,8 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface CompressParameters extends BaseParameters {
   compressionLevel: number;
@@ -8,9 +11,9 @@ export interface CompressParameters extends BaseParameters {
   lineArtThreshold: number;
   lineArtEdgeLevel: 1 | 2 | 3;
   expectedSize: string;
-  compressionMethod: 'quality' | 'filesize';
+  compressionMethod: "quality" | "filesize";
   fileSizeValue: string;
-  fileSizeUnit: 'KB' | 'MB';
+  fileSizeUnit: "KB" | "MB";
   linearize: boolean;
 }
 
@@ -20,10 +23,10 @@ export const defaultParameters: CompressParameters = {
   lineArt: false,
   lineArtThreshold: 50,
   lineArtEdgeLevel: 3,
-  expectedSize: '',
-  compressionMethod: 'quality',
-  fileSizeValue: '',
-  fileSizeUnit: 'MB',
+  expectedSize: "",
+  compressionMethod: "quality",
+  fileSizeValue: "",
+  fileSizeUnit: "MB",
   linearize: false,
 };
 
@@ -32,7 +35,7 @@ export type CompressParametersHook = BaseParametersHook<CompressParameters>;
 export const useCompressParameters = (): CompressParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'compress-pdf',
+    endpointName: "compress-pdf",
     validateFn: (params) => {
       // For compression, we only need to validate that compression level is within range
       return params.compressionLevel >= 1 && params.compressionLevel <= 9;

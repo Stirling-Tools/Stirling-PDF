@@ -6,12 +6,16 @@ Portions of this software are licensed as follows:
 
 * All content that resides under the "app/proprietary/" directory of this repository,
 if that directory exists, is licensed under the license defined in "app/proprietary/LICENSE".
+* All content that resides under the "engine/" directory of this repository,
+if that directory exists, is licensed under the license defined in "engine/LICENSE".
 * All content that resides under the "frontend/src/proprietary/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/src/proprietary/LICENSE".
 * All content that resides under the "frontend/src/desktop/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/src/desktop/LICENSE".
 * All content that resides under the "frontend/src/saas/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/src/saas/LICENSE".
+* All content that resides under the "frontend/src/prototypes/" directory of this repository,
+if that directory exists, is licensed under the license defined in "frontend/src/prototypes/LICENSE".
 * Content outside of the above mentioned directories or restrictions above is
 available under the MIT License as defined below.
 

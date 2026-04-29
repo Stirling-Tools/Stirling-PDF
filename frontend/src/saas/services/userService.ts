@@ -2,7 +2,7 @@
  * User service for handling user-related API calls
  */
 
-const API_BASE = '/api/v1';
+const API_BASE = "/api/v1";
 
 /**
  * Synchronizes user upgrade from anonymous to authenticated status with the backend.
@@ -14,7 +14,7 @@ const API_BASE = '/api/v1';
  * @returns Promise with the synchronization result
  */
 export const synchronizeUserUpgrade = async (
-  authMethod?: string
+  authMethod?: string,
 ): Promise<{
   message: string;
   userId: string;
@@ -22,21 +22,23 @@ export const synchronizeUserUpgrade = async (
 }> => {
   const formData = new URLSearchParams();
   if (authMethod) {
-    formData.append('authMethod', authMethod);
+    formData.append("authMethod", authMethod);
   }
 
   const response = await fetch(`${API_BASE}/user-role/promptToAuthUser`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    credentials: 'include', // Include cookies for authentication
+    credentials: "include", // Include cookies for authentication
     body: formData.toString(),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Failed to synchronize user upgrade' }));
-    throw new Error(errorData.error || 'Failed to synchronize user upgrade');
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: "Failed to synchronize user upgrade" }));
+    throw new Error(errorData.error || "Failed to synchronize user upgrade");
   }
 
   return response.json();

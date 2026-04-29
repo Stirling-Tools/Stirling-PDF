@@ -1,20 +1,20 @@
-import { useTranslation } from 'react-i18next';
-import '@app/routes/authShared/auth.css';
-import '@app/routes/authShared/saas-auth.css';
+import { useTranslation } from "react-i18next";
+import "@app/routes/authShared/auth.css";
+import "@app/routes/authShared/saas-auth.css";
 
 interface EmailPasswordFormProps {
-  email: string
-  password: string
-  setEmail: (email: string) => void
-  setPassword: (password: string) => void
-  onSubmit: () => void
-  isSubmitting: boolean
-  submitButtonText: string
-  showPasswordField?: boolean
+  email: string;
+  password: string;
+  setEmail: (email: string) => void;
+  setPassword: (password: string) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  submitButtonText: string;
+  showPasswordField?: boolean;
   fieldErrors?: {
-    email?: string
-    password?: string
-  }
+    email?: string;
+    password?: string;
+  };
 }
 
 export default function EmailPasswordForm({
@@ -26,7 +26,7 @@ export default function EmailPasswordForm({
   isSubmitting,
   submitButtonText,
   showPasswordField = true,
-  fieldErrors = {}
+  fieldErrors = {},
 }: EmailPasswordFormProps) {
   const { t } = useTranslation();
 
@@ -38,16 +38,18 @@ export default function EmailPasswordForm({
     <form onSubmit={handleSubmit}>
       <div className="auth-fields">
         <div className="auth-field">
-          <label htmlFor="email" className="auth-label">{t('login.email', 'Email')}</label>
+          <label htmlFor="email" className="auth-label">
+            {t("login.email", "Email")}
+          </label>
           <input
             id="email"
             type="email"
             name="email"
             autoComplete="username email"
-            placeholder={t('login.enterEmail', 'Enter email')}
+            placeholder={t("login.enterEmail", "Enter email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`auth-input ${fieldErrors.email ? 'auth-input-error' : ''}`}
+            className={`auth-input ${fieldErrors.email ? "auth-input-error" : ""}`}
           />
           {fieldErrors.email && (
             <div className="auth-field-error">{fieldErrors.email}</div>
@@ -56,16 +58,18 @@ export default function EmailPasswordForm({
 
         {showPasswordField && (
           <div className="auth-field">
-            <label htmlFor="password" className="auth-label">{t('login.password')}</label>
+            <label htmlFor="password" className="auth-label">
+              {t("login.password")}
+            </label>
             <input
               id="password"
               type="password"
               name="current-password"
               autoComplete="current-password"
-              placeholder={t('login.enterPassword')}
+              placeholder={t("login.enterPassword")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`auth-input ${fieldErrors.password ? 'auth-input-error' : ''}`}
+              className={`auth-input ${fieldErrors.password ? "auth-input-error" : ""}`}
             />
             {fieldErrors.password && (
               <div className="auth-field-error">{fieldErrors.password}</div>

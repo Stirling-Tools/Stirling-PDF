@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { alert } from '@app/components/toast';
-import { useTranslation } from 'react-i18next';
+import { useCallback } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { alert } from "@app/components/toast";
+import { useTranslation } from "react-i18next";
 
 /**
  * Hook to manage login-required functionality in admin sections
@@ -17,9 +17,12 @@ export function useLoginRequired() {
    */
   const showLoginRequiredAlert = useCallback(() => {
     alert({
-      alertType: 'warning',
-      title: t('admin.error', 'Error'),
-      body: t('admin.settings.loginRequired', 'Login mode must be enabled to modify admin settings'),
+      alertType: "warning",
+      title: t("admin.error", "Error"),
+      body: t(
+        "admin.settings.loginRequired",
+        "Login mode must be enabled to modify admin settings",
+      ),
     });
   }, [t]);
 
@@ -38,16 +41,17 @@ export function useLoginRequired() {
   /**
    * Wrap an async handler to check login state before executing
    */
-  const withLoginCheck = useCallback(<T extends (...args: any[]) => Promise<any>>(
-    handler: T
-  ): T => {
-    return (async (...args: any[]) => {
-      if (!validateLoginEnabled()) {
-        return;
-      }
-      return handler(...args);
-    }) as T;
-  }, [validateLoginEnabled]);
+  const withLoginCheck = useCallback(
+    <T extends (...args: any[]) => Promise<any>>(handler: T): T => {
+      return (async (...args: any[]) => {
+        if (!validateLoginEnabled()) {
+          return;
+        }
+        return handler(...args);
+      }) as T;
+    },
+    [validateLoginEnabled],
+  );
 
   /**
    * Get styles for disabled inputs (cursor not-allowed)
@@ -55,9 +59,9 @@ export function useLoginRequired() {
   const getDisabledStyles = useCallback(() => {
     if (!loginEnabled) {
       return {
-        input: { cursor: 'not-allowed' },
-        track: { cursor: 'not-allowed' },
-        thumb: { cursor: 'not-allowed' }
+        input: { cursor: "not-allowed" },
+        track: { cursor: "not-allowed" },
+        thumb: { cursor: "not-allowed" },
       };
     }
     return undefined;
@@ -66,18 +70,21 @@ export function useLoginRequired() {
   /**
    * Wrap fetch function to skip API call when login disabled
    */
-  const withLoginCheckForFetch = useCallback(<T extends (...args: any[]) => Promise<any>>(
-    fetchHandler: T,
-    skipWhenDisabled: boolean = true
-  ): T => {
-    return (async (...args: any[]) => {
-      if (!loginEnabled && skipWhenDisabled) {
-        // Skip fetch when login disabled - component will use default/empty values
-        return;
-      }
-      return fetchHandler(...args);
-    }) as T;
-  }, [loginEnabled]);
+  const withLoginCheckForFetch = useCallback(
+    <T extends (...args: any[]) => Promise<any>>(
+      fetchHandler: T,
+      skipWhenDisabled: boolean = true,
+    ): T => {
+      return (async (...args: any[]) => {
+        if (!loginEnabled && skipWhenDisabled) {
+          // Skip fetch when login disabled - component will use default/empty values
+          return;
+        }
+        return fetchHandler(...args);
+      }) as T;
+    },
+    [loginEnabled],
+  );
 
   return {
     loginEnabled,

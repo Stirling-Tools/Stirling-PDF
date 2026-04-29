@@ -1,22 +1,31 @@
-import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { ChangeMetadataParameters, defaultParameters } from '@app/hooks/tools/changeMetadata/useChangeMetadataParameters';
+import { useTranslation } from "react-i18next";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import {
+  ChangeMetadataParameters,
+  defaultParameters,
+} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 // Helper function to format Date object to string
 const formatDateForBackend = (date: Date | null): string => {
-  if (!date) return '';
+  if (!date) return "";
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
 
 // Static function that can be used by both the hook and automation executor
-export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters, file: File): FormData => {
+export const buildChangeMetadataFormData = (
+  parameters: ChangeMetadataParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -29,8 +38,14 @@ export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters
   formData.append("producer", parameters.producer || "");
 
   // Date fields - convert Date objects to strings
-  formData.append("creationDate", formatDateForBackend(parameters.creationDate));
-  formData.append("modificationDate", formatDateForBackend(parameters.modificationDate));
+  formData.append(
+    "creationDate",
+    formatDateForBackend(parameters.creationDate),
+  );
+  formData.append(
+    "modificationDate",
+    formatDateForBackend(parameters.modificationDate),
+  );
 
   // Trapped status
   formData.append("trapped", parameters.trapped || "");
@@ -44,8 +59,14 @@ export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters
     parameters.customMetadata.forEach((entry) => {
       if (entry.key.trim() && entry.value.trim()) {
         keyNumber += 1;
-        formData.append(`allRequestParams[customKey${keyNumber}]`, entry.key.trim());
-        formData.append(`allRequestParams[customValue${keyNumber}]`, entry.value.trim());
+        formData.append(
+          `allRequestParams[customKey${keyNumber}]`,
+          entry.key.trim(),
+        );
+        formData.append(
+          `allRequestParams[customValue${keyNumber}]`,
+          entry.value.trim(),
+        );
       }
     });
   }
@@ -57,8 +78,8 @@ export const buildChangeMetadataFormData = (parameters: ChangeMetadataParameters
 export const changeMetadataOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildChangeMetadataFormData,
-  operationType: 'changeMetadata',
-  endpoint: '/api/v1/misc/update-metadata',
+  operationType: "changeMetadata",
+  endpoint: "/api/v1/misc/update-metadata",
   defaultParameters,
 } as const;
 
@@ -67,7 +88,12 @@ export const useChangeMetadataOperation = () => {
 
   return useToolOperation<ChangeMetadataParameters>({
     ...changeMetadataOperationConfig,
-    filePrefix: t('changeMetadata.filenamePrefix', 'metadata') + '_',
-    getErrorMessage: createStandardErrorHandler(t('changeMetadata.error.failed', 'An error occurred while changing the PDF metadata.'))
+    filePrefix: t("changeMetadata.filenamePrefix", "metadata") + "_",
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "changeMetadata.error.failed",
+        "An error occurred while changing the PDF metadata.",
+      ),
+    ),
   });
 };

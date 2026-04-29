@@ -12,18 +12,28 @@ import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInput
 
 interface CropAutomationSettingsProps {
   parameters: CropParameters;
-  onParameterChange: <K extends keyof CropParameters>(key: K, value: CropParameters[K]) => void;
+  onParameterChange: <K extends keyof CropParameters>(
+    key: K,
+    value: CropParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const CropAutomationSettings = ({ parameters, onParameterChange, disabled = false }: CropAutomationSettingsProps) => {
+const CropAutomationSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: CropAutomationSettingsProps) => {
   // Handle coordinate changes
-  const handleCoordinateChange = (field: keyof Rectangle, value: number | string) => {
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  const handleCoordinateChange = (
+    field: keyof Rectangle,
+    value: number | string,
+  ) => {
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
     if (isNaN(numValue)) return;
 
     const newCropArea = { ...parameters.cropArea, [field]: numValue };
-    onParameterChange('cropArea', newCropArea);
+    onParameterChange("cropArea", newCropArea);
   };
 
   return (

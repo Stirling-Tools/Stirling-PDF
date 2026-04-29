@@ -1,6 +1,6 @@
-import React from 'react';
-import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
-import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
+import React from "react";
+import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
+import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
 
 interface KeyValueSectionProps {
   title: string;
@@ -9,7 +9,12 @@ interface KeyValueSectionProps {
   emptyLabel?: string;
 }
 
-const KeyValueSection: React.FC<KeyValueSectionProps> = ({ title, anchorId, obj, emptyLabel }) => {
+const KeyValueSection: React.FC<KeyValueSectionProps> = ({
+  title,
+  anchorId,
+  obj,
+  emptyLabel,
+}) => {
   return (
     <SectionBlock title={title} anchorId={anchorId}>
       <KeyValueList obj={obj} emptyLabel={emptyLabel} />
@@ -18,5 +23,3 @@ const KeyValueSection: React.FC<KeyValueSectionProps> = ({ title, anchorId, obj,
 };
 
 export default KeyValueSection;
-
-
