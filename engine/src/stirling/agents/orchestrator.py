@@ -10,11 +10,14 @@ from pydantic_ai.tools import RunContext
 
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
+from stirling.agents.smart_redaction import SmartRedactionWorkflow
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftRequest,
     AgentDraftWorkflowResponse,
+    EditCannotDoResponse,
     ExtractedTextArtifact,
+    NeedContentResponse,
     OrchestratorRequest,
     OrchestratorResponse,
     PdfEditRequest,
@@ -69,6 +72,15 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
+                    self.smart_redaction_agent,
+                    name="smart_redaction_agent",
+                    description=(
+                        "Delegate requests to redact, remove, or hide content from PDFs. "
+                        "Use for redacting PII, names, phone numbers, bank details, "
+                        "specific text, document sections, or any sensitive content."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -83,6 +95,8 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use math_auditor_agent for requests to check arithmetic, validate "
                 "table totals, audit financial calculations, or verify math in PDFs. "
+                "Use smart_redaction_agent for requests to redact, remove, or hide "
+                "content from PDFs (PII, names, phone numbers, sections, etc.). "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
             model_settings=runtime.fast_model_settings,
@@ -114,6 +128,8 @@ class OrchestratorAgent:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
+            case SupportedCapability.SMART_REDACTION_AGENT:
+                return await SmartRedactionWorkflow(self.runtime).handle(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
@@ -173,6 +189,11 @@ class OrchestratorAgent:
                 )
             ],
         )
+
+    async def smart_redaction_agent(
+        self, ctx: RunContext[OrchestratorDeps]
+    ) -> EditPlanResponse | NeedContentResponse | EditCannotDoResponse:
+        return await SmartRedactionWorkflow(self.runtime).handle(ctx.deps.request)
 
     async def unsupported_capability(
         self,
