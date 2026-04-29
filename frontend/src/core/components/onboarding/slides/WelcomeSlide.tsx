@@ -1,15 +1,15 @@
-import React from 'react';
-import { useTranslation, Trans } from 'react-i18next';
-import { SlideConfig } from '@app/types/types';
-import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
-import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
+import React from "react";
+import { useTranslation, Trans } from "react-i18next";
+import { SlideConfig } from "@app/types/types";
+import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 
 function WelcomeSlideTitle() {
   const { t } = useTranslation();
 
   return (
     <span className={styles.welcomeTitleContainer}>
-      {t('onboarding.welcomeSlide.title', 'Welcome to Stirling')}
+      {t("onboarding.welcomeSlide.title", "Welcome to Stirling")}
       <span className={styles.v2Badge}>V2</span>
     </span>
   );
@@ -27,13 +27,12 @@ const WelcomeSlideBody = () => (
 
 export default function WelcomeSlide(): SlideConfig {
   return {
-    key: 'welcome',
+    key: "welcome",
     title: <WelcomeSlideTitle />,
     body: <WelcomeSlideBody />,
     background: {
-      gradientStops: ['#7C3AED', '#EC4899'],
+      gradientStops: ["#7C3AED", "#EC4899"],
       circles: UNIFIED_CIRCLE_CONFIG,
     },
   };
 }
-

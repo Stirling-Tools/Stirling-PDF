@@ -1,0 +1,93 @@
+name: Rollback Latest Tags to Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to rollback to (e.g. 2.8.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@31b88afe9de28ae0ffa220711af4b60be9435f6e # v0.4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Rollback all latest tags to v${{ inputs.version }}
+        env:
+          VERSION: ${{ inputs.version }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_ORG_USERNAME: ${{ secrets.DOCKER_HUB_ORG_USERNAME }}
+          REPO_OWNER: ${{ steps.repoowner.outputs.lowercase }}
+        run: |
+          set -euo pipefail
+
+          IMAGES=(
+            "${DOCKER_HUB_USERNAME}/s-pdf"
+            "ghcr.io/${REPO_OWNER}/s-pdf"
+            "ghcr.io/${REPO_OWNER}/stirling-pdf"
+            "${DOCKER_HUB_ORG_USERNAME}/stirling-pdf"
+          )
+
+          VARIANTS=(
+            "${VERSION}:latest"
+            "${VERSION}-fat:latest-fat"
+            "${VERSION}-ultra-lite:latest-ultra-lite"
+          )
+
+          FAILED=0
+
+          for image in "${IMAGES[@]}"; do
+            for variant in "${VARIANTS[@]}"; do
+              SOURCE_TAG="${variant%%:*}"
+              TARGET_TAG="${variant##*:}"
+
+              echo "::group::${image} — ${SOURCE_TAG} → ${TARGET_TAG}"
+
+              if crane manifest "${image}:${SOURCE_TAG}" > /dev/null 2>&1; then
+                crane cp "${image}:${SOURCE_TAG}" "${image}:${TARGET_TAG}"
+                echo "✅ ${image}:${TARGET_TAG} now points to ${SOURCE_TAG}"
+              else
+                echo "::warning::⚠️ ${image}:${SOURCE_TAG} not found, skipping"
+                FAILED=1
+              fi
+
+              echo "::endgroup::"
+            done
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::warning::Some source tags were not found. This is expected if not all variants exist for this version."
+          fi
+
+          echo ""
+          echo "🎉 Rollback to ${VERSION} complete!"

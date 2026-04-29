@@ -4,9 +4,16 @@
  * Forces correct usage patterns through service API design
  */
 
-import { FileId, BaseFileMetadata } from '@app/types/file';
-import { StirlingFile, StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
-import { indexedDBManager, DATABASE_CONFIGS } from '@app/services/indexedDBManager';
+import { FileId, BaseFileMetadata } from "@app/types/file";
+import {
+  StirlingFile,
+  StirlingFileStub,
+  createStirlingFile,
+} from "@app/types/fileContext";
+import {
+  indexedDBManager,
+  DATABASE_CONFIGS,
+} from "@app/services/indexedDBManager";
 
 /**
  * Storage record - single source of truth
@@ -29,7 +36,7 @@ export interface StorageStats {
 
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
-  private readonly storeName = 'files';
+  private readonly storeName = "files";
 
   /**
    * Get database connection using centralized manager
@@ -41,7 +48,10 @@ class FileStorageService {
   /**
    * Store a StirlingFile with its metadata from StirlingFileStub
    */
-  async storeStirlingFile(stirlingFile: StirlingFile, stub: StirlingFileStub): Promise<void> {
+  async storeStirlingFile(
+    stirlingFile: StirlingFile,
+    stub: StirlingFileStub,
+  ): Promise<void> {
     const db = await this.getDatabase();
     const arrayBuffer = await stirlingFile.arrayBuffer();
 
@@ -53,38 +63,49 @@ class FileStorageService {
       type: stirlingFile.type,
       size: stirlingFile.size,
       lastModified: stirlingFile.lastModified,
+      createdAt: stub.createdAt,
       data: arrayBuffer,
       thumbnail: stub.thumbnailUrl,
       isLeaf: stub.isLeaf ?? true,
+      remoteStorageId: stub.remoteStorageId,
+      remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
+      remoteOwnerUsername: stub.remoteOwnerUsername,
+      remoteOwnedByCurrentUser: stub.remoteOwnedByCurrentUser,
+      remoteAccessRole: stub.remoteAccessRole,
+      remoteSharedViaLink: stub.remoteSharedViaLink,
+      remoteHasShareLinks: stub.remoteHasShareLinks,
+      remoteShareToken: stub.remoteShareToken,
 
       // History data from stub
       versionNumber: stub.versionNumber ?? 1,
       originalFileId: stub.originalFileId ?? stirlingFile.fileId,
       parentFileId: stub.parentFileId ?? undefined,
-      toolHistory: stub.toolHistory ?? []
+      toolHistory: stub.toolHistory ?? [],
     };
 
     return new Promise((resolve, reject) => {
       try {
         // Verify store exists before creating transaction
         if (!db.objectStoreNames.contains(this.storeName)) {
-          throw new Error(`Object store '${this.storeName}' not found. Available stores: ${Array.from(db.objectStoreNames).join(', ')}`);
+          throw new Error(
+            `Object store '${this.storeName}' not found. Available stores: ${Array.from(db.objectStoreNames).join(", ")}`,
+          );
         }
 
-        const transaction = db.transaction([this.storeName], 'readwrite');
+        const transaction = db.transaction([this.storeName], "readwrite");
         const store = transaction.objectStore(this.storeName);
 
         const request = store.add(record);
 
         request.onerror = () => {
-          console.error('IndexedDB add error:', request.error);
+          console.error("IndexedDB add error:", request.error);
           reject(request.error);
         };
         request.onsuccess = () => {
           resolve();
         };
       } catch (error) {
-        console.error('Transaction error:', error);
+        console.error("Transaction error:", error);
         reject(error);
       }
     });
@@ -97,7 +118,7 @@ class FileStorageService {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
@@ -113,7 +134,7 @@ class FileStorageService {
         const blob = new Blob([record.data], { type: record.type });
         const file = new File([blob], record.name, {
           type: record.type,
-          lastModified: record.lastModified
+          lastModified: record.lastModified,
         });
 
         // Convert to StirlingFile with preserved IDs
@@ -127,7 +148,9 @@ class FileStorageService {
    * Get multiple StirlingFiles - for batch loading
    */
   async getStirlingFiles(ids: FileId[]): Promise<StirlingFile[]> {
-    const results = await Promise.all(ids.map(id => this.getStirlingFile(id)));
+    const results = await Promise.all(
+      ids.map((id) => this.getStirlingFile(id)),
+    );
     return results.filter((file): file is StirlingFile => file !== null);
   }
 
@@ -138,7 +161,7 @@ class FileStorageService {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
@@ -160,11 +183,19 @@ class FileStorageService {
           quickKey: record.quickKey,
           thumbnailUrl: record.thumbnail,
           isLeaf: record.isLeaf,
+          remoteStorageId: record.remoteStorageId,
+          remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+          remoteOwnerUsername: record.remoteOwnerUsername,
+          remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+          remoteAccessRole: record.remoteAccessRole,
+          remoteSharedViaLink: record.remoteSharedViaLink,
+          remoteHasShareLinks: record.remoteHasShareLinks,
+          remoteShareToken: record.remoteShareToken,
           versionNumber: record.versionNumber,
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
           toolHistory: record.toolHistory,
-          createdAt: Date.now() // Current session
+          createdAt: record.createdAt || Date.now(),
         };
 
         resolve(stub);
@@ -179,7 +210,7 @@ class FileStorageService {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
       const stubs: StirlingFileStub[] = [];
@@ -189,7 +220,7 @@ class FileStorageService {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
           const record = cursor.value as StoredStirlingFileRecord;
-          if (record && record.name && typeof record.size === 'number') {
+          if (record && record.name && typeof record.size === "number") {
             // Extract metadata only - no file data
             stubs.push({
               id: record.id,
@@ -200,11 +231,19 @@ class FileStorageService {
               quickKey: record.quickKey,
               thumbnailUrl: record.thumbnail,
               isLeaf: record.isLeaf,
+              remoteStorageId: record.remoteStorageId,
+              remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+              remoteOwnerUsername: record.remoteOwnerUsername,
+              remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+              remoteAccessRole: record.remoteAccessRole,
+              remoteSharedViaLink: record.remoteSharedViaLink,
+              remoteHasShareLinks: record.remoteHasShareLinks,
+              remoteShareToken: record.remoteShareToken,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
-              createdAt: Date.now()
+              createdAt: record.createdAt || Date.now(),
             });
           }
           cursor.continue();
@@ -216,13 +255,25 @@ class FileStorageService {
   }
 
   /**
+   * Get all history stubs for a given original file ID.
+   */
+  async getHistoryChainStubs(
+    originalFileId: FileId,
+  ): Promise<StirlingFileStub[]> {
+    const stubs = await this.getAllStirlingFileStubs();
+    return stubs
+      .filter((stub) => (stub.originalFileId || stub.id) === originalFileId)
+      .sort((a, b) => (a.versionNumber || 1) - (b.versionNumber || 1));
+  }
+
+  /**
    * Get leaf StirlingFileStubs only - for unprocessed files
    */
   async getLeafStirlingFileStubs(): Promise<StirlingFileStub[]> {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.openCursor();
       const leafStubs: StirlingFileStub[] = [];
@@ -233,7 +284,12 @@ class FileStorageService {
         if (cursor) {
           const record = cursor.value as StoredStirlingFileRecord;
           // Only include leaf files (default to true if undefined)
-          if (record && record.name && typeof record.size === 'number' && record.isLeaf !== false) {
+          if (
+            record &&
+            record.name &&
+            typeof record.size === "number" &&
+            record.isLeaf !== false
+          ) {
             leafStubs.push({
               id: record.id,
               name: record.name,
@@ -243,11 +299,19 @@ class FileStorageService {
               quickKey: record.quickKey,
               thumbnailUrl: record.thumbnail,
               isLeaf: record.isLeaf,
+              remoteStorageId: record.remoteStorageId,
+              remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
+              remoteOwnerUsername: record.remoteOwnerUsername,
+              remoteOwnedByCurrentUser: record.remoteOwnedByCurrentUser,
+              remoteAccessRole: record.remoteAccessRole,
+              remoteSharedViaLink: record.remoteSharedViaLink,
+              remoteHasShareLinks: record.remoteHasShareLinks,
+              remoteShareToken: record.remoteShareToken,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
               toolHistory: record.toolHistory || [],
-              createdAt: Date.now()
+              createdAt: record.createdAt || Date.now(),
             });
           }
           cursor.continue();
@@ -265,7 +329,7 @@ class FileStorageService {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(id);
 
@@ -282,7 +346,7 @@ class FileStorageService {
 
     return new Promise((resolve, _reject) => {
       try {
-        const transaction = db.transaction([this.storeName], 'readwrite');
+        const transaction = db.transaction([this.storeName], "readwrite");
         const store = transaction.objectStore(this.storeName);
         const getRequest = store.get(id);
 
@@ -296,7 +360,7 @@ class FileStorageService {
               resolve(true);
             };
             updateRequest.onerror = () => {
-              console.error('Failed to update thumbnail:', updateRequest.error);
+              console.error("Failed to update thumbnail:", updateRequest.error);
               resolve(false);
             };
           } else {
@@ -305,11 +369,14 @@ class FileStorageService {
         };
 
         getRequest.onerror = () => {
-          console.error('Failed to get file for thumbnail update:', getRequest.error);
+          console.error(
+            "Failed to get file for thumbnail update:",
+            getRequest.error,
+          );
           resolve(false);
         };
       } catch (error) {
-        console.error('Transaction error during thumbnail update:', error);
+        console.error("Transaction error during thumbnail update:", error);
         resolve(false);
       }
     });
@@ -322,7 +389,7 @@ class FileStorageService {
     const db = await this.getDatabase();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.clear();
 
@@ -342,7 +409,7 @@ class FileStorageService {
 
     try {
       // Get browser quota for context
-      if ('storage' in navigator && 'estimate' in navigator.storage) {
+      if ("storage" in navigator && "estimate" in navigator.storage) {
         const estimate = await navigator.storage.estimate();
         quota = estimate.quota;
         available = estimate.quota || 0;
@@ -357,9 +424,8 @@ class FileStorageService {
       if (quota) {
         available = quota - used;
       }
-
     } catch (error) {
-      console.warn('Could not get storage stats:', error);
+      console.warn("Could not get storage stats:", error);
       used = 0;
       fileCount = 0;
     }
@@ -368,7 +434,7 @@ class FileStorageService {
       used,
       available,
       fileCount,
-      quota
+      quota,
     };
   }
 
@@ -380,7 +446,7 @@ class FileStorageService {
       const db = await this.getDatabase();
 
       return new Promise((resolve, reject) => {
-        const transaction = db.transaction([this.storeName], 'readonly');
+        const transaction = db.transaction([this.storeName], "readonly");
         const store = transaction.objectStore(this.storeName);
         const request = store.get(id);
 
@@ -409,14 +475,16 @@ class FileStorageService {
   async markFileAsProcessed(fileId: FileId): Promise<boolean> {
     try {
       const db = await this.getDatabase();
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
 
-      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
-        const request = store.get(fileId);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
+      const record = await new Promise<StoredStirlingFileRecord | undefined>(
+        (resolve, reject) => {
+          const request = store.get(fileId);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        },
+      );
 
       if (!record) {
         return false; // File not found
@@ -433,7 +501,7 @@ class FileStorageService {
 
       return true;
     } catch (error) {
-      console.error('Failed to mark file as processed:', error);
+      console.error("Failed to mark file as processed:", error);
       return false;
     }
   }
@@ -445,14 +513,16 @@ class FileStorageService {
   async markFileAsLeaf(fileId: FileId): Promise<boolean> {
     try {
       const db = await this.getDatabase();
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
 
-      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
-        const request = store.get(fileId);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
+      const record = await new Promise<StoredStirlingFileRecord | undefined>(
+        (resolve, reject) => {
+          const request = store.get(fileId);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        },
+      );
 
       if (!record) {
         return false; // File not found
@@ -469,7 +539,45 @@ class FileStorageService {
 
       return true;
     } catch (error) {
-      console.error('Failed to mark file as leaf:', error);
+      console.error("Failed to mark file as leaf:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Update metadata fields for a stored file record.
+   */
+  async updateFileMetadata(
+    fileId: FileId,
+    updates: Partial<StoredStirlingFileRecord>,
+  ): Promise<boolean> {
+    try {
+      const db = await this.getDatabase();
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const record = await new Promise<StoredStirlingFileRecord | undefined>(
+        (resolve, reject) => {
+          const request = store.get(fileId);
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () =>
+            resolve(request.result as StoredStirlingFileRecord | undefined);
+        },
+      );
+
+      if (!record) {
+        return false;
+      }
+
+      const updatedRecord = { ...record, ...updates };
+      await new Promise<void>((resolve, reject) => {
+        const request = store.put(updatedRecord);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Failed to update file metadata:", error);
       return false;
     }
   }

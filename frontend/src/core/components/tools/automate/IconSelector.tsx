@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Text, Stack, Button, SimpleGrid, Tooltip, Popover } from "@mantine/core";
+import {
+  Box,
+  Text,
+  Stack,
+  Button,
+  SimpleGrid,
+  Tooltip,
+  Popover,
+} from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { iconMap, iconOptions } from '@app/components/tools/automate/iconMap';
-import { Z_INDEX_AUTOMATE_DROPDOWN } from '@app/styles/zIndex';
+import { iconMap, iconOptions } from "@app/components/tools/automate/iconMap";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface IconSelectorProps {
   value?: string;
@@ -11,11 +19,16 @@ interface IconSelectorProps {
   size?: "sm" | "md" | "lg";
 }
 
-export default function IconSelector({ value = "SettingsIcon", onChange, size = "sm" }: IconSelectorProps) {
+export default function IconSelector({
+  value = "SettingsIcon",
+  onChange,
+  size = "sm",
+}: IconSelectorProps) {
   const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const selectedIconComponent = iconMap[value as keyof typeof iconMap] || iconMap.SettingsIcon;
+  const selectedIconComponent =
+    iconMap[value as keyof typeof iconMap] || iconMap.SettingsIcon;
 
   const handleIconSelect = (iconKey: string) => {
     onChange?.(iconKey);
@@ -26,7 +39,11 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
 
   return (
     <Stack gap="1px">
-      <Text size="sm" fw={600} style={{ color: "var(--mantine-color-primary)" }}>
+      <Text
+        size="sm"
+        fw={600}
+        style={{ color: "var(--mantine-color-primary)" }}
+      >
         {t("automate.creation.icon.label", "Icon")}
       </Text>
 
@@ -53,10 +70,11 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
               paddingLeft: "0.5rem",
               borderColor: "var(--mantine-color-gray-3)",
               color: "var(--mantine-color-text)",
-
             }}
           >
-            {React.createElement(selectedIconComponent, { style: { fontSize: iconSize } })}
+            {React.createElement(selectedIconComponent, {
+              style: { fontSize: iconSize },
+            })}
             <KeyboardArrowDownIcon
               style={{
                 fontSize: iconSize * 0.8,
@@ -73,7 +91,8 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
           <Stack gap="xs">
             <SimpleGrid cols={4} spacing="xs">
               {iconOptions.map((option) => {
-                const IconComponent = iconMap[option.value as keyof typeof iconMap];
+                const IconComponent =
+                  iconMap[option.value as keyof typeof iconMap];
                 const isSelected = value === option.value;
 
                 return (
@@ -87,11 +106,14 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
                         padding: "0.5rem",
                         borderRadius: "0.25rem",
                         cursor: "pointer",
-                        backgroundColor: isSelected ? "var(--mantine-color-gray-1)" : "transparent",
+                        backgroundColor: isSelected
+                          ? "var(--mantine-color-gray-1)"
+                          : "transparent",
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-0)";
+                          e.currentTarget.style.backgroundColor =
+                            "var(--mantine-color-gray-0)";
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -103,7 +125,9 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
                       <IconComponent
                         style={{
                           fontSize: iconSize,
-                          color: isSelected ? "var(--mantine-color-gray-9)" : "var(--mantine-color-gray-7)",
+                          color: isSelected
+                            ? "var(--mantine-color-gray-9)"
+                            : "var(--mantine-color-gray-7)",
                         }}
                       />
                     </Box>

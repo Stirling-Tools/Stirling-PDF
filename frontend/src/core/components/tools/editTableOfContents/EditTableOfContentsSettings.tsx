@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Button,
@@ -9,9 +9,9 @@ import {
   Switch,
   Text,
   Tooltip,
-} from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { BookmarkNode } from '@app/utils/editTableOfContents';
+} from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { BookmarkNode } from "@app/utils/editTableOfContents";
 
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];
@@ -50,20 +50,39 @@ export default function EditTableOfContentsSettings({
 }: EditTableOfContentsSettingsProps) {
   const { t } = useTranslation();
 
-  const infoLines = useMemo(() => ([
-    t('editTableOfContents.info.line1', 'Each bookmark needs a descriptive title and the page it should open.'),
-    t('editTableOfContents.info.line2', 'Use child bookmarks to build a hierarchy for chapters, sections, or subsections.'),
-    t('editTableOfContents.info.line3', 'Import bookmarks from the selected PDF or from a JSON file to save time.'),
-  ]), [t]);
+  const infoLines = useMemo(
+    () => [
+      t(
+        "editTableOfContents.info.line1",
+        "Each bookmark needs a descriptive title and the page it should open.",
+      ),
+      t(
+        "editTableOfContents.info.line2",
+        "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+      ),
+      t(
+        "editTableOfContents.info.line3",
+        "Import bookmarks from the selected PDF or from a JSON file to save time.",
+      ),
+    ],
+    [t],
+  );
 
   return (
     <Stack gap="md">
       <Stack gap="xs">
-        <Text size="sm" fw={500}>{t('editTableOfContents.actions.source', 'Load bookmarks')}</Text>
+        <Text size="sm" fw={500}>
+          {t("editTableOfContents.actions.source", "Load bookmarks")}
+        </Text>
         <Text size="xs" c="dimmed">
           {selectedFileName
-            ? t('editTableOfContents.actions.selectedFile', { file: selectedFileName })
-            : t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.')}
+            ? t("editTableOfContents.actions.selectedFile", {
+                file: selectedFileName,
+              })
+            : t(
+                "editTableOfContents.actions.noFile",
+                "Select a PDF to extract existing bookmarks.",
+              )}
         </Text>
       </Stack>
 
@@ -75,11 +94,21 @@ export default function EditTableOfContentsSettings({
           fullWidth
         >
           {selectedFileName
-            ? t('editTableOfContents.workbench.changeFile', 'Change PDF')
-            : t('editTableOfContents.workbench.selectFile', 'Select PDF')}
+            ? t("editTableOfContents.workbench.changeFile", "Change PDF")
+            : t("editTableOfContents.workbench.selectFile", "Select PDF")}
         </Button>
 
-        <Tooltip label={!selectedFileName ? t('editTableOfContents.actions.noFile', 'Select a PDF to extract existing bookmarks.') : ''} disabled={Boolean(selectedFileName)}>
+        <Tooltip
+          label={
+            !selectedFileName
+              ? t(
+                  "editTableOfContents.actions.noFile",
+                  "Select a PDF to extract existing bookmarks.",
+                )
+              : ""
+          }
+          disabled={Boolean(selectedFileName)}
+        >
           <Button
             variant="default"
             leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
@@ -88,12 +117,12 @@ export default function EditTableOfContentsSettings({
             disabled={disabled || !selectedFileName}
             fullWidth
           >
-            {t('editTableOfContents.actions.loadFromPdf', 'Load from PDF')}
+            {t("editTableOfContents.actions.loadFromPdf", "Load from PDF")}
           </Button>
         </Tooltip>
 
         <FileButton
-          onChange={file => file && onImportJson(file)}
+          onChange={(file) => file && onImportJson(file)}
           accept="application/json"
           disabled={disabled}
         >
@@ -105,13 +134,20 @@ export default function EditTableOfContentsSettings({
               disabled={disabled}
               fullWidth
             >
-              {t('editTableOfContents.actions.importJson', 'Import JSON')}
+              {t("editTableOfContents.actions.importJson", "Import JSON")}
             </Button>
           )}
         </FileButton>
 
         <Tooltip
-          label={canReadClipboard ? '' : t('editTableOfContents.actions.clipboardUnavailable', 'Clipboard access is not available in this browser.')}
+          label={
+            canReadClipboard
+              ? ""
+              : t(
+                  "editTableOfContents.actions.clipboardUnavailable",
+                  "Clipboard access is not available in this browser.",
+                )
+          }
           disabled={canReadClipboard}
         >
           <Button
@@ -121,13 +157,20 @@ export default function EditTableOfContentsSettings({
             disabled={disabled || !canReadClipboard}
             fullWidth
           >
-            {t('editTableOfContents.actions.importClipboard', 'Paste from clipboard')}
+            {t(
+              "editTableOfContents.actions.importClipboard",
+              "Paste from clipboard",
+            )}
           </Button>
         </Tooltip>
       </Stack>
 
       {loadError && (
-        <Alert color="red" radius="md" icon={<LocalIcon icon="error-outline-rounded" />}>
+        <Alert
+          color="red"
+          radius="md"
+          icon={<LocalIcon icon="error-outline-rounded" />}
+        >
           {loadError}
         </Alert>
       )}
@@ -135,7 +178,9 @@ export default function EditTableOfContentsSettings({
       <Divider />
 
       <Stack gap="xs">
-        <Text size="sm" fw={500}>{t('editTableOfContents.actions.export', 'Export bookmarks')}</Text>
+        <Text size="sm" fw={500}>
+          {t("editTableOfContents.actions.export", "Export bookmarks")}
+        </Text>
       </Stack>
 
       <Stack gap="sm">
@@ -146,11 +191,18 @@ export default function EditTableOfContentsSettings({
           disabled={disabled || bookmarks.length === 0}
           fullWidth
         >
-          {t('editTableOfContents.actions.exportJson', 'Download JSON')}
+          {t("editTableOfContents.actions.exportJson", "Download JSON")}
         </Button>
 
         <Tooltip
-          label={canWriteClipboard ? '' : t('editTableOfContents.actions.clipboardUnavailable', 'Clipboard access is not available in this browser.')}
+          label={
+            canWriteClipboard
+              ? ""
+              : t(
+                  "editTableOfContents.actions.clipboardUnavailable",
+                  "Clipboard access is not available in this browser.",
+                )
+          }
           disabled={canWriteClipboard}
         >
           <Button
@@ -160,7 +212,10 @@ export default function EditTableOfContentsSettings({
             disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
             fullWidth
           >
-            {t('editTableOfContents.actions.exportClipboard', 'Copy to clipboard')}
+            {t(
+              "editTableOfContents.actions.exportClipboard",
+              "Copy to clipboard",
+            )}
           </Button>
         </Tooltip>
       </Stack>
@@ -169,9 +224,17 @@ export default function EditTableOfContentsSettings({
 
       <Switch
         checked={replaceExisting}
-        onChange={(event) => onReplaceExistingChange(event.currentTarget.checked)}
-        label={t('editTableOfContents.settings.replaceExisting', 'Replace existing bookmarks')}
-        description={t('editTableOfContents.settings.replaceExistingHint', 'When disabled, the new outline is appended after the current bookmarks.')}
+        onChange={(event) =>
+          onReplaceExistingChange(event.currentTarget.checked)
+        }
+        label={t(
+          "editTableOfContents.settings.replaceExisting",
+          "Replace existing bookmarks",
+        )}
+        description={t(
+          "editTableOfContents.settings.replaceExistingHint",
+          "When disabled, the new outline is appended after the current bookmarks.",
+        )}
         disabled={disabled}
       />
 

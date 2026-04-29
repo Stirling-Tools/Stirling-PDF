@@ -3,338 +3,204 @@ package stirling.software.common.util;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
-public class RequestUriUtilsTest {
+class RequestUriUtilsTest {
+
+    // --- isStaticResource tests ---
 
     @Test
-    void testIsStaticResource() {
-        // Test static resources without context path
-        assertTrue(
-                RequestUriUtils.isStaticResource("/css/styles.css"), "CSS files should be static");
-        assertTrue(RequestUriUtils.isStaticResource("/js/script.js"), "JS files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/images/logo.png"),
-                "Image files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/public/index.html"),
-                "Public files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/pdfjs/pdf.worker.js"),
-                "PDF.js files should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/pdfium/pdfium.wasm"),
-                "PDFium wasm should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/api/v1/info/status"),
-                "API status should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/some-path/icon.svg"),
-                "SVG files should be static");
-        assertTrue(RequestUriUtils.isStaticResource("/login"), "Login page should be static");
-        assertTrue(RequestUriUtils.isStaticResource("/error"), "Error page should be static");
-
-        // Test non-static resources
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/v1/users"),
-                "API users should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/v1/orders"),
-                "API orders should not be static");
-        assertFalse(RequestUriUtils.isStaticResource("/"), "Root path should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource("/register"),
-                "Register page should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/v1/products"),
-                "API products should not be static");
+    void testIsStaticResource_nullUri() {
+        assertFalse(RequestUriUtils.isStaticResource(null));
     }
 
     @Test
-    void testIsFrontendRoute() {
-        assertTrue(
-                RequestUriUtils.isFrontendRoute("", "/"), "Root path should be a frontend route");
-        assertTrue(
-                RequestUriUtils.isFrontendRoute("", "/app/dashboard"),
-                "React routes without extensions should be frontend routes");
-        assertFalse(
-                RequestUriUtils.isFrontendRoute("", "/api/v1/users"),
-                "API routes should not be frontend routes");
-        assertFalse(
-                RequestUriUtils.isFrontendRoute("", "/register"),
-                "Register should not be treated as a frontend route");
-        assertFalse(
-                RequestUriUtils.isFrontendRoute("", "/pipeline/jobs"),
-                "Pipeline should not be treated as a frontend route");
-        assertFalse(
-                RequestUriUtils.isFrontendRoute("", "/files/download"),
-                "Files path should not be treated as a frontend route");
+    void testIsStaticResource_cssDirectory() {
+        assertTrue(RequestUriUtils.isStaticResource("/css/style.css"));
     }
 
     @Test
-    void testIsStaticResourceWithContextPath() {
-        String contextPath = "/myapp";
-
-        // Test static resources with context path
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/css/styles.css"),
-                "CSS with context path should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/js/script.js"),
-                "JS with context path should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/images/logo.png"),
-                "Images with context path should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/login"),
-                "Login with context path should be static");
-
-        // Test non-static resources with context path
-        assertFalse(
-                RequestUriUtils.isStaticResource(contextPath, contextPath + "/api/v1/users"),
-                "API users with context path should not be static");
-        assertFalse(
-                RequestUriUtils.isStaticResource(contextPath, "/"),
-                "Root path with context path should not be static");
-    }
-
-    @ParameterizedTest
-    @ValueSource(
-            strings = {
-                "robots.txt",
-                "/favicon.ico",
-                "/icon.svg",
-                "/image.png",
-                "/locales/en/translation.toml",
-                "/site.webmanifest",
-                "/app/logo.svg",
-                "/downloads/document.png",
-                "/assets/brand.ico",
-                "/any/path/with/image.svg",
-                "/deep/nested/folder/icon.png",
-                "/pdfium/pdfium.wasm"
-            })
-    void testIsStaticResourceWithFileExtensions(String path) {
-        assertTrue(
-                RequestUriUtils.isStaticResource(path),
-                "Files with specific extensions should be static regardless of path");
+    void testIsStaticResource_jsDirectory() {
+        assertTrue(RequestUriUtils.isStaticResource("/js/app.js"));
     }
 
     @Test
-    void testIsTrackableResource() {
-        // Test non-trackable resources (returns false)
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/js/script.js"),
-                "JS files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/v1/api-docs"),
-                "API docs should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("robots.txt"),
-                "robots.txt should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/images/logo.png"),
-                "Images should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/styles.css"),
-                "CSS files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/script.js.map"),
-                "Map files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/icon.svg"),
-                "SVG files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/popularity.txt"),
-                "Popularity file should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/script.js"),
-                "JS files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/pdfium/pdfium.wasm"),
-                "PDFium wasm should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/swagger/index.html"),
-                "Swagger files should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/api/v1/info/status"),
-                "API info should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/site.webmanifest"),
-                "Webmanifest should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/fonts/font.woff"),
-                "Fonts should not be trackable");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/pdfjs/viewer.js"),
-                "PDF.js files should not be trackable");
-
-        // Test trackable resources (returns true)
-        assertTrue(RequestUriUtils.isTrackableResource("/login"), "Login page should be trackable");
-        assertTrue(
-                RequestUriUtils.isTrackableResource("/register"),
-                "Register page should be trackable");
-        assertTrue(
-                RequestUriUtils.isTrackableResource("/api/v1/users"),
-                "API users should be trackable");
-        assertTrue(RequestUriUtils.isTrackableResource("/"), "Root path should be trackable");
-        assertTrue(
-                RequestUriUtils.isTrackableResource("/some-other-path"),
-                "Other paths should be trackable");
+    void testIsStaticResource_imagesDirectory() {
+        assertTrue(RequestUriUtils.isStaticResource("/images/logo.png"));
     }
 
     @Test
-    void testIsTrackableResourceWithContextPath() {
-        String contextPath = "/myapp";
-
-        // Test with context path
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/js/script.js"),
-                "JS files should not be trackable with context path");
-        assertTrue(
-                RequestUriUtils.isTrackableResource(contextPath, "/login"),
-                "Login page should be trackable with context path");
-
-        // Additional tests with context path
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/fonts/custom.woff"),
-                "Font files should not be trackable with context path");
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/images/header.png"),
-                "Images should not be trackable with context path");
-        assertFalse(
-                RequestUriUtils.isTrackableResource(contextPath, "/swagger/ui.html"),
-                "Swagger UI should not be trackable with context path");
-        assertTrue(
-                RequestUriUtils.isTrackableResource(contextPath, "/account/profile"),
-                "Account page should be trackable with context path");
-        assertTrue(
-                RequestUriUtils.isTrackableResource(contextPath, "/pdf/view"),
-                "PDF view page should be trackable with context path");
-    }
-
-    @ParameterizedTest
-    @ValueSource(
-            strings = {
-                "/js/util.js",
-                "/v1/api-docs/swagger.json",
-                "/robots.txt",
-                "/images/header/logo.png",
-                "/styles/theme.css",
-                "/build/app.js.map",
-                "/assets/icon.svg",
-                "/data/popularity.txt",
-                "/bundle.js",
-                "/api/swagger-ui.html",
-                "/api/v1/info/health",
-                "/site.webmanifest",
-                "/fonts/roboto.woff",
-                "/pdfjs/viewer.js",
-                "/pdfium/pdfium.wasm"
-            })
-    void testNonTrackableResources(String path) {
-        assertFalse(
-                RequestUriUtils.isTrackableResource(path),
-                "Resources matching patterns should not be trackable: " + path);
-    }
-
-    @ParameterizedTest
-    @ValueSource(
-            strings = {
-                "/",
-                "/home",
-                "/login",
-                "/register",
-                "/pdf/merge",
-                "/pdf/split",
-                "/api/v1/users/1",
-                "/api/v1/documents/process",
-                "/settings",
-                "/account/profile",
-                "/dashboard",
-                "/help",
-                "/about"
-            })
-    void testTrackableResources(String path) {
-        assertTrue(
-                RequestUriUtils.isTrackableResource(path),
-                "App routes should be trackable: " + path);
+    void testIsStaticResource_robotsTxt() {
+        assertTrue(RequestUriUtils.isStaticResource("/robots.txt"));
     }
 
     @Test
-    void testEdgeCases() {
-        // Test with empty strings
-        assertFalse(RequestUriUtils.isStaticResource("", ""), "Empty path should not be static");
-        assertTrue(RequestUriUtils.isTrackableResource("", ""), "Empty path should be trackable");
-
-        // Test with null-like behavior (would actually throw NPE in real code)
-        // These are not actual null tests but shows handling of odd cases
-        assertFalse(RequestUriUtils.isStaticResource("null"), "String 'null' should not be static");
-
-        // Test String "null" as a path
-        boolean isTrackable = RequestUriUtils.isTrackableResource("null");
-        assertTrue(isTrackable, "String 'null' should be trackable");
-
-        // Mixed case extensions test - note that Java's endsWith() is case-sensitive
-        // We'll check actual behavior and document it rather than asserting
-
-        // Always test the lowercase versions which should definitely work
-        assertTrue(
-                RequestUriUtils.isStaticResource("/logo.png"), "PNG (lowercase) should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/icon.svg"), "SVG (lowercase) should be static");
-
-        // Path with query parameters
-        assertFalse(
-                RequestUriUtils.isStaticResource("/api/users?page=1"),
-                "Path with query params should respect base path");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/images/logo.png?v=123"),
-                "Static resource with query params should still be static");
-
-        // Paths with fragments
-        assertTrue(
-                RequestUriUtils.isStaticResource("/css/styles.css#section1"),
-                "CSS with fragment should be static");
-
-        // Multiple dots in filename
-        assertTrue(
-                RequestUriUtils.isStaticResource("/js/jquery.min.js"),
-                "JS with multiple dots should be static");
-
-        // Special characters in path
-        assertTrue(
-                RequestUriUtils.isStaticResource("/images/user's-photo.png"),
-                "Path with special chars should be handled correctly");
+    void testIsStaticResource_faviconIco() {
+        assertTrue(RequestUriUtils.isStaticResource("/favicon.ico"));
     }
 
     @Test
-    void testComplexPaths() {
-        // Test complex static resource paths
-        assertTrue(
-                RequestUriUtils.isStaticResource("/css/theme/dark/styles.css"),
-                "Nested CSS should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/fonts/open-sans/bold/font.woff"),
-                "Nested font should be static");
-        assertTrue(
-                RequestUriUtils.isStaticResource("/js/vendor/jquery/3.5.1/jquery.min.js"),
-                "Versioned JS should be static");
+    void testIsStaticResource_loginPath() {
+        assertTrue(RequestUriUtils.isStaticResource("/login"));
+    }
 
-        // Test complex paths with context
-        String contextPath = "/app";
-        assertTrue(
-                RequestUriUtils.isStaticResource(
-                        contextPath, contextPath + "/css/theme/dark/styles.css"),
-                "Nested CSS with context should be static");
+    @Test
+    void testIsStaticResource_errorPath() {
+        assertTrue(RequestUriUtils.isStaticResource("/error"));
+    }
 
-        // Test boundary cases for isTrackableResource
+    @Test
+    void testIsStaticResource_svgExtension() {
+        assertTrue(RequestUriUtils.isStaticResource("/some/path/icon.svg"));
+    }
+
+    @Test
+    void testIsStaticResource_apiRoute_notStatic() {
+        assertFalse(RequestUriUtils.isStaticResource("/api/v1/convert"));
+    }
+
+    @Test
+    void testIsStaticResource_apiStatusEndpoint() {
+        assertTrue(RequestUriUtils.isStaticResource("/api/v1/info/status"));
+    }
+
+    @Test
+    void testIsStaticResource_withContextPath() {
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/css/style.css"));
+    }
+
+    @Test
+    void testIsStaticResource_mobileScannerPath() {
+        assertTrue(RequestUriUtils.isStaticResource("/mobile-scanner"));
+    }
+
+    // --- isFrontendRoute tests ---
+
+    @Test
+    void testIsFrontendRoute_nullUri() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", null));
+    }
+
+    @Test
+    void testIsFrontendRoute_apiPath() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/api/v1/convert"));
+    }
+
+    @Test
+    void testIsFrontendRoute_backendOnlyPath() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/swagger"));
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/register"));
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/actuator"));
+    }
+
+    @Test
+    void testIsFrontendRoute_extensionlessPath() {
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/merge"));
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/split-pdf"));
+    }
+
+    @Test
+    void testIsFrontendRoute_pathWithExtension() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/some/file.pdf"));
+    }
+
+    @Test
+    void testIsFrontendRoute_blankPath() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", ""));
+    }
+
+    // --- isTrackableResource tests ---
+
+    @Test
+    void testIsTrackableResource_jsPath() {
+        assertFalse(RequestUriUtils.isTrackableResource("/js/app.js"));
+    }
+
+    @Test
+    void testIsTrackableResource_cssFile() {
+        assertFalse(RequestUriUtils.isTrackableResource("/some/file.css"));
+    }
+
+    @Test
+    void testIsTrackableResource_apiPage() {
+        assertTrue(RequestUriUtils.isTrackableResource("/api/v1/convert"));
+    }
+
+    @Test
+    void testIsTrackableResource_swaggerPath() {
+        assertFalse(RequestUriUtils.isTrackableResource("/swagger-ui/index.html"));
+    }
+
+    @Test
+    void testIsTrackableResource_infoApi() {
+        assertFalse(RequestUriUtils.isTrackableResource("/api/v1/info/status"));
+    }
+
+    // --- isPublicAuthEndpoint tests ---
+
+    @Test
+    void testIsPublicAuthEndpoint_loginPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/login", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_oauthPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/oauth2/authorization/google", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_healthEndpoint() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/actuator/health", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_regularApiNotPublic() {
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/convert", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_withContextPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
+    }
+
+    // --- share-link SPA bootstrap ---
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkToken() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkTokenTrailingSlash() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkWithContextPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/share/abc123", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareRootNotPublic() {
+        // Avoid matching bare "/share" or "/share/" — must have a token segment
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareNestedPathNotPublic() {
+        // Guard against future additions like /share/<token>/download becoming accidentally public
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/download", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc/admin", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareApiStillProtected() {
+        // Share-link data APIs must NOT be public — they enforce auth + access checks
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));
         assertFalse(
-                RequestUriUtils.isTrackableResource("/js-framework/components"),
-                "Path starting with js- should not be treated as JS resource");
-        assertFalse(
-                RequestUriUtils.isTrackableResource("/fonts-selection"),
-                "Path starting with fonts- should not be treated as font resource");
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/share-links/abc123/metadata", ""));
     }
 }

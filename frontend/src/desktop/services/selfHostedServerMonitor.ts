@@ -1,7 +1,7 @@
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from "@tauri-apps/plugin-http";
 
 export interface SelfHostedServerState {
-  status: 'idle' | 'checking' | 'online' | 'offline';
+  status: "idle" | "checking" | "online" | "offline";
   isOnline: boolean;
   serverUrl: string | null;
 }
@@ -25,7 +25,7 @@ class SelfHostedServerMonitor {
   private static instance: SelfHostedServerMonitor;
 
   private state: SelfHostedServerState = {
-    status: 'idle',
+    status: "idle",
     isOnline: false,
     serverUrl: null,
   };
@@ -53,7 +53,7 @@ class SelfHostedServerMonitor {
 
     this.stop();
 
-    this.updateState({ serverUrl, status: 'checking', isOnline: false });
+    this.updateState({ serverUrl, status: "checking", isOnline: false });
 
     void this.pollOnce(serverUrl);
     this.intervalId = setInterval(() => {
@@ -67,7 +67,7 @@ class SelfHostedServerMonitor {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
-    this.updateState({ status: 'idle', isOnline: false, serverUrl: null });
+    this.updateState({ status: "idle", isOnline: false, serverUrl: null });
   }
 
   get isOnline(): boolean {
@@ -96,21 +96,22 @@ class SelfHostedServerMonitor {
   }
 
   private async pollOnce(serverUrl: string): Promise<void> {
-    const healthUrl = `${serverUrl.replace(/\/$/, '')}/api/v1/info/status`;
+    const healthUrl = `${serverUrl.replace(/\/$/, "")}/api/v1/info/status`;
 
     try {
       const response = await fetch(healthUrl, {
-        method: 'GET',
+        method: "GET",
         connectTimeout: REQUEST_TIMEOUT_MS,
       });
 
-      if (response.ok) {
-        this.updateState({ status: 'online', isOnline: true });
+      // 401/403 means the server is running but requires authentication — treat as online
+      if (response.ok || response.status === 401 || response.status === 403) {
+        this.updateState({ status: "online", isOnline: true });
       } else {
-        this.updateState({ status: 'offline', isOnline: false });
+        this.updateState({ status: "offline", isOnline: false });
       }
     } catch {
-      this.updateState({ status: 'offline', isOnline: false });
+      this.updateState({ status: "offline", isOnline: false });
     }
   }
 
@@ -125,7 +126,7 @@ class SelfHostedServerMonitor {
     this.state = next;
 
     if (changed) {
-      this.listeners.forEach(listener => listener(this.state));
+      this.listeners.forEach((listener) => listener(this.state));
     }
   }
 }

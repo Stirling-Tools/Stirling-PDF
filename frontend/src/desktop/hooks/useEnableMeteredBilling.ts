@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { supabase } from '@app/auth/supabase';
-import { authService } from '@app/services/authService';
+import { useState } from "react";
+import { supabase } from "@app/auth/supabase";
+import { authService } from "@app/services/authService";
 
 /**
  * Shared hook for enabling metered (overage) billing via Supabase edge function.
@@ -13,7 +13,7 @@ import { authService } from '@app/services/authService';
 export function useEnableMeteredBilling(
   refreshBilling: () => Promise<void>,
   onSuccess: () => void,
-  logPrefix: string
+  logPrefix: string,
 ): {
   enablingMetering: boolean;
   meteringError: string | null;
@@ -30,20 +30,25 @@ export function useEnableMeteredBilling(
     try {
       const token = await authService.getAuthToken();
       if (!token) {
-        throw new Error('Not authenticated');
+        throw new Error("Not authenticated");
       }
 
-      const { data, error } = await supabase.functions.invoke('create-meter-subscription', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "create-meter-subscription",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (error) {
-        throw new Error(error.message || 'Failed to enable metered billing');
+        throw new Error(error.message || "Failed to enable metered billing");
       }
 
       if (!data?.success) {
-        throw new Error(data?.error || data?.message || 'Failed to enable metered billing');
+        throw new Error(
+          data?.error || data?.message || "Failed to enable metered billing",
+        );
       }
 
       console.debug(`[${logPrefix}] Metered billing enabled successfully`);
@@ -51,7 +56,8 @@ export function useEnableMeteredBilling(
       await refreshBilling();
       onSuccess();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to enable metered billing';
+      const message =
+        err instanceof Error ? err.message : "Failed to enable metered billing";
       console.error(`[${logPrefix}] Failed to enable metered billing:`, err);
       setMeteringError(message);
     } finally {

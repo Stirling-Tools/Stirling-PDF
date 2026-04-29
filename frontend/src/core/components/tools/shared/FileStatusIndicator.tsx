@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import FolderIcon from '@mui/icons-material/Folder';
-import UploadIcon from '@mui/icons-material/Upload';
+import FolderIcon from "@mui/icons-material/Folder";
+import UploadIcon from "@mui/icons-material/Upload";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { StirlingFile } from "@app/types/fileContext";
-import { PrivateContent } from "@app/components/shared/PrivateContent"
+import { PrivateContent } from "@app/components/shared/PrivateContent";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
@@ -39,10 +39,10 @@ const FileStatusIndicator = ({
 
   // Handle native file picker
   const handleNativeUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
+    const input = document.createElement("input");
+    input.type = "file";
     input.multiple = true;
-    input.accept = '.pdf,application/pdf';
+    input.accept = ".pdf,application/pdf";
     input.onchange = (event) => {
       const files = Array.from((event.target as HTMLInputElement).files || []);
       if (files.length > 0) {
@@ -59,9 +59,18 @@ const FileStatusIndicator = ({
 
   const getPlaceholder = () => {
     if (minFiles === undefined || minFiles === 1) {
-      return t("files.selectFromWorkbench", "Select files from the workbench or ");
+      return t(
+        "files.selectFromWorkbench",
+        "Select files from the workbench or ",
+      );
     } else {
-      return t("files.selectMultipleFromWorkbench", "Select at least {{count}} files from the workbench or ", { count: minFiles });
+      return t(
+        "files.selectMultipleFromWorkbench",
+        "Select at least {{count}} files from the workbench or ",
+        {
+          count: minFiles,
+        },
+      );
     }
   };
 
@@ -74,9 +83,14 @@ const FileStatusIndicator = ({
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
-            <UploadIcon style={{ fontSize: '0.875rem' }} />
+            <UploadIcon style={{ fontSize: "0.875rem" }} />
             {t("files.upload", "Upload")}
           </Anchor>
         </Text>
@@ -88,9 +102,14 @@ const FileStatusIndicator = ({
           <Anchor
             size="sm"
             onClick={() => openFilesModal({})}
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
-            <FolderIcon style={{ fontSize: '0.875rem' }} />
+            <FolderIcon style={{ fontSize: "0.875rem" }} />
             {t("files.addFiles", "Add files")}
           </Anchor>
         </Text>
@@ -108,9 +127,14 @@ const FileStatusIndicator = ({
           <Anchor
             size="sm"
             onClick={handleNativeUpload}
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
-            <UploadIcon style={{ fontSize: '0.875rem' }} />
+            <UploadIcon style={{ fontSize: "0.875rem" }} />
             {t("files.uploadFiles", "Upload Files")}
           </Anchor>
         </Text>
@@ -123,9 +147,14 @@ const FileStatusIndicator = ({
           <Anchor
             size="sm"
             onClick={() => openFilesModal({})}
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+            }}
           >
-            <FolderIcon style={{ fontSize: '0.875rem' }} />
+            <FolderIcon style={{ fontSize: "0.875rem" }} />
             {t("files.addFiles", "Add files")}
           </Anchor>
         </Text>
@@ -134,10 +163,23 @@ const FileStatusIndicator = ({
   }
 
   return (
-   <Text size="sm" c="dimmed" style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
-      ✓ {selectedFiles.length === 1
-          ? <PrivateContent>{t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name }) }</PrivateContent>
-          : t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })}
+    <Text
+      size="sm"
+      c="dimmed"
+      style={{ wordBreak: "break-word", whiteSpace: "normal" }}
+    >
+      ✓{" "}
+      {selectedFiles.length === 1 ? (
+        <PrivateContent>
+          {t("fileSelected", "Selected: {{filename}}", {
+            filename: selectedFiles[0]?.name,
+          })}
+        </PrivateContent>
+      ) : (
+        t("filesSelected", "{{count}} files selected", {
+          count: selectedFiles.length,
+        })
+      )}
     </Text>
   );
 };

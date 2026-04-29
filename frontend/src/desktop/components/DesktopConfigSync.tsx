@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useBackendHealth } from '@app/hooks/useBackendHealth';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useEffect, useRef } from "react";
+import { useBackendHealth } from "@app/hooks/useBackendHealth";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
  * Desktop-only bridge that refetches the app config once the bundled backend
@@ -13,7 +13,7 @@ export function DesktopConfigSync() {
   const previousStatus = useRef(status);
 
   useEffect(() => {
-    if (status === 'healthy' && previousStatus.current !== 'healthy') {
+    if (status === "healthy" && previousStatus.current !== "healthy") {
       refetch();
     }
     previousStatus.current = status;

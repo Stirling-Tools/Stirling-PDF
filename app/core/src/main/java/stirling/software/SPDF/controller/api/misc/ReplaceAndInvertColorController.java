@@ -1,8 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -16,6 +20,8 @@ import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -23,6 +29,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -32,7 +39,7 @@ public class ReplaceAndInvertColorController {
             description =
                     "This endpoint accepts a PDF file and provides options to invert all colors, replace"
                             + " text and background colors, or convert to CMYK color space for printing. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> replaceAndInvertColor(
+    public ResponseEntity<Resource> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 
         InputStreamResource resource =
@@ -47,7 +54,15 @@ public class ReplaceAndInvertColorController {
         String filename =
                 GeneralUtils.generateFilename(
                         request.getFileInput().getOriginalFilename(), "_inverted.pdf");
-        return WebResponseUtils.bytesToWebResponse(
-                resource.getContentAsByteArray(), filename, MediaType.APPLICATION_PDF);
+
+        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+        try (InputStream in = resource.getInputStream()) {
+            Files.copy(in, tempOut.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            tempOut.close();
+            throw e;
+        }
+
+        return WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
     }
 }

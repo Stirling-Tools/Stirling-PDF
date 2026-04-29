@@ -1,4 +1,7 @@
-import type { SaveResult, MultiFileSaveResult } from "@core/services/localFileSaveService";
+import type {
+  SaveResult,
+  MultiFileSaveResult,
+} from "@core/services/localFileSaveService";
 export type { SaveResult, MultiFileSaveResult };
 
 /**
@@ -10,7 +13,7 @@ export type { SaveResult, MultiFileSaveResult };
  */
 export async function saveToLocalPath(
   data: Blob | File,
-  filePath: string
+  filePath: string,
 ): Promise<SaveResult> {
   try {
     const { writeFile } = await import("@tauri-apps/plugin-fs");
@@ -19,7 +22,7 @@ export async function saveToLocalPath(
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error('[LocalFileSave] Failed to save:', message);
+    console.error("[LocalFileSave] Failed to save:", message);
     return { success: false, error: message };
   }
 }
@@ -33,23 +36,27 @@ export async function saveToLocalPath(
  */
 export async function showSaveDialog(
   defaultFilename: string,
-  defaultDirectory?: string
+  defaultDirectory?: string,
 ): Promise<string | null> {
   try {
     const { save } = await import("@tauri-apps/plugin-dialog");
 
+    // Derive the file type filter from the filename extension so the dialog
+    // doesn't force a .pdf extension when saving non-PDF outputs (e.g. .docx).
+    const ext = defaultFilename.split(".").pop()?.toLowerCase() ?? "";
+    const filters = ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : [];
+
     const selectedPath = await save({
-      defaultPath: defaultDirectory ? `${defaultDirectory}/${defaultFilename}` : defaultFilename,
-      filters: [{
-        name: 'PDF',
-        extensions: ['pdf']
-      }],
-      title: 'Save As'
+      defaultPath: defaultDirectory
+        ? `${defaultDirectory}/${defaultFilename}`
+        : defaultFilename,
+      filters,
+      title: "Save As",
     });
 
     return selectedPath;
   } catch (error) {
-    console.error('[SaveDialog] Failed to show dialog:', error);
+    console.error("[SaveDialog] Failed to show dialog:", error);
     return null;
   }
 }
@@ -63,7 +70,7 @@ export async function showSaveDialog(
  */
 export async function saveMultipleFilesWithPrompt(
   files: (Blob | File)[],
-  defaultDirectory?: string
+  defaultDirectory?: string,
 ): Promise<MultiFileSaveResult> {
   try {
     const { open } = await import("@tauri-apps/plugin-dialog");
@@ -75,7 +82,7 @@ export async function saveMultipleFilesWithPrompt(
       directory: true,
       multiple: false,
       defaultPath: defaultDirectory,
-      title: `Save ${files.length} file${files.length > 1 ? 's' : ''}`
+      title: `Save ${files.length} file${files.length > 1 ? "s" : ""}`,
     });
 
     // User cancelled
@@ -89,14 +96,15 @@ export async function saveMultipleFilesWithPrompt(
 
     for (const file of files) {
       try {
-        const fileName = file instanceof File ? file.name : `output_${savedCount + 1}.pdf`;
-        const filePath = await join(selectedFolder as string, fileName);
+        const fileName =
+          file instanceof File ? file.name : `output_${savedCount + 1}.pdf`;
+        const filePath = await join(selectedFolder, fileName);
         const arrayBuffer = await file.arrayBuffer();
         await writeFile(filePath, new Uint8Array(arrayBuffer));
         savedCount++;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        errors.push(`${file instanceof File ? file.name : 'file'}: ${message}`);
+        errors.push(`${file instanceof File ? file.name : "file"}: ${message}`);
       }
     }
 
@@ -106,18 +114,18 @@ export async function saveMultipleFilesWithPrompt(
       return {
         success: false,
         savedCount,
-        error: `Saved ${savedCount}/${files.length} files. Errors: ${errors.join(', ')}`
+        error: `Saved ${savedCount}/${files.length} files. Errors: ${errors.join(", ")}`,
       };
     } else {
       return {
         success: false,
         savedCount: 0,
-        error: `Failed to save files: ${errors.join(', ')}`
+        error: `Failed to save files: ${errors.join(", ")}`,
       };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error('[LocalFileSave] Failed to save multiple files:', message);
+    console.error("[LocalFileSave] Failed to save multiple files:", message);
     return { success: false, savedCount: 0, error: message };
   }
 }

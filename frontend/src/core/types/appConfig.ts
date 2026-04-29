@@ -6,7 +6,7 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
-  logoStyle?: 'modern' | 'classic';
+  logoStyle?: "modern" | "classic";
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
@@ -44,12 +44,20 @@ export interface AppConfig {
   isNewUser?: boolean;
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
+  storageEnabled?: boolean;
+  storageSharingEnabled?: boolean;
+  storageShareLinksEnabled?: boolean;
+  storageShareEmailEnabled?: boolean;
+  storageGroupSigningEnabled?: boolean;
   hideDisabledToolsGoogleDrive?: boolean;
   hideDisabledToolsMobileQRScanner?: boolean;
   googleDriveEnabled?: boolean;
   googleDriveClientId?: string;
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
+  timestampDefaultTsaUrl?: string;
+  timestampCustomTsaUrls?: string[];
+  timestampTsaPresets?: { label: string; url: string }[];
 }
 
-export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
+export type AppConfigBootstrapMode = "blocking" | "non-blocking";

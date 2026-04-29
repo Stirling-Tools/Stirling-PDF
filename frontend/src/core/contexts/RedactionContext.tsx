@@ -1,7 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
-import { RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
-import { useNavigationGuard } from '@app/contexts/NavigationContext';
-import { RedactionMode } from '@embedpdf/plugin-redaction';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
+import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { RedactionMode } from "@embedpdf/plugin-redaction";
 
 /**
  * API interface that the EmbedPDF bridge will implement
@@ -73,7 +81,9 @@ interface RedactionContextValue extends RedactionState, RedactionActions {
 }
 
 // Create context
-const RedactionContext = createContext<RedactionContextValue | undefined>(undefined);
+const RedactionContext = createContext<RedactionContextValue | undefined>(
+  undefined,
+);
 
 // Initial state
 const initialState: RedactionState = {
@@ -84,35 +94,37 @@ const initialState: RedactionState = {
   activeType: null,
   isRedacting: false,
   isBridgeReady: false,
-  manualRedactColor: '#000000',
+  manualRedactColor: "#000000",
 };
 
 /**
  * Provider component for redaction functionality
  * Bridges between the tool panel (outside EmbedPDF) and the viewer (inside EmbedPDF)
  */
-export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, setState] = useState<RedactionState>(initialState);
   const redactionApiRef = useRef<RedactionAPI | null>(null);
   const { setHasUnsavedChanges } = useNavigationGuard();
 
   // Actions for tool configuration
   const setRedactionConfig = useCallback((config: RedactParameters | null) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       redactionConfig: config,
     }));
   }, []);
 
   const setRedactionMode = useCallback((enabled: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isRedactionMode: enabled,
     }));
   }, []);
 
   const setRedactionsApplied = useCallback((applied: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       redactionsApplied: applied,
     }));
@@ -120,35 +132,35 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Synced state setters (called from bridge inside EmbedPDF)
   const setPendingCount = useCallback((count: number) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       pendingCount: count,
     }));
   }, []);
 
   const setActiveType = useCallback((type: RedactionMode | null) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       activeType: type,
     }));
   }, []);
 
   const setIsRedacting = useCallback((isRedacting: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isRedacting,
     }));
   }, []);
 
   const setBridgeReady = useCallback((ready: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isBridgeReady: ready,
     }));
   }, []);
 
   const setManualRedactColor = useCallback((color: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       manualRedactColor: color,
     }));
@@ -164,7 +176,12 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
       // When there are no pending redactions and nothing has been applied, we're "clean"
       setHasUnsavedChanges(false);
     }
-  }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
+  }, [
+    state.pendingCount,
+    state.redactionsApplied,
+    state.isRedactionMode,
+    setHasUnsavedChanges,
+  ]);
 
   // Unified redaction actions (v2.5.0)
   const activateRedact = useCallback(() => {
@@ -200,14 +217,14 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
   const activateTextSelection = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.enableRedact();
-      setActiveType('redactSelection' as RedactionMode);
+      setActiveType("redactSelection" as RedactionMode);
     }
   }, [setActiveType]);
 
   const activateMarquee = useCallback(() => {
     if (redactionApiRef.current) {
       redactionApiRef.current.enableRedact();
-      setActiveType('marqueeRedact' as RedactionMode);
+      setActiveType("marqueeRedact" as RedactionMode);
     }
   }, [setActiveType]);
 
@@ -243,7 +260,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
 export const useRedaction = (): RedactionContextValue => {
   const context = useContext(RedactionContext);
   if (context === undefined) {
-    throw new Error('useRedaction must be used within a RedactionProvider');
+    throw new Error("useRedaction must be used within a RedactionProvider");
   }
   return context;
 };
@@ -260,7 +277,6 @@ export const useRedactionMode = () => {
     activeType: context?.activeType || null,
     isRedacting: context?.isRedacting || false,
     isBridgeReady: context?.isBridgeReady || false,
-    manualRedactColor: context?.manualRedactColor || '#000000',
+    manualRedactColor: context?.manualRedactColor || "#000000",
   };
 };
-

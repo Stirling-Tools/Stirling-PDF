@@ -1,7 +1,10 @@
 // Note: This utility should be used with useToolResources for ZIP operations
-import { getFilenameFromHeaders } from '@app/utils/fileResponseUtils';
+import { getFilenameFromHeaders } from "@app/utils/fileResponseUtils";
 
-export type ResponseHandler = (blob: Blob, originalFiles: File[]) => Promise<File[]> | File[];
+export type ResponseHandler = (
+  blob: Blob,
+  originalFiles: File[],
+) => Promise<File[]> | File[];
 
 /**
  * Processes a blob response into File(s).
@@ -15,7 +18,7 @@ export async function processResponse(
   originalFiles: File[],
   filePrefix?: string,
   responseHandler?: ResponseHandler,
-  responseHeaders?: Record<string, any>
+  responseHeaders?: Record<string, any>,
 ): Promise<File[]> {
   if (responseHandler) {
     const out = await responseHandler(blob, originalFiles);
@@ -25,10 +28,13 @@ export async function processResponse(
   // Check if we should use the backend-provided filename from headers
   // Only when responseHeaders are explicitly provided (indicating the operation requested this)
   if (responseHeaders) {
-    const contentDisposition = responseHeaders['content-disposition'];
+    const contentDisposition = responseHeaders["content-disposition"];
     const backendFilename = getFilenameFromHeaders(contentDisposition);
     if (backendFilename) {
-      const type = blob.type || responseHeaders['content-type'] || 'application/octet-stream';
+      const type =
+        blob.type ||
+        responseHeaders["content-type"] ||
+        "application/octet-stream";
       return [new File([blob], backendFilename, { type })];
     }
     // If preserveBackendFilename was requested but no Content-Disposition header found,
@@ -36,14 +42,16 @@ export async function processResponse(
   }
 
   // Default behavior: use filePrefix + original name
-  const original = originalFiles[0]?.name ?? 'result.pdf';
+  const original = originalFiles[0]?.name ?? "result.pdf";
   // Only add prefix if it's not empty - this preserves original filenames for file history
   const name = filePrefix ? `${filePrefix}${original}` : original;
-  const type = blob.type || 'application/octet-stream';
+  const type = blob.type || "application/octet-stream";
 
   // File was modified by tool processing - set lastModified to current time
-  return [new File([blob], name, {
-    type,
-    lastModified: Date.now()
-  })];
+  return [
+    new File([blob], name, {
+      type,
+      lastModified: Date.now(),
+    }),
+  ];
 }

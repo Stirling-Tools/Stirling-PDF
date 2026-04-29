@@ -8,34 +8,60 @@ interface SignatureAppearanceSettingsProps {
   disabled?: boolean;
 }
 
-const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled = false }: SignatureAppearanceSettingsProps) => {
+const SignatureAppearanceSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: SignatureAppearanceSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="md">
       {/* Signature Visibility */}
       <Stack gap="sm">
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={!parameters.showSignature ? 'filled' : 'outline'}
-            color={!parameters.showSignature ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('showSignature', false)}
+            variant={!parameters.showSignature ? "filled" : "outline"}
+            color={!parameters.showSignature ? "blue" : "var(--text-muted)"}
+            onClick={() => onParameterChange("showSignature", false)}
             disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+            style={{
+              flex: 1,
+              height: "auto",
+              minHeight: "40px",
+              fontSize: "11px",
+            }}
           >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              {t('certSign.appearance.invisible', 'Invisible')}
+            <div
+              style={{
+                textAlign: "center",
+                lineHeight: "1.1",
+                fontSize: "11px",
+              }}
+            >
+              {t("certSign.appearance.invisible", "Invisible")}
             </div>
           </Button>
           <Button
-            variant={parameters.showSignature ? 'filled' : 'outline'}
-            color={parameters.showSignature ? 'blue' : 'var(--text-muted)'}
-            onClick={() => onParameterChange('showSignature', true)}
+            variant={parameters.showSignature ? "filled" : "outline"}
+            color={parameters.showSignature ? "blue" : "var(--text-muted)"}
+            onClick={() => onParameterChange("showSignature", true)}
             disabled={disabled}
-            style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+            style={{
+              flex: 1,
+              height: "auto",
+              minHeight: "40px",
+              fontSize: "11px",
+            }}
           >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-              {t('certSign.appearance.visible', 'Visible')}
+            <div
+              style={{
+                textAlign: "center",
+                lineHeight: "1.1",
+                fontSize: "11px",
+              }}
+            >
+              {t("certSign.appearance.visible", "Visible")}
             </div>
           </Button>
         </div>
@@ -45,58 +71,86 @@ const SignatureAppearanceSettings = ({ parameters, onParameterChange, disabled =
       {parameters.showSignature && (
         <Stack gap="sm">
           <Text size="sm" fw={500}>
-            {t('certSign.appearance.options.title', 'Signature Details')}
+            {t("certSign.appearance.options.title", "Signature Details")}
           </Text>
           <TextInput
-            label={t('certSign.reason', 'Reason')}
+            label={t("certSign.reason", "Reason")}
             value={parameters.reason}
-            onChange={(event) => onParameterChange('reason', event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("reason", event.currentTarget.value)
+            }
             disabled={disabled}
           />
           <TextInput
-            label={t('certSign.location', 'Location')}
+            label={t("certSign.location", "Location")}
             value={parameters.location}
-            onChange={(event) => onParameterChange('location', event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("location", event.currentTarget.value)
+            }
             disabled={disabled}
           />
           <TextInput
-            label={t('certSign.name', 'Name')}
+            label={t("certSign.name", "Name")}
             value={parameters.name}
-            onChange={(event) => onParameterChange('name', event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("name", event.currentTarget.value)
+            }
             disabled={disabled}
           />
           <NumberInput
-            label={t('certSign.pageNumber', 'Page Number')}
+            label={t("certSign.pageNumber", "Page Number")}
             value={parameters.pageNumber}
-            onChange={(value) => onParameterChange('pageNumber', value || 1)}
+            onChange={(value) => onParameterChange("pageNumber", value || 1)}
             min={1}
             disabled={disabled}
           />
           <Stack gap="xs">
             <Text size="sm" fw={500}>
-              {t('certSign.logoTitle', 'Logo')}
+              {t("certSign.logoTitle", "Logo")}
             </Text>
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div style={{ display: "flex", gap: "4px" }}>
               <Button
-                variant={!parameters.showLogo ? 'filled' : 'outline'}
-                color={!parameters.showLogo ? 'blue' : 'var(--text-muted)'}
-                onClick={() => onParameterChange('showLogo', false)}
+                variant={!parameters.showLogo ? "filled" : "outline"}
+                color={!parameters.showLogo ? "blue" : "var(--text-muted)"}
+                onClick={() => onParameterChange("showLogo", false)}
                 disabled={disabled}
-                style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+                style={{
+                  flex: 1,
+                  height: "auto",
+                  minHeight: "40px",
+                  fontSize: "11px",
+                }}
               >
-                <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-                  {t('certSign.noLogo', 'No Logo')}
+                <div
+                  style={{
+                    textAlign: "center",
+                    lineHeight: "1.1",
+                    fontSize: "11px",
+                  }}
+                >
+                  {t("certSign.noLogo", "No Logo")}
                 </div>
               </Button>
               <Button
-                variant={parameters.showLogo ? 'filled' : 'outline'}
-                color={parameters.showLogo ? 'blue' : 'var(--text-muted)'}
-                onClick={() => onParameterChange('showLogo', true)}
+                variant={parameters.showLogo ? "filled" : "outline"}
+                color={parameters.showLogo ? "blue" : "var(--text-muted)"}
+                onClick={() => onParameterChange("showLogo", true)}
                 disabled={disabled}
-                style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
+                style={{
+                  flex: 1,
+                  height: "auto",
+                  minHeight: "40px",
+                  fontSize: "11px",
+                }}
               >
-                <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
-                  {t('certSign.showLogo', 'Show Logo')}
+                <div
+                  style={{
+                    textAlign: "center",
+                    lineHeight: "1.1",
+                    fontSize: "11px",
+                  }}
+                >
+                  {t("certSign.showLogo", "Show Logo")}
                 </div>
               </Button>
             </div>

@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { usePageEditor } from '@app/contexts/PageEditorContext';
-import { useFileState } from '@app/contexts/FileContext';
-import { FileId } from '@app/types/file';
-import { useFileColorMap } from '@app/components/pageEditor/hooks/useFileColorMap';
+import { useMemo } from "react";
+import { usePageEditor } from "@app/contexts/PageEditorContext";
+import { useFileState } from "@app/contexts/FileContext";
+import { FileId } from "@app/types/file";
+import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 
 export interface PageEditorDropdownFile {
   fileId: FileId;
@@ -21,15 +21,11 @@ export interface PageEditorDropdownState {
 }
 
 const isPdf = (name?: string | null) =>
-  typeof name === 'string' && name.toLowerCase().endsWith('.pdf');
+  typeof name === "string" && name.toLowerCase().endsWith(".pdf");
 
 export function usePageEditorDropdownState(): PageEditorDropdownState {
   const { state, selectors } = useFileState();
-  const {
-    toggleFileSelection,
-    reorderFiles,
-    fileOrder,
-  } = usePageEditor();
+  const { toggleFileSelection, reorderFiles, fileOrder } = usePageEditor();
 
   const pageEditorFiles = useMemo(() => {
     return fileOrder
@@ -39,7 +35,7 @@ export function usePageEditorDropdownState(): PageEditorDropdownState {
 
         return {
           fileId,
-          name: stub?.name || '',
+          name: stub?.name || "",
           versionNumber: stub?.versionNumber,
           isSelected: state.ui.selectedFileIds.includes(fileId),
         };
@@ -47,19 +43,30 @@ export function usePageEditorDropdownState(): PageEditorDropdownState {
       .filter((file): file is PageEditorDropdownFile => file !== null);
   }, [fileOrder, selectors, state.ui.selectedFileIds]);
 
-  const fileColorMap = useFileColorMap(pageEditorFiles.map((file) => file.fileId));
+  const fileColorMap = useFileColorMap(
+    pageEditorFiles.map((file) => file.fileId),
+  );
 
   const selectedCount = useMemo(
     () => pageEditorFiles.filter((file) => file.isSelected).length,
-    [pageEditorFiles]
+    [pageEditorFiles],
   );
 
-  return useMemo<PageEditorDropdownState>(() => ({
-    files: pageEditorFiles,
-    selectedCount,
-    totalCount: pageEditorFiles.length,
-    onToggleSelection: toggleFileSelection,
-    onReorder: reorderFiles,
-    fileColorMap,
-  }), [pageEditorFiles, selectedCount, toggleFileSelection, reorderFiles, fileColorMap]);
+  return useMemo<PageEditorDropdownState>(
+    () => ({
+      files: pageEditorFiles,
+      selectedCount,
+      totalCount: pageEditorFiles.length,
+      onToggleSelection: toggleFileSelection,
+      onReorder: reorderFiles,
+      fileColorMap,
+    }),
+    [
+      pageEditorFiles,
+      selectedCount,
+      toggleFileSelection,
+      reorderFiles,
+      fileColorMap,
+    ],
+  );
 }

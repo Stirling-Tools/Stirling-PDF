@@ -1,6 +1,8 @@
 # Version control
 .git/
 .gitignore
+.git-blame-ignore-revs
+.gitattributes
 
 # Build outputs
 build/
@@ -8,20 +10,41 @@ build/
 **/build/
 out/
 target/
+**/target/
+bin/
+version_builds/
 
 # Gradle caches (local, not what's in the container)
 .gradle/
 **/.gradle/
+.gradle-home/
+
+# Task (go-task) cache
+.task/
 
 # Node / frontend
 node_modules/
 **/node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/playwright-report/
 .npm/
 .yarn/
+
+# Tauri/desktop builds
+src-tauri/target/
+src-tauri/dist/
+frontend/src-tauri/target/
+frontend/src-tauri/dist/
 
 # IDE and editor
 .idea/
 .vscode/
+.settings/
+.settings.zip
+.classpath
+.project
+.devcontainer/
 *.iml
 *.ipr
 *.iws
@@ -32,6 +55,7 @@ node_modules/
 *.pid
 .DS_Store
 Thumbs.db
+logs/
 
 # Docker itself
 Dockerfile*
@@ -45,8 +69,42 @@ Dockerfile*
 # Test reports
 **/test-results/
 **/jacoco/
+test_*.pdf
+
+# Testing and documentation (not needed in build)
+testing/
+docs/
+devGuide/
+devTools/
+*.md
+README*
+
+# Separate projects not consumed by the Java/frontend build
+commonforms-onnx/
+
+# Runtime mount points used by docker-compose volumes, not build input
+stirling/
+customFiles/
+configs/
+
+# Claude Code workspace
+.claude/
+
+# Python caches
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+**/__pycache__/
 
 # Local env
 .env
 .env.*
 !.env.example
+!engine/.env
+
+# Misc
+*.swp
+*.swo
+*~
+.DS_Store
+.cache/

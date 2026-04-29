@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useDocumentManagerCapability } from '@embedpdf/plugin-document-manager/react';
+import { useState, useEffect } from "react";
+import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/react";
 
 /**
  * useDocumentReady - Custom hook to track whether a PDF document is fully loaded
@@ -13,7 +13,8 @@ import { useDocumentManagerCapability } from '@embedpdf/plugin-document-manager/
  * needed.
  */
 export function useDocumentReady() {
-  const { provides: documentManagerCapability } = useDocumentManagerCapability();
+  const { provides: documentManagerCapability } =
+    useDocumentManagerCapability();
   const [documentReady, setDocumentReady] = useState(false);
 
   useEffect(() => {
@@ -24,11 +25,13 @@ export function useDocumentReady() {
 
     let mounted = true;
 
-    const unsubOpen = documentManagerCapability.onDocumentOpened?.((event: any) => {
-      if (mounted && (event?.documentId || event?.id)) {
-        setDocumentReady(true);
-      }
-    });
+    const unsubOpen = documentManagerCapability.onDocumentOpened?.(
+      (event: any) => {
+        if (mounted && (event?.documentId || event?.id)) {
+          setDocumentReady(true);
+        }
+      },
+    );
 
     const unsubClose = documentManagerCapability.onDocumentClosed?.(() => {
       if (!mounted) return;
@@ -54,10 +57,10 @@ export function useDocumentReady() {
 
     return () => {
       mounted = false;
-      if (typeof unsubOpen === 'function') {
+      if (typeof unsubOpen === "function") {
         unsubOpen();
       }
-      if (typeof unsubClose === 'function') {
+      if (typeof unsubClose === "function") {
         unsubClose();
       }
     };

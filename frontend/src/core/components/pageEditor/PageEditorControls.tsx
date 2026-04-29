@@ -1,7 +1,4 @@
-import {
-  Tooltip,
-  ActionIcon,
-} from "@mantine/core";
+import { Tooltip, ActionIcon } from "@mantine/core";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -21,7 +18,7 @@ interface PageEditorControlsProps {
   canRedo: boolean;
 
   // Page operations
-  onRotate: (direction: 'left' | 'right') => void;
+  onRotate: (direction: "left" | "right") => void;
   onDelete: () => void;
   onSplit: () => void;
   onSplitAll: () => void;
@@ -63,14 +60,19 @@ const PageEditorControls = ({
 
     const totalPages = displayDocument.pages.length;
     const selectedValidPageIds = displayDocument.pages
-      .filter((page, index) => selectedPageIds.includes(page.id) && index < totalPages - 1)
-      .map(page => page.id);
+      .filter(
+        (page, index) =>
+          selectedPageIds.includes(page.id) && index < totalPages - 1,
+      )
+      .map((page) => page.id);
 
     if (selectedValidPageIds.length === 0) {
       return "Split Selected";
     }
 
-    const existingSplitsCount = selectedValidPageIds.filter(id => splitPositions.has(id)).length;
+    const existingSplitsCount = selectedValidPageIds.filter((id) =>
+      splitPositions.has(id),
+    ).length;
     const noSplitsCount = selectedValidPageIds.length - existingSplitsCount;
 
     const willRemoveSplits = existingSplitsCount > noSplitsCount;
@@ -89,68 +91,101 @@ const PageEditorControls = ({
   // Calculate page break tooltip text
   const getPageBreakTooltip = () => {
     return selectedPageIds.length > 0
-      ? `Insert ${selectedPageIds.length} Page Break${selectedPageIds.length > 1 ? 's' : ''}`
+      ? `Insert ${selectedPageIds.length} Page Break${selectedPageIds.length > 1 ? "s" : ""}`
       : "Insert Page Breaks";
   };
 
   return (
     <div
       style={{
-        position: 'sticky',
+        position: "sticky",
         left: 0,
         right: 0,
         bottom: 0,
         zIndex: 50,
-        display: 'flex',
-        justifyContent: 'center',
-        pointerEvents: 'none',
-        background: 'transparent',
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
+        background: "transparent",
       }}
     >
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           gap: 12,
           borderTopLeftRadius: 16,
           borderTopRightRadius: 16,
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
-          boxShadow: '0 -2px 8px rgba(0,0,0,0.04)',
-          backgroundColor: 'var(--bg-toolbar)',
-          border: '1px solid var(--border-default)',
-          borderRadius: '16px 16px 0 0',
-          pointerEvents: 'auto',
+          boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
+          backgroundColor: "var(--bg-toolbar)",
+          border: "1px solid var(--border-default)",
+          borderRadius: "16px 16px 0 0",
+          pointerEvents: "auto",
           minWidth: 360,
           maxWidth: 700,
-          flexWrap: 'wrap',
-          justifyContent: 'center',
+          flexWrap: "wrap",
+          justifyContent: "center",
           padding: "1rem",
-          paddingBottom: "1rem"
+          paddingBottom: "1rem",
         }}
       >
-
         {/* Undo/Redo */}
         <Tooltip label="Undo">
-          <ActionIcon onClick={onUndo} disabled={!canUndo} variant="subtle" style={{ color: canUndo ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }} radius="md" size="lg">
+          <ActionIcon
+            onClick={onUndo}
+            disabled={!canUndo}
+            variant="subtle"
+            style={{
+              color: canUndo
+                ? "var(--right-rail-icon)"
+                : "var(--right-rail-icon-disabled)",
+            }}
+            radius="md"
+            size="lg"
+          >
             <UndoIcon />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Redo">
-          <ActionIcon onClick={onRedo} disabled={!canRedo} variant="subtle" style={{ color: canRedo ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }} radius="md" size="lg">
+          <ActionIcon
+            onClick={onRedo}
+            disabled={!canRedo}
+            variant="subtle"
+            style={{
+              color: canRedo
+                ? "var(--right-rail-icon)"
+                : "var(--right-rail-icon-disabled)",
+            }}
+            radius="md"
+            size="lg"
+          >
             <RedoIcon />
           </ActionIcon>
         </Tooltip>
 
-        <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
+        <div
+          style={{
+            width: 1,
+            height: 28,
+            backgroundColor: "var(--mantine-color-gray-3)",
+            margin: "0 8px",
+          }}
+        />
 
         {/* Page Operations */}
         <Tooltip label="Rotate Selected Left">
           <ActionIcon
-            onClick={() => onRotate('left')}
+            onClick={() => onRotate("left")}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{
+              color:
+                selectedPageIds.length > 0
+                  ? "var(--right-rail-icon)"
+                  : "var(--right-rail-icon-disabled)",
+            }}
             radius="md"
             size="lg"
           >
@@ -159,10 +194,15 @@ const PageEditorControls = ({
         </Tooltip>
         <Tooltip label="Rotate Selected Right">
           <ActionIcon
-            onClick={() => onRotate('right')}
+            onClick={() => onRotate("right")}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{
+              color:
+                selectedPageIds.length > 0
+                  ? "var(--right-rail-icon)"
+                  : "var(--right-rail-icon-disabled)",
+            }}
             radius="md"
             size="lg"
           >
@@ -174,7 +214,12 @@ const PageEditorControls = ({
             onClick={onDelete}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{
+              color:
+                selectedPageIds.length > 0
+                  ? "var(--right-rail-icon)"
+                  : "var(--right-rail-icon-disabled)",
+            }}
             radius="md"
             size="lg"
           >
@@ -186,7 +231,12 @@ const PageEditorControls = ({
             onClick={onSplit}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{
+              color:
+                selectedPageIds.length > 0
+                  ? "var(--right-rail-icon)"
+                  : "var(--right-rail-icon-disabled)",
+            }}
             radius="md"
             size="lg"
           >
@@ -198,7 +248,12 @@ const PageEditorControls = ({
             onClick={onPageBreak}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{
+              color:
+                selectedPageIds.length > 0
+                  ? "var(--right-rail-icon)"
+                  : "var(--right-rail-icon-disabled)",
+            }}
             radius="md"
             size="lg"
           >

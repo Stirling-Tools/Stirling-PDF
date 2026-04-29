@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Modal, Button, Stack, Slider, Alert, Text, Box } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import Cropper from 'react-easy-crop';
-import { getCroppedImage, type Area } from '@app/utils/cropImage';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import React, { useState, useCallback, useEffect } from "react";
+import { Modal, Button, Stack, Slider, Alert, Text, Box } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import Cropper from "react-easy-crop";
+import { getCroppedImage, type Area } from "@app/utils/cropImage";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface ProfilePictureCropperProps {
   file: File | null;
@@ -41,7 +41,12 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
       setError(null);
     };
     reader.onerror = () => {
-      setError(t('config.account.profilePicture.cropper.invalidImage', 'Invalid image file. Please select a valid PNG, JPG, or WebP file.'));
+      setError(
+        t(
+          "config.account.profilePicture.cropper.invalidImage",
+          "Invalid image file. Please select a valid PNG, JPG, or WebP file.",
+        ),
+      );
     };
     reader.readAsDataURL(file);
 
@@ -79,7 +84,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
     (_croppedArea: Area, croppedAreaPixels: Area) => {
       setCroppedAreaPixels(croppedAreaPixels);
     },
-    []
+    [],
   );
 
   // Process and save the cropped image
@@ -100,9 +105,9 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
       if (croppedBlob.size > maxSize) {
         setError(
           t(
-            'config.account.profilePicture.cropper.sizeErrorAfterCrop',
-            'Cropped image is too large. Please zoom out or crop a smaller area.'
-          )
+            "config.account.profilePicture.cropper.sizeErrorAfterCrop",
+            "Cropped image is too large. Please zoom out or crop a smaller area.",
+          ),
         );
         setProcessing(false);
         return;
@@ -112,12 +117,12 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
       onCropComplete(croppedBlob);
       onClose();
     } catch (err) {
-      console.error('Error cropping image:', err);
+      console.error("Error cropping image:", err);
       setError(
         t(
-          'config.account.profilePicture.cropper.cropError',
-          'Failed to crop image. Please try again.'
-        )
+          "config.account.profilePicture.cropper.cropError",
+          "Failed to crop image. Please try again.",
+        ),
       );
     } finally {
       setProcessing(false);
@@ -128,7 +133,10 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t('config.account.profilePicture.cropper.title', 'Crop Profile Picture')}
+      title={t(
+        "config.account.profilePicture.cropper.title",
+        "Crop Profile Picture",
+      )}
       size="lg"
       centered
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
@@ -141,7 +149,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         )}
 
         {/* Cropper area */}
-        <Box style={{ position: 'relative', width: '100%', height: 400 }}>
+        <Box style={{ position: "relative", width: "100%", height: 400 }}>
           {imageSrc && (
             <Cropper
               image={imageSrc}
@@ -158,7 +166,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         {/* Zoom slider */}
         <Stack gap={4}>
           <Text size="sm" fw={500}>
-            {t('config.account.profilePicture.cropper.zoom', 'Zoom')}
+            {t("config.account.profilePicture.cropper.zoom", "Zoom")}
           </Text>
           <Slider
             value={zoom}
@@ -171,14 +179,22 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         </Stack>
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+        <div
+          style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
+        >
           <Button variant="subtle" onClick={onClose} disabled={processing}>
-            {t('common.cancel', 'Cancel')}
+            {t("common.cancel", "Cancel")}
           </Button>
           <Button onClick={handleSave} loading={processing}>
             {processing
-              ? t('config.account.profilePicture.cropper.processing', 'Processing crop...')
-              : t('config.account.profilePicture.cropper.save', 'Save Cropped Image')}
+              ? t(
+                  "config.account.profilePicture.cropper.processing",
+                  "Processing crop...",
+                )
+              : t(
+                  "config.account.profilePicture.cropper.save",
+                  "Save Cropped Image",
+                )}
           </Button>
         </div>
       </Stack>

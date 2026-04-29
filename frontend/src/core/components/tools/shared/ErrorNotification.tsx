@@ -1,5 +1,5 @@
-import { Notification } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { Notification } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 export interface ErrorNotificationProps {
   error: string | null;
@@ -13,8 +13,8 @@ const ErrorNotification = ({
   error,
   onClose,
   title,
-  color = 'red',
-  mb = 'md'
+  color = "red",
+  mb = "md",
 }: ErrorNotificationProps) => {
   const { t } = useTranslation();
 

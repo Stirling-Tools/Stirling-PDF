@@ -3,7 +3,7 @@
  * Auto-detects user's preferred currency from browser locale
  */
 
-const STORAGE_KEY = 'preferredCurrency';
+const STORAGE_KEY = "preferredCurrency";
 
 /**
  * Map of locale codes to currency codes
@@ -11,62 +11,62 @@ const STORAGE_KEY = 'preferredCurrency';
  */
 const LOCALE_TO_CURRENCY_MAP: Record<string, string> = {
   // English variants
-  'en-US': 'usd',
-  'en-CA': 'usd',
-  'en-AU': 'usd',
-  'en-NZ': 'usd',
-  'en-GB': 'gbp',
-  'en-IE': 'eur',
+  "en-US": "usd",
+  "en-CA": "usd",
+  "en-AU": "usd",
+  "en-NZ": "usd",
+  "en-GB": "gbp",
+  "en-IE": "eur",
 
   // European locales - Euro
-  'de-DE': 'eur',
-  'de-AT': 'eur',
-  'de-CH': 'eur',
-  'fr-FR': 'eur',
-  'fr-BE': 'eur',
-  'fr-CH': 'eur',
-  'it-IT': 'eur',
-  'es-ES': 'eur',
-  'pt-PT': 'eur',
-  'nl-NL': 'eur',
-  'nl-BE': 'eur',
-  'pl-PL': 'eur',
-  'ro-RO': 'eur',
-  'el-GR': 'eur',
-  'fi-FI': 'eur',
-  'sv-SE': 'eur',
-  'da-DK': 'eur',
-  'no-NO': 'eur',
+  "de-DE": "eur",
+  "de-AT": "eur",
+  "de-CH": "eur",
+  "fr-FR": "eur",
+  "fr-BE": "eur",
+  "fr-CH": "eur",
+  "it-IT": "eur",
+  "es-ES": "eur",
+  "pt-PT": "eur",
+  "nl-NL": "eur",
+  "nl-BE": "eur",
+  "pl-PL": "eur",
+  "ro-RO": "eur",
+  "el-GR": "eur",
+  "fi-FI": "eur",
+  "sv-SE": "eur",
+  "da-DK": "eur",
+  "no-NO": "eur",
 
   // Chinese variants
-  'zh-CN': 'cny',
-  'zh-TW': 'cny',
-  'zh-HK': 'cny',
-  'zh-SG': 'cny',
+  "zh-CN": "cny",
+  "zh-TW": "cny",
+  "zh-HK": "cny",
+  "zh-SG": "cny",
 
   // Indian locales
-  'hi-IN': 'inr',
-  'en-IN': 'inr',
-  'bn-IN': 'inr',
-  'te-IN': 'inr',
-  'ta-IN': 'inr',
-  'mr-IN': 'inr',
+  "hi-IN": "inr",
+  "en-IN": "inr",
+  "bn-IN": "inr",
+  "te-IN": "inr",
+  "ta-IN": "inr",
+  "mr-IN": "inr",
 
   // Brazilian Portuguese
-  'pt-BR': 'brl',
+  "pt-BR": "brl",
 
   // Indonesian
-  'id-ID': 'idr',
-  'jv-ID': 'idr',
+  "id-ID": "idr",
+  "jv-ID": "idr",
 
   // Other major locales defaulting to USD
-  'ja-JP': 'usd',
-  'ko-KR': 'usd',
-  'ru-RU': 'usd',
-  'ar-SA': 'usd',
-  'th-TH': 'usd',
-  'vi-VN': 'usd',
-  'tr-TR': 'usd',
+  "ja-JP": "usd",
+  "ko-KR": "usd",
+  "ru-RU": "usd",
+  "ar-SA": "usd",
+  "th-TH": "usd",
+  "vi-VN": "usd",
+  "tr-TR": "usd",
 };
 
 /**
@@ -81,9 +81,9 @@ export function detectCurrencyFromLocale(locale: string): string {
   }
 
   // Try matching just the language code (e.g., 'en' from 'en-US')
-  const languageCode = locale.split('-')[0];
-  const matchingLocale = Object.keys(LOCALE_TO_CURRENCY_MAP).find(
-    key => key.startsWith(languageCode)
+  const languageCode = locale.split("-")[0];
+  const matchingLocale = Object.keys(LOCALE_TO_CURRENCY_MAP).find((key) =>
+    key.startsWith(languageCode),
   );
 
   if (matchingLocale) {
@@ -91,7 +91,7 @@ export function detectCurrencyFromLocale(locale: string): string {
   }
 
   // Default fallback to USD
-  return 'usd';
+  return "usd";
 }
 
 /**
@@ -102,7 +102,7 @@ export function getCachedCurrency(): string | null {
   try {
     return localStorage.getItem(STORAGE_KEY);
   } catch (error) {
-    console.warn('Failed to read currency from localStorage:', error);
+    console.warn("Failed to read currency from localStorage:", error);
     return null;
   }
 }
@@ -115,7 +115,7 @@ export function setCachedCurrency(currency: string): void {
   try {
     localStorage.setItem(STORAGE_KEY, currency);
   } catch (error) {
-    console.warn('Failed to save currency to localStorage:', error);
+    console.warn("Failed to save currency to localStorage:", error);
   }
 }
 

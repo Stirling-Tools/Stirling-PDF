@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Paper,
   Stack,
@@ -7,6 +7,7 @@ import {
   Tooltip,
   NumberInput,
   SegmentedControl,
+  Select,
   Code,
   Group,
   Anchor,
@@ -19,11 +20,15 @@ import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
+import type {
+  StartupView,
+  ViewerZoomSetting,
+} from "@app/services/preferencesService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
-import { getVersion } from "@tauri-apps/api/app";
-import { isTauri } from "@tauri-apps/api/core";
+import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
@@ -34,22 +39,30 @@ interface GeneralSectionProps {
   hideAdminBanner?: boolean;
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({
+  hideTitle = false,
+  hideUpdateSection = false,
+  hideAdminBanner = false,
+}) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
-  const [fileLimitInput, setFileLimitInput] = useState<number | string>(preferences.autoUnzipFileLimit);
+  const [fileLimitInput, setFileLimitInput] = useState<number | string>(
+    preferences.autoUnzipFileLimit,
+  );
   const [bannerDismissed, setBannerDismissed] = useState(() => {
     // Check localStorage on mount
     return localStorage.getItem(BANNER_DISMISSED_KEY) === "true";
   });
-  const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
+  const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(
+    null,
+  );
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [mismatchVersion, setMismatchVersion] = useState(false);
-  const isTauriApp = useMemo(() => isTauri(), []);
-  const [appVersion, setAppVersion] = useState<string | null>(null);
-  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading...");
+  const { appVersion, mismatchVersion } = useFrontendVersionInfo(
+    config?.appVersion,
+  );
+  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading..."); // null = loading, shown only when appVersion !== undefined
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -75,9 +88,16 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
       licenseType: config.license ?? "NORMAL",
     };
 
-    const summary = await updateService.getUpdateSummary(config.appVersion, machineInfo);
+    const summary = await updateService.getUpdateSummary(
+      config.appVersion,
+      machineInfo,
+    );
     if (summary && summary.latest_version) {
-      const isNewerVersion = updateService.compareVersions(summary.latest_version, config.appVersion) > 0;
+      const isNewerVersion =
+        updateService.compareVersions(
+          summary.latest_version,
+          config.appVersion,
+        ) > 0;
       if (isNewerVersion) {
         setUpdateSummary(summary);
       } else {
@@ -90,52 +110,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
     }
     setCheckingUpdate(false);
   };
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    let cancelled = false;
-    const fetchFrontendVersion = async () => {
-      try {
-        const frontendVersion = await getVersion();
-        if (!cancelled) {
-          setAppVersion(frontendVersion);
-        }
-      } catch (error) {
-        console.error("[GeneralSection] Failed to fetch frontend version:", error);
-      }
-    };
-
-    fetchFrontendVersion();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isTauriApp]);
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      return;
-    }
-
-    if (!appVersion || !config?.appVersion) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    if (appVersion !== config.appVersion) {
-      console.warn("[GeneralSection] Mismatch between Tauri version and AppConfig version:", {
-        backendVersion: config.appVersion,
-        frontendVersion: appVersion,
-      });
-      setMismatchVersion(true);
-    } else {
-      setMismatchVersion(false);
-    }
-  }, [isTauriApp, appVersion, config?.appVersion]);
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
@@ -153,13 +127,24 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             {t("settings.general.title", "General")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("settings.general.description", "Configure general application preferences.")}
+            {t(
+              "settings.general.description",
+              "Configure general application preferences.",
+            )}
           </Text>
         </div>
       )}
 
       {!hideAdminBanner && loginDisabled && !bannerDismissed && (
-        <Paper withBorder p="md" radius="md" style={{ background: "var(--mantine-color-blue-0)", position: "relative" }}>
+        <Paper
+          withBorder
+          p="md"
+          radius="md"
+          style={{
+            background: "var(--mantine-color-blue-0)",
+            position: "relative",
+          }}
+        >
           <ActionIcon
             variant="subtle"
             color="gray"
@@ -178,8 +163,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 height="1.2rem"
                 style={{ color: "var(--mantine-color-blue-6)" }}
               />
-              <Text fw={600} size="sm" style={{ color: "var(--mantine-color-blue-9)" }}>
-                {t("settings.general.enableFeatures.title", "For System Administrators")}
+              <Text
+                fw={600}
+                size="sm"
+                style={{ color: "var(--mantine-color-blue-9)" }}
+              >
+                {t(
+                  "settings.general.enableFeatures.title",
+                  "For System Administrators",
+                )}
               </Text>
             </Group>
             <Text size="sm" c="dimmed">
@@ -210,7 +202,11 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
               size="sm"
               style={{ color: "var(--mantine-color-blue-6)" }}
             >
-              {t("settings.general.enableFeatures.learnMore", "Learn more in documentation")} →
+              {t(
+                "settings.general.enableFeatures.learnMore",
+                "Learn more in documentation",
+              )}{" "}
+              →
             </Anchor>
           </Stack>
         </Paper>
@@ -227,11 +223,19 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                     {t("settings.general.updates.title", "Software Updates")}
                   </Text>
                   <Text size="xs" c="dimmed" mt={4}>
-                    {t("settings.general.updates.description", "Check for updates and view version information")}
+                    {t(
+                      "settings.general.updates.description",
+                      "Check for updates and view version information",
+                    )}
                   </Text>
                 </div>
                 {updateSummary && (
-                  <Badge color={updateSummary.max_priority === "urgent" ? "red" : "blue"} variant="filled">
+                  <Badge
+                    color={
+                      updateSummary.max_priority === "urgent" ? "red" : "blue"
+                    }
+                    variant="filled"
+                  >
                     {updateSummary.max_priority === "urgent"
                       ? t("update.urgentUpdateAvailable", "Urgent Update")
                       : t("update.updateAvailable", "Update Available")}
@@ -239,11 +243,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 )}
               </Group>
             </div>
-            {isTauriApp && (
+            {appVersion !== undefined && (
               <Group justify="space-between" align="center">
                 <div>
                   <Text size="sm" c="dimmed">
-                    {t("settings.general.updates.currentFrontendVersion", "Current Frontend Version")}:{" "}
+                    {t(
+                      "settings.general.updates.currentFrontendVersion",
+                      "Current Frontend Version",
+                    )}
+                    :{" "}
                     <Text component="span" fw={500}>
                       {frontendVersionLabel}
                     </Text>
@@ -262,14 +270,22 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             <Group justify="space-between" align="center">
               <div>
                 <Text size="sm" c="dimmed">
-                  {t("settings.general.updates.currentBackendVersion", "Current Backend Version")}:{" "}
+                  {t(
+                    "settings.general.updates.currentBackendVersion",
+                    "Current Backend Version",
+                  )}
+                  :{" "}
                   <Text component="span" fw={500}>
                     {config.appVersion}
                   </Text>
                 </Text>
                 {updateSummary && (
                   <Text size="sm" c="dimmed" mt={4}>
-                    {t("settings.general.updates.latestVersion", "Latest Version")}:{" "}
+                    {t(
+                      "settings.general.updates.latestVersion",
+                      "Latest Version",
+                    )}
+                    :{" "}
                     <Text component="span" fw={500} c="blue">
                       {updateSummary.latest_version}
                     </Text>
@@ -282,16 +298,33 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                   variant="default"
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
-                  leftSection={<LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />}
+                  leftSection={
+                    <LocalIcon
+                      icon="refresh-rounded"
+                      width="1rem"
+                      height="1rem"
+                    />
+                  }
                 >
-                  {t("settings.general.updates.checkForUpdates", "Check for Updates")}
+                  {t(
+                    "settings.general.updates.checkForUpdates",
+                    "Check for Updates",
+                  )}
                 </Button>
                 {updateSummary && (
                   <Button
                     size="sm"
-                    color={updateSummary.max_priority === "urgent" ? "red" : "blue"}
+                    color={
+                      updateSummary.max_priority === "urgent" ? "red" : "blue"
+                    }
                     onClick={() => setUpdateModalOpened(true)}
-                    leftSection={<LocalIcon icon="system-update-alt-rounded" width="1rem" height="1rem" />}
+                    leftSection={
+                      <LocalIcon
+                        icon="system-update-alt-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
+                    }
                   >
                     {t("settings.general.updates.viewDetails", "View Details")}
                   </Button>
@@ -302,7 +335,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             {updateSummary?.any_breaking && (
               <Alert
                 color="orange"
-                title={t("update.breakingChangesDetected", "Breaking Changes Detected")}
+                title={t(
+                  "update.breakingChangesDetected",
+                  "Breaking Changes Detected",
+                )}
                 styles={{
                   title: { fontWeight: 600 },
                 }}
@@ -321,10 +357,19 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
               <Text fw={500} size="sm">
-                {t("settings.general.defaultToolPickerMode", "Default tool picker mode")}
+                {t(
+                  "settings.general.defaultToolPickerMode",
+                  "Default tool picker mode",
+                )}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
@@ -335,17 +380,131 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             </div>
             <SegmentedControl
               value={preferences.defaultToolPanelMode}
-              onChange={(val: string) => updatePreference("defaultToolPanelMode", val as ToolPanelMode)}
+              onChange={(val: string) =>
+                updatePreference("defaultToolPanelMode", val as ToolPanelMode)
+              }
               data={[
-                { label: t("settings.general.mode.sidebar", "Sidebar"), value: "sidebar" },
-                { label: t("settings.general.mode.fullscreen", "Fullscreen"), value: "fullscreen" },
+                {
+                  label: t("settings.general.mode.sidebar", "Sidebar"),
+                  value: "sidebar",
+                },
+                {
+                  label: t("settings.general.mode.fullscreen", "Fullscreen"),
+                  value: "fullscreen",
+                },
               ]}
             />
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
               <Text fw={500} size="sm">
-                {t("settings.general.hideUnavailableTools", "Hide unavailable tools")}
+                {t(
+                  "settings.general.defaultStartupView",
+                  "Default view on launch",
+                )}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  "settings.general.defaultStartupViewDescription",
+                  "Choose which tab is active in the left column when the app starts",
+                )}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={preferences.defaultStartupView}
+              onChange={(val: string) =>
+                updatePreference("defaultStartupView", val as StartupView)
+              }
+              data={[
+                {
+                  label: t("settings.general.startupView.tools", "Tools"),
+                  value: "tools",
+                },
+                {
+                  label: t("settings.general.startupView.read", "Reader"),
+                  value: "read",
+                },
+                {
+                  label: t("settings.general.startupView.automate", "Automate"),
+                  value: "automate",
+                },
+              ]}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.defaultViewerZoom", "Default reader zoom")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  "settings.general.defaultViewerZoomDescription",
+                  "Set the default zoom level when opening PDFs in the reader",
+                )}
+              </Text>
+            </div>
+            <Select
+              value={preferences.defaultViewerZoom}
+              onChange={(val: string | null) => {
+                if (val)
+                  updatePreference(
+                    "defaultViewerZoom",
+                    val as ViewerZoomSetting,
+                  );
+              }}
+              data={[
+                {
+                  label: t("settings.general.zoomLevel.auto", "Auto"),
+                  value: "auto",
+                },
+                {
+                  label: t("settings.general.zoomLevel.fitWidth", "Fit width"),
+                  value: "fitWidth",
+                },
+                {
+                  label: t("settings.general.zoomLevel.fitPage", "Fit page"),
+                  value: "fitPage",
+                },
+                { label: "50%", value: "50" },
+                { label: "75%", value: "75" },
+                { label: "100%", value: "100" },
+                { label: "125%", value: "125" },
+                { label: "150%", value: "150" },
+                { label: "200%", value: "200" },
+              ]}
+              style={{ width: 140 }}
+              allowDeselect={false}
+              comboboxProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+              }}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <Text fw={500} size="sm">
+                {t(
+                  "settings.general.hideUnavailableTools",
+                  "Hide unavailable tools",
+                )}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
@@ -356,13 +515,27 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             </div>
             <Switch
               checked={preferences.hideUnavailableTools}
-              onChange={(event) => updatePreference("hideUnavailableTools", event.currentTarget.checked)}
+              onChange={(event) =>
+                updatePreference(
+                  "hideUnavailableTools",
+                  event.currentTarget.checked,
+                )
+              }
             />
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
               <Text fw={500} size="sm">
-                {t("settings.general.hideUnavailableConversions", "Hide unavailable conversions")}
+                {t(
+                  "settings.general.hideUnavailableConversions",
+                  "Hide unavailable conversions",
+                )}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
@@ -373,7 +546,12 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             </div>
             <Switch
               checked={preferences.hideUnavailableConversions}
-              onChange={(event) => updatePreference("hideUnavailableConversions", event.currentTarget.checked)}
+              onChange={(event) =>
+                updatePreference(
+                  "hideUnavailableConversions",
+                  event.currentTarget.checked,
+                )
+              }
             />
           </div>
           <Tooltip
@@ -385,18 +563,30 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             w={300}
             withArrow
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "help" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "help",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
                   {t("settings.general.autoUnzip", "Auto-unzip API responses")}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t("settings.general.autoUnzipDescription", "Automatically extract files from ZIP responses")}
+                  {t(
+                    "settings.general.autoUnzipDescription",
+                    "Automatically extract files from ZIP responses",
+                  )}
                 </Text>
               </div>
               <Switch
                 checked={preferences.autoUnzip}
-                onChange={(event) => updatePreference("autoUnzip", event.currentTarget.checked)}
+                onChange={(event) =>
+                  updatePreference("autoUnzip", event.currentTarget.checked)
+                }
               />
             </div>
           </Tooltip>
@@ -410,13 +600,26 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             w={300}
             withArrow
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "help" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "help",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("settings.general.autoUnzipFileLimit", "Auto-unzip file limit")}
+                  {t(
+                    "settings.general.autoUnzipFileLimit",
+                    "Auto-unzip file limit",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
-                  {t("settings.general.autoUnzipFileLimitDescription", "Maximum number of files to extract from ZIP")}
+                  {t(
+                    "settings.general.autoUnzipFileLimitDescription",
+                    "Maximum number of files to extract from ZIP",
+                  )}
                 </Text>
               </div>
               <NumberInput
@@ -425,7 +628,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 onBlur={() => {
                   const numValue = Number(fileLimitInput);
                   const finalValue =
-                    !fileLimitInput || isNaN(numValue) || numValue < 1 || numValue > 100
+                    !fileLimitInput ||
+                    isNaN(numValue) ||
+                    numValue < 1 ||
+                    numValue > 100
                       ? DEFAULT_AUTO_UNZIP_FILE_LIMIT
                       : numValue;
                   setFileLimitInput(finalValue);

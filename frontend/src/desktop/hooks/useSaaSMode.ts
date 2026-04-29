@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { connectionModeService } from '@app/services/connectionModeService';
+import { useState, useEffect } from "react";
+import { connectionModeService } from "@app/services/connectionModeService";
 
 /**
  * Returns whether the app is currently in SaaS connection mode.
@@ -10,8 +10,12 @@ export function useSaaSMode(): boolean {
   const [isSaaSMode, setIsSaaSMode] = useState(true);
 
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then(mode => setIsSaaSMode(mode === 'saas'));
-    return connectionModeService.subscribeToModeChanges(cfg => setIsSaaSMode(cfg.mode === 'saas'));
+    void connectionModeService
+      .getCurrentMode()
+      .then((mode) => setIsSaaSMode(mode === "saas"));
+    return connectionModeService.subscribeToModeChanges((cfg) =>
+      setIsSaaSMode(cfg.mode === "saas"),
+    );
   }, []);
 
   return isSaaSMode;

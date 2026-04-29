@@ -4,7 +4,15 @@
  * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
 
-import { Stack, Text, Group, ActionIcon, ScrollArea, Button, Checkbox } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  ActionIcon,
+  ScrollArea,
+  Button,
+  Checkbox,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -12,11 +20,18 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
-  onParameterChange: <K extends keyof AddAttachmentsParameters>(key: K, value: AddAttachmentsParameters[K]) => void;
+  onParameterChange: <K extends keyof AddAttachmentsParameters>(
+    key: K,
+    value: AddAttachmentsParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = false }: AddAttachmentsSettingsProps) => {
+const AddAttachmentsSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: AddAttachmentsSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -28,13 +43,16 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
           onChange={(e) => {
             const files = Array.from(e.target.files || []);
             // Append to existing attachments instead of replacing
-            const newAttachments = [...(parameters.attachments || []), ...files];
-            onParameterChange('attachments', newAttachments);
+            const newAttachments = [
+              ...(parameters.attachments || []),
+              ...files,
+            ];
+            onParameterChange("attachments", newAttachments);
             // Reset the input so the same file can be selected again
-            e.target.value = '';
+            e.target.value = "";
           }}
           disabled={disabled}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           id="attachments-input"
         />
         <Button
@@ -47,34 +65,51 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
         >
           {parameters.attachments?.length > 0
             ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
-            : t("AddAttachmentsRequest.placeholder", "Choose files...")
-          }
+            : t("AddAttachmentsRequest.placeholder", "Choose files...")}
         </Button>
       </Stack>
 
       {parameters.attachments?.length > 0 && (
         <Stack gap="xs">
           <Text size="sm" fw={500}>
-            {t("AddAttachmentsRequest.selectedFiles", "Selected Files")} ({parameters.attachments.length})
+            {t("AddAttachmentsRequest.selectedFiles", "Selected Files")} (
+            {parameters.attachments.length})
           </Text>
-          <ScrollArea.Autosize mah={300} type="scroll" offsetScrollbars styles={{ viewport: { overflowX: 'hidden' } }}>
+          <ScrollArea.Autosize
+            mah={300}
+            type="scroll"
+            offsetScrollbars
+            styles={{ viewport: { overflowX: "hidden" } }}
+          >
             <Stack gap="xs">
               {parameters.attachments.map((file, index) => (
-                <Group key={index} justify="space-between" p="xs" style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 'var(--mantine-radius-sm)', alignItems: 'flex-start' }}>
-                  <Group gap="xs" style={{ flex: 1, minWidth: 0, alignItems: 'flex-start' }}>
+                <Group
+                  key={index}
+                  justify="space-between"
+                  p="xs"
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-3)",
+                    borderRadius: "var(--mantine-radius-sm)",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <Group
+                    gap="xs"
+                    style={{ flex: 1, minWidth: 0, alignItems: "flex-start" }}
+                  >
                     {/* Filename (two-line clamp, wraps, no icon on the left) */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div
                         style={{
-                          fontSize: 'var(--mantine-font-size-sm)',
+                          fontSize: "var(--mantine-font-size-sm)",
                           fontWeight: 400,
                           lineHeight: 1.2,
-                          display: '-webkit-box',
+                          display: "-webkit-box",
                           WebkitLineClamp: 2 as any,
-                          WebkitBoxOrient: 'vertical' as any,
-                          overflow: 'hidden',
-                          whiteSpace: 'normal',
-                          wordBreak: 'break-word',
+                          WebkitBoxOrient: "vertical" as any,
+                          overflow: "hidden",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
                         }}
                         title={file.name}
                       >
@@ -91,8 +126,10 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
                     color="red"
                     style={{ flexShrink: 0 }}
                     onClick={() => {
-                      const newAttachments = (parameters.attachments || []).filter((_, i) => i !== index);
-                      onParameterChange('attachments', newAttachments);
+                      const newAttachments = (
+                        parameters.attachments || []
+                      ).filter((_, i) => i !== index);
+                      onParameterChange("attachments", newAttachments);
                     }}
                     disabled={disabled}
                   >
@@ -110,30 +147,48 @@ const AddAttachmentsSettings = ({ parameters, onParameterChange, disabled = fals
         <Checkbox
           label={
             <Group gap={4}>
-              <Text size="sm">{t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}</Text>
+              <Text size="sm">
+                {t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}
+              </Text>
               <Tooltip
                 header={{
-                  title: t("attachments.convertToPdfA3bTooltipHeader", "About PDF/A-3b Conversion")
+                  title: t(
+                    "attachments.convertToPdfA3bTooltipHeader",
+                    "About PDF/A-3b Conversion",
+                  ),
                 }}
                 tips={[
                   {
-                    title: t("attachments.convertToPdfA3bTooltipTitle", "What it does"),
+                    title: t(
+                      "attachments.convertToPdfA3bTooltipTitle",
+                      "What it does",
+                    ),
                     description: t(
                       "attachments.convertToPdfA3bTooltip",
-                      "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
-                    )
-                  }
+                      "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files.",
+                    ),
+                  },
                 ]}
                 sidebarTooltip={true}
                 pinOnClick={true}
               >
-                <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--icon-files-color)', cursor: 'help' }} />
+                <LocalIcon
+                  icon="info-outline-rounded"
+                  width="1.25rem"
+                  height="1.25rem"
+                  style={{ color: "var(--icon-files-color)", cursor: "help" }}
+                />
               </Tooltip>
             </Group>
           }
-          description={t("attachments.convertToPdfA3bDescription", "Creates an archival PDF with embedded attachments")}
+          description={t(
+            "attachments.convertToPdfA3bDescription",
+            "Creates an archival PDF with embedded attachments",
+          )}
           checked={parameters.convertToPdfA3b}
-          onChange={(event) => onParameterChange('convertToPdfA3b', event.currentTarget.checked)}
+          onChange={(event) =>
+            onParameterChange("convertToPdfA3b", event.currentTarget.checked)
+          }
           disabled={disabled}
           styles={{ root: { flex: 1 } }}
         />

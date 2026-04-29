@@ -10,6 +10,8 @@ interface InsufficientCreditsModalProps {
   requiredCredits?: number;
 }
 
-export function InsufficientCreditsModal(_props: InsufficientCreditsModalProps) {
+export function InsufficientCreditsModal(
+  _props: InsufficientCreditsModalProps,
+) {
   return null;
 }

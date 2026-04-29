@@ -1,11 +1,23 @@
-import React, { useMemo } from 'react';
-import { Badge, Group, Stack, Text, ThemeIcon, Paper, Tooltip, Divider } from '@mantine/core';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import InfoIcon from '@mui/icons-material/InfoOutlined';
-import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
-import type { PdfCompliance, PdfComplianceSummary } from '@app/types/getPdfInfo';
-import { useTranslation } from 'react-i18next';
+import React, { useMemo } from "react";
+import {
+  Badge,
+  Group,
+  Stack,
+  Text,
+  ThemeIcon,
+  Paper,
+  Tooltip,
+  Divider,
+} from "@mantine/core";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import InfoIcon from "@mui/icons-material/InfoOutlined";
+import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
+import type {
+  PdfCompliance,
+  PdfComplianceSummary,
+} from "@app/types/getPdfInfo";
+import { useTranslation } from "react-i18next";
 
 interface ComplianceSectionProps {
   anchorId: string;
@@ -28,28 +40,33 @@ interface ComplianceCheckResult {
   sortOrder: number;
 }
 
-const parseStandardDisplayName = (standardId: string): { displayName: string; category: string; sortOrder: number } => {
+const parseStandardDisplayName = (
+  standardId: string,
+): { displayName: string; category: string; sortOrder: number } => {
   const id = standardId.toLowerCase().trim();
 
   // PDF/A variants: pdfa-1a, pdfa-1b, pdfa-2a, pdfa-2b, pdfa-2u, pdfa-3a, pdfa-3b, pdfa-3u, pdfa-4, etc.
   const pdfaMatch = id.match(/^pdf[_-]?a[_-]?(\d+)([abuf])?$/i);
   if (pdfaMatch) {
     const version = pdfaMatch[1];
-    const level = pdfaMatch[2]?.toUpperCase() || '';
+    const level = pdfaMatch[2]?.toUpperCase() || "";
     return {
       displayName: `PDF/A-${version}${level}`,
-      category: 'PDF/A',
-      sortOrder: 10 + parseInt(version) * 10 + (level === 'A' ? 1 : level === 'B' ? 2 : level === 'U' ? 3 : 0),
+      category: "PDF/A",
+      sortOrder:
+        10 +
+        parseInt(version) * 10 +
+        (level === "A" ? 1 : level === "B" ? 2 : level === "U" ? 3 : 0),
     };
   }
 
   // PDF/UA variants: pdfua-1, pdfua-2, etc.
   const pdfuaMatch = id.match(/^pdf[_-]?ua[_-]?(\d+)?$/i);
   if (pdfuaMatch) {
-    const version = pdfuaMatch[1] || '1';
+    const version = pdfuaMatch[1] || "1";
     return {
       displayName: `PDF/UA-${version}`,
-      category: 'PDF/UA',
+      category: "PDF/UA",
       sortOrder: 200 + parseInt(version),
     };
   }
@@ -57,10 +74,10 @@ const parseStandardDisplayName = (standardId: string): { displayName: string; ca
   // PDF/X variants
   const pdfxMatch = id.match(/^pdf[_-]?x[_-]?(.+)?$/i);
   if (pdfxMatch) {
-    const version = pdfxMatch[1]?.toUpperCase() || '';
+    const version = pdfxMatch[1]?.toUpperCase() || "";
     return {
-      displayName: `PDF/X${version ? `-${version}` : ''}`,
-      category: 'PDF/X',
+      displayName: `PDF/X${version ? `-${version}` : ""}`,
+      category: "PDF/X",
       sortOrder: 300,
     };
   }
@@ -68,40 +85,44 @@ const parseStandardDisplayName = (standardId: string): { displayName: string; ca
   // PDF/E variants
   const pdfeMatch = id.match(/^pdf[_-]?e[_-]?(.+)?$/i);
   if (pdfeMatch) {
-    const version = pdfeMatch[1]?.toUpperCase() || '';
+    const version = pdfeMatch[1]?.toUpperCase() || "";
     return {
-      displayName: `PDF/E${version ? `-${version}` : ''}`,
-      category: 'PDF/E',
+      displayName: `PDF/E${version ? `-${version}` : ""}`,
+      category: "PDF/E",
       sortOrder: 400,
     };
   }
 
   // PDF/VT
-  if (id.includes('pdfvt') || id.includes('pdf-vt') || id.includes('pdf_vt')) {
-    return { displayName: 'PDF/VT', category: 'PDF/VT', sortOrder: 500 };
+  if (id.includes("pdfvt") || id.includes("pdf-vt") || id.includes("pdf_vt")) {
+    return { displayName: "PDF/VT", category: "PDF/VT", sortOrder: 500 };
   }
 
   // SEC (EDGAR) compliance
-  if (id.includes('sec') || id.includes('edgar')) {
-    return { displayName: 'SEC (EDGAR)', category: 'SEC', sortOrder: 600 };
+  if (id.includes("sec") || id.includes("edgar")) {
+    return { displayName: "SEC (EDGAR)", category: "SEC", sortOrder: 600 };
   }
 
   // Not PDF/A indicator
-  if (id === 'not-pdfa' || id === 'not_pdfa') {
-    return { displayName: 'PDF/A Detection', category: 'Detection', sortOrder: 1 };
+  if (id === "not-pdfa" || id === "not_pdfa") {
+    return {
+      displayName: "PDF/A Detection",
+      category: "Detection",
+      sortOrder: 1,
+    };
   }
 
   // Fallback: capitalize and format
   return {
-    displayName: standardId.toUpperCase().replace(/[-_]/g, '/'),
-    category: 'Other',
+    displayName: standardId.toUpperCase().replace(/[-_]/g, "/"),
+    category: "Other",
     sortOrder: 999,
   };
 };
 
 const buildComplianceResults = (
   complianceSummary?: PdfComplianceSummary[] | null,
-  legacyCompliance?: PdfCompliance | null
+  legacyCompliance?: PdfCompliance | null,
 ): ComplianceCheckResult[] => {
   const results: ComplianceCheckResult[] = [];
   const processedCategories = new Set<string>();
@@ -109,11 +130,13 @@ const buildComplianceResults = (
   if (complianceSummary && complianceSummary.length > 0) {
     for (const item of complianceSummary) {
       // Skip the "not-pdfa" detection marker - it's informational, not a compliance check
-      if (item.Standard.toLowerCase() === 'not-pdfa') {
+      if (item.Standard.toLowerCase() === "not-pdfa") {
         continue;
       }
 
-      const { displayName, category, sortOrder } = parseStandardDisplayName(item.Standard);
+      const { displayName, category, sortOrder } = parseStandardDisplayName(
+        item.Standard,
+      );
       processedCategories.add(category);
 
       results.push({
@@ -129,16 +152,20 @@ const buildComplianceResults = (
 
   // Then, add SEC compliance from legacy data if not already present
   // SEC compliance is checked separately by PDFBox, not VeraPDF
-  if (legacyCompliance && 'IsPDF/SECCompliant' in legacyCompliance && !processedCategories.has('SEC')) {
-    const isSecCompliant = legacyCompliance['IsPDF/SECCompliant'] as boolean;
+  if (
+    legacyCompliance &&
+    "IsPDF/SECCompliant" in legacyCompliance &&
+    !processedCategories.has("SEC")
+  ) {
+    const isSecCompliant = legacyCompliance["IsPDF/SECCompliant"] as boolean;
     results.push({
-      displayName: 'SEC (EDGAR)',
-      category: 'SEC',
+      displayName: "SEC (EDGAR)",
+      category: "SEC",
       isCompliant: isSecCompliant,
       summary: isSecCompliant
-        ? 'Document meets SEC EDGAR filing requirements'
-        : 'Document does not meet SEC EDGAR filing requirements',
-      standardId: 'sec-edgar',
+        ? "Document meets SEC EDGAR filing requirements"
+        : "Document does not meet SEC EDGAR filing requirements",
+      standardId: "sec-edgar",
       sortOrder: 600,
     });
   }
@@ -149,9 +176,11 @@ const buildComplianceResults = (
   return results;
 };
 
-const getConformanceLevel = (results: ComplianceCheckResult[]): string | null => {
+const getConformanceLevel = (
+  results: ComplianceCheckResult[],
+): string | null => {
   const passingPdfA = results
-    .filter(r => r.category === 'PDF/A' && r.isCompliant)
+    .filter((r) => r.category === "PDF/A" && r.isCompliant)
     .sort((a, b) => b.sortOrder - a.sortOrder);
 
   if (passingPdfA.length > 0) {
@@ -166,10 +195,10 @@ const ComplianceRow: React.FC<{
 }> = ({ result }) => {
   const { t } = useTranslation();
   const Icon = result.isCompliant ? CheckIcon : CloseIcon;
-  const color = result.isCompliant ? 'teal' : 'red';
+  const color = result.isCompliant ? "teal" : "red";
   const statusText = result.isCompliant
-    ? t('getPdfInfo.compliance.passed', 'Passed')
-    : t('getPdfInfo.compliance.failed', 'Failed');
+    ? t("getPdfInfo.compliance.passed", "Passed")
+    : t("getPdfInfo.compliance.failed", "Failed");
 
   return (
     <Paper
@@ -183,14 +212,19 @@ const ComplianceRow: React.FC<{
       <Group justify="space-between" wrap="nowrap">
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
           <ThemeIcon color={color} variant="light" size="lg" radius="xl">
-            <Icon style={{ fontSize: '1.2rem' }} />
+            <Icon style={{ fontSize: "1.2rem" }} />
           </ThemeIcon>
           <Stack gap={2} style={{ minWidth: 0 }}>
             <Text size="sm" fw={600} truncate>
               {result.displayName}
             </Text>
             <Tooltip label={result.summary} multiline maw={400} withArrow>
-              <Text size="xs" c="dimmed" lineClamp={1} style={{ cursor: 'help' }}>
+              <Text
+                size="xs"
+                c="dimmed"
+                lineClamp={1}
+                style={{ cursor: "help" }}
+              >
                 {result.summary}
               </Text>
             </Tooltip>
@@ -215,14 +249,20 @@ const EmptyComplianceState: React.FC = () => {
     <Paper p="md" radius="sm" withBorder>
       <Group gap="sm">
         <ThemeIcon color="gray" variant="light" size="lg" radius="xl">
-          <InfoIcon style={{ fontSize: '1.2rem' }} />
+          <InfoIcon style={{ fontSize: "1.2rem" }} />
         </ThemeIcon>
         <Stack gap={2}>
           <Text size="sm" fw={500}>
-            {t('getPdfInfo.compliance.noVerification', 'No Verification Performed')}
+            {t(
+              "getPdfInfo.compliance.noVerification",
+              "No Verification Performed",
+            )}
           </Text>
           <Text size="xs" c="dimmed">
-            {t('getPdfInfo.compliance.noVerificationDesc', 'PDF standards compliance was not verified for this document.')}
+            {t(
+              "getPdfInfo.compliance.noVerificationDesc",
+              "PDF standards compliance was not verified for this document.",
+            )}
           </Text>
         </Stack>
       </Group>
@@ -239,21 +279,24 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({
 
   const complianceResults = useMemo(
     () => buildComplianceResults(complianceSummary, legacyCompliance),
-    [complianceSummary, legacyCompliance]
+    [complianceSummary, legacyCompliance],
   );
 
   const conformanceLevel = useMemo(
     () => getConformanceLevel(complianceResults),
-    [complianceResults]
+    [complianceResults],
   );
 
-  const passedCount = complianceResults.filter(r => r.isCompliant).length;
-  const failedCount = complianceResults.filter(r => !r.isCompliant).length;
+  const passedCount = complianceResults.filter((r) => r.isCompliant).length;
+  const failedCount = complianceResults.filter((r) => !r.isCompliant).length;
 
   const hasResults = complianceResults.length > 0;
 
   return (
-    <SectionBlock title={t('getPdfInfo.sections.compliance', 'Compliance')} anchorId={anchorId}>
+    <SectionBlock
+      title={t("getPdfInfo.sections.compliance", "Compliance")}
+      anchorId={anchorId}
+    >
       <Stack gap="md">
         {/* Summary header when there are results */}
         {hasResults && (
@@ -267,12 +310,14 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({
                 )}
                 {passedCount > 0 && (
                   <Badge color="teal" variant="outline" size="sm">
-                    {passedCount} {t('getPdfInfo.compliance.passedCount', 'passed')}
+                    {passedCount}{" "}
+                    {t("getPdfInfo.compliance.passedCount", "passed")}
                   </Badge>
                 )}
                 {failedCount > 0 && (
                   <Badge color="red" variant="outline" size="sm">
-                    {failedCount} {t('getPdfInfo.compliance.failedCount', 'failed')}
+                    {failedCount}{" "}
+                    {t("getPdfInfo.compliance.failedCount", "failed")}
                   </Badge>
                 )}
               </Group>
@@ -285,7 +330,10 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({
         {hasResults ? (
           <Stack gap="xs">
             {complianceResults.map((result, index) => (
-              <ComplianceRow key={`${result.standardId}-${index}`} result={result} />
+              <ComplianceRow
+                key={`${result.standardId}-${index}`}
+                result={result}
+              />
             ))}
           </Stack>
         ) : (

@@ -1,11 +1,11 @@
-import { PDFFont, PDFPage } from '@cantoo/pdf-lib';
-import { wrapText } from '@app/hooks/tools/validateSignature/utils/pdfText';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import { PdfiumFont, PdfiumPage } from "@app/services/pdfiumDocBuilder";
+import { wrapText } from "@app/hooks/tools/validateSignature/utils/pdfText";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface FieldBoxOptions {
-  page: PDFPage;
-  font: PDFFont;
-  fontBold: PDFFont;
+  page: PdfiumPage;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   x: number;
   top: number;
   width: number;
@@ -37,9 +37,10 @@ export const drawFieldBox = ({
   });
 
   const boxTop = top - labelFontSize - 6;
-  const rawValue = value && value.trim().length > 0 ? value : '--';
+  const rawValue = value && value.trim().length > 0 ? value : "--";
   const lines = wrapText(rawValue, font, valueFontSize, width - boxPadding * 2);
-  const boxHeight = Math.max(valueLineHeight, lines.length * valueLineHeight) + boxPadding * 2;
+  const boxHeight =
+    Math.max(valueLineHeight, lines.length * valueLineHeight) + boxPadding * 2;
 
   page.drawRectangle({
     x,

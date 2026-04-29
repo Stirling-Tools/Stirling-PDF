@@ -6,20 +6,21 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
-import apiClient from '@app/services/apiClient';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useAuth } from '@app/auth/UseSession';
-import { useLicense } from '@app/contexts/LicenseContext';
+} from "react";
+import apiClient from "@app/services/apiClient";
+import { isAxiosError } from "axios";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
+import { useLicense } from "@app/contexts/LicenseContext";
 import {
   getSimulatedAdminUsage,
   getSimulatedWauResponse,
-} from '@app/testing/serverExperienceSimulations';
+} from "@app/testing/serverExperienceSimulations";
 
-const SELF_REPORTED_ADMIN_KEY = 'stirling-self-reported-admin';
+const SELF_REPORTED_ADMIN_KEY = "stirling-self-reported-admin";
 const FREE_TIER_LIMIT = 5;
 
-type UserCountSource = 'admin' | 'estimate' | 'unknown';
+type UserCountSource = "admin" | "estimate" | "unknown";
 
 interface WeeklyActiveUsersResponse {
   trackingSince: string;
@@ -38,16 +39,16 @@ interface UserCountState {
 }
 
 export type ServerScenarioKey =
-  | 'unknown'
-  | 'licensed'
-  | 'no-login-user-under-limit-no-license'
-  | 'no-login-admin-under-limit-no-license'
-  | 'no-login-user-over-limit-no-license'
-  | 'no-login-admin-over-limit-no-license'
-  | 'login-user-under-limit-no-license'
-  | 'login-admin-under-limit-no-license'
-  | 'login-user-over-limit-no-license'
-  | 'login-admin-over-limit-no-license';
+  | "unknown"
+  | "licensed"
+  | "no-login-user-under-limit-no-license"
+  | "no-login-admin-under-limit-no-license"
+  | "no-login-user-over-limit-no-license"
+  | "no-login-admin-over-limit-no-license"
+  | "login-user-under-limit-no-license"
+  | "login-admin-under-limit-no-license"
+  | "login-user-over-limit-no-license"
+  | "login-admin-over-limit-no-license";
 
 export interface ServerExperienceValue {
   loginEnabled: boolean;
@@ -78,65 +79,72 @@ export interface ServerExperienceValue {
   scenarioKey: ServerScenarioKey;
 }
 
-const ServerExperienceContext = createContext<ServerExperienceValue | undefined>(undefined);
+const ServerExperienceContext = createContext<
+  ServerExperienceValue | undefined
+>(undefined);
 
 function getStoredSelfReportedAdmin(): boolean {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return false;
   }
   try {
-    return window.localStorage.getItem(SELF_REPORTED_ADMIN_KEY) === 'true';
+    return window.localStorage.getItem(SELF_REPORTED_ADMIN_KEY) === "true";
   } catch {
     return false;
   }
 }
 
 function getErrorMessage(error: unknown): string {
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
   if (
-    typeof error === 'object' &&
-    error !== null &&
-    'response' in error &&
-    typeof (error as any).response?.data?.message === 'string'
+    isAxiosError(error) &&
+    typeof error.response?.data?.message === "string"
   ) {
-    return (error as any).response.data.message;
+    return error.response.data.message;
   }
   if (error instanceof Error) {
     return error.message;
   }
-  return 'Unable to load server usage';
+  return "Unable to load server usage";
 }
 
-export function ServerExperienceProvider({ children }: { children: ReactNode }) {
+export function ServerExperienceProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const { config } = useAppConfig();
   const { user } = useAuth();
   const { licenseInfo, loading: licenseLoading } = useLicense();
 
-  const [selfReportedAdmin, setSelfReportedAdminState] = useState<boolean>(getStoredSelfReportedAdmin);
+  const [selfReportedAdmin, setSelfReportedAdminState] = useState<boolean>(
+    getStoredSelfReportedAdmin,
+  );
   const [userCountState, setUserCountState] = useState<UserCountState>({
     totalUsers: null,
     weeklyActiveUsers: null,
     loading: false,
-    source: 'unknown',
+    source: "unknown",
     lastUpdated: null,
     error: null,
   });
 
   const loginEnabled = config?.enableLogin !== false;
   const configIsAdmin = Boolean(config?.isAdmin);
-  const effectiveIsAdmin = configIsAdmin || (!loginEnabled && selfReportedAdmin);
+  const effectiveIsAdmin =
+    configIsAdmin || (!loginEnabled && selfReportedAdmin);
   const isAuthenticated = Boolean(user);
 
   const setSelfReportedAdmin = useCallback((value: boolean) => {
     setSelfReportedAdminState(value);
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
     try {
       if (value) {
-        window.localStorage.setItem(SELF_REPORTED_ADMIN_KEY, 'true');
+        window.localStorage.setItem(SELF_REPORTED_ADMIN_KEY, "true");
       } else {
         window.localStorage.removeItem(SELF_REPORTED_ADMIN_KEY);
       }
@@ -146,16 +154,16 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
     const handleStorage = (event: StorageEvent) => {
       if (event.key === SELF_REPORTED_ADMIN_KEY) {
-        setSelfReportedAdminState(event.newValue === 'true');
+        setSelfReportedAdminState(event.newValue === "true");
       }
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   useEffect(() => {
@@ -195,17 +203,21 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
           testResponse ??
           (
             await apiClient.get<{ totalUsers?: number }>(
-              '/api/v1/proprietary/ui-data/admin-settings',
-              { suppressErrorToast: true } as any,
+              "/api/v1/proprietary/ui-data/admin-settings",
+              {
+                suppressErrorToast: true,
+              },
             )
           ).data;
         const totalUsers =
-          typeof responseData?.totalUsers === 'number' ? responseData.totalUsers : null;
+          typeof responseData?.totalUsers === "number"
+            ? responseData.totalUsers
+            : null;
         setUserCountState({
           totalUsers,
           weeklyActiveUsers: null,
           loading: false,
-          source: 'admin',
+          source: "admin",
           lastUpdated: Date.now(),
           error: null,
         });
@@ -217,19 +229,19 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
         const responseData =
           testResponse ??
           (
-            await apiClient.get<WeeklyActiveUsersResponse>('/api/v1/info/wau', {
+            await apiClient.get<WeeklyActiveUsersResponse>("/api/v1/info/wau", {
               suppressErrorToast: true,
-            } as any)
+            })
           ).data;
         const weeklyActiveUsers =
-          typeof responseData?.weeklyActiveUsers === 'number'
+          typeof responseData?.weeklyActiveUsers === "number"
             ? responseData.weeklyActiveUsers
             : null;
         setUserCountState({
           totalUsers: weeklyActiveUsers,
           weeklyActiveUsers,
           loading: false,
-          source: 'estimate',
+          source: "estimate",
           lastUpdated: Date.now(),
           error: null,
         });
@@ -239,7 +251,7 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
         totalUsers: null,
         weeklyActiveUsers: null,
         loading: false,
-        source: 'unknown',
+        source: "unknown",
         lastUpdated: null,
         error: getErrorMessage(error),
       });
@@ -255,7 +267,11 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
   }, [fetchUserCounts]);
 
   const hasPaidLicense = useMemo(() => {
-    return config?.license === 'SERVER' || config?.license === 'PRO' || config?.license === 'ENTERPRISE';
+    return (
+      config?.license === "SERVER" ||
+      config?.license === "PRO" ||
+      config?.license === "ENTERPRISE"
+    );
   }, [config?.license]);
 
   const licenseKeyValid = useMemo(() => {
@@ -269,44 +285,46 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
   }, [config?.premiumEnabled, licenseInfo]);
 
   const overFreeTierLimit = useMemo(() => {
-    if (typeof userCountState.totalUsers !== 'number') {
+    if (typeof userCountState.totalUsers !== "number") {
       return null;
     }
     return userCountState.totalUsers > FREE_TIER_LIMIT;
   }, [userCountState.totalUsers]);
 
   const userCountResolved =
-    !userCountState.loading && userCountState.source !== 'unknown' && userCountState.totalUsers !== null;
+    !userCountState.loading &&
+    userCountState.source !== "unknown" &&
+    userCountState.totalUsers !== null;
 
   const scenarioKey = useMemo<ServerScenarioKey>(() => {
     if (hasPaidLicense) {
-      return 'licensed';
+      return "licensed";
     }
-    if (!userCountResolved || typeof userCountState.totalUsers !== 'number') {
-      return 'unknown';
+    if (!userCountResolved || typeof userCountState.totalUsers !== "number") {
+      return "unknown";
     }
     const overLimit = userCountState.totalUsers > FREE_TIER_LIMIT;
 
     if (!loginEnabled) {
       if (selfReportedAdmin) {
         return overLimit
-          ? 'no-login-admin-over-limit-no-license'
-          : 'no-login-admin-under-limit-no-license';
+          ? "no-login-admin-over-limit-no-license"
+          : "no-login-admin-under-limit-no-license";
       }
       return overLimit
-        ? 'no-login-user-over-limit-no-license'
-        : 'no-login-user-under-limit-no-license';
+        ? "no-login-user-over-limit-no-license"
+        : "no-login-user-under-limit-no-license";
     }
 
     if (configIsAdmin) {
       return overLimit
-        ? 'login-admin-over-limit-no-license'
-        : 'login-admin-under-limit-no-license';
+        ? "login-admin-over-limit-no-license"
+        : "login-admin-under-limit-no-license";
     }
 
     return overLimit
-      ? 'login-user-over-limit-no-license'
-      : 'login-user-under-limit-no-license';
+      ? "login-user-over-limit-no-license"
+      : "login-user-under-limit-no-license";
   }, [
     hasPaidLicense,
     userCountResolved,
@@ -355,7 +373,9 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
 export function useServerExperienceContext() {
   const context = useContext(ServerExperienceContext);
   if (!context) {
-    throw new Error('useServerExperience must be used within ServerExperienceProvider');
+    throw new Error(
+      "useServerExperience must be used within ServerExperienceProvider",
+    );
   }
   return context;
 }

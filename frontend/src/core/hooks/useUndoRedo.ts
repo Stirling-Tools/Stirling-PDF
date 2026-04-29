@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 export interface Command {
   execute(): void;
@@ -19,7 +19,7 @@ export function useUndoRedo() {
 
   const executeCommand = useCallback((command: Command | CommandSequence) => {
     command.execute();
-    setUndoStack(prev => [command, ...prev]);
+    setUndoStack((prev) => [command, ...prev]);
     setRedoStack([]); // Clear redo stack when new command is executed
   }, []);
 
@@ -28,10 +28,10 @@ export function useUndoRedo() {
 
     const command = undoStack[0];
     command.undo();
-    
-    setUndoStack(prev => prev.slice(1));
-    setRedoStack(prev => [command, ...prev]);
-    
+
+    setUndoStack((prev) => prev.slice(1));
+    setRedoStack((prev) => [command, ...prev]);
+
     return true;
   }, [undoStack]);
 
@@ -40,10 +40,10 @@ export function useUndoRedo() {
 
     const command = redoStack[0];
     command.execute();
-    
-    setRedoStack(prev => prev.slice(1));
-    setUndoStack(prev => [command, ...prev]);
-    
+
+    setRedoStack((prev) => prev.slice(1));
+    setUndoStack((prev) => [command, ...prev]);
+
     return true;
   }, [redoStack]);
 
@@ -63,6 +63,6 @@ export function useUndoRedo() {
     canUndo,
     canRedo,
     undoStack,
-    redoStack
+    redoStack,
   };
 }

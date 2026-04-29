@@ -2,7 +2,7 @@ import {
   ProcessedFileMetadata,
   ProcessedFilePage,
   StirlingFileStub,
-} from '@app/types/fileContext';
+} from "@app/types/fileContext";
 
 export interface PageDimensions {
   width: number | null;
@@ -10,18 +10,18 @@ export interface PageDimensions {
 }
 
 export function getPageDimensions(
-  page?: ProcessedFilePage | null
+  page?: ProcessedFilePage | null,
 ): PageDimensions {
   const width =
-    typeof page?.width === 'number' && page.width > 0 ? page.width : null;
+    typeof page?.width === "number" && page.width > 0 ? page.width : null;
   const height =
-    typeof page?.height === 'number' && page.height > 0 ? page.height : null;
+    typeof page?.height === "number" && page.height > 0 ? page.height : null;
 
   return { width, height };
 }
 
 export function getFirstPageDimensionsFromMetadata(
-  metadata?: ProcessedFileMetadata | null
+  metadata?: ProcessedFileMetadata | null,
 ): PageDimensions {
   if (!metadata?.pages?.length) {
     return { width: null, height: null };
@@ -31,13 +31,13 @@ export function getFirstPageDimensionsFromMetadata(
 }
 
 export function getFirstPageDimensionsFromStub(
-  file?: StirlingFileStub
+  file?: StirlingFileStub,
 ): PageDimensions {
   return getFirstPageDimensionsFromMetadata(file?.processedFile);
 }
 
 export function getFirstPageAspectRatioFromMetadata(
-  metadata?: ProcessedFileMetadata | null
+  metadata?: ProcessedFileMetadata | null,
 ): number | null {
   const { width, height } = getFirstPageDimensionsFromMetadata(metadata);
   if (width && height) {
@@ -47,7 +47,7 @@ export function getFirstPageAspectRatioFromMetadata(
 }
 
 export function getFirstPageAspectRatioFromStub(
-  file?: StirlingFileStub
+  file?: StirlingFileStub,
 ): number | null {
   return getFirstPageAspectRatioFromMetadata(file?.processedFile);
 }

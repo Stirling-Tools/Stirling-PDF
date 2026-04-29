@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import classes from '@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css';
-import PageSelectionInput from '@app/components/pageEditor/bulkSelectionPanel/PageSelectionInput';
-import SelectedPagesDisplay from '@app/components/pageEditor/bulkSelectionPanel/SelectedPagesDisplay';
-import PageSelectionSyntaxHint from '@app/components/shared/PageSelectionSyntaxHint';
-import AdvancedSelectionPanel from '@app/components/pageEditor/bulkSelectionPanel/AdvancedSelectionPanel';
+import { useState } from "react";
+import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
+import PageSelectionInput from "@app/components/pageEditor/bulkSelectionPanel/PageSelectionInput";
+import SelectedPagesDisplay from "@app/components/pageEditor/bulkSelectionPanel/SelectedPagesDisplay";
+import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxHint";
+import AdvancedSelectionPanel from "@app/components/pageEditor/bulkSelectionPanel/AdvancedSelectionPanel";
 
 interface BulkSelectionPanelProps {
   csvInput: string;
@@ -24,8 +24,8 @@ const BulkSelectionPanel = ({
   const maxPages = displayDocument?.pages?.length ?? 0;
 
   const handleClear = () => {
-    setCsvInput('');
-    onUpdatePagesFromCSV('');
+    setCsvInput("");
+    onUpdatePagesFromCSV("");
   };
 
   return (
@@ -39,7 +39,11 @@ const BulkSelectionPanel = ({
         onToggleAdvanced={setAdvancedOpened}
       />
 
-      <PageSelectionSyntaxHint input={csvInput} maxPages={maxPages} variant="panel" />
+      <PageSelectionSyntaxHint
+        input={csvInput}
+        maxPages={maxPages}
+        variant="panel"
+      />
 
       <SelectedPagesDisplay
         selectedPageIds={selectedPageIds}

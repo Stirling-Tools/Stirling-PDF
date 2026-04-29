@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
-import { isOnboardingCompleted, hasShownToursTooltip, markToursTooltipShown } from '@app/components/onboarding/orchestrator/onboardingStorage';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { TOUR_STATE_EVENT, type TourStatePayload } from "@app/constants/events";
+import {
+  isOnboardingCompleted,
+  hasShownToursTooltip,
+  markToursTooltipShown,
+} from "@app/components/onboarding/orchestrator/onboardingStorage";
 
 export interface ToursTooltipState {
   tooltipOpen: boolean | undefined;
@@ -24,7 +28,7 @@ export function useToursTooltip(): ToursTooltipState {
 
   // Auto-show when a tour ends (fires once per user)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const handleTourStateChange = (event: Event) => {
       const { detail } = event as CustomEvent<TourStatePayload>;
@@ -37,7 +41,8 @@ export function useToursTooltip(): ToursTooltipState {
     };
 
     window.addEventListener(TOUR_STATE_EVENT, handleTourStateChange);
-    return () => window.removeEventListener(TOUR_STATE_EVENT, handleTourStateChange);
+    return () =>
+      window.removeEventListener(TOUR_STATE_EVENT, handleTourStateChange);
   }, []);
 
   // Show once after onboarding is complete
@@ -64,10 +69,14 @@ export function useToursTooltip(): ToursTooltipState {
         setShowToursTooltip(true);
       }
     },
-    [hasBeenDismissed, toursMenuOpen, handleDismissToursTooltip]
+    [hasBeenDismissed, toursMenuOpen, handleDismissToursTooltip],
   );
 
-  const tooltipOpen = toursMenuOpen ? false : hasBeenDismissed ? undefined : showToursTooltip;
+  const tooltipOpen = toursMenuOpen
+    ? false
+    : hasBeenDismissed
+      ? undefined
+      : showToursTooltip;
 
   return {
     tooltipOpen,
@@ -78,4 +87,3 @@ export function useToursTooltip(): ToursTooltipState {
     handleTooltipOpenChange,
   };
 }
-

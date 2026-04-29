@@ -1,7 +1,7 @@
-import { ButtonConfig } from '@app/types/sidebar';
+import { ButtonConfig } from "@app/types/sidebar";
 
 // Border radius constants
-export const ROUND_BORDER_RADIUS = '0.5rem';
+export const ROUND_BORDER_RADIUS = "0.5rem";
 
 /**
  * Check if a navigation button is currently active
@@ -12,16 +12,17 @@ export const isNavButtonActive = (
   isFilesModalOpen: boolean,
   configModalOpen: boolean,
   selectedToolKey?: string | null,
-  leftPanelView?: 'toolPicker' | 'toolContent' | 'hidden'
+  leftPanelView?: "toolPicker" | "toolContent" | "hidden",
 ): boolean => {
-  const isActiveByLocalState = config.type === 'navigation' && activeButton === config.id;
+  const isActiveByLocalState =
+    config.type === "navigation" && activeButton === config.id;
   const isActiveByContext =
-    config.type === 'navigation' &&
-    leftPanelView === 'toolContent' &&
+    config.type === "navigation" &&
+    leftPanelView === "toolContent" &&
     selectedToolKey === config.id;
   const isActiveByModal =
-    (config.type === 'modal' && config.id === 'files' && isFilesModalOpen) ||
-    (config.type === 'modal' && config.id === 'config' && configModalOpen);
+    (config.type === "modal" && config.id === "files" && isFilesModalOpen) ||
+    (config.type === "modal" && config.id === "config" && configModalOpen);
 
   return isActiveByLocalState || isActiveByContext || isActiveByModal;
 };
@@ -35,7 +36,7 @@ export const getNavButtonStyle = (
   isFilesModalOpen: boolean,
   configModalOpen: boolean,
   selectedToolKey?: string | null,
-  leftPanelView?: 'toolPicker' | 'toolContent' | 'hidden'
+  leftPanelView?: "toolPicker" | "toolContent" | "hidden",
 ) => {
   const isActive = isNavButtonActive(
     config,
@@ -43,41 +44,40 @@ export const getNavButtonStyle = (
     isFilesModalOpen,
     configModalOpen,
     selectedToolKey,
-    leftPanelView
+    leftPanelView,
   );
 
   if (isActive) {
     return {
       backgroundColor: `var(--icon-${config.id}-bg)`,
       color: `var(--icon-${config.id}-color)`,
-      border: 'none',
+      border: "none",
       borderRadius: ROUND_BORDER_RADIUS,
     };
   }
 
   // Inactive state for all buttons
   return {
-    backgroundColor: 'var(--icon-inactive-bg)',
-    color: 'var(--icon-inactive-color)',
-    border: 'none',
+    backgroundColor: "var(--icon-inactive-bg)",
+    color: "var(--icon-inactive-color)",
+    border: "none",
     borderRadius: ROUND_BORDER_RADIUS,
   };
 };
-
 
 /**
  * Determine the active nav button based on current tool state and registry
  */
 export const getActiveNavButton = (
   selectedToolKey: string | null,
-  readerMode: boolean
+  readerMode: boolean,
 ): string => {
   // Reader mode takes precedence and should highlight the Read nav item
   if (readerMode) {
-    return 'read';
+    return "read";
   }
   // If a tool is selected, highlight it immediately even if the panel view
   // transition to 'toolContent' has not completed yet. This prevents a brief
   // period of no-highlight during rapid navigation.
-    return selectedToolKey ? selectedToolKey : 'tools';
+  return selectedToolKey ? selectedToolKey : "tools";
 };

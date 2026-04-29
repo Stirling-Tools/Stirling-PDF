@@ -1,0 +1,68 @@
+/* Shared Sidebar Base - Common styles for all viewer sidebars */
+
+/* Container */
+.sidebar-base {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
+    color-mix(in srgb, var(--bg-background) 90%, transparent)
+  );
+  border-left: 1px solid
+    color-mix(in srgb, var(--border-subtle) 75%, transparent);
+  box-shadow: -2px 0 16px
+    color-mix(
+      in srgb,
+      var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%,
+      transparent
+    );
+  backdrop-filter: blur(12px);
+}
+
+/* Header Section */
+.sidebar-base__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.875rem;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebar-base__header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-base__header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mantine-color-blue-6);
+  font-size: 1.1rem;
+}
+
+/* Search Section (used by bookmark & attachment sidebars) */
+.sidebar-base__search {
+  background: var(--tool-panel-search-bg, var(--bg-toolbar));
+  border-bottom: 1px solid
+    var(--tool-panel-search-border-bottom, var(--border-subtle));
+  padding-top: 0.75rem !important;
+}
+
+/* Content Section */
+.sidebar-base__content {
+  padding-top: 0.5rem !important;
+}
+
+.sidebar-base__empty-state,
+.sidebar-base__error {
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.sidebar-base__loading {
+  padding: 2rem 1rem !important;
+}

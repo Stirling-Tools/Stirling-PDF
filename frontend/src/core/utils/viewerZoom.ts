@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export const DEFAULT_VISIBILITY_THRESHOLD = 70; // Require at least 70% of the page height to be visible
 export const DEFAULT_FALLBACK_ZOOM = 1.44; // 144% fallback when no reliable metadata is present
@@ -11,9 +11,9 @@ export interface ZoomViewport {
 }
 
 export type AutoZoomDecision =
-  | { type: 'fallback'; zoom: number }
-  | { type: 'fitWidth' }
-  | { type: 'adjust'; zoom: number };
+  | { type: "fallback"; zoom: number }
+  | { type: "fitWidth" }
+  | { type: "adjust"; zoom: number };
 
 export interface AutoZoomParams {
   viewportWidth: number;
@@ -40,11 +40,11 @@ export function determineAutoZoom({
   const rectWidth = pageRect?.width ?? 0;
   const rectHeight = pageRect?.height ?? 0;
   const aspectRatio: number | null =
-    rectWidth > 0 ? rectHeight / rectWidth : metadataAspectRatio ?? null;
+    rectWidth > 0 ? rectHeight / rectWidth : (metadataAspectRatio ?? null);
 
   // Need aspect ratio to proceed
   if (!aspectRatio || aspectRatio <= 0) {
-    return { type: 'fallback', zoom: Math.min(fitWidthZoom, fallbackZoom) };
+    return { type: "fallback", zoom: Math.min(fitWidthZoom, fallbackZoom) };
   }
 
   // Landscape pages need 100% visibility, portrait need the specified threshold
@@ -53,15 +53,17 @@ export function determineAutoZoom({
 
   // Calculate zoom level that shows targetVisibility% of page height
   const pageHeightAtFitWidth = (viewportWidth / pagesPerSpread) * aspectRatio;
-  const heightBasedZoom = fitWidthZoom * (viewportHeight / pageHeightAtFitWidth) / (targetVisibility / 100);
+  const heightBasedZoom =
+    (fitWidthZoom * (viewportHeight / pageHeightAtFitWidth)) /
+    (targetVisibility / 100);
 
   // Use whichever zoom is smaller (more zoomed out) to satisfy both width and height constraints
   if (heightBasedZoom < fitWidthZoom) {
     // Need to zoom out from fitWidth to show enough height
-    return { type: 'adjust', zoom: heightBasedZoom };
+    return { type: "adjust", zoom: heightBasedZoom };
   } else {
     // fitWidth already shows enough
-    return { type: 'fitWidth' };
+    return { type: "fitWidth" };
   }
 }
 
@@ -76,7 +78,7 @@ export async function measureRenderedPageRect({
   maxAttempts = 12,
   shouldCancel,
 }: MeasurePageRectOptions = {}): Promise<DOMRect | null> {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
+  if (typeof window === "undefined" || typeof document === "undefined") {
     return null;
   }
 
@@ -163,12 +165,12 @@ export function useFitWidthResize({
       }, debounceMs);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     return () => {
       if (timeoutId !== undefined) {
         window.clearTimeout(timeoutId);
       }
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [debounceMs]);
 }

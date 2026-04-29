@@ -1,17 +1,29 @@
-import { ActionIcon, Tooltip, Popover, Stack, Slider, Text, Group, Button } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
-import TuneIcon from '@mui/icons-material/Tune';
-import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
-import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
-import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
+import {
+  ActionIcon,
+  Tooltip,
+  Popover,
+  Stack,
+  Slider,
+  Text,
+  Group,
+  Button,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
+import type { PdfAnnotationObject } from "@embedpdf/models";
+import type { AnnotationPatch } from "@app/components/viewer/viewerTypes";
+import TuneIcon from "@mui/icons-material/Tune";
+import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
+import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
+import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 
-type AnnotationType = 'text' | 'note' | 'shape';
+export type PropertiesAnnotationType = "text" | "note" | "shape";
 
 interface PropertiesPopoverProps {
-  annotationType: AnnotationType;
-  annotation: any;
-  onUpdate: (patch: Record<string, any>) => void;
+  annotationType: PropertiesAnnotationType;
+  annotation: TrackedAnnotation<PdfAnnotationObject> | undefined;
+  onUpdate: (patch: AnnotationPatch) => void;
   disabled?: boolean;
 }
 
@@ -24,23 +36,33 @@ export function PropertiesPopover({
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
-  const obj = annotation?.object;
+  interface AnnotationObjectProps {
+    fontSize?: number;
+    textAlign?: number | string;
+    opacity?: number;
+    borderWidth?: number;
+    strokeWidth?: number;
+  }
+
+  const obj = annotation?.object as
+    | (PdfAnnotationObject & AnnotationObjectProps)
+    | undefined;
 
   // Get current values
   const fontSize = obj?.fontSize ?? 14;
   const textAlign = obj?.textAlign;
   const currentAlign =
-    typeof textAlign === 'number'
+    typeof textAlign === "number"
       ? textAlign === 1
-        ? 'center'
+        ? "center"
         : textAlign === 2
-          ? 'right'
-          : 'left'
-      : textAlign === 'center'
-        ? 'center'
-        : textAlign === 'right'
-          ? 'right'
-          : 'left';
+          ? "right"
+          : "left"
+      : textAlign === "center"
+        ? "center"
+        : textAlign === "right"
+          ? "right"
+          : "left";
 
   // For shapes
   const opacity = Math.round((obj?.opacity ?? 1) * 100);
@@ -52,7 +74,7 @@ export function PropertiesPopover({
       {/* Font Size */}
       <div>
         <Text size="xs" fw={500} mb={4}>
-          {t('annotation.fontSize', 'Font size')}
+          {t("annotation.fontSize", "Font size")}
         </Text>
         <Slider
           value={fontSize}
@@ -66,7 +88,7 @@ export function PropertiesPopover({
       {/* Opacity */}
       <div>
         <Text size="xs" fw={500} mb={4}>
-          {t('annotation.opacity', 'Opacity')}
+          {t("annotation.opacity", "Opacity")}
         </Text>
         <Slider
           value={Math.round((obj?.opacity ?? 1) * 100)}
@@ -80,25 +102,25 @@ export function PropertiesPopover({
       {/* Text Alignment */}
       <div>
         <Text size="xs" fw={500} mb={4}>
-          {t('annotation.textAlignment', 'Text Alignment')}
+          {t("annotation.textAlignment", "Text Alignment")}
         </Text>
         <Group gap="xs">
           <ActionIcon
-            variant={currentAlign === 'left' ? 'filled' : 'default'}
+            variant={currentAlign === "left" ? "filled" : "default"}
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
           >
             <FormatAlignLeftIcon style={{ fontSize: 18 }} />
           </ActionIcon>
           <ActionIcon
-            variant={currentAlign === 'center' ? 'filled' : 'default'}
+            variant={currentAlign === "center" ? "filled" : "default"}
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
           >
             <FormatAlignCenterIcon style={{ fontSize: 18 }} />
           </ActionIcon>
           <ActionIcon
-            variant={currentAlign === 'right' ? 'filled' : 'default'}
+            variant={currentAlign === "right" ? "filled" : "default"}
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
           >
@@ -114,7 +136,7 @@ export function PropertiesPopover({
       {/* Opacity */}
       <div>
         <Text size="xs" fw={500} mb={4}>
-          {t('annotation.opacity', 'Opacity')}
+          {t("annotation.opacity", "Opacity")}
         </Text>
         <Slider
           value={opacity}
@@ -137,7 +159,7 @@ export function PropertiesPopover({
         <Group gap="xs" align="flex-end">
           <div style={{ flex: 1 }}>
             <Text size="xs" fw={500} mb={4}>
-              {t('annotation.strokeWidth', 'Stroke')}
+              {t("annotation.strokeWidth", "Stroke")}
             </Text>
             <Slider
               value={strokeWidth}
@@ -155,7 +177,7 @@ export function PropertiesPopover({
           </div>
           <Button
             size="xs"
-            variant={!borderVisible ? 'filled' : 'light'}
+            variant={!borderVisible ? "filled" : "light"}
             onClick={() => {
               const newValue = borderVisible ? 0 : 1;
               onUpdate({
@@ -166,8 +188,8 @@ export function PropertiesPopover({
             }}
           >
             {borderVisible
-              ? t('annotation.borderOn', 'Border: On')
-              : t('annotation.borderOff', 'Border: Off')}
+              ? t("annotation.borderOn", "Border: On")
+              : t("annotation.borderOff", "Border: Off")}
           </Button>
         </Group>
       </div>
@@ -177,7 +199,7 @@ export function PropertiesPopover({
   return (
     <Popover opened={opened} onChange={setOpened} position="bottom" withArrow>
       <Popover.Target>
-        <Tooltip label={t('annotation.properties', 'Properties')}>
+        <Tooltip label={t("annotation.properties", "Properties")}>
           <ActionIcon
             variant="subtle"
             color="gray"
@@ -187,13 +209,13 @@ export function PropertiesPopover({
             styles={{
               root: {
                 flexShrink: 0,
-                backgroundColor: 'var(--bg-raised)',
-                border: '1px solid var(--border-default)',
-                color: 'var(--text-secondary)',
-                '&:hover': {
-                  backgroundColor: 'var(--hover-bg)',
-                  borderColor: 'var(--border-strong)',
-                  color: 'var(--text-primary)',
+                backgroundColor: "var(--bg-raised)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-secondary)",
+                "&:hover": {
+                  backgroundColor: "var(--hover-bg)",
+                  borderColor: "var(--border-strong)",
+                  color: "var(--text-primary)",
                 },
               },
             }}
@@ -203,8 +225,9 @@ export function PropertiesPopover({
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
-        {(annotationType === 'text' || annotationType === 'note') && renderTextNoteControls()}
-        {annotationType === 'shape' && renderShapeControls()}
+        {(annotationType === "text" || annotationType === "note") &&
+          renderTextNoteControls()}
+        {annotationType === "shape" && renderShapeControls()}
       </Popover.Dropdown>
     </Popover>
   );

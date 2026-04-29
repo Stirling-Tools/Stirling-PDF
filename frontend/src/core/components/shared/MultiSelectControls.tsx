@@ -16,33 +16,32 @@ const MultiSelectControls = ({
   onOpenInFileEditor,
   onOpenInPageEditor,
   onAddToUpload,
-  onDeleteAll
+  onDeleteAll,
 }: MultiSelectControlsProps) => {
   const { t } = useTranslation();
 
   if (selectedCount === 0) return null;
 
   return (
-    <Box mb="md" p="md" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+    <Box
+      mb="md"
+      p="md"
+      style={{
+        backgroundColor: "var(--mantine-color-blue-0)",
+        borderRadius: 8,
+      }}
+    >
       <Group justify="space-between">
         <Text size="sm">
           {selectedCount} {t("fileManager.filesSelected", "files selected")}
         </Text>
         <Group>
-          <Button
-            size="xs"
-            variant="light"
-            onClick={onClearSelection}
-          >
+          <Button size="xs" variant="light" onClick={onClearSelection}>
             {t("fileManager.clearSelection", "Clear Selection")}
           </Button>
 
           {onAddToUpload && (
-            <Button
-              size="xs"
-              color="green"
-              onClick={onAddToUpload}
-            >
+            <Button size="xs" color="green" onClick={onAddToUpload}>
               {t("fileManager.addToUpload", "Add to Upload")}
             </Button>
           )}
@@ -70,11 +69,7 @@ const MultiSelectControls = ({
           )}
 
           {onDeleteAll && (
-            <Button
-              size="xs"
-              color="red"
-              onClick={onDeleteAll}
-            >
+            <Button size="xs" color="red" onClick={onDeleteAll}>
               {t("fileManager.deleteAll", "Delete All")}
             </Button>
           )}

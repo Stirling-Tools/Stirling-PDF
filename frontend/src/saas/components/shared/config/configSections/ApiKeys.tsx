@@ -18,7 +18,15 @@ export default function ApiKeys() {
   const isAnonymous = Boolean(user && isUserAnonymous(user));
 
   const { data: credits, isLoading: creditsLoading } = useCredits();
-  const { apiKey, isLoading: apiKeyLoading, refresh, isRefreshing, error: apiKeyError, refetch, hasAttempted } = useApiKey();
+  const {
+    apiKey,
+    isLoading: apiKeyLoading,
+    refresh,
+    isRefreshing,
+    error: apiKeyError,
+    refetch,
+    hasAttempted,
+  } = useApiKey();
 
   const copy = async (text: string, tag: string) => {
     try {
@@ -40,7 +48,9 @@ export default function ApiKeys() {
   };
 
   const goToAccount = () => {
-    window.dispatchEvent(new CustomEvent('appConfig:navigate', { detail: { key: 'overview' } }));
+    window.dispatchEvent(
+      new CustomEvent("appConfig:navigate", { detail: { key: "overview" } }),
+    );
   };
 
   const showUsage = Boolean(credits);
@@ -48,60 +58,96 @@ export default function ApiKeys() {
   return (
     <Stack gap={20} p={0}>
       {showUsage && (
-        <UsageSection 
+        <UsageSection
           apiUsage={credits!}
           obscured={Boolean(!apiKey && hasAttempted && !isAnonymous)}
-          overlayMessage={t('config.apiKeys.overlayMessage', 'Generate a key to see credits and available credits')}
+          overlayMessage={t(
+            "config.apiKeys.overlayMessage",
+            "Generate a key to see credits and available credits",
+          )}
           loading={creditsLoading}
         />
       )}
-      
+
       {!isAnonymous && apiKeyError && (
         <Text size="sm" c="red.5">
-          {t('config.apiKeys.generateError', "We couldn't generate your API key.")} {" "}
-          <Anchor component="button" underline="always" onClick={refetch} c="red.4">
-            {t('common.retry', 'Retry')}
+          {t(
+            "config.apiKeys.generateError",
+            "We couldn't generate your API key.",
+          )}{" "}
+          <Anchor
+            component="button"
+            underline="always"
+            onClick={refetch}
+            c="red.4"
+          >
+            {t("common.retry", "Retry")}
           </Anchor>
         </Text>
       )}
 
       {isAnonymous ? (
-        <Paper radius="md" p={18} style={{ background: "var(--api-keys-card-bg)", border: "1px solid var(--api-keys-card-border)", boxShadow: "0 2px 8px var(--api-keys-card-shadow)" }}>
+        <Paper
+          radius="md"
+          p={18}
+          style={{
+            background: "var(--api-keys-card-bg)",
+            border: "1px solid var(--api-keys-card-border)",
+            boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
+          }}
+        >
           <Stack gap={10}>
-            <Text fw={500}>{t('config.apiKeys.label', 'API Key')}</Text>
-            <Group justify="space-between" wrap="nowrap" align="center" style={{ gap: '1rem' }}>
+            <Text fw={500}>{t("config.apiKeys.label", "API Key")}</Text>
+            <Group
+              justify="space-between"
+              wrap="nowrap"
+              align="center"
+              style={{ gap: "1rem" }}
+            >
               <Text size="sm" c="dimmed" style={{ flex: 1 }}>
-                {t('config.apiKeys.guestInfo', 'Guest users do not receive API keys. Create an account to get an API key you can use in your applications.')}
+                {t(
+                  "config.apiKeys.guestInfo",
+                  "Guest users do not receive API keys. Create an account to get an API key you can use in your applications.",
+                )}
               </Text>
               <Button size="sm" onClick={goToAccount}>
-                {t('config.apiKeys.goToAccount', 'Go to Account')}
+                {t("config.apiKeys.goToAccount", "Go to Account")}
               </Button>
             </Group>
           </Stack>
         </Paper>
+      ) : apiKeyLoading ? (
+        <>
+          <Text size="sm" c="dimmed" style={{ marginBottom: 8 }}>
+            {t(
+              "config.apiKeys.description",
+              "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
+            )}
+          </Text>
+          <div
+            style={{
+              padding: 18,
+              borderRadius: 12,
+              background: "var(--api-keys-card-bg)",
+              border: "1px solid var(--api-keys-card-border)",
+              boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
+            }}
+          >
+            <Group align="center" gap={12} wrap="nowrap">
+              <SkeletonLoader type="block" width="100%" height={36} />
+              <SkeletonLoader type="block" width={76} height={32} />
+              <SkeletonLoader type="block" width={92} height={32} />
+            </Group>
+          </div>
+        </>
       ) : (
-        apiKeyLoading ? (
-          <>
-            <Text size="sm" c="dimmed" style={{ marginBottom: 8 }}>
-              {t('config.apiKeys.description', "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.")}
-            </Text>
-            <div style={{ padding: 18, borderRadius: 12, background: "var(--api-keys-card-bg)", border: "1px solid var(--api-keys-card-border)", boxShadow: "0 2px 8px var(--api-keys-card-shadow)" }}>
-              <Group align="center" gap={12} wrap="nowrap">
-                <SkeletonLoader type="block" width="100%" height={36} />
-                <SkeletonLoader type="block" width={76} height={32} />
-                <SkeletonLoader type="block" width={92} height={32} />
-              </Group>
-            </div>
-          </>
-        ) : (
-          <ApiKeySection 
-            publicKey={apiKey ?? ""}
-            copied={copied}
-            onCopy={copy}
-            onRefresh={() => setShowRefreshModal(true)}
-            disabled={isRefreshing}
-          />
-        )
+        <ApiKeySection
+          publicKey={apiKey ?? ""}
+          copied={copied}
+          onCopy={copy}
+          onRefresh={() => setShowRefreshModal(true)}
+          disabled={isRefreshing}
+        />
       )}
 
       <RefreshModal

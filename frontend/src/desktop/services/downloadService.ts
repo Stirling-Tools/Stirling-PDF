@@ -1,9 +1,17 @@
-import type { DownloadRequest, DownloadResult } from "@core/services/downloadService";
-import { saveToLocalPath, showSaveDialog } from "@app/services/localFileSaveService";
+import type {
+  DownloadRequest,
+  DownloadResult,
+} from "@core/services/downloadService";
+import {
+  saveToLocalPath,
+  showSaveDialog,
+} from "@app/services/localFileSaveService";
 
 export type { DownloadRequest, DownloadResult };
 
-export async function downloadFile(request: DownloadRequest): Promise<DownloadResult> {
+export async function downloadFile(
+  request: DownloadRequest,
+): Promise<DownloadResult> {
   if (request.localPath) {
     const result = await saveToLocalPath(request.data, request.localPath);
     if (!result.success) {
@@ -28,7 +36,7 @@ export async function downloadFile(request: DownloadRequest): Promise<DownloadRe
 export async function downloadFromUrl(
   url: string,
   filename: string,
-  localPath?: string
+  localPath?: string,
 ): Promise<DownloadResult> {
   const response = await fetch(url);
   if (!response.ok) {
