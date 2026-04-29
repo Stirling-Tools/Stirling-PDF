@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from stirling.models import FileId
 from stirling.rag.capability import RagCapability
 from stirling.rag.chunker import chunk_text
 from stirling.rag.service import RagService
@@ -163,38 +164,38 @@ class TestRagService:
     @pytest.mark.anyio
     async def test_index_and_search(self, rag_service: RagService) -> None:
         text = "Python is great for data science. It has many libraries like pandas and numpy."
-        count = await rag_service.index_text("docs", text, source="guide.pdf")
+        count = await rag_service.index_text(FileId("docs"), text, source="guide.pdf")
         assert count > 0
 
-        results = await rag_service.search("Python libraries", collection="docs")
+        results = await rag_service.search("Python libraries", collection=FileId("docs"))
         assert len(results) > 0
         assert results[0].document.text  # non-empty text
 
     @pytest.mark.anyio
     async def test_index_empty_text_returns_zero(self, rag_service: RagService) -> None:
-        count = await rag_service.index_text("docs", "", source="empty.pdf")
+        count = await rag_service.index_text(FileId("docs"), "", source="empty.pdf")
         assert count == 0
 
     @pytest.mark.anyio
     async def test_search_nonexistent_collection_returns_empty(self, rag_service: RagService) -> None:
-        results = await rag_service.search("anything", collection="nonexistent")
+        results = await rag_service.search("anything", collection=FileId("nonexistent"))
         assert results == []
 
     @pytest.mark.anyio
     async def test_search_all_collections(self, rag_service: RagService) -> None:
-        await rag_service.index_text("col-a", "Machine learning overview.", source="ml.pdf")
-        await rag_service.index_text("col-b", "Deep learning with neural networks.", source="dl.pdf")
+        await rag_service.index_text(FileId("col-a"), "Machine learning overview.", source="ml.pdf")
+        await rag_service.index_text(FileId("col-b"), "Deep learning with neural networks.", source="dl.pdf")
 
         results = await rag_service.search("neural networks")
         assert len(results) > 0
 
     @pytest.mark.anyio
     async def test_delete_collection(self, rag_service: RagService) -> None:
-        await rag_service.index_text("temp", "Temporary data.", source="tmp.pdf")
+        await rag_service.index_text(FileId("temp"), "Temporary data.", source="tmp.pdf")
         collections = await rag_service.list_collections()
         assert "temp" in collections
 
-        await rag_service.delete_collection("temp")
+        await rag_service.delete_collection(FileId("temp"))
         collections = await rag_service.list_collections()
         assert "temp" not in collections
 
@@ -214,7 +215,7 @@ async def _invoke_search_knowledge(capability: RagCapability, query: str, max_re
 
 class TestRagCapability:
     def test_instructions_static_when_collections_pinned(self, rag_service: RagService) -> None:
-        cap = RagCapability(rag_service, collections=["docs", "manuals"])
+        cap = RagCapability(rag_service, collections=[FileId("docs"), FileId("manuals")])
         instructions = cap.instructions
         assert isinstance(instructions, str)
         assert "docs, manuals" in instructions
@@ -227,8 +228,8 @@ class TestRagCapability:
 
     @pytest.mark.anyio
     async def test_dynamic_instructions_list_available_collections(self, rag_service: RagService) -> None:
-        await rag_service.index_text("col-a", "Alpha content.", source="a.pdf")
-        await rag_service.index_text("col-b", "Beta content.", source="b.pdf")
+        await rag_service.index_text(FileId("col-a"), "Alpha content.", source="a.pdf")
+        await rag_service.index_text(FileId("col-b"), "Beta content.", source="b.pdf")
         cap = RagCapability(rag_service)
         instructions_fn = cap.instructions
         assert callable(instructions_fn)
@@ -252,7 +253,7 @@ class TestRagCapability:
 
     @pytest.mark.anyio
     async def test_search_knowledge_formats_results_with_source_and_score(self, rag_service: RagService) -> None:
-        await rag_service.index_text("docs", "Python is a programming language.", source="guide.pdf")
+        await rag_service.index_text(FileId("docs"), "Python is a programming language.", source="guide.pdf")
         cap = RagCapability(rag_service)
         output = await _invoke_search_knowledge(cap, "Python")
         assert "[Result 1" in output
@@ -262,10 +263,10 @@ class TestRagCapability:
 
     @pytest.mark.anyio
     async def test_search_knowledge_restricts_to_pinned_collections(self, rag_service: RagService) -> None:
-        await rag_service.index_text("pinned", "Pinned collection content.", source="pinned.pdf")
-        await rag_service.index_text("other", "Content in another collection.", source="other.pdf")
+        await rag_service.index_text(FileId("pinned"), "Pinned collection content.", source="pinned.pdf")
+        await rag_service.index_text(FileId("other"), "Content in another collection.", source="other.pdf")
 
-        cap = RagCapability(rag_service, collections=["pinned"])
+        cap = RagCapability(rag_service, collections=[FileId("pinned")])
         output = await _invoke_search_knowledge(cap, "content")
         assert "pinned.pdf" in output
         assert "other.pdf" not in output
@@ -273,7 +274,7 @@ class TestRagCapability:
     @pytest.mark.anyio
     async def test_search_knowledge_respects_max_results(self, rag_service: RagService) -> None:
         paragraphs = "\n\n".join(f"Paragraph {i} about topic." for i in range(10))
-        await rag_service.index_text("bulk", paragraphs, source="bulk.pdf")
+        await rag_service.index_text(FileId("bulk"), paragraphs, source="bulk.pdf")
 
         cap = RagCapability(rag_service)
         output = await _invoke_search_knowledge(cap, "topic", max_results=2)
@@ -281,3 +282,27 @@ class TestRagCapability:
         assert "[Result 1" in output
         assert "[Result 2" in output
         assert "[Result 3" not in output
+
+    @pytest.mark.anyio
+    async def test_search_knowledge_tool_is_hidden_after_budget_exhausted(self, rag_service: RagService) -> None:
+        """The prepare callback must return None once max_searches has been reached
+        so the agent can no longer call the tool on subsequent turns."""
+        await rag_service.index_text(FileId("docs"), "Some content.", source="x.pdf")
+        cap = RagCapability(rag_service, max_searches=2)
+        tool_def = _dummy_tool_def()
+
+        # Budget intact: prepare returns the tool definition.
+        assert await cap._prepare_search_knowledge(None, tool_def) is tool_def  # type: ignore[arg-type]
+
+        # Use the budget.
+        await _invoke_search_knowledge(cap, "content")
+        await _invoke_search_knowledge(cap, "content")
+
+        # Budget spent: prepare returns None, removing the tool from the agent's next turn.
+        assert await cap._prepare_search_knowledge(None, tool_def) is None  # type: ignore[arg-type]
+
+
+def _dummy_tool_def() -> object:
+    """Sentinel passed to ``_prepare_search_knowledge``. The callback only inspects
+    ``_search_count``; it doesn't read anything off the tool_def or context."""
+    return object()

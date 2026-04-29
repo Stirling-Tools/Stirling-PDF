@@ -88,7 +88,10 @@ def test_health_route() -> None:
 
 
 def test_orchestrator_route() -> None:
-    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this", "fileNames": ["test.pdf"]})
+    response = client.post(
+        "/api/v1/orchestrator",
+        json={"userMessage": "route this", "files": [{"id": "test-id", "name": "test.pdf"}]},
+    )
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "need_content"
@@ -106,8 +109,7 @@ def test_pdf_questions_route() -> None:
         "/api/v1/pdf/questions",
         json={
             "question": "what is this?",
-            "fileNames": ["test.pdf"],
-            "pageText": [{"fileName": "test.pdf", "pages": [{"pageNumber": 1, "text": "Example"}]}],
+            "files": [{"id": "test-id", "name": "test.pdf"}],
         },
     )
 
