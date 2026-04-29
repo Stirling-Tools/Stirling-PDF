@@ -1,11 +1,15 @@
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
+import {
+  getPdfiumModule,
+  openRawDocument,
+  closeDocAndFreeBuffer,
+  readUtf16,
+} from "@app/services/pdfiumService";
 import {
   TrappedStatus,
   CustomMetadataEntry,
   ExtractedPDFMetadata,
 } from "@app/types/metadata";
-import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 
 export interface MetadataExtractionResult {
   success: true;
@@ -66,75 +70,201 @@ function formatPDFDate(dateString: string): string {
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 }
 
-/**
- * Convert PDF.js trapped value to TrappedStatus enum
- * PDF.js returns trapped as { name: "True" | "False" } object
- */
-function convertTrappedStatus(trapped: unknown): TrappedStatus {
-  if (trapped && typeof trapped === "object" && "name" in trapped) {
-    const name = (trapped as Record<string, string>).name?.toLowerCase();
-    if (name === "true") return TrappedStatus.TRUE;
-    if (name === "false") return TrappedStatus.FALSE;
+const STANDARD_INFO_KEYS = new Set([
+  "Title",
+  "Author",
+  "Subject",
+  "Keywords",
+  "Creator",
+  "Producer",
+  "CreationDate",
+  "ModDate",
+  "Trapped",
+]);
+
+function decodePdfLiteralString(raw: string): string {
+  return raw
+    .slice(1, -1)
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r")
+    .replace(/\\t/g, "\t")
+    .replace(/\\b/g, "\b")
+    .replace(/\\f/g, "\f")
+    .replace(/\\\\/g, "\\")
+    .replace(/\\\(/g, "(")
+    .replace(/\\\)/g, ")")
+    .replace(/\\(\d{1,3})/g, (_, oct) =>
+      String.fromCharCode(parseInt(oct, 8)),
+    );
+}
+
+function decodePdfHexString(raw: string): string {
+  const hex = raw.slice(1, -1).replace(/\s/g, "");
+  const upper = hex.toUpperCase();
+  // UTF-16BE with BOM
+  if (upper.startsWith("FEFF")) {
+    const codeUnits: number[] = [];
+    for (let i = 4; i + 3 < hex.length; i += 4) {
+      codeUnits.push(
+        (parseInt(hex.slice(i, i + 2), 16) << 8) |
+          parseInt(hex.slice(i + 2, i + 4), 16),
+      );
+    }
+    return String.fromCharCode(...codeUnits);
   }
+  let result = "";
+  for (let i = 0; i < hex.length; i += 2) {
+    result += String.fromCharCode(parseInt(hex.slice(i, i + 2) || "0", 16));
+  }
+  return result;
+}
+
+function matchBytesAt(
+  bytes: Uint8Array,
+  pattern: Uint8Array,
+  pos: number,
+): boolean {
+  if (pos + pattern.length > bytes.length) return false;
+  for (let i = 0; i < pattern.length; i++) {
+    if (bytes[pos + i] !== pattern[i]) return false;
+  }
+  return true;
+}
+
+function findLastBytes(bytes: Uint8Array, pattern: Uint8Array): number {
+  for (let i = bytes.length - pattern.length; i >= 0; i--) {
+    if (matchBytesAt(bytes, pattern, i)) return i;
+  }
+  return -1;
+}
+
+/**
+ * Extract non-standard key-value pairs from the PDF document Info dictionary.
+ * Scans only the trailer tail and a small window around the Info object rather
+ * than decoding the entire file, so memory stays proportional to those sections
+ * regardless of PDF size.
+ */
+function extractInfoDictCustomEntries(
+  arrayBuffer: ArrayBuffer,
+): CustomMetadataEntry[] {
+  const bytes = new Uint8Array(arrayBuffer);
+  const enc = new TextEncoder();
+  const dec = new TextDecoder("latin1");
+
+  // Search only the last 4 KB for the trailer dictionary
+  const tailBytes = bytes.subarray(Math.max(0, bytes.length - 4096));
+  const trailerPattern = enc.encode("trailer");
+  let trailerRelIdx = -1;
+  for (let i = tailBytes.length - trailerPattern.length; i >= 0; i--) {
+    if (matchBytesAt(tailBytes, trailerPattern, i)) {
+      trailerRelIdx = i;
+      break;
+    }
+  }
+  if (trailerRelIdx === -1) return [];
+
+  const trailerStr = dec.decode(
+    tailBytes.subarray(trailerRelIdx, trailerRelIdx + 512),
+  );
+  const infoRef = trailerStr.match(/\/Info\s+(\d+)\s+(\d+)\s+R/);
+  if (!infoRef) return [];
+
+  const [, objNum, genNum] = infoRef;
+  const objHeaderPattern = enc.encode(`${objNum} ${genNum} obj`);
+
+  // Scan full bytes for the last occurrence (handles incremental updates)
+  const objIdx = findLastBytes(bytes, objHeaderPattern);
+  if (objIdx === -1) return [];
+
+  // Decode only a 2 KB window — Info dicts are small
+  const headerLen = `${objNum} ${genNum} obj`.length;
+  const objStr = dec.decode(
+    bytes.subarray(objIdx, Math.min(objIdx + 2048, bytes.length)),
+  );
+  const endobjIdx = objStr.indexOf("endobj");
+  const objBody = objStr.slice(
+    headerLen,
+    endobjIdx === -1 ? undefined : endobjIdx,
+  );
+
+  const dictOpen = objBody.indexOf("<<");
+  if (dictOpen === -1) return [];
+
+  let depth = 0;
+  let dictClose = -1;
+  for (let i = dictOpen; i < objBody.length - 1; i++) {
+    if (objBody[i] === "<" && objBody[i + 1] === "<") {
+      depth++;
+      i++;
+    } else if (objBody[i] === ">" && objBody[i + 1] === ">") {
+      depth--;
+      if (depth === 0) {
+        dictClose = i;
+        break;
+      }
+      i++;
+    }
+  }
+  if (dictClose === -1) return [];
+
+  const dict = objBody.slice(dictOpen + 2, dictClose);
+  const entries: CustomMetadataEntry[] = [];
+  let idCounter = 1;
+
+  const pairRe =
+    /\/([A-Za-z]\w*)\s*(\((?:[^()\\]|\\.|\([^)]*\))*\)|<[0-9a-fA-F\s]*>)/g;
+  let match;
+  while ((match = pairRe.exec(dict)) !== null) {
+    const key = match[1];
+    if (STANDARD_INFO_KEYS.has(key)) continue;
+    const raw = match[2];
+    const value = raw.startsWith("(")
+      ? decodePdfLiteralString(raw)
+      : decodePdfHexString(raw);
+    if (value) {
+      entries.push({ key, value, id: `custom${idCounter++}` });
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * Convert PDFium trapped string value to TrappedStatus enum.
+ * FPDF_GetMetaText returns "True", "False", or empty string for the Trapped key.
+ */
+function convertTrappedStatus(trapped: string): TrappedStatus {
+  const lower = trapped.toLowerCase();
+  if (lower === "true") return TrappedStatus.TRUE;
+  if (lower === "false") return TrappedStatus.FALSE;
   return TrappedStatus.UNKNOWN;
 }
 
 /**
- * Extract custom metadata fields from PDF.js info object
- * Custom metadata is nested under the "Custom" key
+ * Read a named metadata tag from an open PDFium document pointer.
+ * Returns empty string if the tag is absent or empty.
  */
-function extractCustomMetadata(custom: unknown): CustomMetadataEntry[] {
-  const customMetadata: CustomMetadataEntry[] = [];
-  let customIdCounter = 1;
-
-  // Check if there's a Custom object containing the custom metadata
-  if (typeof custom === "object" && custom !== null) {
-    const customObj = custom as Record<string, unknown>;
-
-    Object.entries(customObj).forEach(([key, value]) => {
-      if (value != null && value !== "") {
-        const entry = {
-          key,
-          value: String(value),
-          id: `custom${customIdCounter++}`,
-        };
-        customMetadata.push(entry);
-      }
-    });
-  }
-
-  return customMetadata;
+async function readMetaText(
+  docPtr: number,
+  tag: string,
+): Promise<string> {
+  const m = await getPdfiumModule();
+  const len = m.FPDF_GetMetaText(docPtr, tag, 0, 0);
+  if (len <= 2) return ""; // 2-byte NUL terminator only → empty
+  const buf = m.pdfium.wasmExports.malloc(len);
+  m.FPDF_GetMetaText(docPtr, tag, buf, len);
+  const value = readUtf16(m, buf, len);
+  m.pdfium.wasmExports.free(buf);
+  return value;
 }
 
 /**
- * Safely cleanup PDF document with error handling
- */
-function cleanupPdfDocument(pdfDoc: PDFDocumentProxy | null): void {
-  if (pdfDoc) {
-    try {
-      pdfWorkerManager.destroyDocument(pdfDoc);
-    } catch (cleanupError) {
-      console.warn("Failed to cleanup PDF document:", cleanupError);
-    }
-  }
-}
-
-function getStringMetadata(info: Record<string, unknown>, key: string): string {
-  if (typeof info[key] === "string") {
-    return info[key];
-  } else {
-    return "";
-  }
-}
-
-/**
- * Extract all metadata from a PDF file
- * Returns a result object with success/error state
+ * Extract all metadata from a PDF file using PDFium WASM.
+ * Returns a result object with success/error state.
  */
 export async function extractPDFMetadata(
   file: File,
 ): Promise<MetadataExtractionResponse> {
-  // Use existing PDF validation
   const isValidPDF = await FileAnalyzer.isValidPDF(file);
   if (!isValidPDF) {
     return {
@@ -143,47 +273,71 @@ export async function extractPDFMetadata(
     };
   }
 
-  let pdfDoc: PDFDocumentProxy | null = null;
-  let arrayBuffer: ArrayBuffer;
-  let metadata;
+  const m = await getPdfiumModule();
+  let docPtr: number;
 
   try {
-    arrayBuffer = await file.arrayBuffer();
-    pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
-      disableAutoFetch: true,
-      disableStream: true,
-    });
-    metadata = await pdfDoc.getMetadata();
+    const arrayBuffer = await file.arrayBuffer();
+    docPtr = await openRawDocument(arrayBuffer);
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    cleanupPdfDocument(pdfDoc);
     return {
       success: false,
       error: `Failed to read PDF: ${errorMessage}`,
     };
   }
 
-  const info = metadata.info as Record<string, unknown>;
+  try {
+    const [
+      title,
+      author,
+      subject,
+      keywords,
+      creator,
+      producer,
+      creationDate,
+      modificationDate,
+      trappedRaw,
+    ] = await Promise.all([
+      readMetaText(docPtr, "Title"),
+      readMetaText(docPtr, "Author"),
+      readMetaText(docPtr, "Subject"),
+      readMetaText(docPtr, "Keywords"),
+      readMetaText(docPtr, "Creator"),
+      readMetaText(docPtr, "Producer"),
+      readMetaText(docPtr, "CreationDate"),
+      readMetaText(docPtr, "ModDate"),
+      readMetaText(docPtr, "Trapped"),
+    ]);
 
-  // Safely extract metadata with proper type checking
-  const extractedMetadata: ExtractedPDFMetadata = {
-    title: getStringMetadata(info, "Title"),
-    author: getStringMetadata(info, "Author"),
-    subject: getStringMetadata(info, "Subject"),
-    keywords: getStringMetadata(info, "Keywords"),
-    creator: getStringMetadata(info, "Creator"),
-    producer: getStringMetadata(info, "Producer"),
-    creationDate: formatPDFDate(getStringMetadata(info, "CreationDate")),
-    modificationDate: formatPDFDate(getStringMetadata(info, "ModDate")),
-    trapped: convertTrappedStatus(info.Trapped),
-    customMetadata: extractCustomMetadata(info.Custom),
-  };
+    const customMetadata = extractInfoDictCustomEntries(arrayBuffer);
 
-  cleanupPdfDocument(pdfDoc);
+    const extractedMetadata: ExtractedPDFMetadata = {
+      title,
+      author,
+      subject,
+      keywords,
+      creator,
+      producer,
+      creationDate: formatPDFDate(creationDate),
+      modificationDate: formatPDFDate(modificationDate),
+      trapped: convertTrappedStatus(trappedRaw),
+      customMetadata,
+    };
 
-  return {
-    success: true,
-    metadata: extractedMetadata,
-  };
+    return {
+      success: true,
+      metadata: extractedMetadata,
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return {
+      success: false,
+      error: `Failed to extract metadata: ${errorMessage}`,
+    };
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr!);
+  }
 }
