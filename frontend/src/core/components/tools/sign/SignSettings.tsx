@@ -11,6 +11,7 @@ import {
   Tooltip,
   Group,
   Box,
+  Checkbox,
 } from "@mantine/core";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
@@ -92,7 +93,13 @@ const SignSettings = ({
   defaultSignatureSource,
 }: SignSettingsProps) => {
   const { t } = useTranslation();
-  const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
+  const {
+    isPlacementMode,
+    signaturesApplied,
+    historyApiRef,
+    placeMultiple,
+    setPlaceMultiple,
+  } = useSignature();
   const { activeFileIndex } = useViewer();
   const [historyAvailability, setHistoryAvailability] = useState({
     canUndo: false,
@@ -1214,6 +1221,20 @@ const SignSettings = ({
           />
           <Box style={{ marginLeft: "auto" }}>{placementToggleControl}</Box>
         </Group>
+
+        <Checkbox
+          checked={placeMultiple}
+          onChange={(event) => setPlaceMultiple(event.currentTarget.checked)}
+          label={translate(
+            "mode.placeMultiple",
+            "Stay in placement mode after each placement",
+          )}
+          description={translate(
+            "mode.placeMultipleDesc",
+            "Place several stamps in a row instead of exiting after the first.",
+          )}
+          disabled={disabled}
+        />
 
         <Alert color={placementAlert.color} title={placementAlert.title}>
           <Text size="sm">{placementAlert.message}</Text>

@@ -251,6 +251,8 @@ title = "How to add images"
 move = "Move Image"
 pause = "Pause placement"
 place = "Place Image"
+placeMultiple = "Stay in placement mode after each placement"
+placeMultipleDesc = "Place several images in a row instead of exiting after the first."
 resume = "Resume placement"
 
 [addImage.results]
@@ -440,6 +442,8 @@ title = "How to add text"
 move = "Move Text"
 pause = "Pause placement"
 place = "Place Text"
+placeMultiple = "Stay in placement mode after each placement"
+placeMultipleDesc = "Place several text stamps in a row instead of exiting after the first."
 resume = "Resume placement"
 
 [addText.results]
@@ -7127,6 +7131,8 @@ title = "How to add signature"
 move = "Move Signature"
 pause = "Pause placement"
 place = "Place Signature"
+placeMultiple = "Stay in placement mode after each placement"
+placeMultipleDesc = "Place several signatures in a row instead of exiting after the first."
 resume = "Resume placement"
 
 [sign.results]
