@@ -137,7 +137,7 @@
     "vite": "^7.3.2",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.1"
   },
   "depcheck": {
     "ignoreMatches": [
