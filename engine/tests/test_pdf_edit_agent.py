@@ -19,7 +19,15 @@ from stirling.contracts import (
     SupportedCapability,
     ToolOperationStep,
 )
-from stirling.models.tool_models import Angle, FlattenParams, RotatePdfParams, ToolEndpoint
+from stirling.models import ParamToolModel
+from stirling.models.tool_models import (
+    Angle,
+    EditTextOperation,
+    EditTextParams,
+    FlattenParams,
+    RotatePdfParams,
+    ToolEndpoint,
+)
 from stirling.services.runtime import AppRuntime
 
 
@@ -32,8 +40,11 @@ class ParameterSelectorCall:
 
 
 class RecordingParameterSelector:
-    def __init__(self) -> None:
+    """Test double that records calls and returns predetermined parameter objects per index."""
+
+    def __init__(self, params_by_index: list[ParamToolModel] | None = None) -> None:
         self.calls: list[ParameterSelectorCall] = []
+        self._params_by_index = params_by_index
 
     async def select(
         self,
@@ -41,7 +52,7 @@ class RecordingParameterSelector:
         operation_plan: list[ToolEndpoint],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
-    ) -> RotatePdfParams | FlattenParams:
+    ) -> ParamToolModel:
         self.calls.append(
             ParameterSelectorCall(
                 request=request,
@@ -50,6 +61,8 @@ class RecordingParameterSelector:
                 generated_steps=list(generated_steps),
             )
         )
+        if self._params_by_index is not None:
+            return self._params_by_index[operation_index]
         if operation_index == 0:
             return RotatePdfParams(angle=Angle(90))
         return FlattenParams(flatten_only_forms=False, render_dpi=None)
@@ -275,3 +288,167 @@ async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: Ap
     )
 
     assert parameter_selector.calls[0].request.page_text == page_text
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supports_literal_find_replace(runtime: AppRuntime) -> None:
+    params = EditTextParams(
+        edits=[EditTextOperation(find="2025", replace="2026")],
+        page_numbers="all",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([params])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT],
+            summary="Replace 2025 with 2026 throughout the document.",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Change every 2025 to 2026.",
+            file_names=["contract.pdf"],
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert len(response.steps) == 1
+    step = response.steps[0]
+    assert step.tool == ToolEndpoint.EDIT_TEXT
+    assert isinstance(step.parameters, EditTextParams)
+    assert step.parameters.edits == [EditTextOperation(find="2025", replace="2026")]
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRuntime) -> None:
+    page_text = [
+        ExtractedFileText(
+            file_name="memo.pdf",
+            pages=[
+                PdfTextSelection(
+                    page_number=3,
+                    text="The quick brown fox jumps over the lazy dog.",
+                )
+            ],
+        )
+    ]
+    params = EditTextParams(
+        edits=[
+            EditTextOperation(find="quick", replace="slow"),
+            EditTextOperation(find="lazy", replace="energetic"),
+        ],
+        page_numbers="3",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([params])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT],
+            summary="Fix typos on page 3.",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Fix typos on page 3.",
+            file_names=["memo.pdf"],
+            page_text=page_text,
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert len(parameter_selector.calls) == 1
+    # The parameter selector receives the extracted page text, which is what enables free-form
+    # copy-editing: it can read the current text and propose specific edits.
+    assert parameter_selector.calls[0].request.page_text == page_text
+    step = response.steps[0]
+    assert step.tool == ToolEndpoint.EDIT_TEXT
+    assert isinstance(step.parameters, EditTextParams)
+    assert step.parameters.page_numbers == "3"
+    assert step.parameters.edits is not None
+    assert len(step.parameters.edits) == 2
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supports_natural_language_directed_edit(runtime: AppRuntime) -> None:
+    page_text = [
+        ExtractedFileText(
+            file_name="agreement.pdf",
+            pages=[
+                PdfTextSelection(
+                    page_number=1,
+                    text="This agreement is between OldCompany Inc. and the client.",
+                )
+            ],
+        )
+    ]
+    params = EditTextParams(
+        edits=[EditTextOperation(find="OldCompany Inc.", replace="Acme Corp")],
+        page_numbers="all",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([params])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT],
+            summary="Update the company name to Acme Corp.",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Update the company name to Acme Corp.",
+            file_names=["agreement.pdf"],
+            page_text=page_text,
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    step = response.steps[0]
+    assert step.tool == ToolEndpoint.EDIT_TEXT
+    assert isinstance(step.parameters, EditTextParams)
+    # The exact find string came from interpreting the user's intent against the extracted text.
+    assert step.parameters.edits is not None
+    assert step.parameters.edits[0].find == "OldCompany Inc."
+    assert step.parameters.edits[0].replace == "Acme Corp"
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: AppRuntime) -> None:
+    """EDIT_TEXT can appear alongside other operations in a single plan."""
+    edit_params = EditTextParams(
+        edits=[EditTextOperation(find="DRAFT", replace="")],
+        page_numbers="all",
+        whole_word_search=False,
+    )
+    parameter_selector = RecordingParameterSelector([edit_params, RotatePdfParams(angle=Angle(90))])
+    agent = StubPdfEditAgent(
+        runtime,
+        PdfEditPlanSelection(
+            operations=[ToolEndpoint.EDIT_TEXT, ToolEndpoint.ROTATE_PDF],
+            summary="Remove DRAFT marker, then rotate.",
+        ),
+        parameter_selector=parameter_selector,
+    )
+
+    response = await agent.handle(
+        PdfEditRequest(
+            user_message="Remove the DRAFT watermark text and then rotate.",
+            file_names=["draft.pdf"],
+        )
+    )
+
+    assert isinstance(response, EditPlanResponse)
+    assert [step.tool for step in response.steps] == [
+        ToolEndpoint.EDIT_TEXT,
+        ToolEndpoint.ROTATE_PDF,
+    ]
+    assert isinstance(response.steps[0].parameters, EditTextParams)
+    assert isinstance(response.steps[1].parameters, RotatePdfParams)

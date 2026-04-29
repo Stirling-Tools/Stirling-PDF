@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
@@ -38,6 +40,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -230,6 +233,158 @@ class AiWorkflowServiceTest {
         assertEquals(1, result.getResultFiles().size());
         // 1:1 input → output mapping at the plan level preserves the input's filename.
         assertEquals("input.pdf", result.getResultFiles().get(0).getFileName());
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+        verify(internalApiClient, times(1)).post(eq(COMPRESS_ENDPOINT), any());
+    }
+
+    @Test
+    void parameterListOfStructuredObjectsIsJsonEncodedAsSingleField() throws IOException {
+        // Endpoints like /general/edit-text and /security/redact bind a List<StructuredObject>
+        // from a single JSON form field via a property editor. The plan executor must
+        // pre-serialize such lists rather than splitting them into repeated form fields.
+        String editTextEndpoint = "/api/v1/general/edit-text";
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"Find and replace",
+                  "steps":[
+                    {"tool":"%s","parameters":{
+                      "edits":[{"find":"foo","replace":"bar"},{"find":"baz","replace":"qux"}],
+                      "useRegex":false
+                    }}
+                  ]
+                }
+                """
+                        .formatted(editTextEndpoint));
+        when(toolMetadataService.isMultiInput(editTextEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(editTextEndpoint)).thenReturn(false);
+        stubEndpoint(editTextEndpoint, pdfResource("edited", "edited.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(input, "find and replace"));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(editTextEndpoint), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+
+        // The structured-list field must be serialized as ONE JSON-string entry, not multiple
+        // entries.
+        List<Object> editsValues = body.get("edits");
+        assertNotNull(editsValues);
+        assertEquals(1, editsValues.size());
+        assertEquals(
+                "[{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}]",
+                editsValues.get(0));
+
+        // Primitive fields keep the original behavior (single value, not JSON-wrapped).
+        List<Object> useRegex = body.get("useRegex");
+        assertNotNull(useRegex);
+        assertEquals(1, useRegex.size());
+        assertEquals(false, useRegex.get(0));
+    }
+
+    @Test
+    void parameterListOfPrimitivesIsSentAsRepeatedFormFields() throws IOException {
+        // Endpoints like /misc/ocr-pdf bind List<String> via Spring's repeated-form-field
+        // convention. The executor must preserve that behavior for primitive lists.
+        String ocrEndpoint = "/api/v1/misc/ocr-pdf";
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"OCR the document",
+                  "steps":[
+                    {"tool":"%s","parameters":{"languages":["eng","fra","deu"]}}
+                  ]
+                }
+                """
+                        .formatted(ocrEndpoint));
+        when(toolMetadataService.isMultiInput(ocrEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ocrEndpoint)).thenReturn(false);
+        stubEndpoint(ocrEndpoint, pdfResource("ocred", "ocred.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(input, "ocr"));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(ocrEndpoint), bodyCaptor.capture());
+        List<Object> languages = bodyCaptor.getValue().get("languages");
+        assertNotNull(languages);
+        assertEquals(List.of("eng", "fra", "deu"), languages);
+    }
+
+    @Test
+    void toolTimeoutSurfacesAsCannotContinueWithFriendlyMessage() throws IOException {
+        // When an internal tool hangs, InternalApiClient throws InternalApiTimeoutException after
+        // its read timeout fires. The workflow must convert that into a clean CANNOT_CONTINUE
+        // outcome so the user sees an actionable message rather than the request hanging forever.
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE_ENDPOINT), any()))
+                .thenThrow(
+                        new InternalApiTimeoutException(
+                                ROTATE_ENDPOINT,
+                                java.time.Duration.ofSeconds(300),
+                                new java.io.IOException("Read timed out")));
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate"));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertNotNull(result.getReason());
+        assertTrue(
+                result.getReason().contains(ROTATE_ENDPOINT),
+                "reason should mention the failing tool path: " + result.getReason());
+        assertTrue(
+                result.getReason().contains("300"),
+                "reason should mention the timeout duration: " + result.getReason());
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
+    @Test
+    void planTimeoutOnLaterStepStillSurfacesCleanly() throws IOException {
+        // Multi-step plans must also handle a hung tool gracefully (no partial leaks) and the
+        // failure message must identify which step failed so the user can iterate.
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"Rotate then compress",
+                  "steps":[
+                    {"tool":"%s","parameters":{"angle":90}},
+                    {"tool":"%s","parameters":{}}
+                  ]
+                }
+                """
+                        .formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
+        // No fileStorage stub here: the second step times out before any output reaches storage.
+        when(internalApiClient.post(eq(COMPRESS_ENDPOINT), any()))
+                .thenThrow(
+                        new InternalApiTimeoutException(
+                                COMPRESS_ENDPOINT,
+                                java.time.Duration.ofSeconds(300),
+                                new java.io.IOException("Read timed out")));
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate then compress"));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertTrue(result.getReason().contains(COMPRESS_ENDPOINT));
+        // The first step actually executed; the failure happened on the second.
         verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
         verify(internalApiClient, times(1)).post(eq(COMPRESS_ENDPOINT), any());
     }

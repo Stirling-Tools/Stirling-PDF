@@ -252,6 +252,17 @@ public class PdfJsonConversionService {
         convertPdfToJson(file, null, false, out);
     }
 
+    /**
+     * Converts a PDF to the editable {@link PdfJsonDocument} model. Convenience wrapper around
+     * {@link #convertPdfToJson(MultipartFile, OutputStream)} for callers that need to inspect or
+     * mutate the document in memory before round-tripping it back to PDF.
+     */
+    public PdfJsonDocument convertPdfToJsonDocument(MultipartFile file) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        convertPdfToJson(file, null, false, buffer);
+        return objectMapper.readValue(buffer.toByteArray(), PdfJsonDocument.class);
+    }
+
     public void convertPdfToJson(MultipartFile file, boolean lightweight, OutputStream out)
             throws IOException {
         convertPdfToJson(file, null, lightweight, out);
@@ -620,6 +631,13 @@ public class PdfJsonConversionService {
         }
         byte[] jsonBytes = file.getBytes();
         PdfJsonDocument pdfJson = objectMapper.readValue(jsonBytes, PdfJsonDocument.class);
+        convertJsonToPdf(pdfJson, out);
+    }
+
+    public void convertJsonToPdf(PdfJsonDocument pdfJson, OutputStream out) throws IOException {
+        if (pdfJson == null) {
+            throw ExceptionUtils.createNullArgumentException("document");
+        }
 
         List<PdfJsonFont> fontModels = pdfJson.getFonts();
         if (fontModels == null) {
@@ -2076,14 +2094,29 @@ public class PdfJsonConversionService {
             byte[] toUnicodeBytes = Base64.getDecoder().decode(toUnicodeBase64);
             String toUnicodeStr = new String(toUnicodeBytes, StandardCharsets.UTF_8);
 
-            // Parse ToUnicode CMap for bfchar and bfrange
+            // Parse ToUnicode CMap for bfchar and bfrange. Both sides go through
+            // parseToUnicodeCodepoint so an 8-hex-char surrogate-pair value on either side
+            // (e.g. "D837DF0E") is decoded as a single supplementary codepoint instead of
+            // overflowing Integer.parseInt and aborting the whole mapping build.
             java.util.regex.Pattern bfcharPattern =
                     java.util.regex.Pattern.compile("<([0-9A-Fa-f]+)>\\s*<([0-9A-Fa-f]+)>");
             java.util.regex.Matcher matcher = bfcharPattern.matcher(toUnicodeStr);
             while (matcher.find()) {
-                int charCode = Integer.parseInt(matcher.group(1), 16);
-                int unicode = Integer.parseInt(matcher.group(2), 16);
-                charCodeToUnicode.put(charCode, unicode);
+                try {
+                    int charCode = parseToUnicodeCodepoint(matcher.group(1));
+                    int unicode = parseToUnicodeCodepoint(matcher.group(2));
+                    charCodeToUnicode.put(charCode, unicode);
+                } catch (NumberFormatException entryEx) {
+                    // Tolerate a single malformed entry: log and skip rather than aborting the
+                    // entire ToUnicode CMap (which would force the whole font onto the slow
+                    // raw-bytes fallback path).
+                    log.debug(
+                            "Skipping malformed ToUnicode entry <{}> <{}> in font {}: {}",
+                            matcher.group(1),
+                            matcher.group(2),
+                            font.getName(),
+                            entryEx.getMessage());
+                }
             }
 
             // Build JSON mapping: CharCode → CID → GID → Unicode
@@ -2134,6 +2167,42 @@ public class PdfJsonConversionService {
                     e.getMessage());
             return toUnicodeBase64; // Fall back to raw ToUnicode
         }
+    }
+
+    /**
+     * Parse a hex string from a PDF ToUnicode CMap into a single Unicode codepoint. Handles three
+     * cases: a single BMP code unit (4 hex chars), a UTF-16 surrogate pair encoding a supplementary
+     * codepoint above U+FFFF (8 hex chars, e.g. {@code D837DF0E} for U+1F40E), and multi-codepoint
+     * mappings (longer; returns the first codepoint as a best-effort representative).
+     *
+     * <p>Without this, {@code Integer.parseInt("D837DF0E", 16)} overflows because the value is ~3.6
+     * billion, throwing {@link NumberFormatException} and forcing the conversion to fall back to a
+     * raw ToUnicode payload that the JSON&rarr;PDF rebuild then fails to use efficiently.
+     */
+    static int parseToUnicodeCodepoint(String hex) {
+        if (hex == null || hex.isEmpty()) {
+            throw new NumberFormatException("Empty ToUnicode hex value");
+        }
+        if (hex.length() <= 4) {
+            return Integer.parseInt(hex, 16);
+        }
+        // Treat the hex string as UTF-16BE: pairs of hex digits form bytes, four hex digits form
+        // one UTF-16 code unit. The PDF ToUnicode CMap convention requires an even number of bytes
+        // (i.e. a multiple of four hex characters) for multi-unit values.
+        if (hex.length() % 4 != 0) {
+            throw new NumberFormatException(
+                    "ToUnicode hex value not a multiple of 4 chars: " + hex);
+        }
+        int unitCount = hex.length() / 4;
+        char[] units = new char[unitCount];
+        for (int i = 0; i < unitCount; i++) {
+            units[i] = (char) Integer.parseInt(hex.substring(i * 4, i * 4 + 4), 16);
+        }
+        // codePointAt assembles a surrogate pair into a supplementary codepoint when the
+        // high/low surrogates appear in sequence; for any other multi-unit sequence it returns
+        // the first BMP codepoint, which is the right best-effort fallback for ligature
+        // decompositions (one charCode -> several Unicode chars).
+        return new String(units).codePointAt(0);
     }
 
     private PdfJsonFontCidSystemInfo extractCidSystemInfo(COSDictionary fontDictionary) {
@@ -4256,12 +4325,8 @@ public class PdfJsonConversionService {
             return 0;
         }
         if (font != null) {
-            try (InputStream inputStream = new ByteArrayInputStream(value.getBytes())) {
-                int count = 0;
-                int code;
-                while ((code = font.readCode(inputStream)) != -1) {
-                    count++;
-                }
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(value.getBytes())) {
+                int count = countCodesProtected(inputStream, font::readCode);
                 if (count > 0) {
                     return count;
                 }
@@ -4271,6 +4336,49 @@ public class PdfJsonConversionService {
         }
         byte[] bytes = value.getBytes();
         return Math.max(1, bytes.length);
+    }
+
+    /**
+     * Functional accessor for {@link PDFont#readCode(InputStream)} so the bounded counting loop can
+     * be exercised in isolation without instantiating a {@link PDFont}.
+     */
+    @FunctionalInterface
+    interface CodeReader {
+        int readCode(InputStream stream) throws IOException;
+    }
+
+    /**
+     * Count how many codes the supplied {@code reader} can extract from {@code inputStream}, with
+     * two safety nets that PDFBox's raw {@link PDFont#readCode(InputStream)} loop lacks:
+     *
+     * <ol>
+     *   <li>Stop when the stream is empty (a corrupt CMap can otherwise loop forever returning
+     *       successfully-matched zero-bytes from an exhausted {@link ByteArrayInputStream}).
+     *   <li>Stop when a {@code readCode} call did not consume any bytes, even if it returned a
+     *       non-{@code -1} value.
+     * </ol>
+     *
+     * <p>Both conditions were observed in the wild on round-tripped fallback fonts where the
+     * embedded ToUnicode CMap matched 0x00 sequences, hanging the JSON&rarr;PDF rebuild.
+     */
+    static int countCodesProtected(ByteArrayInputStream inputStream, CodeReader reader)
+            throws IOException {
+        int count = 0;
+        int previousAvailable = inputStream.available();
+        while (previousAvailable > 0) {
+            int code = reader.readCode(inputStream);
+            if (code == -1) {
+                break;
+            }
+            int currentAvailable = inputStream.available();
+            if (currentAvailable >= previousAvailable) {
+                // No progress made; break to avoid infinite loop on corrupt CMaps.
+                break;
+            }
+            count++;
+            previousAvailable = currentAvailable;
+        }
+        return count;
     }
 
     private MergedText mergeText(List<PdfJsonTextElement> elements) {

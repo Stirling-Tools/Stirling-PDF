@@ -11,11 +11,11 @@ import stirling.software.common.model.api.security.RedactionArea;
 
 class StringToArrayListPropertyEditorTest {
 
-    private StringToArrayListPropertyEditor editor;
+    private StringToArrayListPropertyEditor<RedactionArea> editor;
 
     @BeforeEach
     void setUp() {
-        editor = new StringToArrayListPropertyEditor();
+        editor = new StringToArrayListPropertyEditor<>(RedactionArea.class);
     }
 
     @Test
