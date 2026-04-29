@@ -18,4 +18,11 @@ public class PDFWithPageSize extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL", "KEEP"})
     private String pageSize;
+
+    @Schema(
+            description =
+                    "Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+            defaultValue = "PORTRAIT",
+            allowableValues = {"PORTRAIT", "LANDSCAPE"})
+    private String orientation = "PORTRAIT";
 }
