@@ -9,10 +9,18 @@ import {
 
 export type { DownloadRequest, DownloadResult };
 
+function assertPathSafe(filePath: string): void {
+  const normalized = filePath.replace(/\\/g, "/");
+  if (normalized.split("/").some((segment) => segment === "..")) {
+    throw new Error("Invalid path: path traversal detected");
+  }
+}
+
 export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
   if (request.localPath) {
+    assertPathSafe(request.localPath);
     const result = await saveToLocalPath(request.data, request.localPath);
     if (!result.success) {
       throw new Error(result.error || "Failed to save file");
@@ -25,6 +33,7 @@ export async function downloadFile(
     return { cancelled: true };
   }
 
+  assertPathSafe(savePath);
   const result = await saveToLocalPath(request.data, savePath);
   if (!result.success) {
     throw new Error(result.error || "Failed to save file");
