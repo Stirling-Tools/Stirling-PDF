@@ -69,6 +69,23 @@ class PdfEditSelectionAgent:
         return result.output
 
 
+def filter_operations_by_disabled(
+    operations: list[ToolEndpoint],
+    disabled_endpoints: list[ToolEndpoint],
+) -> list[ToolEndpoint]:
+    """Return operations not present in the disabled set.
+
+    `disabled_endpoints` is supplied by the Java backend, which owns the source of
+    truth for which endpoints are gated. The contract carries `ToolEndpoint` values
+    (the Pydantic field coerces incoming URL strings, dropping any that don't match
+    a known endpoint).
+    """
+    if not disabled_endpoints:
+        return list(operations)
+    disabled = set(disabled_endpoints)
+    return [op for op in operations if op not in disabled]
+
+
 class PdfEditParameterSelector:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
@@ -139,7 +156,6 @@ class PdfEditParameterSelector:
 class PdfEditAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
-        self.supported_operations = list(OPERATIONS)
         self.parameter_selector = PdfEditParameterSelector(runtime)
 
     @overload
@@ -148,19 +164,50 @@ class PdfEditAgent:
     async def handle(self, request: PdfEditRequest, allow_need_content: bool = True) -> PdfEditResponse: ...
     async def handle(self, request: PdfEditRequest, allow_need_content: bool = True) -> PdfEditResponse:
         logger.info(
-            "[pdf-edit] handle: files=%s has_text=%s allow_need_content=%s msg=%r",
+            "[pdf-edit] handle: files=%s has_text=%s allow_need_content=%s disabled=%s msg=%r",
             request.file_names,
             has_page_text(request.page_text),
             allow_need_content,
+            request.disabled_endpoints,
             request.user_message,
         )
-        selection = await self._select_plan(request, allow_need_content=allow_need_content)
+        supported_operations = self._supported_operations(request)
+        disabled_operations = list(request.disabled_endpoints)
+        if not supported_operations:
+            return EditCannotDoResponse(
+                reason=(
+                    "All PDF edit operations are disabled on this server."
+                    if disabled_operations
+                    else "No PDF edit operations are enabled for this request."
+                )
+            )
+        selection = await self._select_plan(
+            request, supported_operations, disabled_operations, allow_need_content=allow_need_content
+        )
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
             logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
             return selection
         if isinstance(selection, NeedContentResponse):
             logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
             return self._fill_need_content_defaults(selection, request)
+        enabled = set(supported_operations)
+        disabled_set = set(disabled_operations)
+        unsupported = [op for op in selection.operations if op not in enabled]
+        if unsupported:
+            logger.warning("[pdf-edit] plan referenced disabled operations: %s", [op.name for op in unsupported])
+            disabled_picks = [op for op in unsupported if op in disabled_set]
+            unknown_picks = [op for op in unsupported if op not in disabled_set]
+            parts: list[str] = []
+            if disabled_picks:
+                parts.append(
+                    "The following operations are disabled on this server: "
+                    + ", ".join(op.name for op in disabled_picks)
+                )
+            if unknown_picks:
+                parts.append(
+                    "The following operations are not supported: " + ", ".join(op.name for op in unknown_picks)
+                )
+            return EditCannotDoResponse(reason=". ".join(parts) + ".")
         logger.info("[pdf-edit] plan: %s", [op.name for op in selection.operations])
         steps: list[ToolOperationStep] = []
         for operation_index, operation_id in enumerate(selection.operations):
@@ -185,18 +232,38 @@ class PdfEditAgent:
     async def _select_plan(
         self,
         request: PdfEditRequest,
+        supported_operations: list[ToolEndpoint],
+        disabled_operations: list[ToolEndpoint],
+        *,
         allow_need_content: bool = True,
     ) -> PdfEditPlanOutput:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
-        agent = self._build_selection_agent(allow_need_content=can_request_content)
-        return await agent.select(self._build_selection_prompt(request))
+        agent = self._build_selection_agent(
+            supported_operations, disabled_operations, allow_need_content=can_request_content
+        )
+        return await agent.select(self._build_selection_prompt(request, supported_operations, disabled_operations))
 
-    def _build_selection_agent(self, *, allow_need_content: bool) -> PdfEditSelectionAgent:
+    def _build_selection_agent(
+        self,
+        supported_operations: list[ToolEndpoint],
+        disabled_operations: list[ToolEndpoint],
+        *,
+        allow_need_content: bool,
+    ) -> PdfEditSelectionAgent:
+        disabled_clause = (
+            f" The following operations exist on this server but are currently disabled by the administrator "
+            f"and must NOT appear in any plan: {self._operations_prompt(disabled_operations)}. "
+            "If the user explicitly asks for one of these disabled operations, return cannot_do "
+            "with a reason that names the operation and explains it is disabled on this server."
+            if disabled_operations
+            else ""
+        )
         return PdfEditSelectionAgent(
             self.runtime,
             base_system_prompt=(
                 "Plan PDF edit requests. "
-                f"Supported operations are: {self._supported_operations_prompt()}. "
+                f"Supported operations are: {self._operations_prompt(supported_operations)}."
+                f"{disabled_clause} "
                 "Return an ordered list of one or more supported operations for the plan. "
                 "Do not produce operation parameters in this stage. "
                 "Return need_clarification when the request is genuinely ambiguous. "
@@ -207,18 +274,33 @@ class PdfEditAgent:
             allow_need_content=allow_need_content,
         )
 
-    def _build_selection_prompt(self, request: PdfEditRequest) -> str:
+    def _build_selection_prompt(
+        self,
+        request: PdfEditRequest,
+        supported_operations: list[ToolEndpoint],
+        disabled_operations: list[ToolEndpoint],
+    ) -> str:
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
+        disabled_line = (
+            f"Disabled operations (exist but unavailable): {self._operations_prompt(disabled_operations)}\n"
+            if disabled_operations
+            else ""
+        )
         return (
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {file_names}\n"
-            f"Supported operations: {self._supported_operations_prompt()}\n"
+            f"Supported operations: {self._operations_prompt(supported_operations)}\n"
+            f"{disabled_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
-    def _supported_operations_prompt(self) -> str:
-        return ", ".join(f"{op.name} ({op.value})" for op in self.supported_operations)
+    def _supported_operations(self, request: PdfEditRequest) -> list[ToolEndpoint]:
+        return filter_operations_by_disabled(list(OPERATIONS), request.disabled_endpoints)
+
+    @staticmethod
+    def _operations_prompt(operations: list[ToolEndpoint]) -> str:
+        return ", ".join(f"{op.name} ({op.value})" for op in operations)
 
     def _fill_need_content_defaults(
         self,

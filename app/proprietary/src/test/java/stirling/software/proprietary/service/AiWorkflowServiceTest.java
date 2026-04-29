@@ -72,6 +72,7 @@ class AiWorkflowServiceTest {
     @Mock private InternalApiClient internalApiClient;
     @Mock private FileStorage fileStorage;
     @Mock private ToolMetadataService toolMetadataService;
+    @Mock private AiEngineEndpointResolver endpointResolver;
 
     @TempDir Path tempDir;
 
@@ -96,7 +97,9 @@ class AiWorkflowServiceTest {
                         internalApiClient,
                         fileStorage,
                         toolMetadataService,
-                        tempFileManager);
+                        tempFileManager,
+                        endpointResolver);
+        when(endpointResolver.getDisabledEndpointUrls()).thenReturn(List.of());
     }
 
     @Test
