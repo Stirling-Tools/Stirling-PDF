@@ -1,6 +1,12 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import type { PDFDocumentProxy } from "pdfjs-dist";
+import { absoluteWithBasePath } from "@app/constants/app";
+import { createPdfiumDirectEngine } from "@embedpdf/engines";
+import {
+  PdfErrorCode,
+  TaskRejectedError,
+  type PdfDocumentObject,
+  type PdfErrorReason,
+} from "@embedpdf/models";
 
 // Scan the last ~8KB of the PDF for an /Encrypt entry. The trailer lives near
 // the tail of the file, so this is enough in practice while staying cheap.
@@ -18,6 +24,38 @@ function hasEncryptMarker(buffer: ArrayBuffer): boolean {
     return true;
   }
   return false;
+}
+
+let fileAnalysisEnginePromise: ReturnType<
+  typeof createPdfiumDirectEngine
+> | null = null;
+
+function getFileAnalysisPdfEngine() {
+  if (!fileAnalysisEnginePromise) {
+    fileAnalysisEnginePromise = createPdfiumDirectEngine(
+      absoluteWithBasePath("/pdfium/pdfium.wasm"),
+    );
+  }
+  return fileAnalysisEnginePromise;
+}
+
+function isUserPasswordRelatedFailure(error: unknown): boolean {
+  if (error instanceof TaskRejectedError) {
+    const reason = error.reason as PdfErrorReason;
+    if (
+      reason.code === PdfErrorCode.Password ||
+      reason.code === PdfErrorCode.Security
+    ) {
+      return true;
+    }
+    const message = reason.message?.toLowerCase() ?? "";
+    if (message.includes("password") || message.includes("encrypted")) {
+      return true;
+    }
+  }
+  const msg =
+    error instanceof Error ? error.message.toLowerCase() : String(error);
+  return msg.includes("password") || msg.includes("encrypted");
 }
 
 export class FileAnalyzer {
@@ -82,7 +120,7 @@ export class FileAnalyzer {
    *
    * Looks for a /Encrypt entry in the last 8KB of the file (where the PDF
    * trailer lives). If absent, the file is definitely not encrypted and we
-   * can skip a full pdf.js parse. If present, falls back to pdf.js so we can
+   * can skip a full parse. If present, opens via PDFium so we can
    * distinguish user-password (blocks open) from owner-password-only (opens
    * fine) — only the former should prompt.
    */
@@ -90,22 +128,23 @@ export class FileAnalyzer {
     const arrayBuffer = await file.arrayBuffer();
     if (!hasEncryptMarker(arrayBuffer)) return false;
 
-    let pdf: PDFDocumentProxy | undefined;
+    const engine = await getFileAnalysisPdfEngine();
+    let doc: PdfDocumentObject | undefined;
     try {
-      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-        stopAtErrors: false,
-        verbosity: 0,
-      });
-      // pdf.js opened it — owner-password-only case, no prompt needed.
+      doc = await engine
+        .openDocumentBuffer(
+          { id: crypto.randomUUID(), content: arrayBuffer },
+          {},
+        )
+        .toPromise();
+      // Opened without a user password — owner-password-only or unencrypted.
       return false;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message.toLowerCase() : "";
-      return (
-        errorMessage.includes("password") || errorMessage.includes("encrypted")
-      );
+      return isUserPasswordRelatedFailure(error);
     } finally {
-      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+      if (doc) {
+        await engine.closeDocument(doc).toPromise();
+      }
     }
   }
 
@@ -114,33 +153,30 @@ export class FileAnalyzer {
     isEncrypted: boolean;
     isCorrupted: boolean;
   }> {
-    let pdf: PDFDocumentProxy | undefined;
+    const engine = await getFileAnalysisPdfEngine();
+    let doc: PdfDocumentObject | undefined;
     try {
-      // For small files, read the whole file
-      // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
 
-      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
-        stopAtErrors: false, // Don't stop at minor errors
-        verbosity: 0, // Suppress PDF.js warnings
-      });
+      doc = await engine
+        .openDocumentBuffer(
+          { id: crypto.randomUUID(), content: arrayBuffer },
+          {},
+        )
+        .toPromise();
 
-      const pageCount = pdf.numPages;
+      const pageCount = doc.pageCount;
 
-      // If pdf.js opened the document successfully, the user can view it — even if
-      // the PDF carries encryption dictionaries (owner-password-only case).  We only
-      // flag isEncrypted when pdf.js *fails* to open the file (caught below).
+      // If PDFium opened the document successfully, the user can view it — even if
+      // the PDF carries encryption dictionaries (owner-password-only case). We only
+      // flag isEncrypted when open fails (handled below).
       return {
         pageCount,
         isEncrypted: false,
         isCorrupted: false,
       };
     } catch (error) {
-      // Try to determine if it's corruption vs encryption
-      const errorMessage =
-        error instanceof Error ? error.message.toLowerCase() : "";
-      const isEncrypted =
-        errorMessage.includes("password") || errorMessage.includes("encrypted");
+      const isEncrypted = isUserPasswordRelatedFailure(error);
 
       return {
         pageCount: 0,
@@ -148,7 +184,9 @@ export class FileAnalyzer {
         isCorrupted: !isEncrypted, // If not encrypted, probably corrupted
       };
     } finally {
-      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+      if (doc) {
+        await engine.closeDocument(doc).toPromise();
+      }
     }
   }
 

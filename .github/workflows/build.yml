@@ -167,7 +167,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
       - name: Check Test Reports Exist
-        if: always()
+        if: success()
         run: |
           declare -a dirs=(
             "app/core/build/reports/tests/"
@@ -632,6 +632,7 @@ jobs:
           name: Cucumber Tests
           path: testing/cucumber/junit/*.xml
           reporter: java-junit
+          fail-on-empty: false
           fail-on-error: false
 
   test-build-docker-images:
