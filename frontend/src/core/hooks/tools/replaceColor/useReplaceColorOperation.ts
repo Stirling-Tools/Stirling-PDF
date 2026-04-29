@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
 import {
   ToolType,
   useToolOperation,
@@ -16,6 +17,14 @@ export const buildReplaceColorFormData = (
   const formData = new FormData();
   formData.append("fileInput", file);
 
+  if (parameters.mode === "TEXT_COLOR_REPLACEMENT") {
+    for (const sourceColor of parameters.sourceColors) {
+      formData.append("sourceColors", sourceColor);
+    }
+    formData.append("targetColor", parameters.targetColor);
+    return formData;
+  }
+
   formData.append("replaceAndInvertOption", parameters.replaceAndInvertOption);
 
   if (parameters.replaceAndInvertOption === "HIGH_CONTRAST_COLOR") {
@@ -32,11 +41,32 @@ export const buildReplaceColorFormData = (
 };
 
 export const replaceColorOperationConfig = {
-  toolType: ToolType.singleFile,
-  buildFormData: buildReplaceColorFormData,
+  toolType: ToolType.custom,
   operationType: "replaceColor",
-  endpoint: "/api/v1/misc/replace-invert-pdf",
-  multiFileEndpoint: false,
+  customProcessor: async (params: ReplaceColorParameters, files: File[]) => {
+    const outputFiles: File[] = [];
+    for (const file of files) {
+      const formData = buildReplaceColorFormData(params, file);
+      const endpoint =
+        params.mode === "TEXT_COLOR_REPLACEMENT"
+          ? "/api/v1/misc/replace-text-colors"
+          : "/api/v1/misc/replace-invert-pdf";
+
+      const response = await apiClient.post(endpoint, formData, {
+        responseType: "blob",
+      });
+
+      outputFiles.push(
+        new File([response.data], file.name, {
+          type: "application/pdf",
+        }),
+      );
+    }
+
+    return {
+      files: outputFiles,
+    };
+  },
   defaultParameters,
 } as const;
 

@@ -6437,13 +6437,23 @@ failed = "An error occurred while processing the colour replacement."
 
 [replaceColor.labels]
 colourOperation = "Colour operation"
+detectedTextColours = "Detected text colours"
+mode = "Mode"
 settings = "Settings"
+scanPrompt = "Scan the PDF to list text colours and select what to replace."
+targetTextColor = "Target text colour"
 
 [replaceColor.options]
 cmyk = "Convert to CMYK"
 custom = "Custom"
 highContrast = "High contrast"
 invertAll = "Invert all colours"
+legacy = "Legacy full-page colour operations"
+textColorReplacement = "Detect and replace text colours"
+
+[replaceColor.actions]
+replaceTextColours = "Replace text colours"
+scanTextColours = "Scan"
 
 [replaceColor.tooltip.cmyk]
 text = "Convert the PDF from RGB colour space to CMYK colour space, optimized for professional printing. This process converts colours to the Cyan, Magenta, Yellow, Black model used by printers."
