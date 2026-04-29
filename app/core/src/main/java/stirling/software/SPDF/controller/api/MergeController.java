@@ -3,10 +3,13 @@ package stirling.software.SPDF.controller.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
@@ -40,6 +43,7 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
@@ -55,6 +59,7 @@ public class MergeController {
     private static final Pattern QUOTE_WRAP_PATTERN = Pattern.compile("^\"|\"$");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final JobProgressService jobProgressService;
 
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
@@ -311,7 +316,14 @@ public class MergeController {
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;
             List<Integer> invalidIndexes = new ArrayList<>();
-            for (int index = 0; index < files.length; index++) {
+            int totalInputs = files.length;
+            // Reserve 0-40% for load, 40-95% for merge sampling, 95-100% for finalization.
+            final int loadRangeEnd = 40;
+            final int mergeRangeEnd = 95;
+            for (int index = 0; index < totalInputs; index++) {
+                int loadPct = (int) (loadRangeEnd * (index + 1.0) / totalInputs);
+                jobProgressService.report(
+                        loadPct, 100, "Loading file " + (index + 1) + " of " + totalInputs);
                 MultipartFile multipartFile = files[index];
                 totalSize += multipartFile.getSize();
                 File tempFile =
@@ -332,7 +344,48 @@ public class MergeController {
 
             mergerUtility.setDestinationFileName(mt.getFile().getAbsolutePath());
 
+            // PDFMergerUtility.mergeDocuments() is one opaque call; poll the destination file
+            // size from a sampler thread so the progress bar moves continuously during merge.
+            final long estimatedBytes = Math.max(totalSize, 1L);
+            final Path destPath = mt.getFile().toPath();
+            final AtomicBoolean mergeDone = new AtomicBoolean(false);
+            Thread sampler =
+                    new Thread(
+                            () -> {
+                                while (!mergeDone.get()) {
+                                    long cur = 0;
+                                    try {
+                                        if (Files.exists(destPath)) {
+                                            cur = Files.size(destPath);
+                                        }
+                                    } catch (IOException ignored) {
+                                        // Transient; try again next tick
+                                    }
+                                    int pct =
+                                            loadRangeEnd
+                                                    + (int)
+                                                            ((mergeRangeEnd - loadRangeEnd)
+                                                                    * Math.min(
+                                                                            1.0,
+                                                                            cur
+                                                                                    / (double)
+                                                                                            estimatedBytes));
+                                    jobProgressService.report(
+                                            Math.min(mergeRangeEnd, pct), 100, "Merging documents");
+                                    try {
+                                        Thread.sleep(250);
+                                    } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        return;
+                                    }
+                                }
+                            },
+                            "merge-progress-sampler");
+            sampler.setDaemon(true);
+            sampler.start();
+
             try {
+                jobProgressService.report(loadRangeEnd, 100, "Merging documents");
                 mergerUtility.mergeDocuments(
                         pdfDocumentFactory.getStreamCacheFunction(
                                 totalSize)); // Merge the documents
@@ -342,6 +395,15 @@ public class MergeController {
                     throw ExceptionUtils.createMultiplePdfCorruptedException(e);
                 }
                 throw e;
+            } finally {
+                mergeDone.set(true);
+                sampler.interrupt();
+                try {
+                    sampler.join(500);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                jobProgressService.report(mergeRangeEnd, 100, "Finalizing merged document");
             }
 
             // Load the merged PDF document and operate on it inside try-with-resources

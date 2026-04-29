@@ -128,6 +128,7 @@ export const ocrOperationConfig = {
   operationType: "ocr",
   endpoint: "/api/v1/misc/ocr-pdf",
   defaultParameters,
+  async: true,
 } as const;
 
 export const useOCROperation = () => {
