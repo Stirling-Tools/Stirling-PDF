@@ -21,6 +21,12 @@ public class EndpointInterceptor implements HandlerInterceptor {
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         String requestURI = request.getRequestURI();
+
+        // Ensure API responses are revalidated by default (ETags will handle the 304)
+        if (requestURI.startsWith("/api/")) {
+            response.setHeader("Cache-Control", "no-cache");
+        }
+
         boolean isEnabled;
 
         // Extract the specific endpoint name (e.g: /api/v1/general/remove-pages -> remove-pages)
