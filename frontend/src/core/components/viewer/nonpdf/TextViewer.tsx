@@ -101,58 +101,57 @@ function CollapsibleTable({
 
       <Box style={{ borderRadius: 6, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            borderCollapse: "collapse",
-            width: "100%",
-            fontSize: "0.85em",
-          }}
-        >
-          <thead>
-            <tr>
-              {headers.map((h, i) => (
-                <th
-                  key={i}
-                  style={{
-                    border: "1px solid var(--mantine-color-gray-3)",
-                    padding: "6px 10px",
-                    background: "var(--mantine-color-gray-1)",
-                    textAlign: "left",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {renderInline(h)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          {!collapsed && (
-            <tbody>
-              {rows.map((row, ri) => (
-                <tr
-                  key={ri}
-                  style={{
-                    background:
-                      ri % 2 === 0 ? "transparent" : "#F5F5F5",
-                  }}
-                >
-                  {row.map((cell, ci) => (
-                    <td
-                      key={ci}
-                      style={{
-                        border: "1px solid var(--mantine-color-gray-3)",
-                        padding: "5px 10px",
-                      }}
-                    >
-                      {renderInline(cell)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          )}
-        </table>
+          <table
+            style={{
+              borderCollapse: "collapse",
+              width: "100%",
+              fontSize: "0.85em",
+            }}
+          >
+            <thead>
+              <tr>
+                {headers.map((h, i) => (
+                  <th
+                    key={i}
+                    style={{
+                      border: "1px solid var(--mantine-color-gray-3)",
+                      padding: "6px 10px",
+                      background: "var(--mantine-color-gray-1)",
+                      textAlign: "left",
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {renderInline(h)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            {!collapsed && (
+              <tbody>
+                {rows.map((row, ri) => (
+                  <tr
+                    key={ri}
+                    style={{
+                      background: ri % 2 === 0 ? "transparent" : "#F5F5F5",
+                    }}
+                  >
+                    {row.map((cell, ci) => (
+                      <td
+                        key={ci}
+                        style={{
+                          border: "1px solid var(--mantine-color-gray-3)",
+                          padding: "5px 10px",
+                        }}
+                      >
+                        {renderInline(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            )}
+          </table>
         </div>
       </Box>
 
@@ -377,7 +376,10 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
 
   const lines = content?.split("\n") ?? [];
   const renderedMarkdown = useMemo(
-    () => (content !== null && isMarkdown && renderMd ? renderMarkdown(content) : null),
+    () =>
+      content !== null && isMarkdown && renderMd
+        ? renderMarkdown(content)
+        : null,
     [content, isMarkdown, renderMd],
   );
 
