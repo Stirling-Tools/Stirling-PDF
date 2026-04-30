@@ -359,11 +359,7 @@ export default function HomePage() {
               aria-label={t("home.mobile.openFiles", "Open files")}
               onClick={() => openFilesModal()}
             >
-              <LocalIcon
-                icon="folder-rounded"
-                width="1.5rem"
-                height="1.5rem"
-              />
+              <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
               <span className="mobile-bottom-button-label">
                 {t("quickAccess.files", "Files")}
               </span>
@@ -394,12 +390,7 @@ export default function HomePage() {
           </Suspense>
         </div>
       ) : (
-        <Group
-          align="flex-start"
-          gap={0}
-          h="100%"
-          className="flex-nowrap flex"
-        >
+        <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
           <Suspense fallback={null}>
             <QuickAccessBar ref={quickAccessRef} />
           </Suspense>
