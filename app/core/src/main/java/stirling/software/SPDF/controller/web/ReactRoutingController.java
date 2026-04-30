@@ -136,7 +136,7 @@ public class ReactRoutingController {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
                 return ResponseEntity.ok()
-                        .cacheControl(CacheControl.noCache())
+                        .cacheControl(CacheControl.noCache().mustRevalidate())
                         .contentType(MediaType.TEXT_HTML)
                         .body(cachedIndexHtml);
             }

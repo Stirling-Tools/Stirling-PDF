@@ -56,20 +56,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true);
 
-        // 3. Media, fonts and other rarely changing assets (immutable)
-        registry.addResourceHandler(
-                        "/images/**", "/fonts/**", "/pdfjs/**", "/pdfjs-legacy/**", "/pdfium/**")
+        // 3. Media and fonts (immutable)
+        registry.addResourceHandler("/images/**", "/fonts/**")
                 .addResourceLocations(
                         staticPath + "images/",
                         "classpath:/static/images/",
                         staticPath + "fonts/",
-                        "classpath:/static/fonts/",
-                        staticPath + "pdfjs/",
-                        "classpath:/static/pdfjs/",
-                        staticPath + "pdfjs-legacy/",
-                        "classpath:/static/pdfjs-legacy/",
-                        staticPath + "pdfium/",
-                        "classpath:/static/pdfium/")
+                        "classpath:/static/fonts/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true);
 
@@ -77,12 +70,27 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // Use stale-while-revalidate to improve perceived performance.
         registry.addResourceHandler(
                         "/favicon.*",
+                        "/apple-touch-icon.png",
+                        "/android-chrome-*.png",
+                        "/mstile-*.png",
+                        "/safari-pinned-tab.svg",
                         "/icons/**",
                         "/modern-logo/**",
                         "/classic-logo/**",
                         "/robots.txt",
-                        "/3rdPartyLicenses.json")
-                .addResourceLocations(staticPath, "classpath:/static/")
+                        "/3rdPartyLicenses.json",
+                        "/pdfjs/**",
+                        "/pdfjs-legacy/**",
+                        "/pdfium/**")
+                .addResourceLocations(
+                        staticPath,
+                        "classpath:/static/",
+                        staticPath + "pdfjs/",
+                        "classpath:/static/pdfjs/",
+                        staticPath + "pdfjs-legacy/",
+                        "classpath:/static/pdfjs-legacy/",
+                        staticPath + "pdfium/",
+                        "classpath:/static/pdfium/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()

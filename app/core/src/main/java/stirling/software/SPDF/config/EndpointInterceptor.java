@@ -22,9 +22,9 @@ public class EndpointInterceptor implements HandlerInterceptor {
             throws Exception {
         String requestURI = request.getRequestURI();
 
-        // Ensure API responses are revalidated by default (ETags will handle the 304)
-        if (requestURI.startsWith("/api/")) {
-            response.setHeader("Cache-Control", "no-cache");
+        // Prevent API responses from being stored by browsers or intermediary caches by default
+        if (request.getServletPath().startsWith("/api/")) {
+            response.setHeader("Cache-Control", "private, no-store");
         }
 
         boolean isEnabled;
