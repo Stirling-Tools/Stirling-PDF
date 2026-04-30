@@ -1,10 +1,11 @@
 name: AI Engine CI
 
+# Validates the Python AI engine: regenerates tool models, runs fixers,
+# lint, type-check, and tests. Called from build.yml on PRs and merge_group;
+# also runs directly on push to main as a post-merge safety net.
 on:
+  workflow_call:
   push:
-    branches: [main]
-  pull_request:
-  merge_group:
     branches: [main]
 
 permissions:
