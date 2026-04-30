@@ -79,9 +79,6 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
             const response = await apiClient.post(
               "/api/v1/security/get-info-on-pdf",
               formData,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-              },
             );
 
             const stub = selectors.getStirlingFileStub(file.fileId);

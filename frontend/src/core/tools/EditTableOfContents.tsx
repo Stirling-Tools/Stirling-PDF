@@ -34,9 +34,6 @@ const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const response = await apiClient.post(
     "/api/v1/general/extract-bookmarks",
     formData,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    },
   );
 
   return response.data as BookmarkPayload[];

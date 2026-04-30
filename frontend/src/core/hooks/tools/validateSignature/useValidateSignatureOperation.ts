@@ -102,9 +102,6 @@ export const useValidateSignatureOperation =
               const response = await apiClient.post(
                 "/api/v1/security/validate-signature",
                 formData,
-                {
-                  headers: { "Content-Type": "multipart/form-data" },
-                },
               );
 
               const data = Array.isArray(response.data)
