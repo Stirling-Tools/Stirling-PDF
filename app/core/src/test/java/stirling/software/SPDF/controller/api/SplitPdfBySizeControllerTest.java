@@ -73,8 +73,8 @@ class SplitPdfBySizeControllerTest {
 
         when(pdfDocumentFactory.load(any(File.class), eq(true)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
-        when(pdfDocumentFactory.load(any(File.class)))
-                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
+                .thenAnswer(inv -> new PDDocument());
 
         ResponseEntity<?> response = controller.autoSplitPdf(request);
 
@@ -106,8 +106,8 @@ class SplitPdfBySizeControllerTest {
 
         when(pdfDocumentFactory.load(any(File.class), eq(true)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
-        when(pdfDocumentFactory.load(any(File.class)))
-                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
+                .thenAnswer(inv -> new PDDocument());
 
         ResponseEntity<?> response = controller.autoSplitPdf(request);
 

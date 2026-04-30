@@ -65,6 +65,8 @@ class SplitPDFControllerTest {
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
         when(pdfDocumentFactory.load(any(File.class)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
+                .thenAnswer(inv -> new PDDocument());
     }
 
     @Test

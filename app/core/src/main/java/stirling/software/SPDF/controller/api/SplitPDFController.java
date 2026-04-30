@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -58,7 +59,6 @@ public class SplitPDFController {
         MultipartFile file = request.getFileInput();
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
         try {
-            // Each output is built by reloading and mutating the doc; persist the upload once.
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
                 Files.copy(
                         file.getInputStream(),
@@ -67,10 +67,12 @@ public class SplitPDFController {
 
                 int totalPages;
                 List<Integer> pageNumbers;
+                boolean hasForm;
                 try (PDDocument document =
                         pdfDocumentFactory.load(sourceTempFile.getFile(), true)) {
                     totalPages = document.getNumberOfPages();
                     pageNumbers = request.getPageNumbersList(document, false);
+                    hasForm = document.getDocumentCatalog().getAcroForm(null) != null;
                 }
                 if (!pageNumbers.contains(totalPages - 1)) {
                     pageNumbers = new ArrayList<>(pageNumbers);
@@ -84,33 +86,12 @@ public class SplitPDFController {
                 String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
-                    int previousPageNumber = 0;
-                    for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
-                        int splitPoint = pageNumbers.get(splitIndex);
-                        Set<Integer> keep = new HashSet<>();
-                        for (int i = previousPageNumber; i <= splitPoint; i++) {
-                            keep.add(i);
-                        }
-                        previousPageNumber = splitPoint + 1;
-
-                        try (PDDocument splitDocument =
-                                pdfDocumentFactory.load(sourceTempFile.getFile())) {
-                            int pageCount = splitDocument.getNumberOfPages();
-                            for (int p = pageCount - 1; p >= 0; p--) {
-                                if (!keep.contains(p)) {
-                                    splitDocument.removePage(p);
-                                }
-                            }
-                            FormUtils.pruneOrphanedFormFields(splitDocument);
-
-                            String fileName = baseFilename + "_" + (splitIndex + 1) + ".pdf";
-                            zipOut.putNextEntry(new ZipEntry(fileName));
-                            splitDocument.save(zipOut);
-                            zipOut.closeEntry();
-                        } catch (Exception e) {
-                            ExceptionUtils.logException("document splitting and saving", e);
-                            throw e;
-                        }
+                    if (hasForm) {
+                        writeSplitsViaReload(
+                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
+                    } else {
+                        writeSplitsViaSharedSource(
+                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
                     }
                 }
             }
@@ -122,5 +103,61 @@ public class SplitPDFController {
             outputTempFile.close();
             throw e;
         }
+    }
+
+    private void writeSplitsViaReload(
+            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
+            throws IOException {
+        int previousPageNumber = 0;
+        for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+            int splitPoint = pageNumbers.get(splitIndex);
+            Set<Integer> keep = new HashSet<>();
+            for (int i = previousPageNumber; i <= splitPoint; i++) {
+                keep.add(i);
+            }
+            previousPageNumber = splitPoint + 1;
+
+            try (PDDocument splitDoc = pdfDocumentFactory.load(source)) {
+                for (int p = splitDoc.getNumberOfPages() - 1; p >= 0; p--) {
+                    if (!keep.contains(p)) {
+                        splitDoc.removePage(p);
+                    }
+                }
+                FormUtils.pruneOrphanedFormFields(splitDoc);
+                writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
+            } catch (Exception e) {
+                ExceptionUtils.logException("document splitting and saving", e);
+                throw e;
+            }
+        }
+    }
+
+    private void writeSplitsViaSharedSource(
+            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
+            throws IOException {
+        try (PDDocument sourceDoc = pdfDocumentFactory.load(source)) {
+            int previousPageNumber = 0;
+            for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+                int splitPoint = pageNumbers.get(splitIndex);
+                try (PDDocument splitDoc =
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc)) {
+                    for (int i = previousPageNumber; i <= splitPoint; i++) {
+                        splitDoc.addPage(sourceDoc.getPage(i));
+                    }
+                    previousPageNumber = splitPoint + 1;
+                    writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
+                } catch (Exception e) {
+                    ExceptionUtils.logException("document splitting and saving", e);
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, PDDocument doc)
+            throws IOException {
+        zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + index + ".pdf"));
+        doc.save(zipOut);
+        zipOut.closeEntry();
     }
 }

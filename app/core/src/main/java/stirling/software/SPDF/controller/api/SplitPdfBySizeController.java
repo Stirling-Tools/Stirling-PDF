@@ -65,7 +65,6 @@ public class SplitPdfBySizeController {
 
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
         try {
-            // Each output is built by reloading and mutating the doc; persist the upload once.
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf");
                     ZipOutputStream zipOut =
                             new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
@@ -74,33 +73,24 @@ public class SplitPdfBySizeController {
                         sourceTempFile.getPath(),
                         StandardCopyOption.REPLACE_EXISTING);
 
-                List<List<Integer>> ranges;
                 try (PDDocument sourceDocument =
                         pdfDocumentFactory.load(sourceTempFile.getFile(), true)) {
-                    int type = request.getSplitType();
-                    String value = request.getSplitValue();
-                    if (type == 0) {
-                        ranges =
-                                computeSizeRanges(
-                                        sourceDocument, GeneralUtils.convertSizeToBytes(value));
-                    } else if (type == 1) {
-                        ranges = computePageCountRanges(sourceDocument, Integer.parseInt(value));
-                    } else if (type == 2) {
-                        ranges = computeDocCountRanges(sourceDocument, Integer.parseInt(value));
-                    } else {
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.invalidArgument",
-                                "Invalid argument: {0}",
-                                "split type: " + type);
-                    }
-                }
+                    boolean hasForm = sourceDocument.getDocumentCatalog().getAcroForm(null) != null;
+                    List<List<Integer>> ranges = computeRanges(request, sourceDocument);
 
-                int fileIndex = 1;
-                for (List<Integer> range : ranges) {
-                    if (range.isEmpty()) {
-                        continue;
+                    int fileIndex = 1;
+                    for (List<Integer> range : ranges) {
+                        if (range.isEmpty()) {
+                            continue;
+                        }
+                        if (hasForm) {
+                            writeRangeViaReload(
+                                    sourceTempFile.getFile(), range, zipOut, filename, fileIndex++);
+                        } else {
+                            writeRangeViaSharedSource(
+                                    sourceDocument, range, zipOut, filename, fileIndex++);
+                        }
                     }
-                    writeRangeToZip(sourceTempFile.getFile(), range, zipOut, filename, fileIndex++);
                 }
             }
 
@@ -112,7 +102,22 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private void writeRangeToZip(
+    private List<List<Integer>> computeRanges(
+            SplitPdfBySizeOrCountRequest request, PDDocument sourceDocument) throws IOException {
+        int type = request.getSplitType();
+        String value = request.getSplitValue();
+        if (type == 0) {
+            return computeSizeRanges(sourceDocument, GeneralUtils.convertSizeToBytes(value));
+        } else if (type == 1) {
+            return computePageCountRanges(sourceDocument, Integer.parseInt(value));
+        } else if (type == 2) {
+            return computeDocCountRanges(sourceDocument, Integer.parseInt(value));
+        }
+        throw ExceptionUtils.createIllegalArgumentException(
+                "error.invalidArgument", "Invalid argument: {0}", "split type: " + type);
+    }
+
+    private void writeRangeViaReload(
             File sourceFile,
             List<Integer> keepIndices,
             ZipOutputStream zipOut,
@@ -121,24 +126,41 @@ public class SplitPdfBySizeController {
             throws IOException {
         Set<Integer> keep = new HashSet<>(keepIndices);
         try (PDDocument doc = pdfDocumentFactory.load(sourceFile)) {
-            int pageCount = doc.getNumberOfPages();
-            for (int i = pageCount - 1; i >= 0; i--) {
+            for (int i = doc.getNumberOfPages() - 1; i >= 0; i--) {
                 if (!keep.contains(i)) {
                     doc.removePage(i);
                 }
             }
             FormUtils.pruneOrphanedFormFields(doc);
-
-            zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
-            doc.save(zipOut);
-            zipOut.closeEntry();
+            writeEntry(zipOut, baseFilename, fileIndex, doc);
         }
     }
 
-    /**
-     * Page-index ranges each output should contain. AcroForm overhead is not modeled, so outputs
-     * with forms may slightly exceed {@code maxBytes}.
-     */
+    private void writeRangeViaSharedSource(
+            PDDocument sourceDocument,
+            List<Integer> keepIndices,
+            ZipOutputStream zipOut,
+            String baseFilename,
+            int fileIndex)
+            throws IOException {
+        try (PDDocument doc =
+                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+            for (int p : keepIndices) {
+                doc.addPage(sourceDocument.getPage(p));
+            }
+            writeEntry(zipOut, baseFilename, fileIndex, doc);
+        }
+    }
+
+    private void writeEntry(
+            ZipOutputStream zipOut, String baseFilename, int fileIndex, PDDocument doc)
+            throws IOException {
+        zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
+        doc.save(zipOut);
+        zipOut.closeEntry();
+    }
+
+    /** Page-index ranges each output should contain. AcroForm overhead isn't modeled. */
     private List<List<Integer>> computeSizeRanges(PDDocument sourceDocument, long maxBytes)
             throws IOException {
         List<List<Integer>> ranges = new ArrayList<>();

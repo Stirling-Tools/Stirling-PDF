@@ -2310,7 +2310,6 @@ public class FormUtils {
         Set<COSDictionary> liveWidgets = collectLiveWidgetDictionaries(document);
         List<PDField> kept = pruneFieldList(fields, liveWidgets);
         if (kept.isEmpty()) {
-            // setAcroForm(null) also clears the cached form; removeItem alone wouldn't.
             catalog.setAcroForm(null);
         } else if (kept.size() != fields.size()) {
             form.setFields(kept);

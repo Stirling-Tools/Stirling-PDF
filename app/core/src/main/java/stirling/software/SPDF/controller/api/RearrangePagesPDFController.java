@@ -270,8 +270,6 @@ public class RearrangePagesPDFController {
                         rearrangedDocument.addPage(page);
                     }
 
-                    // All source pages are preserved here, so it's safe to share the source
-                    // AcroForm.
                     PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
                     if (sourceCatalog != null) {
                         PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);
