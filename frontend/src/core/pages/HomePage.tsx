@@ -29,13 +29,15 @@ import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 
+import QuickAccessBar from "@app/components/shared/QuickAccessBar";
+import RightRail from "@app/components/shared/RightRail";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+
+import "@app/pages/HomePage.css";
+
 // Lazy load heavy components
 const ToolPanel = lazy(() => import("@app/components/tools/ToolPanel"));
 const Workbench = lazy(() => import("@app/components/layout/Workbench"));
-const QuickAccessBar = lazy(
-  () => import("@app/components/shared/QuickAccessBar"),
-);
-const RightRail = lazy(() => import("@app/components/shared/RightRail"));
 const FileManager = lazy(() => import("@app/components/FileManager"));
 const AppConfigModal = lazy(
   () => import("@app/components/shared/AppConfigModal"),
@@ -45,16 +47,10 @@ const AppConfigModal = lazy(
 const preloadImports = () => {
   import("@app/components/tools/ToolPanel");
   import("@app/components/layout/Workbench");
-  import("@app/components/shared/QuickAccessBar");
-  import("@app/components/shared/RightRail");
   import("@app/components/FileManager");
   import("@app/components/shared/AppConfigModal");
 };
 preloadImports();
-
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-
-import "@app/pages/HomePage.css";
 
 type MobileView = "tools" | "workbench";
 
@@ -321,9 +317,7 @@ export default function HomePage() {
                   <Suspense fallback={<LoadingFallback />}>
                     <Workbench />
                   </Suspense>
-                  <Suspense fallback={null}>
-                    <RightRail />
-                  </Suspense>
+                  <RightRail />
                 </div>
               </div>
             </div>
@@ -402,9 +396,7 @@ export default function HomePage() {
         </div>
       ) : (
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
-          <Suspense fallback={null}>
-            <QuickAccessBar ref={quickAccessRef} />
-          </Suspense>
+          <QuickAccessBar ref={quickAccessRef} />
           {!hideToolPanel && (
             <Suspense fallback={<LoadingFallback />}>
               <ToolPanel />
@@ -413,9 +405,7 @@ export default function HomePage() {
           <Suspense fallback={<LoadingFallback />}>
             <Workbench />
           </Suspense>
-          <Suspense fallback={null}>
-            <RightRail />
-          </Suspense>
+          <RightRail />
           <Suspense fallback={null}>
             <FileManager selectedTool={selectedTool} />
           </Suspense>
