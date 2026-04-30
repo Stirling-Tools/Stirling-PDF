@@ -29,7 +29,7 @@
     "@embedpdf/plugin-spread": "^2.8.0",
     "@embedpdf/plugin-thumbnail": "^2.8.0",
     "@embedpdf/plugin-tiling": "^2.8.0",
-    "@embedpdf/plugin-viewport": "^2.8.0",
+    "@embedpdf/plugin-viewport": "^2.14.1",
     "@embedpdf/plugin-zoom": "^2.8.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
