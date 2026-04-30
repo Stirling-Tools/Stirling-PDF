@@ -1,5 +1,13 @@
 name: Build and Test Workflow
 
+# Top-level PR / merge-queue gate. Detects which paths changed and dispatches
+# to the dedicated reusable workflows under .github/workflows/. Each child
+# workflow keeps its own setup/teardown so this file stays a routing layer.
+#
+# The final `all-checks-passed` job is the single status check that branch
+# protection should require — it succeeds only if every required upstream
+# job either succeeded or was legitimately skipped by its path filter.
+
 on:
   pull_request:
     branches: ["main"]
@@ -33,6 +41,9 @@ jobs:
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
       docker-base: ${{ steps.changes.outputs.docker-base }}
+      tauri: ${{ steps.changes.outputs.tauri }}
+      engine: ${{ steps.changes.outputs.engine }}
+      proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -48,714 +59,174 @@ jobs:
           filters: .github/config/.files.yaml
 
   build:
-    runs-on: ubuntu-latest
+    needs: [files-changed]
     permissions:
       actions: read
+      contents: read
       security-events: write
       pull-requests: write
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk-version: [21, 25]
-        spring-security: [true, false]
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: ${{ matrix.jdk-version }}
-          distribution: "temurin"
-
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Check Java formatting (Spotless)
-        if: matrix.jdk-version == 25 && matrix.spring-security == false
-        id: spotless-check
-        run: task backend:format:check
-        continue-on-error: true
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-
-      - name: Comment on Java formatting failure
-        # Only post a comment on PRs. github-script's PR helpers need an
-        # issue/PR number, which doesn't exist on merge_group runs.
-        if: steps.spotless-check.outcome == 'failure' && github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: |
-            const marker = '<!-- java-formatting-check -->';
-            const body = [
-              marker,
-              '### Java Formatting Check Failed',
-              '',
-              'Your code has formatting issues. Run the following command to fix them:',
-              '',
-              '```bash',
-              'task backend:format',
-              '```',
-              '',
-              'Then commit and push the changes.',
-            ].join('\n');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-
-      - name: Fail if Java formatting issues found
-        if: steps.spotless-check.outcome == 'failure'
-        run: |
-          echo "============================================"
-          echo "  Java Formatting Check Failed"
-          echo "============================================"
-          echo ""
-          echo "Your code has formatting issues."
-          echo "Run the following command to fix them:"
-          echo ""
-          echo "  task backend:format"
-          echo ""
-          echo "Then commit and push the changes."
-          echo "============================================"
-          exit 1
-
-      - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: task backend:build:ci
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
-
-      - name: Check Test Reports Exist
-        if: always()
-        run: |
-          declare -a dirs=(
-            "app/core/build/reports/tests/"
-            "app/core/build/test-results/"
-            "app/common/build/reports/tests/"
-            "app/common/build/test-results/"
-            "app/proprietary/build/reports/tests/"
-            "app/proprietary/build/test-results/"
-          )
-          for dir in "${dirs[@]}"; do
-            if [ ! -d "$dir" ]; then
-              echo "Missing $dir"
-              exit 1
-            fi
-          done
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
-          path: |
-            app/**/build/reports/jacoco/test
-            app/**/build/reports/tests/
-            app/**/build/test-results/
-            app/**/build/reports/problems/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
-
-      - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
-        # The action only supports the pull_request event (it posts a PR comment),
-        # so skip it for merge_group runs and workflow_dispatch.
-        if: github.event_name == 'pull_request'
-        id: jacoco
-        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
-        with:
-          paths: |
-            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 10
-          min-coverage-changed-files: 0
-          comment-type: summary
+    uses: ./.github/workflows/backend-build.yml
+    secrets: inherit
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
     needs: [files-changed]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Generate OpenAPI documentation
-        run: task backend:swagger
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-
-      - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: openapi-docs
-          path: ./SwaggerDoc.json
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check-openapi.yml
+    secrets: inherit
 
   frontend-validation:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: files-changed
-    runs-on: ubuntu-latest
+    needs: [files-changed]
     permissions:
       contents: read
       pull-requests: write
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Quality-check frontend
-        id: frontend-check
-        run: task frontend:check:all
-        continue-on-error: true
-      - name: Comment on frontend check failure
-        # Only post a comment on PRs. github-script's PR helpers need an
-        # issue/PR number, which doesn't exist on merge_group runs.
-        if: steps.frontend-check.outcome == 'failure' && github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: |
-            const marker = '<!-- frontend-check -->';
-            const body = [
-              marker,
-              '### Frontend Check Failed',
-              '',
-              'There are issues with your frontend code that will need to be fixed before they can be merged in.',
-              '',
-              'Run `task frontend:fix` to auto-fix what can be fixed automatically, then run `task frontend:check:all` to see what still needs fixing manually.',
-            ].join('\n');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-      - name: Fail if frontend check failed
-        if: steps.frontend-check.outcome == 'failure'
-        run: |
-          echo "============================================"
-          echo "  Frontend Check Failed"
-          echo "============================================"
-          echo ""
-          echo "There are issues with your frontend code that"
-          echo "will need to be fixed before they can be merged in."
-          echo ""
-          echo "Run 'task frontend:fix' to auto-fix what can be"
-          echo "fixed automatically, then run 'task frontend:check:all'"
-          echo "to see what still needs fixing manually."
-          echo "============================================"
-          exit 1
-      - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: frontend-build
-          path: frontend/dist/
-          retention-days: 3
+    uses: ./.github/workflows/frontend-validation.yml
+    secrets: inherit
 
   playwright-e2e:
-    # Backend-free stubbed suite — fast, no Spring Boot required.
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: files-changed
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Install Playwright (chromium only)
-        run: task frontend:test:e2e:install -- chromium
-      - name: Run stubbed E2E tests (chromium)
-        run: task frontend:test:e2e -- --project=stubbed --workers=3
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: playwright-report-stubbed-${{ github.run_id }}
-          path: frontend/playwright-report/
-          retention-days: 7
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-stubbed.yml
+    secrets: inherit
 
   playwright-e2e-live:
-    # Live-backend suite — boots Spring Boot and runs auth + real tool round-trips.
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: files-changed
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-      - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Install Playwright (chromium only)
-        run: task frontend:test:e2e:install -- chromium
-      - name: Start Spring Boot backend (background)
-        env:
-          # Suppress the analytics opt-in modal that fires on first admin login when
-          # enableAnalytics is null (see Onboarding.tsx). The modal renders a Mantine
-          # overlay that intercepts pointer events on every tool page until dismissed,
-          # which causes every "click run button" assertion in the live suite to fail.
-          SYSTEM_ENABLEANALYTICS: "false"
-        # NOTE: SECURITY_INITIALLOGIN_USERNAME/PASSWORD are intentionally NOT set.
-        # The live-setup project's bootstrap spec performs the real first-login
-        # flow against the backend's default admin/stirling user, exercising the
-        # forced-password-change UI and leaving the DB at admin/adminadmin for
-        # the rest of the live suite. This is both real coverage of the first-
-        # login flow and a stronger seed than env-var-driven user creation.
-        run: |
-          nohup ./gradlew :stirling-pdf:bootRun > /tmp/backend.log 2>&1 &
-          echo $! > /tmp/backend.pid
-      - name: Wait for backend to become ready
-        run: |
-          start=$SECONDS
-          # 300 iterations × 2s = 10 minute ceiling
-          for i in $(seq 1 300); do
-            if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then
-              echo "Backend up after $((SECONDS - start))s"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Backend did not become ready in $((SECONDS - start))s"
-          tail -200 /tmp/backend.log || true
-          exit 1
-      - name: Run live E2E tests (chromium)
-        id: live-tests
-        run: task frontend:test:e2e -- --project=live
-      - name: Print backend log on failure
-        if: failure() && steps.live-tests.conclusion == 'failure'
-        run: |
-          echo "::group::Spring Boot backend log (last 500 lines)"
-          tail -500 /tmp/backend.log || echo "no backend log found"
-          echo "::endgroup::"
-      - name: Stop backend
-        if: always()
-        run: |
-          if [ -f /tmp/backend.pid ]; then
-            kill "$(cat /tmp/backend.pid)" 2>/dev/null || true
-          fi
-      - name: Upload backend log
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: backend-log-live-${{ github.run_id }}
-          path: /tmp/backend.log
-          retention-days: 7
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: playwright-report-live-${{ github.run_id }}
-          path: frontend/playwright-report/
-          retention-days: 7
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-live.yml
+    secrets: inherit
+
+  playwright-e2e-enterprise:
+    if: needs.files-changed.outputs.proprietary == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-enterprise.yml
+    secrets: inherit
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
     needs: [files-changed, build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Check licenses for compatibility
-        run: task backend:licenses:check
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-
-      - name: FAILED - check the licenses for compatibility
-        if: failure()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: dependencies-without-allowed-license.json
-          path: build/reports/dependency-license/dependencies-without-allowed-license.json
-          retention-days: 3
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check-licence.yml
+    secrets: inherit
 
   docker-compose-tests:
     if: needs.files-changed.outputs.project == 'true'
-    needs: files-changed
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
-    #     (github.event_name == 'pull_request' &&
-    #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
-    #     (
-    #       contains(github.event.pull_request.labels.*.name, 'Front End') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Java') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Back End') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Security') ||
-    #       contains(github.event.pull_request.labels.*.name, 'API') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Docker') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Test')
-    #     )
-    #     )
-
-    runs-on: ubuntu-latest
+    needs: [files-changed]
     permissions:
       actions: write
       contents: read
       checks: write
-
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
-      # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
-      - name: Expose GitHub runtime for Buildx cache
-        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
-
-      - name: Install Docker Compose
-        run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: "3.12"
-          cache: "pip" # caching pip dependencies
-          cache-dependency-path: ./testing/cucumber/requirements.txt
-
-      - name: Pip requirements
-        run: |
-          pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
-
-      - name: Run Docker Compose Tests
-        run: |
-          chmod +x ./testing/test_webpages.sh
-          chmod +x ./testing/test.sh
-          chmod +x ./testing/test_disabledEndpoints.sh
-          ./testing/test.sh
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DOCKER_BASE_CHANGED: ${{ needs.files-changed.outputs.docker-base }}
-
-      - name: Upload Cucumber Report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: cucumber-report
-          path: testing/cucumber/report.html
-          retention-days: 7
-          if-no-files-found: warn
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: docker-compose-test-reports
-          path: testing/reports/
-          retention-days: 7
-          if-no-files-found: warn
-
-      - name: Cucumber Test Report
-        if: always()
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
-        with:
-          name: Cucumber Tests
-          path: testing/cucumber/junit/*.xml
-          reporter: java-junit
-          fail-on-error: false
+    uses: ./.github/workflows/docker-compose-tests.yml
+    secrets: inherit
+    with:
+      docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
     needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/test-build-docker.yml
+    secrets: inherit
+    with:
+      docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
+
+  tauri-build:
+    if: needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/tauri-build.yml
+    secrets: inherit
+
+  ai-engine:
+    if: needs.files-changed.outputs.engine == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/ai-engine.yml
+    secrets: inherit
+
+  pre-commit:
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/pre_commit.yml
+    secrets: inherit
+
+  dependency-review:
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/dependency-review.yml
+    secrets: inherit
+
+  # Single status check that branch protection should mark as required.
+  # Succeeds when every upstream job is either `success` or `skipped` (path-
+  # gated jobs that didn't apply this run). Any `failure` or `cancelled`
+  # result fails the gate. `if: always()` ensures the gate evaluates even
+  # when an upstream job fails.
+  all-checks-passed:
+    name: All checks passed
+    if: always()
+    needs:
+      - files-changed
+      - build
+      - check-generateOpenApiDocs
+      - frontend-validation
+      - playwright-e2e
+      - playwright-e2e-live
+      - playwright-e2e-enterprise
+      - check-licence
+      - docker-compose-tests
+      - test-build-docker-images
+      - tauri-build
+      - ai-engine
+      - pre-commit
+      - dependency-review
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - docker-rev: docker/embedded/Dockerfile
-            artifact-suffix: Dockerfile
-            cache-scope: stirling-pdf-latest
-          - docker-rev: docker/embedded/Dockerfile.ultra-lite
-            artifact-suffix: Dockerfile.ultra-lite
-            cache-scope: stirling-pdf-ultra-lite
-          - docker-rev: docker/embedded/Dockerfile.fat
-            artifact-suffix: Dockerfile.fat
-            cache-scope: stirling-pdf-fat
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Convert repository owner to lowercase
-        id: repoowner
-        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
-
-      - name: Free disk space on runner
-        run: |
-          echo "Disk space before cleanup:" && df -h
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
-          docker system prune -af || true
-          echo "Disk space after cleanup:" && df -h
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-      - name: Build application
-        run: task backend:build
+      - name: Verify every required job passed (or was legitimately skipped)
         env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-          STIRLING_PDF_DESKTOP_UI: false
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
-      - name: Build base image locally (PR base change only)
-        if: github.event_name == 'pull_request' && needs.files-changed.outputs.docker-base == 'true'
+          RESULTS: |
+            files-changed=${{ needs.files-changed.result }}
+            build=${{ needs.build.result }}
+            check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
+            frontend-validation=${{ needs.frontend-validation.result }}
+            playwright-e2e=${{ needs.playwright-e2e.result }}
+            playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
+            playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}
+            check-licence=${{ needs.check-licence.result }}
+            docker-compose-tests=${{ needs.docker-compose-tests.result }}
+            test-build-docker-images=${{ needs.test-build-docker-images.result }}
+            tauri-build=${{ needs.tauri-build.result }}
+            ai-engine=${{ needs.ai-engine.result }}
+            pre-commit=${{ needs.pre-commit.result }}
+            dependency-review=${{ needs.dependency-review.result }}
         run: |
-          docker build -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
-
-      - name: Set base image and platform for this build
-        id: build-params
-        run: |
-          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ needs.files-changed.outputs.docker-base }}" == "true" ]; then
-            echo "base_image=stirling-pdf-base:pr-test" >> $GITHUB_OUTPUT
-            echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
-          else
-            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
-            echo "platforms=linux/amd64,linux/arm64/v8" >> $GITHUB_OUTPUT
+          ok=true
+          while IFS='=' read -r name result; do
+            [ -z "$name" ] && continue
+            case "$result" in
+              success|skipped) printf '  %-30s %s\n' "$name" "$result" ;;
+              *)               printf '✗ %-30s %s\n' "$name" "$result"; ok=false ;;
+            esac
+          done <<< "$RESULTS"
+          if [ "$ok" != "true" ]; then
+            echo ""
+            echo "One or more required checks failed or were cancelled."
+            exit 1
           fi
-
-      - name: Build ${{ matrix.docker-rev }}
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./${{ matrix.docker-rev }}
-          push: false
-          cache-from: type=gha,scope=${{ matrix.cache-scope }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
-          platforms: ${{ steps.build-params.outputs.platforms }}
-          build-args: |
-            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
-          provenance: true
-          sbom: true
-
-      - name: Upload Reports
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: reports-docker-${{ matrix.artifact-suffix }}
-          path: |
-            build/reports/tests/
-            build/test-results/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
+          echo ""
+          echo "All required checks passed."

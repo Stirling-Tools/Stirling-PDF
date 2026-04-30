@@ -1,6 +1,17 @@
 name: Build Tauri Applications
 
+# Multi-OS Tauri desktop bundle build matrix (Windows / macOS arm+intel /
+# Linux). Called from build.yml on PRs that touch desktop sources (gated
+# via the `tauri` filter in .github/config/.files.yaml). Also runnable
+# on demand via workflow_dispatch with a per-platform selector.
 on:
+  workflow_call:
+    inputs:
+      platform:
+        description: "Platform to build (windows, macos, linux, or all)."
+        required: false
+        type: string
+        default: "all"
   workflow_dispatch:
     inputs:
       platform:
@@ -13,17 +24,6 @@ on:
           - windows
           - macos
           - linux
-  pull_request:
-    branches: [main]
-    types: [opened, reopened, synchronize, ready_for_review]
-    paths:
-      - "frontend/src-tauri/**"
-      - "frontend/src/desktop/**"
-      - "frontend/tsconfig.desktop.json"
-      - "frontend/package.json"
-      - "frontend/package-lock.json"
-      - "frontend/vite.config.ts"
-      - ".github/workflows/tauri-build.yml"
 
 permissions:
   contents: read
@@ -45,20 +45,15 @@ jobs:
         id: set-matrix
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          PLATFORM: ${{ inputs.platform }}
         run: |
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
           MACOS_ARM='{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}'
           MACOS_INTEL='{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}'
 
-          # Resolve requested platform (non-dispatch events always build all)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PLATFORM="${{ github.event.inputs.platform }}"
-          else
-            PLATFORM="all"
-          fi
-
-          # Build candidate list
+          # Resolve requested platform — populated by either workflow_dispatch
+          # or workflow_call inputs; both paths default to "all".
           case "$PLATFORM" in
             windows) ENTRIES=("$WINDOWS") ;;
             macos)   ENTRIES=("$MACOS_ARM" "$MACOS_INTEL") ;;
@@ -89,6 +84,7 @@ jobs:
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -293,9 +289,7 @@ jobs:
           EOF
 
       - name: Import release GPG signing key (Linux)
-        if: matrix.platform == 'ubuntu-22.04'
-        env:
-          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+        if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         run: |
           echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
@@ -313,7 +307,7 @@ jobs:
           fi
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -327,7 +321,8 @@ jobs:
           #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
           #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
           # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
-          SIGN: "1"
+          # Mirror the Windows/macOS gate: only sign when secret is present AND ref is main (skips PRs from forks/Dependabot).
+          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -340,10 +335,35 @@ jobs:
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
-          args: ${{ matrix.args }}
+          # Linux: build deb+rpm only here. AppImage runs in its own
+          # continue-on-error step below so its persistent linuxdeploy
+          # failure (#6127 onwards) does not tank deb/rpm uploads.
+          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+
+      # AppImage is decoupled so its linuxdeploy run gets a fresh process
+      # (rpm scratch state torn down) and its failure can't tank deb/rpm.
+      - name: Build Tauri app (Linux AppImage)
+        if: matrix.platform == 'ubuntu-22.04'
+        continue-on-error: true
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }} # gitleaks:allow
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+          CI: true
+        with:
+          projectPath: ./frontend
+          tauriScript: npx tauri
+          args: --bundles appimage
 
       - name: Clear release GPG key from runner keyring (Linux)
-        if: always() && matrix.platform == 'ubuntu-22.04'
+        if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         env:
           RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
         run: |

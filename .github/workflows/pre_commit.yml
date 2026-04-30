@@ -1,13 +1,11 @@
 name: Pre-commit
 
+# Runs `pre-commit run` for ruff / codespell / gitleaks / EOF / trailing-ws.
+# Called from build.yml on PRs and merge_group; also runnable on demand via
+# workflow_dispatch for manual local-equivalent linting.
 on:
+  workflow_call:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-  merge_group:
-    branches:
-      - main
 
 permissions:
   contents: read
