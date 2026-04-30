@@ -8,7 +8,10 @@ import React, {
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
@@ -46,6 +49,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
   const { actions: navActions } = useNavigationActions();
+  const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+  const isMultiTool = currentWorkbench === "pageEditor" && selectedTool === "multiTool";
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
@@ -263,8 +268,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           );
           actions.setSelectedFiles(nextSelection);
         }
-        // Single file → viewer, multiple → active files
-        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        // Stay in multi-tool; otherwise single file → viewer, multiple → active files
+        if (!isMultiTool) {
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        }
       }
       closeFilesModal();
     },
@@ -276,6 +283,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       actions,
       fileCtx,
       navActions,
+      isMultiTool,
     ],
   );
 
@@ -407,9 +415,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("addStirlingFileStubs action not available");
       }
 
-      // Single file → viewer, multiple → active files
-      const totalAdded = stirlingFileStubs.length;
-      navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
+      // Stay in multi-tool; otherwise single file → viewer, multiple → active files
+      if (!isMultiTool) {
+        const totalAdded = stirlingFileStubs.length;
+        navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
+      }
 
       closeFilesModal();
     },
@@ -425,6 +435,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       extractLatestFilesFromBundle,
       importBundleToWorkbench,
       navActions,
+      isMultiTool,
     ],
   );
 

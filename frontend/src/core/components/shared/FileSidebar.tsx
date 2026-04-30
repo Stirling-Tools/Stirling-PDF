@@ -66,7 +66,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { workbench: currentWorkbench } = useNavigationState();
+    const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const isMultiTool = currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
@@ -158,9 +159,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       const files = await openGoogleDrivePicker({ multiple: true });
       if (files.length > 0) {
         await addFiles(files);
-        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        if (!isMultiTool) {
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        }
       }
-    }, [isGoogleDriveEnabled, openGoogleDrivePicker, addFiles, navActions]);
+    }, [isGoogleDriveEnabled, openGoogleDrivePicker, addFiles, navActions, isMultiTool]);
 
     // Toggle file in/out of workbench
     const handleFileClick = useCallback(
@@ -193,21 +196,30 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           await fileActions.addStirlingFileStubs([stub]);
 
-          if (workbenchCount === 0) {
-            navActions.setWorkbench("viewer");
+          if (isMultiTool) {
+            fileActions.setSelectedFiles([
+              ...state.ui.selectedFileIds,
+              stub.id,
+            ]);
           } else {
-            navActions.setWorkbench("fileEditor");
+            if (workbenchCount === 0) {
+              navActions.setWorkbench("viewer");
+            } else {
+              navActions.setWorkbench("fileEditor");
+            }
           }
         }
       },
       [
         allFileStubs,
         state.files.ids,
+        state.ui.selectedFileIds,
         fileActions,
         navActions,
         currentWorkbench,
         activeFileId,
         requestNavigation,
+        isMultiTool,
       ],
     );
 
@@ -274,11 +286,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         const files = Array.from(e.target.files ?? []);
         if (files.length > 0) {
           await addFiles(files);
-          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+          if (!isMultiTool) {
+            navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+          }
         }
         e.target.value = "";
       },
-      [addFiles, navActions],
+      [addFiles, navActions, isMultiTool],
     );
 
     const shouldHideGoogleDrive =

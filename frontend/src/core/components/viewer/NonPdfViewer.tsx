@@ -111,7 +111,6 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
       }}
     >
       <NonPdfBanner
-        meta={meta}
         onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined}
       />
       <Box

@@ -82,6 +82,10 @@
   flex-shrink: 0;
 }
 
+.file-sidebar-search-close {
+  cursor: pointer;
+}
+
 .file-sidebar-search-input {
   flex: 1;
   background: transparent;

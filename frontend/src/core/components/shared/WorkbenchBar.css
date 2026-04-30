@@ -152,6 +152,11 @@
   margin: 0 4px;
 }
 
+/* Extra breathing room around the export/close separator */
+.workbench-bar-globals-sep {
+  margin: 0 8px;
+}
+
 /* ---- Inline viewer controls (page nav + zoom) ---- */
 .viewer-inline-controls {
   display: flex;

@@ -56,6 +56,43 @@ export function getFileExtension(name: string): string {
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
 }
 
+export type DateGroup =
+  | "today"
+  | "yesterday"
+  | "thisWeek"
+  | "thisMonth"
+  | "older";
+
+export const DATE_GROUP_ORDER: DateGroup[] = [
+  "today",
+  "yesterday",
+  "thisWeek",
+  "thisMonth",
+  "older",
+];
+
+export function getDateGroup(lastModified: number | undefined): DateGroup {
+  if (!lastModified) return "older";
+  const now = new Date();
+  const today = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  ).getTime();
+  const d = new Date(lastModified);
+  const fileDay = new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate(),
+  ).getTime();
+  const daysAgo = (today - fileDay) / 86400000;
+  if (daysAgo < 1) return "today";
+  if (daysAgo < 2) return "yesterday";
+  if (daysAgo < 7) return "thisWeek";
+  if (daysAgo < 30) return "thisMonth";
+  return "older";
+}
+
 export function formatFileDate(lastModifiedTs: number): string {
   const lastModified = lastModifiedTs ? new Date(lastModifiedTs) : new Date();
   const now = new Date();
@@ -102,21 +139,23 @@ function FilePdfIcon({
     <svg
       className={className}
       style={style}
-      width="20"
+      width="16"
       height="20"
-      viewBox="0 0 24 24"
+      viewBox="0 0 16 20"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      aria-hidden="true"
     >
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
-      <path d="M9 13h.01" />
-      <path d="M9 17h.01" />
-      <path d="M13 13h2" />
-      <path d="M13 17h2" />
+      <path
+        d="M1 2C1 .895 1.895 0 3 0H9.5L15 5.5V18C15 19.105 14.105 20 13 20H3C1.895 20 1 19.105 1 18V2Z"
+        fill="currentColor"
+      />
+      <path
+        d="M9.5 0L15 5.5H11C10.172 5.5 9.5 4.828 9.5 4V0Z"
+        fill="rgba(0,0,0,0.2)"
+      />
+      <rect x="3.5" y="8.5" width="7" height="1.2" rx=".6" fill="rgba(255,255,255,.85)" />
+      <rect x="3.5" y="11" width="9" height="1.2" rx=".6" fill="rgba(255,255,255,.85)" />
+      <rect x="3.5" y="13.5" width="5.5" height="1.2" rx=".6" fill="rgba(255,255,255,.85)" />
     </svg>
   );
 }
@@ -200,7 +239,7 @@ export function FileItem({
   const ext = getFileExtension(name);
   const isPdf = ext === "pdf";
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
-  const typeLabel = ext ? ext.toUpperCase() : "File";
+  const typeLabel = isPdf ? "" : ext ? ext.toUpperCase() : "File";
 
   const resolvedThumbnail = useLazyThumbnail(fileId, size ?? 0, thumbnailUrl);
 
@@ -245,7 +284,7 @@ export function FileItem({
               {isPdf ? (
                 <FilePdfIcon
                   className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide"
-                  style={{ color: "#3B82F6" }}
+                  style={{ color: "#DC2626" }}
                 />
               ) : (
                 <FileGenericIcon

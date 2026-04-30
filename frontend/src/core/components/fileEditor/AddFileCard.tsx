@@ -68,7 +68,7 @@ const AddFileCard = ({
       />
 
       <div
-        className={`${styles.addFileCard} w-[21rem] h-[26rem] select-none flex flex-col shadow-sm transition-all relative cursor-pointer`}
+        className={`${styles.addFileCard} select-none flex flex-col transition-all relative cursor-pointer`}
         tabIndex={0}
         role="button"
         aria-label={t("fileEditor.addFiles", "Add files")}

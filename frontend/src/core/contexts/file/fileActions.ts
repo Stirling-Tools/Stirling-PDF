@@ -874,9 +874,13 @@ export async function addStirlingFileStubs(
                 updates,
                 stateRef,
               );
+              return;
             }
           }
         }
+
+        // Stub dispatch triggers re-render so the viewer appears (ADD_FILES alone doesn't update selectors).
+        lifecycleManager.updateStirlingFileStub(fileId, {}, stateRef);
       });
     }
 

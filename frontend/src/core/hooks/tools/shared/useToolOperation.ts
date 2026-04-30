@@ -459,7 +459,7 @@ export const useToolOperation = <TParams>(
                       inputStirlingFileStubs[0],
                     newToolOperation,
                     file,
-                    thumbnail,
+                    metadata?.thumbnailUrl || thumbnail,
                     metadata,
                   ),
               );
@@ -523,7 +523,7 @@ export const useToolOperation = <TParams>(
                   createNewStirlingFileStub(
                     file,
                     undefined,
-                    thumbnail,
+                    metadata?.thumbnailUrl || thumbnail,
                     metadata,
                   ),
               );

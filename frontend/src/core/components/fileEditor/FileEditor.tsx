@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { flushSync } from "react-dom";
-import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
+import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import {
   useFileSelection,
@@ -377,16 +377,7 @@ const FileEditor = ({
         <Box p="md">
           {activeStirlingFileStubs.length === 0 ? (
             <Center h="60vh">
-              <Stack align="center" gap="md">
-                <Text size="lg" c="dimmed">
-                  📁
-                </Text>
-                <Text c="dimmed">No files loaded</Text>
-                <Text size="sm" c="dimmed">
-                  Upload PDF files, ZIP archives, or load from storage to get
-                  started
-                </Text>
-              </Stack>
+              <AddFileCard onFileSelect={handleFileUpload} />
             </Center>
           ) : (
             <div

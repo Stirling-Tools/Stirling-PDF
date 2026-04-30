@@ -11,8 +11,9 @@ import { isStirlingFile } from "@app/types/fileContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
-import { WorkbenchType } from "@app/types/workbench";
+import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { downloadFile } from "@app/services/downloadService";
@@ -66,8 +67,10 @@ export default function WorkbenchBar({
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
-  const { pageEditorFunctions, toolPanelMode, leftPanelView } =
+  const { pageEditorFunctions, toolPanelMode, leftPanelView, customWorkbenchViews } =
     useToolWorkflow();
+  const { selectedTool } = useNavigationState();
+  const isCustomView = !isBaseWorkbench(currentView);
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
@@ -286,6 +289,28 @@ export default function WorkbenchBar({
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <FolderIcon fontSize="small" />,
     },
+    ...(selectedTool === "multiTool"
+      ? [
+          {
+            value: "pageEditor" as WorkbenchType,
+            label: t("workbenchBar.multiTool", "Multi-Tool"),
+            icon: (
+              <LocalIcon
+                icon="dashboard-customize-outline-rounded"
+                width="1rem"
+                height="1rem"
+              />
+            ),
+          },
+        ]
+      : []),
+    ...customWorkbenchViews
+      .filter((v) => v.data != null)
+      .map((v) => ({
+        value: v.workbenchId,
+        label: v.label,
+        icon: v.icon ?? <InsertDriveFileIcon fontSize="small" />,
+      })),
   ];
 
   const barRef = useRef<HTMLDivElement>(null);
@@ -366,7 +391,7 @@ export default function WorkbenchBar({
         </div>
       )}
 
-      {/* Right: Global buttons (share / delete / download / zoom + page nav) */}
+      {/* Right: Global buttons — export group left, close anchored right */}
       <div className="workbench-bar-globals">
         {/* Print */}
         {currentView === "viewer" &&
@@ -385,29 +410,6 @@ export default function WorkbenchBar({
             </ActionIcon>,
             t("rightRail.print", "Print PDF"),
           )}
-
-        {/* Close (context-aware: close all / close viewer file / close page editor) */}
-        {renderWithTooltip(
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="workbench-bar-action-icon"
-            onClick={handleClose}
-            disabled={
-              totalItems === 0 || allButtonsDisabled || disableForFullscreen
-            }
-            aria-label={
-              currentView === "fileEditor"
-                ? t("rightRail.closeAll", "Close All")
-                : t("rightRail.closePdf", "Close PDF")
-            }
-          >
-            <CloseIcon sx={{ fontSize: "1rem" }} />
-          </ActionIcon>,
-          currentView === "fileEditor"
-            ? t("rightRail.closeAll", "Close All")
-            : t("rightRail.closePdf", "Close PDF"),
-        )}
 
         {/* Download */}
         {renderWithTooltip(
@@ -449,6 +451,32 @@ export default function WorkbenchBar({
             </ActionIcon>,
             t("rightRail.saveAs", "Save As"),
           )}
+
+        {/* Separator: export group | close */}
+        {!isCustomView && <div className="workbench-bar-divider workbench-bar-globals-sep" />}
+
+        {/* Close (context-aware: close all / close viewer file / close page editor) */}
+        {!isCustomView && renderWithTooltip(
+          <ActionIcon
+            variant="subtle"
+            radius="md"
+            className="workbench-bar-action-icon"
+            onClick={handleClose}
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
+            aria-label={
+              currentView === "fileEditor"
+                ? t("rightRail.closeAll", "Close All")
+                : t("rightRail.closePdf", "Close PDF")
+            }
+          >
+            <CloseIcon sx={{ fontSize: "1rem" }} />
+          </ActionIcon>,
+          currentView === "fileEditor"
+            ? t("rightRail.closeAll", "Close All")
+            : t("rightRail.closePdf", "Close PDF"),
+        )}
       </div>
     </div>
   );

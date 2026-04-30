@@ -106,7 +106,9 @@ const FileEditorThumbnail = ({
     const w = firstPage?.width;
     const h = firstPage?.height;
     if (w && h && w > 0 && h > 0) {
-      return isLandscape ? `${h} / ${w}` : `${w} / ${h}`;
+      // width/height are effective (post-rotation) dims from PDFium, so use
+      // them directly — no swapping needed.
+      return `${w} / ${h}`;
     }
     return isLandscape ? "11 / 8.5" : "8.5 / 11";
   })();

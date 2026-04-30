@@ -207,6 +207,20 @@
   display: block !important;
 }
 
+/* ---- Date group headers ---- */
+.file-sidebar-date-group-header {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 0 10px 2px 10px;
+  margin-top: 8px;
+  user-select: none;
+}
+
+.file-sidebar-date-group-header:first-child {
+  margin-top: 0;
+}
+
 /* ---- Loading state ---- */
 .file-sidebar-loading {
   display: flex;

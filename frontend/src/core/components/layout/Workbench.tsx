@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Box } from "@mantine/core";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -19,7 +20,6 @@ import Viewer from "@app/components/viewer/Viewer";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import LandingPage from "@app/components/shared/LandingPage";
-
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
@@ -50,6 +50,15 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
+  const hasFiles = activeFiles.length > 0;
+
+  // Enable bar transitions after first paint so the initial hidden state shows
+  // without animating (landing page on load shouldn't animate the bar up).
+  const [barTransitionEnabled, setBarTransitionEnabled] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setBarTransitionEnabled(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -82,7 +91,7 @@ export default function Workbench() {
       }
     }
 
-    if (activeFiles.length === 0) {
+      if (activeFiles.length === 0) {
       return <LandingPage />;
     }
 
@@ -168,14 +177,22 @@ export default function Workbench() {
           : { backgroundColor: "var(--bg-background)" }
       }
     >
-      {/* Workbench Bar - replaces TopControls and includes RightRail action buttons */}
+      {/* Workbench Bar - animates in/out based on file presence */}
       {!customWorkbenchViews.find((v) => v.workbenchId === currentView)
         ?.hideTopControls && (
-        <WorkbenchBar
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          hasFiles={activeFiles.length > 0}
-        />
+        <div
+          className={styles.workbenchBarWrapper}
+          data-hidden={String(!hasFiles)}
+          data-no-transition={String(!barTransitionEnabled)}
+        >
+          <div className={styles.workbenchBarInner}>
+            <WorkbenchBar
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+              hasFiles={hasFiles}
+            />
+          </div>
+        </div>
       )}
 
       {/* Dismiss All Errors Button */}

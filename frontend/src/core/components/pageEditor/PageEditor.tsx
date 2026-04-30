@@ -168,6 +168,16 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   }, [pageEditorFiles]);
   const activeFilesSignature = selectors.getFilesSignature();
 
+  // Check if there are any PDF files in FileContext (bypasses fileOrder, which is
+  // populated asynchronously via effect). Used to avoid a one-render flash of
+  // "No PDF files loaded" when PageEditor first mounts after files are added.
+  const hasPdfFiles = useMemo(() => {
+    return state.files.ids.some((id) => {
+      const stub = selectors.getStirlingFileStub(id);
+      return stub?.name?.toLowerCase().endsWith(".pdf") ?? false;
+    });
+  }, [state.files.ids, selectors]);
+
   // UI state
   const globalProcessing = state.ui.isProcessing;
 
@@ -676,7 +686,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
 
       {!initialDocument &&
         !globalProcessing &&
-        selectedFileIds.length === 0 && (
+        !hasPdfFiles && (
           <Center h="100%">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">
@@ -690,7 +700,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
           </Center>
         )}
 
-      {!initialDocument && globalProcessing && (
+      {!initialDocument && (globalProcessing || hasPdfFiles) && (
         <Box p={0}>
           <SkeletonLoader type="controls" />
           <SkeletonLoader type="pageGrid" count={8} />
