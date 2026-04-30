@@ -1,0 +1,93 @@
+name: Frontend lint, type-check, and build
+
+# Reusable workflow called from build.yml when frontend / testing sources
+# change. Runs the consolidated `task frontend:check:all` (lint, types,
+# unit tests, build) and uploads the dist artifact for downstream jobs.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  frontend-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Quality-check frontend
+        id: frontend-check
+        run: task frontend:check:all
+        continue-on-error: true
+      - name: Comment on frontend check failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.frontend-check.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const marker = '<!-- frontend-check -->';
+            const body = [
+              marker,
+              '### Frontend Check Failed',
+              '',
+              'There are issues with your frontend code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task frontend:fix` to auto-fix what can be fixed automatically, then run `task frontend:check:all` to see what still needs fixing manually.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+      - name: Fail if frontend check failed
+        if: steps.frontend-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Frontend Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your frontend code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task frontend:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task frontend:check:all'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          retention-days: 3
