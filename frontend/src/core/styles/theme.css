@@ -800,12 +800,15 @@
 }
 
 /* Smooth transitions for theme switching */
-* {
+/* Targeted transitions for theme switching instead of global * rule */
+[class*="mantine-"] {
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease,
     color 0.2s ease;
 }
+
+
 /* ── PDF Link Overlay (viewer) ── */
 :root {
   --link-hover-bg: rgba(10, 139, 255, 0.04);

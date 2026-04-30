@@ -114,21 +114,23 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
             console.log("[AppConfig] Fetching app config...");
           }
 
-          // apiClient automatically adds JWT header if available via interceptors
-          // Always suppress error toast - we handle 401 errors locally
-          console.debug("[AppConfig] Fetching app config", {
-            attempt,
-            force,
-            path: window.location.pathname,
-          });
-          const response = await apiClient.get<AppConfig>(
-            "/api/v1/config/app-config",
-            {
+          // Parallelize app-config and status calls to minimize initialization time
+          const [configResponse] = await Promise.all([
+            apiClient.get<AppConfig>("/api/v1/config/app-config", {
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any,
-          );
-          const data = response.data;
+            } as any),
+            // Background probe for status to warm up the connection/cache
+            apiClient
+              .get("/api/v1/info/status", {
+                suppressErrorToast: true,
+                skipAuthRedirect: true,
+              } as any)
+              .catch(() => null),
+          ]);
+
+          const data = configResponse.data;
+
 
           console.debug("[AppConfig] Config fetched successfully:", data);
           console.debug(

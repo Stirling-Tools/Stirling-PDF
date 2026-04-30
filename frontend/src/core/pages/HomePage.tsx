@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -17,16 +17,22 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
-import ToolPanel from "@app/components/tools/ToolPanel";
-import Workbench from "@app/components/layout/Workbench";
-import QuickAccessBar from "@app/components/shared/QuickAccessBar";
-import RightRail from "@app/components/shared/RightRail";
-import FileManager from "@app/components/FileManager";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import AppConfigModal from "@app/components/shared/AppConfigModal";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+
+// Lazy load heavy components
+const ToolPanel = lazy(() => import("@app/components/tools/ToolPanel"));
+const Workbench = lazy(() => import("@app/components/layout/Workbench"));
+const QuickAccessBar = lazy(() => import("@app/components/shared/QuickAccessBar"));
+const RightRail = lazy(() => import("@app/components/shared/RightRail"));
+const FileManager = lazy(() => import("@app/components/FileManager"));
+const AppConfigModal = lazy(() => import("@app/components/shared/AppConfigModal"));
+
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+
+
 
 import "@app/pages/HomePage.css";
 
@@ -232,147 +238,149 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
-      {isMobile ? (
-        <div className="mobile-layout">
-          <div className="mobile-toggle">
-            <div className="mobile-header">
-              <div className="mobile-brand">
-                <LogoIcon className="mobile-brand-icon" />
-                <Wordmark alt={brandAltText} className="mobile-brand-text" />
+      <Suspense fallback={<LoadingFallback />}>
+        {isMobile ? (
+          <div className="mobile-layout">
+            <div className="mobile-toggle">
+              <div className="mobile-header">
+                <div className="mobile-brand">
+                  <LogoIcon className="mobile-brand-icon" />
+                  <Wordmark alt={brandAltText} className="mobile-brand-text" />
+                </div>
               </div>
-            </div>
-            <div
-              className="mobile-toggle-buttons"
-              role="tablist"
-              aria-label={t(
-                "home.mobile.viewSwitcher",
-                "Switch workspace view",
-              )}
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeMobileView === "tools"}
-                className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
-                onClick={() => handleSelectMobileView("tools")}
+              <div
+                className="mobile-toggle-buttons"
+                role="tablist"
+                aria-label={t(
+                  "home.mobile.viewSwitcher",
+                  "Switch workspace view",
+                )}
               >
-                {t("home.mobile.tools", "Tools")}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeMobileView === "workbench"}
-                className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
-                onClick={() => handleSelectMobileView("workbench")}
-              >
-                {t("home.mobile.workspace", "Workspace")}
-              </button>
-            </div>
-            <span className="mobile-toggle-hint">
-              {t(
-                "home.mobile.swipeHint",
-                "Swipe left or right to switch views",
-              )}
-            </span>
-          </div>
-          <div ref={sliderRef} className="mobile-slider">
-            <div
-              className="mobile-slide"
-              aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
-            >
-              <div className="mobile-slide-content">
-                <ToolPanel />
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeMobileView === "tools"}
+                  className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
+                  onClick={() => handleSelectMobileView("tools")}
+                >
+                  {t("home.mobile.tools", "Tools")}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeMobileView === "workbench"}
+                  className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
+                  onClick={() => handleSelectMobileView("workbench")}
+                >
+                  {t("home.mobile.workspace", "Workspace")}
+                </button>
               </div>
+              <span className="mobile-toggle-hint">
+                {t(
+                  "home.mobile.swipeHint",
+                  "Swipe left or right to switch views",
+                )}
+              </span>
             </div>
-            <div
-              className="mobile-slide"
-              aria-label={t("home.mobile.workbenchSlide", "Workspace panel")}
-            >
-              <div className="mobile-slide-content">
-                <div className="flex-1 min-h-0 flex">
-                  <Workbench />
-                  <RightRail />
+            <div ref={sliderRef} className="mobile-slider">
+              <div
+                className="mobile-slide"
+                aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
+              >
+                <div className="mobile-slide-content">
+                  <ToolPanel />
+                </div>
+              </div>
+              <div
+                className="mobile-slide"
+                aria-label={t("home.mobile.workbenchSlide", "Workspace panel")}
+              >
+                <div className="mobile-slide-content">
+                  <div className="flex-1 min-h-0 flex">
+                    <Workbench />
+                    <RightRail />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="mobile-bottom-bar">
-            <button
-              className="mobile-bottom-button"
-              aria-label={t("quickAccess.allTools", "Tools")}
-              onClick={() => {
-                handleBackToTools();
-                if (isMobile) {
-                  setActiveMobileView("tools");
-                }
-              }}
-            >
-              <AppsIcon sx={{ fontSize: "1.5rem" }} />
-              <span className="mobile-bottom-button-label">
-                {t("quickAccess.allTools", "Tools")}
-              </span>
-            </button>
-            {toolAvailability["automate"]?.available !== false && (
+            <div className="mobile-bottom-bar">
               <button
                 className="mobile-bottom-button"
-                aria-label={t("quickAccess.automate", "Automate")}
+                aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
-                  handleToolSelect("automate");
+                  handleBackToTools();
                   if (isMobile) {
                     setActiveMobileView("tools");
                   }
                 }}
               >
+                <AppsIcon sx={{ fontSize: "1.5rem" }} />
+                <span className="mobile-bottom-button-label">
+                  {t("quickAccess.allTools", "Tools")}
+                </span>
+              </button>
+              {toolAvailability["automate"]?.available !== false && (
+                <button
+                  className="mobile-bottom-button"
+                  aria-label={t("quickAccess.automate", "Automate")}
+                  onClick={() => {
+                    handleToolSelect("automate");
+                    if (isMobile) {
+                      setActiveMobileView("tools");
+                    }
+                  }}
+                >
+                  <LocalIcon
+                    icon="automation-outline"
+                    width="1.5rem"
+                    height="1.5rem"
+                  />
+                  <span className="mobile-bottom-button-label">
+                    {t("quickAccess.automate", "Automate")}
+                  </span>
+                </button>
+              )}
+              <button
+                className="mobile-bottom-button"
+                aria-label={t("home.mobile.openFiles", "Open files")}
+                onClick={() => openFilesModal()}
+              >
+                <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
+                <span className="mobile-bottom-button-label">
+                  {t("quickAccess.files", "Files")}
+                </span>
+              </button>
+              <button
+                className="mobile-bottom-button"
+                aria-label={t("quickAccess.config", "Config")}
+                onClick={() => setConfigModalOpen(true)}
+              >
                 <LocalIcon
-                  icon="automation-outline"
+                  icon="settings-rounded"
                   width="1.5rem"
                   height="1.5rem"
                 />
                 <span className="mobile-bottom-button-label">
-                  {t("quickAccess.automate", "Automate")}
+                  {t("quickAccess.config", "Config")}
                 </span>
               </button>
-            )}
-            <button
-              className="mobile-bottom-button"
-              aria-label={t("home.mobile.openFiles", "Open files")}
-              onClick={() => openFilesModal()}
-            >
-              <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">
-                {t("quickAccess.files", "Files")}
-              </span>
-            </button>
-            <button
-              className="mobile-bottom-button"
-              aria-label={t("quickAccess.config", "Config")}
-              onClick={() => setConfigModalOpen(true)}
-            >
-              <LocalIcon
-                icon="settings-rounded"
-                width="1.5rem"
-                height="1.5rem"
-              />
-              <span className="mobile-bottom-button-label">
-                {t("quickAccess.config", "Config")}
-              </span>
-            </button>
+            </div>
+            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+            <AppConfigModal
+              opened={configModalOpen}
+              onClose={() => setConfigModalOpen(false)}
+            />
           </div>
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-          <AppConfigModal
-            opened={configModalOpen}
-            onClose={() => setConfigModalOpen(false)}
-          />
-        </div>
-      ) : (
-        <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
-          <QuickAccessBar ref={quickAccessRef} />
-          {!hideToolPanel && <ToolPanel />}
-          <Workbench />
-          <RightRail />
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-        </Group>
-      )}
+        ) : (
+          <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
+            <QuickAccessBar ref={quickAccessRef} />
+            {!hideToolPanel && <ToolPanel />}
+            <Workbench />
+            <RightRail />
+            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          </Group>
+        )}
+      </Suspense>
     </div>
   );
 }
