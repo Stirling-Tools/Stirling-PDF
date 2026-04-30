@@ -23,7 +23,8 @@ public class EndpointInterceptor implements HandlerInterceptor {
         String requestURI = request.getRequestURI();
 
         // Prevent API responses from being stored by browsers or intermediary caches by default
-        if (request.getServletPath().startsWith("/api/")) {
+        String servletPath = request.getServletPath();
+        if (servletPath != null && servletPath.startsWith("/api/")) {
             response.setHeader("Cache-Control", "private, no-store");
         }
 
