@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -54,7 +54,7 @@ public class RepairController {
                     "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
                             + " first saved to a temporary location, repaired, read back, and then"
                             + " returned as a response. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> repairPdf(@ModelAttribute PDFFile file)
+    public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
 

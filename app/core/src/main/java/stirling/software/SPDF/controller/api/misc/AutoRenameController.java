@@ -8,11 +8,11 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,8 +45,8 @@ public class AutoRenameController {
             description =
                     "This endpoint accepts a PDF file and attempts to extract its title or header"
                             + " based on heuristics. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> extractHeader(
-            @ModelAttribute ExtractHeaderRequest request) throws Exception {
+    public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
         boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());
 
