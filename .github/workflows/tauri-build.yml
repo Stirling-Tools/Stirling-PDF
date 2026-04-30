@@ -335,7 +335,32 @@ jobs:
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
-          args: ${{ matrix.args }}
+          # Linux: build deb+rpm only here. AppImage runs in its own
+          # continue-on-error step below so its persistent linuxdeploy
+          # failure (#6127 onwards) does not tank deb/rpm uploads.
+          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+
+      # AppImage is decoupled so its linuxdeploy run gets a fresh process
+      # (rpm scratch state torn down) and its failure can't tank deb/rpm.
+      - name: Build Tauri app (Linux AppImage)
+        if: matrix.platform == 'ubuntu-22.04'
+        continue-on-error: true
+        uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }} # gitleaks:allow
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+          CI: true
+        with:
+          projectPath: ./frontend
+          tauriScript: npx tauri
+          args: --bundles appimage
 
       - name: Clear release GPG key from runner keyring (Linux)
         if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
