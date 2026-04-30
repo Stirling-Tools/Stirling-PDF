@@ -82,6 +82,19 @@ class ReactRoutingControllerTest {
         assertTrue(response.getBody().contains("Stirling PDF"));
     }
 
+    @Test
+    void serveShareLinkPage_returnsIndexHtml() {
+        controller.init();
+
+        ResponseEntity<String> response = controller.serveShareLinkPage(request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
+        String body = response.getBody();
+        assertNotNull(body);
+        assertTrue(body.contains("Stirling PDF"));
+    }
+
     // --- tauri auth callback ---
 
     @Test

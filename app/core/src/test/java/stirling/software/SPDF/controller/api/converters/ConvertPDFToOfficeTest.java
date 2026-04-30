@@ -21,10 +21,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
@@ -40,14 +41,15 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToOfficeTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -85,8 +87,7 @@ class ConvertPDFToOfficeTest {
         request.setFileInput(pdfFile);
         request.setOutputFormat("pptx");
 
-        ResponseEntity<StreamingResponseBody> expectedResponse =
-                streamingOk("pptx-content".getBytes());
+        ResponseEntity<Resource> expectedResponse = streamingOk("pptx-content".getBytes());
 
         try (MockedStatic<PDFToFile> mock =
                 Mockito.mockStatic(PDFToFile.class, Mockito.CALLS_REAL_METHODS)) {
@@ -115,8 +116,7 @@ class ConvertPDFToOfficeTest {
         realDoc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(realDoc);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse =
-                streamingOk("text content".getBytes());
+        ResponseEntity<Resource> expectedResponse = streamingOk("text content".getBytes());
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -131,8 +131,7 @@ class ConvertPDFToOfficeTest {
                                             any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response =
-                    controller.processPdfToRTForTXT(request);
+            ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
 
             assertSame(expectedResponse, response);
         }

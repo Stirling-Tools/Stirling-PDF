@@ -14,10 +14,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -52,7 +52,7 @@ public class PosterPdfController {
                             + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
                             + "Divides each page into a grid of smaller pages using Apache PDFBox. "
                             + "Input: PDF Output: ZIP-PDF Type: SISO")
-    public ResponseEntity<StreamingResponseBody> posterPdf(@ModelAttribute PosterPdfRequest request)
+    public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
             throws Exception {
 
         log.debug("Starting PDF poster split process with request: {}", request);

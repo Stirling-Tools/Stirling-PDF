@@ -20,10 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -75,7 +75,7 @@ public class RotationControllerTest {
         when(mockPage.getRotation()).thenReturn(0);
 
         // Act
-        ResponseEntity<StreamingResponseBody> response = rotationController.rotatePDF(request);
+        ResponseEntity<Resource> response = rotationController.rotatePDF(request);
 
         // Assert
         verify(mockPage).setRotation(90);

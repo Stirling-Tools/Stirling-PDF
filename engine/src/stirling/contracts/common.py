@@ -107,6 +107,21 @@ class ExtractedFileText(ApiModel):
     pages: list[PdfTextSelection] = Field(default_factory=list)
 
 
+class NeedContentFileRequest(ApiModel):
+    file_name: str
+    page_numbers: list[int] = Field(default_factory=list)
+    content_types: list[PdfContentType]
+
+
+class NeedContentResponse(ApiModel):
+    outcome: Literal[WorkflowOutcome.NEED_CONTENT] = WorkflowOutcome.NEED_CONTENT
+    resume_with: SupportedCapability
+    reason: str
+    files: list[NeedContentFileRequest] = Field(default_factory=list)
+    max_pages: int
+    max_characters: int
+
+
 class ToolOperationStep(ApiModel):
     kind: Literal[StepKind.TOOL] = StepKind.TOOL
     tool: AnyToolId

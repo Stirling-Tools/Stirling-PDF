@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum, StrEnum
-from typing import Any
 
 from pydantic import Field, RootModel, SecretStr
 
@@ -756,6 +755,15 @@ class RearrangePagesParams(ApiModel):
     )
 
 
+class RedactionArea(ApiModel):
+    color: str | None = Field(None, description="The color used to redact the specified area.")
+    height: float | None = Field(None, description="The height of the area to be redacted.")
+    page: int | None = Field(None, description="The page on which the area should be redacted.")
+    width: float | None = Field(None, description="The width of the area to be redacted.")
+    x: float | None = Field(None, description="The left edge point of the area to be redacted.")
+    y: float | None = Field(None, description="The top edge point of the area to be redacted.")
+
+
 class RemoveBlanksParams(ApiModel):
     threshold: int | None = Field(10, description="The threshold value to determine blank pages", ge=0, le=255)
     white_percent: float | None = Field(
@@ -949,7 +957,7 @@ class SplitForPosterPrintParams(ApiModel):
 class SplitPagesParams(ApiModel):
     page_numbers: str | None = Field(
         "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
+        description='Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.',
     )
 
 
@@ -1039,10 +1047,6 @@ class OutputFormat6(StrEnum):
 class VectorToPdfParams(ApiModel):
     output_format: OutputFormat6 | None = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class RedactionArea(RootModel[Any]):
-    root: Any
 
 
 class RedactParams(ApiModel):

@@ -1,3 +1,4 @@
+accessInvite = "Davet Et"
 addToDoc = "Dökümana Ekle"
 alphabet = "Alfabe"
 apply = "Uygula"
@@ -8,22 +9,22 @@ black = "Siyah"
 blue = "Mavi"
 bored = "Sıkıldınız mı?"
 cancel = "İptal"
-confirm = "Onayla"
 changedCredsMessage = "Bilgiler değiştirildi!"
 chooseFile = "Dosya Seç"
 close = "Kapat"
 color = "Renk"
 comingSoon = "Yakında"
+confirm = "Onayla"
 confirmClose = "Kapatmayı Onayla"
 confirmCloseCancel = "İptal"
 confirmCloseConfirm = "Dosyayı Kapat"
-confirmCloseMessage = "Bu dosyayı kapatmak istediğinizden emin misiniz?"
 confirmCloseDiscard = "Değişiklikleri at ve kapat"
+confirmCloseMessage = "Bu dosyayı kapatmak istediğinizden emin misiniz?"
 confirmCloseSave = "Kaydet ve kapat"
+confirmCloseSaveFailed = "Hatalarla kaydedildi. {{count}} dosya{{plural}} kaydedilemedi."
+confirmCloseSaveFailedTitle = "Kaydetme Başarısız"
 confirmCloseUnsaved = "Bu dosyada kaydedilmemiş değişiklikler var."
 confirmCloseUnsavedList = "Kaydedilmemiş değişiklikleri olan {{count}} dosya{{plural}} var.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Kaydetme Başarısız"
-confirmCloseSaveFailed = "Hatalarla kaydedildi. {{count}} dosya{{plural}} kaydedilemedi."
 confirmPasswordErrorMessage = "Yeni Şifre ve Yeni Şifreyi Onayla eşleşmelidir."
 custom = "Özel"
 customPosition = "Özel Konum"
@@ -43,11 +44,14 @@ downloadComplete = "İndirme Tamamlandı"
 downloadPdf = "PDF İndir"
 downloadUnavailable = "Bu öğe için indirme kullanılamıyor"
 edit = "Düzenle"
+editSecret = "Bu değeri düzenle"
 editYourNewFiles = "Yeni dosyalarınızı düzenleyin"
+encryptedFileBlocked = "Dosya parola korumalı. Önce kilidini açın."
+encryptedFilesBlocked = "{{count}} dosya parola korumalı. Önce kilitlerini açın."
 exportAndContinue = "Dışa aktar ve Devam et"
 false = "Yanlış"
-fileSavedToDisk = "Dosya diske kaydedildi"
 fileNotSavedToDisk = "Diske kaydedilmedi"
+fileSavedToDisk = "Dosya diske kaydedildi"
 fileSelected = "Seçildi: {{filename}}"
 filesSelected = "dosya seçildi"
 font = "Yazı tipi"
@@ -61,12 +65,15 @@ help = "Yardım"
 imgPrompt = "Resim(leri) seçin"
 incorrectPasswordMessage = "Mevcut şifre yanlış."
 info = "Bilgi"
+insufficientCredits = "Yetersiz kredi. Gerekli: {{requiredCredits}}, Mevcut: {{currentBalance}}, Eksik: {{shortfall}}"
 invalidPasswordMessage = "Şifre boş olmamalı ve başında veya sonunda boşluk bulunmamalıdır."
 invalidUndoData = "Geri alma yapılamıyor: geçersiz işlem verisi"
 invalidUsernameMessage = "Geçersiz kullanıcı adı, kullanıcı adı yalnızca harf, rakam ve aşağıdaki özel karakterleri @._+- içerebilir veya geçerli bir e-posta adresi olmalıdır."
 joinDiscord = "Discord sunucumuza katılın"
 keepWorking = "Çalışmaya Devam Et"
 loading = "Yükleniyor..."
+loadingCredits = "Krediler kontrol ediliyor..."
+loadingProStatus = "Abonelik durumu kontrol ediliyor..."
 logOut = "Oturumu kapat"
 marginTooltip = "Sayfa numarası ile sayfa kenarı arasındaki mesafe."
 moreOptions = "Daha Fazla Seçenek"
@@ -80,6 +87,7 @@ noFilesToUndo = "Geri alma yapılamıyor: son işlemde işlenen dosya yok"
 noOperationToUndo = "Geri alınacak işlem yok"
 notAuthenticatedMessage = "Kullanıcı doğrulanmadı."
 nothingToUndo = "Geri alınacak bir şey yok"
+noticeTopUpOrPlan = "Yeterli kredi yok, lütfen bakiye yükleyin veya bir plana yükseltin"
 noValidFiles = "İşlenecek geçerli dosya yok"
 oops = "Tüh!"
 openInViewer = "Görüntüleyicide Aç"
@@ -96,9 +104,9 @@ pendingRedactionsTitle = "Uygulanmamış Karartmalar"
 pin = "Dosyayı Sabitle (araç çalıştıktan sonra etkin tut)"
 poweredBy = "Tarafından desteklenmektedir"
 pro = "Pro"
-processTimeWarning = "Uyarı: Bu işlem, dosya boyutuna bağlı olarak bir dakikaya kadar sürebilir."
 processingComplete = "Dosyanız hazır."
 processingCompleteMultiple = "{{count}} dosya hazır."
+processTimeWarning = "Uyarı: Bu işlem, dosya boyutuna bağlı olarak bir dakikaya kadar sürebilir."
 property = "Özellik"
 quickPosition = "Hızlı Konum"
 red = "Kırmızı"
@@ -108,7 +116,6 @@ save = "Kaydet"
 saveToBrowser = "Tarayıcıya Kaydet"
 saveUnavailable = "Bu öğe için kaydetme kullanılamıyor"
 seeDockerHub = "Docker Hub'a bakın"
-editSecret = "Bu değeri düzenle"
 selectFillter = "-- Seçiniz --"
 size = "Boyut"
 sponsor = "Bağış"
@@ -143,11 +150,6 @@ welcome = "Hoş geldiniz"
 white = "Beyaz"
 WorkInProgess = "Çalışmalar devam ediyor, Çalışmayabilir veya hatalı olabilir, Lütfen herhangi bir sorunu bildirin!"
 yes = "Evet"
-insufficientCredits = "Yetersiz kredi. Gerekli: {{requiredCredits}}, Mevcut: {{currentBalance}}, Eksik: {{shortfall}}"
-loadingCredits = "Krediler kontrol ediliyor..."
-loadingProStatus = "Abonelik durumu kontrol ediliyor..."
-noticeTopUpOrPlan = "Yeterli kredi yok, lütfen bakiye yükleyin veya bir plana yükseltin"
-accessInvite = "Davet Et"
 
 [account]
 accountSettings = "Hesap Ayarları"
@@ -851,6 +853,14 @@ title = "API Uç Noktaları"
 userDefaults = "Kullanıcı Tercihi Varsayılanları"
 userDefaultsDescription = "Kullanıcı tercihleri için varsayılan değerleri ayarlayın. Kullanıcılar bunları kişisel ayarlarında geçersiz kılabilir."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Devre dışı dönüştürme seçeneklerini gri göstermek yerine kaldırın"
+label = "Kullanılamayan dönüştürmeleri varsayılan olarak gizle"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Devre dışı araçları gri göstermek yerine kaldırın"
+label = "Kullanılamayan araçları varsayılan olarak gizle"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Devre dışı bırakılacak uç nokta gruplarını seçin"
 label = "Devre Dışı Uç Nokta Grupları"
@@ -858,14 +868,6 @@ label = "Devre Dışı Uç Nokta Grupları"
 [admin.settings.endpoints.toRemove]
 description = "Devre dışı bırakılacak bireysel uç noktaları seçin"
 label = "Devre Dışı Uç Noktalar"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Devre dışı araçları gri göstermek yerine kaldırın"
-label = "Kullanılamayan araçları varsayılan olarak gizle"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Devre dışı dönüştürme seçeneklerini gri göstermek yerine kaldırın"
-label = "Kullanılamayan dönüştürmeleri varsayılan olarak gizle"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} erişimi için Kurumsal lisans gereklidir. Referans için demo verilerini görüntülüyorsunuz."
@@ -974,6 +976,10 @@ label = "Varsayılan Yerel Ayar"
 description = "Maksimum dosya yükleme boyutu (örn., 100MB, 1GB)"
 label = "Dosya Yükleme Sınırı"
 
+[admin.settings.general.frontendUrl]
+description = "Ön uç için temel URL (örn. https://pdf.example.com). E-posta davet bağlantıları ve mobil QR kod yüklemeleri için kullanılır. Arka uç URL'sini kullanmak için boş bırakın."
+label = "Ön Uç URL'si"
+
 [admin.settings.general.hideDisabledTools]
 description = "Devre dışı bırakılan araçları arayüzde gizle"
 label = "Devre Dışı Araçları Gizle"
@@ -985,10 +991,6 @@ label = "Google Drive'ı Gizle"
 [admin.settings.general.hideDisabledTools.mobileScanner]
 description = "Etkin değilken mobil QR tarayıcı düğmesini gizle"
 label = "Mobil QR Tarayıcıyı Gizle"
-
-[admin.settings.general.frontendUrl]
-description = "Ön uç için temel URL (örn. https://pdf.example.com). E-posta davet bağlantıları ve mobil QR kod yüklemeleri için kullanılır. Arka uç URL'sini kullanmak için boş bırakın."
-label = "Ön Uç URL'si"
 
 [admin.settings.general.homeDescription]
 description = "Ana sayfada gösterilen açıklama metni"
@@ -1169,9 +1171,25 @@ description = "Kimlik doğrulama, oturum açma davranışı ve güvenlik ilkeler
 title = "Güvenlik"
 
 [admin.settings.security.audit]
+hideDetails = "Denetim düzeyi ayrıntılarını gizle"
 label = "Denetim Günlüğü"
 showDetails = "Denetim düzeyi ayrıntılarını göster"
-hideDetails = "Denetim düzeyi ayrıntılarını gizle"
+
+[admin.settings.security.audit.advancedOptions]
+description = "Aşağıdaki seçenekler işlem süresini ve bellek kullanımını artırır. Yalnızca gerçekten gerektiğinde etkinleştirin."
+title = "Gelişmiş Seçenekler"
+
+[admin.settings.security.audit.captureFileHash]
+description = "Bütünlük doğrulaması için yüklenen PDF dosyalarının SHA-256 özetini çıkarın. Denetim düzeyinden bağımsızdır."
+label = "Dosya Özeti (SHA-256) Yakala"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Yöntem dönüş değerlerini yakalayın. Önerilmez: günlük hacmini ve disk kullanımını önemli ölçüde artırır."
+label = "İşlem Sonuçlarını Yakala"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "İşlem sırasında PDF belgelerinden yazar alanını çıkarın. PDF ayrıştırma gerektirir, gecikmeyi artırır. Denetim düzeyinden bağımsızdır."
+label = "PDF Yazar Meta Verisini Yakala"
 
 [admin.settings.security.audit.enabled]
 description = "Uyumluluk ve güvenlik izleme için kullanıcı eylemlerini ve sistem olaylarını takip edin"
@@ -1182,30 +1200,14 @@ description = "0=KAPALI, 1=BAŞLANGIÇ, 2=STANDART, 3=AYRINTILI"
 label = "Denetim Düzeyi"
 
 [admin.settings.security.audit.levelDetails]
-off = "Günlük kaydı yok (kritik güvenlik olayları hariç)"
 basic = "PDF dosya işlemleri (compress, split, merge, vb.) ve ayar değişiklikleri. Yakalananlar: işlem durumu (başarılı/başarısız), yöntem parametreleri, zamanlama. Minimum günlük hacmi."
+off = "Günlük kaydı yok (kritik güvenlik olayları hariç)"
 standard = "BASIC olaylarına ek olarak: kullanıcı giriş/çıkışı, hesap değişiklikleri, genel GET istekleri. Günlük gürültüsünü azaltmak için sürekli yoklama çağrılarını (/auth/me, /app-config, /health, vb.) hariç tutar. Çoğu kurulum için idealdir."
 verbose = "STANDARD olaylarına ek olarak: sürekli yoklama çağrıları, tüm GET istekleri, ayrıntılı zamanlama. Uyarı: yüksek günlük hacmi ve performans etkisi."
 
 [admin.settings.security.audit.retentionDays]
 description = "Denetim günlüklerinin saklanacağı gün sayısı"
 label = "Denetim Saklama Süresi (gün)"
-
-[admin.settings.security.audit.advancedOptions]
-title = "Gelişmiş Seçenekler"
-description = "Aşağıdaki seçenekler işlem süresini ve bellek kullanımını artırır. Yalnızca gerçekten gerektiğinde etkinleştirin."
-
-[admin.settings.security.audit.captureFileHash]
-description = "Bütünlük doğrulaması için yüklenen PDF dosyalarının SHA-256 özetini çıkarın. Denetim düzeyinden bağımsızdır."
-label = "Dosya Özeti (SHA-256) Yakala"
-
-[admin.settings.security.audit.capturePdfAuthor]
-description = "İşlem sırasında PDF belgelerinden yazar alanını çıkarın. PDF ayrıştırma gerektirir, gecikmeyi artırır. Denetim düzeyinden bağımsızdır."
-label = "PDF Yazar Meta Verisini Yakala"
-
-[admin.settings.security.audit.captureOperationResults]
-description = "Yöntem dönüş değerlerini yakalayın. Önerilmez: günlük hacmini ve disk kullanımını önemli ölçüde artırır."
-label = "İşlem Sonuçlarını Yakala"
 
 [admin.settings.security.csrfDisabled]
 description = "Siteler Arası İstek Sahteciliği (CSRF) korumasını devre dışı bırak (önerilmez)"
@@ -1274,6 +1276,14 @@ label = "İlk Kullanıcı Adı"
 [admin.settings.security.jwt]
 label = "JWT Yapılandırması"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Jeton doğrulaması sırasında istemci/sunucu zaman sapmasına tolerans (varsayılan: 60 saniye)"
+label = "Zaman Sapması Toleransı (saniye)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masaüstü istemcileri için erişim jetonu ömrü (dakika cinsinden). Masaüstü uygulamaları User-Agent üzerinden otomatik olarak algılanır ve daha iyi UX için daha uzun oturumlar alır (varsayılan: 43200 = 30 gün)"
+label = "Masaüstü Jetonu Sona Erme (dakika)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Süresi dolan JWT anahtarlarını otomatik olarak kaldır"
 label = "Anahtar Temizlemeyi Etkinleştir"
@@ -1282,29 +1292,21 @@ label = "Anahtar Temizlemeyi Etkinleştir"
 description = "JWT imzalama anahtarlarını periyodik olarak otomatik döndür"
 label = "Anahtar Döndürmeyi Etkinleştir"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Web istemcileri için erişim jetonu ömrü (dakika cinsinden) (varsayılan: 1440 = 24 saat)"
-label = "Web Jetonu Sona Erme (dakika)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Masaüstü istemcileri için erişim jetonu ömrü (dakika cinsinden). Masaüstü uygulamaları User-Agent üzerinden otomatik olarak algılanır ve daha iyi UX için daha uzun oturumlar alır (varsayılan: 43200 = 30 gün)"
-label = "Masaüstü Jetonu Sona Erme (dakika)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Jeton doğrulaması sırasında istemci/sunucu zaman sapmasına tolerans (varsayılan: 60 saniye)"
-label = "Zaman Sapması Toleransı (saniye)"
+[admin.settings.security.jwt.persistence]
+description = "Sunucu yeniden başlatmalarında korunması için JWT anahtarlarını kalıcı olarak sakla"
+label = "Anahtar Kalıcılığını Etkinleştir"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Jetonun süresi dolduktan sonra bu kadar dakika içinde yenilemeye izin ver (varsayılan: 15 dakika, en fazla 3 deneme)"
 label = "Yenileme Toleransı (dakika)"
 
-[admin.settings.security.jwt.persistence]
-description = "Sunucu yeniden başlatmalarında korunması için JWT anahtarlarını kalıcı olarak sakla"
-label = "Anahtar Kalıcılığını Etkinleştir"
-
 [admin.settings.security.jwt.secureCookie]
 description = "JWT çerezleri için HTTPS gerektir (üretim için önerilir)"
 label = "Güvenli Çerez"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Web istemcileri için erişim jetonu ömrü (dakika cinsinden) (varsayılan: 1440 = 24 saat)"
+label = "Web Jetonu Sona Erme (dakika)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Hesap kilitlenmeden önceki maksimum başarısız oturum açma denemesi sayısı"
@@ -1332,6 +1334,34 @@ description = "Controls whether the application can be embedded in iframes"
 disabled = "Disabled (No X-Frame-Options header)"
 label = "X-Frame-Options"
 sameorigin = "Same Origin (Allow framing from same domain)"
+
+[admin.settings.storage]
+description = "Sunucu depolama ve paylaşım seçeneklerini kontrol edin."
+title = "Dosya Depolama ve Paylaşma"
+
+[admin.settings.storage.enabled]
+description = "Kullanıcıların dosyaları sunucuda depolamasına izin verin."
+label = "Sunucu Dosya Depolamasını Etkinleştir"
+
+[admin.settings.storage.sharing.email]
+description = "E-posta adresleriyle paylaşmaya izin verin."
+label = "E-posta ile Paylaşımı Etkinleştir"
+mailLink = "Posta Ayarlarını Yapılandır"
+mailNote = "Posta yapılandırması gerekir. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Kullanıcıların depolanan dosyaları paylaşmasına izin verin."
+label = "Paylaşımı Etkinleştir"
+
+[admin.settings.storage.sharing.links]
+description = "Oturum açmayı gerektiren bağlantılarla paylaşmaya izin verin."
+frontendUrlLink = "Sistem Ayarlarında Yapılandır"
+frontendUrlNote = "Ön uç URL'si gerekir. "
+label = "Paylaşım Bağlantılarını Etkinleştir"
+
+[admin.settings.storage.signing.enabled]
+description = "Kullanıcıların çok katılımcılı belge imzalama oturumları oluşturmasına izin verin. Sunucu dosya depolamasının etkin olmasını gerektirir."
+label = "Grup İmzalama'yı Etkinleştir (Alfa)"
 
 [admin.settings.telegram]
 description = "Telegram bot bağlantısını, erişim kontrollerini ve geri bildirim davranışını yapılandırın."
@@ -1429,34 +1459,6 @@ title = "İşleme"
 description = "Hata bildirmeden önce bir işin işlenmesi için beklenecek azami süre."
 label = "İşleme Zaman Aşımı (saniye)"
 
-[admin.settings.storage]
-description = "Sunucu depolama ve paylaşım seçeneklerini kontrol edin."
-title = "Dosya Depolama ve Paylaşma"
-
-[admin.settings.storage.enabled]
-description = "Kullanıcıların dosyaları sunucuda depolamasına izin verin."
-label = "Sunucu Dosya Depolamasını Etkinleştir"
-
-[admin.settings.storage.sharing.email]
-description = "E-posta adresleriyle paylaşmaya izin verin."
-label = "E-posta ile Paylaşımı Etkinleştir"
-mailLink = "Posta Ayarlarını Yapılandır"
-mailNote = "Posta yapılandırması gerekir. "
-
-[admin.settings.storage.sharing.enabled]
-description = "Kullanıcıların depolanan dosyaları paylaşmasına izin verin."
-label = "Paylaşımı Etkinleştir"
-
-[admin.settings.storage.sharing.links]
-description = "Oturum açmayı gerektiren bağlantılarla paylaşmaya izin verin."
-frontendUrlLink = "Sistem Ayarlarında Yapılandır"
-frontendUrlNote = "Ön uç URL'si gerekir. "
-label = "Paylaşım Bağlantılarını Etkinleştir"
-
-[admin.settings.storage.signing.enabled]
-description = "Kullanıcıların çok katılımcılı belge imzalama oturumları oluşturmasına izin verin. Sunucu dosya depolamasının etkin olmasını gerektirir."
-label = "Grup İmzalama'yı Etkinleştir (Alfa)"
-
 [admin.settings.unsavedChanges]
 cancel = "Düzenlemeye Devam Et"
 discard = "Değişikliklerden Vazgeç"
@@ -1521,6 +1523,7 @@ settings = "Analiz ayarlarını config/settings.yml dosyasından değiştirebili
 title = "Stirling PDF’i daha iyi hale getirmek ister misiniz?"
 
 [annotation]
+annotationStyle = "Açıklama stili"
 applyChanges = "Değişiklikleri Uygula"
 backgroundColor = "Arka plan rengi"
 borderOff = "Kenarlık: Kapalı"
@@ -1530,6 +1533,8 @@ chooseColor = "Renk seç"
 circle = "Daire"
 clearBackground = "Arka planı kaldır"
 color = "Renk"
+comment = "Yorum"
+comments = "Yorumlar"
 contents = "Metin"
 delete = "Sil"
 desc = "Vurgu, kalem, metin ve notları kullanın. Değişiklikler canlı kalır—düzleştirme gerekmez."
@@ -1547,7 +1552,6 @@ editStampHint = "Görseli değiştirmek için bu damgayı silip yenisini ekleyin
 editSwitchToSelect = "Bu açıklamayı düzenlemek için Seç ve Düzenle moduna geçin."
 editText = "Metin Kutusunu Düzenle"
 editTextMarkup = "Metin İşaretlemeyi Düzenle"
-annotationStyle = "Açıklama stili"
 ellipse = "Elips"
 exit = "Açıklama modundan çık"
 fillColor = "Dolgu Rengi"
@@ -1557,14 +1561,11 @@ freehandHighlighter = "Serbest Vurgu Kalemi"
 highlight = "Vurgula"
 imagePreview = "Önizleme"
 inkHighlighter = "Serbest Vurgu Kalemi"
+insertText = "Metin Ekle"
 line = "Çizgi"
 lineArrow = "Ok"
 noBackground = "Arka plan yok"
 note = "Not"
-comment = "Yorum"
-comments = "Yorumlar"
-insertText = "Metin Ekle"
-replaceText = "Metni Değiştir"
 noteIcon = "Not Simgesi"
 notesStamps = "Notlar ve Damgalar"
 opacity = "Opaklık"
@@ -1574,6 +1575,7 @@ polyline = "Kırık Çizgi"
 properties = "Özellikler"
 rectangle = "Dikdörtgen"
 redo = "Yinele"
+replaceText = "Metni Değiştir"
 saveChanges = "Değişiklikleri Kaydet"
 saveFailed = "Kopya kaydedilemiyor"
 saveReady = "İndirmeye hazır"
@@ -1627,68 +1629,6 @@ goToSettings = "Denetim Ayarlarına Git"
 notAvailable = "Denetim sistemi kullanılamıyor"
 notAvailableMessage = "Denetim sistemi yapılandırılmamış veya kullanılamıyor."
 
-[audit.error]
-title = "Denetim sistemi yüklenirken hata"
-
-[audit.export]
-clearFilters = "Temizle"
-description = "Denetim olaylarını CSV veya JSON biçiminde dışa aktarın. Dışa aktarılan verileri sınırlamak için filtreleri kullanın."
-endDate = "Bitiş tarihi"
-error = "Veriler dışa aktarılamadı"
-exportButton = "Verileri Dışa Aktar"
-fieldAuthor = "Yazar (PDF'den)"
-fieldDate = "Tarih"
-fieldDocumentName = "Belge Adı"
-fieldFileHash = "Dosya Özeti (SHA-256)"
-fieldIpAddress = "IP Adresi"
-fieldOperationResults = "İşlem Sonuçları"
-fieldOutcome = "Sonuç (Başarılı/Başarısız)"
-fieldTool = "Araç"
-fieldUsername = "Kullanıcı adı"
-filterByType = "Türe göre filtrele"
-filterByUser = "Kullanıcıya göre filtrele"
-filters = "Filtreler (İsteğe bağlı)"
-format = "Dışa Aktarım Biçimi"
-selectFields = "Dahil edilecek alanları seçin"
-startDate = "Başlangıç tarihi"
-title = "Denetim Verilerini Dışa Aktar"
-verboseRequired = "VERBOSE denetim düzeyi gerektirir"
-
-[audit.systemStatus]
-autoRefresh = "Otomatik yenileme"
-autoRefreshLabel = "Her 30 sn'de otomatik yenile"
-captureBySettings = "Ayarlar'da etkinleştir"
-capturedFields = "Yakalanan Alanlar"
-date = "Tarih"
-days = "gün"
-disabled = "Devre dışı"
-documentName = "Belge Adı"
-enabled = "Etkin"
-fileHash = "Dosya Özeti"
-level = "Denetim Düzeyi"
-pdfAuthor = "PDF Yazarı"
-retention = "Saklama Süresi"
-status = "Denetim Günlüğü"
-title = "Sistem Durumu"
-tool = "Araç"
-totalEvents = "Toplam Olay"
-username = "Kullanıcı adı"
-verboseOnly = "Yalnızca VERBOSE"
-
-[audit.stats]
-activeUsers = "Aktif Kullanıcılar"
-attention = "Dikkat gerekiyor"
-avgLatency = "Ort. Gecikme"
-error = "İstatistikler yüklenirken hata"
-errorLoadingStats = "İstatistikler yüklenemedi"
-excellent = "Mükemmel"
-good = "İyi"
-noData = "Yok"
-successRate = "Başarı Oranı"
-title = "Özet"
-totalEvents = "Toplam Olay"
-vsLastPeriod = "önceki döneme göre"
-
 [audit.charts]
 byTool = "En Çok Kullanılan Araçlar"
 byType = "Türüne Göre Olaylar"
@@ -1701,6 +1641,27 @@ noData = "Bu dönem için veri yok"
 overTime = "Zaman İçinde Olaylar"
 title = "Denetim Panosu"
 week = "Hafta"
+
+[audit.clearData]
+cancel = "İptal"
+codeDoesNotMatch = "Kod eşleşmiyor"
+codePlaceholder = "Kodu buraya yazın"
+confirmationCode = "Doğrulama Kodu"
+confirmationRequired = "Tüm Denetim Verilerini Sil"
+confirmMessage = "Bu işlem tüm denetim günlüklerini kalıcı olarak kaldıracaktır. Devam etmek için aşağıya doğrulama kodunu girin."
+confirmTitle = "Lütfen silmek istediğinizi onaylayın"
+deleteButton = "Sil"
+enterCode = "Doğrulama Kodu"
+enterCodeBelow = "Kodu yukarıda gösterildiği gibi aynen girin (büyük/küçük harfe duyarlı)"
+initiateDelete = "Tüm Verileri Sil"
+irreversible = "GERİ ALINAMAZ"
+success = "Başarılı"
+successMessage = "Tüm denetim verileri başarıyla temizlendi"
+warning1 = "Bu işlem geri alınamaz"
+warning2 = "Denetim verilerinin silinmesi, güvenlik olayları, kullanıcı etkinlikleri ve dosya işlemleri dahil olmak üzere veritabanındaki tüm geçmiş denetim günlüklerini kalıcı olarak kaldıracaktır."
+
+[audit.error]
+title = "Denetim sistemi yüklenirken hata"
 
 [audit.events]
 actions = "İşlemler"
@@ -1728,40 +1689,81 @@ type = "Tür"
 user = "Kullanıcı"
 viewDetails = "Ayrıntıları Görüntüle"
 
+[audit.export]
+clearFilters = "Temizle"
+description = "Denetim olaylarını CSV veya JSON biçiminde dışa aktarın. Dışa aktarılan verileri sınırlamak için filtreleri kullanın."
+endDate = "Bitiş tarihi"
+error = "Veriler dışa aktarılamadı"
+exportButton = "Verileri Dışa Aktar"
+fieldAuthor = "Yazar (PDF'den)"
+fieldDate = "Tarih"
+fieldDocumentName = "Belge Adı"
+fieldFileHash = "Dosya Özeti (SHA-256)"
+fieldIpAddress = "IP Adresi"
+fieldOperationResults = "İşlem Sonuçları"
+fieldOutcome = "Sonuç (Başarılı/Başarısız)"
+fieldTool = "Araç"
+fieldUsername = "Kullanıcı adı"
+filterByType = "Türe göre filtrele"
+filterByUser = "Kullanıcıya göre filtrele"
+filters = "Filtreler (İsteğe bağlı)"
+format = "Dışa Aktarım Biçimi"
+selectFields = "Dahil edilecek alanları seçin"
+startDate = "Başlangıç tarihi"
+title = "Denetim Verilerini Dışa Aktar"
+verboseRequired = "VERBOSE denetim düzeyi gerektirir"
+
 [audit.filters]
 allOutcomes = "Tümü"
 failureOnly = "Yalnızca başarısızlıklar"
-last7Days = "Son 7 gün"
 last30Days = "Son 30 gün"
+last7Days = "Son 7 gün"
 outcomeFilter = "Sonuç"
 quickPresets = "Hızlı filtreler"
 successOnly = "Yalnızca başarılar"
 thisMonth = "Bu ay"
 today = "Bugün"
 
+[audit.stats]
+activeUsers = "Aktif Kullanıcılar"
+attention = "Dikkat gerekiyor"
+avgLatency = "Ort. Gecikme"
+error = "İstatistikler yüklenirken hata"
+errorLoadingStats = "İstatistikler yüklenemedi"
+excellent = "Mükemmel"
+good = "İyi"
+noData = "Yok"
+successRate = "Başarı Oranı"
+title = "Özet"
+totalEvents = "Toplam Olay"
+vsLastPeriod = "önceki döneme göre"
+
+[audit.systemStatus]
+autoRefresh = "Otomatik yenileme"
+autoRefreshLabel = "Her 30 sn'de otomatik yenile"
+captureBySettings = "Ayarlar'da etkinleştir"
+capturedFields = "Yakalanan Alanlar"
+date = "Tarih"
+days = "gün"
+disabled = "Devre dışı"
+documentName = "Belge Adı"
+enabled = "Etkin"
+fileHash = "Dosya Özeti"
+level = "Denetim Düzeyi"
+pdfAuthor = "PDF Yazarı"
+retention = "Saklama Süresi"
+status = "Denetim Günlüğü"
+title = "Sistem Durumu"
+tool = "Araç"
+totalEvents = "Toplam Olay"
+username = "Kullanıcı adı"
+verboseOnly = "Yalnızca VERBOSE"
+
 [audit.tabs]
 clearData = "Verileri Temizle"
 dashboard = "Pano"
 events = "Denetim Olayları"
 export = "Dışa Aktar"
-
-[audit.clearData]
-cancel = "İptal"
-codeDoesNotMatch = "Kod eşleşmiyor"
-codePlaceholder = "Kodu buraya yazın"
-confirmationCode = "Doğrulama Kodu"
-confirmationRequired = "Tüm Denetim Verilerini Sil"
-confirmMessage = "Bu işlem tüm denetim günlüklerini kalıcı olarak kaldıracaktır. Devam etmek için aşağıya doğrulama kodunu girin."
-confirmTitle = "Lütfen silmek istediğinizi onaylayın"
-deleteButton = "Sil"
-enterCode = "Doğrulama Kodu"
-enterCodeBelow = "Kodu yukarıda gösterildiği gibi aynen girin (büyük/küçük harfe duyarlı)"
-initiateDelete = "Tüm Verileri Sil"
-irreversible = "GERİ ALINAMAZ"
-success = "Başarılı"
-successMessage = "Tüm denetim verileri başarıyla temizlendi"
-warning1 = "Bu işlem geri alınamaz"
-warning2 = "Denetim verilerinin silinmesi, güvenlik olayları, kullanıcı etkinlikleri ve dosya işlemleri dahil olmak üzere veritabanındaki tüm geçmiş denetim günlüklerini kalıcı olarak kaldıracaktır."
 
 [auth]
 accessDenied = "Erişim Reddedildi"
@@ -2088,43 +2090,70 @@ keywords = "Anahtar kelimeler: odd, even"
 numbers = "Sayılar/aralıklar: 5, 10-20"
 progressions = "İlerlemeler: 3n, 4n+1"
 
+[certificateChoice.tooltip]
+header = "Sertifika Türleri"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Sistem yöneticileri tarafından yönetilir"
+bullet2 = "Yetkili kullanıcılar arasında paylaşılır"
+bullet3 = "Şirket kimliğini temsil eder, bireyi değil"
+bullet4 = "En uygun: Resmi belgeler, ekip imzaları"
+description = "Kuruluşunuz tarafından sağlanan paylaşılan bir sertifika. Şirket çapında imzalama yetkisi için kullanılır."
+title = "Kuruluş Sertifikası"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "İlk kullanımda otomatik oluşturulur"
+bullet2 = "Kullanıcı hesabınıza bağlıdır"
+bullet3 = "Diğer kullanıcılarla paylaşılamaz"
+bullet4 = "En uygun: Kişisel belgeler, bireysel sorumluluk"
+description = "Kullanıcı hesabınıza özgü otomatik oluşturulmuş bir sertifika. Bireysel imzalar için uygundur."
+title = "Kişisel Sertifika"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "P12/PFX dosyası ve parola gerektirir"
+bullet2 = "Harici Sertifika Otoriteleri tarafından verilebilir"
+bullet3 = "Hukuki belgeler için daha yüksek güven seviyesi"
+bullet4 = "En uygun: Hukuken bağlayıcı sözleşmeler, harici doğrulama"
+description = "Kendi PKCS#12 sertifika dosyanızı kullanın. Sertifika özellikleri üzerinde tam kontrol sağlar."
+title = "Özel P12 Yükle"
+
 [certSign]
 allSigned = "Tüm katılımcılar imzaladı. Sonlandırmaya hazır."
 awaitingSignatures = "İmzalar bekleniyor"
-signatureProgress = "{{signedCount}}/{{totalCount}} imza"
 chooseCertificate = "Sertifika Dosyası Seç"
-declined = "Reddedildi"
-fetchFailed = "İmzalama verileri yüklenemedi"
-finalized = "Sonlandırıldı"
-notified = "Beklemede"
-partialNote = "Mevcut imzalarla erken sonlandırabilirsiniz. İmzalamayan katılımcılar hariç tutulacaktır."
-pending = "Beklemede"
-readyToFinalize = "Sonlandırmaya hazır"
-signed = "İmzalandı"
-viewed = "Görüntülendi"
 chooseJksFile = "JKS Dosyası Seç"
 chooseP12File = "PKCS12 Dosyası Seç"
 choosePfxFile = "PFX Dosyası Seç"
 choosePrivateKey = "Özel Anahtar Dosyası Seç"
+declined = "Reddedildi"
+fetchFailed = "İmzalama verileri yüklenemedi"
 filenamePrefix = "imzalı"
+finalized = "Sonlandırıldı"
 location = "Konum"
 logoTitle = "Logo"
 name = "İsim"
 noLogo = "Logo Yok"
+notified = "Beklemede"
 pageNumber = "Sayfa Numarası"
+partialNote = "Mevcut imzalarla erken sonlandırabilirsiniz. İmzalamayan katılımcılar hariç tutulacaktır."
 password = "Anahtar Deposu veya Özel Anahtar Şifrenizi Girin (Varsa):"
 passwordOptional = "Parola yoksa boş bırakın"
+pending = "Beklemede"
+readyToFinalize = "Sonlandırmaya hazır"
 reason = "Neden"
 serverCertMessage = "Sunucu sertifikası kullanılıyor - dosya veya parola gerekmez"
 showLogo = "Logo Göster"
+signatureProgress = "{{signedCount}}/{{totalCount}} imza"
+signed = "İmzalandı"
 tags = "doğrula,PEM,P12,resmi,şifrele"
 title = "Sertifika İmzalama"
+viewed = "Görüntülendi"
 
 [certSign.appearance]
 invisible = "Görünmez"
 stepTitle = "İmza Görünümü"
-visible = "Görünür"
 visibility = "Görünürlük"
+visible = "Görünür"
 
 [certSign.appearance.options]
 title = "İmza Ayrıntıları"
@@ -2172,8 +2201,227 @@ title = "Hangi seçeneği kullanmalıyım?"
 [certSign.certTypeStep]
 stepTitle = "Sertifika Biçimi"
 
+[certSign.collab.addParticipants]
+add = "{{count}} Katılımcı Ekle"
+back = "Geri"
+configureSignatures = "İmza Ayarlarını Yapılandır"
+continue = "İmza Ayarlarına Devam Et"
+reasonHelp = "Bu katılımcılar için önceden bir imzalama nedeni belirleyin (isteğe bağlı, imzalarken değiştirebilirler)"
+reasonPlaceholder = "örn. Onay, İnceleme..."
+selectUsers = "Kullanıcıları Seç"
+
+[certSign.collab.finalize]
+button = "Sonlandır ve İmzalı PDF'yi Yükle"
+early = "Mevcut İmzalarla Sonlandır"
+
+[certSign.collab.participant]
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Geçersiz sertifika"
+certNetworkError = "Sertifika doğrulanamadı"
+certValid = "✓ Sertifika geçerli"
+certValidating = "Sertifika doğrulanıyor..."
+certValidUntil = " {{date}} tarihine kadar"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "İmza Özeti Sayfasını Dahil Et"
+includeSummaryPageHelp = "Tüm imza metaverilerini içeren bir özet sayfası sona eklenecek. Tek tek sayfalardaki dijital sertifika imza kutuları gizlenecek (ıslak imzalar etkilenmez)."
+
+[certSign.collab.sessionDetail]
+addButton = "Katılımcı Ekle"
+addParticipants = "Katılımcı Ekle"
+addParticipantsError = "Katılımcılar eklenemedi"
+backToList = "Oturumlara Geri Dön"
+deleteConfirm = "Emin misiniz? Bu işlem geri alınamaz."
+deleted = "Oturum silindi"
+deleteError = "Oturum silinemedi"
+deleteSession = "Oturumu Sil"
+dueDate = "Son Tarih"
+finalizeError = "Oturum sonlandırılamadı"
+loadPdfError = "İmzalı PDF yüklenemedi"
+loadSignedPdf = "İmzalı PDF'yi Aktif Dosyalara Yükle"
+messageLabel = "Mesaj"
+noAdditionalInfo = "Ek bilgi yok"
+owner = "Sahip"
+participantRemoved = "Katılımcı kaldırıldı"
+participants = "Katılımcılar"
+participantsAdded = "Katılımcılar başarıyla eklendi"
+removeParticipant = "Kaldır"
+removeParticipantError = "Katılımcı kaldırılamadı"
+selectUsers = "Kullanıcı seçin..."
+sessionInfo = "Oturum Bilgileri"
+workbenchTitle = "Oturum Yönetimi"
+
+[certSign.collab.sessionList]
+active = "Aktif"
+finalized = "Sonlandırıldı"
+
+[certSign.collab.signatureSettings]
+description = "Tüm katılımcılar için imzaların nasıl görüneceğini yapılandırın"
+title = "İmza Görünümü"
+
+[certSign.collab.signRequest]
+addedToFiles = "Belge aktif dosyalara eklendi"
+addSignature = "İmzanızı Ekleyin"
+addToFiles = "Aktif Dosyalara Ekle"
+advancedSettings = "Gelişmiş Ayarlar"
+backToList = "İmza İsteklerine Geri Dön"
+certificateChoice = "İmzalamak için bir sertifika seçin"
+changeSignature = "İmzayı değiştir"
+clearSignature = "İmzayı Temizle"
+completeAndSign = "Tamamla ve İmzala"
+createNewSignature = "Yeni İmza Oluştur"
+decline = "İsteği Reddet"
+declineButton = "Reddet"
+deleteSelected = "Seçili imzayı sil"
+drawSignature = "İmzanızı aşağıda çizin"
+dueDate = "Son Tarih"
+fileTooLarge = "Dosya boyutu 5MB'den küçük olmalıdır"
+fontFamily = "Yazı Tipi Ailesi"
+fontSize = "Yazı Boyutu: {{size}}px"
+fontSizePlaceholder = "Boyut"
+from = "Kimden"
+invalidCertFile = "Lütfen bir P12 veya PFX sertifika dosyası seçin"
+invalidFileType = "Lütfen bir resim dosyası seçin"
+location = "Konum (İsteğe bağlı)"
+locationPlaceholder = "Nereden imzalıyorsunuz?"
+message = "Mesaj"
+noCertificate = "Lütfen bir sertifika dosyası seçin"
+noSignatures = "Lütfen PDF üzerine en az bir imza yerleştirin"
+p12File = "P12/PFX Sertifika Dosyası"
+password = "Sertifika Parolası"
+passwordPlaceholder = "Parolayı girin..."
+penColor = "Kalem Rengi"
+penSize = "Kalem Boyutu: {{size}}px"
+placementActive = "Yerleştirmek için PDF'ye tıklayın"
+placeSignatureButton = "İmzayı PDF'ye Yerleştir"
+reason = "Neden (İsteğe bağlı)"
+reasonPlaceholder = "Neden imzalıyorsunuz?"
+removeCertFile = "Dosyayı Kaldır"
+removeImage = "Görseli Kaldır"
+savedSignatures = "Kaydedilmiş İmzalar"
+selectFile = "Görsel Dosya Seç"
+selectSignatureTitle = "İmza Seçin veya Oluşturun"
+signatureInfo = "Bu ayarlar belge sahibi tarafından yapılandırılmıştır"
+signaturePlaced = "İmza sayfaya yerleştirildi"
+signatureSettings = "İmza Ayarları"
+signatureText = "İmza Metni"
+signatureTextPlaceholder = "Adınızı girin..."
+signatureTypeLabel = "İmza Türü"
+signButton = "Belgeyi İmzala"
+signingTitle = "İmzalama"
+textColor = "Metin Rengi"
+typeSignature = "İmza oluşturmak için adınızı yazın"
+uploadCert = "Özel Sertifika"
+uploadCertDesc = "Kendi P12/PFX sertifikanızı kullanın"
+uploadSignature = "İmza görselinizi yükleyin"
+usePersonalCert = "Kişisel Sertifika"
+usePersonalCertDesc = "Hesabınız için otomatik oluşturulur"
+useServerCert = "Kuruluş Sertifikası"
+useServerCertDesc = "Paylaşılan kuruluş sertifikası"
+workbenchTitle = "İmza İsteği"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Vuruş rengini seçin"
+continue = "Devam et"
+
+[certSign.collab.signRequest.certModal]
+certInvalid = "Sertifika geçersiz: {{error}}"
+certInvalidFallback = "Geçersiz sertifika"
+certNetworkError = "Sertifika doğrulanamadı"
+certValidating = "Sertifika doğrulanıyor..."
+certValidUntil = "Sertifika {{date}} tarihine kadar geçerli"
+description = "{{count}} imza yerleştirdiniz. İmzalamayı tamamlamak için sertifikanızı seçin."
+sign = "Belgeyi İmzala"
+title = "Sertifikayı Yapılandır"
+
+[certSign.collab.signRequest.image]
+hint = "İmzanızın PNG veya JPG görselini yükleyin"
+
+[certSign.collab.signRequest.mode]
+move = "İmzayı Taşı"
+place = "İmzayı Yerleştir"
+title = "İmzalama veya taşıma modu"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Çiz"
+image = "Yükle"
+text = "Yaz"
+
+[certSign.collab.signRequest.placeSignature]
+message = "İmzanızı yerleştirmek için PDF'ye tıklayın"
+title = "İmzayı Yerleştir"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Seçilen imza"
+missing = "Önizleme yok"
+textFallback = "İmza"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Çizim imzası"
+defaultImageLabel = "Yüklenen imza"
+defaultLabel = "İmza"
+defaultTextLabel = "Yazılı imza"
+delete = "İmzayı sil"
+none = "Kayıtlı imza yok"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Çiz"
+type = "Yaz"
+upload = "Yükle"
+
+[certSign.collab.signRequest.steps]
+back = "Geri"
+cancelPlacement = "Yerleştirmeyi İptal Et"
+certificate = "Sertifika"
+clickMultipleTimes = "İmzaları yerleştirmek için PDF'ye birden çok kez tıklayın. Taşımak veya yeniden boyutlandırmak için imzayı sürükleyin."
+clickToPlace = "İmzanızın görünmesini istediğiniz yere PDF üzerinde tıklayın."
+continue = "Sertifika Seçimine Devam Et"
+continueToPlacement = "Yerleştirmeye Devam Et"
+continueToReview = "Gözden Geçirmeye Devam Et"
+createSignature = "İmza Oluştur"
+invisible = "Görünmez"
+location = "Konum:"
+multipleSignatures = "{{count}} imza PDF'ye uygulanacak"
+oneSignature = "1 imza PDF'ye uygulanacak"
+placeOnPdf = "PDF'ye Yerleştir"
+reason = "Neden:"
+reviewTitle = "İmzalamadan Önce Gözden Geçirin"
+signaturePlaced = "İmza {{page}}. sayfaya yerleştirildi. Tekrar tıklayarak konumu ayarlayabilir veya gözden geçirmeye devam edebilirsiniz."
+visibility = "Görünürlük:"
+visible = "Görünür"
+yourSignatures = "İmzalarınız ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Renk"
+fontLabel = "Yazı Tipi"
+fontSizeLabel = "Boyut"
+fontSizePlaceholder = "16"
+label = "İmza Metni"
+modalHint = "Adınızı girin, ardından PDF'ye yerleştirmek için Devam et'e tıklayın."
+placeholder = "Adınızı girin..."
+
+[certSign.collab.userSelector]
+inviteUsers = "Kullanıcı Ekle"
+loadError = "Kullanıcılar yüklenemedi"
+noTeam = "Ekip Yok"
+noUsers = "Başka kullanıcı bulunamadı."
+placeholder = "Kullanıcı seçin..."
+
 [certSign.error]
 failed = "İmzalar işlenirken bir hata oluştu."
+
+[certSign.mobile]
+panelActions = "İşlemler"
+panelDocument = "Belge"
+panelPeople = "Kişiler"
+
+[certSign.sessions]
+deleted = "Oturum silindi"
+fetchFailed = "Oturum ayrıntıları yüklenemedi"
+finalized = "Oturum sonlandırıldı"
+loaded = "İmzalı PDF yüklendi"
+pdfNotReady = "PDF Hazır Değil"
+pdfNotReadyDesc = "İmzalı PDF oluşturuluyor. Lütfen kısa süre sonra tekrar deneyin."
 
 [certSign.sign]
 results = "İmzalanmış PDF"
@@ -2230,252 +2478,6 @@ bullet3 = "Belgenin imzadan sonra değiştirilip değiştirilmediğini kontrol e
 bullet4 = "Doğrulama için özel sertifikalar kullanılabilir"
 text = "İmzaları kontrol ettiğinizde, araç bunların geçerli olup olmadığını, belgenin kimin tarafından imzalandığını, ne zaman imzalandığını ve imzadan sonra belgenin değiştirilip değiştirilmediğini size bildirir."
 title = "İmzaları Kontrol Etme"
-
-[certSign.collab.finalize]
-button = "Sonlandır ve İmzalı PDF'yi Yükle"
-early = "Mevcut İmzalarla Sonlandır"
-
-[certSign.collab.sessionDetail]
-addButton = "Katılımcı Ekle"
-addParticipants = "Katılımcı Ekle"
-addParticipantsError = "Katılımcılar eklenemedi"
-backToList = "Oturumlara Geri Dön"
-deleteConfirm = "Emin misiniz? Bu işlem geri alınamaz."
-deleteError = "Oturum silinemedi"
-deleted = "Oturum silindi"
-deleteSession = "Oturumu Sil"
-dueDate = "Son Tarih"
-finalizeError = "Oturum sonlandırılamadı"
-loadPdfError = "İmzalı PDF yüklenemedi"
-loadSignedPdf = "İmzalı PDF'yi Aktif Dosyalara Yükle"
-messageLabel = "Mesaj"
-noAdditionalInfo = "Ek bilgi yok"
-owner = "Sahip"
-participantRemoved = "Katılımcı kaldırıldı"
-participants = "Katılımcılar"
-participantsAdded = "Katılımcılar başarıyla eklendi"
-removeParticipant = "Kaldır"
-removeParticipantError = "Katılımcı kaldırılamadı"
-selectUsers = "Kullanıcı seçin..."
-sessionInfo = "Oturum Bilgileri"
-workbenchTitle = "Oturum Yönetimi"
-
-[certSign.collab.signRequest]
-addedToFiles = "Belge aktif dosyalara eklendi"
-addSignature = "İmzanızı Ekleyin"
-addToFiles = "Aktif Dosyalara Ekle"
-advancedSettings = "Gelişmiş Ayarlar"
-backToList = "İmza İsteklerine Geri Dön"
-certificateChoice = "İmzalamak için bir sertifika seçin"
-changeSignature = "İmzayı değiştir"
-clearSignature = "İmzayı Temizle"
-completeAndSign = "Tamamla ve İmzala"
-createNewSignature = "Yeni İmza Oluştur"
-declineButton = "Reddet"
-decline = "İsteği Reddet"
-deleteSelected = "Seçili imzayı sil"
-drawSignature = "İmzanızı aşağıda çizin"
-dueDate = "Son Tarih"
-fileTooLarge = "Dosya boyutu 5MB'den küçük olmalıdır"
-fontFamily = "Yazı Tipi Ailesi"
-fontSize = "Yazı Boyutu: {{size}}px"
-fontSizePlaceholder = "Boyut"
-from = "Kimden"
-invalidCertFile = "Lütfen bir P12 veya PFX sertifika dosyası seçin"
-invalidFileType = "Lütfen bir resim dosyası seçin"
-location = "Konum (İsteğe bağlı)"
-locationPlaceholder = "Nereden imzalıyorsunuz?"
-message = "Mesaj"
-noCertificate = "Lütfen bir sertifika dosyası seçin"
-noSignatures = "Lütfen PDF üzerine en az bir imza yerleştirin"
-p12File = "P12/PFX Sertifika Dosyası"
-password = "Sertifika Parolası"
-passwordPlaceholder = "Parolayı girin..."
-penColor = "Kalem Rengi"
-penSize = "Kalem Boyutu: {{size}}px"
-placementActive = "Yerleştirmek için PDF'ye tıklayın"
-placeSignatureButton = "İmzayı PDF'ye Yerleştir"
-reason = "Neden (İsteğe bağlı)"
-reasonPlaceholder = "Neden imzalıyorsunuz?"
-removeImage = "Görseli Kaldır"
-removeCertFile = "Dosyayı Kaldır"
-savedSignatures = "Kaydedilmiş İmzalar"
-selectFile = "Görsel Dosya Seç"
-selectSignatureTitle = "İmza Seçin veya Oluşturun"
-signButton = "Belgeyi İmzala"
-signatureInfo = "Bu ayarlar belge sahibi tarafından yapılandırılmıştır"
-signaturePlaced = "İmza sayfaya yerleştirildi"
-signatureSettings = "İmza Ayarları"
-signatureText = "İmza Metni"
-signatureTextPlaceholder = "Adınızı girin..."
-signatureTypeLabel = "İmza Türü"
-signingTitle = "İmzalama"
-textColor = "Metin Rengi"
-typeSignature = "İmza oluşturmak için adınızı yazın"
-uploadCert = "Özel Sertifika"
-uploadCertDesc = "Kendi P12/PFX sertifikanızı kullanın"
-uploadSignature = "İmza görselinizi yükleyin"
-usePersonalCert = "Kişisel Sertifika"
-usePersonalCertDesc = "Hesabınız için otomatik oluşturulur"
-useServerCert = "Kuruluş Sertifikası"
-useServerCertDesc = "Paylaşılan kuruluş sertifikası"
-workbenchTitle = "İmza İsteği"
-
-[certSign.collab.signRequest.canvas]
-colorPickerTitle = "Vuruş rengini seçin"
-continue = "Devam et"
-
-[certSign.collab.signRequest.certModal]
-description = "{{count}} imza yerleştirdiniz. İmzalamayı tamamlamak için sertifikanızı seçin."
-sign = "Belgeyi İmzala"
-certValidating = "Sertifika doğrulanıyor..."
-certValidUntil = "Sertifika {{date}} tarihine kadar geçerli"
-certInvalid = "Sertifika geçersiz: {{error}}"
-certInvalidFallback = "Geçersiz sertifika"
-certNetworkError = "Sertifika doğrulanamadı"
-title = "Sertifikayı Yapılandır"
-
-[certSign.collab.signRequest.image]
-hint = "İmzanızın PNG veya JPG görselini yükleyin"
-
-[certSign.collab.signRequest.mode]
-move = "İmzayı Taşı"
-place = "İmzayı Yerleştir"
-title = "İmzalama veya taşıma modu"
-
-[certSign.collab.signRequest.modeTabs]
-draw = "Çiz"
-image = "Yükle"
-text = "Yaz"
-
-[certSign.collab.signRequest.placeSignature]
-message = "İmzanızı yerleştirmek için PDF'ye tıklayın"
-title = "İmzayı Yerleştir"
-
-[certSign.collab.signRequest.preview]
-imageAlt = "Seçilen imza"
-missing = "Önizleme yok"
-textFallback = "İmza"
-
-[certSign.collab.signRequest.saved]
-defaultCanvasLabel = "Çizim imzası"
-defaultImageLabel = "Yüklenen imza"
-defaultLabel = "İmza"
-defaultTextLabel = "Yazılı imza"
-delete = "İmzayı sil"
-none = "Kayıtlı imza yok"
-
-[certSign.collab.signRequest.signatureType]
-draw = "Çiz"
-type = "Yaz"
-upload = "Yükle"
-
-[certSign.collab.signRequest.steps]
-back = "Geri"
-cancelPlacement = "Yerleştirmeyi İptal Et"
-certificate = "Sertifika"
-clickMultipleTimes = "İmzaları yerleştirmek için PDF'ye birden çok kez tıklayın. Taşımak veya yeniden boyutlandırmak için imzayı sürükleyin."
-clickToPlace = "İmzanızın görünmesini istediğiniz yere PDF üzerinde tıklayın."
-continue = "Sertifika Seçimine Devam Et"
-continueToPlacement = "Yerleştirmeye Devam Et"
-continueToReview = "Gözden Geçirmeye Devam Et"
-createSignature = "İmza Oluştur"
-invisible = "Görünmez"
-location = "Konum:"
-multipleSignatures = "{{count}} imza PDF'ye uygulanacak"
-oneSignature = "1 imza PDF'ye uygulanacak"
-placeOnPdf = "PDF'ye Yerleştir"
-reason = "Neden:"
-reviewTitle = "İmzalamadan Önce Gözden Geçirin"
-signaturePlaced = "İmza {{page}}. sayfaya yerleştirildi. Tekrar tıklayarak konumu ayarlayabilir veya gözden geçirmeye devam edebilirsiniz."
-visible = "Görünür"
-visibility = "Görünürlük:"
-yourSignatures = "İmzalarınız ({{count}})"
-
-[certSign.collab.signRequest.text]
-colorLabel = "Renk"
-fontLabel = "Yazı Tipi"
-fontSizeLabel = "Boyut"
-fontSizePlaceholder = "16"
-label = "İmza Metni"
-modalHint = "Adınızı girin, ardından PDF'ye yerleştirmek için Devam et'e tıklayın."
-placeholder = "Adınızı girin..."
-
-[certSign.collab.participant]
-certValidating = "Sertifika doğrulanıyor..."
-certValid = "✓ Sertifika geçerli"
-certValidUntil = " {{date}} tarihine kadar"
-certInvalid = "✗ {{error}}"
-certInvalidFallback = "Geçersiz sertifika"
-certNetworkError = "Sertifika doğrulanamadı"
-
-[certSign.collab.addParticipants]
-add = "{{count}} Katılımcı Ekle"
-back = "Geri"
-configureSignatures = "İmza Ayarlarını Yapılandır"
-continue = "İmza Ayarlarına Devam Et"
-reasonHelp = "Bu katılımcılar için önceden bir imzalama nedeni belirleyin (isteğe bağlı, imzalarken değiştirebilirler)"
-reasonPlaceholder = "örn. Onay, İnceleme..."
-selectUsers = "Kullanıcıları Seç"
-
-[certSign.collab.sessionCreation]
-includeSummaryPage = "İmza Özeti Sayfasını Dahil Et"
-includeSummaryPageHelp = "Tüm imza metaverilerini içeren bir özet sayfası sona eklenecek. Tek tek sayfalardaki dijital sertifika imza kutuları gizlenecek (ıslak imzalar etkilenmez)."
-
-[certSign.collab.sessionList]
-active = "Aktif"
-finalized = "Sonlandırıldı"
-
-[certSign.collab.signatureSettings]
-description = "Tüm katılımcılar için imzaların nasıl görüneceğini yapılandırın"
-title = "İmza Görünümü"
-
-[certSign.collab.userSelector]
-inviteUsers = "Kullanıcı Ekle"
-loadError = "Kullanıcılar yüklenemedi"
-noTeam = "Ekip Yok"
-noUsers = "Başka kullanıcı bulunamadı."
-placeholder = "Kullanıcı seçin..."
-
-[certSign.mobile]
-panelActions = "İşlemler"
-panelDocument = "Belge"
-panelPeople = "Kişiler"
-
-[certSign.sessions]
-deleted = "Oturum silindi"
-fetchFailed = "Oturum ayrıntıları yüklenemedi"
-finalized = "Oturum sonlandırıldı"
-loaded = "İmzalı PDF yüklendi"
-pdfNotReady = "PDF Hazır Değil"
-pdfNotReadyDesc = "İmzalı PDF oluşturuluyor. Lütfen kısa süre sonra tekrar deneyin."
-
-[certificateChoice.tooltip]
-header = "Sertifika Türleri"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Sistem yöneticileri tarafından yönetilir"
-bullet2 = "Yetkili kullanıcılar arasında paylaşılır"
-bullet3 = "Şirket kimliğini temsil eder, bireyi değil"
-bullet4 = "En uygun: Resmi belgeler, ekip imzaları"
-description = "Kuruluşunuz tarafından sağlanan paylaşılan bir sertifika. Şirket çapında imzalama yetkisi için kullanılır."
-title = "Kuruluş Sertifikası"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "İlk kullanımda otomatik oluşturulur"
-bullet2 = "Kullanıcı hesabınıza bağlıdır"
-bullet3 = "Diğer kullanıcılarla paylaşılamaz"
-bullet4 = "En uygun: Kişisel belgeler, bireysel sorumluluk"
-description = "Kullanıcı hesabınıza özgü otomatik oluşturulmuş bir sertifika. Bireysel imzalar için uygundur."
-title = "Kişisel Sertifika"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "P12/PFX dosyası ve parola gerektirir"
-bullet2 = "Harici Sertifika Otoriteleri tarafından verilebilir"
-bullet3 = "Hukuki belgeler için daha yüksek güven seviyesi"
-bullet4 = "En uygun: Hukuken bağlayıcı sözleşmeler, harici doğrulama"
-description = "Kendi PKCS#12 sertifika dosyanızı kullanın. Sertifika özellikleri üzerinde tam kontrol sağlar."
-title = "Özel P12 Yükle"
 
 [changeCreds]
 changePassword = "Varsayılan giriş bilgilerini kullanıyorsunuz. Lütfen yeni bir şifre girin."
@@ -2658,6 +2660,26 @@ title = "İzinleri Değiştir"
 [changePermissions.tooltip.warning]
 text = "Bu izinlerin değiştirilemez olmasını sağlamak için, sahip parolasını ayarlamak üzere Parola Ekle aracını kullanın."
 
+[chat.progress]
+analyzing = "İsteğiniz analiz ediliyor..."
+calling_engine = "Yapay zekâ düşünüyor..."
+executing_tool_generic = "Araç çalıştırılıyor..."
+executing_tool_generic_step = "Araç çalıştırılıyor ({{total}} adımdan {{step}}. adım)..."
+executing_tool_single = "{{tool}} çalıştırılıyor..."
+executing_tool_step = "{{tool}} çalıştırılıyor ({{total}} adımdan {{step}}. adım)..."
+extracting_content = "Belgelerinizden içerik çıkarılıyor..."
+processing = "Çıkarılan içerik işleniyor..."
+thinking = "Düşünüyor..."
+
+[chat.toolsUsed]
+summary = "{{count}} araç çalıştırıldı"
+summary_one = "1 araç çalıştırıldı"
+summary_other = "{{count}} araç çalıştırıldı"
+unknownTool = "Bilinmeyen araç"
+
+[cloudBadge]
+tooltip = "Bu işlem bulut kredilerinizi kullanacak"
+
 [colorPicker]
 title = "Renk seçin"
 
@@ -2755,11 +2777,38 @@ message = "Verilen belgelerden biri veya her ikisi işlenemeyecek kadar büyük"
 body = "Bu PDF'ler birlikte 2.000 sayfayı aşıyor. İşleme birkaç dakika sürebilir."
 title = "Büyük karşılaştırma sürüyor"
 
+[compare.mode]
+pixel = "Piksel Karşılaştırması"
+text = "Metin Karşılaştırması"
+
 [compare.no.text]
 message = "Seçilen PDF'lerden biri veya her ikisinde metin içeriği yok. Lütfen karşılaştırma için metin içeren PDF'ler seçin."
 
 [compare.original]
 label = "Orijinal PDF"
+
+[compare.pixel]
+base = "Orijinal"
+changed = "değişti"
+comparison = "Düzenlenmiş"
+diff = "Farklar"
+diffOnly = "Yalnızca farklar"
+missingInBase = "Orijinalde eksik"
+missingInComparison = "Düzenlenmişte eksik"
+overall = "genel"
+overlay = "Bindirme"
+pageLabel = "Sayfa"
+pagesChanged = "sayfa değişti"
+sideBySide = "Yan yana"
+sizeMismatch = "Boyut uyumsuzluğu"
+summaryTitle = "Piksel karşılaştırması"
+
+[compare.pixel.errors]
+canvasContextUnavailable = "Piksel karşılaştırması için 2D canvas bağlamı alınamıyor."
+
+[compare.pixel.warnings]
+noPages = "Belgelerden birinde ya da her ikisinde sayfa yok."
+pageCountMismatch = "Sayfa sayısı uyuşmuyor: orijinal {{base}} sayfa, düzenlenmiş {{comparison}}. Fazladan sayfalar tek taraflı gösterilir ve tamamen kaldırıldı/eklendi olarak işaretlenir."
 
 [compare.rendering]
 complete = "Sayfa işleme tamamlandı"
@@ -2998,9 +3047,11 @@ blackwhite = "Siyah & Beyaz"
 cbrDpi = "Görüntü oluşturma için DPI"
 cbrOptions = "CBR Seçenekleri"
 cbrOutputOptions = "PDF'den CBR'ye Dönüştürme Seçenekleri"
+cbrToPdf = "CBR → PDF"
 cbzDpi = "Görüntü oluşturma için DPI"
 cbzOptions = "CBZ'den PDF'e Seçenekleri"
 cbzOutputOptions = "PDF'den CBZ'ye Seçenekleri"
+cbzToPdf = "CBZ → PDF"
 color = "Renk"
 colorType = "Renk Türü"
 combineImages = "Görüntüleri Birleştir"
@@ -3018,13 +3069,16 @@ desc = "Farklı formatlar arasında dosya dönüştürün"
 downloadConverted = "Dönüştürülen Dosyayı İndir"
 downloadHtml = "PDF yerine ara HTML dosyasını indir"
 dpi = "DPI"
+ebookToPdf = "eBook → PDF"
 emailOptions = "E-postadan PDF'e Seçenekleri"
+emlToPdf = "E-posta → PDF"
 errorConversion = "Dosya dönüştürülürken bir hata oluştu."
 errorNoFiles = "Lütfen dönüştürmek için en az bir dosya seçin."
 errorNoFormat = "Lütfen hem kaynak hem de hedef biçimleri seçin."
 errorNotSupported = "{{from}} biçiminden {{to}} biçimine dönüştürme desteklenmiyor."
 fileFormat = "Dosya Biçimi"
 files = "Dosyalar"
+fileToPdf = "Office/Belge → PDF"
 fillPage = "Sayfayı Doldur"
 fitDocumentToPage = "Belgeyi sayfaya sığdır"
 fitOption = "Sığdırma Seçeneği"
@@ -3052,6 +3106,9 @@ pdfaFormat = "PDF/A biçimi"
 pdfaNote = "PDF/A-1b daha uyumludur, PDF/A-2b daha fazla özelliği destekler."
 pdfaOptions = "PDF/A Seçenekleri"
 pdfOptions = "PDF Seçenekleri"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
 pdfxDescription = "PDF/X, güvenilir baskı ve grafik alışverişi için ISO standartlı bir PDF alt kümesidir."
 pdfxDigitalSignatureWarning = "PDF dijital imza içeriyor. Bir sonraki adımda kaldırılacaktır."
 pptExt = "PowerPoint (.pptx)"
@@ -3066,6 +3123,7 @@ sourceFormatPlaceholder = "Kaynak biçim"
 strictMode = "Strict Mode"
 strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
+svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
 targetFormatPlaceholder = "Hedef biçim"
 textRtf = "Metin/RTF"
@@ -3075,15 +3133,6 @@ webOptions = "Web'den PDF'e Seçenekleri"
 wordDoc = "Word Belgesi"
 wordDocExt = "Word Belgesi (.docx)"
 zoomLevel = "Yakınlaştırma Düzeyi"
-cbrToPdf = "CBR → PDF"
-cbzToPdf = "CBZ → PDF"
-ebookToPdf = "eBook → PDF"
-emlToPdf = "E-posta → PDF"
-fileToPdf = "Office/Belge → PDF"
-pdfToCbr = "PDF → CBR"
-pdfToCbz = "PDF → CBZ"
-pdfToEpub = "PDF → EPUB"
-svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook'tan PDF'ye Dönüştürme Seçenekleri"
@@ -3147,6 +3196,77 @@ description = "Bu çerezler, web sitesinin düzgün çalışabilmesi için gerek
 [cookieBanner.services]
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
+
+[credits]
+enableOverageBilling = "Aşım Faturalandırmasını Etkinleştir"
+maybeLater = "Belki sonra"
+upgrade = "Yükselt"
+
+[credits.insufficient]
+brief = "Yetersiz kredi. {{required}} krediye ihtiyacınız var ancak {{current}} var."
+freeTier = "10 kat daha fazla kredi ve sınırsız aşım faturalandırma için Takım'a yükseltin."
+managedMember = "Lütfen yardım için takım liderinizle iletişime geçin."
+message = "{{tool}} çalıştırmak için yeterli krediniz yok. Şu anda {{current}} krediniz var."
+messageWithAmount = "{{tool}} çalıştırmak için {{required}} krediye ihtiyacınız var, ancak yalnızca {{current}} var."
+teamMember = "Kredinizin asla bitmemesi için aşım faturalandırmayı etkinleştirin."
+title = "Yetersiz Kredi"
+
+[credits.modal]
+advancedMonitoring = "Gelişmiş izleme"
+allInOneWorkspace = "Tümü bir arada PDF çalışma alanı (görüntüleyici, araçlar ve ajan)"
+apiSandbox = "API sandbox"
+contactSales = "Satış ile iletişime geçin"
+creditsRemaining = "{{total}} içinden {{current}} kaldı"
+creditsThisMonth = "Aylık krediler"
+current = "Geçerli Plan"
+customPricing = "Özel"
+customSmartFolders = "Özel Akıllı Klasörler"
+dedicatedSupportSlas = "Özel destek ve SLA'lar"
+enterpriseSubscription = "Kurumsal"
+everythingInCredits = "Krediler'deki her şey ve fazlası:"
+everythingInFree = "Ücretsiz'deki her şey ve fazlası:"
+fasterThroughput = "10 kat daha hızlı işleme hızı"
+forRegularWork = "Düzenli PDF çalışmaları için:"
+freeTier = "Ücretsiz Katman"
+fullyPrivateFiles = "Tamamen özel dosyalar"
+largeFileProcessing = "Büyük dosya işleme"
+managedMemberMessage = "Takımınız aracılığıyla sınırsız kredi erişiminiz var. Yardıma ihtiyacınız olursa lütfen takım liderinizle iletişime geçin."
+managedMemberTitle = "Sınırsız Krediler"
+meteringBillingNote = "Aşım kredileri, Takım aboneliğinizle birlikte aylık olarak faturalandırılır. Kullanımınızı istediğiniz zaman hesap ayarlarınızdan takip edebilirsiniz."
+meteringExplanation = "Takım planınız ayda {{credits}} kredi içerir. Bittiğinde, aşım faturalandırma otomatik olarak ek krediler sağlar; böylece çalışmayı asla durdurmak zorunda kalmazsınız."
+meteringIncluded = "Takım ile ayda {{credits}} kredi dahil"
+meteringNeverRunOut = "Krediniz asla bitmesin"
+meteringNoCommitment = "Taahhüt yok, istediğiniz zaman iptal edin"
+meteringPayAsYouGo = "Kullandığın kadar öde"
+meteringPrice = "Ek krediler {{price}}/kredi"
+meteringTitle = "Kullandığın Kadar Öde Aşım Faturalandırması"
+monthlyCredits = "aylık krediler"
+orgWideAccess = "Kuruluş genelinde erişim kontrolleri"
+overage = "aşım"
+perMonth = "/ay"
+popular = "Popüler"
+premiumAiModels = "Premium AI modelleri"
+prioritySupport = "Öncelikli destek"
+privateDocCloud = "Özel Belge Bulutu"
+ragFineTuning = "RAG + ince ayar"
+secureApiAccess = "Güvenli API erişimi"
+selfHostLink = "Belgeleri ve planları inceleyin"
+selfHostPrompt = "Kendi sunucunuzda barındırmak mı istiyorsunuz?"
+standardThroughput = "Standart işleme hızı"
+subtitle = "10 kat kredi ve daha hızlı işleme için Takım'a yükseltin."
+subtitlePro = "Kredinizin asla bitmemesi için otomatik aşım faturalandırmayı etkinleştirin."
+teamLeaderOnly = "Yalnızca takım liderleri aşım faturalandırmayı etkinleştirebilir"
+teamSubscription = "Takım"
+titleExhausted = "Ücretsiz kredilerinizi kullandınız"
+titleExhaustedPro = "Kredileriniz tükendi"
+unlimitedApiAccess = "Sınırsız API erişimi"
+unlimitedMonthlyCredits = "Site Lisansı"
+unlimitedSeats = "Sınırsız kullanıcı"
+
+[credits.modal.features]
+everythingInCredits = "Krediler'deki her şey ve fazlası:"
+everythingInFree = "Ücretsiz'deki her şey ve fazlası:"
+forRegularWork = "Düzenli PDF çalışmaları için:"
 
 [crop]
 autoCrop = "Boşlukları otomatik kırp"
@@ -3352,6 +3472,9 @@ successBodyWithName = "{{fileName}} dosyasından parola kaldırıldı"
 successTitle = "Parola kaldırıldı"
 title = "Devam etmek için parolayı kaldırın"
 unlock = "Kilidi Aç ve Devam Et"
+unlockAll = "Tümüne uygula ({{count}})"
+unlockAllPartialFail = "Şu dosyalar için parola yanlış: {{names}}"
+unlockAllSuccess = "{{count}} dosyanın kilidi açıldı."
 unlockPrompt = "Devam etmek için PDF'nin kilidini açın"
 
 [encryptedPdfUnlock.password]
@@ -3464,10 +3587,14 @@ addFiles = "Dosya Ekle"
 [fileManager]
 active = "Aktif"
 addToUpload = "Yüklemeye Ekle"
+changesNotUploaded = "Değişiklikler yüklenmedi"
 clearAll = "Tümünü Temizle"
 clearSelection = "Seçimi Temizle"
 clickToUpload = "Dosya yüklemek için tıklayın"
 closeFile = "Dosyayı Kapat"
+cloudFile = "Bulut dosyası"
+copyCreated = "Kopya bu cihaza kaydedildi."
+copyFailed = "Kopya oluşturulamadı."
 delete = "Sil"
 deleteAll = "Tümünü Sil"
 deleteSelected = "Seçilenleri Sil"
@@ -3486,14 +3613,24 @@ fileSize = "Boyut"
 filesSelected = "dosya seçildi"
 filesStored = "dosya depolandı"
 fileVersion = "Sürüm"
+filterAll = "Tümü"
+filterLocal = "Yerel"
+filterSharedByMe = "Benim paylaştıklarım"
+filterSharedWithMe = "Benimle paylaşılanlar"
 googleDrive = "Google Drive"
 googleDriveNotAvailable = "Google Drive entegrasyonu kullanılamıyor"
 googleDriveShort = "Drive"
 hideHistory = "Geçmişi Gizle"
 lastModified = "Son Değiştirilme"
+lastSynced = "Son eşitleme"
+leaveShare = "Listemden kaldır"
+leaveShareFailed = "Paylaşılan dosya kaldırılamadı."
+leaveShareSuccess = "Paylaşılan listenizden kaldırıldı."
 loadingFiles = "Dosyalar yükleniyor..."
 loadingHistory = "Geçmiş Yükleniyor..."
 localFiles = "Yerel Dosyalar"
+localOnly = "Yalnızca yerel"
+makeCopy = "Kopya oluştur"
 mobileShort = "Mobil"
 mobileUpload = "Mobil Yükleme"
 mobileUploadNotAvailable = "Mobil yükleme etkin değil"
@@ -3506,36 +3643,10 @@ openFile = "Dosya Aç"
 openFiles = "Dosyaları Aç"
 openInFileEditor = "Dosya Düzenleyicide Aç"
 openInPageEditor = "Sayfa Düzenleyicide Aç"
+owner = "Sahip"
+ownerUnknown = "Bilinmiyor"
 recent = "Son"
 reloadFiles = "Dosyaları Yeniden Yükle"
-restore = "Geri Yükle"
-saveSelected = "Seçilenleri Kaydet"
-searchFiles = "Dosyalarda ara..."
-selectAll = "Tümünü Seç"
-selectedCount = "{{count}} seçildi"
-selectedFiles = "Seçilen Dosyalar"
-showAll = "Tümünü Göster"
-showHistory = "Geçmişi Göster"
-sortByDate = "Tarihe Göre Sırala"
-sortByName = "Ada Göre Sırala"
-sortBySize = "Boyuta Göre Sırala"
-storage = "Depolama"
-storageCleared = "Tarayıcı depolamayı temizledi. Dosyalar kaldırıldı. Lütfen yeniden yükleyin."
-storageError = "Depolama hatası oluştu"
-storageLow = "Depolama alanı azalıyor. Eski dosyaları kaldırmayı düşünün."
-subtitle = "Araçlar arasında kolay erişim için depolamanıza dosya ekleyin"
-supportMessage = "Sınırsız kapasite için tarayıcı veritabanı depolaması tarafından desteklenir"
-title = "PDF Dosyaları Yükle"
-toolChain = "Uygulanan Araçlar"
-totalSelected = "Toplam Seçilen"
-unsupported = "Desteklenmiyor"
-unzip = "Zip'ten Çıkar"
-uploadError = "Bazı dosyalar yüklenemedi."
-copyCreated = "Kopya bu cihaza kaydedildi."
-copyFailed = "Kopya oluşturulamadı."
-leaveShare = "Listemden kaldır"
-leaveShareFailed = "Paylaşılan dosya kaldırılamadı."
-leaveShareSuccess = "Paylaşılan listenizden kaldırıldı."
 removeBoth = "Her ikisinden de kaldır"
 removeFilePrompt = "Bu dosya hem bu cihazda hem de sunucunuzda kayıtlı. Nereden kaldırmak istersiniz?"
 removeFileTitle = "Dosyayı kaldır"
@@ -3547,28 +3658,40 @@ removeServerSuccess = "Sunucudan kaldırıldı."
 removeSharedPrompt = "Bu dosya sizinle paylaşıldı. Bunu bu cihazdan veya paylaşılan listenizden kaldırabilirsiniz."
 removeSharedServerOnlyBlockedPrompt = "Bu dosya sizinle paylaşıldı ve yalnızca sunucuda saklanıyor."
 removeSharedServerOnlyPrompt = "Bu dosya sizinle paylaşıldı ve yalnızca sunucuda saklanıyor. Listeden kaldırmak ister misiniz?"
-changesNotUploaded = "Değişiklikler yüklenmedi"
-cloudFile = "Bulut dosyası"
-filterAll = "Tümü"
-filterLocal = "Yerel"
-filterSharedByMe = "Benim paylaştıklarım"
-filterSharedWithMe = "Benimle paylaşılanlar"
-lastSynced = "Son eşitleme"
-localOnly = "Yalnızca yerel"
-makeCopy = "Kopya oluştur"
-owner = "Sahip"
-ownerUnknown = "Bilinmiyor"
+restore = "Geri Yükle"
+saveSelected = "Seçilenleri Kaydet"
+searchFiles = "Dosyalarda ara..."
+selectAll = "Tümünü Seç"
+selectedCount = "{{count}} seçildi"
+selectedFiles = "Seçilen Dosyalar"
 share = "Paylaş"
-shareSelected = "Seçileni Paylaş"
 sharedByYou = "Sizin paylaştıklarınız"
 sharedEditNoticeBody = "Bu dosyanın sunucudaki sürümünde düzenleme hakkınız yok. Yapacağınız düzenlemeler yerel bir kopya olarak kaydedilir."
 sharedEditNoticeConfirm = "Anladım"
 sharedEditNoticeTitle = "Salt okunur sunucu kopyası"
 sharedWithYou = "Sizinle paylaşılanlar"
+shareSelected = "Seçileni Paylaş"
 sharing = "Paylaşım"
+showAll = "Tümünü Göster"
+showHistory = "Geçmişi Göster"
+sortByDate = "Tarihe Göre Sırala"
+sortByName = "Ada Göre Sırala"
+sortBySize = "Boyuta Göre Sırala"
+storage = "Depolama"
+storageCleared = "Tarayıcı depolamayı temizledi. Dosyalar kaldırıldı. Lütfen yeniden yükleyin."
+storageError = "Depolama hatası oluştu"
+storageLow = "Depolama alanı azalıyor. Eski dosyaları kaldırmayı düşünün."
 storageState = "Depolama"
+subtitle = "Araçlar arasında kolay erişim için depolamanıza dosya ekleyin"
+supportMessage = "Sınırsız kapasite için tarayıcı veritabanı depolaması tarafından desteklenir"
 synced = "Eşitlendi"
+title = "PDF Dosyaları Yükle"
+toolChain = "Uygulanan Araçlar"
+totalSelected = "Toplam Seçilen"
+unsupported = "Desteklenmiyor"
+unzip = "Zip'ten Çıkar"
 updateOnServer = "Sunucuda Güncelle"
+uploadError = "Bazı dosyalar yüklenemedi."
 uploadSelected = "Seçileni Yükle"
 uploadToServer = "Sunucuya Yükle"
 
@@ -3696,77 +3819,6 @@ title = "PDF'leri Düzleştirme Hakkında"
 discord = "Discord"
 issues = "GitHub"
 
-[groupSigning.tooltip]
-header = "Grup İmzalama Hakkında"
-
-[groupSigning.tooltip.finalization]
-bullet1 = "Tüm imzalar belirttiğiniz katılımcı sırasıyla uygulanır"
-bullet2 = "Gerektiğinde kısmi imzalarla sonlandırabilirsiniz"
-bullet3 = "Sonlandırıldıktan sonra oturum değiştirilemez"
-description = "Tüm katılımcılar imzaladığında (veya erken sonlandırmayı seçtiğinizde), nihai imzalı PDF'yi oluşturabilirsiniz."
-title = "Sonlandırma Süreci"
-
-[groupSigning.tooltip.roles]
-bullet1 = "Sahip (siz): Oturumu oluşturur, imza varsayılanlarını yapılandırır, belgeyi sonlandırır"
-bullet2 = "Katılımcılar: İmzalarını oluşturur, sertifika seçer, PDF'ye yerleştirir"
-bullet3 = "Katılımcılar imza görünürlüğü, nedeni veya konum ayarlarını değiştiremez"
-description = "Tüm katılımcılar için imza görünümü ayarlarını siz kontrol edersiniz."
-title = "Katılımcı Rolleri"
-
-[groupSigning.tooltip.sequential]
-bullet1 = "İlk katılımcı imzalamadan ikinci kişi belgeye erişemez"
-bullet2 = "Hukuki uyum için doğru imzalama sırasını sağlar"
-bullet3 = "Listedeki sıralarını sürükleyerek katılımcıları yeniden sıralayabilirsiniz"
-description = "Katılımcılar belirttiğiniz sırada belgeleri imzalar. Her imzalayan, sırası geldiğinde bir bildirim alır."
-title = "Sıralı İmzalama"
-
-[groupSigning.steps]
-back = "Geri"
-completed = "Tamamlandı"
-current = "Mevcut"
-stepLabel = "Adım {{number}}"
-
-[groupSigning.steps.configureDefaults]
-continue = "Gözden Geçirmeye Devam Et"
-invisible = "İmzalar görünmez olacak (yalnızca metaveri)"
-locationLabel = "Konum:"
-preview = "Önizleme"
-reasonLabel = "Neden:"
-title = "İmza Ayarlarını Yapılandır"
-visible = "İmzalar {{page}}. sayfada görünür olacak"
-
-[groupSigning.steps.review]
-document = "Belge"
-dueDate = "Son Tarih (İsteğe bağlı)"
-dueDatePlaceholder = "Son tarihi seçin..."
-invisible = "Görünmez (yalnızca metaveri)"
-location = "Konum:"
-logo = "Logo:"
-logoHidden = "Logo yok"
-logoShown = "Stirling PDF logosu gösteriliyor"
-participants = "Katılımcılar"
-reason = "Neden:"
-send = "İmzalama İsteklerini Gönder"
-signatureSettings = "İmza Ayarları"
-title = "Oturum Ayrıntılarını Gözden Geçir"
-titleShort = "Gözden Geçir ve Gönder"
-visibility = "Görünürlük:"
-visible = "{{page}}. sayfada görünür"
-participantCount = "{{count}} katılımcı sırayla imzalayacak"
-
-[groupSigning.steps.selectDocument]
-continue = "Katılımcı Seçimine Devam Et"
-noFile = "Bir imzalama oturumu oluşturmak için lütfen aktif dosyalarınızdan tek bir PDF dosyası seçin."
-selectedFile = "Seçilen belge"
-title = "Belge Seç"
-
-[groupSigning.steps.selectParticipants]
-continue = "İmza Ayarlarına Devam Et"
-count = "{{count}} katılımcı seçildi"
-label = "Katılımcıları seçin"
-placeholder = "İmzalamaları için katılımcıları seçin..."
-title = "Katılımcıları Seç"
-
 [getPdfInfo]
 downloadJson = "JSON İndir"
 downloads = "İndirmeler"
@@ -3873,6 +3925,77 @@ javaScript = "JavaScript"
 layers = "Katmanlar"
 multimedia = "Multimedya"
 
+[groupSigning.steps]
+back = "Geri"
+completed = "Tamamlandı"
+current = "Mevcut"
+stepLabel = "Adım {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Gözden Geçirmeye Devam Et"
+invisible = "İmzalar görünmez olacak (yalnızca metaveri)"
+locationLabel = "Konum:"
+preview = "Önizleme"
+reasonLabel = "Neden:"
+title = "İmza Ayarlarını Yapılandır"
+visible = "İmzalar {{page}}. sayfada görünür olacak"
+
+[groupSigning.steps.review]
+document = "Belge"
+dueDate = "Son Tarih (İsteğe bağlı)"
+dueDatePlaceholder = "Son tarihi seçin..."
+invisible = "Görünmez (yalnızca metaveri)"
+location = "Konum:"
+logo = "Logo:"
+logoHidden = "Logo yok"
+logoShown = "Stirling PDF logosu gösteriliyor"
+participantCount = "{{count}} katılımcı sırayla imzalayacak"
+participants = "Katılımcılar"
+reason = "Neden:"
+send = "İmzalama İsteklerini Gönder"
+signatureSettings = "İmza Ayarları"
+title = "Oturum Ayrıntılarını Gözden Geçir"
+titleShort = "Gözden Geçir ve Gönder"
+visibility = "Görünürlük:"
+visible = "{{page}}. sayfada görünür"
+
+[groupSigning.steps.selectDocument]
+continue = "Katılımcı Seçimine Devam Et"
+noFile = "Bir imzalama oturumu oluşturmak için lütfen aktif dosyalarınızdan tek bir PDF dosyası seçin."
+selectedFile = "Seçilen belge"
+title = "Belge Seç"
+
+[groupSigning.steps.selectParticipants]
+continue = "İmza Ayarlarına Devam Et"
+count = "{{count}} katılımcı seçildi"
+label = "Katılımcıları seçin"
+placeholder = "İmzalamaları için katılımcıları seçin..."
+title = "Katılımcıları Seç"
+
+[groupSigning.tooltip]
+header = "Grup İmzalama Hakkında"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Tüm imzalar belirttiğiniz katılımcı sırasıyla uygulanır"
+bullet2 = "Gerektiğinde kısmi imzalarla sonlandırabilirsiniz"
+bullet3 = "Sonlandırıldıktan sonra oturum değiştirilemez"
+description = "Tüm katılımcılar imzaladığında (veya erken sonlandırmayı seçtiğinizde), nihai imzalı PDF'yi oluşturabilirsiniz."
+title = "Sonlandırma Süreci"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Sahip (siz): Oturumu oluşturur, imza varsayılanlarını yapılandırır, belgeyi sonlandırır"
+bullet2 = "Katılımcılar: İmzalarını oluşturur, sertifika seçer, PDF'ye yerleştirir"
+bullet3 = "Katılımcılar imza görünürlüğü, nedeni veya konum ayarlarını değiştiremez"
+description = "Tüm katılımcılar için imza görünümü ayarlarını siz kontrol edersiniz."
+title = "Katılımcı Rolleri"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "İlk katılımcı imzalamadan ikinci kişi belgeye erişemez"
+bullet2 = "Hukuki uyum için doğru imzalama sırasını sağlar"
+bullet3 = "Listedeki sıralarını sürükleyerek katılımcıları yeniden sıralayabilirsiniz"
+description = "Katılımcılar belirttiğiniz sırada belgeleri imzalar. Her imzalayan, sırası geldiğinde bir bildirim alır."
+title = "Sıralı İmzalama"
+
 [guestBanner]
 dismiss = "Afişi kapat"
 message = "Çalışmanızı kaydetmek, daha fazla özelliğe erişmek ve projeyi desteklemek için ücretsiz bir hesap oluşturun."
@@ -3935,10 +4058,6 @@ title = "Açıklama Ekle"
 desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları oluşturun. Tekrarlayan görevler için idealdir."
 tags = "iş_akışı,sıralı,otomasyon"
 title = "Otomatikleştir"
-
-[home.formFill]
-desc = "PDF form alanlarını görsel bir düzenleyiciyle etkileşimli olarak doldurun"
-title = "Formu Doldur"
 
 [home.autoRename]
 desc = "Algılanan başlığına göre bir PDF dosyasını otomatik olarak yeniden adlandırır"
@@ -4034,6 +4153,10 @@ title = "Sayfaları Çıkar"
 desc = "PDF'ten tüm etkileşimli öğeleri ve formları kaldırır"
 tags = "basitleştir,kaldır,etkileşimli"
 title = "Düzleştir"
+
+[home.formFill]
+desc = "PDF form alanlarını görsel bir düzenleyiciyle etkileşimli olarak doldurun"
+title = "Formu Doldur"
 
 [home.getPdfInfo]
 desc = "PDF'ler hakkında mümkün olan her türlü bilgiyi toplar"
@@ -4185,11 +4308,6 @@ desc = "Çizim, metin veya resim ile PDF'e imza ekler"
 tags = "imza,imzala"
 title = "İmzala"
 
-[home.timestampPdf]
-desc = "PDF'nizin ne zaman var olduğunu kanıtlamak için bir RFC 3161 belge zaman damgası ekleyin"
-tags = "timestamp,RFC 3161,TSA,zaman damgası otoritesi,belge zaman damgası,mevcudiyet kanıtı,zaman damgası belirteci,güvenilir zaman damgası,imzayı zaman damgalama,noter onayı"
-title = "PDF'yi Zaman Damgala"
-
 [home.split]
 desc = "PDF'leri birden fazla belgeye ayırın"
 tags = "böl,ayır,parçala"
@@ -4209,6 +4327,11 @@ title = "PDF'yi Bölümlere Göre Böl"
 desc = "API dokümantasyonunu görüntüleyin ve uç noktaları test edin"
 tags = "API,dokümantasyon,test"
 title = "API Dokümantasyonu"
+
+[home.timestampPdf]
+desc = "PDF'nizin ne zaman var olduğunu kanıtlamak için bir RFC 3161 belge zaman damgası ekleyin"
+tags = "timestamp,RFC 3161,TSA,zaman damgası otoritesi,belge zaman damgası,mevcudiyet kanıtı,zaman damgası belirteci,güvenilir zaman damgası,imzayı zaman damgalama,noter onayı"
+title = "PDF'yi Zaman Damgala"
 
 [home.unlockPDFForms]
 desc = "Form alanlarını düzenlenebilir hâle getir."
@@ -4298,6 +4421,8 @@ welcomeTitle = "Davet edildiniz!"
 
 [landing]
 addFiles = "Dosya Ekle"
+heroSubtitle = "Başlamak için bir PDF bırakın veya mevcut bir PDF ekleyin."
+heroTitle = "Stirling PDF"
 mobileUpload = "Mobil Cihazdan Yükle"
 openFromComputer = "Bilgisayardan aç"
 uploadFromComputer = "Bilgisayardan yükle"
@@ -4321,6 +4446,18 @@ module = "Modül"
 nav = "Lisanslar"
 title = "3. Taraf Lisansları"
 version = "Sürüm"
+
+[localMode]
+toolUnavailable = "Bu araç bir hesap gerektirir. Kullanmak için Stirling Cloud'da oturum açın veya kendi barındırılan bir sunucuya bağlanın."
+
+[localMode.banner]
+message = "Tüm araçların kilidini açmak için oturum açın."
+signIn = "Oturum Aç"
+title = "Yerelde çalışıyor"
+
+[localMode.toolPicker]
+message = "Tüm araçların kilidini açmak için oturum açın."
+signIn = "Oturum Aç"
 
 [login]
 accountCreatedSuccess = "Hesap başarıyla oluşturuldu! Artık giriş yapabilirsiniz."
@@ -4382,12 +4519,12 @@ sendResetLink = "Sıfırlama bağlantısı gönder"
 sessionExpired = "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın."
 signin = "Giriş Yap"
 signInAnonymously = "Misafir olarak kaydol"
-subtitle = "Stirling PDF'de yeniden oturum açın"
 signingIn = "Giriş yapılıyor..."
 signinTitle = "Lütfen giriş yapınız."
 signInWith = "Şununla giriş yap"
 signOut = "Çıkış Yap"
 ssoSignIn = "Tek Oturum Açma ile Giriş Yap"
+subtitle = "Stirling PDF'de yeniden oturum açın"
 title = "Giriş Yap"
 toManySessions = "Çok fazla aktif oturumunuz var"
 unexpectedError = "Beklenmeyen hata: {{message}}"
@@ -4430,9 +4567,11 @@ tags = "biçimlendirme,web-içeriği,dönüşüm,dönüştür"
 title = "Markdown'dan PDF'e"
 
 [merge]
+goToFileEditor = "Dosya düzenleyiciye git"
 submit = "Birleştir"
 tags = "birleştir,Sayfa işlemleri,Arka uç,sunucu tarafı"
 title = "Birleştir"
+viewerModeHint = "Birleştirme için 2 veya daha fazla dosya gerekir. Bunları seçmek için dosya düzenleyiciye gidin."
 
 [merge.error]
 failed = "PDF'ler birleştirilirken bir hata oluştu."
@@ -4701,15 +4840,6 @@ viewSwitcher = "PDF'lerinizi nasıl görüntülemek istediğinizi seçmek için 
 workbench = "Burası <strong>Çalışma Alanı</strong> - PDF'lerinizi görüntüleyip düzenlediğiniz ana alandır."
 wrapUp = "Her şey hazır! Uygulamanın ana alanlarını ve bunları nasıl kullanacağınızı öğrendiniz. Bu turu tekrar görmek istediğinizde istediğiniz zaman <strong>Yardım</strong> düğmesine tıklayın."
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "Denemeniz bittiğinde ücretsiz katmanla devam edeceksiniz. Pro erişimini sürdürmek için bir ödeme yöntemi ekleyin."
-afterTrialWithPayment = "Deneme bittiğinde Pro aboneliğiniz otomatik olarak başlayacak."
-body = "Deneme süreniz boyunca Stirling PDF Pro özelliklerine tam erişiminiz var. Sınırsız dönüştürme, daha büyük dosya boyutları ve öncelikli işlemden yararlanın."
-daysRemaining = "{{days}} gün kaldı"
-daysRemainingSingular = "{{days}} gün kaldı"
-title = "30 Günlük Pro Denemeniz"
-trialEnds = "Deneme {{date}} tarihinde bitiyor"
-
 [onboarding.buttons]
 back = "Geri"
 download = "İndir →"
@@ -4722,6 +4852,15 @@ skipTheTour = "Turu atla"
 body = "Stirling, bir masaüstü uygulaması olarak en iyi şekilde çalışır. Çevrimdışı kullanabilir, belgelere daha hızlı erişebilir ve düzenlemeleri bilgisayarınızda yerel olarak yapabilirsiniz."
 title = "İndir"
 titleWithOs = "{{osLabel}} için indir"
+
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Denemeniz bittiğinde ücretsiz katmanla devam edeceksiniz. Pro erişimini sürdürmek için bir ödeme yöntemi ekleyin."
+afterTrialWithPayment = "Deneme bittiğinde Pro aboneliğiniz otomatik olarak başlayacak."
+body = "Deneme süreniz boyunca Stirling PDF Pro özelliklerine tam erişiminiz var. Sınırsız dönüştürme, daha büyük dosya boyutları ve öncelikli işlemden yararlanın."
+daysRemaining = "{{days}} gün kaldı"
+daysRemainingSingular = "{{days}} gün kaldı"
+title = "30 Günlük Pro Denemeniz"
+trialEnds = "Deneme {{date}} tarihinde bitiyor"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Oturum açma modunu etkinleştirdiğinizde kullanıcıları yönetebilir, ayarları yapılandırabilir ve sunucu sağlığını izleyebilirsiniz. Sunucunuzdaki ilk <strong>{{freeTierLimit}}</strong> kişi Stirling'i ücretsiz kullanır."
@@ -4858,126 +4997,6 @@ title = "Sayfa Düzenleyici"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
 
-[viewer]
-cannotPreviewFile = "Dosya önizlenemiyor"
-disableColorFilter = "Renk Filtresini Devre Dışı Bırak"
-dualPageView = "Çift Sayfa Görünümü"
-enableDarkFilter = "Karanlık Filtresini Etkinleştir"
-enableSepiaFilter = "Sepya Filtresini Etkinleştir"
-firstPage = "İlk Sayfa"
-lastPage = "Son Sayfa"
-nextPage = "Sonraki Sayfa"
-onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
-previousPage = "Önceki Sayfa"
-singlePageView = "Tek Sayfa Görünümü"
-unknownFile = "Bilinmeyen dosya"
-zoomIn = "Yakınlaştır"
-zoomOut = "Uzaklaştır"
-resetZoom = "Yakınlaştırmayı sıfırla"
-
-[viewer.nonPdf]
-fileTypeBadge = "{{type}} Dosyası"
-convertToPdf = "PDF'ye Dönüştür"
-loading = "Yükleniyor..."
-emptyFile = "Boş dosya"
-csvStats = "{{rows}} satır · {{columns}} sütun · {{size}}"
-sortedBy = "Sıralama ölçütü: {{column}}"
-columnDefault = "Sütun {{index}}"
-htmlPreviewWarning = "HTML önizleme — harici kaynaklar yüklenmeyebilir · {{size}}"
-htmlPreview = "HTML önizleme"
-invalidJson = "Geçersiz JSON — ham içerik gösteriliyor"
-textStats = "{{lines}} satır · {{size}}"
-lineNumbers = "Satır numaraları"
-renderMarkdown = "Markdown'u işle"
-
-[viewer.attachments]
-title = "Ekler"
-searchPlaceholder = "Eklerde ara"
-noSupport = "Bu görüntüleyici için ek desteği mevcut değil."
-noDocument = "Eklerini görmek için bir PDF açın."
-loading = "Ekler yükleniyor..."
-empty = "Bu belgede ek yok"
-noMatch = "Aramanızla eşleşen ek yok"
-
-[viewer.comments]
-title = "Yorumlar"
-hint = "Yorum, Metin Ekle veya Metni Değiştir araçlarıyla yorum bırakın. Bunlar burada sayfaya göre görünecektir."
-placeholder = "Yorumunuzu yazın..."
-pageLabel = "Sayfa {{page}}"
-oneComment = "1 yorum"
-nComments = "{{count}} yorum"
-addCommentPlaceholder = "Yorum ekle..."
-addLink = "Bağlantı ekle"
-goToLink = "Bağlantıya git"
-addComment = "Yorum ekle"
-viewComment = "Yorumu görüntüle"
-addReplyPlaceholder = "Yanıt ekle..."
-saveReply = "Yanıtı kaydet"
-send = "Gönder"
-moreActions = "Diğer işlemler"
-typeComment = "Yorum"
-typeInsertText = "Metin Ekle"
-typeReplaceText = "Metni Değiştir"
-locateAnnotation = "Belgede konumlandır"
-deleteTitle = "Açıklamayı yorumlardan kaldır?"
-deleteDescription = "Bu açıklamaya bir yorum eklenmiş. Açıklamayı koruyup kenar çubuğundan yalnızca yorumu kaldırabilir veya hepsini silebilirsiniz."
-removeCommentOnly = "Yalnızca yorumu kaldır"
-deleteAnnotationAndComment = "Açıklamayı ve yorumu sil"
-
-[viewer.formBar]
-title = "Form Alanları"
-unsavedBadge = "Kaydedilmemiş"
-unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
-hasFieldsDesc = "Bu PDF doldurulabilir alanlar içeriyor"
-dismiss = "Kapat"
-apply = "Değişiklikleri Uygula"
-download = "PDF'yi İndir"
-
-[rightRail]
-closeSelected = "Seçilen Dosyaları Kapat"
-selectAll = "Tümünü Seç"
-deselectAll = "Seçimi Kaldır"
-selectByNumber = "Sayfa Numaralarına Göre Seç"
-deleteSelected = "Seçilen Sayfaları Sil"
-closePdf = "PDF'yi Kapat"
-exportAll = "PDF'yi Dışa Aktar"
-downloadSelected = "Seçilen Dosyaları İndir"
-annotations = "Açıklamalar"
-exportSelected = "Seçilen Sayfaları Dışa Aktar"
-formFill = "Formu Doldur"
-saveChanges = "Değişiklikleri Kaydet"
-toggleAttachments = "Ekleri Göster/Gizle"
-toggleTheme = "Temayı Değiştir"
-language = "Dil"
-toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
-toggleLayers = "Katmanları Aç/Kapat"
-search = "PDF Ara"
-panMode = "Kaydırma Modu"
-applyRedactionsFirst = "Önce karartmaları uygula"
-rotateLeft = "Sola Döndür"
-rotateRight = "Sağa Döndür"
-toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
-toggleBookmarks = "Yer imlerini aç/kapat"
-toggleComments = "Yorumlar"
-print = "PDF'yi Yazdır"
-ruler = "Cetvel / Ölçüm"
-readAloud = "Sesli Oku"
-readAloudSpeed = "Hız"
-readAloudLanguage = "Dil"
-selectLanguage = "Dil seçin"
-draw = "Çiz"
-redact = "Karart"
-exitRedaction = "Karartma Modundan Çık"
-save = "Kaydet"
-downloadAll = "Tümünü İndir"
-saveAll = "Tümünü Kaydet"
-saveAs = "Farklı Kaydet"
-
-[textAlign]
-left = "Sol"
-center = "Orta"
-right = "Sağ"
-
 [pageExtracter]
 header = "Sayfaları Çıkar"
 placeholder = "(örneğin 1,2,8 veya 4,7,12-16 ya da 2n-1)"
@@ -5000,10 +5019,24 @@ tags = "birleştir,kompozit,tek-görünüm,düzenle"
 title = "Çoklu Sayfa Düzeni"
 top = "Üst Kenar Boşluğu"
 
-[pageLayout.mode]
-default = "Varsayılan"
-custom = "Özel"
-label = "Mod:"
+[pageLayout.advanced.tooltip.arrangement]
+bullet1 = "Satırlara Göre: Önce her satırı doldurur."
+bullet2 = "Sütunlara Göre: Önce her sütunu doldurur."
+text = "Sayfaların ızgarayı satır satır mı yoksa sütun sütun mu dolduracağını kontrol eder."
+title = "Sayfa Yerleşimi"
+
+[pageLayout.advanced.tooltip.header]
+title = "Gelişmiş Yerleşim Seçenekleri"
+
+[pageLayout.advanced.tooltip.orientation]
+text = "Nihai yaprak yönünü seçin. Dikey uzun içerikler için daha iyi çalışırken, yatay daha geniş düzenlere uygundur."
+title = "Yönlendirme"
+
+[pageLayout.advanced.tooltip.readingDirection]
+bullet1 = "LTR: Soldan sağa sıra."
+bullet2 = "RTL: Sağdan sola sıra."
+text = "Izgaradaki yatay sıralamayı belirler; soldan-sağa ve sağdan-sola belgeler için faydalıdır."
+title = "Okuma Yönü"
 
 [pageLayout.arrangement]
 byColumns = "Sütunlara Göre"
@@ -5018,100 +5051,86 @@ label = "Yerleşim Sırası:"
 
 [pageLayout.error]
 failed = "Çok sayfalı yerleşim oluşturulurken bir hata oluştu."
-outerVerticalMarginsTooLarge = "Üst/Alt kenar boşlukları bu sayfa boyutu için çok büyük."
-outerHorizontalMarginsTooLarge = "Sol/Sağ kenar boşlukları bu sayfa boyutu için çok büyük."
 innerMarginTooLarge = "Seçili yerleşim için iç kenar boşluğu çok büyük."
+outerHorizontalMarginsTooLarge = "Sol/Sağ kenar boşlukları bu sayfa boyutu için çok büyük."
+outerVerticalMarginsTooLarge = "Üst/Alt kenar boşlukları bu sayfa boyutu için çok büyük."
 
-[pageLayout.orientation]
-landscape = "Yatay"
-portrait = "Dikey"
-label = "Yönlendirme:"
-
-[pageLayout.readingDirection]
-ltr = "Soldan Sağa"
-rtl = "Sağdan Sola"
-label = "Okuma Yönü:"
-
-[pageLayout.tooltip.header]
-title = "Sayfa Yerleşimi Rehberi"
-
-[pageLayout.tooltip.overview]
-title = "Sayfa Yerleşimi nedir?"
-text = "Elden dağıtım için veya kağıt tasarrufu amacıyla birden çok sayfayı tek bir yaprağa sığdırın."
-
-[pageLayout.tooltip.mode]
-title = "Mod"
-text = "Izgaranın nasıl yapılandırılacağını seçin:"
-bullet1 = "Varsayılan: Bir hazır ayar seçin, ızgara otomatik hesaplanır."
-bullet2 = "Özel: Satır ve sütunları manuel ayarlayın."
-
-[pageLayout.tooltip.pagesPerSheet]
-title = "Kağıt Başına Sayfa (Varsayılan Mod)"
-text = "Kağıt başına kaç sayfa olacağını seçin (ör. 4 → 2×2, 9 → 3×3)."
-
-[pageLayout.tooltip.rowsCols]
-title = "Satırlar ve Sütunlar (Özel Mod)"
-text = "Kesin ızgara boyutlarını ayarlayın. Kağıt başına toplam sayfa = satır × sütun."
-
-[pageLayout.tooltip.orientation]
-title = "Yönlendirme"
-text = "Çıktı yaprağının yönünü ayarlar:"
-bullet1 = "Dikey: Eninden uzun."
-bullet2 = "Yatay: Boyundan geniş."
-
-[pageLayout.tooltip.arrangement]
-title = "Sayfa Yerleşimi"
-text = "Sayfaların ızgarayı doldurma sırasını kontrol eder:"
-bullet1 = "Satırlara Göre: Satır satır doldurur (soldan sağa veya sağdan sola)."
-bullet2 = "Sütunlara Göre: Yukarıdan aşağıya, sütun sütun doldurur."
-
-[pageLayout.tooltip.readingDirection]
-title = "Okuma Yönü"
-text = "Sayfaların yatay sırasını kontrol eder:"
-bullet1 = "LTR: Soldan sağa."
-bullet2 = "RTL: Sağdan sola."
-
-[pageLayout.tooltip.addBorder]
+[pageLayout.marginsBorders.tooltip.borders]
+text = "Yerleştirilen her sayfanın etrafına çizgiler çizmek için kenarlıkları etkinleştirin. Bu, görsel ayrım veya kırpma için yardımcı olabilir."
 title = "Kenarlık Ekle"
-text = "Her sayfa hücresinin etrafına kesim kılavuzları veya görsel ayrım için kenarlık çizgileri çizer."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+text = "Kenarlık kalınlığı yalnızca kenarlıklar etkinleştirildiğinde uygulanır. Daha yüksek değerler daha kalın çizgiler üretir."
+title = "Kenarlık Kalınlığı"
 
 [pageLayout.marginsBorders.tooltip.header]
 title = "Kenar Boşlukları ve Kenarlıklar"
 
-[pageLayout.marginsBorders.tooltip.margins]
-title = "Kenar Boşlukları"
-text = "Tam yaprak çıktı etrafındaki boşluğu kontrol etmek için üst, alt, sol ve sağ kenar boşluklarını kullanın."
-
 [pageLayout.marginsBorders.tooltip.innerMargin]
-title = "İç Kenar Boşluğu"
 text = "İç kenar boşluğu, sayfa ızgarasındaki hücreler arasında boşluk ekleyerek ayrımı ve okunabilirliği artırır."
+title = "İç Kenar Boşluğu"
 
-[pageLayout.marginsBorders.tooltip.borders]
+[pageLayout.marginsBorders.tooltip.margins]
+text = "Tam yaprak çıktı etrafındaki boşluğu kontrol etmek için üst, alt, sol ve sağ kenar boşluklarını kullanın."
+title = "Kenar Boşlukları"
+
+[pageLayout.mode]
+custom = "Özel"
+default = "Varsayılan"
+label = "Mod:"
+
+[pageLayout.orientation]
+label = "Yönlendirme:"
+landscape = "Yatay"
+portrait = "Dikey"
+
+[pageLayout.readingDirection]
+label = "Okuma Yönü:"
+ltr = "Soldan Sağa"
+rtl = "Sağdan Sola"
+
+[pageLayout.tooltip.addBorder]
+text = "Her sayfa hücresinin etrafına kesim kılavuzları veya görsel ayrım için kenarlık çizgileri çizer."
 title = "Kenarlık Ekle"
-text = "Yerleştirilen her sayfanın etrafına çizgiler çizmek için kenarlıkları etkinleştirin. Bu, görsel ayrım veya kırpma için yardımcı olabilir."
 
-[pageLayout.marginsBorders.tooltip.borderWidth]
-title = "Kenarlık Kalınlığı"
-text = "Kenarlık kalınlığı yalnızca kenarlıklar etkinleştirildiğinde uygulanır. Daha yüksek değerler daha kalın çizgiler üretir."
-
-[pageLayout.advanced.tooltip.header]
-title = "Gelişmiş Yerleşim Seçenekleri"
-
-[pageLayout.advanced.tooltip.orientation]
-title = "Yönlendirme"
-text = "Nihai yaprak yönünü seçin. Dikey uzun içerikler için daha iyi çalışırken, yatay daha geniş düzenlere uygundur."
-
-[pageLayout.advanced.tooltip.arrangement]
+[pageLayout.tooltip.arrangement]
+bullet1 = "Satırlara Göre: Satır satır doldurur (soldan sağa veya sağdan sola)."
+bullet2 = "Sütunlara Göre: Yukarıdan aşağıya, sütun sütun doldurur."
+text = "Sayfaların ızgarayı doldurma sırasını kontrol eder:"
 title = "Sayfa Yerleşimi"
-text = "Sayfaların ızgarayı satır satır mı yoksa sütun sütun mu dolduracağını kontrol eder."
-bullet1 = "Satırlara Göre: Önce her satırı doldurur."
-bullet2 = "Sütunlara Göre: Önce her sütunu doldurur."
 
-[pageLayout.advanced.tooltip.readingDirection]
+[pageLayout.tooltip.header]
+title = "Sayfa Yerleşimi Rehberi"
+
+[pageLayout.tooltip.mode]
+bullet1 = "Varsayılan: Bir hazır ayar seçin, ızgara otomatik hesaplanır."
+bullet2 = "Özel: Satır ve sütunları manuel ayarlayın."
+text = "Izgaranın nasıl yapılandırılacağını seçin:"
+title = "Mod"
+
+[pageLayout.tooltip.orientation]
+bullet1 = "Dikey: Eninden uzun."
+bullet2 = "Yatay: Boyundan geniş."
+text = "Çıktı yaprağının yönünü ayarlar:"
+title = "Yönlendirme"
+
+[pageLayout.tooltip.overview]
+text = "Elden dağıtım için veya kağıt tasarrufu amacıyla birden çok sayfayı tek bir yaprağa sığdırın."
+title = "Sayfa Yerleşimi nedir?"
+
+[pageLayout.tooltip.pagesPerSheet]
+text = "Kağıt başına kaç sayfa olacağını seçin (ör. 4 → 2×2, 9 → 3×3)."
+title = "Kağıt Başına Sayfa (Varsayılan Mod)"
+
+[pageLayout.tooltip.readingDirection]
+bullet1 = "LTR: Soldan sağa."
+bullet2 = "RTL: Sağdan sola."
+text = "Sayfaların yatay sırasını kontrol eder:"
 title = "Okuma Yönü"
-text = "Izgaradaki yatay sıralamayı belirler; soldan-sağa ve sağdan-sola belgeler için faydalıdır."
-bullet1 = "LTR: Soldan sağa sıra."
-bullet2 = "RTL: Sağdan sola sıra."
+
+[pageLayout.tooltip.rowsCols]
+text = "Kesin ızgara boyutlarını ayarlayın. Kağıt başına toplam sayfa = satır × sütun."
+title = "Satırlar ve Sütunlar (Özel Mod)"
 
 [pageRemover]
 header = "PDF Sayfa silici"
@@ -5197,6 +5216,9 @@ title = "İpuçları"
 autoClose = "Bu pencere otomatik olarak kapanacaktır..."
 billingPeriod = "Faturalandırma Dönemi"
 canCloseWindow = "Bu pencereyi şimdi kapatabilirsiniz."
+checkoutInstructions = "Yeni açılan tarayıcı penceresinde satın almayı tamamlayın. Ödeme tamamlandıktan sonra buraya dönün ve faturalandırma bilgilerinizi yenilemek için aşağıdaki düğmeye tıklayın."
+checkoutOpened = "Ödeme Tarayıcıda Açıldı"
+closeLater = "Bunu Daha Sonra Yapacağım"
 emailInvalid = "Lütfen geçerli bir e-posta adresi girin"
 enterpriseNote = "Koltuklar ödeme adımında ayarlanabilir (1-1000)."
 error = "Ödeme Hatası"
@@ -5218,6 +5240,7 @@ perMonth = "/ay"
 perYear = "/yıl"
 preparing = "Ödeme hazırlanıyor..."
 redirecting = "Güvenli ödeme sayfasına yönlendiriliyor..."
+refreshBilling = "Ödemeyi Tamamladım - Faturalandırmayı Yenile"
 stripeNotConfigured = "Stripe Yapılandırılmadı"
 stripeNotConfiguredMessage = "Stripe ödeme entegrasyonu yapılandırılmadı. Lütfen yöneticinizle iletişime geçin."
 success = "Ödeme Başarılı!"
@@ -5229,10 +5252,6 @@ upgradeCompleteMessage = "Aboneliğiniz başarıyla yükseltildi. Mevcut lisans 
 upgradeSuccess = "Ödeme başarılı! Aboneliğiniz yükseltildi. Lisansınız sunucunuza güncellendi. Kısa süre içinde bir onay e-postası alacaksınız."
 upgradeTitle = "{{planName}} planına yükselt"
 yearly = "Yıllık"
-checkoutOpened = "Ödeme Tarayıcıda Açıldı"
-checkoutInstructions = "Yeni açılan tarayıcı penceresinde satın almayı tamamlayın. Ödeme tamamlandıktan sonra buraya dönün ve faturalandırma bilgilerinizi yenilemek için aşağıdaki düğmeye tıklayın."
-refreshBilling = "Ödemeyi Tamamladım - Faturalandırmayı Yenile"
-closeLater = "Bunu Daha Sonra Yapacağım"
 
 [payment.emailStage]
 continue = "Devam et"
@@ -5456,13 +5475,6 @@ prompt = "Tabloyu çıkarmak için sayfa seçin"
 submit = "Çıkart"
 title = "PDF'den CSV'ye"
 
-[PDFToXLSX]
-header = "PDF'den Excel'e"
-prompt = "Tabloları çıkarmak için sayfaları seçin"
-submit = "Dönüştür"
-title = "PDF'den Excel'e (XLSX)"
-tags = "e-tablo,excel,xlsx,tablo,çıkar,dönüştür"
-
 [PDFToHTML]
 credit = "Bu hizmet dosya dönüşümü için pdftohtml kullanır."
 header = "PDF'den HTML'e"
@@ -5561,6 +5573,13 @@ title = "PDF'den Word'e"
 [PDFToWord.selectText]
 1 = "Çıktı dosya formatı"
 
+[PDFToXLSX]
+header = "PDF'den Excel'e"
+prompt = "Tabloları çıkarmak için sayfaları seçin"
+submit = "Dönüştür"
+tags = "e-tablo,excel,xlsx,tablo,çıkar,dönüştür"
+title = "PDF'den Excel'e (XLSX)"
+
 [PDFToXML]
 credit = "Bu hizmet dosya dönüşümü için LibreOffice kullanır."
 header = "PDF'den XML'e"
@@ -5626,10 +5645,10 @@ manage = "Yönet"
 perMonth = "/ay"
 perSeat = "/koltuk"
 popular = "Popüler"
-selectPlan = "Plan Seç"
-selectCredits = "Kredi Miktarını Seçin"
-showComparison = "Tüm Özellikleri Karşılaştır"
 purchase = "Satın Al"
+selectCredits = "Kredi Miktarını Seçin"
+selectPlan = "Plan Seç"
+showComparison = "Tüm Özellikleri Karşılaştır"
 totalCost = "Toplam Maliyet"
 upgrade = "Yükselt"
 withServer = "+ Sunucu Planı"
@@ -5638,19 +5657,29 @@ withServer = "+ Sunucu Planı"
 subtitle = "Mevcut abonelik ayrıntılarınız"
 title = "Aktif Plan"
 
+[plan.api]
+large = "5.000 Kredi"
+medium = "1.000 Kredi"
+small = "500 Kredi"
+xsmall = "100 Kredi"
+
+[plan.apiPackages]
+subtitle = "Uygulamalarınız için API kredi satın alın"
+title = "API Kredi Paketleri"
+
 [plan.availablePlans]
-subtitle = "İhtiyaçlarınıza uygun planı seçin"
 loadError = "Plan fiyatları yüklenemedi. Varsayılan değerler kullanılıyor."
+subtitle = "İhtiyaçlarınıza uygun planı seçin"
 title = "Mevcut Planlar"
 
 [plan.enterprise]
-siteLicense = "Site Lisansı"
 highlight1 = "Özel fiyatlandırma"
 highlight2 = "Özel destek"
 highlight3 = "En yeni özellikler"
 name = "Kurumsal"
 requiresServer = "Sunucu gerektirir"
 requiresServerMessage = "Enterprise'a yükseltmeden önce lütfen önce Sunucu planına yükseltin."
+siteLicense = "Site Lisansı"
 
 [plan.feature]
 api = "API Erişimi"
@@ -5722,16 +5751,6 @@ successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi
 name = "Takım"
 siteLicense = "Site Lisansı"
 
-[plan.api]
-large = "5.000 Kredi"
-medium = "1.000 Kredi"
-small = "500 Kredi"
-xsmall = "100 Kredi"
-
-[plan.apiPackages]
-subtitle = "Uygulamalarınız için API kredi satın alın"
-title = "API Kredi Paketleri"
-
 [plan.trial]
 badge = "Deneme"
 continueWithFree = "Ücretsiz ile Devam Et"
@@ -5746,77 +5765,6 @@ subscribeToPro = "Pro'ya Abone Ol"
 subscriptionScheduled = "Abonelik planlandı - {{date}} tarihinde başlar"
 title = "Ücretsiz Deneme Etkin"
 
-[credits]
-enableOverageBilling = "Aşım Faturalandırmasını Etkinleştir"
-maybeLater = "Belki sonra"
-upgrade = "Yükselt"
-
-[credits.modal]
-advancedMonitoring = "Gelişmiş izleme"
-allInOneWorkspace = "Tümü bir arada PDF çalışma alanı (görüntüleyici, araçlar ve ajan)"
-apiSandbox = "API sandbox"
-contactSales = "Satış ile iletişime geçin"
-creditsRemaining = "{{total}} içinden {{current}} kaldı"
-creditsThisMonth = "Aylık krediler"
-current = "Geçerli Plan"
-customPricing = "Özel"
-customSmartFolders = "Özel Akıllı Klasörler"
-dedicatedSupportSlas = "Özel destek ve SLA'lar"
-enterpriseSubscription = "Kurumsal"
-everythingInCredits = "Krediler'deki her şey ve fazlası:"
-everythingInFree = "Ücretsiz'deki her şey ve fazlası:"
-fasterThroughput = "10 kat daha hızlı işleme hızı"
-forRegularWork = "Düzenli PDF çalışmaları için:"
-freeTier = "Ücretsiz Katman"
-fullyPrivateFiles = "Tamamen özel dosyalar"
-largeFileProcessing = "Büyük dosya işleme"
-managedMemberMessage = "Takımınız aracılığıyla sınırsız kredi erişiminiz var. Yardıma ihtiyacınız olursa lütfen takım liderinizle iletişime geçin."
-managedMemberTitle = "Sınırsız Krediler"
-meteringBillingNote = "Aşım kredileri, Takım aboneliğinizle birlikte aylık olarak faturalandırılır. Kullanımınızı istediğiniz zaman hesap ayarlarınızdan takip edebilirsiniz."
-meteringExplanation = "Takım planınız ayda {{credits}} kredi içerir. Bittiğinde, aşım faturalandırma otomatik olarak ek krediler sağlar; böylece çalışmayı asla durdurmak zorunda kalmazsınız."
-meteringIncluded = "Takım ile ayda {{credits}} kredi dahil"
-meteringNoCommitment = "Taahhüt yok, istediğiniz zaman iptal edin"
-meteringNeverRunOut = "Krediniz asla bitmesin"
-meteringPayAsYouGo = "Kullandığın kadar öde"
-meteringPrice = "Ek krediler {{price}}/kredi"
-meteringTitle = "Kullandığın Kadar Öde Aşım Faturalandırması"
-monthlyCredits = "aylık krediler"
-orgWideAccess = "Kuruluş genelinde erişim kontrolleri"
-overage = "aşım"
-perMonth = "/ay"
-popular = "Popüler"
-premiumAiModels = "Premium AI modelleri"
-prioritySupport = "Öncelikli destek"
-privateDocCloud = "Özel Belge Bulutu"
-ragFineTuning = "RAG + ince ayar"
-secureApiAccess = "Güvenli API erişimi"
-selfHostLink = "Belgeleri ve planları inceleyin"
-selfHostPrompt = "Kendi sunucunuzda barındırmak mı istiyorsunuz?"
-standardThroughput = "Standart işleme hızı"
-subtitle = "10 kat kredi ve daha hızlı işleme için Takım'a yükseltin."
-subtitlePro = "Kredinizin asla bitmemesi için otomatik aşım faturalandırmayı etkinleştirin."
-teamLeaderOnly = "Yalnızca takım liderleri aşım faturalandırmayı etkinleştirebilir"
-teamSubscription = "Takım"
-titleExhausted = "Ücretsiz kredilerinizi kullandınız"
-titleExhaustedPro = "Kredileriniz tükendi"
-unlimitedApiAccess = "Sınırsız API erişimi"
-unlimitedMonthlyCredits = "Site Lisansı"
-unlimitedSeats = "Sınırsız kullanıcı"
-
-[credits.modal.features]
-everythingInCredits = "Krediler'deki her şey ve fazlası:"
-everythingInFree = "Ücretsiz'deki her şey ve fazlası:"
-forRegularWork = "Düzenli PDF çalışmaları için:"
-
-[credits.insufficient]
-brief = "Yetersiz kredi. {{required}} krediye ihtiyacınız var ancak {{current}} var."
-freeTier = "10 kat daha fazla kredi ve sınırsız aşım faturalandırma için Takım'a yükseltin."
-managedMember = "Lütfen yardım için takım liderinizle iletişime geçin."
-message = "{{tool}} çalıştırmak için yeterli krediniz yok. Şu anda {{current}} krediniz var."
-messageWithAmount = "{{tool}} çalıştırmak için {{required}} krediye ihtiyacınız var, ancak yalnızca {{current}} var."
-teamMember = "Kredinizin asla bitmemesi için aşım faturalandırmayı etkinleştirin."
-title = "Yetersiz Kredi"
-
 [printFile]
 header = "Dosyayı Yazıcıya Yazdır"
 submit = "Yazdır"
@@ -5825,6 +5773,207 @@ title = "Dosya Yazdır"
 [printFile.selectText]
 1 = "Yazdırılacak Dosyayı Seçin"
 2 = "Yazıcı Adını Girin"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Dosya İçe Aktarma"
+
+[provider.googledrive.apiKey]
+description = "Google Cloud Console'dan Google Picker API için Google API Anahtarı"
+label = "API Anahtarı"
+
+[provider.googledrive.appId]
+description = "Google Cloud Console'dan Google Drive Uygulama Kimliği"
+label = "Uygulama Kimliği"
+
+[provider.googledrive.clientId]
+description = "Google Cloud Console'dan Google OAuth 2.0 İstemci Kimliği"
+label = "İstemci Kimliği"
+
+[provider.googledrive.enabled]
+description = "Kullanıcıların doğrudan Google Drive'dan dosya içe aktarmasına izin ver"
+label = "Google Drive Dosya Seçiciyi Etkinleştir"
+
+[provider.oauth2.generic]
+name = "Genel OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.autoCreateUser]
+description = "İlk OAuth2 oturum açışında kullanıcı hesaplarını otomatik olarak oluştur"
+label = "Kullanıcıları Otomatik Oluştur"
+
+[provider.oauth2.generic.blockRegistration]
+description = "OAuth2 üzerinden yeni kullanıcı kaydını engelle"
+label = "Kaydı Engelle"
+
+[provider.oauth2.generic.clientId]
+description = "Sağlayıcınızdan alınan OAuth2 istemci kimliği"
+label = "İstemci Kimliği"
+
+[provider.oauth2.generic.clientSecret]
+description = "Sağlayıcınızdan alınan OAuth2 istemci sırrı"
+label = "İstemci Sırrı"
+
+[provider.oauth2.generic.enabled]
+description = "Özel bir OAuth2 sağlayıcısı kullanarak kimlik doğrulamayı etkinleştirin"
+label = "Genel OAuth2'yi Etkinleştir"
+
+[provider.oauth2.generic.issuer]
+description = "OpenID Connect Keşfi'ni destekleyen sağlayıcı (/.well-known/openid-configuration)"
+label = "Veren URL'si"
+
+[provider.oauth2.generic.provider]
+description = "OAuth2 sağlayıcınızın adı (örn. Azure AD, Okta)"
+label = "Sağlayıcı Adı"
+
+[provider.oauth2.generic.scopes]
+description = "Virgülle ayrılmış OAuth2 kapsamları"
+label = "Kapsamlar"
+
+[provider.oauth2.generic.useAsUsername]
+description = "Kullanıcı adı olarak kullanılacak alan"
+label = "Kullanıcı Adı Olarak Kullan"
+
+[provider.oauth2.github]
+scope = "Oturum açma kimlik doğrulaması"
+
+[provider.oauth2.github.clientId]
+description = "GitHub Developer Settings'ten OAuth2 istemci kimliği"
+label = "İstemci Kimliği"
+
+[provider.oauth2.github.clientSecret]
+description = "GitHub Developer Settings'ten OAuth2 istemci sırrı"
+label = "İstemci Sırrı"
+
+[provider.oauth2.github.scopes]
+description = "Virgülle ayrılmış OAuth2 kapsamları"
+label = "Kapsamlar"
+
+[provider.oauth2.github.useAsUsername]
+description = "Kullanıcı adı olarak kullanılacak alan (email, login, name)"
+label = "Kullanıcı Adı Olarak Kullan"
+
+[provider.oauth2.google]
+scope = "Oturum açma kimlik doğrulaması"
+
+[provider.oauth2.google.clientId]
+description = "Google Cloud Console'dan OAuth2 istemci kimliği"
+label = "İstemci Kimliği"
+
+[provider.oauth2.google.clientSecret]
+description = "Google Cloud Console'dan OAuth2 istemci sırrı"
+label = "İstemci Sırrı"
+
+[provider.oauth2.google.scopes]
+description = "Virgülle ayrılmış OAuth2 kapsamları"
+label = "Kapsamlar"
+
+[provider.oauth2.google.useAsUsername]
+description = "Kullanıcı adı olarak kullanılacak alan (email, name, given_name, family_name)"
+label = "Kullanıcı Adı Olarak Kullan"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.clientId]
+description = "Keycloak'tan OAuth2 istemci kimliği"
+label = "İstemci Kimliği"
+
+[provider.oauth2.keycloak.clientSecret]
+description = "Keycloak'tan OAuth2 istemci sırrı"
+label = "İstemci Sırrı"
+
+[provider.oauth2.keycloak.issuer]
+description = "Keycloak realm'inin OpenID Connect Keşif uç noktasının URL'si"
+label = "Yayıncı URL'si"
+
+[provider.oauth2.keycloak.scopes]
+description = "Virgülle ayrılmış OAuth2 kapsamları"
+label = "Kapsamlar"
+
+[provider.oauth2.keycloak.useAsUsername]
+description = "Kullanıcı adı olarak kullanılacak alan (email, name, given_name, family_name, preferred_username)"
+label = "Kullanıcı Adı Olarak Kullan"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.autoCreateUser]
+description = "İlk SAML2 oturum açışında kullanıcı hesaplarını otomatik olarak oluşturun"
+label = "Kullanıcıları Otomatik Oluştur"
+
+[provider.saml2.blockRegistration]
+description = "SAML2 üzerinden yeni kullanıcı kaydını engelle"
+label = "Kaydı Engelle"
+
+[provider.saml2.enabled]
+description = "SAML2 kimlik doğrulamasını etkinleştirin (yalnızca Kurumsal)"
+label = "SAML2'yi Etkinleştir"
+
+[provider.saml2.idpCert]
+description = "Sertifika yolu (örn. classpath:okta.cert)"
+label = "IDP Sertifikası"
+
+[provider.saml2.idpIssuer]
+description = "Sağlayıcınızın kimliği"
+label = "IDP Veren"
+
+[provider.saml2.idpMetadataUri]
+description = "Sağlayıcınızın meta verileri için URI"
+label = "IDP Meta Verisi URI'si"
+
+[provider.saml2.idpSingleLoginUrl]
+description = "SSO başlatma için URL"
+label = "IDP Tek Oturum Açma URL'si"
+
+[provider.saml2.idpSingleLogoutUrl]
+description = "SLO başlatma için URL"
+label = "IDP Tek Oturum Kapatma URL'si"
+
+[provider.saml2.privateKey]
+description = "Özel anahtar yolunuz"
+label = "Özel Anahtar"
+
+[provider.saml2.provider]
+description = "SAML2 sağlayıcınızın adı"
+label = "Sağlayıcı Adı"
+
+[provider.saml2.registrationId]
+description = "Hizmet Sağlayıcı (SP) uygulamanızın adı"
+label = "Kayıt Kimliği"
+
+[provider.saml2.spCert]
+description = "İmzalama sertifikanızın yolu"
+label = "SP Sertifikası"
+
+[provider.smtp]
+name = "SMTP Posta"
+scope = "E-posta Bildirimleri"
+
+[provider.smtp.enabled]
+description = "E-posta bildirimlerini ve SMTP işlevselliğini etkinleştirin"
+label = "Postayı Etkinleştir"
+
+[provider.smtp.from]
+description = "Gönderici olarak kullanılacak e-posta adresi"
+label = "Kimden Adresi"
+
+[provider.smtp.host]
+description = "SMTP sunucunuzun ana makine adı veya IP adresi"
+label = "SMTP Sunucusu"
+
+[provider.smtp.password]
+description = "SMTP kimlik doğrulaması için parola"
+label = "SMTP Parolası"
+
+[provider.smtp.port]
+description = "SMTP bağlantısı için bağlantı noktası numarası (genellikle 25, 465 veya 587)"
+label = "SMTP Bağlantı Noktası"
+
+[provider.smtp.username]
+description = "SMTP kimlik doğrulaması için kullanıcı adı"
+label = "SMTP Kullanıcı Adı"
 
 [quickAccess]
 access = "Erişim"
@@ -5867,7 +6016,12 @@ createNew = "Yeni İstek Oluştur"
 createSession = "İmzalama İsteği Oluştur"
 dueDate = "Son tarih (isteğe bağlı)"
 files = "Dosyalar"
+filterDeclined = "Reddedildi"
+filterMine = "Benim"
+filterOverdue = "Gecikmiş"
+filterSigned = "İmzalandı"
 help = "Yardım"
+newRequest = "Yeni İstek"
 noActiveSessions = "Bekleyen imza isteği veya aktif oturum yok"
 noCompletedSessions = "Tamamlanan oturum yok"
 noFile = "Dosya seçilmedi"
@@ -5875,8 +6029,9 @@ read = "Oku"
 reader = "Okuyucu"
 refresh = "Yenile"
 requestSignatures = "İmza İste"
-selectSingleFileToRequest = "İmza istemek için tek bir PDF dosyası seçin"
+searchDocuments = "Belgelerde ara…"
 selectedFile = "Seçilen dosya"
+selectSingleFileToRequest = "İmza istemek için tek bir PDF dosyası seçin"
 selectUsers = "İmzalamaları için kullanıcıları seçin"
 selectUsersPlaceholder = "Katılımcıları seçin..."
 sendingRequest = "Gönderiliyor..."
@@ -5885,14 +6040,8 @@ showMeAround = "Bana etrafı göster"
 sign = "İmzala"
 signatureRequests = "İmza İstekleri"
 signYourself = "Kendin İmzala"
-newRequest = "Yeni İstek"
 tours = "Turlar"
 wetSign = "İmza Ekle"
-filterMine = "Benim"
-filterOverdue = "Gecikmiş"
-filterSigned = "İmzalandı"
-filterDeclined = "Reddedildi"
-searchDocuments = "Belgelerde ara…"
 
 [quickAccess.helpMenu]
 adminTour = "Yönetici Turu"
@@ -5933,15 +6082,15 @@ title = "Sansürlenecek Kelimeler"
 failed = "PDF sansürlenirken bir hata oluştu."
 
 [redact.manual]
+activate = "Karartma Aracını Etkinleştir"
+active = "Karartma Modu Etkin"
 apply = "Uygula"
 applyChanges = "Değişiklikleri Uygula"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Kalıcı uygulama, geri alınamaz ve altındaki veriler silinir"
 boxRedaction = "Kutu çizerek sansürleme"
-colourPicker = "Renk Seçici"
 colorLabel = "Karartma Rengi"
-active = "Karartma Modu Etkin"
-activate = "Karartma Aracını Etkinleştir"
+colourPicker = "Renk Seçici"
 controlsTitle = "Manuel Karartma Kontrolleri"
 convertPDFToImageLabel = "PDF'yi PDF-Image'a dönüştür (Kutunun arkasındaki metni kaldırmak için kullanılır)"
 export = "Dışa Aktar"
@@ -6337,6 +6486,46 @@ title = "Yüksek Kontrast"
 text = "PDF'deki tüm renkleri tamamen ters çevirerek negatif benzeri bir etki oluşturur. Düşük ışık koşullarında göz yorgunluğunu azaltmak veya belgelerin koyu mod sürümlerini oluşturmak için kullanışlıdır."
 title = "Tüm Renkleri Ters Çevir"
 
+[rightRail]
+annotations = "Açıklamalar"
+applyRedactionsFirst = "Önce karartmaları uygula"
+closePdf = "PDF'yi Kapat"
+closeSelected = "Seçilen Dosyaları Kapat"
+deleteSelected = "Seçilen Sayfaları Sil"
+deselectAll = "Seçimi Kaldır"
+downloadAll = "Tümünü İndir"
+downloadSelected = "Seçilen Dosyaları İndir"
+draw = "Çiz"
+exitRedaction = "Karartma Modundan Çık"
+exportAll = "PDF'yi Dışa Aktar"
+exportSelected = "Seçilen Sayfaları Dışa Aktar"
+formFill = "Formu Doldur"
+language = "Dil"
+panMode = "Kaydırma Modu"
+print = "PDF'yi Yazdır"
+readAloud = "Sesli Oku"
+readAloudLanguage = "Dil"
+readAloudSpeed = "Hız"
+redact = "Karart"
+rotateLeft = "Sola Döndür"
+rotateRight = "Sağa Döndür"
+ruler = "Cetvel / Ölçüm"
+save = "Kaydet"
+saveAll = "Tümünü Kaydet"
+saveAs = "Farklı Kaydet"
+saveChanges = "Değişiklikleri Kaydet"
+search = "PDF Ara"
+selectAll = "Tümünü Seç"
+selectByNumber = "Sayfa Numaralarına Göre Seç"
+selectLanguage = "Dil seçin"
+toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
+toggleAttachments = "Ekleri Göster/Gizle"
+toggleBookmarks = "Yer imlerini aç/kapat"
+toggleComments = "Yorumlar"
+toggleLayers = "Katmanları Aç/Kapat"
+toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
+toggleTheme = "Temayı Değiştir"
+
 [rotate]
 rotateLeft = "Saat yönünün tersine döndür"
 rotateRight = "Saat yönünde döndür"
@@ -6359,32 +6548,6 @@ text = "PDF sayfalarınızı 90 derecelik artışlarla saat yönünde veya saat 
 
 [rotate.tooltip.header]
 title = "Döndürme Ayarları Genel Bakış"
-
-[timestampPdf]
-completed = "PDF başarıyla zaman damgalandı"
-desc = "Güvenilir bir Time Stamp Authority (TSA) sunucusu kullanarak PDF'nize bir RFC 3161 belge zaman damgası ekleyin."
-filenamePrefix = "zaman-damgalı"
-results = "Zaman Damgası Sonuçları"
-submit = "Zaman Damgası Uygula"
-title = "PDF'yi Zaman Damgala"
-
-[timestampPdf.error]
-failed = "PDF zaman damgalanırken bir hata oluştu."
-generic = "Zaman damgalama başarısız"
-
-[timestampPdf.files]
-placeholder = "Başlamak için ana görünümde bir PDF dosyası seçin"
-
-[timestampPdf.options]
-note = "Yalnızca belgenizin SHA-256 özeti TSA sunucusuna gönderilir; PDF dosyasının kendisi asla TSA sunucusuna gönderilmez."
-title = "Zaman Damgası Sunucusu (TSA)"
-
-[timestampPdf.options.tsaUrl]
-desc = "Güvenilir bir Zaman Damgası Otoritesi seçin"
-label = "Bir TSA sunucusu seçin"
-
-[timestampPdf.steps]
-settings = "Ayarlar"
 
 [sanitize]
 completed = "Temizleme başarıyla tamamlandı"
@@ -6554,37 +6717,6 @@ bullet3 = "Onay iş akışları ve yasal teslim zincirleri için kritiktir"
 description = "Oturumu oluştururken belirttiğiniz sıra, kimin önce imzalayacağını belirler."
 title = "İmza Sırası"
 
-[signatureSettings.tooltip]
-header = "İmza Görünümü Ayarları"
-
-[signatureSettings.tooltip.location]
-bullet1 = "Örnekler: \"New York, USA\", \"London Office\", \"Remote\""
-bullet2 = "Sayfa konumuyla aynı değildir"
-bullet3 = "Bazı hukuki yargı alanları için gerekli olabilir"
-description = "İmzanın uygulandığı isteğe bağlı coğrafi konum. Sertifika metaverisine kaydedilir."
-title = "İmza Konumu"
-
-[signatureSettings.tooltip.logo]
-bullet1 = "İmza ve metnin yanında gösterilir"
-bullet2 = "PNG, JPG formatlarını destekler"
-bullet3 = "Profesyonel görünümü artırır"
-description = "Görünür imzalara marka ve doğruluk için şirket logosu ekleyin."
-title = "Şirket Logosu"
-
-[signatureSettings.tooltip.reason]
-bullet1 = "Örnekler: \"Onay\", \"Sözleşme Anlaşması\", \"İnceleme Tamamlandı\""
-bullet2 = "PDF imza özelliklerinde görünür"
-bullet3 = "Denetim izleri ve uyumluluk için faydalıdır"
-description = "Belgenin neden imzalandığını açıklayan isteğe bağlı metin. Sertifika metaverisine kaydedilir."
-title = "İmza Nedeni"
-
-[signatureSettings.tooltip.visibility]
-bullet1 = "<b>Görünür</b>: İmza, özel görünümle PDF üzerinde görünür"
-bullet2 = "<b>Görünmez</b>: Görsel işaret olmadan sertifika gömülür"
-bullet3 = "Görünmez imzalar yine de kriptografik doğrulama sağlar"
-description = "İmzanın belgede görünür olup olmayacağını veya görünmez şekilde gömüleceğini kontrol eder."
-title = "İmza Görünürlüğü"
-
 [settings.configuration]
 advanced = "Gelişmiş"
 database = "Veritabanı"
@@ -6606,6 +6738,102 @@ user = "Şu olarak oturum açıldı"
 local = "Yalnızca Yerel"
 saas = "Stirling Cloud"
 selfhosted = "Öz Barındırılan"
+
+[settings.developer]
+apiKeys = "API Anahtarları"
+title = "Geliştirici"
+
+[settings.general]
+autoUnzip = "API yanıtlarını otomatik ZIP'ten çıkar"
+autoUnzipDescription = "ZIP yanıtlarındaki dosyaları otomatik olarak çıkar"
+autoUnzipFileLimit = "Otomatik zip açma dosya sınırı"
+autoUnzipFileLimitDescription = "ZIP'ten çıkarılacak azami dosya sayısı"
+autoUnzipFileLimitTooltip = "Yalnızca ZIP bu kadar ya da daha az dosya içeriyorsa çıkar. Daha büyük ZIP'leri çıkarmak için daha yüksek ayarlayın."
+autoUnzipTooltip = "API işlemlerinden dönen ZIP dosyalarını otomatik olarak çıkarır. ZIP dosyalarını olduğu gibi tutmak için devre dışı bırakın. Bu, otomasyon iş akışlarını etkilemez."
+defaultPdfEditor = "Varsayılan PDF düzenleyici"
+defaultPdfEditorActive = "Stirling PDF varsayılan PDF düzenleyiciniz"
+defaultPdfEditorChecking = "Kontrol ediliyor..."
+defaultPdfEditorInactive = "Varsayılan olarak başka bir uygulama ayarlı"
+defaultPdfEditorSet = "Zaten Varsayılan"
+defaultStartupView = "Başlangıçtaki varsayılan görünüm"
+defaultStartupViewDescription = "Uygulama başlarken sol sütunda hangi sekmenin etkin olacağını seçin"
+defaultToolPickerMode = "Varsayılan araç seçici modu"
+defaultToolPickerModeDescription = "Araç seçicinin varsayılan olarak tam ekranda mı yoksa kenar çubuğunda mı açılacağını seçin"
+defaultViewerZoom = "Varsayılan okuyucu yakınlaştırması"
+defaultViewerZoomDescription = "PDF'leri okuyucuda açarken varsayılan yakınlaştırma düzeyini ayarlayın"
+description = "Genel uygulama tercihlerini yapılandırın."
+hideUnavailableConversions = "Kullanılamayan dönüşümleri gizle"
+hideUnavailableConversionsDescription = "Gri gösterilmek yerine Dönüştür aracındaki devre dışı seçenekleri kaldırın."
+hideUnavailableTools = "Kullanılamayan araçları gizle"
+hideUnavailableToolsDescription = "Gri gösterilmek yerine sunucunuz tarafından devre dışı bırakılan araçları kaldırın."
+logout = "Oturumu kapat"
+setAsDefault = "Varsayılan Yap"
+title = "Genel"
+user = "Kullanıcı"
+
+[settings.general.enableFeatures]
+action = "Yapılandır"
+and = "ve"
+benefit = "Kullanıcı rolleri, ekip işbirliği, yönetici kontrolleri ve kurumsal özellikleri etkinleştirir."
+dismiss = "Kapat"
+intro = "Kuruluşunuz için kullanıcı kimlik doğrulaması, ekip yönetimi ve çalışma alanı özelliklerini etkinleştirin."
+learnMore = "Belgelerde daha fazla bilgi edinin"
+title = "Sistem Yöneticileri için"
+
+[settings.general.mode]
+fullscreen = "Tam ekran"
+sidebar = "Kenar çubuğu"
+
+[settings.general.startupView]
+automate = "Otomasyon"
+read = "Okuyucu"
+tools = "Araçlar"
+
+[settings.general.updates]
+checkForUpdates = "Güncellemeleri Kontrol Et"
+currentBackendVersion = "Current Backend Version"
+currentFrontendVersion = "Current Frontend Version"
+description = "Güncellemeleri kontrol edin ve sürüm bilgilerini görüntüleyin"
+latestVersion = "En Son Sürüm"
+serverNeedsUpdate = "Sunucunun yönetici tarafından güncellenmesi gerekiyor"
+title = "Yazılım Güncellemeleri"
+versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+viewDetails = "Ayrıntıları Görüntüle"
+
+[settings.general.versionInfo]
+description = "Masaüstü ve sunucu sürüm ayrıntıları"
+desktop = "Masaüstü Sürümü"
+server = "Sunucu Sürümü"
+title = "Sürüm Bilgileri"
+
+[settings.general.zoomLevel]
+auto = "Otomatik"
+fitPage = "Sayfaya sığdır"
+fitWidth = "Genişliğe sığdır"
+
+[settings.hotkeys]
+capturing = "Tuşlara basın… (İptal için Esc)"
+change = "Kısayolu değiştir"
+customBadge = "Özel"
+defaultLabel = "Varsayılan: {{shortcut}}"
+description = "Araçlara hızlı erişim için klavye kısayollarını özelleştirin. \"Kısayolu değiştir\"e tıklayın ve yeni bir tuş kombinasyonuna basın. İptal etmek için Esc'ye basın."
+errorConflict = "Kısayol zaten {{tool}} tarafından kullanılıyor."
+none = "Atanmadı"
+noShortcut = "Kısayol ayarlanmamış"
+reset = "Sıfırla"
+searchPlaceholder = "Araçlarda ara..."
+shortcut = "Kısayol"
+title = "Klavye Kısayolları"
+
+[settings.hotkeys.errorModifier]
+mac = "Kısayolunuza ⌘ (Command), ⌥ (Option) veya başka bir değiştirici ekleyin."
+windows = "Kısayolunuza Ctrl, Alt veya başka bir değiştirici ekleyin."
+
+[settings.licensingAnalytics]
+audit = "Denetim"
+plan = "Plan"
+title = "Lisanslama ve Analitik"
+usageAnalytics = "Kullanım Analitiği"
 
 [settings.planBilling]
 currentPlan = "Geçerli Plan"
@@ -6637,6 +6865,10 @@ canceled = "İptal edildi"
 pastDue = "Vadesi geçmiş"
 trial = "Deneme"
 
+[settings.planBilling.team]
+managedByTeam = "Takım tarafından yönetiliyor"
+memberCount = "{{count}} takım üyesi"
+
 [settings.planBilling.tier]
 enterprise = "Kurumsal"
 enterpriseDescription = "Özel kurumsal özellikler ve destek"
@@ -6648,10 +6880,6 @@ teamDescription = "Ayda 500 kredi dahil, kesintisiz hizmet için otomatik aşım
 teamTooltipCredits = "Takım planı ayda {{credits}} kredi içerir."
 teamTooltipFineprint = "Dahil kredilerin ötesinde kullandıklarınız için ödeme yapın."
 teamTooltipOverage = "Kesintisiz hizmet için {{price}}/kredi üzerinden otomatik aşım faturalandırma."
-
-[settings.planBilling.team]
-managedByTeam = "Takım tarafından yönetiliyor"
-memberCount = "{{count}} takım üyesi"
 
 [settings.planBilling.trial]
 daysRemaining = "{{days}} gün kaldı"
@@ -6670,88 +6898,6 @@ featureThroughput = "Daha hızlı işleme hızı"
 opensInBrowser = "Yükseltmeyi tamamlamak için tarayıcıda açılır"
 subtitle = "Takım'a yükseltme ile:"
 title = "Planınızı Yükseltin"
-
-[settings.developer]
-apiKeys = "API Anahtarları"
-title = "Geliştirici"
-
-[settings.general]
-autoUnzip = "API yanıtlarını otomatik ZIP'ten çıkar"
-autoUnzipDescription = "ZIP yanıtlarındaki dosyaları otomatik olarak çıkar"
-autoUnzipFileLimit = "Otomatik zip açma dosya sınırı"
-autoUnzipFileLimitDescription = "ZIP'ten çıkarılacak azami dosya sayısı"
-autoUnzipFileLimitTooltip = "Yalnızca ZIP bu kadar ya da daha az dosya içeriyorsa çıkar. Daha büyük ZIP'leri çıkarmak için daha yüksek ayarlayın."
-autoUnzipTooltip = "API işlemlerinden dönen ZIP dosyalarını otomatik olarak çıkarır. ZIP dosyalarını olduğu gibi tutmak için devre dışı bırakın. Bu, otomasyon iş akışlarını etkilemez."
-defaultPdfEditor = "Varsayılan PDF düzenleyici"
-defaultPdfEditorActive = "Stirling PDF varsayılan PDF düzenleyiciniz"
-defaultPdfEditorChecking = "Kontrol ediliyor..."
-defaultPdfEditorInactive = "Varsayılan olarak başka bir uygulama ayarlı"
-defaultPdfEditorSet = "Zaten Varsayılan"
-defaultToolPickerMode = "Varsayılan araç seçici modu"
-defaultToolPickerModeDescription = "Araç seçicinin varsayılan olarak tam ekranda mı yoksa kenar çubuğunda mı açılacağını seçin"
-description = "Genel uygulama tercihlerini yapılandırın."
-hideUnavailableConversions = "Kullanılamayan dönüşümleri gizle"
-hideUnavailableConversionsDescription = "Gri gösterilmek yerine Dönüştür aracındaki devre dışı seçenekleri kaldırın."
-hideUnavailableTools = "Kullanılamayan araçları gizle"
-hideUnavailableToolsDescription = "Gri gösterilmek yerine sunucunuz tarafından devre dışı bırakılan araçları kaldırın."
-logout = "Oturumu kapat"
-setAsDefault = "Varsayılan Yap"
-title = "Genel"
-user = "Kullanıcı"
-
-[settings.general.enableFeatures]
-action = "Yapılandır"
-and = "ve"
-benefit = "Kullanıcı rolleri, ekip işbirliği, yönetici kontrolleri ve kurumsal özellikleri etkinleştirir."
-dismiss = "Kapat"
-intro = "Kuruluşunuz için kullanıcı kimlik doğrulaması, ekip yönetimi ve çalışma alanı özelliklerini etkinleştirin."
-learnMore = "Belgelerde daha fazla bilgi edinin"
-title = "Sistem Yöneticileri için"
-
-[settings.general.mode]
-fullscreen = "Tam ekran"
-sidebar = "Kenar çubuğu"
-
-[settings.general.updates]
-checkForUpdates = "Güncellemeleri Kontrol Et"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
-description = "Güncellemeleri kontrol edin ve sürüm bilgilerini görüntüleyin"
-latestVersion = "En Son Sürüm"
-serverNeedsUpdate = "Sunucunun yönetici tarafından güncellenmesi gerekiyor"
-title = "Yazılım Güncellemeleri"
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
-viewDetails = "Ayrıntıları Görüntüle"
-
-[settings.general.versionInfo]
-description = "Masaüstü ve sunucu sürüm ayrıntıları"
-desktop = "Masaüstü Sürümü"
-server = "Sunucu Sürümü"
-title = "Sürüm Bilgileri"
-
-[settings.hotkeys]
-capturing = "Tuşlara basın… (İptal için Esc)"
-change = "Kısayolu değiştir"
-customBadge = "Özel"
-defaultLabel = "Varsayılan: {{shortcut}}"
-description = "Araçlara hızlı erişim için klavye kısayollarını özelleştirin. \"Kısayolu değiştir\"e tıklayın ve yeni bir tuş kombinasyonuna basın. İptal etmek için Esc'ye basın."
-errorConflict = "Kısayol zaten {{tool}} tarafından kullanılıyor."
-none = "Atanmadı"
-noShortcut = "Kısayol ayarlanmamış"
-reset = "Sıfırla"
-searchPlaceholder = "Araçlarda ara..."
-shortcut = "Kısayol"
-title = "Klavye Kısayolları"
-
-[settings.hotkeys.errorModifier]
-mac = "Kısayolunuza ⌘ (Command), ⌥ (Option) veya başka bir değiştirici ekleyin."
-windows = "Kısayolunuza Ctrl, Alt veya başka bir değiştirici ekleyin."
-
-[settings.licensingAnalytics]
-audit = "Denetim"
-plan = "Plan"
-title = "Lisanslama ve Analitik"
-usageAnalytics = "Kullanım Analitiği"
 
 [settings.policiesPrivacy]
 legal = "Yasal"
@@ -6789,6 +6935,9 @@ security = "Güvenlik"
 telegram = "Telegram"
 title = "Güvenlik ve Kimlik Doğrulama"
 
+[settings.team]
+title = "Takım"
+
 [settings.tooltips]
 enableLoginFirst = "Önce oturum açma modunu etkinleştirin"
 requiresEnterprise = "Enterprise lisansı gerektirir"
@@ -6798,21 +6947,6 @@ people = "Kişiler"
 teams = "Ekipler"
 title = "Çalışma Alanı"
 
-[settings.team]
-title = "Takım"
-
-[localMode]
-toolUnavailable = "Bu araç bir hesap gerektirir. Kullanmak için Stirling Cloud'da oturum açın veya kendi barındırılan bir sunucuya bağlanın."
-
-[localMode.banner]
-message = "Tüm araçların kilidini açmak için oturum açın."
-signIn = "Oturum Aç"
-title = "Yerelde çalışıyor"
-
-[localMode.toolPicker]
-message = "Tüm araçların kilidini açmak için oturum açın."
-signIn = "Oturum Aç"
-
 [setup]
 description = "Stirling PDF'yi nasıl kullanmak istediğinizi seçerek başlayın"
 welcome = "Stirling PDF'ye hoş geldiniz"
@@ -6820,7 +6954,6 @@ welcome = "Stirling PDF'ye hoş geldiniz"
 [setup.login]
 connectingTo = "Bağlanılıyor:"
 hideInstructions = "Yönergeleri gizle"
-skipSignIn = "Oturum açmadan devam et"
 instructions = "Stirling PDF sunucunuzda oturum açmayı etkinleştirmek için:"
 instructionsEnvVar = "Ortam değişkenini ayarlayın:"
 instructionsOrYml = "Veya settings.yml içinde:"
@@ -6830,6 +6963,7 @@ orContinueWith = "Veya e-postayla devam edin"
 serverRequirement = "Not: Sunucuda oturum açma etkin olmalıdır."
 showInstructions = "Nasıl etkinleştirilir?"
 signInWith = "Şununla oturum aç"
+skipSignIn = "Oturum açmadan devam et"
 sso = "Tek Oturum Açma"
 submit = "Oturum Aç"
 subtitle = "Devam etmek için kimlik bilgilerinizi girin"
@@ -6866,9 +7000,9 @@ subtitle = "Stirling hesabınızla oturum açın"
 title = "Stirling'de Oturum Açın"
 
 [setup.selfhosted]
+changeServerLocked = "Kuruluşunuz bu uygulamayı belirli bir sunucuyla sınırlamıştır"
 link = "veya kendi barındırdığınız bir hesaba bağlanın"
 subtitle = "Sunucu kimlik bilgilerinizi girin"
-changeServerLocked = "Kuruluşunuz bu uygulamayı belirli bir sunucuyla sınırlamıştır"
 switchToLocal = "Bunun yerine yerel araçları kullan"
 title = "Sunucuda Oturum Açın"
 
@@ -7068,14 +7202,45 @@ saved = "Kaydedildi"
 text = "Metin"
 title = "İmza Türü"
 
+[signatureSettings.tooltip]
+header = "İmza Görünümü Ayarları"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Örnekler: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Sayfa konumuyla aynı değildir"
+bullet3 = "Bazı hukuki yargı alanları için gerekli olabilir"
+description = "İmzanın uygulandığı isteğe bağlı coğrafi konum. Sertifika metaverisine kaydedilir."
+title = "İmza Konumu"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "İmza ve metnin yanında gösterilir"
+bullet2 = "PNG, JPG formatlarını destekler"
+bullet3 = "Profesyonel görünümü artırır"
+description = "Görünür imzalara marka ve doğruluk için şirket logosu ekleyin."
+title = "Şirket Logosu"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Örnekler: \"Onay\", \"Sözleşme Anlaşması\", \"İnceleme Tamamlandı\""
+bullet2 = "PDF imza özelliklerinde görünür"
+bullet3 = "Denetim izleri ve uyumluluk için faydalıdır"
+description = "Belgenin neden imzalandığını açıklayan isteğe bağlı metin. Sertifika metaverisine kaydedilir."
+title = "İmza Nedeni"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Görünür</b>: İmza, özel görünümle PDF üzerinde görünür"
+bullet2 = "<b>Görünmez</b>: Görsel işaret olmadan sertifika gömülür"
+bullet3 = "Görünmez imzalar yine de kriptografik doğrulama sağlar"
+description = "İmzanın belgede görünür olup olmayacağını veya görünmez şekilde gömüleceğini kontrol eder."
+title = "İmza Görünürlüğü"
+
 [signRequest]
 declined = "İmza isteği reddedildi"
 fetchFailed = "İmza isteği yüklenemedi"
 signed = "Belge başarıyla imzalandı"
 
 [signSession]
-createFailed = "İmzalama isteği oluşturulamadı"
 created = "İmzalama isteği gönderildi"
+createFailed = "İmzalama isteği oluşturulamadı"
 
 [signup]
 accountCreatedSuccessfully = "Hesap başarıyla oluşturuldu! Artık giriş yapabilirsiniz."
@@ -7156,15 +7321,15 @@ desc = "Ayırıcı sayfalarla otomatik bölme"
 name = "Ayırıcı Sayfa"
 tooltip = "Taramada belgeler arasına QR kodlu ayırıcı sayfalar kullanın"
 
-[split.methods.byPoster]
-name = "Yazdırılabilir Parçalar"
-desc = "Büyük sayfaları yazdırılabilir boyutlara bölün"
-tooltip = "Aşırı büyük sayfaları standart kağıtta (A4, Letter vb.) yazdırmaya uygun daha küçük parçalara ayırın"
-
 [split.methods.byPages]
 desc = "Belirli sayfaları çıkar (1,3,5-10)"
 name = "Sayfa Numaraları"
 tooltip = "Virgülle ayrılmış sayfa numaraları veya tire ile aralıklar girin"
+
+[split.methods.byPoster]
+desc = "Büyük sayfaları yazdırılabilir boyutlara bölün"
+name = "Yazdırılabilir Parçalar"
+tooltip = "Aşırı büyük sayfaları standart kağıtta (A4, Letter vb.) yazdırmaya uygun daha küçük parçalara ayırın"
 
 [split.methods.bySections]
 desc = "Sayfaları ızgara bölümlerine ayır"
@@ -7192,27 +7357,27 @@ title = "Bölme Yönteminizi Seçin"
 text = "PDF belgenizi nasıl bölmek istediğinizi seçin. Her yöntem farklı kullanım durumları ve belge türleri için optimize edilmiştir."
 title = "Bölme Yöntemi Seçimi"
 
+[split.poster]
+rightToLeft = "Sağdan sola böl"
+
+[split.poster.pageSize]
+description = "Yazdırma için çıktı sayfalarının boyutu"
+label = "Hedef Sayfa Boyutu"
+
+[split.poster.xFactor]
+description = "Her sayfanın bölüneceği sütun sayısı"
+label = "Yatay Bölümler"
+
+[split.poster.yFactor]
+description = "Her sayfanın bölüneceği satır sayısı"
+label = "Dikey Bölümler"
+
 [split.settings]
 selectMethodFirst = "Lütfen önce bir bölme yöntemi seçin"
 
 [split.steps]
 chooseMethod = "Yöntem Seç"
 settings = "Ayarlar"
-
-[split.poster]
-rightToLeft = "Sağdan sola böl"
-
-[split.poster.pageSize]
-label = "Hedef Sayfa Boyutu"
-description = "Yazdırma için çıktı sayfalarının boyutu"
-
-[split.poster.xFactor]
-label = "Yatay Bölümler"
-description = "Her sayfanın bölüneceği sütun sayısı"
-
-[split.poster.yFactor]
-label = "Dikey Bölümler"
-description = "Her sayfanın bölüneceği satır sayısı"
 
 [split.tooltip.byChapters]
 bullet1 = "Yer İmi Düzeyi: Hangi düzeyde bölüneceği (1=üst düzey)"
@@ -7251,6 +7416,13 @@ bullet5 = "Ayırıcı sayfaların her iki yüzünü de tarıyorsanız Çift Yön
 text = "QR kodlu fiziksel ayırıcı sayfaları kullanarak taranan belgeleri otomatik olarak bölün. Birlikte taranan birden çok belgeyi işlemek için mükemmeldir."
 title = "Ayırıcı Sayfaya Göre Böl"
 
+[split.tooltip.byPages]
+bullet1 = "Tek bölme noktaları: 3,7 (3 ve 7. sayfalardan sonra böler)"
+bullet2 = "Aralık bölme noktaları: 3-8 (3. sayfadan önce ve 8. sayfadan sonra böler)"
+bullet3 = "Karışık: 2,5-10,15 (2'den sonra, 5'ten önce, 10'dan sonra ve 15'ten sonra böler)"
+text = "PDF'inizi belirli sayfa numaralarında bölün. 'n' kullanmak sayfa n'den sonra böler. 'n-m' kullanmak sayfa n'den önce ve m'den sonra böler."
+title = "Sayfa Numaralarında Böl"
+
 [split.tooltip.byPoster]
 bullet1 = "Hedef Sayfa Boyutu: Çıktı kağıt boyutunu seçin (A4, Letter vb.)"
 bullet2 = "Yatay/Dikey Bölümler: Bölme için ızgara boyutu"
@@ -7258,13 +7430,6 @@ bullet3 = "Sağdan Sola: RTL düzenleri için sütun sırasını ters çevirin"
 bullet4 = "Poster oluşturmak için parçaları yazdırıp birleştirin"
 text = "Büyük PDF sayfalarını, standart kağıt boyutlarına uygun daha küçük, yazdırılabilir parçalara bölün. Aşırı büyük sayfalardan poster baskıları oluşturmak için idealdir."
 title = "Poster Baskı için Böl"
-
-[split.tooltip.byPages]
-bullet1 = "Tek bölme noktaları: 3,7 (3 ve 7. sayfalardan sonra böler)"
-bullet2 = "Aralık bölme noktaları: 3-8 (3. sayfadan önce ve 8. sayfadan sonra böler)"
-bullet3 = "Karışık: 2,5-10,15 (2'den sonra, 5'ten önce, 10'dan sonra ve 15'ten sonra böler)"
-text = "PDF'inizi belirli sayfa numaralarında bölün. 'n' kullanmak sayfa n'den sonra böler. 'n-m' kullanmak sayfa n'den önce ve m'den sonra böler."
-title = "Sayfa Numaralarında Böl"
 
 [split.tooltip.bySections]
 bullet1 = "Yatay: Oluşturulacak satır sayısı"
@@ -7355,106 +7520,6 @@ title = "PDF'yi Bölümlere Ayır"
 [splitPdfByChapters]
 tags = "böl, bölümler, yer imleri, düzenle"
 
-[storageShare]
-accessed = "Erişildi"
-accessDenied = "Bu paylaşılan dosyaya erişiminiz yok. Sahipten sizinle paylaşmasını isteyin."
-accessFailed = "Etkinlik yüklenemedi."
-accessDeniedBody = "Bu dosyaya erişiminiz yok. Sahipten sizinle paylaşmasını isteyin."
-accessDeniedTitle = "Erişim yok"
-accessLimitedCommenter = "Yorum erişimi yakında geliyor. İndirmeniz gerekiyorsa sahibinden düzenleyici erişimi isteyin."
-accessLimitedTitle = "Sınırlı erişim"
-accessLimitedViewer = "Bu bağlantı yalnızca görüntüleme içindir. İndirmeniz gerekiyorsa sahibinden düzenleyici erişimi isteyin."
-createdAt = "Oluşturuldu"
-download = "İndir"
-downloadFailed = "Bu dosya indirilemedi."
-expiredBody = "Bu paylaşım bağlantısı geçersiz veya süresi dolmuş."
-expiredTitle = "Bağlantının süresi doldu"
-goToLogin = "Girişe git"
-loadFailed = "Paylaşılan dosya açılamadı."
-loading = "Paylaşım bağlantısı yükleniyor..."
-loginPrompt = "Bu paylaşılan dosyaya erişmek için oturum açın."
-loginRequired = "Giriş gerekli"
-openInApp = "Stirling PDF'de Aç"
-ownerLabel = "Sahip"
-ownerUnknown = "Bilinmiyor"
-requiresLogin = "Bu paylaşılan dosya oturum açmayı gerektirir."
-roleCommenter = "Yorumcu"
-roleEditor = "Düzenleyici"
-roleViewer = "Görüntüleyici"
-shareHeading = "Paylaşılan dosya"
-titleDefault = "Paylaşılan dosya"
-tryAgain = "Lütfen daha sonra tekrar deneyin."
-addUser = "Ekle"
-commenterHint = "Yorum yapma özelliği yakında geliyor."
-copied = "Bağlantı panoya kopyalandı"
-copy = "Kopyala"
-copyFailed = "Kopyalama başarısız"
-description = "Bu dosya için bir paylaşım bağlantısı oluşturun. Bağlantıya sahip ve oturum açmış kullanıcılar erişebilir."
-downloadsCount = "İndirme: {{count}}"
-emailWarningBody = "Bu bir e-posta adresine benziyor. Bu kişi henüz bir Stirling PDF kullanıcısı değilse dosyaya erişemez."
-emailWarningConfirm = "Yine de paylaş"
-emailWarningTitle = "E-posta adresi"
-errorTitle = "Paylaşım başarısız"
-failure = "Paylaşım bağlantısı oluşturulamadı. Lütfen tekrar deneyin."
-fileLabel = "Dosya"
-generate = "Bağlantı Oluştur"
-generated = "Paylaşım bağlantısı oluşturuldu"
-hideActivity = "Etkinliği gizle"
-invalidUsername = "Geçerli bir kullanıcı adı veya e-posta adresi girin."
-lastAccessed = "Son erişim"
-linkAccessTitle = "Paylaşım bağlantısı erişimi"
-linkLabel = "Paylaşım bağlantısı"
-linksDisabled = "Paylaşım bağlantıları devre dışı bırakıldı."
-linksDisabledBody = "Paylaşım bağlantıları sunucu ayarlarınız tarafından devre dışı bırakıldı."
-manage = "Paylaşımı yönet"
-manageDescription = "Bu dosyayı paylaşmak için bağlantılar oluşturun ve yönetin."
-manageLoadFailed = "Paylaşım bağlantıları yüklenemedi."
-manageTitle = "Paylaşımı Yönet"
-noActivity = "Henüz etkinlik yok."
-noLinks = "Henüz etkin paylaşım bağlantısı yok."
-noSharedUsers = "Henüz hiçbir kullanıcının erişimi yok."
-removeLink = "Bağlantıyı kaldır"
-removeUser = "Kaldır"
-revokeFailed = "Paylaşım bağlantısı kaldırılamadı."
-revoked = "Paylaşım bağlantısı kaldırıldı"
-roleLabel = "Rol"
-sharingDisabled = "Paylaşım devre dışı bırakıldı."
-sharingDisabledBody = "Paylaşım, sunucu ayarlarınız tarafından devre dışı bırakıldı."
-sharedUsersTitle = "Paylaşılan kullanıcılar"
-title = "Dosyayı Paylaş"
-unknownUser = "Bilinmeyen kullanıcı"
-userAddFailed = "Bu kullanıcıyla paylaşım yapılamadı."
-userAdded = "Kullanıcı paylaşım listesine eklendi."
-usernameLabel = "Kullanıcı adı veya e-posta"
-usernamePlaceholder = "Bir kullanıcı adı veya e-posta girin"
-userRemoveFailed = "Bu kullanıcı kaldırılamadı."
-userRemoved = "Kullanıcı paylaşım listesinden kaldırıldı."
-viewActivity = "Etkinliği görüntüle"
-viewed = "Görüntülendi"
-viewsCount = "Görüntüleme: {{count}}"
-downloaded = "İndirildi"
-bulkDescription = "Oturum açmış kullanıcılarla seçili tüm dosyaları paylaşmak için tek bir bağlantı oluşturun."
-bulkTitle = "Seçili dosyaları paylaş"
-copyLink = "Paylaşım bağlantısını kopyala"
-fileCount = "{{count}} dosya seçildi"
-ownerOnly = "Paylaşımı yalnızca sahibi yönetebilir."
-selectSingleFile = "Paylaşımı yönetmek için tek bir dosya seçin."
-
-[storageUpload]
-description = "Bu, geçerli dosyayı kendi erişiminiz için sunucu depolamasına yükler."
-errorTitle = "Yükleme başarısız"
-failure = "Yükleme başarısız. Lütfen oturum açma ve depolama ayarlarınızı kontrol edin."
-fileLabel = "Dosya"
-hint = "Genel bağlantılar ve erişim modları, sunucu ayarlarınız tarafından kontrol edilir."
-success = "Sunucuya yüklendi"
-title = "Sunucuya Yükle"
-updateButton = "Sunucuda Güncelle"
-uploadButton = "Sunucuya Yükle"
-bulkDescription = "Bu, seçili dosyaları sunucu depolamanıza yükler."
-bulkTitle = "Seçili dosyaları yükle"
-fileCount = "{{count}} dosya seçildi"
-more = " +{{count}} daha"
-
 [storage]
 approximateSize = "Yaklaşık boyut"
 fileTooLarge = "Dosya çok büyük. Dosya başına maksimum boyut"
@@ -7463,6 +7528,106 @@ storageLimit = "Depolama sınırı"
 storageQuotaExceeded = "Depolama kotası aşıldı. Daha fazla yüklemeden önce lütfen bazı dosyaları kaldırın."
 storageUsed = "Kullanılan Geçici Depolama"
 temporaryNotice = "Dosyalar tarayıcınızda geçici olarak depolanır ve otomatik olarak silinebilir"
+
+[storageShare]
+accessDenied = "Bu paylaşılan dosyaya erişiminiz yok. Sahipten sizinle paylaşmasını isteyin."
+accessDeniedBody = "Bu dosyaya erişiminiz yok. Sahipten sizinle paylaşmasını isteyin."
+accessDeniedTitle = "Erişim yok"
+accessed = "Erişildi"
+accessFailed = "Etkinlik yüklenemedi."
+accessLimitedCommenter = "Yorum erişimi yakında geliyor. İndirmeniz gerekiyorsa sahibinden düzenleyici erişimi isteyin."
+accessLimitedTitle = "Sınırlı erişim"
+accessLimitedViewer = "Bu bağlantı yalnızca görüntüleme içindir. İndirmeniz gerekiyorsa sahibinden düzenleyici erişimi isteyin."
+addUser = "Ekle"
+bulkDescription = "Oturum açmış kullanıcılarla seçili tüm dosyaları paylaşmak için tek bir bağlantı oluşturun."
+bulkTitle = "Seçili dosyaları paylaş"
+commenterHint = "Yorum yapma özelliği yakında geliyor."
+copied = "Bağlantı panoya kopyalandı"
+copy = "Kopyala"
+copyFailed = "Kopyalama başarısız"
+copyLink = "Paylaşım bağlantısını kopyala"
+createdAt = "Oluşturuldu"
+description = "Bu dosya için bir paylaşım bağlantısı oluşturun. Bağlantıya sahip ve oturum açmış kullanıcılar erişebilir."
+download = "İndir"
+downloaded = "İndirildi"
+downloadFailed = "Bu dosya indirilemedi."
+downloadsCount = "İndirme: {{count}}"
+emailWarningBody = "Bu bir e-posta adresine benziyor. Bu kişi henüz bir Stirling PDF kullanıcısı değilse dosyaya erişemez."
+emailWarningConfirm = "Yine de paylaş"
+emailWarningTitle = "E-posta adresi"
+errorTitle = "Paylaşım başarısız"
+expiredBody = "Bu paylaşım bağlantısı geçersiz veya süresi dolmuş."
+expiredTitle = "Bağlantının süresi doldu"
+failure = "Paylaşım bağlantısı oluşturulamadı. Lütfen tekrar deneyin."
+fileCount = "{{count}} dosya seçildi"
+fileLabel = "Dosya"
+generate = "Bağlantı Oluştur"
+generated = "Paylaşım bağlantısı oluşturuldu"
+goToLogin = "Girişe git"
+hideActivity = "Etkinliği gizle"
+invalidUsername = "Geçerli bir kullanıcı adı veya e-posta adresi girin."
+lastAccessed = "Son erişim"
+linkAccessTitle = "Paylaşım bağlantısı erişimi"
+linkLabel = "Paylaşım bağlantısı"
+linksDisabled = "Paylaşım bağlantıları devre dışı bırakıldı."
+linksDisabledBody = "Paylaşım bağlantıları sunucu ayarlarınız tarafından devre dışı bırakıldı."
+loadFailed = "Paylaşılan dosya açılamadı."
+loading = "Paylaşım bağlantısı yükleniyor..."
+loginPrompt = "Bu paylaşılan dosyaya erişmek için oturum açın."
+loginRequired = "Giriş gerekli"
+manage = "Paylaşımı yönet"
+manageDescription = "Bu dosyayı paylaşmak için bağlantılar oluşturun ve yönetin."
+manageLoadFailed = "Paylaşım bağlantıları yüklenemedi."
+manageTitle = "Paylaşımı Yönet"
+noActivity = "Henüz etkinlik yok."
+noLinks = "Henüz etkin paylaşım bağlantısı yok."
+noSharedUsers = "Henüz hiçbir kullanıcının erişimi yok."
+openInApp = "Stirling PDF'de Aç"
+ownerLabel = "Sahip"
+ownerOnly = "Paylaşımı yalnızca sahibi yönetebilir."
+ownerUnknown = "Bilinmiyor"
+removeLink = "Bağlantıyı kaldır"
+removeUser = "Kaldır"
+requiresLogin = "Bu paylaşılan dosya oturum açmayı gerektirir."
+revoked = "Paylaşım bağlantısı kaldırıldı"
+revokeFailed = "Paylaşım bağlantısı kaldırılamadı."
+roleCommenter = "Yorumcu"
+roleEditor = "Düzenleyici"
+roleLabel = "Rol"
+roleViewer = "Görüntüleyici"
+selectSingleFile = "Paylaşımı yönetmek için tek bir dosya seçin."
+sharedUsersTitle = "Paylaşılan kullanıcılar"
+shareHeading = "Paylaşılan dosya"
+sharingDisabled = "Paylaşım devre dışı bırakıldı."
+sharingDisabledBody = "Paylaşım, sunucu ayarlarınız tarafından devre dışı bırakıldı."
+title = "Dosyayı Paylaş"
+titleDefault = "Paylaşılan dosya"
+tryAgain = "Lütfen daha sonra tekrar deneyin."
+unknownUser = "Bilinmeyen kullanıcı"
+userAdded = "Kullanıcı paylaşım listesine eklendi."
+userAddFailed = "Bu kullanıcıyla paylaşım yapılamadı."
+usernameLabel = "Kullanıcı adı veya e-posta"
+usernamePlaceholder = "Bir kullanıcı adı veya e-posta girin"
+userRemoved = "Kullanıcı paylaşım listesinden kaldırıldı."
+userRemoveFailed = "Bu kullanıcı kaldırılamadı."
+viewActivity = "Etkinliği görüntüle"
+viewed = "Görüntülendi"
+viewsCount = "Görüntüleme: {{count}}"
+
+[storageUpload]
+bulkDescription = "Bu, seçili dosyaları sunucu depolamanıza yükler."
+bulkTitle = "Seçili dosyaları yükle"
+description = "Bu, geçerli dosyayı kendi erişiminiz için sunucu depolamasına yükler."
+errorTitle = "Yükleme başarısız"
+failure = "Yükleme başarısız. Lütfen oturum açma ve depolama ayarlarınızı kontrol edin."
+fileCount = "{{count}} dosya seçildi"
+fileLabel = "Dosya"
+hint = "Genel bağlantılar ve erişim modları, sunucu ayarlarınız tarafından kontrol edilir."
+more = " +{{count}} daha"
+success = "Sunucuya yüklendi"
+title = "Sunucuya Yükle"
+updateButton = "Sunucuda Güncelle"
+uploadButton = "Sunucuya Yükle"
 
 [subscription]
 cancelsOn = "{{date}} tarihinde iptal edilir"
@@ -7507,8 +7672,121 @@ title = "API Dokümantasyonu"
 [tableExtraxt]
 tags = "CSV, Tablo Çıkarma, ayıklama, dönüştürme"
 
+[team]
+cancelInviteError = "Davet iptal edilemedi"
+confirmCancelInvite = "Bu daveti iptal etmek istediğinizden emin misiniz?"
+confirmLeave = "Bu takımdan ayrılmak istediğinizden emin misiniz?"
+confirmLeaveLeader = "Bir takım lideri olarak ayrılmanız, sizi takımdan kaldırır. Emin misiniz?"
+confirmRemove = "Bu üyeyi kaldırmak istediğinizden emin misiniz?"
+editName = "Takım adını düzenle"
+inviteCancelled = "Davet iptal edildi"
+inviteError = "Davet gönderilemedi"
+inviteSent = "Davet başarıyla gönderildi"
+leader = "Lider"
+leaveButton = "Takımdan Ayrıl"
+leaveError = "Takımdan ayrılamadı"
+leaveSuccess = "Takımdan başarıyla ayrıldınız"
+loading = "Takım bilgileri yükleniyor..."
+memberCount = "{{count}} üye"
+memberRemoved = "Üye başarıyla kaldırıldı"
+namePlaceholder = "Takım adını girin"
+personal = "Kişisel"
+removeError = "Üye kaldırılamadı"
+renameError = "Takım yeniden adlandırılamadı"
+renameSuccess = "Takım başarıyla yeniden adlandırıldı"
+
+[team.features]
+badge = "Takım Özellikleri"
+subtitle = "Takımınızla iş birliği yapın"
+title = "Takım İş Birliği"
+viewPlans = "Planları Görüntüle"
+
+[team.features.billing]
+description = "Faturalandırmayı ve abonelikleri yönetin"
+title = "Faturalandırma Yönetimi"
+
+[team.features.credits]
+description = "Tüm üyeler için paylaşılan kredi havuzu"
+title = "Paylaşılan Krediler"
+
+[team.features.dashboard]
+description = "Takım etkinliği ve kullanımı görüntüleyin"
+title = "Takım Panosu"
+
+[team.features.invite]
+description = "Takımınıza üye ekleyin"
+title = "Üye Davet Et"
+
+[team.invitationBanner]
+acceptButton = "Kabul Et"
+message = "sizi katılmaya davet etti"
+rejectButton = "Reddet"
+
+[team.invite]
+cancelLabel = "İptal"
+invalidEmail = "Geçersiz e-posta adresi"
+placeholder = "E-posta adresi girin"
+sendButton = "Davet Gönder"
+title = "Takım Üyesi Davet Et"
+
+[team.members]
+emailColumn = "E-posta"
+empty = "Henüz takım üyesi yok"
+nameColumn = "Ad"
+pending = "Beklemede"
+remove = "Kaldır"
+roleColumn = "Rol"
+title = "Takım Üyeleri"
+
+[team.upgrade]
+button = "Takım'a Yükseltin"
+description = "Takım iş birliği özelliklerinin kilidini açın"
+title = "Takım Planına Yükseltin"
+
+[textAlign]
+center = "Orta"
+left = "Sol"
+right = "Sağ"
+
 [theme]
 toggle = "Temayı Değiştir"
+
+[timestampPdf]
+completed = "PDF başarıyla zaman damgalandı"
+desc = "Güvenilir bir Time Stamp Authority (TSA) sunucusu kullanarak PDF'nize bir RFC 3161 belge zaman damgası ekleyin."
+filenamePrefix = "zaman-damgalı"
+results = "Zaman Damgası Sonuçları"
+submit = "Zaman Damgası Uygula"
+title = "PDF'yi Zaman Damgala"
+
+[timestampPdf.error]
+failed = "PDF zaman damgalanırken bir hata oluştu."
+generic = "Zaman damgalama başarısız"
+
+[timestampPdf.files]
+placeholder = "Başlamak için ana görünümde bir PDF dosyası seçin"
+
+[timestampPdf.options]
+note = "Yalnızca belgenizin SHA-256 özeti TSA sunucusuna gönderilir; PDF dosyasının kendisi asla TSA sunucusuna gönderilmez."
+title = "Zaman Damgası Sunucusu (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Güvenilir bir Zaman Damgası Otoritesi seçin"
+label = "Bir TSA sunucusu seçin"
+
+[timestampPdf.steps]
+settings = "Ayarlar"
+
+[tool]
+endpointUnavailable = "Bu araç sunucunuzda kullanılamıyor."
+endpointUnavailableClickable = "Bu modda kullanılamaz. Oturum açmak için tıklayın."
+invalidParams = "Gerekli ayarları doldurun."
+noFiles = "Başlamak için bir dosya ekleyin."
+scopeFiles = "dosyalar"
+scopeThisFile = "bu dosya"
+selectFilesHint = "Bu aracı çalıştırmak için Etkin Dosyalar içinden dosyaları seçin"
+singleFileScope = "Yalnızca şu dosyaya uygulanıyor: {{fileName}}"
+viewerMode = "Birden çok dosya seçmek için dosya düzenleyiciye geçin."
 
 [toolPanel]
 alpha = "Alfa"
@@ -7568,12 +7846,6 @@ pageFormatting = "Sayfa Biçimlendirme"
 removal = "Kaldırma"
 signing = "İmzalama"
 verification = "Doğrulama"
-
-[tool]
-endpointUnavailable = "Bu araç sunucunuzda kullanılamıyor."
-endpointUnavailableClickable = "Bu modda kullanılamaz. Oturum açmak için tıklayın."
-invalidParams = "Gerekli ayarları doldurun."
-noFiles = "Başlamak için bir dosya ekleyin."
 
 [tools]
 noSearchResults = "Araç bulunamadı"
@@ -7793,6 +8065,81 @@ fileManager = "Dosya Yöneticisi"
 pageEditor = "Sayfa Düzenleyici"
 viewer = "Görüntüleyici"
 
+[viewer]
+cannotPreviewFile = "Dosya önizlenemiyor"
+disableColorFilter = "Renk Filtresini Devre Dışı Bırak"
+dualPageView = "Çift Sayfa Görünümü"
+enableDarkFilter = "Karanlık Filtresini Etkinleştir"
+enableSepiaFilter = "Sepya Filtresini Etkinleştir"
+firstPage = "İlk Sayfa"
+lastPage = "Son Sayfa"
+nextPage = "Sonraki Sayfa"
+onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+previousPage = "Önceki Sayfa"
+resetZoom = "Yakınlaştırmayı sıfırla"
+singlePageView = "Tek Sayfa Görünümü"
+unknownFile = "Bilinmeyen dosya"
+zoomIn = "Yakınlaştır"
+zoomOut = "Uzaklaştır"
+
+[viewer.attachments]
+empty = "Bu belgede ek yok"
+loading = "Ekler yükleniyor..."
+noDocument = "Eklerini görmek için bir PDF açın."
+noMatch = "Aramanızla eşleşen ek yok"
+noSupport = "Bu görüntüleyici için ek desteği mevcut değil."
+searchPlaceholder = "Eklerde ara"
+title = "Ekler"
+
+[viewer.comments]
+addComment = "Yorum ekle"
+addCommentPlaceholder = "Yorum ekle..."
+addLink = "Bağlantı ekle"
+addReplyPlaceholder = "Yanıt ekle..."
+deleteAnnotationAndComment = "Açıklamayı ve yorumu sil"
+deleteDescription = "Bu açıklamaya bir yorum eklenmiş. Açıklamayı koruyup kenar çubuğundan yalnızca yorumu kaldırabilir veya hepsini silebilirsiniz."
+deleteTitle = "Açıklamayı yorumlardan kaldır?"
+goToLink = "Bağlantıya git"
+hint = "Yorum, Metin Ekle veya Metni Değiştir araçlarıyla yorum bırakın. Bunlar burada sayfaya göre görünecektir."
+locateAnnotation = "Belgede konumlandır"
+moreActions = "Diğer işlemler"
+nComments = "{{count}} yorum"
+oneComment = "1 yorum"
+pageLabel = "Sayfa {{page}}"
+placeholder = "Yorumunuzu yazın..."
+removeCommentOnly = "Yalnızca yorumu kaldır"
+saveReply = "Yanıtı kaydet"
+send = "Gönder"
+title = "Yorumlar"
+typeComment = "Yorum"
+typeInsertText = "Metin Ekle"
+typeReplaceText = "Metni Değiştir"
+viewComment = "Yorumu görüntüle"
+
+[viewer.formBar]
+apply = "Değişiklikleri Uygula"
+dismiss = "Kapat"
+download = "PDF'yi İndir"
+hasFieldsDesc = "Bu PDF doldurulabilir alanlar içeriyor"
+title = "Form Alanları"
+unsavedBadge = "Kaydedilmemiş"
+unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
+
+[viewer.nonPdf]
+columnDefault = "Sütun {{index}}"
+convertToPdf = "PDF'ye Dönüştür"
+csvStats = "{{rows}} satır · {{columns}} sütun · {{size}}"
+emptyFile = "Boş dosya"
+fileTypeBadge = "{{type}} Dosyası"
+htmlPreview = "HTML önizleme"
+htmlPreviewWarning = "HTML önizleme — harici kaynaklar yüklenmeyebilir · {{size}}"
+invalidJson = "Geçersiz JSON — ham içerik gösteriliyor"
+lineNumbers = "Satır numaraları"
+loading = "Yükleniyor..."
+renderMarkdown = "Markdown'u işle"
+sortedBy = "Sıralama ölçütü: {{column}}"
+textStats = "{{lines}} satır · {{size}}"
+
 [viewPdf]
 header = "PDF Görüntüle"
 tags = "görüntüle,oku,açıklama ekle,metin,görüntü"
@@ -7800,30 +8147,6 @@ title = "PDF Görüntüle/Düzenle"
 
 [warning]
 tooltipTitle = "Uyarı"
-
-[wetSignature.tooltip]
-header = "İmza Oluşturma Yöntemleri"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Kalem rengi ve kalınlığını özelleştirin"
-bullet2 = "Memnun kalana kadar temizleyip yeniden çizin"
-bullet3 = "Dokunmatik cihazlarda çalışır (tabletler, telefonlar)"
-description = "Fareyi veya dokunmatik ekranı kullanarak el yazısı imza oluşturun. Kişisel ve özgün imzalar için en iyisidir."
-title = "İmza Çiz"
-
-[wetSignature.tooltip.type]
-bullet1 = "Birden çok yazı tipinden seçin"
-bullet2 = "Metin boyutunu ve rengini özelleştirin"
-bullet3 = "Standartlaştırılmış imzalar için idealdir"
-description = "Yazılan metinden bir imza oluşturun. Hızlı ve tutarlıdır, iş belgeleri için uygundur."
-title = "İmza Yaz"
-
-[wetSignature.tooltip.upload]
-bullet1 = "PNG, JPG ve diğer görüntü formatlarını destekler"
-bullet2 = "En iyi sonuçlar için şeffaf arka plan önerilir"
-bullet3 = "Görüntü, imza alanına sığacak şekilde yeniden boyutlandırılacaktır"
-description = "Önceden oluşturulmuş bir imza görüntüsü yükleyin. Taranmış bir imzanız veya şirket logonuz varsa idealdir."
-title = "İmza Görüntüsü Yükle"
 
 [watermark]
 completed = "Filigran eklendi"
@@ -7996,6 +8319,30 @@ title = "Filigran Metni"
 image = "Resim"
 text = "Metin"
 
+[wetSignature.tooltip]
+header = "İmza Oluşturma Yöntemleri"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Kalem rengi ve kalınlığını özelleştirin"
+bullet2 = "Memnun kalana kadar temizleyip yeniden çizin"
+bullet3 = "Dokunmatik cihazlarda çalışır (tabletler, telefonlar)"
+description = "Fareyi veya dokunmatik ekranı kullanarak el yazısı imza oluşturun. Kişisel ve özgün imzalar için en iyisidir."
+title = "İmza Çiz"
+
+[wetSignature.tooltip.type]
+bullet1 = "Birden çok yazı tipinden seçin"
+bullet2 = "Metin boyutunu ve rengini özelleştirin"
+bullet3 = "Standartlaştırılmış imzalar için idealdir"
+description = "Yazılan metinden bir imza oluşturun. Hızlı ve tutarlıdır, iş belgeleri için uygundur."
+title = "İmza Yaz"
+
+[wetSignature.tooltip.upload]
+bullet1 = "PNG, JPG ve diğer görüntü formatlarını destekler"
+bullet2 = "En iyi sonuçlar için şeffaf arka plan önerilir"
+bullet3 = "Görüntü, imza alanına sığacak şekilde yeniden boyutlandırılacaktır"
+description = "Önceden oluşturulmuş bir imza görüntüsü yükleyin. Taranmış bir imzanız veya şirket logonuz varsa idealdir."
+title = "İmza Görüntüsü Yükle"
+
 [workspace]
 title = "Çalışma Alanı"
 
@@ -8014,9 +8361,9 @@ disable = "Devre Dışı Bırak"
 disabled = "Devre dışı"
 editRole = "Rolü Düzenle"
 enable = "Etkinleştir"
+loading = "Kişiler yükleniyor..."
 locked = "kilitli"
 lockedBadge = "Kilitli"
-loading = "Kişiler yükleniyor..."
 loginRequired = "Önce oturum açma modunu etkinleştirin"
 member = "Üye"
 noMembersFound = "Üye bulunamadı"
@@ -8262,278 +8609,3 @@ cancel = "İptal"
 confirm = "Çıkart"
 message = "Bu ZIP {{count}} dosya içeriyor. Yine de çıkartılsın mı?"
 title = "Büyük ZIP Dosyası"
-
-[cloudBadge]
-tooltip = "Bu işlem bulut kredilerinizi kullanacak"
-
-[team]
-cancelInviteError = "Davet iptal edilemedi"
-confirmCancelInvite = "Bu daveti iptal etmek istediğinizden emin misiniz?"
-confirmLeave = "Bu takımdan ayrılmak istediğinizden emin misiniz?"
-confirmLeaveLeader = "Bir takım lideri olarak ayrılmanız, sizi takımdan kaldırır. Emin misiniz?"
-confirmRemove = "Bu üyeyi kaldırmak istediğinizden emin misiniz?"
-editName = "Takım adını düzenle"
-inviteCancelled = "Davet iptal edildi"
-inviteError = "Davet gönderilemedi"
-inviteSent = "Davet başarıyla gönderildi"
-leader = "Lider"
-leaveButton = "Takımdan Ayrıl"
-leaveError = "Takımdan ayrılamadı"
-leaveSuccess = "Takımdan başarıyla ayrıldınız"
-loading = "Takım bilgileri yükleniyor..."
-memberCount = "{{count}} üye"
-memberRemoved = "Üye başarıyla kaldırıldı"
-namePlaceholder = "Takım adını girin"
-personal = "Kişisel"
-removeError = "Üye kaldırılamadı"
-renameError = "Takım yeniden adlandırılamadı"
-renameSuccess = "Takım başarıyla yeniden adlandırıldı"
-
-[team.invitationBanner]
-message = "sizi katılmaya davet etti"
-acceptButton = "Kabul Et"
-rejectButton = "Reddet"
-
-[team.features]
-badge = "Takım Özellikleri"
-subtitle = "Takımınızla iş birliği yapın"
-title = "Takım İş Birliği"
-viewPlans = "Planları Görüntüle"
-
-[team.features.billing]
-description = "Faturalandırmayı ve abonelikleri yönetin"
-title = "Faturalandırma Yönetimi"
-
-[team.features.credits]
-description = "Tüm üyeler için paylaşılan kredi havuzu"
-title = "Paylaşılan Krediler"
-
-[team.features.dashboard]
-description = "Takım etkinliği ve kullanımı görüntüleyin"
-title = "Takım Panosu"
-
-[team.features.invite]
-description = "Takımınıza üye ekleyin"
-title = "Üye Davet Et"
-
-[team.invite]
-cancelLabel = "İptal"
-invalidEmail = "Geçersiz e-posta adresi"
-placeholder = "E-posta adresi girin"
-sendButton = "Davet Gönder"
-title = "Takım Üyesi Davet Et"
-
-[team.members]
-emailColumn = "E-posta"
-empty = "Henüz takım üyesi yok"
-nameColumn = "Ad"
-pending = "Beklemede"
-remove = "Kaldır"
-roleColumn = "Rol"
-title = "Takım Üyeleri"
-
-[team.upgrade]
-button = "Takım'a Yükseltin"
-description = "Takım iş birliği özelliklerinin kilidini açın"
-title = "Takım Planına Yükseltin"
-
-[provider.oauth2.google]
-scope = "Oturum açma kimlik doğrulaması"
-
-[provider.oauth2.google.clientId]
-label = "İstemci Kimliği"
-description = "Google Cloud Console'dan OAuth2 istemci kimliği"
-
-[provider.oauth2.google.clientSecret]
-label = "İstemci Sırrı"
-description = "Google Cloud Console'dan OAuth2 istemci sırrı"
-
-[provider.oauth2.google.scopes]
-label = "Kapsamlar"
-description = "Virgülle ayrılmış OAuth2 kapsamları"
-
-[provider.oauth2.google.useAsUsername]
-label = "Kullanıcı Adı Olarak Kullan"
-description = "Kullanıcı adı olarak kullanılacak alan (email, name, given_name, family_name)"
-
-[provider.oauth2.github]
-scope = "Oturum açma kimlik doğrulaması"
-
-[provider.oauth2.github.clientId]
-label = "İstemci Kimliği"
-description = "GitHub Developer Settings'ten OAuth2 istemci kimliği"
-
-[provider.oauth2.github.clientSecret]
-label = "İstemci Sırrı"
-description = "GitHub Developer Settings'ten OAuth2 istemci sırrı"
-
-[provider.oauth2.github.scopes]
-label = "Kapsamlar"
-description = "Virgülle ayrılmış OAuth2 kapsamları"
-
-[provider.oauth2.github.useAsUsername]
-label = "Kullanıcı Adı Olarak Kullan"
-description = "Kullanıcı adı olarak kullanılacak alan (email, login, name)"
-
-[provider.oauth2.keycloak]
-scope = "SSO"
-
-[provider.oauth2.keycloak.issuer]
-label = "Yayıncı URL'si"
-description = "Keycloak realm'inin OpenID Connect Keşif uç noktasının URL'si"
-
-[provider.oauth2.keycloak.clientId]
-label = "İstemci Kimliği"
-description = "Keycloak'tan OAuth2 istemci kimliği"
-
-[provider.oauth2.keycloak.clientSecret]
-label = "İstemci Sırrı"
-description = "Keycloak'tan OAuth2 istemci sırrı"
-
-[provider.oauth2.keycloak.scopes]
-label = "Kapsamlar"
-description = "Virgülle ayrılmış OAuth2 kapsamları"
-
-[provider.oauth2.keycloak.useAsUsername]
-label = "Kullanıcı Adı Olarak Kullan"
-description = "Kullanıcı adı olarak kullanılacak alan (email, name, given_name, family_name, preferred_username)"
-
-[provider.oauth2.generic]
-name = "Genel OAuth2"
-scope = "SSO"
-
-[provider.oauth2.generic.enabled]
-label = "Genel OAuth2'yi Etkinleştir"
-description = "Özel bir OAuth2 sağlayıcısı kullanarak kimlik doğrulamayı etkinleştirin"
-
-[provider.oauth2.generic.provider]
-label = "Sağlayıcı Adı"
-description = "OAuth2 sağlayıcınızın adı (örn. Azure AD, Okta)"
-
-[provider.oauth2.generic.issuer]
-label = "Veren URL'si"
-description = "OpenID Connect Keşfi'ni destekleyen sağlayıcı (/.well-known/openid-configuration)"
-
-[provider.oauth2.generic.clientId]
-label = "İstemci Kimliği"
-description = "Sağlayıcınızdan alınan OAuth2 istemci kimliği"
-
-[provider.oauth2.generic.clientSecret]
-label = "İstemci Sırrı"
-description = "Sağlayıcınızdan alınan OAuth2 istemci sırrı"
-
-[provider.oauth2.generic.scopes]
-label = "Kapsamlar"
-description = "Virgülle ayrılmış OAuth2 kapsamları"
-
-[provider.oauth2.generic.useAsUsername]
-label = "Kullanıcı Adı Olarak Kullan"
-description = "Kullanıcı adı olarak kullanılacak alan"
-
-[provider.oauth2.generic.autoCreateUser]
-label = "Kullanıcıları Otomatik Oluştur"
-description = "İlk OAuth2 oturum açışında kullanıcı hesaplarını otomatik olarak oluştur"
-
-[provider.oauth2.generic.blockRegistration]
-label = "Kaydı Engelle"
-description = "OAuth2 üzerinden yeni kullanıcı kaydını engelle"
-
-[provider.smtp]
-name = "SMTP Posta"
-scope = "E-posta Bildirimleri"
-
-[provider.smtp.enabled]
-label = "Postayı Etkinleştir"
-description = "E-posta bildirimlerini ve SMTP işlevselliğini etkinleştirin"
-
-[provider.smtp.host]
-label = "SMTP Sunucusu"
-description = "SMTP sunucunuzun ana makine adı veya IP adresi"
-
-[provider.smtp.port]
-label = "SMTP Bağlantı Noktası"
-description = "SMTP bağlantısı için bağlantı noktası numarası (genellikle 25, 465 veya 587)"
-
-[provider.smtp.username]
-label = "SMTP Kullanıcı Adı"
-description = "SMTP kimlik doğrulaması için kullanıcı adı"
-
-[provider.smtp.password]
-label = "SMTP Parolası"
-description = "SMTP kimlik doğrulaması için parola"
-
-[provider.smtp.from]
-label = "Kimden Adresi"
-description = "Gönderici olarak kullanılacak e-posta adresi"
-
-[provider.saml2]
-name = "SAML2"
-scope = "SSO (SAML)"
-
-[provider.saml2.enabled]
-label = "SAML2'yi Etkinleştir"
-description = "SAML2 kimlik doğrulamasını etkinleştirin (yalnızca Kurumsal)"
-
-[provider.saml2.provider]
-label = "Sağlayıcı Adı"
-description = "SAML2 sağlayıcınızın adı"
-
-[provider.saml2.registrationId]
-label = "Kayıt Kimliği"
-description = "Hizmet Sağlayıcı (SP) uygulamanızın adı"
-
-[provider.saml2.idpMetadataUri]
-label = "IDP Meta Verisi URI'si"
-description = "Sağlayıcınızın meta verileri için URI"
-
-[provider.saml2.idpSingleLoginUrl]
-label = "IDP Tek Oturum Açma URL'si"
-description = "SSO başlatma için URL"
-
-[provider.saml2.idpSingleLogoutUrl]
-label = "IDP Tek Oturum Kapatma URL'si"
-description = "SLO başlatma için URL"
-
-[provider.saml2.idpIssuer]
-label = "IDP Veren"
-description = "Sağlayıcınızın kimliği"
-
-[provider.saml2.idpCert]
-label = "IDP Sertifikası"
-description = "Sertifika yolu (örn. classpath:okta.cert)"
-
-[provider.saml2.privateKey]
-label = "Özel Anahtar"
-description = "Özel anahtar yolunuz"
-
-[provider.saml2.spCert]
-label = "SP Sertifikası"
-description = "İmzalama sertifikanızın yolu"
-
-[provider.saml2.autoCreateUser]
-label = "Kullanıcıları Otomatik Oluştur"
-description = "İlk SAML2 oturum açışında kullanıcı hesaplarını otomatik olarak oluşturun"
-
-[provider.saml2.blockRegistration]
-label = "Kaydı Engelle"
-description = "SAML2 üzerinden yeni kullanıcı kaydını engelle"
-
-[provider.googledrive]
-name = "Google Drive"
-scope = "Dosya İçe Aktarma"
-
-[provider.googledrive.enabled]
-label = "Google Drive Dosya Seçiciyi Etkinleştir"
-description = "Kullanıcıların doğrudan Google Drive'dan dosya içe aktarmasına izin ver"
-
-[provider.googledrive.clientId]
-label = "İstemci Kimliği"
-description = "Google Cloud Console'dan Google OAuth 2.0 İstemci Kimliği"
-
-[provider.googledrive.apiKey]
-label = "API Anahtarı"
-description = "Google Cloud Console'dan Google Picker API için Google API Anahtarı"
-
-[provider.googledrive.appId]
-label = "Uygulama Kimliği"
-description = "Google Cloud Console'dan Google Drive Uygulama Kimliği"
