@@ -125,20 +125,22 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
             console.log("[AppConfig] Fetching app config...");
           }
 
-          // Parallelize app-config and status calls to minimize initialization time
-          const [configResponse] = await Promise.all([
-            apiClient.get<AppConfig>("/api/v1/config/app-config", {
+          // Background probe for status to warm up the connection/cache - don't await to avoid gating config
+          apiClient
+            .get("/api/v1/info/status", {
               suppressErrorToast: true,
               skipAuthRedirect: true,
-            } as any),
-            // Background probe for status to warm up the connection/cache
-            apiClient
-              .get("/api/v1/info/status", {
-                suppressErrorToast: true,
-                skipAuthRedirect: true,
-              } as any)
-              .catch(() => null),
-          ]);
+            } as any)
+            .catch(() => null);
+
+          // Fetch app config
+          const configResponse = await apiClient.get<AppConfig>(
+            "/api/v1/config/app-config",
+            {
+              suppressErrorToast: true,
+              skipAuthRedirect: true,
+            } as any,
+          );
 
           const data = configResponse.data;
 

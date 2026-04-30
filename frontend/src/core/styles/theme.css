@@ -801,6 +801,7 @@
 
 /* Smooth transitions for theme switching */
 /* Targeted transitions for theme switching instead of global * rule */
+body,
 [class*="mantine-"] {
   transition:
     background-color 0.2s ease,
