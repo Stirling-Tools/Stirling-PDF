@@ -54,10 +54,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 + stirling.software.common.configuration.InstallationPathConfig
                                         .getStaticPath(),
                         "classpath:/static/")
-                .setCacheControl(CacheControl.noCache().mustRevalidate())
-                .resourceChain(true)
-                .addResolver(
-                        new org.springframework.web.servlet.resource.EncodedResourceResolver());
+                .setCacheControl(CacheControl.noCache().mustRevalidate());
 
         // Handle all other static resources (js, css, images, fonts, etc.)
         // Check customFiles/static first for user overrides

@@ -86,10 +86,12 @@ export default defineConfig(({ mode }) => {
       viteCompression({
         algorithm: "gzip",
         ext: ".gz",
+        threshold: 1024,
       }),
       viteCompression({
         algorithm: "brotliCompress",
         ext: ".br",
+        threshold: 1024,
       }),
     ],
     server: {
