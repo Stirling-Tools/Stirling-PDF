@@ -72,7 +72,6 @@ export const useShowJSOperation = (): ShowJSOperationHook => {
           "/api/v1/misc/show-javascript",
           formData,
           {
-            headers: { "Content-Type": "multipart/form-data" },
             responseType: "text",
           },
         );

@@ -1,7 +1,7 @@
 version: '3'
 
 tasks:
-  "e2e:live":
+  e2e:live:
     desc: "Auto-spawn backend in parallel and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
     summary: |
       Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
@@ -14,9 +14,9 @@ tasks:
         task testing:e2e:live -- --headed --grep merge
     deps:
       - ":backend:dev"
-      - "e2e:live:runner"
+      - e2e:live:runner
 
-  "e2e:live:runner":
+  e2e:live:runner:
     internal: true
     deps: [":frontend:prepare"]
     dir: frontend

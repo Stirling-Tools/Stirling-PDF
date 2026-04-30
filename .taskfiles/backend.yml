@@ -1,16 +1,19 @@
 version: '3'
 
 # All gradle invocations go through `bash gradlew` (the sh wrapper) so they work
-# uniformly on Linux/macOS (native bash) and Windows-with-Git-Bash. The previous
-# `cmd /c gradlew.bat` Windows variants don't work via Task's mvdan/sh interpreter
-# because cmd.exe is launched in %TEMP% and can't find the .bat file.
+# uniformly on Linux/macOS (native bash) and Windows-with-Git-Bash.
 
 tasks:
   dev:
     desc: "Start backend dev server"
     ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
+      AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+    env:
+      SERVER_PORT: '{{.PORT}}'
     cmds:
-      - bash gradlew :stirling-pdf:bootRun
+      - '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}bash gradlew :stirling-pdf:bootRun'
 
   dev:bundled:
     desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"

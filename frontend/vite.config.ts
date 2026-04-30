@@ -39,54 +39,29 @@ export default defineConfig(({ mode }) => {
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
+  // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
+  // so the top-level dev launcher can wire a dynamically-assigned backend port.
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  const backendProxy = {
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    xfwd: true,
+  };
+
   // Shared between `vite` (dev) and `vite preview` (production-build serve, used
   // in CI/E2E) so the live test suite still resolves /api → :8080.
-  const backendProxy =
+  const backendProxyConfig =
     effectiveMode === "desktop"
       ? undefined
       : {
-          "/api": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
-          "/oauth2": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
-          "/saml2": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
-          "/login/oauth2": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
-          "/login/saml2": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
-          "/swagger-ui": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
-          "/v1/api-docs": {
-            target: "http://localhost:8080",
-            changeOrigin: true,
-            secure: false,
-            xfwd: true,
-          },
+          "/api": backendProxy,
+          "/oauth2": backendProxy,
+          "/saml2": backendProxy,
+          "/login/oauth2": backendProxy,
+          "/login/saml2": backendProxy,
+          "/swagger-ui": backendProxy,
+          "/v1/api-docs": backendProxy,
         };
 
   return {
@@ -134,13 +109,13 @@ export default defineConfig(({ mode }) => {
         ignored: ["**/src-tauri/**"],
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
-      proxy: backendProxy,
+      proxy: backendProxyConfig,
     },
     preview: {
       host: true,
       port: 5173,
       strictPort: true,
-      proxy: backendProxy,
+      proxy: backendProxyConfig,
     },
     // base: "./" produces relative asset URLs which work when dist/ is served
     // at any path (e.g. Spring Boot bundling the frontend at /). But under
