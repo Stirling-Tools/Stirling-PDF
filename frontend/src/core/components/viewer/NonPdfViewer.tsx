@@ -13,7 +13,6 @@ import {
 import { CONVERSION_MATRIX } from "@app/constants/convertConstants";
 
 import { NonPdfBanner } from "@app/components/viewer/nonpdf/NonPdfBanner";
-import { getFileTypeMeta } from "@app/components/viewer/nonpdf/types";
 import { ImageViewer } from "@app/components/viewer/nonpdf/ImageViewer";
 import { CsvViewer } from "@app/components/viewer/nonpdf/CsvViewer";
 import { JsonViewer } from "@app/components/viewer/nonpdf/JsonViewer";
@@ -33,10 +32,6 @@ export interface NonPdfViewerProps extends ViewerProps {
 
 export function NonPdfViewer({ file }: NonPdfViewerProps) {
   const fileType = useMemo(() => detectNonPdfFileType(file), [file]);
-  const meta = useMemo(
-    () => getFileTypeMeta(fileType, file.name),
-    [fileType, file.name],
-  );
 
   const { handleToolSelect, toolAvailability } = useToolWorkflow();
 

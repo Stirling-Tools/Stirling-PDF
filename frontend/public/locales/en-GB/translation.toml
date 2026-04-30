@@ -2702,13 +2702,11 @@ addFilesHint = "Add PDFs in the Files step to enable selection."
 clearSelected = "Clear selected"
 clearSlot = "Remove file"
 cta = "Compare"
-edited.selectBaseFirst = "Select original PDF first"
 header = "Compare PDFs"
 loading = "Comparing..."
 newLine = "new-line"
 noFiles = "No PDFs available yet"
 pages = "Pages"
-swap.label = "Swap"
 tags = "differentiate,contrast,changes,analysis"
 title = "Compare"
 
@@ -2754,6 +2752,7 @@ title = "These PDFs look highly different"
 
 [compare.edited]
 label = "Edited PDF"
+selectBaseFirst = "Select original PDF first"
 placeholder = "Select the edited PDF"
 
 [compare.error]
@@ -2835,6 +2834,7 @@ pageLabel = "Page"
 
 [compare.swap]
 confirm = "Swap and Re-run"
+label = "Swap"
 confirmBody = "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?"
 confirmTitle = "Re-run comparison?"
 

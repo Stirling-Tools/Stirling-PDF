@@ -67,7 +67,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
-    const isMultiTool = currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+    const isMultiTool =
+      currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
@@ -163,7 +164,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
         }
       }
-    }, [isGoogleDriveEnabled, openGoogleDrivePicker, addFiles, navActions, isMultiTool]);
+    }, [
+      isGoogleDriveEnabled,
+      openGoogleDrivePicker,
+      addFiles,
+      navActions,
+      isMultiTool,
+    ]);
 
     // Toggle file in/out of workbench
     const handleFileClick = useCallback(
@@ -287,7 +294,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         if (files.length > 0) {
           await addFiles(files);
           if (!isMultiTool) {
-            navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+            navActions.setWorkbench(
+              files.length === 1 ? "viewer" : "fileEditor",
+            );
           }
         }
         e.target.value = "";

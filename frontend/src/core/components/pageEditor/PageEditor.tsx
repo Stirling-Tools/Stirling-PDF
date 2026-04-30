@@ -684,21 +684,19 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     >
       <LoadingOverlay visible={globalProcessing && !initialDocument} />
 
-      {!initialDocument &&
-        !globalProcessing &&
-        !hasPdfFiles && (
-          <Center h="100%">
-            <Stack align="center" gap="md">
-              <Text size="lg" c="dimmed">
-                📄
-              </Text>
-              <Text c="dimmed">No PDF files loaded</Text>
-              <Text size="sm" c="dimmed">
-                Add files to start editing pages
-              </Text>
-            </Stack>
-          </Center>
-        )}
+      {!initialDocument && !globalProcessing && !hasPdfFiles && (
+        <Center h="100%">
+          <Stack align="center" gap="md">
+            <Text size="lg" c="dimmed">
+              📄
+            </Text>
+            <Text c="dimmed">No PDF files loaded</Text>
+            <Text size="sm" c="dimmed">
+              Add files to start editing pages
+            </Text>
+          </Stack>
+        </Center>
+      )}
 
       {!initialDocument && (globalProcessing || hasPdfFiles) && (
         <Box p={0}>

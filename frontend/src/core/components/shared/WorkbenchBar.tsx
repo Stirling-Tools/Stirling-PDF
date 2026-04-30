@@ -67,8 +67,12 @@ export default function WorkbenchBar({
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const { buttons, actions, allButtonsDisabled } = useRightRail();
-  const { pageEditorFunctions, toolPanelMode, leftPanelView, customWorkbenchViews } =
-    useToolWorkflow();
+  const {
+    pageEditorFunctions,
+    toolPanelMode,
+    leftPanelView,
+    customWorkbenchViews,
+  } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
   const disableForFullscreen =
@@ -453,30 +457,33 @@ export default function WorkbenchBar({
           )}
 
         {/* Separator: export group | close */}
-        {!isCustomView && <div className="workbench-bar-divider workbench-bar-globals-sep" />}
+        {!isCustomView && (
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        )}
 
         {/* Close (context-aware: close all / close viewer file / close page editor) */}
-        {!isCustomView && renderWithTooltip(
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="workbench-bar-action-icon"
-            onClick={handleClose}
-            disabled={
-              totalItems === 0 || allButtonsDisabled || disableForFullscreen
-            }
-            aria-label={
-              currentView === "fileEditor"
-                ? t("rightRail.closeAll", "Close All")
-                : t("rightRail.closePdf", "Close PDF")
-            }
-          >
-            <CloseIcon sx={{ fontSize: "1rem" }} />
-          </ActionIcon>,
-          currentView === "fileEditor"
-            ? t("rightRail.closeAll", "Close All")
-            : t("rightRail.closePdf", "Close PDF"),
-        )}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={handleClose}
+              disabled={
+                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+              }
+              aria-label={
+                currentView === "fileEditor"
+                  ? t("rightRail.closeAll", "Close All")
+                  : t("rightRail.closePdf", "Close PDF")
+              }
+            >
+              <CloseIcon sx={{ fontSize: "1rem" }} />
+            </ActionIcon>,
+            currentView === "fileEditor"
+              ? t("rightRail.closeAll", "Close All")
+              : t("rightRail.closePdf", "Close PDF"),
+          )}
       </div>
     </div>
   );

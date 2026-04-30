@@ -366,10 +366,17 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     if (navigationState.workbench === "pageEditor" && prev !== "pageEditor") {
       setLeftPanelView("hidden");
-    } else if (navigationState.workbench !== "pageEditor" && prev === "pageEditor") {
+    } else if (
+      navigationState.workbench !== "pageEditor" &&
+      prev === "pageEditor"
+    ) {
       setLeftPanelView("toolPicker");
     }
-  }, [navigationState.workbench, navigationState.selectedTool, setLeftPanelView]);
+  }, [
+    navigationState.workbench,
+    navigationState.selectedTool,
+    setLeftPanelView,
+  ]);
 
   // Tool reset methods
   const registerToolReset = useCallback(

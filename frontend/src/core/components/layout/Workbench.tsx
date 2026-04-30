@@ -91,7 +91,7 @@ export default function Workbench() {
       }
     }
 
-      if (activeFiles.length === 0) {
+    if (activeFiles.length === 0) {
       return <LandingPage />;
     }
 

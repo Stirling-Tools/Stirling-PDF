@@ -153,9 +153,30 @@ function FilePdfIcon({
         d="M9.5 0L15 5.5H11C10.172 5.5 9.5 4.828 9.5 4V0Z"
         fill="rgba(0,0,0,0.2)"
       />
-      <rect x="3.5" y="8.5" width="7" height="1.2" rx=".6" fill="rgba(255,255,255,.85)" />
-      <rect x="3.5" y="11" width="9" height="1.2" rx=".6" fill="rgba(255,255,255,.85)" />
-      <rect x="3.5" y="13.5" width="5.5" height="1.2" rx=".6" fill="rgba(255,255,255,.85)" />
+      <rect
+        x="3.5"
+        y="8.5"
+        width="7"
+        height="1.2"
+        rx=".6"
+        fill="rgba(255,255,255,.85)"
+      />
+      <rect
+        x="3.5"
+        y="11"
+        width="9"
+        height="1.2"
+        rx=".6"
+        fill="rgba(255,255,255,.85)"
+      />
+      <rect
+        x="3.5"
+        y="13.5"
+        width="5.5"
+        height="1.2"
+        rx=".6"
+        fill="rgba(255,255,255,.85)"
+      />
     </svg>
   );
 }
