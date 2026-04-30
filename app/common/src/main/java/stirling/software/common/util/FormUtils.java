@@ -2289,14 +2289,7 @@ public class FormUtils {
         acroForm.getFields().add(field);
     }
 
-    /**
-     * Drop AcroForm fields whose widget annotations aren't on any page of {@code document}. Apply
-     * after page-level mutations (removePage, building a subset doc) — without this, widgets keep
-     * /P references to pages no longer in the page tree, producing orphan pages in the saved file
-     * and broken form interactivity.
-     *
-     * <p>If no fields survive, the entire /AcroForm entry is removed.
-     */
+    /** Drops AcroForm fields whose widgets are no longer on any page of {@code document}. */
     public void pruneOrphanedFormFields(PDDocument document) {
         if (document == null) {
             return;
@@ -2317,8 +2310,7 @@ public class FormUtils {
         Set<COSDictionary> liveWidgets = collectLiveWidgetDictionaries(document);
         List<PDField> kept = pruneFieldList(fields, liveWidgets);
         if (kept.isEmpty()) {
-            // setAcroForm(null) clears the catalog's cached PDAcroForm — a raw COS removeItem
-            // would leave the stale cache active.
+            // setAcroForm(null) also clears the cached form; removeItem alone wouldn't.
             catalog.setAcroForm(null);
         } else if (kept.size() != fields.size()) {
             form.setFields(kept);

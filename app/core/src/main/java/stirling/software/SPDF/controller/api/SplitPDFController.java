@@ -58,8 +58,7 @@ public class SplitPDFController {
         MultipartFile file = request.getFileInput();
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
         try {
-            // Persist the upload once so each output can be built from its own fresh load
-            // (removePage + AcroForm prune mutate the doc).
+            // Each output is built by reloading and mutating the doc; persist the upload once.
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
                 Files.copy(
                         file.getInputStream(),

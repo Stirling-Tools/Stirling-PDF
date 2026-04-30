@@ -65,8 +65,7 @@ public class SplitPdfBySizeController {
 
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
         try {
-            // Persist the upload once so each output can be built from its own fresh load
-            // (removePage + AcroForm prune mutate the doc).
+            // Each output is built by reloading and mutating the doc; persist the upload once.
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf");
                     ZipOutputStream zipOut =
                             new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
@@ -137,11 +136,8 @@ public class SplitPdfBySizeController {
     }
 
     /**
-     * Run the iterative size-estimation algorithm against an in-memory scratch document built from
-     * shared COS page references, and return the page-index ranges each output document should
-     * contain. Output is written separately by {@link #writeRangeToZip} so that AcroForm pruning
-     * can be applied. AcroForm overhead is not included in the estimation, so output size may
-     * slightly exceed {@code maxBytes} for documents that carry an AcroForm.
+     * Page-index ranges each output should contain. AcroForm overhead is not modeled, so outputs
+     * with forms may slightly exceed {@code maxBytes}.
      */
     private List<List<Integer>> computeSizeRanges(PDDocument sourceDocument, long maxBytes)
             throws IOException {
@@ -203,11 +199,7 @@ public class SplitPdfBySizeController {
         return ranges;
     }
 
-    /**
-     * Speculatively add up to 5 upcoming pages and return how many fit under {@code maxBytes}. Used
-     * after a successful size check that came in well under cap to avoid running save+measure on
-     * every single page.
-     */
+    /** Speculatively tries up to 5 next pages; returns how many fit under {@code maxBytes}. */
     private int lookAheadFit(PDDocument scratch, PDDocument source, int pageIndex, long maxBytes)
             throws IOException {
         int totalPages = source.getNumberOfPages();

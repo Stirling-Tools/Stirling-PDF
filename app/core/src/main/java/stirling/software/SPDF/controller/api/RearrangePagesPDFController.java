@@ -270,8 +270,8 @@ public class RearrangePagesPDFController {
                         rearrangedDocument.addPage(page);
                     }
 
-                    // Reorder keeps every source page, so widget /P references stay valid; share
-                    // the source AcroForm dictionary so form fields remain interactive.
+                    // All source pages are preserved here, so it's safe to share the source
+                    // AcroForm.
                     PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
                     if (sourceCatalog != null) {
                         PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);

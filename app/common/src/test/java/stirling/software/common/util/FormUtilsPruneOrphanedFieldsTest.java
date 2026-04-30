@@ -73,7 +73,6 @@ class FormUtilsPruneOrphanedFieldsTest {
         byte[] pdfBytes = buildPdfWithMultiWidgetField();
 
         try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-            // Page 0 gets removed; the multi-widget field has widgets on pages 0, 1, 2.
             document.removePage(0);
 
             FormUtils.pruneOrphanedFormFields(document);
