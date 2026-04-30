@@ -10,9 +10,9 @@ import jakarta.persistence.Converter;
  * Visibility scope of a {@code WatchFolder}.
  *
  * <ul>
- *   <li>{@link #PERSONAL} — only the owner can see / modify the folder.</li>
+ *   <li>{@link #PERSONAL} — only the owner can see / modify the folder.
  *   <li>{@link #ORGANISATION} — visible to every authenticated user; only admins may create or
- *       modify.</li>
+ *       modify.
  * </ul>
  */
 public enum FolderScope {

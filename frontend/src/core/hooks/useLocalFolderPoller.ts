@@ -8,8 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SmartFolder } from '@app/types/smartFolders';
-import { smartFolderStorage } from '@app/services/smartFolderStorage';
-import { folderStorage } from '@app/services/folderStorage';
+import { useWatchFolderStore } from '@app/contexts/WatchFolderStorageContext';
 import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
 import { folderSeenFilesStorage, makeSeenKey } from '@app/services/folderSeenFilesStorage';
 import { resolveInputFile } from '@app/hooks/useFolderAutomation';
@@ -20,8 +19,11 @@ const POLL_INTERVAL_MS = 10_000;
 export function useLocalFolderPoller(
   runPipeline: (folder: SmartFolder, file: File, inputFileId: string, ownedByFolder: boolean) => Promise<void>
 ): void {
+  const store = useWatchFolderStore();
   const runPipelineRef = useRef(runPipeline);
+  const storeRef = useRef(store);
   useEffect(() => { runPipelineRef.current = runPipeline; });
+  useEffect(() => { storeRef.current = store; });
 
   useEffect(() => {
     let cancelled = false;
@@ -31,7 +33,7 @@ export function useLocalFolderPoller(
 
       let folders: SmartFolder[];
       try {
-        folders = await smartFolderStorage.getAllFolders();
+        folders = await storeRef.current.getAllFolders();
       } catch {
         return;
       }
@@ -48,7 +50,7 @@ export function useLocalFolderPoller(
           const hasPermission = await folderDirectoryHandleStorage.ensureReadPermission(inputHandle);
           if (!hasPermission) continue;
 
-          const folderData = await folderStorage.getFolderData(folder.id);
+          const folderData = await storeRef.current.getFolderData(folder.id);
           // Build set of file names already in the folder (any status) to avoid duplicates
           // keyed by name+size (can't use lastModified — file handle gives same value each time)
           const processingNames = new Set(
@@ -84,7 +86,7 @@ export function useLocalFolderPoller(
 
             const { inputFileId, ownedByFolder } = await resolveInputFile(file);
 
-            await folderStorage.addFileToFolder(folder.id, inputFileId, {
+            await storeRef.current.addFileToFolder(folder.id, inputFileId, {
               status: 'pending',
               name: file.name,
               ownedByFolder,

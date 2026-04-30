@@ -3,7 +3,7 @@
  *
  * Writes go to the server API first (source of truth), then mirror to IDB for fast reads.
  * Reads come from IDB (populated on init and after writes).
- * Falls back to IDB-only if the server is unreachable.
+ * Falls back to IDB-only on network errors (NOT on auth/permission errors).
  */
 
 import type { WatchFolderStorageBackend } from "@app/contexts/WatchFolderStorageContext";
@@ -11,16 +11,38 @@ import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from "@app/serv
 import { folderStorage } from "@app/services/folderStorage";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
 import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from "@app/types/smartFolders";
-import { watchFolderApi, WatchFolderDTO, WatchFolderFileDTO, WatchFolderRunDTO } from "./watchFolderApiService";
+import { watchFolderApi, WatchFolderDTO } from "./watchFolderApiService";
+import { AxiosError } from "axios";
 
-// ── DTO ↔ Domain conversions ───────────────────────────────────────────────
+// ── Error classification ──────────────────────────────────────────────────
+
+/** Returns true only for network/timeout errors where fallback to IDB makes sense. */
+function isNetworkError(err: unknown): boolean {
+  if (err instanceof AxiosError) {
+    // No response at all = network failure / timeout
+    if (!err.response) return true;
+    // 5xx = server error, safe to fall back
+    if (err.response.status >= 500) return true;
+    // 401/403 = auth issue — don't silently fall back to stale IDB data
+    return false;
+  }
+  return true; // Unknown error type — treat as network
+}
+
+/** True if the error is a 404 — treat as "not found" rather than a fatal error. */
+function isNotFound(err: unknown): boolean {
+  return err instanceof AxiosError && err.response?.status === 404;
+}
+
+// ── DTO ↔ Domain conversions ──────────────────────────────────────────────
 
 function toSmartFolder(dto: WatchFolderDTO): SmartFolder {
   return {
     id: dto.id,
     name: dto.name,
     description: dto.description ?? "",
-    automationId: "", // automation config is inlined — hooks resolve this
+    automationId: "", // server uses inlined automationConfig instead
+    automationConfig: dto.automationConfig,
     icon: dto.icon ?? "FolderIcon",
     accentColor: dto.accentColor ?? "#3b82f6",
     createdAt: dto.createdAt ?? new Date().toISOString(),
@@ -28,6 +50,7 @@ function toSmartFolder(dto: WatchFolderDTO): SmartFolder {
     order: dto.orderIndex,
     isDefault: dto.isDefault,
     isPaused: dto.isPaused,
+    scope: dto.scope,
     inputSource: (dto.inputSource as SmartFolder["inputSource"]) ?? "idb",
     processingMode: (dto.processingMode as SmartFolder["processingMode"]) ?? "local",
     outputMode: (dto.outputMode as SmartFolder["outputMode"]) ?? "new_file",
@@ -40,14 +63,15 @@ function toSmartFolder(dto: WatchFolderDTO): SmartFolder {
   };
 }
 
-function toDTO(folder: SmartFolder & { scope?: string }): WatchFolderDTO {
+function toDTO(folder: SmartFolder): WatchFolderDTO {
   return {
     id: folder.id,
     name: folder.name,
     description: folder.description,
+    automationConfig: folder.automationConfig,
     icon: folder.icon,
     accentColor: folder.accentColor,
-    scope: (folder as any).scope ?? "PERSONAL",
+    scope: folder.scope ?? "PERSONAL",
     orderIndex: folder.order,
     isDefault: folder.isDefault,
     isPaused: folder.isPaused,
@@ -67,11 +91,22 @@ function dispatchChange() {
   window.dispatchEvent(new Event(SMART_FOLDER_STORAGE_CHANGE_EVENT));
 }
 
-// ── Sync helper: pull server state into IDB ────────────────────────────────
+// ── Sync helper: pull server state into IDB ───────────────────────────────
 
-async function syncFoldersToIdb(): Promise<SmartFolder[]> {
+let lastSyncAt = 0;
+const SYNC_DEBOUNCE_MS = 10_000; // Don't re-sync more than once per 10s
+
+async function syncFoldersToIdb(force = false): Promise<SmartFolder[]> {
+  const now = Date.now();
+  if (!force && now - lastSyncAt < SYNC_DEBOUNCE_MS) {
+    // Return IDB cache — it's fresh enough
+    return smartFolderStorage.getAllFolders();
+  }
+
   const dtos = await watchFolderApi.list();
   const folders = dtos.map(toSmartFolder);
+  lastSyncAt = Date.now();
+
   // Overwrite IDB with server state
   const existing = await smartFolderStorage.getAllFolders();
   const serverIds = new Set(folders.map((f) => f.id));
@@ -89,14 +124,14 @@ async function syncFoldersToIdb(): Promise<SmartFolder[]> {
   return folders;
 }
 
-// ── Backend implementation ─────────────────────────────────────────────────
+// ── Backend implementation ────────────────────────────────────────────────
 
 export const serverBackend: WatchFolderStorageBackend = {
   async getAllFolders() {
     try {
       return await syncFoldersToIdb();
-    } catch {
-      // Server unreachable — fall back to IDB
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
       return smartFolderStorage.getAllFolders();
     }
   },
@@ -107,7 +142,11 @@ export const serverBackend: WatchFolderStorageBackend = {
       const folder = toSmartFolder(dto);
       await smartFolderStorage.createFolderWithId(folder).catch(() => {});
       return folder;
-    } catch {
+    } catch (err) {
+      // 404 → folder genuinely doesn't exist on server (or was deleted in another tab).
+      // Don't fall back to IDB; return null so callers can treat as gone.
+      if (isNotFound(err)) return null;
+      if (!isNetworkError(err)) throw err;
       return smartFolderStorage.getFolder(id);
     }
   },
@@ -124,10 +163,11 @@ export const serverBackend: WatchFolderStorageBackend = {
       const created = await watchFolderApi.create(toDTO(folder));
       const result = toSmartFolder(created);
       await smartFolderStorage.createFolderWithId(result).catch(() => {});
+      lastSyncAt = 0; // Invalidate sync cache
       dispatchChange();
       return result;
-    } catch {
-      // Offline — create in IDB only
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
       return smartFolderStorage.createFolder(data);
     }
   },
@@ -137,9 +177,11 @@ export const serverBackend: WatchFolderStorageBackend = {
       const created = await watchFolderApi.create(toDTO(folder));
       const result = toSmartFolder(created);
       await smartFolderStorage.createFolderWithId(result).catch(() => {});
+      lastSyncAt = 0;
       dispatchChange();
       return result;
-    } catch {
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
       return smartFolderStorage.createFolderWithId(folder);
     }
   },
@@ -149,9 +191,11 @@ export const serverBackend: WatchFolderStorageBackend = {
       const updated = await watchFolderApi.update(folder.id, toDTO(folder));
       const result = toSmartFolder(updated);
       await smartFolderStorage.createFolderWithId(result).catch(() => {});
+      lastSyncAt = 0;
       dispatchChange();
       return result;
-    } catch {
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
       return smartFolderStorage.updateFolder(folder);
     }
   },
@@ -159,8 +203,14 @@ export const serverBackend: WatchFolderStorageBackend = {
   async deleteFolder(id) {
     try {
       await watchFolderApi.remove(id);
-    } catch {
-      // best-effort server delete
+      lastSyncAt = 0;
+    } catch (err) {
+      // 404 = already deleted — that's success for delete semantics.
+      if (isNotFound(err)) {
+        lastSyncAt = 0;
+      } else if (!isNetworkError(err)) {
+        throw err;
+      }
     }
     await smartFolderStorage.deleteFolder(id);
   },
@@ -188,10 +238,13 @@ export const serverBackend: WatchFolderStorageBackend = {
           processedAt: f.processedAt ? new Date(f.processedAt) : undefined,
         };
       }
-      // Mirror to IDB
-      await folderStorage.setFolderData(folderId, record).catch(() => {});
+      // Mirror to IDB silently — this is a cache write reflecting a read, not a user action.
+      // Dispatching FOLDER_CHANGE_EVENT here would cause subscribers (useFolderData, etc.)
+      // to re-call getFolderData → server → mirror → … infinite loop.
+      await folderStorage.setFolderData(folderId, record, { silent: true }).catch(() => {});
       return record;
-    } catch {
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
       return folderStorage.getFolderData(folderId);
     }
   },
@@ -199,7 +252,7 @@ export const serverBackend: WatchFolderStorageBackend = {
   async updateFileMetadata(folderId, fileId, meta) {
     // Update IDB immediately for fast UI
     await folderStorage.updateFileMetadata(folderId, fileId, meta);
-    // Sync to server
+    // Sync to server — only swallow network failures; surface auth/config errors.
     try {
       const existing = await folderStorage.getFolderData(folderId);
       const fileMeta = existing?.files[fileId];
@@ -218,8 +271,8 @@ export const serverBackend: WatchFolderStorageBackend = {
           processedAt: fileMeta.processedAt?.toISOString(),
         });
       }
-    } catch {
-      // Server sync failed — IDB is still up to date
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
     }
   },
 
@@ -233,16 +286,33 @@ export const serverBackend: WatchFolderStorageBackend = {
         ownedByFolder: meta?.ownedByFolder,
         addedAt: meta?.addedAt?.toISOString() ?? new Date().toISOString(),
       });
-    } catch {
-      // offline — IDB has the data
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
+    }
+  },
+
+  async removeFileFromFolder(folderId, fileId) {
+    await folderStorage.removeFileFromFolder(folderId, fileId);
+    try {
+      await watchFolderApi.deleteFile(folderId, fileId);
+    } catch (err) {
+      if (isNotFound(err)) {
+        // Already gone server-side — DELETE is idempotent.
+      } else if (!isNetworkError(err)) {
+        throw err;
+      }
     }
   },
 
   async clearFolder(folderId) {
     try {
       await watchFolderApi.deleteFiles(folderId);
-    } catch {
-      /* best-effort */
+    } catch (err) {
+      if (isNotFound(err)) {
+        // Already cleared on server — proceed.
+      } else if (!isNetworkError(err)) {
+        throw err;
+      }
     }
     await folderStorage.clearFolder(folderId);
   },
@@ -259,7 +329,8 @@ export const serverBackend: WatchFolderStorageBackend = {
         processedAt: r.processedAt ? new Date(r.processedAt) : undefined,
       }));
       return entries;
-    } catch {
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
       return folderRunStateStorage.getFolderRunState(folderId);
     }
   },
@@ -279,18 +350,22 @@ export const serverBackend: WatchFolderStorageBackend = {
           processedAt: e.processedAt?.toISOString(),
         })),
       );
-    } catch {
-      /* offline */
+    } catch (err) {
+      if (!isNetworkError(err)) throw err;
     }
   },
 
   async clearFolderRunState(folderId) {
-    try {
-      // No dedicated endpoint yet — runs are deleted with the folder
-    } catch {
-      /* best-effort */
-    }
     await folderRunStateStorage.clearFolderRunState(folderId);
+    try {
+      await watchFolderApi.deleteRuns(folderId);
+    } catch (err) {
+      if (isNotFound(err)) {
+        // Folder already gone or no runs — fine.
+      } else if (!isNetworkError(err)) {
+        throw err;
+      }
+    }
   },
 
   onChange(callback) {

@@ -21,7 +21,7 @@ import { AutomationConfig, AutomationMode } from '@app/types/automation';
 import { IconPicker as IconSelector } from '@app/components/smartFolders/IconPicker';
 import AutomationCreation from '@app/components/tools/automate/AutomationCreation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { smartFolderStorage } from '@app/services/smartFolderStorage';
+import { useWatchFolderStore } from '@app/contexts/WatchFolderStorageContext';
 import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
 import {
   createServerFolder,
@@ -75,6 +75,7 @@ export function SmartFolderManagementModal({
 }: SmartFolderManagementModalProps) {
   const { t } = useTranslation();
   const { toolRegistry } = useToolWorkflow();
+  const store = useWatchFolderStore();
   const isEditMode = !!editFolder;
 
   // Animation state
@@ -186,12 +187,20 @@ export function SmartFolderManagementModal({
       const retryFields = { maxRetries, retryDelayMinutes };
       const hasOutputDirectory = outputDirName !== null;
       const ttlHoursNum = isServerFolder && outputTtlHours !== 'forever' ? Number(outputTtlHours) : null;
+      // Inline the automation config when persisting to a server-backed store —
+      // server folders use this instead of looking up automationId in browser IDB.
+      const inlinedAutomationConfig = JSON.stringify({
+        name: automation.name,
+        description: automation.description,
+        operations: automation.operations,
+      });
       const folderData = {
         name: trimmedName,
         description: '',
         icon,
         accentColor,
         automationId: automation.id,
+        automationConfig: inlinedAutomationConfig,
         ...retryFields,
         outputMode: outputMode === 'new_version' ? 'new_version' as const : undefined,
         outputName: outputName.trim() || undefined,
@@ -206,7 +215,7 @@ export function SmartFolderManagementModal({
       if (isEditMode && editFolder) {
         const wasServerFolder = editFolder.inputSource === 'server-folder';
         const wasLocalFolder = editFolder.inputSource === 'local-folder';
-        await smartFolderStorage.updateFolder({ ...editFolder, ...folderData });
+        await store.updateFolder({ ...editFolder, ...folderData });
         if (pendingDirHandle.current) {
           await folderDirectoryHandleStorage.set(editFolder.id, pendingDirHandle.current);
         } else if (!hasOutputDirectory) {
@@ -229,7 +238,7 @@ export function SmartFolderManagementModal({
           await deleteServerFolder(editFolder.id).catch(() => {});
         }
       } else {
-        const newFolder = await smartFolderStorage.createFolder(folderData);
+        const newFolder = await store.createFolder(folderData);
         if (pendingDirHandle.current) {
           await folderDirectoryHandleStorage.set(newFolder.id, pendingDirHandle.current);
         }
@@ -249,7 +258,7 @@ export function SmartFolderManagementModal({
     } finally {
       setSaving(false);
     }
-  }, [name, icon, accentColor, outputMode, outputName, outputNamePosition, outputDirName, maxRetries, retryDelayMinutes, inputSource, outputTtlHours, deleteOutputOnDownload, isEditMode, editFolder, toolRegistry, resetState, onSaved, onClose, t]);
+  }, [name, icon, accentColor, outputMode, outputName, outputNamePosition, outputDirName, maxRetries, retryDelayMinutes, inputSource, outputTtlHours, deleteOutputOnDownload, isEditMode, editFolder, toolRegistry, resetState, onSaved, onClose, t, store]);
 
   const handleSave = () => {
     const trimmedName = name.trim();

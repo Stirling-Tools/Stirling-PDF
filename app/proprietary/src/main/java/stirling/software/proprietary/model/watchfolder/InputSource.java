@@ -10,9 +10,9 @@ import jakarta.persistence.Converter;
  * Where input files for a watch folder come from.
  *
  * <ul>
- *   <li>{@link #IDB} — files dropped / picked in the browser, stored in IndexedDB.</li>
- *   <li>{@link #LOCAL_FOLDER} — a real folder on the user's machine (desktop build).</li>
- *   <li>{@link #SERVER_FOLDER} — a directory watched on the server.</li>
+ *   <li>{@link #IDB} — files dropped / picked in the browser, stored in IndexedDB.
+ *   <li>{@link #LOCAL_FOLDER} — a real folder on the user's machine (desktop build).
+ *   <li>{@link #SERVER_FOLDER} — a directory watched on the server.
  * </ul>
  */
 public enum InputSource {

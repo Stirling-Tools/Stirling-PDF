@@ -13,13 +13,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { addSSEHandler, parsePipelineSSEEvent } from '@app/hooks/useSSEConnection';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { SmartFolder, isServerFolderInput } from '@app/types/smartFolders';
+import { SmartFolder, isServerFolderInput, FolderFileMetadata } from '@app/types/smartFolders';
 import { automationStorage } from '@app/services/automationStorage';
-import { folderStorage } from '@app/services/folderStorage';
+import type { AutomationConfig } from '@app/types/automation';
 import { fileStorage } from '@app/services/fileStorage';
-import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { folderRetryScheduleStorage } from '@app/services/folderRetryScheduleStorage';
-import { smartFolderStorage } from '@app/services/smartFolderStorage';
+import { useWatchFolderStore, WatchFolderStorageBackend } from '@app/contexts/WatchFolderStorageContext';
 import {
   executeBackendPipeline,
   submitBackendJob,
@@ -80,6 +79,37 @@ function notifySW(message: { type: string }): void {
   navigator.serviceWorker?.controller?.postMessage(message);
 }
 
+/**
+ * Resolves the automation to run for a folder.
+ *
+ * Server-backed folders carry the pipeline inline as `automationConfig` (the IDB
+ * automationStorage on this client may not have an entry for `automationId`), so
+ * prefer that. Otherwise look up by `automationId` in IDB.
+ */
+export async function resolveFolderAutomation(folder: SmartFolder): Promise<AutomationConfig | null> {
+  if (folder.automationConfig) {
+    try {
+      const parsed = JSON.parse(folder.automationConfig);
+      const operations = Array.isArray(parsed) ? parsed : parsed.operations;
+      if (Array.isArray(operations)) {
+        return {
+          id: folder.automationId || `inline:${folder.id}`,
+          name: parsed.name ?? folder.name,
+          description: parsed.description ?? '',
+          icon: folder.icon,
+          operations,
+          createdAt: folder.createdAt,
+          updatedAt: folder.updatedAt,
+        };
+      }
+    } catch {
+      // Fall through to IDB lookup
+    }
+  }
+  if (!folder.automationId) return null;
+  return automationStorage.getAutomation(folder.automationId);
+}
+
 // ---------------------------------------------------------------------------
 // Output finalisation — shared by runPipeline (sync fallback) and drainPendingJobs
 // ---------------------------------------------------------------------------
@@ -90,13 +120,14 @@ function notifySW(message: { type: string }): void {
  * executeBackendPipeline call or an async job poll.
  */
 async function finalizeRun(
+  store: WatchFolderStorageBackend,
   folder: SmartFolder,
   file: File,
   inputFileId: string,
   ownedByFolder: boolean,
   resultFiles: File[]
 ): Promise<void> {
-  const currentFolderData = await folderStorage.getFolderData(folder.id);
+  const currentFolderData = await store.getFolderData(folder.id);
   const currentMeta = currentFolderData?.files[inputFileId];
   const prevOutputIds: string[] = currentMeta?.displayFileIds
     ?? (currentMeta?.displayFileId ? [currentMeta.displayFileId] : []);
@@ -201,14 +232,14 @@ async function finalizeRun(
 
   const processedAt = new Date();
   const accumulatedIds = isAutoNumber ? [...prevOutputIds, ...allOutputIds] : allOutputIds;
-  await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+  await store.updateFileMetadata(folder.id, inputFileId, {
     status: 'processed',
     processedAt,
     displayFileId: accumulatedIds[0],
     displayFileIds: accumulatedIds,
   });
 
-  await folderRunStateStorage.appendRunEntries(folder.id, [{
+  await store.addFolderRunEntries(folder.id, [{
     inputFileId,
     displayFileId: accumulatedIds[0],
     displayFileIds: accumulatedIds,
@@ -222,11 +253,12 @@ async function finalizeRun(
 // ---------------------------------------------------------------------------
 
 async function findFileByJobId(
+  store: WatchFolderStorageBackend,
   jobId: string
-): Promise<{ folder: SmartFolder; fileId: string; meta: import('@app/types/smartFolders').FolderFileMetadata } | null> {
-  const folders = await smartFolderStorage.getAllFolders();
+): Promise<{ folder: SmartFolder; fileId: string; meta: FolderFileMetadata } | null> {
+  const folders = await store.getAllFolders();
   for (const folder of folders) {
-    const folderData = await folderStorage.getFolderData(folder.id);
+    const folderData = await store.getFolderData(folder.id);
     if (!folderData) continue;
     for (const [fileId, meta] of Object.entries(folderData.files)) {
       if (meta.serverJobId === jobId) return { folder, fileId, meta };
@@ -252,22 +284,23 @@ async function findFileByJobId(
  * executeBackendPipeline (tab-close resilience does not apply to these).
  */
 export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
+  const store = useWatchFolderStore();
   const processingRef = useRef<Set<string>>(new Set());
 
   // ── Finalise a job from the SSE handler ───────────────────────────────────
   const finalizeFromSSE = useCallback(async (jobId: string, error?: string) => {
-    const match = await findFileByJobId(jobId);
+    const match = await findFileByJobId(store, jobId);
     if (!match) return;
     const { folder, fileId, meta } = match;
 
     if (processingRef.current.has(fileId)) return; // drain already handling it
     processingRef.current.add(fileId);
     try {
-      const freshMeta = (await folderStorage.getFolderData(folder.id))?.files[fileId];
+      const freshMeta = (await store.getFolderData(folder.id))?.files[fileId];
       if (freshMeta?.status !== 'processing') return; // already finalised by drain
 
       if (error) {
-        await folderStorage.updateFileMetadata(folder.id, fileId, {
+        await store.updateFileMetadata(folder.id, fileId, {
           status: 'error',
           errorMessage: error,
           serverJobId: undefined,
@@ -277,7 +310,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
       const inputFile = await fileStorage.getStirlingFile(fileId as FileId);
       if (!inputFile) {
-        await folderStorage.updateFileMetadata(folder.id, fileId, {
+        await store.updateFileMetadata(folder.id, fileId, {
           status: 'error',
           errorMessage: 'Input file missing from storage',
           serverJobId: undefined,
@@ -285,10 +318,10 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         return;
       }
       const resultFiles = await getBackendJobResult(jobId, folder.name);
-      await finalizeRun(folder, inputFile, fileId, meta.ownedByFolder ?? false, resultFiles);
-      await folderStorage.updateFileMetadata(folder.id, fileId, { serverJobId: undefined });
+      await finalizeRun(store, folder, inputFile, fileId, meta.ownedByFolder ?? false, resultFiles);
+      await store.updateFileMetadata(folder.id, fileId, { serverJobId: undefined });
     } catch (err) {
-      await folderStorage.updateFileMetadata(folder.id, fileId, {
+      await store.updateFileMetadata(folder.id, fileId, {
         status: 'error',
         errorMessage: err instanceof Error ? err.message : 'Failed to retrieve job result',
         serverJobId: undefined,
@@ -296,7 +329,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
     } finally {
       processingRef.current.delete(fileId);
     }
-  }, []);
+  }, [store]);
 
   // ── Server-folder SSE completion handler ──────────────────────────────────
   // Output filenames are "{fileId}.{ext}" — strip extension to get the IDB fileId directly.
@@ -306,9 +339,9 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
     folderId: string,
     outputFilenames: string[]
   ) => {
-    const folder = await smartFolderStorage.getFolder(folderId);
+    const folder = await store.getFolder(folderId);
     if (!folder || folder.isPaused) return;
-    const folderData = await folderStorage.getFolderData(folderId);
+    const folderData = await store.getFolderData(folderId);
     if (!folderData) return;
 
     for (const outputFilename of outputFilenames) {
@@ -321,19 +354,19 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       if (processingRef.current.has(fileId)) continue;
       processingRef.current.add(fileId);
       try {
-        const freshMeta = (await folderStorage.getFolderData(folderId))?.files[fileId];
+        const freshMeta = (await store.getFolderData(folderId))?.files[fileId];
         if (freshMeta?.status !== 'processing') continue; // already finalised
 
         const processedAt = new Date();
 
         // Record completion — output lives on the server, not in IDB file storage
-        await folderStorage.updateFileMetadata(folderId, fileId, {
+        await store.updateFileMetadata(folderId, fileId, {
           status: 'processed',
           processedAt,
           serverOutputFilenames: [outputFilename],
           pendingOnServerFolder: undefined,
         });
-        await folderRunStateStorage.appendRunEntries(folderId, [{
+        await store.addFolderRunEntries(folderId, [{
           inputFileId: fileId,
           displayFileId: fileId,
           processedAt,
@@ -363,7 +396,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           }
         }
       } catch (err) {
-        await folderStorage.updateFileMetadata(folderId, fileId, {
+        await store.updateFileMetadata(folderId, fileId, {
           status: 'error',
           errorMessage: err instanceof Error ? err.message : 'Failed to finalize server output',
           pendingOnServerFolder: undefined,
@@ -372,7 +405,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         processingRef.current.delete(fileId);
       }
     }
-  }, []);
+  }, [store]);
 
   // ── Server-folder SSE error handler ───────────────────────────────────────
   // Marks files as failed when PipelineDirectoryProcessor reports a batch error.
@@ -384,7 +417,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       if (processingRef.current.has(fileId)) continue;
       processingRef.current.add(fileId);
       try {
-        await folderStorage.updateFileMetadata(folderId, fileId, {
+        await store.updateFileMetadata(folderId, fileId, {
           status: 'error',
           errorMessage: 'Server-side processing failed',
           pendingOnServerFolder: undefined,
@@ -393,17 +426,17 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         processingRef.current.delete(fileId);
       }
     }
-  }, []);
+  }, [store]);
 
   // ── Recovery drain — runs once on mount/visibility/SW wake ────────────────
   // Only needed when SSE was down during job completion (tab close, server restart).
   // On transient network errors: leave as 'processing' — drain retries next cycle.
   // On 404: job expired from server — mark as error.
   const drainPendingJobs = useCallback(async () => {
-    const folders = await smartFolderStorage.getAllFolders();
+    const folders = await store.getAllFolders();
     for (const folder of folders) {
       if (folder.isPaused) continue;
-      const folderData = await folderStorage.getFolderData(folder.id);
+      const folderData = await store.getFolderData(folder.id);
       if (!folderData) continue;
 
       for (const [fileId, meta] of Object.entries(folderData.files)) {
@@ -420,7 +453,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
             // 404 → job expired (server restarted / TTL hit) — surface as error
             // Anything else → transient network issue, leave as 'processing' for next drain
             if ((err as any)?.response?.status === 404) {
-              await folderStorage.updateFileMetadata(folder.id, fileId, {
+              await store.updateFileMetadata(folder.id, fileId, {
                 status: 'error',
                 errorMessage: 'Job expired — server may have restarted. Retry to reprocess.',
                 serverJobId: undefined,
@@ -432,7 +465,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           if (jobStatus.status === 'completed') {
             const inputFile = await fileStorage.getStirlingFile(fileId as FileId);
             if (!inputFile) {
-              await folderStorage.updateFileMetadata(folder.id, fileId, {
+              await store.updateFileMetadata(folder.id, fileId, {
                 status: 'error',
                 errorMessage: 'Input file missing from storage',
                 serverJobId: undefined,
@@ -441,17 +474,17 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
             }
             try {
               const resultFiles = await getBackendJobResult(jobId, folder.name);
-              await finalizeRun(folder, inputFile, fileId, meta.ownedByFolder ?? false, resultFiles);
-              await folderStorage.updateFileMetadata(folder.id, fileId, { serverJobId: undefined });
+              await finalizeRun(store, folder, inputFile, fileId, meta.ownedByFolder ?? false, resultFiles);
+              await store.updateFileMetadata(folder.id, fileId, { serverJobId: undefined });
             } catch (err) {
-              await folderStorage.updateFileMetadata(folder.id, fileId, {
+              await store.updateFileMetadata(folder.id, fileId, {
                 status: 'error',
                 errorMessage: err instanceof Error ? err.message : 'Failed to retrieve job result',
                 serverJobId: undefined,
               });
             }
           } else if (jobStatus.status === 'failed') {
-            await folderStorage.updateFileMetadata(folder.id, fileId, {
+            await store.updateFileMetadata(folder.id, fileId, {
               status: 'error',
               errorMessage: jobStatus.error || 'Server job failed',
               serverJobId: undefined,
@@ -485,12 +518,12 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         if (processingRef.current.has(fileId)) continue;
         processingRef.current.add(fileId);
         try {
-          const freshMeta = (await folderStorage.getFolderData(folder.id))?.files[fileId];
+          const freshMeta = (await store.getFolderData(folder.id))?.files[fileId];
           if (freshMeta?.status !== 'processing') continue;
 
           const inputFile = await fileStorage.getStirlingFile(fileId as FileId);
           if (!inputFile) {
-            await folderStorage.updateFileMetadata(folder.id, fileId, {
+            await store.updateFileMetadata(folder.id, fileId, {
               status: 'error',
               errorMessage: 'Input file missing from storage',
               pendingOnServerFolder: undefined,
@@ -498,13 +531,13 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
             continue;
           }
           const processedAt = new Date();
-          await folderStorage.updateFileMetadata(folder.id, fileId, {
+          await store.updateFileMetadata(folder.id, fileId, {
             status: 'processed',
             processedAt,
             serverOutputFilenames: [outputFile.filename],
             pendingOnServerFolder: undefined,
           });
-          await folderRunStateStorage.appendRunEntries(folder.id, [{
+          await store.addFolderRunEntries(folder.id, [{
             inputFileId: fileId,
             displayFileId: fileId,
             processedAt,
@@ -529,7 +562,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
             } catch { /* best-effort */ }
           }
         } catch (err) {
-          await folderStorage.updateFileMetadata(folder.id, fileId, {
+          await store.updateFileMetadata(folder.id, fileId, {
             status: 'error',
             errorMessage: err instanceof Error ? err.message : 'Failed to retrieve server output',
             pendingOnServerFolder: undefined,
@@ -539,7 +572,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         }
       }
     }
-  }, []);
+  }, [store]);
 
   // ── Core pipeline runner ───────────────────────────────────────────────────
   const runPipeline = useCallback(
@@ -553,16 +586,16 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       processingRef.current.add(inputFileId);
 
       try {
-        const automation = await automationStorage.getAutomation(folder.automationId);
+        const automation = await resolveFolderAutomation(folder);
         if (!automation) {
-          await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+          await store.updateFileMetadata(folder.id, inputFileId, {
             status: 'error',
             errorMessage: 'Automation not found',
           });
           return;
         }
 
-        await folderStorage.updateFileMetadata(folder.id, inputFileId, { status: 'processing' });
+        await store.updateFileMetadata(folder.id, inputFileId, { status: 'processing' });
 
         // Server-folder input — upload to watch folder, trigger immediate processing via SSE
         if (isServerFolderInput(folder)) {
@@ -571,7 +604,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           // is no longer readable after the async resolveInputFile call completed.
           const uploadFile = await fileStorage.getStirlingFile(inputFileId as FileId) ?? file;
           await uploadFileToServerFolder(folder.id, inputFileId, uploadFile);
-          await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+          await store.updateFileMetadata(folder.id, inputFileId, {
             pendingOnServerFolder: true,
           });
           // Fire-and-forget trigger — don't wait for processing to start
@@ -584,7 +617,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         const jobId = await submitBackendJob(automation, [file], toolRegistry);
 
         if (jobId !== null) {
-          await folderStorage.updateFileMetadata(folder.id, inputFileId, { serverJobId: jobId });
+          await store.updateFileMetadata(folder.id, inputFileId, { serverJobId: jobId });
           // Release lock — SSE handler / drain will re-acquire when finalising
           processingRef.current.delete(inputFileId);
           return;
@@ -592,10 +625,10 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
         // Sync fallback (automation contains a custom-processor step)
         const resultFiles = await executeBackendPipeline(automation, [file], toolRegistry);
-        await finalizeRun(folder, file, inputFileId, ownedByFolder, resultFiles);
+        await finalizeRun(store, folder, file, inputFileId, ownedByFolder, resultFiles);
 
       } catch (err: unknown) {
-        const existing = await folderStorage.getFolderData(folder.id);
+        const existing = await store.getFolderData(folder.id);
         const prev = existing?.files[inputFileId];
         const attempts = (prev?.failedAttempts ?? 0) + 1;
         const maxRetries = folder.maxRetries ?? 3;
@@ -603,7 +636,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         const willRetry = maxRetries > 0 && attempts < maxRetries && retryDelayMs > 0;
         const nextRetryAt = willRetry ? Date.now() + retryDelayMs : undefined;
 
-        await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+        await store.updateFileMetadata(folder.id, inputFileId, {
           status: 'error',
           errorMessage: err instanceof Error ? err.message : 'Unknown error',
           failedAttempts: attempts,
@@ -624,10 +657,10 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       } finally {
         // Safety net: if still 'processing' without a serverJobId, something went wrong
         try {
-          const record = await folderStorage.getFolderData(folder.id);
+          const record = await store.getFolderData(folder.id);
           const fileMeta = record?.files[inputFileId];
           if (fileMeta?.status === 'processing' && !fileMeta?.serverJobId && !fileMeta?.pendingOnServerFolder) {
-            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+            await store.updateFileMetadata(folder.id, inputFileId, {
               status: 'error',
               errorMessage: 'Processing failed unexpectedly',
             });
@@ -638,14 +671,14 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         processingRef.current.delete(inputFileId);
       }
     },
-    [toolRegistry]
+    [toolRegistry, store]
   );
 
   // ── Sync server-folder sessions on mount ──────────────────────────────────
   // Ensures the server's session.json always points to the current browser session,
   // so SSE notifications are routed here even after localStorage was cleared.
   const syncServerFolderSessions = useCallback(async () => {
-    const folders = await smartFolderStorage.getAllFolders();
+    const folders = await store.getAllFolders();
     for (const folder of folders) {
       if (!isServerFolderInput(folder)) continue;
       try {
@@ -655,9 +688,9 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         // when the folder was created). Re-provision it now using the stored automation.
         if (err?.response?.status === 404) {
           try {
-            const automation = await automationStorage.getAutomation(folder.automationId);
+            const automation = await resolveFolderAutomation(folder);
             if (!automation) {
-              console.warn(`[watch-folders] Cannot re-provision ${folder.id}: automation ${folder.automationId} not found in IDB`);
+              console.warn(`[watch-folders] Cannot re-provision ${folder.id}: no automation (id=${folder.automationId}, hasInlineConfig=${!!folder.automationConfig})`);
             } else {
               const configJson = buildPipelineJson(automation, toolRegistry);
               if (!configJson) {
@@ -678,29 +711,47 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         }
       }
     }
-  }, [toolRegistry]);
+  }, [toolRegistry, store]);
 
   // ── Lifecycle effects ──────────────────────────────────────────────────────
+  // Mirror callbacks into refs so the lifecycle effect can mount listeners once
+  // (SSE / SW / visibility) without tearing them down whenever callback identities
+  // change. The cost of re-registering the SSE handler is dropping in-flight events.
+  const storeRef = useRef(store);
+  const runPipelineRef = useRef(runPipeline);
+  const drainPendingJobsRef = useRef(drainPendingJobs);
+  const finalizeFromSSERef = useRef(finalizeFromSSE);
+  const finalizeFromServerFolderSSERef = useRef(finalizeFromServerFolderSSE);
+  const finalizeServerFolderErrorRef = useRef(finalizeServerFolderError);
+  const syncServerFolderSessionsRef = useRef(syncServerFolderSessions);
+  useEffect(() => { storeRef.current = store; }, [store]);
+  useEffect(() => { runPipelineRef.current = runPipeline; }, [runPipeline]);
+  useEffect(() => { drainPendingJobsRef.current = drainPendingJobs; }, [drainPendingJobs]);
+  useEffect(() => { finalizeFromSSERef.current = finalizeFromSSE; }, [finalizeFromSSE]);
+  useEffect(() => { finalizeFromServerFolderSSERef.current = finalizeFromServerFolderSSE; }, [finalizeFromServerFolderSSE]);
+  useEffect(() => { finalizeServerFolderErrorRef.current = finalizeServerFolderError; }, [finalizeServerFolderError]);
+  useEffect(() => { syncServerFolderSessionsRef.current = syncServerFolderSessions; }, [syncServerFolderSessions]);
+
   useEffect(() => {
     async function drainDueRetries() {
       const due = await folderRetryScheduleStorage.claimDue();
       for (const entry of due) {
-        const freshFolder = await smartFolderStorage.getFolder(entry.folderId);
+        const freshFolder = await storeRef.current.getFolder(entry.folderId);
         if (!freshFolder || freshFolder.isPaused) continue;
         const freshFile = await fileStorage.getStirlingFile(entry.fileId as FileId);
         if (!freshFile) continue;
-        await folderStorage.updateFileMetadata(entry.folderId, entry.fileId, {
+        await storeRef.current.updateFileMetadata(entry.folderId, entry.fileId, {
           status: 'pending',
           nextRetryAt: undefined,
           serverJobId: undefined,
         });
-        void runPipeline(freshFolder, freshFile, entry.fileId, entry.ownedByFolder);
+        void runPipelineRef.current(freshFolder, freshFile, entry.fileId, entry.ownedByFolder);
       }
     }
 
     void drainDueRetries();
-    void drainPendingJobs();
-    void syncServerFolderSessions();
+    void drainPendingJobsRef.current();
+    void syncServerFolderSessionsRef.current();
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
@@ -710,26 +761,27 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
     function handleSWMessage(event: MessageEvent) {
       if (event.data?.type === 'PROCESS_DUE_RETRIES') void drainDueRetries();
-      if (event.data?.type === 'POLL_PIPELINE_JOBS') void drainPendingJobs();
+      if (event.data?.type === 'POLL_PIPELINE_JOBS') void drainPendingJobsRef.current();
     }
     navigator.serviceWorker?.addEventListener('message', handleSWMessage);
 
     function handleVisibilityChange() {
       if (document.visibilityState === 'visible') {
         void drainDueRetries();
-        void drainPendingJobs();
+        void drainPendingJobsRef.current();
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // SSE handler — receives job-complete / job-failed / server-folder-complete / server-folder-error events
+    // SSE handler — receives job-complete / job-failed / server-folder-complete / server-folder-error events.
+    // Reads callbacks from refs so identity changes don't force re-subscription.
     const removeSSEHandler = addSSEHandler((data: unknown) => {
       const event = parsePipelineSSEEvent(data);
       if (!event) return;
-      if (event.type === 'job-complete') void finalizeFromSSE(event.jobId);
-      if (event.type === 'job-failed') void finalizeFromSSE(event.jobId, event.error ?? 'Server job failed');
-      if (event.type === 'server-folder-complete') void finalizeFromServerFolderSSE(event.folderId, event.outputFiles);
-      if (event.type === 'server-folder-error') void finalizeServerFolderError(event.folderId, event.failedFileIds);
+      if (event.type === 'job-complete') void finalizeFromSSERef.current(event.jobId);
+      if (event.type === 'job-failed') void finalizeFromSSERef.current(event.jobId, event.error ?? 'Server job failed');
+      if (event.type === 'server-folder-complete') void finalizeFromServerFolderSSERef.current(event.folderId, event.outputFiles);
+      if (event.type === 'server-folder-error') void finalizeServerFolderErrorRef.current(event.folderId, event.failedFileIds);
     });
 
     return () => {
@@ -737,7 +789,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       removeSSEHandler();
     };
-  }, [runPipeline, drainPendingJobs, finalizeFromSSE, finalizeFromServerFolderSSE, finalizeServerFolderError, syncServerFolderSessions]);
+  }, []);
 
   /** Run multiple files through the pipeline concurrently. */
   const processBatch = useCallback(

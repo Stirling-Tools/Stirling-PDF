@@ -7,10 +7,10 @@
  */
 
 import React, { createContext, useContext } from "react";
-import { SmartFolder, FolderRecord } from "@app/types/smartFolders";
-import { SmartFolderRunEntry } from "@app/types/smartFolders";
+import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from "@app/types/smartFolders";
+import { idbBackend } from "@app/services/watchFolderIdbBackend";
 
-// ── Storage interface ──────────────────────────────────────────────────────
+// ── Storage interface ─────────────────────────────────────────────────────
 
 export interface WatchFolderStorageBackend {
   // Folder CRUD
@@ -23,16 +23,9 @@ export interface WatchFolderStorageBackend {
 
   // File metadata
   getFolderData(folderId: string): Promise<FolderRecord | null>;
-  updateFileMetadata(
-    folderId: string,
-    fileId: string,
-    meta: Partial<import("@app/types/smartFolders").FolderFileMetadata>,
-  ): Promise<void>;
-  addFileToFolder(
-    folderId: string,
-    fileId: string,
-    meta?: Partial<import("@app/types/smartFolders").FolderFileMetadata>,
-  ): Promise<void>;
+  updateFileMetadata(folderId: string, fileId: string, meta: Partial<FolderFileMetadata>): Promise<void>;
+  addFileToFolder(folderId: string, fileId: string, meta?: Partial<FolderFileMetadata>): Promise<void>;
+  removeFileFromFolder(folderId: string, fileId: string): Promise<void>;
   clearFolder(folderId: string): Promise<void>;
 
   // Run state
@@ -44,7 +37,7 @@ export interface WatchFolderStorageBackend {
   onChange(callback: () => void): () => void;
 }
 
-// ── Context ────────────────────────────────────────────────────────────────
+// ── Context ───────────────────────────────────────────────────────────────
 
 const WatchFolderStorageContext = createContext<WatchFolderStorageBackend | null>(null);
 
@@ -59,9 +52,10 @@ export function WatchFolderStorageProvider({
 }
 
 /**
- * Returns the storage backend from context, or null if none is provided
- * (meaning hooks should fall back to direct IDB imports).
+ * Returns the storage backend, falling back to `idbBackend` if no provider is mounted.
+ * The provider IS always mounted in the app, so the fallback is purely defensive
+ * (e.g. tests rendering hooks in isolation).
  */
-export function useWatchFolderStorage(): WatchFolderStorageBackend | null {
-  return useContext(WatchFolderStorageContext);
+export function useWatchFolderStore(): WatchFolderStorageBackend {
+  return useContext(WatchFolderStorageContext) ?? idbBackend;
 }

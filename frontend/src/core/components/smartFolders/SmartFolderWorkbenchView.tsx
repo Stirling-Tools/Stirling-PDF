@@ -26,8 +26,7 @@ import { useFolderData } from "@app/hooks/useFolderData";
 import { useFolderRunState } from "@app/hooks/useFolderRunState";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from "@app/components/smartFolders/SmartFoldersRegistration";
-import { automationStorage } from "@app/services/automationStorage";
-import { useFolderAutomation, resolveInputFile } from "@app/hooks/useFolderAutomation";
+import { useFolderAutomation, resolveInputFile, resolveFolderAutomation } from "@app/hooks/useFolderAutomation";
 import { useLocalFolderPoller } from "@app/hooks/useLocalFolderPoller";
 import { AutomationConfig } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
@@ -184,10 +183,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   }, [folderRecord, isServerFolder]);
 
   useEffect(() => {
-    if (folder?.automationId) {
-      automationStorage.getAutomation(folder.automationId).then(setAutomation);
+    if (folder) {
+      resolveFolderAutomation(folder).then(setAutomation);
     }
-  }, [folder?.automationId]);
+  }, [folder]);
 
   useEffect(() => {
     if (isLocalFolder && folderId) {

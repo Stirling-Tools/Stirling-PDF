@@ -41,10 +41,10 @@ public class WatchFolder implements Serializable {
 
     /**
      * Client-supplied identifier (matches the IndexedDB folder id used by the React frontend).
-     * Using a String PK — rather than an IDENTITY {@code Long} like other entities — keeps the
-     * same opaque id across the local IDB cache and the server, so the frontend can round-trip a
-     * folder between offline/local mode and server mode without remapping. Callers are expected
-     * to supply a UUID (or equivalently collision-resistant string).
+     * Using a String PK — rather than an IDENTITY {@code Long} like other entities — keeps the same
+     * opaque id across the local IDB cache and the server, so the frontend can round-trip a folder
+     * between offline/local mode and server mode without remapping. Callers are expected to supply
+     * a UUID (or equivalently collision-resistant string).
      */
     @Id
     @EqualsAndHashCode.Include

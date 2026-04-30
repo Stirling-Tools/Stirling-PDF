@@ -6,7 +6,11 @@
 import { useState, useEffect, useRef } from "react";
 import { SmartFolder, SmartFolderRunEntry } from "@app/types/smartFolders";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
-import { useWatchFolderStorage } from "@app/contexts/WatchFolderStorageContext";
+import { useWatchFolderStore } from "@app/contexts/WatchFolderStorageContext";
+
+// IDB run-state events fire for both backends — the server backend mirrors writes to IDB
+// (see serverBackend.addFolderRunEntries), so listening to the IDB event surface gives us
+// live updates for both local and server-backed folders.
 
 export type FolderRunStatus = "idle" | "processing" | "done";
 
@@ -23,7 +27,7 @@ function deriveStatus(runs: SmartFolderRunEntry[]): FolderRunStatus {
 }
 
 export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, FolderRunStatus> {
-  const backend = useWatchFolderStorage();
+  const store = useWatchFolderStore();
   const [statuses, setStatuses] = useState<Record<string, FolderRunStatus>>({});
   const doneTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const foldersRef = useRef(folders);
@@ -36,9 +40,7 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
       const results = await Promise.all(
         folders.map(async (folder) => {
           try {
-            const runs = backend
-              ? await backend.getFolderRunState(folder.id)
-              : await folderRunStateStorage.getFolderRunState(folder.id);
+            const runs = await store.getFolderRunState(folder.id);
             return [folder.id, deriveStatus(runs)] as const;
           } catch {
             return [folder.id, "idle" as FolderRunStatus] as const;
@@ -53,20 +55,20 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
     };
 
     load();
-  }, [folders]);
+  }, [folders, store]);
 
   // Update individual folder status live when new run entries are appended
   useEffect(() => {
     return folderRunStateStorage.onRunStateChange((changedFolderId) => {
       if (!foldersRef.current.find((f) => f.id === changedFolderId)) return;
-      folderRunStateStorage
+      store
         .getFolderRunState(changedFolderId)
         .then((runs) => {
           setStatuses((prev) => ({ ...prev, [changedFolderId]: deriveStatus(runs) }));
         })
         .catch((err) => console.error("Failed to update run status:", err));
     });
-  }, []);
+  }, [store]);
 
   // When a folder becomes 'done', revert to 'idle' after TTL
   useEffect(() => {

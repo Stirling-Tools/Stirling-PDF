@@ -7,9 +7,11 @@
 import { useState, useEffect } from 'react';
 import { folderStorage } from '@app/services/folderStorage';
 import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
+import { useWatchFolderStore } from '@app/contexts/WatchFolderStorageContext';
 
 export function useFolderMembership(): Map<string, string[]> {
   const folders = useAllSmartFolders();
+  const store = useWatchFolderStore();
   const [membership, setMembership] = useState<Map<string, string[]>>(new Map());
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function useFolderMembership(): Map<string, string[]> {
       };
       for (const folder of folders) {
         try {
-          const record = await folderStorage.getFolderData(folder.id);
+          const record = await store.getFolderData(folder.id);
           if (record) {
             Object.entries(record.files).forEach(([fileId, meta]) => {
               add(fileId, folder.id);
@@ -45,8 +47,9 @@ export function useFolderMembership(): Map<string, string[]> {
 
     load();
 
+    // Server backend mirrors writes to IDB so this fires for both backends.
     return folderStorage.onFolderChange(load);
-  }, [folders]);
+  }, [folders, store]);
 
   return membership;
 }

@@ -102,6 +102,10 @@ export const watchFolderApi = {
     await apiClient.delete(`${BASE}/${folderId}/files`);
   },
 
+  async deleteFile(folderId: string, fileId: string): Promise<void> {
+    await apiClient.delete(`${BASE}/${folderId}/files/${encodeURIComponent(fileId)}`);
+  },
+
   // Runs
   async listRuns(folderId: string): Promise<WatchFolderRunDTO[]> {
     const res = await apiClient.get<WatchFolderRunDTO[]>(`${BASE}/${folderId}/runs`);
@@ -116,5 +120,9 @@ export const watchFolderApi = {
   async addRuns(folderId: string, runs: WatchFolderRunDTO[]): Promise<WatchFolderRunDTO[]> {
     const res = await apiClient.post<WatchFolderRunDTO[]>(`${BASE}/${folderId}/runs/batch`, runs);
     return res.data;
+  },
+
+  async deleteRuns(folderId: string): Promise<void> {
+    await apiClient.delete(`${BASE}/${folderId}/runs`);
   },
 };

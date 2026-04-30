@@ -12,13 +12,13 @@ import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { useSmartFolders } from "@app/hooks/useSmartFolders";
 import { useFolderRunStatuses } from "@app/hooks/useFolderRunStatuses";
-import { useFolderAutomation, resolveInputFile } from "@app/hooks/useFolderAutomation";
+import { useFolderAutomation, resolveInputFile, resolveFolderAutomation } from "@app/hooks/useFolderAutomation";
 import { SmartFolder } from "@app/types/smartFolders";
 import { AutomationConfig } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
-import { automationStorage } from "@app/services/automationStorage";
 import { folderStorage } from "@app/services/folderStorage";
 import { fileStorage } from "@app/services/fileStorage";
+import { useWatchFolderStore } from "@app/contexts/WatchFolderStorageContext";
 import { SmartFolderManagementModal } from "@app/components/smartFolders/SmartFolderManagementModal";
 import { DeleteFolderConfirmModal } from "@app/components/smartFolders/DeleteFolderConfirmModal";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -66,6 +66,7 @@ function FolderCard({
   onTogglePause,
 }: FolderCardProps) {
   const { t } = useTranslation();
+  const store = useWatchFolderStore();
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
   const [fileCount, setFileCount] = useState(0);
   const [lastAdded, setLastAdded] = useState<Date | null>(null);
@@ -73,10 +74,10 @@ function FolderCard({
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    automationStorage.getAutomation(folder.automationId).then(setAutomation);
+    resolveFolderAutomation(folder).then(setAutomation);
 
     const loadData = () =>
-      folderStorage.getFolderData(folder.id).then((record) => {
+      store.getFolderData(folder.id).then((record) => {
         if (!record) {
           setFileCount(0);
           setLastAdded(null);
@@ -89,11 +90,12 @@ function FolderCard({
       });
     loadData();
 
+    // Server backend mirrors writes to IDB so this fires for both backends.
     const unsub = folderStorage.onFolderChange((changedId) => {
       if (changedId === folder.id) loadData();
     });
     return unsub;
-  }, [folder.id, folder.automationId]);
+  }, [folder.id, folder.automationId, folder.automationConfig, store]);
 
   const FolderIcon = iconMap[folder.icon as keyof typeof iconMap] ?? iconMap.FolderIcon;
   const isPaused = folder.isPaused ?? false;
@@ -488,6 +490,7 @@ export function SmartFolderHomePage() {
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
   const { processBatch } = useFolderAutomation(toolRegistry);
+  const store = useWatchFolderStore();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editFolder, setEditFolder] = useState<SmartFolder | null>(null);
@@ -505,7 +508,7 @@ export function SmartFolderHomePage() {
 
   const handleEdit = useCallback(async (folder: SmartFolder) => {
     setEditFolder(folder);
-    const automation = await automationStorage.getAutomation(folder.automationId);
+    const automation = await resolveFolderAutomation(folder);
     setEditAutomation(automation);
     setCreateModalOpen(true);
   }, []);
@@ -522,7 +525,7 @@ export function SmartFolderHomePage() {
       if (pdfs.length === 0) return;
 
       // Load existing folder data once to detect re-runs (same sidebar file dropped again)
-      const existingData = await folderStorage.getFolderData(folder.id);
+      const existingData = await store.getFolderData(folder.id);
       // Register files sequentially — addFileToFolder/updateFileMetadata are read-modify-write
       // without IDB transactions, so concurrent calls on the same folder lose updates.
       const items: Array<{ file: File; inputFileId: string; ownedByFolder: boolean }> = [];
@@ -530,9 +533,9 @@ export function SmartFolderHomePage() {
         const { inputFileId, ownedByFolder } = await resolveInputFile(file);
         if (existingData?.files[inputFileId]) {
           // Re-processing: preserve addedAt and ownedByFolder, just reset status
-          await folderStorage.updateFileMetadata(folder.id, inputFileId, { status: "pending", errorMessage: undefined });
+          await store.updateFileMetadata(folder.id, inputFileId, { status: "pending", errorMessage: undefined });
         } else {
-          await folderStorage.addFileToFolder(folder.id, inputFileId, {
+          await store.addFileToFolder(folder.id, inputFileId, {
             status: "pending",
             name: file.name,
             ownedByFolder: ownedByFolder || undefined,
@@ -557,7 +560,7 @@ export function SmartFolderHomePage() {
         });
       }
     },
-    [processBatch],
+    [processBatch, store],
   );
 
   const handleTogglePause = useCallback(
@@ -569,7 +572,7 @@ export function SmartFolderHomePage() {
 
       if (resuming) {
         // Process any files that were queued while paused
-        const record = await folderStorage.getFolderData(folder.id);
+        const record = await store.getFolderData(folder.id);
         if (record) {
           const pendingEntries = Object.entries(record.files).filter(([, meta]) => meta.status === "pending");
           if (pendingEntries.length > 0) {
@@ -585,7 +588,7 @@ export function SmartFolderHomePage() {
         }
       }
     },
-    [updateFolder, refreshFolders, processFiles],
+    [updateFolder, refreshFolders, processBatch, store],
   );
 
   const handleDropSidebarFile = useCallback(

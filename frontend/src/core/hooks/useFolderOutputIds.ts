@@ -6,9 +6,11 @@
 import { useState, useEffect } from 'react';
 import { folderStorage } from '@app/services/folderStorage';
 import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
+import { useWatchFolderStore } from '@app/contexts/WatchFolderStorageContext';
 
 export function useFolderOutputIds(): Set<string> {
   const folders = useAllSmartFolders();
+  const store = useWatchFolderStore();
   const [outputIds, setOutputIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export function useFolderOutputIds(): Set<string> {
       const ids = new Set<string>();
       for (const folder of folders) {
         try {
-          const record = await folderStorage.getFolderData(folder.id);
+          const record = await store.getFolderData(folder.id);
           if (record) {
             Object.values(record.files).forEach(meta => {
               const oids = meta?.displayFileIds ?? (meta?.displayFileId ? [meta.displayFileId] : []);
@@ -31,8 +33,9 @@ export function useFolderOutputIds(): Set<string> {
     };
 
     load();
+    // Server backend mirrors writes to IDB so this fires for both backends.
     return folderStorage.onFolderChange(load);
-  }, [folders]);
+  }, [folders, store]);
 
   return outputIds;
 }

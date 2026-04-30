@@ -11,7 +11,7 @@ import { DeleteFolderConfirmModal } from '@app/components/smartFolders/DeleteFol
 import { SmartFolderCard } from '@app/components/smartFolders/SmartFolderCard';
 import { SmartFolder } from '@app/types/smartFolders';
 import { AutomationConfig } from '@app/types/automation';
-import { automationStorage } from '@app/services/automationStorage';
+import { resolveFolderAutomation } from '@app/hooks/useFolderAutomation';
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 
 export function SmartFolderSection() {
@@ -37,7 +37,7 @@ export function SmartFolderSection() {
   const handleEditFolder = async (e: React.MouseEvent, folder: SmartFolder) => {
     e.stopPropagation();
     setEditFolder(folder);
-    const automation = await automationStorage.getAutomation(folder.automationId);
+    const automation = await resolveFolderAutomation(folder);
     setEditAutomation(automation);
     setCreateModalOpen(true);
   };

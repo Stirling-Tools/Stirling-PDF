@@ -77,8 +77,7 @@ public class WatchFolderService {
         WatchFolder existing =
                 folderRepo
                         .findById(id)
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("Folder not found: " + id));
+                        .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + id));
         requireWriteAccess(existing);
 
         existing.setName(updates.getName());
@@ -114,8 +113,7 @@ public class WatchFolderService {
         WatchFolder folder =
                 folderRepo
                         .findById(id)
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("Folder not found: " + id));
+                        .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + id));
         requireWriteAccess(folder);
 
         // Don't rely on CascadeType.ALL to remove children one-row-at-a-time — for a folder with
@@ -196,6 +194,16 @@ public class WatchFolderService {
         fileRepo.deleteAllByFolderId(folderId);
     }
 
+    /**
+     * Remove a single file row from a folder. Returns true if a row was deleted, false if no
+     * matching row existed (already gone, or never present). Idempotent — calling twice is safe.
+     */
+    @Transactional
+    public boolean deleteFile(String folderId, String fileId) {
+        requireWriteAccess(folderId);
+        return fileRepo.deleteByFolderIdAndFileId(folderId, fileId) > 0;
+    }
+
     // ── Folder runs ────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
@@ -227,6 +235,13 @@ public class WatchFolderService {
                             r.setFolder(folder);
                         });
         return runRepo.saveAll(runs);
+    }
+
+    /** Bulk-delete all runs for a folder. */
+    @Transactional
+    public void deleteRuns(String folderId) {
+        requireWriteAccess(folderId);
+        runRepo.deleteAllByFolderId(folderId);
     }
 
     // ── Auth helpers ───────────────────────────────────────────────────────

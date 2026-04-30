@@ -5,7 +5,7 @@
 import { SmartFolder } from "@app/types/smartFolders";
 import { AutomationConfig } from "@app/types/automation";
 import { automationStorage } from "@app/services/automationStorage";
-import { smartFolderStorage } from "@app/services/smartFolderStorage";
+import type { WatchFolderStorageBackend } from "@app/contexts/WatchFolderStorageContext";
 
 const SEEDED_FLAG = "smart_folders_seeded";
 let seedingInProgress = false;
@@ -94,14 +94,14 @@ const PRESETS: PresetDefinition[] = [
   },
 ];
 
-export async function seedDefaultFolders(): Promise<void> {
+export async function seedDefaultFolders(store: WatchFolderStorageBackend): Promise<void> {
   if (localStorage.getItem(SEEDED_FLAG) || seedingInProgress) return;
   seedingInProgress = true;
 
   try {
     for (const preset of PRESETS) {
       const savedAutomation = await automationStorage.saveAutomation(preset.automation);
-      await smartFolderStorage.createFolder({
+      await store.createFolder({
         ...preset.folder,
         automationId: savedAutomation.id,
       });

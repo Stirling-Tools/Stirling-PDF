@@ -23,4 +23,10 @@ public interface WatchFolderFileRepository extends JpaRepository<WatchFolderFile
     @Transactional
     @Query("DELETE FROM WatchFolderFile f WHERE f.folder.id = :folderId")
     int deleteAllByFolderId(@Param("folderId") String folderId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM WatchFolderFile f WHERE f.folder.id = :folderId AND f.fileId = :fileId")
+    int deleteByFolderIdAndFileId(
+            @Param("folderId") String folderId, @Param("fileId") String fileId);
 }

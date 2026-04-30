@@ -9,7 +9,6 @@ import type { WatchFolderStorageBackend } from "@app/contexts/WatchFolderStorage
 import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from "@app/services/smartFolderStorage";
 import { folderStorage } from "@app/services/folderStorage";
 import { folderRunStateStorage } from "@app/services/folderRunStateStorage";
-import type { SmartFolder, FolderRecord, FolderFileMetadata, SmartFolderRunEntry } from "@app/types/smartFolders";
 
 export const idbBackend: WatchFolderStorageBackend = {
   // Folder CRUD
@@ -24,6 +23,7 @@ export const idbBackend: WatchFolderStorageBackend = {
   getFolderData: (folderId) => folderStorage.getFolderData(folderId),
   updateFileMetadata: (folderId, fileId, meta) => folderStorage.updateFileMetadata(folderId, fileId, meta),
   addFileToFolder: (folderId, fileId, meta) => folderStorage.addFileToFolder(folderId, fileId, meta),
+  removeFileFromFolder: (folderId, fileId) => folderStorage.removeFileFromFolder(folderId, fileId),
   clearFolder: (folderId) => folderStorage.clearFolder(folderId),
 
   // Run state

@@ -14,16 +14,16 @@ export interface SmartFolder {
   order?: number;
   isDefault?: boolean;
   isPaused?: boolean;
-  maxRetries?: number;        // 0 = disabled; default 3
+  maxRetries?: number; // 0 = disabled; default 3
   retryDelayMinutes?: number; // default 5
-  outputMode?: 'new_file' | 'new_version';       // default: 'new_file' (existing behaviour)
-  outputName?: string;                           // output filename prefix/suffix
-  outputNamePosition?: 'prefix' | 'suffix' | 'auto-number'; // default: 'prefix'
-  hasOutputDirectory?: boolean;                  // true when a local FS output folder is configured
+  outputMode?: "new_file" | "new_version"; // default: 'new_file' (existing behaviour)
+  outputName?: string; // output filename prefix/suffix
+  outputNamePosition?: "prefix" | "suffix" | "auto-number"; // default: 'prefix'
+  hasOutputDirectory?: boolean; // true when a local FS output folder is configured
   /** Where input files come from. Default: 'idb' (dropped/sidebar files stay in browser). */
-  inputSource?: 'idb' | 'local-folder' | 'server-folder';
+  inputSource?: "idb" | "local-folder" | "server-folder";
   /** Where processing happens. Default: 'local' (browser). Forced to 'server' when inputSource='server-folder'. */
-  processingMode?: 'local' | 'server';
+  processingMode?: "local" | "server";
   /**
    * How long to keep output files in the server's processed/ dir (hours).
    * null / undefined = keep forever. Only meaningful when inputSource='server-folder'.
@@ -34,11 +34,18 @@ export interface SmartFolder {
    * immediately after downloading it. Only meaningful when inputSource='server-folder'.
    */
   deleteOutputOnDownload?: boolean;
+  /** Visibility: PERSONAL (owner-only) or ORGANISATION (all users). Only set when server-backed. */
+  scope?: "PERSONAL" | "ORGANISATION";
+  /**
+   * Inlined automation pipeline (JSON-stringified operations array).
+   * Used by the server DB instead of automationId. When present, takes precedence.
+   */
+  automationConfig?: string;
 }
 
 export interface FolderFileMetadata {
   addedAt: Date;
-  status: 'pending' | 'processing' | 'processed' | 'error';
+  status: "pending" | "processing" | "processed" | "error";
   processedAt?: Date;
   /** All output file ids produced by this run — references stirling-pdf-files */
   displayFileIds?: string[];
@@ -64,7 +71,7 @@ export interface FolderFileMetadata {
 
 /** Type guard / helper — true when the folder's input source is the server watch folder. */
 export function isServerFolderInput(folder: SmartFolder): boolean {
-  return folder.inputSource === 'server-folder';
+  return folder.inputSource === "server-folder";
 }
 
 export interface FolderRecord {
@@ -81,5 +88,5 @@ export interface SmartFolderRunEntry {
   displayFileIds?: string[];
   /** When this run completed — used for TTL-based "done" status */
   processedAt?: Date;
-  status: 'processing' | 'processed';
+  status: "processing" | "processed";
 }

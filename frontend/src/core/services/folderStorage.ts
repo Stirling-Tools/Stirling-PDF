@@ -153,15 +153,20 @@ class FolderStorage {
     });
   }
 
-  /** Overwrite the entire folder record (used by sync from server). */
-  async setFolderData(folderId: string, record: FolderRecord): Promise<void> {
+  /**
+   * Overwrite the entire folder record (used by sync from server).
+   * Pass `{ silent: true }` for server-mirror writes — these reflect a read,
+   * not a user action, so dispatching change events would cause subscribers
+   * (which themselves call getFolderData) to re-fetch in an infinite loop.
+   */
+  async setFolderData(folderId: string, record: FolderRecord, opts?: { silent?: boolean }): Promise<void> {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.recordsStore], "readwrite");
       const store = transaction.objectStore(this.recordsStore);
       const request = store.put(record);
       request.onsuccess = () => {
-        this.dispatchChange(folderId);
+        if (!opts?.silent) this.dispatchChange(folderId);
         resolve();
       };
       request.onerror = () => reject(new Error("Failed to set folder data"));

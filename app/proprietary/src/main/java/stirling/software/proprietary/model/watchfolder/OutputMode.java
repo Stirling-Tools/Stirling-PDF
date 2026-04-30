@@ -10,9 +10,9 @@ import jakarta.persistence.Converter;
  * How automation output files are produced.
  *
  * <ul>
- *   <li>{@link #NEW_FILE} — always produce a new, separately-named file.</li>
+ *   <li>{@link #NEW_FILE} — always produce a new, separately-named file.
  *   <li>{@link #NEW_VERSION} — produce a new version of the input file (replacing / versioning
- *       semantics handled client-side).</li>
+ *       semantics handled client-side).
  * </ul>
  */
 public enum OutputMode {

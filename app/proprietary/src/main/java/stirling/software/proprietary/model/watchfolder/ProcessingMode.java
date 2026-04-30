@@ -10,9 +10,9 @@ import jakarta.persistence.Converter;
  * Where the automation pipeline runs.
  *
  * <ul>
- *   <li>{@link #LOCAL} — runs entirely in the user's browser.</li>
+ *   <li>{@link #LOCAL} — runs entirely in the user's browser.
  *   <li>{@link #SERVER} — runs on the server (forced when {@link InputSource#SERVER_FOLDER} is in
- *       use).</li>
+ *       use).
  * </ul>
  */
 public enum ProcessingMode {

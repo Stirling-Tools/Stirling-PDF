@@ -78,6 +78,15 @@ public class WatchFolderController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{folderId}/files/{fileId}")
+    public ResponseEntity<Void> deleteFile(
+            @PathVariable String folderId, @PathVariable String fileId) {
+        service.deleteFile(folderId, fileId);
+        // Return 204 whether the row existed or not — DELETE is idempotent and the caller's
+        // intent ("ensure this row is gone") is satisfied either way.
+        return ResponseEntity.noContent().build();
+    }
+
     // ── Folder runs ────────────────────────────────────────────────────────
 
     @GetMapping("/{folderId}/runs")
@@ -96,5 +105,11 @@ public class WatchFolderController {
             @PathVariable String folderId,
             @Valid @RequestBody @Size(max = RUNS_BATCH_MAX) List<WatchFolderRun> runs) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.addRuns(folderId, runs));
+    }
+
+    @DeleteMapping("/{folderId}/runs")
+    public ResponseEntity<Void> deleteRuns(@PathVariable String folderId) {
+        service.deleteRuns(folderId);
+        return ResponseEntity.noContent().build();
     }
 }
