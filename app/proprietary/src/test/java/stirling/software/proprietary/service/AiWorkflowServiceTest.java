@@ -99,7 +99,7 @@ class AiWorkflowServiceTest {
                         toolMetadataService,
                         tempFileManager,
                         endpointResolver);
-        when(endpointResolver.getDisabledEndpointUrls()).thenReturn(List.of());
+        when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 
     @Test

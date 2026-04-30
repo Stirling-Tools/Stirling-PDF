@@ -135,7 +135,7 @@ class OrchestratorAgent:
                 file_names=request.file_names,
                 conversation_history=request.conversation_history,
                 page_text=extracted_text.files if extracted_text is not None else [],
-                disabled_endpoints=request.disabled_endpoints,
+                enabled_endpoints=request.enabled_endpoints,
             )
         )
 

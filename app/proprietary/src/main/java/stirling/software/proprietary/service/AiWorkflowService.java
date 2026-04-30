@@ -98,7 +98,7 @@ public class AiWorkflowService {
                 request.getConversationHistory() == null
                         ? new ArrayList<>()
                         : new ArrayList<>(request.getConversationHistory()));
-        initialRequest.setDisabledEndpoints(endpointResolver.getDisabledEndpointUrls());
+        initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -193,7 +193,7 @@ public class AiWorkflowService {
             nextRequest.setConversationHistory(request.getConversationHistory());
             nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
-            nextRequest.setDisabledEndpoints(request.getDisabledEndpoints());
+            nextRequest.setEnabledEndpoints(request.getEnabledEndpoints());
             return new WorkflowState.Pending(nextRequest);
         } finally {
             for (LoadedFile lf : loadedFiles) {
@@ -427,6 +427,6 @@ public class AiWorkflowService {
         private List<AiConversationMessage> conversationHistory = new ArrayList<>();
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
-        private List<String> disabledEndpoints = new ArrayList<>();
+        private List<String> enabledEndpoints = new ArrayList<>();
     }
 }

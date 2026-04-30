@@ -20,8 +20,7 @@ from stirling.api.routes import (
     rag_router,
 )
 from stirling.config import AppSettings, load_settings
-from stirling.contracts import HealthResponse, KnownEndpointsResponse
-from stirling.models import ToolEndpoint
+from stirling.contracts import HealthResponse
 from stirling.services import build_runtime, setup_posthog_tracking
 
 
@@ -71,8 +70,3 @@ async def healthcheck(settings: Annotated[AppSettings, Depends(load_settings)]) 
         smart_model=settings.smart_model_name,
         fast_model=settings.fast_model_name,
     )
-
-
-@app.get("/api/v1/known-endpoints", response_model=KnownEndpointsResponse)
-async def known_endpoints() -> KnownEndpointsResponse:
-    return KnownEndpointsResponse(endpoints=list(ToolEndpoint))

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import pytest
@@ -68,11 +69,18 @@ class StubPdfEditAgent(PdfEditAgent):
         if parameter_selector is not None:
             self.parameter_selector = parameter_selector
 
+    def _supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
+        # Tests construct requests without `enabled_endpoints`; pretend everything is enabled
+        # unless the test explicitly supplies an enabled set.
+        if request.enabled_endpoints:
+            return request.enabled_endpoints
+        return OPERATIONS
+
     async def _select_plan(
         self,
         request: PdfEditRequest,
-        supported_operations: list[ToolEndpoint],
-        disabled_operations: list[ToolEndpoint],
+        supported_operations: Iterable[ToolEndpoint],
+        unavailable_operations: Iterable[ToolEndpoint],
         *,
         allow_need_content: bool = True,
     ) -> PdfEditPlanOutput:
@@ -205,8 +213,8 @@ async def test_pdf_edit_agent_builds_selection_agent_matching_content_availabili
     captured: list[bool] = []
 
     def record(
-        supported_operations: list[ToolEndpoint],
-        disabled_operations: list[ToolEndpoint],
+        supported_operations: Iterable[ToolEndpoint],
+        unavailable_operations: Iterable[ToolEndpoint],
         *,
         allow_need_content: bool,
     ) -> PdfEditSelectionAgent:
@@ -289,74 +297,73 @@ async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: Ap
     assert parameter_selector.calls[0].request.page_text == page_text
 
 
-def test_filter_operations_by_disabled_returns_full_set_when_no_disabled() -> None:
-    from stirling.agents.pdf_edit import filter_operations_by_disabled
-
-    assert filter_operations_by_disabled(list(OPERATIONS), []) == list(OPERATIONS)
-
-
-def test_filter_operations_by_disabled_drops_matching_endpoints() -> None:
-    from stirling.agents.pdf_edit import filter_operations_by_disabled
-
-    filtered = filter_operations_by_disabled(
-        list(OPERATIONS),
-        [ToolEndpoint.COMPRESS_PDF, ToolEndpoint.ROTATE_PDF],
+def test_pdf_edit_request_drops_unknown_enabled_urls() -> None:
+    request = PdfEditRequest.model_validate(
+        {
+            "user_message": "ignore me",
+            "enabled_endpoints": [
+                ToolEndpoint.COMPRESS_PDF.value,
+                "/api/v1/not-a-real/endpoint",
+            ],
+        }
     )
 
-    assert ToolEndpoint.COMPRESS_PDF not in filtered
-    assert ToolEndpoint.ROTATE_PDF not in filtered
-    assert ToolEndpoint.FLATTEN in filtered
+    assert request.enabled_endpoints == [ToolEndpoint.COMPRESS_PDF]
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_filters_supported_operations_using_disabled_endpoints(
+async def test_pdf_edit_agent_supported_operations_defaults_to_empty(
+    runtime: AppRuntime,
+) -> None:
+    agent = PdfEditAgent(runtime)
+    supported = agent._supported_operations(PdfEditRequest(user_message="hi"))
+
+    assert list(supported) == []
+
+
+@pytest.mark.anyio
+async def test_pdf_edit_agent_supported_operations_uses_provided_list(
     runtime: AppRuntime,
 ) -> None:
     agent = PdfEditAgent(runtime)
     request = PdfEditRequest(
         user_message="Compress this PDF.",
-        disabled_endpoints=[ToolEndpoint.COMPRESS_PDF],
+        enabled_endpoints=[ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF],
     )
 
     supported = agent._supported_operations(request)
 
-    assert ToolEndpoint.COMPRESS_PDF not in supported
-    assert ToolEndpoint.FLATTEN in supported
+    assert list(supported) == [ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF]
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_returns_cannot_do_when_all_operations_disabled(
+async def test_pdf_edit_agent_returns_cannot_do_when_no_operations_enabled(
     runtime: AppRuntime,
 ) -> None:
     agent = PdfEditAgent(runtime)
-    response = await agent.handle(
-        PdfEditRequest(
-            user_message="Do anything.",
-            disabled_endpoints=list(OPERATIONS),
-        )
-    )
+    response = await agent.handle(PdfEditRequest(user_message="Do anything.", enabled_endpoints=[]))
 
     assert isinstance(response, EditCannotDoResponse)
 
 
-def test_pdf_edit_selection_prompt_includes_disabled_operations(runtime: AppRuntime) -> None:
+def test_pdf_edit_selection_prompt_includes_unavailable_operations(runtime: AppRuntime) -> None:
     agent = PdfEditAgent(runtime)
     request = PdfEditRequest(
         user_message="Run OCR.",
-        disabled_endpoints=[ToolEndpoint.OCR_PDF],
+        enabled_endpoints=[ToolEndpoint.FLATTEN],
     )
     supported = agent._supported_operations(request)
-    disabled = list(request.disabled_endpoints)
+    unavailable = agent._unavailable_operations(supported)
 
-    prompt = agent._build_selection_prompt(request, supported, disabled)
+    prompt = agent._build_selection_prompt(request, supported, unavailable)
 
-    assert "Disabled operations" in prompt
+    assert "Unavailable operations" in prompt
     assert "OCR_PDF" in prompt
     assert ToolEndpoint.OCR_PDF.value in prompt
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_rejects_plan_referencing_disabled_operations(
+async def test_pdf_edit_agent_rejects_plan_referencing_unavailable_operations(
     runtime: AppRuntime,
 ) -> None:
     parameter_selector = RecordingParameterSelector()
@@ -372,11 +379,11 @@ async def test_pdf_edit_agent_rejects_plan_referencing_disabled_operations(
     response = await agent.handle(
         PdfEditRequest(
             user_message="Compress this PDF.",
-            disabled_endpoints=[ToolEndpoint.COMPRESS_PDF],
+            enabled_endpoints=[ToolEndpoint.FLATTEN],
         )
     )
 
     assert isinstance(response, EditCannotDoResponse)
-    assert "disabled on this server" in response.reason
+    assert "not available" in response.reason
     assert "COMPRESS_PDF" in response.reason
     assert parameter_selector.calls == []

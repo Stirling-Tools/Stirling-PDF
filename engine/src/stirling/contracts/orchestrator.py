@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
 from stirling.models import ApiModel, ToolEndpoint
 
@@ -14,6 +14,7 @@ from .common import (
     NeedContentResponse,
     SupportedCapability,
     WorkflowOutcome,
+    drop_unknown_tool_endpoints,
 )
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditTerminalResponse
@@ -34,7 +35,10 @@ class OrchestratorRequest(ApiModel):
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
-    disabled_endpoints: list[ToolEndpoint] = Field(default_factory=list)
+    # See `PdfEditRequest.enabled_endpoints`.
+    enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
+        default_factory=list
+    )
 
 
 class UnsupportedCapabilityResponse(ApiModel):

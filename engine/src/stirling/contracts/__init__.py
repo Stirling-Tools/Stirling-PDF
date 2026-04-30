@@ -32,7 +32,6 @@ from .execution import (
     ToolCallExecutionAction,
 )
 from .health import HealthResponse
-from .known_endpoints import KnownEndpointsResponse
 from .ledger import (
     Discrepancy,
     DiscrepancyKind,
@@ -110,7 +109,6 @@ __all__ = [
     "FolioType",
     "format_conversation_history",
     "HealthResponse",
-    "KnownEndpointsResponse",
     "NeedContentFileRequest",
     "NeedContentResponse",
     "NextExecutionAction",

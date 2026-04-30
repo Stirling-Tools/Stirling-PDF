@@ -208,7 +208,7 @@ public class AiEngineController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
         }
-        String forwardedBody = withDisabledEndpoints((ObjectNode) parsed);
+        String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
         String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
@@ -223,15 +223,16 @@ public class AiEngineController {
     }
 
     /**
-     * Always overwrite {@code disabled_endpoints} with the server's view of which endpoints are
-     * disabled. The engine must not trust a client-supplied list - the gate is owned by the Java
-     * EndpointConfiguration. Values are full URL paths (e.g. {@code /api/v1/misc/compress-pdf}) so
-     * the engine can match them against its {@code ToolEndpoint} enum by direct string equality.
+     * Always overwrite {@code enabled_endpoints} with the server's view of which endpoints are
+     * usable. The engine must not trust a client-supplied list - the gate is owned by the Java
+     * EndpointConfiguration. Values are full URL paths (e.g. {@code /api/v1/misc/compress-pdf})
+     * that the engine matches against its {@code ToolEndpoint} enum, silently dropping any it
+     * doesn't recognise (which lets the two sides drift in either direction without breaking).
      */
-    private String withDisabledEndpoints(ObjectNode body) {
-        ArrayNode disabled = objectMapper.createArrayNode();
-        endpointResolver.getDisabledEndpointUrls().forEach(disabled::add);
-        body.set("disabled_endpoints", disabled);
+    private String withEnabledEndpoints(ObjectNode body) {
+        ArrayNode enabled = objectMapper.createArrayNode();
+        endpointResolver.getEnabledEndpointUrls().forEach(enabled::add);
+        body.set("enabled_endpoints", enabled);
         return body.toString();
     }
 }
