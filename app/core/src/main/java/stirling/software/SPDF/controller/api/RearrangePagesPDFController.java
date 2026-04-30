@@ -6,8 +6,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -67,6 +71,7 @@ public class RearrangePagesPDFController {
                 int pageIndex = pagesToRemove.get(i);
                 document.removePage(pageIndex);
             }
+            FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
@@ -263,6 +268,19 @@ public class RearrangePagesPDFController {
                     // Add the pages in the new order
                     for (PDPage page : newPages) {
                         rearrangedDocument.addPage(page);
+                    }
+
+                    // Reorder keeps every source page, so widget /P references stay valid; share
+                    // the source AcroForm dictionary so form fields remain interactive.
+                    PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
+                    if (sourceCatalog != null) {
+                        PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);
+                        if (sourceForm != null) {
+                            rearrangedDocument
+                                    .getDocumentCatalog()
+                                    .getCOSObject()
+                                    .setItem(COSName.ACRO_FORM, sourceForm.getCOSObject());
+                        }
                     }
 
                     return WebResponseUtils.pdfDocToWebResponse(

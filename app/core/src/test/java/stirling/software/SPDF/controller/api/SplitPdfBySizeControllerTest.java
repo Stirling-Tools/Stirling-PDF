@@ -3,8 +3,10 @@ package stirling.software.SPDF.controller.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,7 +27,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -70,11 +71,10 @@ class SplitPdfBySizeControllerTest {
         request.setSplitType(1); // Page count
         request.setSplitValue("2");
 
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
-                .thenAnswer(inv -> new PDDocument());
+        when(pdfDocumentFactory.load(any(File.class), eq(true)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+        when(pdfDocumentFactory.load(any(File.class)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
 
         ResponseEntity<?> response = controller.autoSplitPdf(request);
 
@@ -104,16 +104,10 @@ class SplitPdfBySizeControllerTest {
         request.setSplitType(2); // Document count
         request.setSplitValue("3"); // Split into 3 docs (2 pages each)
 
-        when(pdfDocumentFactory.load(any(org.springframework.web.multipart.MultipartFile.class)))
-                .thenAnswer(
-                        inv ->
-                                Loader.loadPDF(
-                                        ((org.springframework.web.multipart.MultipartFile)
-                                                        inv.getArgument(0))
-                                                .getBytes()));
-
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
-                .thenAnswer(inv -> new PDDocument());
+        when(pdfDocumentFactory.load(any(File.class), eq(true)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+        when(pdfDocumentFactory.load(any(File.class)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
 
         ResponseEntity<?> response = controller.autoSplitPdf(request);
 

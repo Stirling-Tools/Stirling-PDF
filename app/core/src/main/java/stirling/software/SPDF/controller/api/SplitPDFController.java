@@ -2,8 +2,11 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -26,6 +29,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -54,9 +58,21 @@ public class SplitPDFController {
         MultipartFile file = request.getFileInput();
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
         try {
-            try (PDDocument document = pdfDocumentFactory.load(file)) {
-                int totalPages = document.getNumberOfPages();
-                List<Integer> pageNumbers = request.getPageNumbersList(document, false);
+            // Persist the upload once so each output can be built from its own fresh load
+            // (removePage + AcroForm prune mutate the doc).
+            try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
+                Files.copy(
+                        file.getInputStream(),
+                        sourceTempFile.getPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+
+                int totalPages;
+                List<Integer> pageNumbers;
+                try (PDDocument document =
+                        pdfDocumentFactory.load(sourceTempFile.getFile(), true)) {
+                    totalPages = document.getNumberOfPages();
+                    pageNumbers = request.getPageNumbersList(document, false);
+                }
                 if (!pageNumbers.contains(totalPages - 1)) {
                     pageNumbers = new ArrayList<>(pageNumbers);
                     pageNumbers.add(totalPages - 1);
@@ -72,19 +88,26 @@ public class SplitPDFController {
                     int previousPageNumber = 0;
                     for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
                         int splitPoint = pageNumbers.get(splitIndex);
+                        Set<Integer> keep = new HashSet<>();
+                        for (int i = previousPageNumber; i <= splitPoint; i++) {
+                            keep.add(i);
+                        }
+                        previousPageNumber = splitPoint + 1;
+
                         try (PDDocument splitDocument =
-                                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
-                            for (int i = previousPageNumber; i <= splitPoint; i++) {
-                                splitDocument.addPage(document.getPage(i));
-                                log.debug("Adding page {} to split document", i);
+                                pdfDocumentFactory.load(sourceTempFile.getFile())) {
+                            int pageCount = splitDocument.getNumberOfPages();
+                            for (int p = pageCount - 1; p >= 0; p--) {
+                                if (!keep.contains(p)) {
+                                    splitDocument.removePage(p);
+                                }
                             }
-                            previousPageNumber = splitPoint + 1;
+                            FormUtils.pruneOrphanedFormFields(splitDocument);
 
                             String fileName = baseFilename + "_" + (splitIndex + 1) + ".pdf";
                             zipOut.putNextEntry(new ZipEntry(fileName));
                             splitDocument.save(zipOut);
                             zipOut.closeEntry();
-                            log.debug("Wrote split document {} to zip file", fileName);
                         } catch (Exception e) {
                             ExceptionUtils.logException("document splitting and saving", e);
                             throw e;
@@ -93,9 +116,6 @@ public class SplitPDFController {
                 }
             }
 
-            log.debug(
-                    "Successfully created zip file with split documents: {}",
-                    outputTempFile.getPath().toString());
             String zipFilename =
                     GeneralUtils.generateFilename(file.getOriginalFilename(), "_split.zip");
             return WebResponseUtils.zipFileToWebResponse(outputTempFile, zipFilename);
