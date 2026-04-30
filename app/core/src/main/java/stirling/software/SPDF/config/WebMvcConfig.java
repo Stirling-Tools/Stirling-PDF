@@ -41,7 +41,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                         .getStaticPath()
                                 + "assets/",
                         "classpath:/static/assets/")
-                .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic());
+                .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic())
+                .resourceChain(true)
+                .addResolver(
+                        new org.springframework.web.servlet.resource.EncodedResourceResolver());
 
         // Don't cache index.html - it needs to be fresh to reference latest hashed assets
         // Note: index.html is handled by ReactRoutingController for dynamic processing
@@ -51,7 +54,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 + stirling.software.common.configuration.InstallationPathConfig
                                         .getStaticPath(),
                         "classpath:/static/")
-                .setCacheControl(CacheControl.noCache().mustRevalidate());
+                .setCacheControl(CacheControl.noCache().mustRevalidate())
+                .resourceChain(true)
+                .addResolver(
+                        new org.springframework.web.servlet.resource.EncodedResourceResolver());
 
         // Handle all other static resources (js, css, images, fonts, etc.)
         // Check customFiles/static first for user overrides
@@ -61,7 +67,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 + stirling.software.common.configuration.InstallationPathConfig
                                         .getStaticPath(),
                         "classpath:/static/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS));
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
+                .resourceChain(true)
+                .addResolver(
+                        new org.springframework.web.servlet.resource.EncodedResourceResolver());
     }
 
     @Override
