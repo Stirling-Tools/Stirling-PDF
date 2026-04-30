@@ -65,9 +65,20 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   // Track how many times we've attempted to fetch. useRef avoids re-renders that can trigger loops.
   const fetchCountRef = React.useRef(0);
-  const [hasResolvedConfig, setHasResolvedConfig] = useState(
+  // Use a Ref for hasResolvedConfig to avoid re-creating fetchConfig when it changes.
+  // This prevents unnecessary re-renders and potential infinite loops in consumers.
+  const hasResolvedConfigRef = React.useRef(
     Boolean(initialConfig) && !isBlockingMode,
   );
+  const [hasResolvedConfig, setHasResolvedConfigState] = useState(
+    hasResolvedConfigRef.current,
+  );
+
+  const setHasResolvedConfig = (val: boolean) => {
+    hasResolvedConfigRef.current = val;
+    setHasResolvedConfigState(val);
+  };
+
   const [loading, setLoading] = useState(!hasResolvedConfig);
 
   const onConfigLoadedRef = React.useRef(onConfigLoaded);
@@ -87,7 +98,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
       // Mark that we've attempted a fetch to prevent repeated auto-fetch loops
       fetchCountRef.current += 1;
 
-      const shouldBlockUI = !hasResolvedConfig || isBlockingMode;
+      const shouldBlockUI = !hasResolvedConfigRef.current || isBlockingMode;
       if (shouldBlockUI) {
         setLoading(true);
       }
@@ -130,7 +141,6 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
           ]);
 
           const data = configResponse.data;
-
 
           console.debug("[AppConfig] Config fetched successfully:", data);
           console.debug(
@@ -197,7 +207,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
       setLoading(false);
     },
-    [hasResolvedConfig, isBlockingMode, maxRetries, initialDelay],
+    [isBlockingMode, maxRetries, initialDelay],
   );
 
   const { isAuthPage } = useJwtConfigSync(fetchConfig);

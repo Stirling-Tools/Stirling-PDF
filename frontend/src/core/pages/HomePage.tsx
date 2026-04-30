@@ -1,4 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -25,14 +32,16 @@ import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 // Lazy load heavy components
 const ToolPanel = lazy(() => import("@app/components/tools/ToolPanel"));
 const Workbench = lazy(() => import("@app/components/layout/Workbench"));
-const QuickAccessBar = lazy(() => import("@app/components/shared/QuickAccessBar"));
+const QuickAccessBar = lazy(
+  () => import("@app/components/shared/QuickAccessBar"),
+);
 const RightRail = lazy(() => import("@app/components/shared/RightRail"));
 const FileManager = lazy(() => import("@app/components/FileManager"));
-const AppConfigModal = lazy(() => import("@app/components/shared/AppConfigModal"));
+const AppConfigModal = lazy(
+  () => import("@app/components/shared/AppConfigModal"),
+);
 
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-
-
 
 import "@app/pages/HomePage.css";
 
@@ -345,7 +354,11 @@ export default function HomePage() {
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => openFilesModal()}
               >
-                <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
+                <LocalIcon
+                  icon="folder-rounded"
+                  width="1.5rem"
+                  height="1.5rem"
+                />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
@@ -372,7 +385,12 @@ export default function HomePage() {
             />
           </div>
         ) : (
-          <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
+          <Group
+            align="flex-start"
+            gap={0}
+            h="100%"
+            className="flex-nowrap flex"
+          >
             <QuickAccessBar ref={quickAccessRef} />
             {!hideToolPanel && <ToolPanel />}
             <Workbench />

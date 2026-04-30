@@ -808,7 +808,6 @@
     color 0.2s ease;
 }
 
-
 /* ── PDF Link Overlay (viewer) ── */
 :root {
   --link-hover-bg: rgba(10, 139, 255, 0.04);

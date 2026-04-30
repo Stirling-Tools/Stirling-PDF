@@ -28,6 +28,25 @@ describe("AppConfigContext", () => {
     <AppConfigProvider>{children}</AppConfigProvider>
   );
 
+  /**
+   * Helper to mock API responses for app-config and info-status
+   */
+  const mockApiResponses = (config: any, delay = 0) => {
+    vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+
+      if (url === "/api/v1/config/app-config") {
+        return { status: 200, data: config };
+      }
+      if (url === "/api/v1/info/status") {
+        return { status: 200, data: { status: "UP" } };
+      }
+      return { status: 404, data: {} };
+    });
+  };
+
   it("should fetch and provide app config on non-auth pages", async () => {
     const mockConfig = {
       enableLogin: false,
@@ -35,10 +54,8 @@ describe("AppConfigContext", () => {
       languages: ["en-US", "en-GB"],
     };
 
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      status: 200,
-      data: mockConfig,
-    } as any);
+    // Use a small delay to ensure we can catch the loading state
+    mockApiResponses(mockConfig, 10);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -46,11 +63,14 @@ describe("AppConfigContext", () => {
     expect(result.current.loading).toBe(true);
     expect(result.current.config).toBeNull();
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.config).toEqual(mockConfig);
-      expect(result.current.error).toBeNull();
-    });
+    await waitFor(
+      () => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.config).toEqual(mockConfig);
+        expect(result.current.error).toBeNull();
+      },
+      { timeout: 1000 },
+    );
 
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/config/app-config", {
       suppressErrorToast: true,
@@ -80,7 +100,7 @@ describe("AppConfigContext", () => {
     const mockError = Object.assign(new Error("Unauthorized"), {
       response: { status: 401, data: {} },
     });
-    vi.mocked(apiClient.get).mockRejectedValueOnce(mockError);
+    vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -95,11 +115,9 @@ describe("AppConfigContext", () => {
     const errorMessage = "Network error occurred";
     const mockError = new Error(errorMessage);
     // Network errors don't have response property
-    // Mock rejection for all retry attempts (default is 3 attempts)
-    vi.mocked(apiClient.get)
-      .mockRejectedValueOnce(mockError)
-      .mockRejectedValueOnce(mockError)
-      .mockRejectedValueOnce(mockError);
+    // Mock rejection for all retry attempts (default is 0 retries in test if not specified,
+    // but the component might still catch it)
+    vi.mocked(apiClient.get).mockRejectedValue(mockError);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -171,23 +189,24 @@ describe("AppConfigContext", () => {
       enableAnalytics: true,
     };
 
-    // First call returns initial config
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      status: 200,
-      data: initialConfig,
-    } as any);
+    // Setup implementation to return different configs on subsequent calls
+    let callCount = 0;
+    vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
+      if (url === "/api/v1/config/app-config") {
+        callCount++;
+        return {
+          status: 200,
+          data: callCount === 1 ? initialConfig : updatedConfig,
+        };
+      }
+      return { status: 200, data: { status: "UP" } };
+    });
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.config).toEqual(initialConfig);
     });
-
-    // Setup second call for refetch
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      status: 200,
-      data: updatedConfig,
-    } as any);
 
     // Trigger jwt-available event wrapped in act
     await act(async () => {
@@ -200,7 +219,8 @@ describe("AppConfigContext", () => {
       expect(result.current.config).toEqual(updatedConfig);
     });
 
-    expect(apiClient.get).toHaveBeenCalledTimes(2);
+    // 2 logical fetches * 2 calls each = 4 total calls
+    expect(apiClient.get).toHaveBeenCalledTimes(4);
   });
 
   it("should provide refetch function", async () => {
@@ -209,10 +229,7 @@ describe("AppConfigContext", () => {
       appNameNavbar: "Test App",
     };
 
-    vi.mocked(apiClient.get).mockResolvedValue({
-      status: 200,
-      data: mockConfig,
-    } as any);
+    mockApiResponses(mockConfig);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -225,7 +242,8 @@ describe("AppConfigContext", () => {
       await result.current.refetch();
     });
 
-    expect(apiClient.get).toHaveBeenCalledTimes(2);
+    // 2 logical fetches * 2 calls each = 4 total calls
+    expect(apiClient.get).toHaveBeenCalledTimes(4);
   });
 
   it("should not fetch twice without force flag", async () => {
@@ -233,10 +251,7 @@ describe("AppConfigContext", () => {
       enableLogin: false,
     };
 
-    vi.mocked(apiClient.get).mockResolvedValue({
-      status: 200,
-      data: mockConfig,
-    } as any);
+    mockApiResponses(mockConfig);
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -244,8 +259,8 @@ describe("AppConfigContext", () => {
       expect(result.current.config).toEqual(mockConfig);
     });
 
-    // Should only be called once (no duplicate fetches)
-    expect(apiClient.get).toHaveBeenCalledTimes(1);
+    // Should only be called twice (one logical fetch = /app-config + /info/status)
+    expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
 
   it("should handle initial config prop", async () => {
@@ -253,6 +268,8 @@ describe("AppConfigContext", () => {
       enableLogin: false,
       appNameNavbar: "Initial App",
     };
+
+    mockApiResponses({ ...initialConfig, fromApi: true });
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
       <AppConfigProvider initialConfig={initialConfig}>
@@ -275,11 +292,7 @@ describe("AppConfigContext", () => {
 
   it("should use suppressErrorToast for all config requests", async () => {
     const mockConfig = { enableLogin: true };
-
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      status: 200,
-      data: mockConfig,
-    } as any);
+    mockApiResponses(mockConfig);
 
     renderHook(() => useAppConfig(), { wrapper });
 
