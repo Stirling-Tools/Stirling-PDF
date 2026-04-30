@@ -23,9 +23,13 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
-  cancel-in-progress: true
+# No `concurrency:` block here on purpose. When this workflow is called via
+# workflow_call from build.yml, ${{ github.workflow }}/event_name/pr_number
+# resolve to the *caller's* values, producing the same group key as build.yml
+# and causing the workflow_call instantiation to self-cancel — the job
+# silently fails to spawn while `${{ needs.X.result }}` still reports
+# `failure`. Standalone runs (push-to-main, nightly cron, dispatch) don't
+# overlap often enough to need explicit concurrency control.
 
 permissions:
   contents: read
