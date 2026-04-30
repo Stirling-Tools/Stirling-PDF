@@ -8395,7 +8395,9 @@ title = "Upload Signature Image"
 
 [workbenchBar]
 activeFiles = "Active Files"
+multiTool = "Multi-Tool"
 viewer = "Viewer"
+
 [workspace]
 title = "Workspace"
 
