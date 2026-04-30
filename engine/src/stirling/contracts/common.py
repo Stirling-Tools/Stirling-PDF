@@ -128,18 +128,9 @@ class NeedContentResponse(ApiModel):
 class MathAuditorToolReportArtifact(ApiModel):
     """Structured Verdict produced by the math-auditor on a previous orchestrator turn.
 
-    Meta-agents (e.g. ``delegate_pdf_review``, ``delegate_pdf_question``) receive
-    this artifact when they emit a plan with ``resume_with`` set — Java runs the
-    math-auditor step, captures the Verdict, and re-enters the orchestrator with
-    it attached. The ``report`` is type-validated against :class:`Verdict` on
-    receipt rather than the previous free-form ``dict[str, Any]``.
-
     New specialists that the orchestrator needs to digest on a resume turn
     should add a sibling artifact type here and lift this into a discriminated
-    union keyed on ``source_tool``. The pdf-comment-agent does *not* need one
-    today — its flow terminates on the first turn (no ``resume_with``), so its
-    report becomes the top-level ``AiWorkflowResponse.report`` rather than a
-    re-entry artifact.
+    union keyed on ``source_tool``.
 
     Java counterpart: {@code PdfContentExtractor.ToolReportArtifact}.
     """
