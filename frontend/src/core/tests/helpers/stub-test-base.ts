@@ -49,7 +49,11 @@ export const test = base.extend<StubFixtures>({
     await skipOnboarding(page);
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {
-      await page.goto(autoGoto);
+      // waitUntil: 'domcontentloaded' avoids hanging on third-party CDN
+      // resources (iconify, posthog, stripe) the stub doesn't mock — the
+      // default 'load' event waits for ALL subresources, which can time out
+      // on slow runners and is rarely what tests actually need.
+      await page.goto(autoGoto, { waitUntil: "domcontentloaded" });
     }
     await use(page);
   },
