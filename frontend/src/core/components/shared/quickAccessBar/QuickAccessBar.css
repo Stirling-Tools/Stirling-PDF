@@ -23,7 +23,9 @@
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  transition: width 0.2s, height 0.2s;
+  transition:
+    width 0.2s,
+    height 0.2s;
 }
 
 /* Action icon styles */
@@ -64,8 +66,8 @@
 }
 
 /* RTL adjustments keep the bar on-screen and separated from content */
-:root[dir='rtl'] .quick-access-bar-main,
-:root[dir='rtl'] .quick-access-bar-main.rainbow-mode {
+:root[dir="rtl"] .quick-access-bar-main,
+:root[dir="rtl"] .quick-access-bar-main.rainbow-mode {
   border-right: none;
   border-left: 1px solid var(--border-default);
 }
@@ -75,7 +77,7 @@
   padding: 1rem 0.25rem 0.5rem 0.25rem;
 }
 
-.nav-header { 
+.nav-header {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -224,7 +226,9 @@
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transition: max-height 450ms ease-out, opacity 300ms ease-out;
+  transition:
+    max-height 450ms ease-out,
+    opacity 300ms ease-out;
 }
 
 .current-tool-enter {
@@ -274,7 +278,9 @@
   opacity: 0;
   pointer-events: none;
   transform: translateX(-8px) scale(0.98);
-  transition: opacity 160ms ease, transform 200ms ease;
+  transition:
+    opacity 160ms ease,
+    transform 200ms ease;
 }
 
 .quick-access-popout.is-open {
@@ -287,7 +293,8 @@
   background: var(--bg-raised);
   border-radius: 16px;
   border: 1px solid var(--border-default);
-  box-shadow: 0 18px 36px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  box-shadow: 0 18px 36px
+    color-mix(in srgb, var(--text-primary) 12%, transparent);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -438,7 +445,11 @@
 
 .quick-access-popout__input.has-error {
   border-color: var(--color-yellow-400);
-  background: color-mix(in srgb, var(--color-yellow-200) 18%, var(--bg-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-yellow-200) 18%,
+    var(--bg-surface)
+  );
 }
 
 .quick-access-popout__input::placeholder {
@@ -585,7 +596,11 @@
 
 .quick-access-popout__warning {
   margin-top: 0.75rem;
-  background: color-mix(in srgb, var(--color-yellow-100) 35%, var(--bg-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-yellow-100) 35%,
+    var(--bg-surface)
+  );
   border: 1px solid var(--color-yellow-300);
   border-radius: 12px;
   padding: 0.75rem;
@@ -709,13 +724,19 @@
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--text-primary);
-  transition: background 120ms, border-color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms;
   white-space: nowrap;
 }
 
 .quick-access-popout__quick-sign-btn:hover {
   background: color-mix(in srgb, var(--btn-open-file) 12%, var(--bg-muted));
-  border-color: color-mix(in srgb, var(--btn-open-file) 40%, var(--border-default));
+  border-color: color-mix(
+    in srgb,
+    var(--btn-open-file) 40%,
+    var(--border-default)
+  );
 }
 
 /* Tab navigation */
@@ -736,7 +757,9 @@
   font-size: 0.85rem;
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
-  transition: color 150ms, border-color 150ms;
+  transition:
+    color 150ms,
+    border-color 150ms;
 }
 
 .quick-access-popout__tab-button.active {
@@ -804,17 +827,33 @@
   width: 1.5rem;
   height: 1.5rem;
   padding: 0;
-  background: color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 40%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 15%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 40%,
+      transparent
+    );
   border-radius: 5px;
   color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
   cursor: pointer;
-  transition: background 120ms, border-color 120ms, color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
   flex-shrink: 0;
 }
 
 .quick-access-popout__section-action:hover {
-  background: color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 28%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 28%,
+    transparent
+  );
   border-color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
 }
 
@@ -883,7 +922,10 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 120ms, border-color 120ms, color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
   white-space: nowrap;
 }
 
@@ -893,7 +935,11 @@
 }
 
 .quick-access-popout__filter-chip.is-active {
-  background: color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 15%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 15%,
+    transparent
+  );
   border-color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
   color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
   font-weight: 500;
@@ -910,7 +956,8 @@
   min-height: 0;
 }
 
-.quick-access-sign-popout .quick-access-popout__body.sign-tab-requestSignatures {
+.quick-access-sign-popout
+  .quick-access-popout__body.sign-tab-requestSignatures {
   transform: translateX(0%);
 }
 

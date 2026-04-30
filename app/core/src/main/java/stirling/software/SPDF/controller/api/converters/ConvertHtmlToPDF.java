@@ -1,5 +1,8 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.nio.file.Files;
+
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,7 +40,7 @@ public class ConvertHtmlToPDF {
             description =
                     "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
                             + " Input:HTML Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
+    public ResponseEntity<Resource> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
 
@@ -65,6 +68,13 @@ public class ConvertHtmlToPDF {
 
         String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
 
-        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            Files.write(tempOut.getPath(), pdfBytes);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
+        return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
     }
 }

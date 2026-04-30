@@ -1,37 +1,131 @@
 /* CSS Custom Properties for Fullscreen Mode */
 .tool-panel__fullscreen-surface-inner {
-  --fullscreen-bg-surface-1: color-mix(in srgb, var(--bg-toolbar) 96%, transparent);
-  --fullscreen-bg-surface-2: color-mix(in srgb, var(--bg-background) 90%, transparent);
+  --fullscreen-bg-surface-1: color-mix(
+    in srgb,
+    var(--bg-toolbar) 96%,
+    transparent
+  );
+  --fullscreen-bg-surface-2: color-mix(
+    in srgb,
+    var(--bg-background) 90%,
+    transparent
+  );
   --fullscreen-bg-header: var(--bg-toolbar);
   --fullscreen-bg-controls-1: var(--bg-toolbar);
-  --fullscreen-bg-controls-2: color-mix(in srgb, var(--bg-toolbar) 95%, var(--bg-background));
-  --fullscreen-bg-body-1: color-mix(in srgb, var(--bg-background) 86%, transparent);
-  --fullscreen-bg-body-2: color-mix(in srgb, var(--bg-toolbar) 78%, transparent);
+  --fullscreen-bg-controls-2: color-mix(
+    in srgb,
+    var(--bg-toolbar) 95%,
+    var(--bg-background)
+  );
+  --fullscreen-bg-body-1: color-mix(
+    in srgb,
+    var(--bg-background) 86%,
+    transparent
+  );
+  --fullscreen-bg-body-2: color-mix(
+    in srgb,
+    var(--bg-toolbar) 78%,
+    transparent
+  );
   --fullscreen-bg-group: color-mix(in srgb, var(--bg-toolbar) 82%, transparent);
   --fullscreen-bg-item: color-mix(in srgb, var(--bg-toolbar) 88%, transparent);
-  --fullscreen-bg-list-item: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
-  --fullscreen-bg-icon-detailed: color-mix(in srgb, var(--bg-muted) 75%, transparent);
-  --fullscreen-bg-icon-compact: color-mix(in srgb, var(--bg-muted) 70%, transparent);
-  --fullscreen-border-subtle-75: color-mix(in srgb, var(--border-subtle) 75%, transparent);
-  --fullscreen-border-subtle-70: color-mix(in srgb, var(--border-subtle) 70%, transparent);
-  --fullscreen-border-subtle-65: color-mix(in srgb, var(--border-subtle) 65%, transparent);
-  --fullscreen-border-favorites: color-mix(in srgb, var(--special-color-favorites) 25%, var(--border-subtle));
-  --fullscreen-border-recommended: color-mix(in srgb, var(--special-color-recommended) 25%, var(--border-subtle));
-  --fullscreen-shadow-primary: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%, transparent);
-  --fullscreen-shadow-secondary: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%, transparent);
-  --fullscreen-shadow-group: color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%, transparent);
-  --fullscreen-accent-hover: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
-  --fullscreen-accent-selected: color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
-  --fullscreen-accent-ring: color-mix(in srgb, var(--text-primary) 15%, transparent);
-  --fullscreen-accent-list-bg: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
-  --fullscreen-accent-list-border: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
-  --fullscreen-text-icon: color-mix(in srgb, var(--text-primary) 90%, var(--text-muted));
-  --fullscreen-text-icon-compact: color-mix(in srgb, var(--text-primary) 88%, var(--text-muted));
+  --fullscreen-bg-list-item: color-mix(
+    in srgb,
+    var(--bg-toolbar) 86%,
+    transparent
+  );
+  --fullscreen-bg-icon-detailed: color-mix(
+    in srgb,
+    var(--bg-muted) 75%,
+    transparent
+  );
+  --fullscreen-bg-icon-compact: color-mix(
+    in srgb,
+    var(--bg-muted) 70%,
+    transparent
+  );
+  --fullscreen-border-subtle-75: color-mix(
+    in srgb,
+    var(--border-subtle) 75%,
+    transparent
+  );
+  --fullscreen-border-subtle-70: color-mix(
+    in srgb,
+    var(--border-subtle) 70%,
+    transparent
+  );
+  --fullscreen-border-subtle-65: color-mix(
+    in srgb,
+    var(--border-subtle) 65%,
+    transparent
+  );
+  --fullscreen-border-favorites: color-mix(
+    in srgb,
+    var(--special-color-favorites) 25%,
+    var(--border-subtle)
+  );
+  --fullscreen-border-recommended: color-mix(
+    in srgb,
+    var(--special-color-recommended) 25%,
+    var(--border-subtle)
+  );
+  --fullscreen-shadow-primary: color-mix(
+    in srgb,
+    var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%,
+    transparent
+  );
+  --fullscreen-shadow-secondary: color-mix(
+    in srgb,
+    var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%,
+    transparent
+  );
+  --fullscreen-shadow-group: color-mix(
+    in srgb,
+    var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%,
+    transparent
+  );
+  --fullscreen-accent-hover: color-mix(
+    in srgb,
+    var(--text-primary) 20%,
+    var(--border-subtle)
+  );
+  --fullscreen-accent-selected: color-mix(
+    in srgb,
+    var(--text-primary) 30%,
+    var(--border-subtle)
+  );
+  --fullscreen-accent-ring: color-mix(
+    in srgb,
+    var(--text-primary) 15%,
+    transparent
+  );
+  --fullscreen-accent-list-bg: color-mix(
+    in srgb,
+    var(--text-primary) 8%,
+    var(--bg-toolbar)
+  );
+  --fullscreen-accent-list-border: color-mix(
+    in srgb,
+    var(--text-primary) 20%,
+    var(--border-subtle)
+  );
+  --fullscreen-text-icon: color-mix(
+    in srgb,
+    var(--text-primary) 90%,
+    var(--text-muted)
+  );
+  --fullscreen-text-icon-compact: color-mix(
+    in srgb,
+    var(--text-primary) 88%,
+    var(--text-muted)
+  );
 }
 
 .tool-panel {
   position: relative;
-  transition: width 0.3s ease, max-width 0.3s ease;
+  transition:
+    width 0.3s ease,
+    max-width 0.3s ease;
 }
 
 .tool-panel--fullscreen-active {
@@ -90,8 +184,7 @@
   display: flex;
   flex-direction: column;
   border-radius: 0;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       140deg,
       var(--fullscreen-bg-surface-1),
       var(--fullscreen-bg-surface-2)
@@ -104,18 +197,21 @@
   /* Shared animation durations for JS + CSS (sourced from theme.css) */
   --fullscreen-anim-in-duration: var(--fullscreen-anim-duration-in);
   --fullscreen-anim-out-duration: var(--fullscreen-anim-duration-out);
-  animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration) ease forwards;
+  animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration)
+    ease forwards;
 }
 
 .tool-panel__fullscreen-surface-inner--exiting {
-  animation: tool-panel-fullscreen-slide-out var(--fullscreen-anim-out-duration) ease forwards;
+  animation: tool-panel-fullscreen-slide-out var(--fullscreen-anim-out-duration)
+    ease forwards;
 }
 
-:root[dir='rtl'] .tool-panel__fullscreen-surface-inner {
+:root[dir="rtl"] .tool-panel__fullscreen-surface-inner {
   animation-name: tool-panel-fullscreen-slide-in-rtl;
 }
 
-:root[dir='rtl'] .tool-panel__fullscreen-surface-inner.tool-panel__fullscreen-surface-inner--exiting {
+:root[dir="rtl"]
+  .tool-panel__fullscreen-surface-inner.tool-panel__fullscreen-surface-inner--exiting {
   animation-name: tool-panel-fullscreen-slide-out-rtl;
 }
 
@@ -238,7 +334,10 @@
   border-radius: 0.95rem;
   background: var(--fullscreen-bg-item);
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   width: 100%;
   box-sizing: border-box;
   /* Allow flex children to shrink without forcing horizontal overflow */
@@ -319,16 +418,19 @@
   background: var(--fullscreen-bg-icon-detailed);
   color: var(--fullscreen-text-icon);
   flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .tool-panel__fullscreen-icon::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     color-mix(in srgb, var(--text-primary) 12%, transparent),
     color-mix(in srgb, var(--text-primary) 4%, transparent)
   );
@@ -337,12 +439,15 @@
   border-radius: 0.75rem;
 }
 
-.tool-panel__fullscreen-item:hover:not([aria-disabled="true"]) .tool-panel__fullscreen-icon {
+.tool-panel__fullscreen-item:hover:not([aria-disabled="true"])
+  .tool-panel__fullscreen-icon {
   transform: scale(1.08);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--text-primary) 15%, transparent);
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--text-primary) 15%, transparent);
 }
 
-.tool-panel__fullscreen-item:hover:not([aria-disabled="true"]) .tool-panel__fullscreen-icon::before {
+.tool-panel__fullscreen-item:hover:not([aria-disabled="true"])
+  .tool-panel__fullscreen-icon::before {
   opacity: 1;
 }
 
@@ -407,7 +512,9 @@
   padding: 0.55rem 0.5rem 0.55rem 0.65rem;
   border-radius: 0.65rem;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
   background: var(--fullscreen-bg-list-item);
   border: 1px solid transparent;
   width: 100%;
@@ -421,7 +528,9 @@
   cursor: not-allowed;
 }
 
-.tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"]):not(:disabled),
+.tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"]):not(
+    :disabled
+  ),
 .tool-panel__fullscreen-list-item--selected {
   background: var(--fullscreen-accent-list-bg);
   border-color: var(--fullscreen-accent-list-border);
@@ -441,16 +550,19 @@
   background: var(--fullscreen-bg-icon-compact);
   color: var(--fullscreen-text-icon-compact);
   flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .tool-panel__fullscreen-list-icon::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     color-mix(in srgb, var(--text-primary) 10%, transparent),
     color-mix(in srgb, var(--text-primary) 3%, transparent)
   );
@@ -459,12 +571,14 @@
   border-radius: 0.6rem;
 }
 
-.tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"]) .tool-panel__fullscreen-list-icon {
+.tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"])
+  .tool-panel__fullscreen-list-icon {
   transform: scale(1.06);
   box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 12%, transparent);
 }
 
-.tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"]) .tool-panel__fullscreen-list-icon::before {
+.tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"])
+  .tool-panel__fullscreen-list-icon::before {
   opacity: 1;
 }
 
@@ -571,5 +685,3 @@
     column-width: 14rem;
   }
 }
-
-

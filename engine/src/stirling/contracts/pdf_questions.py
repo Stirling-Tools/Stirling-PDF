@@ -6,31 +6,34 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
+from .common import (
+    ConversationMessage,
+    ExtractedFileText,
+    NeedContentResponse,
+    WorkflowOutcome,
+)
+
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    conversation_id: str | None = None
-    extracted_text: str = ""
-    file_name: str | None = None
+    page_text: list[ExtractedFileText] = Field(default_factory=list)
+    file_names: list[str]
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
 
 class PdfQuestionAnswerResponse(ApiModel):
-    outcome: Literal["answer"] = "answer"
+    outcome: Literal[WorkflowOutcome.ANSWER] = WorkflowOutcome.ANSWER
     answer: str
-    evidence: list[str] = Field(default_factory=list)
-
-
-class PdfQuestionNeedTextResponse(ApiModel):
-    outcome: Literal["need_text"] = "need_text"
-    reason: str
+    evidence: list[ExtractedFileText] = Field(default_factory=list)
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
-    outcome: Literal["not_found"] = "not_found"
+    outcome: Literal[WorkflowOutcome.NOT_FOUND] = WorkflowOutcome.NOT_FOUND
     reason: str
 
 
-PdfQuestionResponse = Annotated[
-    PdfQuestionAnswerResponse | PdfQuestionNeedTextResponse | PdfQuestionNotFoundResponse,
+type PdfQuestionTerminalResponse = PdfQuestionAnswerResponse | PdfQuestionNotFoundResponse
+type PdfQuestionResponse = Annotated[
+    PdfQuestionTerminalResponse | NeedContentResponse,
     Field(discriminator="outcome"),
 ]

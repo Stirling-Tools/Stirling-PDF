@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,6 +30,7 @@ import stirling.software.common.annotations.api.FilterApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @FilterApi
@@ -36,6 +38,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -53,7 +56,7 @@ public class FilterController {
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> containsText(@ModelAttribute ContainsTextRequest request)
+    public ResponseEntity<Resource> containsText(@ModelAttribute ContainsTextRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String text = request.getText();
@@ -62,7 +65,9 @@ public class FilterController {
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
             if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
                 return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                        pdfDocument,
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
+                        tempFileManager);
             }
         }
         return ResponseEntity.noContent().build();
@@ -84,7 +89,7 @@ public class FilterController {
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> containsImage(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> containsImage(@ModelAttribute PDFWithPageNums request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
@@ -92,7 +97,9 @@ public class FilterController {
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
             if (PdfUtils.hasImages(pdfDocument, pageNumber)) {
                 return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+                        pdfDocument,
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
+                        tempFileManager);
             }
         }
         return ResponseEntity.noContent().build();

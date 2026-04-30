@@ -11,11 +11,11 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -124,9 +124,11 @@ public class SplitPdfByChaptersController {
     @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",
-            description = "Splits a PDF into chapters and returns a ZIP file.")
-    public ResponseEntity<StreamingResponseBody> splitPdf(
-            @ModelAttribute SplitPdfByChaptersRequest request) throws Exception {
+            description =
+                    "Splits a PDF into chapters and returns a ZIP file. Input:PDF Output:ZIP-PDF"
+                            + " Type:SISO")
+    public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
 
         boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());

@@ -1,12 +1,19 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import licenseService, {} from '@app/services/licenseService';
-import UpdateSeatsModal from '@app/components/shared/UpdateSeatsModal';
-import { userManagementService } from '@app/services/userManagementService';
-import { alert } from '@app/components/toast';
-import { useOptionalLicense } from '@app/contexts/LicenseContext';
-import { resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import licenseService from "@app/services/licenseService";
+import UpdateSeatsModal from "@app/components/shared/UpdateSeatsModal";
+import { userManagementService } from "@app/services/userManagementService";
+import { alert } from "@app/components/toast";
+import { useOptionalLicense } from "@app/contexts/LicenseContext";
+import { resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
 
 export interface UpdateSeatsOptions {
   onSuccess?: () => void;
@@ -20,13 +27,17 @@ interface UpdateSeatsContextValue {
   isLoading: boolean;
 }
 
-const UpdateSeatsContext = createContext<UpdateSeatsContextValue | undefined>(undefined);
+const UpdateSeatsContext = createContext<UpdateSeatsContextValue | undefined>(
+  undefined,
+);
 
 interface UpdateSeatsProviderProps {
   children: ReactNode;
 }
 
-export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ children }) => {
+export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({
+  children,
+}) => {
   const { t } = useTranslation();
   const location = useLocation();
   // Use optional hook - won't throw during setup wizard when license provider isn't needed
@@ -43,36 +54,38 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
     // during SAML/OAuth callback. This check only matters after successful billing
     // portal redirects, which never happen on auth routes.
     const isAuthRoute =
-      location.pathname === '/login' ||
-      location.pathname === '/signup' ||
-      location.pathname === '/auth/callback' ||
-      location.pathname.startsWith('/invite/');
+      location.pathname === "/login" ||
+      location.pathname === "/signup" ||
+      location.pathname === "/auth/callback" ||
+      location.pathname.startsWith("/invite/");
 
     if (isAuthRoute) {
-      console.log('[UpdateSeatsContext] On auth route, skipping billing return check');
+      console.log(
+        "[UpdateSeatsContext] On auth route, skipping billing return check",
+      );
       return;
     }
 
     const handleBillingReturn = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const seatsUpdated = urlParams.get('seats_updated');
+      const seatsUpdated = urlParams.get("seats_updated");
 
-      if (seatsUpdated === 'true') {
-        console.log('Seats updated successfully, syncing license with Keygen');
+      if (seatsUpdated === "true") {
+        console.log("Seats updated successfully, syncing license with Keygen");
 
         // Clear URL parameters
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, "", window.location.pathname);
 
         try {
           // Wait a moment for Stripe webhook to process
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
 
           // Resync license with Keygen (not just local fetch)
-          console.log('Seat update detected - resyncing license with Keygen');
+          console.log("Seat update detected - resyncing license with Keygen");
           const activation = await resyncExistingLicense();
 
           if (activation.success) {
-            console.log('License synced successfully after seat update');
+            console.log("License synced successfully after seat update");
 
             // Refresh global license context
             await license?.refetchLicense();
@@ -81,25 +94,27 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
             const updatedLicense = await licenseService.getLicenseInfo();
 
             alert({
-              alertType: 'success',
-              title: t('billing.seatsUpdated', 'Seats Updated'),
+              alertType: "success",
+              title: t("billing.seatsUpdated", "Seats Updated"),
               body: t(
-                'billing.seatsUpdatedMessage',
-                'Your enterprise seats have been updated to {{seats}}',
-                { seats: updatedLicense.maxUsers }
+                "billing.seatsUpdatedMessage",
+                "Your enterprise seats have been updated to {{seats}}",
+                {
+                  seats: updatedLicense.maxUsers,
+                },
               ),
             });
           } else {
-            throw new Error(activation.error || 'Failed to sync license');
+            throw new Error(activation.error || "Failed to sync license");
           }
         } catch (error) {
-          console.error('Failed to sync license after seat update:', error);
+          console.error("Failed to sync license after seat update:", error);
           alert({
-            alertType: 'warning',
-            title: t('billing.updateProcessing', 'Update Processing'),
+            alertType: "warning",
+            title: t("billing.updateProcessing", "Update Processing"),
             body: t(
-              'billing.updateProcessingMessage',
-              'Your seat update is being processed. Please refresh in a few moments.'
+              "billing.updateProcessingMessage",
+              "Your seat update is being processed. Please refresh in a few moments.",
             ),
           });
         }
@@ -108,56 +123,65 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
 
     // CRITICAL FIX: Properly handle async function and catch errors
     handleBillingReturn().catch((error) => {
-      console.error('[UpdateSeatsContext] Error in billing return handler:', error);
+      console.error(
+        "[UpdateSeatsContext] Error in billing return handler:",
+        error,
+      );
       // Don't throw - this is initialization, should not block rendering
     });
   }, [t, location.pathname, license]);
 
-  const openUpdateSeats = useCallback(async (options: UpdateSeatsOptions = {}) => {
-    try {
-      setIsLoading(true);
+  const openUpdateSeats = useCallback(
+    async (options: UpdateSeatsOptions = {}) => {
+      try {
+        setIsLoading(true);
 
-      // Fetch current license info and user count
-      const [licenseInfo, userData] = await Promise.all([
-        licenseService.getLicenseInfo(),
-        userManagementService.getUsers(),
-      ]);
+        // Fetch current license info and user count
+        const [licenseInfo, userData] = await Promise.all([
+          licenseService.getLicenseInfo(),
+          userManagementService.getUsers(),
+        ]);
 
-      // Validate this is an enterprise license
-      if (!licenseInfo || licenseInfo.licenseType !== 'ENTERPRISE') {
-        throw new Error(
-          t('billing.notEnterprise', 'Seat management is only available for enterprise licenses')
+        // Validate this is an enterprise license
+        if (!licenseInfo || licenseInfo.licenseType !== "ENTERPRISE") {
+          throw new Error(
+            t(
+              "billing.notEnterprise",
+              "Seat management is only available for enterprise licenses",
+            ),
+          );
+        }
+
+        const currentLicenseSeats = licenseInfo.maxUsers || 1;
+        const currentUserCount = userData.totalUsers || 0;
+
+        // Minimum seats must be at least the current number of users
+        const calculatedMinSeats = Math.max(currentUserCount, 1);
+
+        console.log(
+          `Opening seat update: current seats=${currentLicenseSeats}, current users=${currentUserCount}, minimum=${calculatedMinSeats}`,
         );
+
+        setCurrentSeats(currentLicenseSeats);
+        setMinimumSeats(calculatedMinSeats);
+        setCurrentOptions(options);
+        setIsOpen(true);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to open seat update";
+        console.error("Error opening seat update:", errorMessage);
+        alert({
+          alertType: "error",
+          title: t("common.error", "Error"),
+          body: errorMessage,
+        });
+        options.onError?.(errorMessage);
+      } finally {
+        setIsLoading(false);
       }
-
-      const currentLicenseSeats = licenseInfo.maxUsers || 1;
-      const currentUserCount = userData.totalUsers || 0;
-
-      // Minimum seats must be at least the current number of users
-      const calculatedMinSeats = Math.max(currentUserCount, 1);
-
-      console.log(
-        `Opening seat update: current seats=${currentLicenseSeats}, current users=${currentUserCount}, minimum=${calculatedMinSeats}`
-      );
-
-      setCurrentSeats(currentLicenseSeats);
-      setMinimumSeats(calculatedMinSeats);
-      setCurrentOptions(options);
-      setIsOpen(true);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to open seat update';
-      console.error('Error opening seat update:', errorMessage);
-      alert({
-        alertType: 'error',
-        title: t('common.error', 'Error'),
-        body: errorMessage,
-      });
-      options.onError?.(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [t]);
+    },
+    [t],
+  );
 
   const closeUpdateSeats = useCallback(() => {
     setIsOpen(false);
@@ -173,7 +197,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
         // Get current license key
         const licenseInfo = await licenseService.getLicenseInfo();
         if (!licenseInfo?.licenseKey) {
-          throw new Error('No license key found');
+          throw new Error("No license key found");
         }
 
         console.log(`Updating seats from ${currentSeats} to ${newSeatCount}`);
@@ -181,32 +205,32 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
         // Call manage-billing function with new seat count
         const portalUrl = await licenseService.updateEnterpriseSeats(
           newSeatCount,
-          licenseInfo.licenseKey
+          licenseInfo.licenseKey,
         );
 
         return portalUrl;
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : 'Failed to update seats';
-        console.error('Error updating seats:', errorMessage);
+          err instanceof Error ? err.message : "Failed to update seats";
+        console.error("Error updating seats:", errorMessage);
         currentOptions.onError?.(errorMessage);
         throw err;
       }
     },
-    [currentSeats, currentOptions]
+    [currentSeats, currentOptions],
   );
 
   const handleSuccess = useCallback(() => {
-    console.log('Seat update initiated successfully');
+    console.log("Seat update initiated successfully");
     currentOptions.onSuccess?.();
   }, [currentOptions]);
 
   const handleError = useCallback(
     (error: string) => {
-      console.error('Seat update error:', error);
+      console.error("Seat update error:", error);
       currentOptions.onError?.(error);
     },
-    [currentOptions]
+    [currentOptions],
   );
 
   return (
@@ -235,7 +259,9 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
 export const useUpdateSeats = (): UpdateSeatsContextValue => {
   const context = useContext(UpdateSeatsContext);
   if (!context) {
-    throw new Error('useUpdateSeats must be used within an UpdateSeatsProvider');
+    throw new Error(
+      "useUpdateSeats must be used within an UpdateSeatsProvider",
+    );
   }
   return context;
 };

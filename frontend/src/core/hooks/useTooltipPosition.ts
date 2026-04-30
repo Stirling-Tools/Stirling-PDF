@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { clamp } from '@app/utils/genericUtils';
-import { getSidebarInfo } from '@app/utils/sidebarUtils';
-import { SidebarRefs, SidebarState } from '@app/types/sidebar';
+import { useState, useEffect } from "react";
+import { clamp } from "@app/utils/genericUtils";
+import { getSidebarInfo } from "@app/utils/sidebarUtils";
+import { SidebarRefs, SidebarState } from "@app/types/sidebar";
 
-type Position = 'right' | 'left' | 'top' | 'bottom';
+type Position = "right" | "left" | "top" | "bottom";
 
 interface PlacementResult {
   top: number;
@@ -19,25 +19,25 @@ function place(
   triggerRect: DOMRect,
   tooltipRect: DOMRect,
   position: Position,
-  offset: number
+  offset: number,
 ): PlacementResult {
   let top = 0;
   let left = 0;
 
   switch (position) {
-    case 'right':
+    case "right":
       top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
       left = triggerRect.right + offset;
       break;
-    case 'left':
+    case "left":
       top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
       left = triggerRect.left - tooltipRect.width - offset;
       break;
-    case 'top':
+    case "top":
       top = triggerRect.top - tooltipRect.height - offset;
       left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
       break;
-    case 'bottom':
+    case "bottom":
       top = triggerRect.bottom + offset;
       left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
       break;
@@ -54,7 +54,7 @@ export function useTooltipPosition({
   triggerRef,
   tooltipRef,
   sidebarRefs,
-  sidebarState
+  sidebarState,
 }: {
   open: boolean;
   sidebarTooltip: boolean;
@@ -65,16 +65,21 @@ export function useTooltipPosition({
   sidebarRefs?: SidebarRefs;
   sidebarState?: SidebarState;
 }): PositionState {
-  const [coords, setCoords] = useState<{ top: number; left: number; arrowOffset: number | null }>({
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    arrowOffset: number | null;
+  }>({
     top: 0,
     left: 0,
-    arrowOffset: null
+    arrowOffset: null,
   });
   const [positionReady, setPositionReady] = useState(false);
 
   // Fallback sidebar position (only used as last resort)
   const sidebarLeft = 240;
-  const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+  const isRTL =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
   const updatePosition = () => {
     if (!triggerRef.current || !open) return;
@@ -88,7 +93,9 @@ export function useTooltipPosition({
     if (sidebarTooltip) {
       // Require sidebar refs and state for proper positioning
       if (!sidebarRefs || !sidebarState) {
-        console.warn('Sidebar tooltip requires sidebarRefs and sidebarState props');
+        console.warn(
+          "Sidebar tooltip requires sidebarRefs and sidebarState props",
+        );
         setPositionReady(false);
         return;
       }
@@ -102,7 +109,7 @@ export function useTooltipPosition({
 
       // Only show tooltip if we have the tool panel active
       if (!sidebarInfo.isToolPanelActive) {
-        console.log('Not showing tooltip - tool panel not active');
+        console.log("Not showing tooltip - tool panel not active");
         setPositionReady(false);
         return;
       }
@@ -145,7 +152,7 @@ export function useTooltipPosition({
       left = clamp(left, 4, window.innerWidth - tooltipRect.width - 4);
 
       // Calculate arrow position to stay aligned with trigger
-      if (position === 'top' || position === 'bottom') {
+      if (position === "top" || position === "bottom") {
         // For top/bottom arrows, adjust horizontal position
         const triggerCenter = triggerRect.left + triggerRect.width / 2;
         const tooltipCenter = left + tooltipRect.width / 2;
@@ -174,12 +181,12 @@ export function useTooltipPosition({
     requestAnimationFrame(updatePosition);
 
     const handleUpdate = () => requestAnimationFrame(updatePosition);
-    window.addEventListener('scroll', handleUpdate, true);
-    window.addEventListener('resize', handleUpdate);
+    window.addEventListener("scroll", handleUpdate, true);
+    window.addEventListener("resize", handleUpdate);
 
     return () => {
-      window.removeEventListener('scroll', handleUpdate, true);
-      window.removeEventListener('resize', handleUpdate);
+      window.removeEventListener("scroll", handleUpdate, true);
+      window.removeEventListener("resize", handleUpdate);
     };
   }, [open, sidebarLeft, position, gap, sidebarTooltip]);
 

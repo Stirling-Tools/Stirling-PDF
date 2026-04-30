@@ -12,14 +12,17 @@ import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbe
 
 interface AddPageNumbersAutomationSettingsProps {
   parameters: AddPageNumbersParameters;
-  onParameterChange: <K extends keyof AddPageNumbersParameters>(key: K, value: AddPageNumbersParameters[K]) => void;
+  onParameterChange: <K extends keyof AddPageNumbersParameters>(
+    key: K,
+    value: AddPageNumbersParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
 const AddPageNumbersAutomationSettings = ({
   parameters,
   onParameterChange,
-  disabled = false
+  disabled = false,
 }: AddPageNumbersAutomationSettingsProps) => {
   const { t } = useTranslation();
 
@@ -27,7 +30,9 @@ const AddPageNumbersAutomationSettings = ({
     <Stack gap="lg">
       {/* Position & Pages Section */}
       <Stack gap="md">
-        <Text size="sm" fw={600}>{t("addPageNumbers.positionAndPages", "Position & Pages")}</Text>
+        <Text size="sm" fw={600}>
+          {t("addPageNumbers.positionAndPages", "Position & Pages")}
+        </Text>
         <AddPageNumbersPositionSettings
           parameters={parameters}
           onParameterChange={onParameterChange}
@@ -41,7 +46,9 @@ const AddPageNumbersAutomationSettings = ({
 
       {/* Appearance Section */}
       <Stack gap="md">
-        <Text size="sm" fw={600}>{t("addPageNumbers.customize", "Customize Appearance")}</Text>
+        <Text size="sm" fw={600}>
+          {t("addPageNumbers.customize", "Customize Appearance")}
+        </Text>
         <AddPageNumbersAppearanceSettings
           parameters={parameters}
           onParameterChange={onParameterChange}

@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
@@ -16,6 +15,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -59,8 +59,8 @@ public class SplitPdfBySectionsController {
                             + " which page to split, and how to split"
                             + " ( halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> splitPdf(@Valid @ModelAttribute SplitPdfBySectionsRequest request)
-            throws Exception {
+    public ResponseEntity<Resource> splitPdf(
+            @Valid @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
         SplitTypes splitMode =
@@ -80,9 +80,7 @@ public class SplitPdfBySectionsController {
 
             if (merge) {
                 try (PDDocument mergedDoc =
-                                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(
-                                        sourceDocument);
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                     LayerUtility layerUtility = new LayerUtility(mergedDoc);
                     for (int pageIndex = 0;
                             pageIndex < sourceDocument.getNumberOfPages();
@@ -99,11 +97,12 @@ public class SplitPdfBySectionsController {
                             addPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility);
                         }
                     }
-                    mergedDoc.save(baos);
-                    return WebResponseUtils.baosToWebResponse(baos, filename + ".pdf");
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            mergedDoc, filename + ".pdf", tempFileManager);
                 }
             } else {
-                try (TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
+                TempFile zipTempFile = tempFileManager.createManagedTempFile(".zip");
+                try {
                     try (ZipOutputStream zipOut =
                             new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
                         for (int pageIndex = 0;
@@ -161,9 +160,10 @@ public class SplitPdfBySectionsController {
                         log.error("Error creating ZIP file with split PDF sections", e);
                         throw e;
                     }
-                    byte[] zipBytes = Files.readAllBytes(zipTempFile.getPath());
-                    return WebResponseUtils.bytesToWebResponse(
-                            zipBytes, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+                    return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
+                } catch (Exception ex) {
+                    zipTempFile.close();
+                    throw ex;
                 }
             }
         } catch (Exception e) {

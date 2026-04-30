@@ -1,18 +1,17 @@
-import { PageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
-import { computeBoxes } from '@app/components/tools/pageLayout/utils/computeBoxes';
+import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+import { computeBoxes } from "@app/components/tools/pageLayout/utils/computeBoxes";
 
 export default function LayoutPreview({
-  parameters
+  parameters,
 }: {
-  parameters: PageLayoutParameters
+  parameters: PageLayoutParameters;
 }) {
-
   const sheet = {
     x: 0,
     y: 0,
     width: parameters.orientation === "LANDSCAPE" ? 297 : 210,
-    height: parameters.orientation === "LANDSCAPE" ? 210 : 297
-  }
+    height: parameters.orientation === "LANDSCAPE" ? 210 : 297,
+  };
 
   const boxes = computeBoxes(sheet, parameters);
   const aspectRatio = sheet.width / sheet.height;
@@ -22,12 +21,16 @@ export default function LayoutPreview({
       viewBox={`${sheet.x} ${sheet.y} ${sheet.width} ${sheet.height}`}
       preserveAspectRatio="xMidYMid meet"
       style={{
-        width: parameters.orientation === "PORTRAIT" ? "50%" : `${50 * aspectRatio}%`,
+        width:
+          parameters.orientation === "PORTRAIT"
+            ? "50%"
+            : `${50 * aspectRatio}%`,
         aspectRatio: `${aspectRatio}`,
-        display: 'block',
-        margin: '0 auto',
-        padding: '10px',
-      }}>
+        display: "block",
+        margin: "0 auto",
+        padding: "10px",
+      }}
+    >
       <rect
         x={sheet.x}
         y={sheet.y}
@@ -39,7 +42,7 @@ export default function LayoutPreview({
         stroke="black"
         strokeWidth={2}
       />
-      {boxes.map(box => (
+      {boxes.map((box) => (
         <g key={box.label}>
           <rect
             x={box.x}
@@ -64,9 +67,8 @@ export default function LayoutPreview({
           >
             {box.label}
           </text>
-        </g>))
-      }
+        </g>
+      ))}
     </svg>
-
-  )
+  );
 }

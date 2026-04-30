@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Locale;
 
@@ -11,8 +12,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,6 +27,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -40,6 +43,7 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 public class ConvertPDFToExcelController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(value = "/pdf/xlsx", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -47,11 +51,12 @@ public class ConvertPDFToExcelController {
             description =
                     "Extracts tabular data from each page of a PDF and writes it into an Excel"
                             + " workbook, one sheet per table. Input:PDF Output:XLSX Type:SISO")
-    public ResponseEntity<byte[]> pdfToExcel(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
             throws Exception {
         String baseName =
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
+        TempFile tempOut = tempFileManager.createManagedTempFile(".xlsx");
         try (PDDocument document = pdfDocumentFactory.load(request);
                 XSSFWorkbook workbook = new XSSFWorkbook();
                 ObjectExtractor extractor = new ObjectExtractor(document)) {
@@ -89,21 +94,22 @@ public class ConvertPDFToExcelController {
             }
 
             if (sheetCount == 0) {
+                tempOut.close();
                 return ResponseEntity.noContent().build();
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            workbook.write(baos);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentDisposition(
-                    ContentDisposition.builder("attachment").filename(baseName + ".xlsx").build());
-            headers.setContentType(
-                    MediaType.parseMediaType(
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-
-            return ResponseEntity.ok().headers(headers).body(baos.toByteArray());
+            try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+                workbook.write(os);
+            }
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
         }
+
+        MediaType mediaType =
+                MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return WebResponseUtils.fileToWebResponse(tempOut, baseName + ".xlsx", mediaType);
     }
 
     private String getUniqueSheetName(Workbook workbook, String baseName) {

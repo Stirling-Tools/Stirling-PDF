@@ -1,5 +1,6 @@
 package stirling.software.proprietary.controller.api;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -239,7 +240,7 @@ public class AuditDashboardController {
             csv.append(escapeCSV(event.getData())).append("\n");
         }
 
-        byte[] csvBytes = csv.toString().getBytes();
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
         // Set up HTTP headers for download
         HttpHeaders headers = new HttpHeaders();

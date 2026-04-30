@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useRotate } from '@embedpdf/plugin-rotate/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect, useRef } from "react";
+import { useRotate } from "@embedpdf/plugin-rotate/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF rotation plugin to the shared ViewerContext.
@@ -33,23 +33,24 @@ function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
     const currentRotate = rotateRef.current;
     if (currentRotate) {
       const newState = {
-        rotation
+        rotation,
       };
 
       // Register this bridge with ViewerContext
-      registerBridge('rotation', {
+      registerBridge("rotation", {
         state: newState,
         api: {
           rotateForward: () => currentRotate.rotateForward(),
           rotateBackward: () => currentRotate.rotateBackward(),
-          setRotation: (rotationValue: number) => currentRotate.setRotation(rotationValue),
+          setRotation: (rotationValue: number) =>
+            currentRotate.setRotation(rotationValue),
           getRotation: () => rotation,
-        }
+        },
       });
     }
 
     return () => {
-      registerBridge('rotation', null);
+      registerBridge("rotation", null);
     };
   }, [rotation, registerBridge]);
 

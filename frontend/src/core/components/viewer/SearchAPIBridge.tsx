@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
-import { useSearch } from '@embedpdf/plugin-search/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect, useState, useRef } from "react";
+import { useSearch } from "@embedpdf/plugin-search/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 interface SearchResult {
   pageIndex: number;
@@ -43,7 +43,7 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
 
   const [localState, setLocalState] = useState({
     results: null as SearchResult[] | null,
-    activeIndex: 0
+    activeIndex: 0,
   });
 
   // Subscribe to search result changes from EmbedPDF
@@ -58,22 +58,26 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
 
     if (!search) return;
 
-    subscriptionRef.current = search.onSearchResultStateChange?.((state: any) => {
-      if (!state) return;
+    subscriptionRef.current =
+      search.onSearchResultStateChange?.((state: any) => {
+        if (!state) return;
 
-      const newState = {
-        results: state.results || null,
-        activeIndex: (state.activeResultIndex || 0) + 1 // Convert to 1-based index
-      };
+        const newState = {
+          results: state.results || null,
+          activeIndex: (state.activeResultIndex || 0) + 1, // Convert to 1-based index
+        };
 
-      setLocalState(prevState => {
-        // Only update if state actually changed
-        if (prevState.results !== newState.results || prevState.activeIndex !== newState.activeIndex) {
-          return newState;
-        }
-        return prevState;
-      });
-    }) ?? null;
+        setLocalState((prevState) => {
+          // Only update if state actually changed
+          if (
+            prevState.results !== newState.results ||
+            prevState.activeIndex !== newState.activeIndex
+          ) {
+            return newState;
+          }
+          return prevState;
+        });
+      }) ?? null;
 
     return () => {
       if (subscriptionRef.current) {
@@ -96,9 +100,11 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
 
     // Only scroll if the active index actually changed
     const activeResultIndex = localActiveIndex - 1; // Convert back to 0-based
-    if (activeResultIndex >= 0 &&
-        activeResultIndex < localResults.length &&
-        lastScrolledIndexRef.current !== activeResultIndex) {
+    if (
+      activeResultIndex >= 0 &&
+      activeResultIndex < localResults.length &&
+      lastScrolledIndexRef.current !== activeResultIndex
+    ) {
       const activeResult = localResults[activeResultIndex];
       if (activeResult) {
         const pageNumber = activeResult.pageIndex + 1; // Convert to 1-based page number
@@ -112,7 +118,7 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
   useEffect(() => {
     const currentSearch = searchRef.current;
     if (currentSearch) {
-      registerBridge('search', {
+      registerBridge("search", {
         state: { results: localResults, activeIndex: localActiveIndex },
         api: {
           search: async (query: string) => {
@@ -133,11 +139,14 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
               return results;
             } catch (error: any) {
               // Handle abort errors gracefully - these occur when searches overlap
-              if (error?.type === 'abort' || error?.message?.includes('abort')) {
+              if (
+                error?.type === "abort" ||
+                error?.message?.includes("abort")
+              ) {
                 // Silently handle abort - this is expected when user types quickly
                 return null;
               }
-              console.error('Search failed:', error);
+              console.error("Search failed:", error);
               return null;
             } finally {
               isSearchingRef.current = false;
@@ -149,7 +158,7 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
                 currentSearch.stopSearch();
               }
             } catch (error) {
-              console.warn('Error stopping search:', error);
+              console.warn("Error stopping search:", error);
             }
             setLocalState({ results: null, activeIndex: 0 });
           },
@@ -157,29 +166,29 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
             try {
               currentSearch?.nextResult?.();
             } catch (error) {
-              console.warn('Error navigating to next result:', error);
+              console.warn("Error navigating to next result:", error);
             }
           },
           previous: () => {
             try {
               currentSearch?.previousResult?.();
             } catch (error) {
-              console.warn('Error navigating to previous result:', error);
+              console.warn("Error navigating to previous result:", error);
             }
           },
           goToResult: (index: number) => {
             try {
               currentSearch?.goToResult?.(index);
             } catch (error) {
-              console.warn('Error going to result:', error);
+              console.warn("Error going to result:", error);
             }
           },
-        }
+        },
       });
     }
 
     return () => {
-      registerBridge('search', null);
+      registerBridge("search", null);
     };
   }, [localResults, localActiveIndex, registerBridge]);
 

@@ -2,10 +2,13 @@ package stirling.software.SPDF.controller.api.form;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -19,11 +22,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -31,8 +38,20 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FormFillController Tests")
 class FormFillControllerTest {
+    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(new ByteArrayResource(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     private ObjectMapper realObjectMapper;
 
@@ -40,6 +59,18 @@ class FormFillControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         realObjectMapper = JsonMapper.builder().build();
         // Inject real ObjectMapper via reflection since @InjectMocks uses the mock
         var field = FormFillController.class.getDeclaredField("objectMapper");
@@ -203,7 +234,7 @@ class FormFillControllerTest {
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
             byte[] payload = "{\"field1\":\"value1\"}".getBytes();
-            ResponseEntity<byte[]> response = controller.fillForm(file, payload, false);
+            ResponseEntity<Resource> response = controller.fillForm(file, payload, false);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -216,7 +247,7 @@ class FormFillControllerTest {
             PDDocument doc = createMinimalPdf();
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
-            ResponseEntity<byte[]> response = controller.fillForm(file, null, false);
+            ResponseEntity<Resource> response = controller.fillForm(file, null, false);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
@@ -257,7 +288,7 @@ class FormFillControllerTest {
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
             byte[] payload = "[\"field1\"]".getBytes();
-            ResponseEntity<byte[]> response = controller.deleteFields(file, payload);
+            ResponseEntity<Resource> response = controller.deleteFields(file, payload);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
@@ -293,7 +324,7 @@ class FormFillControllerTest {
             String json =
                     "[{\"targetName\":\"f1\",\"name\":null,\"label\":null,\"type\":null,"
                             + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
-            ResponseEntity<byte[]> response = controller.modifyFields(file, json.getBytes());
+            ResponseEntity<Resource> response = controller.modifyFields(file, json.getBytes());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }

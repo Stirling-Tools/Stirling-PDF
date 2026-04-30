@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,6 +32,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -60,7 +62,7 @@ public class ConvertEbookToPDFController {
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
                             + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> convertEbookToPdf(
+    public ResponseEntity<Resource> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
@@ -140,24 +142,35 @@ public class ConvertEbookToPDFController {
         String outputFilename =
                 GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
 
+        TempFile tempOut = null;
         try {
+            tempOut = tempFileManager.createManagedTempFile(".pdf");
             if (optimizeForEbook) {
                 byte[] pdfBytes = Files.readAllBytes(outputPath);
                 try {
                     byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
-                    return WebResponseUtils.bytesToWebResponse(optimizedPdf, outputFilename);
+                    Files.write(tempOut.getPath(), optimizedPdf);
                 } catch (IOException e) {
                     log.warn(
                             "Ghostscript optimization failed for ebook conversion, returning"
                                     + " original PDF",
                             e);
-                    return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+                    Files.write(tempOut.getPath(), pdfBytes);
+                }
+            } else {
+                try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
+                    document.save(tempOut.getFile());
                 }
             }
-
-            try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
-                return WebResponseUtils.pdfDocToWebResponse(document, outputFilename);
+            ResponseEntity<Resource> response =
+                    WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+            tempOut = null;
+            return response;
+        } catch (Exception e) {
+            if (tempOut != null) {
+                tempOut.close();
             }
+            throw e;
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }

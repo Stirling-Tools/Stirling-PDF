@@ -20,7 +20,7 @@ export interface StripeWebhookEvent {
   data: {
     object: {
       id: string;
-      payment_status: 'paid' | 'unpaid';
+      payment_status: "paid" | "unpaid";
       customer_details?: {
         email: string;
         name?: string;
@@ -58,10 +58,10 @@ export interface StripeApiError {
 
 // Webhook event types that the backend should handle
 export type StripeWebhookEventType =
-  | 'checkout.session.completed'
-  | 'checkout.session.expired'
-  | 'payment_intent.succeeded'
-  | 'payment_intent.payment_failed'
-  | 'customer.subscription.created'
-  | 'customer.subscription.updated'
-  | 'customer.subscription.deleted';
+  | "checkout.session.completed"
+  | "checkout.session.expired"
+  | "payment_intent.succeeded"
+  | "payment_intent.payment_failed"
+  | "customer.subscription.created"
+  | "customer.subscription.updated"
+  | "customer.subscription.deleted";

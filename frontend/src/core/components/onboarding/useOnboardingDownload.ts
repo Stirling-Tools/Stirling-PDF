@@ -1,12 +1,12 @@
 /**
  * useOnboardingDownload Hook
- * 
+ *
  * Encapsulates OS detection and download URL logic for the desktop install slide.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useOs } from '@app/hooks/useOs';
-import { DOWNLOAD_URLS } from '@app/constants/downloads';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useOs } from "@app/hooks/useOs";
+import { DOWNLOAD_URLS } from "@app/constants/downloads";
 
 interface OsInfo {
   label: string;
@@ -29,30 +29,45 @@ interface UseOnboardingDownloadResult {
 
 export function useOnboardingDownload(): UseOnboardingDownloadResult {
   const osType = useOs();
-  const [selectedDownloadUrl, setSelectedDownloadUrl] = useState<string>('');
+  const [selectedDownloadUrl, setSelectedDownloadUrl] = useState<string>("");
 
   const osInfo = useMemo<OsInfo>(() => {
     switch (osType) {
-      case 'windows':
-        return { label: 'Windows', url: DOWNLOAD_URLS.WINDOWS };
-      case 'mac-apple':
-        return { label: 'Mac (Apple Silicon)', url: DOWNLOAD_URLS.MAC_APPLE_SILICON };
-      case 'mac-intel':
-        return { label: 'Mac (Intel)', url: DOWNLOAD_URLS.MAC_INTEL };
-      case 'linux-x64':
-      case 'linux-arm64':
-        return { label: 'Linux', url: DOWNLOAD_URLS.LINUX_DOCS };
+      case "windows":
+        return { label: "Windows", url: DOWNLOAD_URLS.WINDOWS };
+      case "mac-apple":
+        return {
+          label: "Mac (Apple Silicon)",
+          url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
+        };
+      case "mac-intel":
+        return { label: "Mac (Intel)", url: DOWNLOAD_URLS.MAC_INTEL };
+      case "linux-x64":
+      case "linux-arm64":
+        return { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS };
       default:
-        return { label: '', url: '' };
+        return { label: "", url: "" };
     }
   }, [osType]);
 
-  const osOptions = useMemo<OsOption[]>(() => [
-    { label: 'Windows', url: DOWNLOAD_URLS.WINDOWS, value: 'windows' },
-    { label: 'Mac (Apple Silicon)', url: DOWNLOAD_URLS.MAC_APPLE_SILICON, value: 'mac-apple' },
-    { label: 'Mac (Intel)', url: DOWNLOAD_URLS.MAC_INTEL, value: 'mac-intel' },
-    { label: 'Linux', url: DOWNLOAD_URLS.LINUX_DOCS, value: 'linux' },
-  ].filter((opt) => opt.url), []);
+  const osOptions = useMemo<OsOption[]>(
+    () =>
+      [
+        { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },
+        {
+          label: "Mac (Apple Silicon)",
+          url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
+          value: "mac-apple",
+        },
+        {
+          label: "Mac (Intel)",
+          url: DOWNLOAD_URLS.MAC_INTEL,
+          value: "mac-intel",
+        },
+        { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS, value: "linux" },
+      ].filter((opt) => opt.url),
+    [],
+  );
 
   // Initialize selected URL from detected OS
   useEffect(() => {
@@ -64,7 +79,7 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
   const handleDownloadSelected = useCallback(() => {
     const downloadUrl = selectedDownloadUrl || osInfo.url;
     if (downloadUrl) {
-      window.open(downloadUrl, '_blank', 'noopener');
+      window.open(downloadUrl, "_blank", "noopener");
     }
   }, [selectedDownloadUrl, osInfo.url]);
 
@@ -76,4 +91,3 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
     handleDownloadSelected,
   };
 }
-

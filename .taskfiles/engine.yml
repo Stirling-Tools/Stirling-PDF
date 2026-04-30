@@ -1,0 +1,131 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install engine dependencies"
+    run: once
+    cmds:
+      - uv python install 3.13.8
+      - uv sync
+    sources:
+      - uv.lock
+      - pyproject.toml
+    status:
+      - test -d .venv
+
+  prepare:
+    desc: "Set up engine .env from template"
+    deps: [install]
+    cmds:
+      - uv run scripts/setup_env.py
+    sources:
+      - scripts/setup_env.py
+    generates:
+      - .env.local
+
+  run:
+    desc: "Run engine server"
+    deps: [prepare]
+    ignore_error: true
+    dir: src
+    vars:
+      PORT: '{{.PORT | default "5001"}}'
+    env:
+      PYTHONUNBUFFERED: "1"
+    cmds:
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}}
+
+  dev:
+    desc: "Start engine dev server with hot reload"
+    deps: [prepare]
+    ignore_error: true
+    dir: src
+    vars:
+      PORT: '{{.PORT | default "5001"}}'
+    env:
+      PYTHONUNBUFFERED: "1"
+    cmds:
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --reload
+
+  lint:
+    desc: "Run linting"
+    deps: [install]
+    cmds:
+      - uv run ruff check .
+
+  lint:fix:
+    desc: "Auto-fix lint issues"
+    deps: [install]
+    cmds:
+      - uv run ruff check . --fix
+
+  format:
+    desc: "Auto-fix code formatting"
+    deps: [install]
+    cmds:
+      - uv run ruff format .
+
+  format:check:
+    desc: "Check code formatting"
+    deps: [install]
+    cmds:
+      - uv run ruff format . --diff
+
+  typecheck:
+    desc: "Run type checking"
+    deps: [install]
+    cmds:
+      - uv run pyright . --warnings
+
+  test:
+    desc: "Run tests"
+    deps: [prepare]
+    cmds:
+      - uv run pytest tests
+
+  fix:
+    desc: "Auto-fix lint + format"
+    cmds:
+      - task: lint:fix
+      - task: format
+
+  check:
+    desc: "Full engine quality gate"
+    cmds:
+      - task: typecheck
+      - task: lint
+      - task: format:check
+      - task: test
+
+  tool-models:
+    desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py
+    sources:
+      - ../SwaggerDoc.json
+      - scripts/generate_tool_models.py
+    generates:
+      - src/stirling/models/tool_models.py
+
+  clean:
+    desc: "Clean build artifacts"
+    cmds:
+      - task: '{{if eq .OS "Windows_NT"}}clean-windows{{else}}clean-unix{{end}}'
+
+  clean-unix:
+    internal: true
+    desc: "Clean build artifacts"
+    cmds:
+      - rm -rf .venv data logs output
+
+  # On Windows, use PowerShell as bash failed to delete some dependencies
+  clean-windows:
+    internal: true
+    desc: "Clean build artifacts"
+    ignore_error: true
+    cmds:
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue .venv
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue data
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue logs
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue output

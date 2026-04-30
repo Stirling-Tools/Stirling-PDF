@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,15 +27,19 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @Slf4j
 public class UnlockPDFFormsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    public UnlockPDFFormsController(CustomPDFDocumentFactory pdfDocumentFactory) {
+    public UnlockPDFFormsController(
+            CustomPDFDocumentFactory pdfDocumentFactory, TempFileManager tempFileManager) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.tempFileManager = tempFileManager;
     }
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/unlock-pdf-forms")
@@ -44,7 +49,7 @@ public class UnlockPDFFormsController {
             description =
                     "Removing read-only property from form fields making them fillable"
                             + "Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<byte[]> unlockPDFForms(@ModelAttribute PDFFile file) {
+    public ResponseEntity<Resource> unlockPDFForms(@ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 
@@ -116,7 +121,7 @@ public class UnlockPDFFormsController {
                     GeneralUtils.generateFilename(
                             file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
-                    document, Filenames.toSimpleFileName(mergedFileName));
+                    document, Filenames.toSimpleFileName(mergedFileName), tempFileManager);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }

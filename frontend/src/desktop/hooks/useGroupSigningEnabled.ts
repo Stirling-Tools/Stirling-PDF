@@ -1,5 +1,5 @@
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useSelfHostedAuth } from '@app/hooks/useSelfHostedAuth';
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
 
 /**
  * Desktop override: shared (group) signing requires self-hosted mode AND
@@ -8,5 +8,9 @@ import { useSelfHostedAuth } from '@app/hooks/useSelfHostedAuth';
 export function useGroupSigningEnabled(): boolean {
   const { config } = useAppConfig();
   const { isSelfHosted, isAuthenticated } = useSelfHostedAuth();
-  return isSelfHosted && isAuthenticated && config?.storageGroupSigningEnabled === true;
+  return (
+    isSelfHosted &&
+    isAuthenticated &&
+    config?.storageGroupSigningEnabled === true
+  );
 }

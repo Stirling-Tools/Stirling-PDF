@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, RefObject, useRef } from 'react';
+import { useLayoutEffect, useState, RefObject, useRef } from "react";
 
 export interface ToolPanelGeometry {
   left: number;
@@ -35,17 +35,24 @@ export function useToolPanelGeometry({
       return;
     }
 
-    const rightRailEl = () => (rightRailRef?.current ?? null);
+    const rightRailEl = () => rightRailRef?.current ?? null;
 
     let rafId: number | null = null;
 
     const computeAndSetGeometry = () => {
       const rect = panelEl.getBoundingClientRect();
       const rail = rightRailEl();
-      const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+      const isRTL =
+        typeof document !== "undefined" &&
+        document.documentElement.dir === "rtl";
       const railRect = rail?.getBoundingClientRect();
-      const railIsOnRight = railRect ? railRect.right > window.innerWidth / 2 : false;
-      const rightOffset = railRect && railIsOnRight ? Math.max(0, window.innerWidth - railRect.right) : 0;
+      const railIsOnRight = railRect
+        ? railRect.right > window.innerWidth / 2
+        : false;
+      const rightOffset =
+        railRect && railIsOnRight
+          ? Math.max(0, window.innerWidth - railRect.right)
+          : 0;
       let width: number;
       let left: number;
 
@@ -53,7 +60,10 @@ export function useToolPanelGeometry({
         // In RTL, QuickAccessBar is on the right, so start after it (using rect.right as the right edge)
         const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
         const quickAccessWidth = quickAccessRect ? quickAccessRect.width : 0;
-        width = Math.max(360, window.innerWidth - quickAccessWidth - rightOffset);
+        width = Math.max(
+          360,
+          window.innerWidth - quickAccessWidth - rightOffset,
+        );
         left = quickAccessWidth;
       } else {
         width = Math.max(360, window.innerWidth - rect.left - rightOffset);
@@ -83,7 +93,7 @@ export function useToolPanelGeometry({
     computeAndSetGeometry();
 
     let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
+    if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => scheduleUpdate());
       resizeObserver.observe(panelEl);
       if (quickAccessRef.current) {
@@ -100,10 +110,10 @@ export function useToolPanelGeometry({
     } else {
       // Fallback for environments without ResizeObserver
       const handleResize = () => scheduleUpdate();
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
       // Ensure cleanup of the fallback listener
       resizeObserver = {
-        disconnect: () => window.removeEventListener('resize', handleResize),
+        disconnect: () => window.removeEventListener("resize", handleResize),
       } as unknown as ResizeObserver;
     }
 
@@ -119,7 +129,7 @@ export function useToolPanelGeometry({
   // Secondary effect: (re)attach observers when refs' .current become available later
   useLayoutEffect(() => {
     if (!enabled) return;
-    if (typeof ResizeObserver === 'undefined') return;
+    if (typeof ResizeObserver === "undefined") return;
     const qa = quickAccessRef.current;
     const rail = rightRailRef?.current ?? null;
     if (!qa && !rail) return;

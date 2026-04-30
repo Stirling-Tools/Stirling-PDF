@@ -1,5 +1,5 @@
-import { Button, Stack } from '@mantine/core';
-import React from 'react';
+import { Button, Stack } from "@mantine/core";
+import React from "react";
 
 export interface ButtonToggleOption {
   value: string;
@@ -13,8 +13,8 @@ export interface ButtonToggleProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  orientation?: 'vertical' | 'horizontal';
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  orientation?: "vertical" | "horizontal";
+  size?: "xs" | "sm" | "md" | "lg";
   fullWidth?: boolean;
 }
 
@@ -23,18 +23,18 @@ export const ButtonToggle: React.FC<ButtonToggleProps> = ({
   value,
   onChange,
   disabled = false,
-  orientation = 'vertical',
-  size = 'md',
+  orientation = "vertical",
+  size = "md",
   fullWidth = true,
 }) => {
-  const isVertical = orientation === 'vertical';
+  const isVertical = orientation === "vertical";
 
   const buttonStyle: React.CSSProperties = {
-    justifyContent: 'flex-start',
-    height: isVertical ? 'auto' : undefined,
-    minHeight: isVertical ? '50px' : undefined,
-    padding: isVertical ? '12px 16px' : undefined,
-    textAlign: 'left',
+    justifyContent: "flex-start",
+    height: isVertical ? "auto" : undefined,
+    minHeight: isVertical ? "50px" : undefined,
+    padding: isVertical ? "12px 16px" : undefined,
+    textAlign: "left",
   };
 
   const renderButton = (option: ButtonToggleOption) => {
@@ -44,21 +44,21 @@ export const ButtonToggle: React.FC<ButtonToggleProps> = ({
     return (
       <Button
         key={option.value}
-        variant={isSelected ? 'filled' : 'outline'}
+        variant={isSelected ? "filled" : "outline"}
         onClick={() => !isDisabled && onChange(option.value)}
         disabled={isDisabled}
         size={size}
         fullWidth={fullWidth}
         style={buttonStyle}
       >
-        <div style={{ width: '100%' }}>
+        <div style={{ width: "100%" }}>
           <div style={{ fontWeight: 600 }}>{option.label}</div>
           {option.description && (
             <div
               style={{
-                fontSize: '0.85em',
+                fontSize: "0.85em",
                 opacity: 0.8,
-                marginTop: '4px',
+                marginTop: "4px",
                 fontWeight: 400,
               }}
             >
@@ -71,15 +71,11 @@ export const ButtonToggle: React.FC<ButtonToggleProps> = ({
   };
 
   if (isVertical) {
-    return (
-      <Stack gap="xs">
-        {options.map(renderButton)}
-      </Stack>
-    );
+    return <Stack gap="xs">{options.map(renderButton)}</Stack>;
   }
 
   return (
-    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
       {options.map(renderButton)}
     </div>
   );

@@ -55,7 +55,7 @@ export const calculatePDFBounds = (
   actualPDFWidth: number,
   actualPDFHeight: number,
   containerWidth: number,
-  containerHeight: number
+  containerHeight: number,
 ): PDFBounds => {
   // Calculate scale to fit PDF within container while maintaining aspect ratio
   const scaleX = containerWidth / actualPDFWidth;
@@ -77,7 +77,7 @@ export const calculatePDFBounds = (
     thumbnailHeight,
     offsetX,
     offsetY,
-    scale
+    scale,
   };
 };
 
@@ -87,7 +87,7 @@ export const calculatePDFBounds = (
  */
 export const domToPDFCoordinates = (
   domRect: Rectangle,
-  pdfBounds: PDFBounds
+  pdfBounds: PDFBounds,
 ): Rectangle => {
   // Convert DOM coordinates to thumbnail-relative coordinates
   const thumbX = domRect.x - pdfBounds.offsetX;
@@ -95,7 +95,8 @@ export const domToPDFCoordinates = (
 
   // Convert to PDF coordinates (scale and flip Y-axis)
   const pdfX = thumbX / pdfBounds.scale;
-  const pdfY = pdfBounds.actualHeight - ((thumbY + domRect.height) / pdfBounds.scale);
+  const pdfY =
+    pdfBounds.actualHeight - (thumbY + domRect.height) / pdfBounds.scale;
   const pdfWidth = domRect.width / pdfBounds.scale;
   const pdfHeight = domRect.height / pdfBounds.scale;
 
@@ -103,7 +104,7 @@ export const domToPDFCoordinates = (
     x: pdfX,
     y: pdfY,
     width: pdfWidth,
-    height: pdfHeight
+    height: pdfHeight,
   };
 };
 
@@ -112,11 +113,12 @@ export const domToPDFCoordinates = (
  */
 export const pdfToDOMCoordinates = (
   cropArea: Rectangle,
-  pdfBounds: PDFBounds
+  pdfBounds: PDFBounds,
 ): Rectangle => {
   // Convert PDF coordinates to thumbnail coordinates (scale and flip Y-axis)
   const thumbX = cropArea.x * pdfBounds.scale;
-  const thumbY = (pdfBounds.actualHeight - cropArea.y - cropArea.height) * pdfBounds.scale;
+  const thumbY =
+    (pdfBounds.actualHeight - cropArea.y - cropArea.height) * pdfBounds.scale;
   const thumbWidth = cropArea.width * pdfBounds.scale;
   const thumbHeight = cropArea.height * pdfBounds.scale;
 
@@ -125,7 +127,7 @@ export const pdfToDOMCoordinates = (
     x: thumbX + pdfBounds.offsetX,
     y: thumbY + pdfBounds.offsetY,
     width: thumbWidth,
-    height: thumbHeight
+    height: thumbHeight,
   };
 };
 
@@ -134,7 +136,7 @@ export const pdfToDOMCoordinates = (
  */
 export const constrainCropAreaToPDF = (
   cropArea: Rectangle,
-  pdfBounds: PDFBounds
+  pdfBounds: PDFBounds,
 ): Rectangle => {
   // Ensure crop area doesn't extend beyond PDF boundaries
   const maxX = Math.max(0, pdfBounds.actualWidth - cropArea.width);
@@ -143,8 +145,14 @@ export const constrainCropAreaToPDF = (
   return {
     x: Math.max(0, Math.min(cropArea.x, maxX)),
     y: Math.max(0, Math.min(cropArea.y, maxY)),
-    width: Math.min(cropArea.width, pdfBounds.actualWidth - Math.max(0, cropArea.x)),
-    height: Math.min(cropArea.height, pdfBounds.actualHeight - Math.max(0, cropArea.y))
+    width: Math.min(
+      cropArea.width,
+      pdfBounds.actualWidth - Math.max(0, cropArea.x),
+    ),
+    height: Math.min(
+      cropArea.height,
+      pdfBounds.actualHeight - Math.max(0, cropArea.y),
+    ),
   };
 };
 
@@ -153,7 +161,7 @@ export const constrainCropAreaToPDF = (
  */
 export const constrainDOMRectToThumbnail = (
   domRect: Rectangle,
-  pdfBounds: PDFBounds
+  pdfBounds: PDFBounds,
 ): Rectangle => {
   const thumbnailLeft = pdfBounds.offsetX;
   const thumbnailTop = pdfBounds.offsetY;
@@ -175,7 +183,7 @@ export const constrainDOMRectToThumbnail = (
     x: constrainedX,
     y: constrainedY,
     width: Math.min(domRect.width, maxWidth),
-    height: Math.min(domRect.height, maxHeight)
+    height: Math.min(domRect.height, maxHeight),
   };
 };
 
@@ -185,12 +193,14 @@ export const constrainDOMRectToThumbnail = (
 export const isPointInThumbnail = (
   x: number,
   y: number,
-  pdfBounds: PDFBounds
+  pdfBounds: PDFBounds,
 ): boolean => {
-  return x >= pdfBounds.offsetX &&
-         x <= pdfBounds.offsetX + pdfBounds.thumbnailWidth &&
-         y >= pdfBounds.offsetY &&
-         y <= pdfBounds.offsetY + pdfBounds.thumbnailHeight;
+  return (
+    x >= pdfBounds.offsetX &&
+    x <= pdfBounds.offsetX + pdfBounds.thumbnailWidth &&
+    y >= pdfBounds.offsetY &&
+    y <= pdfBounds.offsetY + pdfBounds.thumbnailHeight
+  );
 };
 
 /**
@@ -201,7 +211,7 @@ export const createFullPDFCropArea = (pdfBounds: PDFBounds): Rectangle => {
     x: 0,
     y: 0,
     width: pdfBounds.actualWidth,
-    height: pdfBounds.actualHeight
+    height: pdfBounds.actualHeight,
   };
 };
 
@@ -213,6 +223,6 @@ export const roundCropArea = (cropArea: Rectangle): Rectangle => {
     x: Math.round(cropArea.x * 10) / 10,
     y: Math.round(cropArea.y * 10) / 10,
     width: Math.round(cropArea.width * 10) / 10,
-    height: Math.round(cropArea.height * 10) / 10
+    height: Math.round(cropArea.height * 10) / 10,
   };
 };

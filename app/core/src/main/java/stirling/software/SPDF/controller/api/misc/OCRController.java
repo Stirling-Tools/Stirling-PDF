@@ -21,6 +21,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -89,7 +90,7 @@ public class OCRController {
                             + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
                             + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
                             + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
-    public ResponseEntity<byte[]> processPdfWithOCR(
+    public ResponseEntity<Resource> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -121,9 +122,11 @@ public class OCRController {
             throw ExceptionUtils.createOcrInvalidLanguagesException();
         }
 
-        // Use try-with-resources for proper temp file management
+        TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
+        TempFile tempZipFile = null;
+        boolean pdfOwnershipTransferred = false;
+        boolean zipOwnershipTransferred = false;
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
                 TempFile sidecarTextFile = sidecar ? new TempFile(tempFileManager, ".txt") : null) {
 
             inputFile.transferTo(tempInputFile.getFile());
@@ -156,9 +159,6 @@ public class OCRController {
                 throw ExceptionUtils.createOcrToolsUnavailableException();
             }
 
-            // Read the processed PDF file
-            byte[] pdfBytes = Files.readAllBytes(tempOutputFile.getPath());
-
             // Return the OCR processed PDF as a response
             String outputFilename =
                     GeneralUtils.removeExtension(
@@ -172,14 +172,14 @@ public class OCRController {
                                         Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                                 + "_OCR.zip";
 
-                try (TempFile tempZipFile = new TempFile(tempFileManager, ".zip");
-                        ZipOutputStream zipOut =
-                                new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
+                tempZipFile = new TempFile(tempFileManager, ".zip");
+                try (ZipOutputStream zipOut =
+                        new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
 
                     // Add PDF file to the zip
                     ZipEntry pdfEntry = new ZipEntry(outputFilename);
                     zipOut.putNextEntry(pdfEntry);
-                    zipOut.write(pdfBytes);
+                    Files.copy(tempOutputFile.getPath(), zipOut);
                     zipOut.closeEntry();
 
                     // Add text file to the zip
@@ -189,16 +189,28 @@ public class OCRController {
                     zipOut.closeEntry();
 
                     zipOut.finish();
-
-                    byte[] zipBytes = Files.readAllBytes(tempZipFile.getPath());
-
-                    // Return the zip file containing both the PDF and the text file
-                    return WebResponseUtils.bytesToWebResponse(
-                            zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 }
+
+                // The intermediate PDF temp file is no longer needed; only the zip is streamed.
+                tempOutputFile.close();
+                pdfOwnershipTransferred = true;
+                ResponseEntity<Resource> response =
+                        WebResponseUtils.fileToWebResponse(
+                                tempZipFile, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                zipOwnershipTransferred = true;
+                return response;
             } else {
-                // Return the OCR processed PDF as a response
-                return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+                ResponseEntity<Resource> response =
+                        WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename);
+                pdfOwnershipTransferred = true;
+                return response;
+            }
+        } finally {
+            if (!pdfOwnershipTransferred) {
+                tempOutputFile.close();
+            }
+            if (tempZipFile != null && !zipOwnershipTransferred) {
+                tempZipFile.close();
             }
         }
     }

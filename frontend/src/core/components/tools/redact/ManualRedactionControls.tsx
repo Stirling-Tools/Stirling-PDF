@@ -1,10 +1,10 @@
-import { useTranslation } from 'react-i18next';
-import { useEffect, useRef, useCallback } from 'react';
-import { Button, Stack, Text, Divider, ColorInput } from '@mantine/core';
-import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useSignature } from '@app/contexts/SignatureContext';
-import { useNavigationGuard } from '@app/contexts/NavigationContext';
+import { useTranslation } from "react-i18next";
+import { useEffect, useRef, useCallback } from "react";
+import { Button, Stack, Text, Divider, ColorInput } from "@mantine/core";
+import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useSignature } from "@app/contexts/SignatureContext";
+import { useNavigationGuard } from "@app/contexts/NavigationContext";
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;
@@ -14,15 +14,29 @@ interface ManualRedactionControlsProps {
  * ManualRedactionControls provides UI for manual PDF redaction in the tool panel.
  * Displays controls for marking text/areas for redaction and applying them.
  */
-export default function ManualRedactionControls({ disabled = false }: ManualRedactionControlsProps) {
+export default function ManualRedactionControls({
+  disabled = false,
+}: ManualRedactionControlsProps) {
   const { t } = useTranslation();
 
   // Use our RedactionContext which bridges to EmbedPDF
-  const { activateManualRedact, redactionsApplied, setActiveType, setManualRedactColor } = useRedaction();
-  const { pendingCount, activeType, isBridgeReady, isRedacting, manualRedactColor } = useRedactionMode();
+  const {
+    activateManualRedact,
+    redactionsApplied,
+    setActiveType,
+    setManualRedactColor,
+  } = useRedaction();
+  const {
+    pendingCount,
+    activeType,
+    isBridgeReady,
+    isRedacting,
+    manualRedactColor,
+  } = useRedactionMode();
 
   // Get viewer context to manage annotation mode and save changes
-  const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
+  const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } =
+    useViewer();
 
   // Get signature context to deactivate annotation tools when switching to redaction
   const { signatureApiRef } = useSignature();
@@ -40,7 +54,13 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // If anything deactivates it (annotation tools, text selection, file switch, etc.)
   // this re-enables it automatically — no manual "Activate" button needed.
   useEffect(() => {
-    if (disabled || !isBridgeReady || isSavingRef.current || showNavigationWarning) return;
+    if (
+      disabled ||
+      !isBridgeReady ||
+      isSavingRef.current ||
+      showNavigationWarning
+    )
+      return;
 
     if (!isRedacting || isAnnotationMode) {
       // Kill annotation mode if it stole focus
@@ -50,7 +70,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           try {
             signatureApiRef.current.deactivateTools();
           } catch (error) {
-            console.log('Unable to deactivate annotation tools:', error);
+            console.log("Unable to deactivate annotation tools:", error);
           }
         }
       }
@@ -62,7 +82,16 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [isRedacting, isAnnotationMode, disabled, isBridgeReady, showNavigationWarning, setAnnotationMode, signatureApiRef, activateManualRedact]);
+  }, [
+    isRedacting,
+    isAnnotationMode,
+    disabled,
+    isBridgeReady,
+    showNavigationWarning,
+    setAnnotationMode,
+    signatureApiRef,
+    activateManualRedact,
+  ]);
 
   // Reset redaction tool when switching between files
   // The new PDF gets a fresh EmbedPDF instance
@@ -99,15 +128,18 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       <Divider my="sm" />
       <Stack gap="md">
         <Text size="sm" fw={500}>
-          {t('redact.manual.title', 'Redaction Tools')}
+          {t("redact.manual.title", "Redaction Tools")}
         </Text>
 
         <Text size="xs" c="dimmed">
-          {t('redact.manual.instructions', 'Select text or draw areas on the PDF to mark content for redaction.')}
+          {t(
+            "redact.manual.instructions",
+            "Select text or draw areas on the PDF to mark content for redaction.",
+          )}
         </Text>
 
         <ColorInput
-          label={t('redact.manual.colorLabel', 'Redaction Colour')}
+          label={t("redact.manual.colorLabel", "Redaction Colour")}
           value={manualRedactColor}
           onChange={setManualRedactColor}
           disabled={disabled || !isApiReady}
@@ -127,7 +159,7 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           disabled={!hasUnsavedChanges}
           onClick={handleSaveChanges}
         >
-          {t('annotation.saveChanges', 'Save Changes')}
+          {t("annotation.saveChanges", "Save Changes")}
         </Button>
       </Stack>
     </>

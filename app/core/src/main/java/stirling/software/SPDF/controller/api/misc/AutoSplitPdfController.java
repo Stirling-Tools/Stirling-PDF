@@ -18,6 +18,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -275,7 +276,7 @@ public class AutoSplitPdfController {
                             + " splits the document at the QR code boundaries. The output is a zip"
                             + " file containing each separate PDF document. Input:PDF Output:ZIP-PDF"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
+    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
@@ -287,8 +288,8 @@ public class AutoSplitPdfController {
                 duplexMode);
 
         List<PDDocument> splitDocuments = new ArrayList<>();
-        try (TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-                PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
+        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             int totalPages = document.getNumberOfPages();
             log.info("PDF loaded, totalPages={}", totalPages);
 
@@ -357,11 +358,10 @@ public class AutoSplitPdfController {
                 }
             }
 
-            byte[] data = Files.readAllBytes(outputTempFile.getPath());
-            return WebResponseUtils.bytesToWebResponse(
-                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.zipFileToWebResponse(outputTempFile, filename + ".zip");
 
         } catch (Exception e) {
+            outputTempFile.close();
             log.error("Error in auto split", e);
             throw e;
         } finally {

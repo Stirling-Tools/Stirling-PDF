@@ -1,60 +1,66 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
-import { MantineProvider } from '@mantine/core';
-import Login from '@app/routes/Login';
-import { useAuth } from '@app/auth/UseSession';
-import { springAuth } from '@app/auth/springAuthClient';
-import { PreferencesProvider } from '@app/contexts/PreferencesContext';
-import apiClient from '@app/services/apiClient';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { BrowserRouter, MemoryRouter } from "react-router-dom";
+import { MantineProvider } from "@mantine/core";
+import Login from "@app/routes/Login";
+import { useAuth } from "@app/auth/UseSession";
+import { springAuth } from "@app/auth/springAuthClient";
+import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import apiClient from "@app/services/apiClient";
 
 // Mock i18n to return fallback text
-vi.mock('react-i18next', () => ({
+vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string | Record<string, unknown>) => {
-      if (typeof fallback === 'string') return fallback;
+      if (typeof fallback === "string") return fallback;
       return key;
     },
   }),
   initReactI18next: {
-    type: '3rdParty',
+    type: "3rdParty",
     init: vi.fn(),
   },
 }));
 
 // Mock i18n module to avoid initialization
-vi.mock('@app/i18n', () => ({
+vi.mock("@app/i18n", () => ({
   updateSupportedLanguages: vi.fn(),
-  supportedLanguages: { 'en-GB': 'English' },
+  supportedLanguages: { "en-GB": "English" },
   rtlLanguages: [],
   default: {
-    language: 'en-GB',
+    language: "en-GB",
     changeLanguage: vi.fn(),
     options: {},
   },
 }));
 
 // Mock useAuth hook
-vi.mock('@app/auth/UseSession', () => ({
+vi.mock("@app/auth/UseSession", () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock springAuth
-vi.mock('@app/auth/springAuthClient', () => ({
-  springAuth: {
-    signInWithPassword: vi.fn(),
-    signInWithOAuth: vi.fn(),
-  },
-}));
+// Mock springAuth; keep the real redirect-path helpers.
+vi.mock("@app/auth/springAuthClient", async () => {
+  const actual = await vi.importActual<
+    typeof import("@app/auth/springAuthClient")
+  >("@app/auth/springAuthClient");
+  return {
+    ...actual,
+    springAuth: {
+      signInWithPassword: vi.fn(),
+      signInWithOAuth: vi.fn(),
+    },
+  };
+});
 
 // Mock useDocumentMeta
-vi.mock('@app/hooks/useDocumentMeta', () => ({
+vi.mock("@app/hooks/useDocumentMeta", () => ({
   useDocumentMeta: vi.fn(),
 }));
 
 // Mock apiClient for provider list
-vi.mock('@app/services/apiClient', () => ({
+vi.mock("@app/services/apiClient", () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -63,21 +69,21 @@ vi.mock('@app/services/apiClient', () => ({
 
 const mockNavigate = vi.fn();
 const mockBackendProbeState = {
-  status: 'up' as const,
+  status: "up" as const,
   loginDisabled: false,
   loading: false,
 };
 const mockProbe = vi.fn().mockResolvedValue(mockBackendProbeState);
 
-vi.mock('@app/hooks/useBackendProbe', () => ({
+vi.mock("@app/hooks/useBackendProbe", () => ({
   useBackendProbe: () => ({
     ...mockBackendProbeState,
     probe: mockProbe,
   }),
 }));
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -87,16 +93,14 @@ vi.mock('react-router-dom', async () => {
 // Test wrapper with MantineProvider
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <MantineProvider>
-    <PreferencesProvider>
-      {children}
-    </PreferencesProvider>
+    <PreferencesProvider>{children}</PreferencesProvider>
   </MantineProvider>
 );
 
-describe('Login', () => {
+describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockBackendProbeState.status = 'up';
+    mockBackendProbeState.status = "up";
     mockBackendProbeState.loginDisabled = false;
     mockBackendProbeState.loading = false;
     mockProbe.mockResolvedValue(mockBackendProbeState);
@@ -120,31 +124,31 @@ describe('Login', () => {
     });
   });
 
-  it('should render login form', async () => {
+  it("should render login form", async () => {
     render(
       <TestWrapper>
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
       // Check for login form elements - use id since it's more reliable
-      const emailInput = document.getElementById('email');
+      const emailInput = document.getElementById("email");
       expect(emailInput).toBeTruthy();
     });
   });
 
-  it('should redirect authenticated user to home', async () => {
+  it("should redirect authenticated user to home", async () => {
     const mockSession = {
       user: {
-        id: '123',
-        email: 'test@example.com',
-        username: 'testuser',
-        role: 'USER',
+        id: "123",
+        email: "test@example.com",
+        username: "testuser",
+        role: "USER",
       },
-      access_token: 'mock-token',
+      access_token: "mock-token",
       expires_in: 3600,
     };
 
@@ -162,15 +166,15 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
     });
   });
 
-  it('should show loading state while auth is loading', () => {
+  it("should show loading state while auth is loading", () => {
     vi.mocked(useAuth).mockReturnValue({
       session: null,
       user: null,
@@ -185,25 +189,25 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Component shouldn't redirect or show form while loading
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('should handle email/password login', async () => {
+  it("should handle email/password login", async () => {
     const user = userEvent.setup();
     const mockUser = {
-      id: '123',
-      email: 'test@example.com',
-      username: 'test@example.com',
-      role: 'USER',
+      id: "123",
+      email: "test@example.com",
+      username: "test@example.com",
+      role: "USER",
     };
 
     const mockSession = {
       user: mockUser,
-      access_token: 'new-token',
+      access_token: "new-token",
       expires_in: 3600,
     };
 
@@ -218,49 +222,59 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Wait for form to load
-    await waitFor(() => {
-      const emailInput = document.getElementById('email');
-      expect(emailInput).toBeTruthy();
-      const passwordInput = document.getElementById('password');
-      expect(passwordInput).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const emailInput = document.getElementById("email");
+        expect(emailInput).toBeTruthy();
+        const passwordInput = document.getElementById("password");
+        expect(passwordInput).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
     // Fill in form using getElementById
-    const emailInput = document.getElementById('email') as HTMLInputElement;
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const emailInput = document.getElementById("email") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
 
     if (!emailInput || !passwordInput) {
-      throw new Error('Form inputs not found');
+      throw new Error("Form inputs not found");
     }
 
-    await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'password123');
+    await user.type(emailInput, "test@example.com");
+    await user.type(passwordInput, "password123");
 
     // Submit form - use a more flexible query
     // Look for button with type="submit" in the form
-    const submitButton = await waitFor(() => {
-      const buttons = screen.queryAllByRole('button');
-      const submitBtn = buttons.find(btn => btn.getAttribute('type') === 'submit');
-      if (!submitBtn) {
-        throw new Error('Submit button not found');
-      }
-      return submitBtn;
-    }, { timeout: 5000 });
+    const submitButton = await waitFor(
+      () => {
+        const buttons = screen.queryAllByRole("button");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
+        if (!submitBtn) {
+          throw new Error("Submit button not found");
+        }
+        return submitBtn;
+      },
+      { timeout: 5000 },
+    );
     await user.click(submitButton);
 
     await waitFor(() => {
       expect(springAuth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "password123",
       });
     });
   });
 
-  it('should use actual provider ID for OAuth login (authentik)', async () => {
+  it("should use actual provider ID for OAuth login (authentik)", async () => {
     const user = userEvent.setup();
 
     // Mock provider list with authentik
@@ -268,7 +282,7 @@ describe('Login', () => {
       data: {
         enableLogin: true,
         providerList: {
-          '/oauth2/authorization/authentik': 'Authentik',
+          "/oauth2/authorization/authentik": "Authentik",
         },
       },
     });
@@ -282,28 +296,31 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Wait for OAuth button to appear
-    await waitFor(() => {
-      const button = screen.queryByText('Authentik');
-      expect(button).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const button = screen.queryByText("Authentik");
+        expect(button).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
-    const oauthButton = screen.getByText('Authentik');
+    const oauthButton = screen.getByText("Authentik");
     await user.click(oauthButton);
 
     await waitFor(() => {
       // Should use full path directly, NOT map to 'oidc'
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: '/oauth2/authorization/authentik',
-        options: { redirectTo: '/auth/callback' }
+        provider: "/oauth2/authorization/authentik",
+        options: { redirectTo: "/auth/callback" },
       });
     });
   });
 
-  it('should use actual provider ID for OAuth login (custom provider)', async () => {
+  it("should use actual provider ID for OAuth login (custom provider)", async () => {
     const user = userEvent.setup();
 
     // Mock provider list with custom provider 'mycompany'
@@ -311,7 +328,7 @@ describe('Login', () => {
       data: {
         enableLogin: true,
         providerList: {
-          '/oauth2/authorization/mycompany': 'My Company SSO',
+          "/oauth2/authorization/mycompany": "My Company SSO",
         },
       },
     });
@@ -325,29 +342,32 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Wait for OAuth button to appear (will show 'Mycompany' as label)
-    await waitFor(() => {
-      const button = screen.queryByText('Mycompany');
-      expect(button).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const button = screen.queryByText("Mycompany");
+        expect(button).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
-    const oauthButton = screen.getByText('Mycompany');
+    const oauthButton = screen.getByText("Mycompany");
     await user.click(oauthButton);
 
     await waitFor(() => {
       // Should use full path directly - this is the critical fix
       // Previously it would map unknown providers to 'oidc'
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: '/oauth2/authorization/mycompany',
-        options: { redirectTo: '/auth/callback' }
+        provider: "/oauth2/authorization/mycompany",
+        options: { redirectTo: "/auth/callback" },
       });
     });
   });
 
-  it('should use oidc provider ID when explicitly configured', async () => {
+  it("should use oidc provider ID when explicitly configured", async () => {
     const user = userEvent.setup();
 
     // Mock provider list with 'oidc'
@@ -355,7 +375,7 @@ describe('Login', () => {
       data: {
         enableLogin: true,
         providerList: {
-          '/oauth2/authorization/oidc': 'OIDC',
+          "/oauth2/authorization/oidc": "OIDC",
         },
       },
     });
@@ -369,30 +389,33 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Wait for OAuth button to appear
-    await waitFor(() => {
-      const button = screen.queryByText('OIDC');
-      expect(button).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const button = screen.queryByText("OIDC");
+        expect(button).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
-    const oauthButton = screen.getByText('OIDC');
+    const oauthButton = screen.getByText("OIDC");
     await user.click(oauthButton);
 
     await waitFor(() => {
       // Should use full path when explicitly configured
       expect(springAuth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: '/oauth2/authorization/oidc',
-        options: { redirectTo: '/auth/callback' }
+        provider: "/oauth2/authorization/oidc",
+        options: { redirectTo: "/auth/callback" },
       });
     });
   });
 
-  it('should show error on failed login', async () => {
+  it("should show error on failed login", async () => {
     const user = userEvent.setup();
-    const errorMessage = 'Invalid credentials';
+    const errorMessage = "Invalid credentials";
 
     vi.mocked(springAuth.signInWithPassword).mockResolvedValueOnce({
       user: null,
@@ -405,30 +428,40 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    await waitFor(() => {
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      expect(emailInput).toBeTruthy();
-      expect(passwordInput).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+        expect(emailInput).toBeTruthy();
+        expect(passwordInput).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
-    const emailInput = document.getElementById('email') as HTMLInputElement;
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const emailInput = document.getElementById("email") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
 
-    await user.type(emailInput, 'wrong@example.com');
-    await user.type(passwordInput, 'wrongpassword');
+    await user.type(emailInput, "wrong@example.com");
+    await user.type(passwordInput, "wrongpassword");
 
-    const submitButton = await waitFor(() => {
-      const buttons = screen.queryAllByRole('button');
-      const submitBtn = buttons.find(btn => btn.getAttribute('type') === 'submit');
-      if (!submitBtn) {
-        throw new Error('Submit button not found');
-      }
-      return submitBtn;
-    }, { timeout: 5000 });
+    const submitButton = await waitFor(
+      () => {
+        const buttons = screen.queryAllByRole("button");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
+        if (!submitBtn) {
+          throw new Error("Submit button not found");
+        }
+        return submitBtn;
+      },
+      { timeout: 5000 },
+    );
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -436,28 +469,36 @@ describe('Login', () => {
     });
   });
 
-  it('should validate empty email and password', async () => {
+  it("should validate empty email and password", async () => {
     render(
       <TestWrapper>
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    await waitFor(() => {
-      expect(document.getElementById('email')).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(document.getElementById("email")).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
     // Find the submit button
-    const submitButton = await waitFor(() => {
-      const buttons = screen.queryAllByRole('button');
-      const submitBtn = buttons.find(btn => btn.getAttribute('type') === 'submit');
-      if (!submitBtn) {
-        throw new Error('Submit button not found');
-      }
-      return submitBtn;
-    }, { timeout: 5000 });
+    const submitButton = await waitFor(
+      () => {
+        const buttons = screen.queryAllByRole("button");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
+        if (!submitBtn) {
+          throw new Error("Submit button not found");
+        }
+        return submitBtn;
+      },
+      { timeout: 5000 },
+    );
 
     // Button should be disabled when email/password are empty
     expect(submitButton).toBeDisabled();
@@ -466,50 +507,54 @@ describe('Login', () => {
     expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it('should display session expired message from URL param', () => {
+  it("should display session expired message from URL param", () => {
     render(
       <TestWrapper>
-        <MemoryRouter initialEntries={['/login?expired=true']}>
+        <MemoryRouter initialEntries={["/login?expired=true"]}>
           <Login />
         </MemoryRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
 
-  it('should display account created success message', () => {
+  it("should display account created success message", () => {
     render(
       <TestWrapper>
-        <MemoryRouter initialEntries={['/login?messageType=accountCreated']}>
+        <MemoryRouter initialEntries={["/login?messageType=accountCreated"]}>
           <Login />
         </MemoryRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText(/account created/i)).toBeInTheDocument();
   });
 
-  it('should prefill email from query param', () => {
-    const email = 'prefilled@example.com';
+  it("should prefill email from query param", () => {
+    const email = "prefilled@example.com";
 
     render(
       <TestWrapper>
         <MemoryRouter initialEntries={[`/login?email=${email}`]}>
           <Login />
         </MemoryRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     return waitFor(() => {
-      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const emailInput = document.getElementById("email") as HTMLInputElement;
       expect(emailInput.value).toBe(email);
     });
   });
 
-  it('should redirect to home when login disabled', async () => {
+  it("should redirect to home when login disabled", async () => {
     mockBackendProbeState.loginDisabled = true;
-    mockProbe.mockResolvedValueOnce({ status: 'up', loginDisabled: true, loading: false });
+    mockProbe.mockResolvedValueOnce({
+      status: "up",
+      loginDisabled: true,
+      loading: false,
+    });
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: {
         enableLogin: false,
@@ -522,20 +567,20 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
     });
   });
 
-  it('should handle OAuth provider click', async () => {
+  it("should handle OAuth provider click", async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: {
         enableLogin: true,
         providerList: {
-          '/oauth2/authorization/github': 'GitHub',
+          "/oauth2/authorization/github": "GitHub",
         },
       },
     });
@@ -549,7 +594,7 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -564,7 +609,7 @@ describe('Login', () => {
     expect(springAuth.signInWithOAuth).toBeDefined();
   });
 
-  it('should show email form by default when no SSO providers', async () => {
+  it("should show email form by default when no SSO providers", async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: {
         enableLogin: true,
@@ -577,16 +622,16 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
-      expect(document.getElementById('email')).toBeInTheDocument();
-      expect(document.getElementById('password')).toBeInTheDocument();
+      expect(document.getElementById("email")).toBeInTheDocument();
+      expect(document.getElementById("password")).toBeInTheDocument();
     });
   });
 
-  it('should disable submit button while signing in', async () => {
+  it("should disable submit button while signing in", async () => {
     const user = userEvent.setup();
 
     vi.mocked(springAuth.signInWithPassword).mockImplementationOnce(
@@ -597,11 +642,11 @@ describe('Login', () => {
               resolve({
                 user: null,
                 session: null,
-                error: { message: 'Error' },
+                error: { message: "Error" },
               }),
-            100
-          )
-        )
+            100,
+          ),
+        ),
     );
 
     render(
@@ -609,30 +654,40 @@ describe('Login', () => {
         <BrowserRouter>
           <Login />
         </BrowserRouter>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    await waitFor(() => {
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      expect(emailInput).toBeTruthy();
-      expect(passwordInput).toBeTruthy();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+        expect(emailInput).toBeTruthy();
+        expect(passwordInput).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
 
-    const emailInput = document.getElementById('email') as HTMLInputElement;
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const emailInput = document.getElementById("email") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
 
-    await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'password123');
+    await user.type(emailInput, "test@example.com");
+    await user.type(passwordInput, "password123");
 
-    const submitButton = await waitFor(() => {
-      const buttons = screen.queryAllByRole('button');
-      const submitBtn = buttons.find(btn => btn.getAttribute('type') === 'submit');
-      if (!submitBtn) {
-        throw new Error('Submit button not found');
-      }
-      return submitBtn;
-    }, { timeout: 5000 });
+    const submitButton = await waitFor(
+      () => {
+        const buttons = screen.queryAllByRole("button");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
+        if (!submitBtn) {
+          throw new Error("Submit button not found");
+        }
+        return submitBtn;
+      },
+      { timeout: 5000 },
+    );
     await user.click(submitButton);
 
     // Button should be disabled while signing in
@@ -642,5 +697,56 @@ describe('Login', () => {
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
     });
+  });
+
+  it("should persist location.state.from.pathname before triggering SSO so the user returns to their original URL", async () => {
+    const user = userEvent.setup();
+    sessionStorage.clear();
+
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        enableLogin: true,
+        providerList: {
+          "/oauth2/authorization/authentik": "Authentik",
+        },
+      },
+    });
+
+    vi.mocked(springAuth.signInWithOAuth).mockResolvedValueOnce({
+      error: null,
+    });
+
+    render(
+      <TestWrapper>
+        <MemoryRouter
+          initialEntries={[
+            {
+              pathname: "/login",
+              state: { from: { pathname: "/share/abc123" } },
+            },
+          ]}
+        >
+          <Login />
+        </MemoryRouter>
+      </TestWrapper>,
+    );
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("Authentik")).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
+
+    await user.click(screen.getByText("Authentik"));
+
+    await waitFor(() => {
+      expect(springAuth.signInWithOAuth).toHaveBeenCalled();
+    });
+
+    // Must be stashed before the cross-origin SSO redirect wipes location.state.
+    expect(sessionStorage.getItem("stirling_post_login_path")).toBe(
+      "/share/abc123",
+    );
   });
 });

@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { useRightRail } from '@app/contexts/RightRailContext';
-import { RightRailAction, RightRailButtonConfig } from '@app/types/rightRail';
+import { useEffect, useMemo } from "react";
+import { useRightRail } from "@app/contexts/RightRailContext";
+import { RightRailAction, RightRailButtonConfig } from "@app/types/rightRail";
 
 export interface RightRailButtonWithAction extends RightRailButtonConfig {
   onClick?: RightRailAction;
@@ -11,25 +11,29 @@ export interface RightRailButtonWithAction extends RightRailButtonConfig {
  * - Automatically registers on mount and unregisters on unmount
  * - Updates registration when the input array reference changes
  */
-export function useRightRailButtons(buttons: readonly RightRailButtonWithAction[]) {
+export function useRightRailButtons(
+  buttons: readonly RightRailButtonWithAction[],
+) {
   const { registerButtons, unregisterButtons, setAction } = useRightRail();
 
   // Memoize configs and ids to reduce churn
   const configs: RightRailButtonConfig[] = useMemo(
     () => buttons.map(({ onClick, ...cfg }) => cfg),
-    [buttons]
+    [buttons],
   );
-  const ids: string[] = useMemo(() => buttons.map(b => b.id), [buttons]);
+  const ids: string[] = useMemo(() => buttons.map((b) => b.id), [buttons]);
 
   useEffect(() => {
     if (!buttons || buttons.length === 0) return;
 
     // DEV warnings for duplicate ids or missing handlers
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       const idSet = new Set<string>();
-      buttons.forEach(b => {
-        if (!b.onClick && !b.render) console.warn('[RightRail] Missing onClick/render for id:', b.id);
-        if (idSet.has(b.id)) console.warn('[RightRail] Duplicate id in buttons array:', b.id);
+      buttons.forEach((b) => {
+        if (!b.onClick && !b.render)
+          console.warn("[RightRail] Missing onClick/render for id:", b.id);
+        if (idSet.has(b.id))
+          console.warn("[RightRail] Duplicate id in buttons array:", b.id);
         idSet.add(b.id);
       });
     }

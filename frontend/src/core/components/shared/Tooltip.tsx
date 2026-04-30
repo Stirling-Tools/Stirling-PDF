@@ -1,18 +1,24 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { addEventListenerWithCleanup } from '@app/utils/genericUtils';
-import { useTooltipPosition } from '@app/hooks/useTooltipPosition';
-import { TooltipTip } from '@app/types/tips';
-import { TooltipContent } from '@app/components/shared/tooltip/TooltipContent';
-import { useSidebarContext } from '@app/contexts/SidebarContext';
-import { useLogoAssets } from '@app/hooks/useLogoAssets';
-import styles from '@app/components/shared/tooltip/Tooltip.module.css';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
+import { createPortal } from "react-dom";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
+import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
+import { TooltipTip } from "@app/types/tips";
+import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
+import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import styles from "@app/components/shared/tooltip/Tooltip.module.css";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
-  position?: 'right' | 'left' | 'top' | 'bottom';
+  position?: "right" | "left" | "top" | "bottom";
   content?: React.ReactNode;
   tips?: TooltipTip[];
   children: React.ReactElement;
@@ -74,7 +80,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   // Runtime guard: some browsers may surface non-Node EventTargets for relatedTarget/target
   const isDomNode = (value: unknown): value is Node =>
-    typeof Node !== 'undefined' && value instanceof Node;
+    typeof Node !== "undefined" && value instanceof Node;
 
   const clearTimers = useCallback(() => {
     if (openTimeoutRef.current) {
@@ -92,15 +98,17 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
   const allowAutoClose = !manualCloseOnly;
 
-  const resolvedPosition: NonNullable<TooltipProps['position']> = useMemo(() => {
-    const htmlDir = typeof document !== 'undefined' ? document.documentElement.dir : 'ltr';
-    const isRTL = htmlDir === 'rtl';
-    const base = position ?? 'right';
-    if (!isRTL) return base as NonNullable<TooltipProps['position']>;
-    if (base === 'left') return 'right';
-    if (base === 'right') return 'left';
-    return base as NonNullable<TooltipProps['position']>;
-  }, [position]);
+  const resolvedPosition: NonNullable<TooltipProps["position"]> =
+    useMemo(() => {
+      const htmlDir =
+        typeof document !== "undefined" ? document.documentElement.dir : "ltr";
+      const isRTL = htmlDir === "rtl";
+      const base = position ?? "right";
+      if (!isRTL) return base as NonNullable<TooltipProps["position"]>;
+      if (base === "left") return "right";
+      if (base === "right") return "left";
+      return base as NonNullable<TooltipProps["position"]>;
+    }, [position]);
 
   const setOpen = useCallback(
     (newOpen: boolean) => {
@@ -109,7 +117,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       else setInternalOpen(newOpen);
       if (!newOpen) setIsPinned(false);
     },
-    [isControlled, onOpenChange, open]
+    [isControlled, onOpenChange, open],
   );
 
   const { coords, positionReady } = useTooltipPosition({
@@ -129,8 +137,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const tEl = tooltipRef.current;
       const trg = triggerRef.current;
       const target = e.target as unknown;
-      const insideTooltip = Boolean(tEl && isDomNode(target) && tEl.contains(target));
-      const insideTrigger = Boolean(trg && isDomNode(target) && trg.contains(target));
+      const insideTooltip = Boolean(
+        tEl && isDomNode(target) && tEl.contains(target),
+      );
+      const insideTrigger = Boolean(
+        trg && isDomNode(target) && trg.contains(target),
+      );
 
       // If pinned: only close when clicking outside BOTH tooltip & trigger
       if (isPinned) {
@@ -142,17 +154,26 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
 
       // Not pinned and configured to close on outside
-      if (allowAutoClose && closeOnOutside && !insideTooltip && !insideTrigger) {
+      if (
+        allowAutoClose &&
+        closeOnOutside &&
+        !insideTooltip &&
+        !insideTrigger
+      ) {
         setOpen(false);
       }
     },
-    [isPinned, closeOnOutside, setOpen, allowAutoClose]
+    [isPinned, closeOnOutside, setOpen, allowAutoClose],
   );
 
   useEffect(() => {
     // Attach global click when open (so hover tooltips can also close on outside if desired)
     if (open || isPinned) {
-      return addEventListenerWithCleanup(document, 'click', handleDocumentClick as EventListener);
+      return addEventListenerWithCleanup(
+        document,
+        "click",
+        handleDocumentClick as EventListener,
+      );
     }
   }, [open, isPinned, handleDocumentClick]);
 
@@ -160,11 +181,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   const arrowClass = useMemo(() => {
     if (sidebarTooltip) return null;
-    const map: Record<NonNullable<TooltipProps['position']>, string> = {
-      top: 'tooltip-arrow-bottom',
-      bottom: 'tooltip-arrow-top',
-      left: 'tooltip-arrow-left',
-      right: 'tooltip-arrow-right',
+    const map: Record<NonNullable<TooltipProps["position"]>, string> = {
+      top: "tooltip-arrow-bottom",
+      bottom: "tooltip-arrow-top",
+      left: "tooltip-arrow-left",
+      right: "tooltip-arrow-right",
     };
     return map[resolvedPosition] || map.right;
   }, [resolvedPosition, sidebarTooltip]);
@@ -172,16 +193,23 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const getArrowStyleClass = useCallback(
     (key: string) =>
       styles[key as keyof typeof styles] ||
-      styles[key.replace(/-([a-z])/g, (_, l) => l.toUpperCase()) as keyof typeof styles] ||
-      '',
-    []
+      styles[
+        key.replace(/-([a-z])/g, (_, l) =>
+          l.toUpperCase(),
+        ) as keyof typeof styles
+      ] ||
+      "",
+    [],
   );
 
   // === Trigger handlers ===
   const openWithDelay = useCallback(() => {
     clearTimers();
     if (disabled) return;
-    openTimeoutRef.current = setTimeout(() => setOpen(true), Math.max(0, delay || 0));
+    openTimeoutRef.current = setTimeout(
+      () => setOpen(true),
+      Math.max(0, delay || 0),
+    );
   }, [clearTimers, setOpen, delay, disabled]);
 
   const handlePointerEnter = useCallback(
@@ -189,7 +217,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       if (!isPinned && !disabled) openWithDelay();
       (children.props as any)?.onPointerEnter?.(e);
     },
-    [isPinned, openWithDelay, children.props, disabled]
+    [isPinned, openWithDelay, children.props, disabled],
   );
 
   const handlePointerLeave = useCallback(
@@ -197,8 +225,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const related = e.relatedTarget as Node | null;
 
       // Moving into the tooltip → keep open
-      if (isDomNode(related) && tooltipRef.current && tooltipRef.current.contains(related)) {
-
+      if (
+        isDomNode(related) &&
+        tooltipRef.current &&
+        tooltipRef.current.contains(related)
+      ) {
         (children.props as any)?.onPointerLeave?.(e);
         return;
       }
@@ -213,7 +244,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       if (allowAutoClose && !isPinned) setOpen(false);
       (children.props as any)?.onPointerLeave?.(e);
     },
-    [clearTimers, isPinned, setOpen, children.props, allowAutoClose]
+    [clearTimers, isPinned, setOpen, children.props, allowAutoClose],
   );
 
   const handleMouseDown = useCallback(
@@ -221,7 +252,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       clickPendingRef.current = true;
       (children.props as any)?.onMouseDown?.(e);
     },
-    [children.props]
+    [children.props],
   );
 
   const handleMouseUp = useCallback(
@@ -230,7 +261,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       queueMicrotask(() => (clickPendingRef.current = false));
       (children.props as any)?.onMouseUp?.(e);
     },
-    [children.props]
+    [children.props],
   );
 
   const handleClick = useCallback(
@@ -247,7 +278,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       clickPendingRef.current = false;
       (children.props as any)?.onClick?.(e);
     },
-    [clearTimers, pinOnClick, open, setOpen, children.props]
+    [clearTimers, pinOnClick, open, setOpen, children.props],
   );
 
   // Keyboard / focus accessibility
@@ -256,13 +287,17 @@ export const Tooltip: React.FC<TooltipProps> = ({
       if (!isPinned && !disabled && openOnFocus) openWithDelay();
       (children.props as any)?.onFocus?.(e);
     },
-    [isPinned, openWithDelay, children.props, disabled, openOnFocus]
+    [isPinned, openWithDelay, children.props, disabled, openOnFocus],
   );
 
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
       const related = e.relatedTarget as Node | null;
-      if (isDomNode(related) && tooltipRef.current && tooltipRef.current.contains(related)) {
+      if (
+        isDomNode(related) &&
+        tooltipRef.current &&
+        tooltipRef.current.contains(related)
+      ) {
         (children.props as any)?.onBlur?.(e);
         return;
       }
@@ -270,13 +305,16 @@ export const Tooltip: React.FC<TooltipProps> = ({
       if (allowAutoClose && !isPinned) setOpen(false);
       (children.props as any)?.onBlur?.(e);
     },
-    [isPinned, setOpen, children.props, allowAutoClose, clearTimers]
+    [isPinned, setOpen, children.props, allowAutoClose, clearTimers],
   );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (manualCloseOnly) return;
-    if (e.key === 'Escape') setOpen(false);
-  }, [setOpen, manualCloseOnly]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (manualCloseOnly) return;
+      if (e.key === "Escape") setOpen(false);
+    },
+    [setOpen, manualCloseOnly],
+  );
 
   // Keep open while pointer is over the tooltip; close when leaving it (if not pinned)
   const handleTooltipPointerEnter = useCallback(() => {
@@ -286,10 +324,15 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleTooltipPointerLeave = useCallback(
     (e: React.PointerEvent) => {
       const related = e.relatedTarget as Node | null;
-      if (isDomNode(related) && triggerRef.current && triggerRef.current.contains(related)) return;
+      if (
+        isDomNode(related) &&
+        triggerRef.current &&
+        triggerRef.current.contains(related)
+      )
+        return;
       if (allowAutoClose && !isPinned) setOpen(false);
     },
-    [isPinned, setOpen, allowAutoClose]
+    [isPinned, setOpen, allowAutoClose],
   );
 
   // Enhance child with handlers and ref
@@ -297,10 +340,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
     ref: (node: HTMLElement | null) => {
       triggerRef.current = node || null;
       const originalRef = (children as any).ref;
-      if (typeof originalRef === 'function') originalRef(node);
-      else if (originalRef && typeof originalRef === 'object') (originalRef as any).current = node;
+      if (typeof originalRef === "function") originalRef(node);
+      else if (originalRef && typeof originalRef === "object")
+        (originalRef as any).current = node;
     },
-    'aria-describedby': open ? tooltipIdRef.current : undefined,
+    "aria-describedby": open ? tooltipIdRef.current : undefined,
     onPointerEnter: handlePointerEnter,
     onPointerLeave: handlePointerLeave,
     onMouseDown: handleMouseDown,
@@ -323,23 +367,35 @@ export const Tooltip: React.FC<TooltipProps> = ({
       onPointerEnter={handleTooltipPointerEnter}
       onPointerLeave={handleTooltipPointerLeave}
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: coords.top,
         left: coords.left,
-        width: maxWidth !== undefined ? maxWidth : (sidebarTooltip ? '25rem' as const : undefined),
+        width:
+          maxWidth !== undefined
+            ? maxWidth
+            : sidebarTooltip
+              ? ("25rem" as const)
+              : undefined,
         minWidth,
         zIndex: Z_INDEX_OVER_FULLSCREEN_SURFACE,
-        visibility: positionReady ? 'visible' : 'hidden',
+        visibility: positionReady ? "visible" : "hidden",
         opacity: positionReady ? 1 : 0,
-        color: 'var(--text-primary)',
+        color: "var(--text-primary)",
         ...containerStyle,
       }}
-      className={`${styles['tooltip-container']} ${isPinned ? styles.pinned : ''}`}
-      onClick={pinOnClick ? (e) => { e.stopPropagation(); setIsPinned(true); } : undefined}
+      className={`${styles["tooltip-container"]} ${isPinned ? styles.pinned : ""}`}
+      onClick={
+        pinOnClick
+          ? (e) => {
+              e.stopPropagation();
+              setIsPinned(true);
+            }
+          : undefined
+      }
     >
       {shouldShowCloseButton && (
         <button
-          className={styles['tooltip-pin-button']}
+          className={styles["tooltip-pin-button"]}
           onClick={(e) => {
             e.stopPropagation();
             setIsPinned(false);
@@ -353,29 +409,37 @@ export const Tooltip: React.FC<TooltipProps> = ({
       )}
       {arrow && !sidebarTooltip && (
         <div
-          className={`${styles['tooltip-arrow']} ${getArrowStyleClass(arrowClass!)}`}
+          className={`${styles["tooltip-arrow"]} ${getArrowStyleClass(arrowClass!)}`}
           style={
             coords.arrowOffset !== null
-              ? { [resolvedPosition === 'top' || resolvedPosition === 'bottom' ? 'left' : 'top']: coords.arrowOffset }
+              ? {
+                  [resolvedPosition === "top" || resolvedPosition === "bottom"
+                    ? "left"
+                    : "top"]: coords.arrowOffset,
+                }
               : undefined
           }
         />
       )}
       {header && (
-        <div className={styles['tooltip-header']}>
-          <div className={styles['tooltip-logo']}>
+        <div className={styles["tooltip-header"]}>
+          <div className={styles["tooltip-logo"]}>
             {header.logo || (
               <img
                 src={tooltipLogo}
                 alt="Stirling PDF"
-                style={{ width: '1.4rem', height: '1.4rem', display: 'block' }}
+                style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
               />
             )}
           </div>
-          <span className={styles['tooltip-title']}>{header.title}</span>
+          <span className={styles["tooltip-title"]}>{header.title}</span>
         </div>
       )}
-      <TooltipContent content={content} tips={tips} extraRightPadding={shouldShowCloseButton ? 48 : 0} />
+      <TooltipContent
+        content={content}
+        tips={tips}
+        extraRightPadding={shouldShowCloseButton ? 48 : 0}
+      />
     </div>
   ) : null;
 
@@ -383,7 +447,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
     <>
       {childWithHandlers}
       {(() => {
-        const defaultTarget = typeof document !== 'undefined' ? document.body : null;
+        const defaultTarget =
+          typeof document !== "undefined" ? document.body : null;
         const target = portalTarget ?? defaultTarget;
         return tooltipElement && target
           ? createPortal(tooltipElement, target)

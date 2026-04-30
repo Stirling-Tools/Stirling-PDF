@@ -1,10 +1,10 @@
-import { useEffect, useImperativeHandle } from 'react';
-import { useRedaction as useEmbedPdfRedaction } from '@embedpdf/plugin-redaction/react';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { useRedaction } from '@app/contexts/RedactionContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect, useImperativeHandle } from "react";
+import { useRedaction as useEmbedPdfRedaction } from "@embedpdf/plugin-redaction/react";
+import { PdfAnnotationSubtype } from "@embedpdf/models";
+import { useRedaction } from "@app/contexts/RedactionContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
@@ -23,7 +23,8 @@ export function RedactionAPIBridge() {
 }
 
 function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
-  const { state, provides: redactionProvides } = useEmbedPdfRedaction(documentId);
+  const { state, provides: redactionProvides } =
+    useEmbedPdfRedaction(documentId);
   const { provides: annotationProvides } = useAnnotationCapability();
   const {
     redactionApiRef,
@@ -31,7 +32,7 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     setActiveType,
     setIsRedacting,
     setBridgeReady,
-    manualRedactColor
+    manualRedactColor,
   } = useRedaction();
 
   // Mark bridge as ready on mount, not ready on unmount
@@ -56,7 +57,7 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   useEffect(() => {
     const annotationApi = annotationProvides as any;
     if (annotationApi?.setToolDefaults) {
-      annotationApi.setToolDefaults('redact', {
+      annotationApi.setToolDefaults("redact", {
         type: PdfAnnotationSubtype.REDACT,
         strokeColor: manualRedactColor,
         color: manualRedactColor,
@@ -64,34 +65,38 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
         fillColor: manualRedactColor,
         interiorColor: manualRedactColor,
         backgroundColor: manualRedactColor,
-        opacity: 1
+        opacity: 1,
       });
     }
   }, [annotationProvides, manualRedactColor]);
 
   // Expose the EmbedPDF API through our context's ref
-  useImperativeHandle(redactionApiRef, () => ({
-    toggleRedact: () => {
-      redactionProvides?.toggleRedact();
-    },
-    enableRedact: () => {
-      redactionProvides?.enableRedact();
-    },
-    isRedactActive: () => {
-      return redactionProvides?.isRedactActive() ?? false;
-    },
-    endRedact: () => {
-      redactionProvides?.endRedact();
-    },
-    // Common methods
-    commitAllPending: () => {
-      redactionProvides?.commitAllPending();
-      // Don't set redactionsApplied here - it should only be set after the file is saved
-      // The save operation in applyChanges will handle setting/clearing this flag
-    },
-    getActiveType: () => state?.activeType ?? null,
-    getPendingCount: () => state?.pendingCount ?? 0,
-  }), [redactionProvides, state]);
+  useImperativeHandle(
+    redactionApiRef,
+    () => ({
+      toggleRedact: () => {
+        redactionProvides?.toggleRedact();
+      },
+      enableRedact: () => {
+        redactionProvides?.enableRedact();
+      },
+      isRedactActive: () => {
+        return redactionProvides?.isRedactActive() ?? false;
+      },
+      endRedact: () => {
+        redactionProvides?.endRedact();
+      },
+      // Common methods
+      commitAllPending: () => {
+        redactionProvides?.commitAllPending();
+        // Don't set redactionsApplied here - it should only be set after the file is saved
+        // The save operation in applyChanges will handle setting/clearing this flag
+      },
+      getActiveType: () => state?.activeType ?? null,
+      getPendingCount: () => state?.pendingCount ?? 0,
+    }),
+    [redactionProvides, state],
+  );
 
   return null;
 }

@@ -33,7 +33,7 @@ export function parseSelection(input: string, maxPages: number): number[] {
   const clampedMax = Math.max(0, Math.floor(maxPages || 0));
   if (clampedMax === 0) return [];
 
-  const trimmed = (input || '').trim();
+  const trimmed = (input || "").trim();
   if (trimmed.length === 0) return [];
 
   try {
@@ -49,12 +49,12 @@ export function parseSelection(input: string, maxPages: number): number[] {
 export function parseSelectionWithDiagnostics(
   input: string,
   maxPages: number,
-  options?: { strict?: boolean }
+  options?: { strict?: boolean },
 ): { pages: number[]; warning?: string } {
   const clampedMax = Math.max(0, Math.floor(maxPages || 0));
   if (clampedMax === 0) return { pages: [] };
 
-  const trimmed = (input || '').trim();
+  const trimmed = (input || "").trim();
   if (trimmed.length === 0) return { pages: [] };
 
   try {
@@ -66,9 +66,12 @@ export function parseSelectionWithDiagnostics(
       throw err;
     }
     const pages = toSortedArray(parseCsvFallback(trimmed, clampedMax));
-    const tokens = trimmed.split(',').map(t => t.trim()).filter(Boolean);
-    const bad = tokens.find(tok => !/^(\d+\s*-\s*\d+|\d+)$/.test(tok));
-    const warning = `Malformed expression${bad ? ` at: '${bad}'` : ''}. Falling back to CSV interpretation.`;
+    const tokens = trimmed
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const bad = tokens.find((tok) => !/^(\d+\s*-\s*\d+|\d+)$/.test(tok));
+    const warning = `Malformed expression${bad ? ` at: '${bad}'` : ""}. Falling back to CSV interpretation.`;
     return { pages, warning };
   }
 }
@@ -79,7 +82,10 @@ function toSortedArray(set: Set<number>): number[] {
 
 function parseCsvFallback(input: string, max: number): Set<number> {
   const result = new Set<number>();
-  const parts = input.split(',').map(p => p.trim()).filter(Boolean);
+  const parts = input
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
   for (const part of parts) {
     const rangeMatch = part.match(/^(\d+)\s*-\s*(\d+)$/);
     if (rangeMatch) {
@@ -121,7 +127,7 @@ class ExpressionParser {
     this.skipWs();
     // If there are leftover non-space characters, treat as error
     if (this.idx < this.src.length) {
-      throw new Error('Unexpected trailing input');
+      throw new Error("Unexpected trailing input");
     }
     return set;
   }
@@ -132,13 +138,13 @@ class ExpressionParser {
       this.skipWs();
       const op = this.peekWordOrSymbol();
       if (!op) break;
-      if (op.type === 'symbol' && (op.value === ',' || op.value === '|')) {
+      if (op.type === "symbol" && (op.value === "," || op.value === "|")) {
         this.consume(op.length);
         const right = this.parseConjunction();
         left = union(left, right);
         continue;
       }
-      if (op.type === 'word' && op.value === 'or') {
+      if (op.type === "word" && op.value === "or") {
         this.consume(op.length);
         const right = this.parseConjunction();
         left = union(left, right);
@@ -155,13 +161,13 @@ class ExpressionParser {
       this.skipWs();
       const op = this.peekWordOrSymbol();
       if (!op) break;
-      if (op.type === 'symbol' && op.value === '&') {
+      if (op.type === "symbol" && op.value === "&") {
         this.consume(op.length);
         const right = this.parseUnary();
         left = intersect(left, right);
         continue;
       }
-      if (op.type === 'word' && op.value === 'and') {
+      if (op.type === "word" && op.value === "and") {
         this.consume(op.length);
         const right = this.parseUnary();
         left = intersect(left, right);
@@ -174,7 +180,7 @@ class ExpressionParser {
 
   private parseUnary(): Set<number> {
     this.skipWs();
-    if (this.peek('!')) {
+    if (this.peek("!")) {
       this.consume(1);
       const inner = this.parseUnary();
       return complement(inner, this.max);
@@ -191,11 +197,11 @@ class ExpressionParser {
     this.skipWs();
 
     // Parenthesized expression: '(' expression ')'
-    if (this.peek('(')) {
+    if (this.peek("(")) {
       this.consume(1);
       const inner = this.parseDisjunction();
       this.skipWs();
-      if (!this.peek(')')) throw new Error('Expected )');
+      if (!this.peek(")")) throw new Error("Expected )");
       this.consume(1);
       return inner;
     }
@@ -203,8 +209,8 @@ class ExpressionParser {
     // Keywords: even / odd
     const keyword = this.tryReadKeyword();
     if (keyword) {
-      if (keyword === 'even') return this.buildEven();
-      if (keyword === 'odd') return this.buildOdd();
+      if (keyword === "even") return this.buildEven();
+      if (keyword === "odd") return this.buildOdd();
     }
 
     // Progression: k n ( +/- c )?
@@ -217,7 +223,7 @@ class ExpressionParser {
     const num = this.tryReadNumber();
     if (num !== null) {
       this.skipWs();
-      if (this.peek('-')) {
+      if (this.peek("-")) {
         // Range
         this.consume(1);
         this.skipWs();
@@ -228,7 +234,7 @@ class ExpressionParser {
     }
 
     // If nothing matched, error
-    throw new Error('Expected primary');
+    throw new Error("Expected primary");
   }
 
   private buildSingleton(n: number): Set<number> {
@@ -239,7 +245,8 @@ class ExpressionParser {
 
   private buildRange(a: number, b: number): Set<number> {
     const set = new Set<number>();
-    let start = a, end = b;
+    let start = a,
+      end = b;
     if (!Number.isFinite(start) || !Number.isFinite(end)) return set;
     if (start > end) [start, end] = [end, start];
     start = Math.max(1, start);
@@ -268,13 +275,13 @@ class ExpressionParser {
     return this.buildProgression(2, -1);
   }
 
-  private tryReadKeyword(): 'even' | 'odd' | null {
+  private tryReadKeyword(): "even" | "odd" | null {
     const start = this.idx;
     const word = this.readWord();
     if (!word) return null;
     const lower = word.toLowerCase();
-    if (lower === 'even' || lower === 'odd') {
-      return lower as 'even' | 'odd';
+    if (lower === "even" || lower === "odd") {
+      return lower as "even" | "odd";
     }
     // Not a keyword; rewind
     this.idx = start;
@@ -291,9 +298,9 @@ class ExpressionParser {
     }
     this.skipWs();
     // Optional '*'
-    if (this.peek('*')) this.consume(1);
+    if (this.peek("*")) this.consume(1);
     this.skipWs();
-    if (!this.peek('n') && !this.peek('N')) {
+    if (!this.peek("n") && !this.peek("N")) {
       this.idx = start;
       return null;
     }
@@ -301,7 +308,7 @@ class ExpressionParser {
     this.skipWs();
     // Optional (+|-) c
     let c = 0;
-    if (this.peek('+') || this.peek('-')) {
+    if (this.peek("+") || this.peek("-")) {
       const sign = this.src[this.idx];
       this.consume(1);
       this.skipWs();
@@ -310,7 +317,7 @@ class ExpressionParser {
         this.idx = start;
         return null;
       }
-      c = sign === '-' ? -cVal : cVal;
+      c = sign === "-" ? -cVal : cVal;
     }
     return { k, c };
   }
@@ -326,7 +333,7 @@ class ExpressionParser {
 
   private readRequiredNumber(): number {
     const n = this.tryReadNumber();
-    if (n === null) throw new Error('Expected number');
+    if (n === null) throw new Error("Expected number");
     return n;
   }
 
@@ -345,14 +352,19 @@ class ExpressionParser {
       this.idx = start;
       return false;
     }
-    if (word.toLowerCase() === 'not') {
+    if (word.toLowerCase() === "not") {
       return true;
     }
     this.idx = start;
     return false;
   }
 
-  private peekWordOrSymbol(): { type: 'word' | 'symbol'; value: string; raw: string; length: number } | null {
+  private peekWordOrSymbol(): {
+    type: "word" | "symbol";
+    value: string;
+    raw: string;
+    length: number;
+  } | null {
     this.skipWs();
     if (this.idx >= this.src.length) return null;
     const ch = this.src[this.idx];
@@ -364,19 +376,20 @@ class ExpressionParser {
       // Always rewind; the caller will consume if it uses this token
       const len = word.length;
       this.idx = start;
-      if (lower === 'and' || lower === 'or') {
-        return { type: 'word', value: lower, raw: word, length: len };
+      if (lower === "and" || lower === "or") {
+        return { type: "word", value: lower, raw: word, length: len };
       }
       return null;
     }
-    if (ch === '&' || ch === '|' || ch === ',') {
-      return { type: 'symbol', value: ch, raw: ch, length: 1 };
+    if (ch === "&" || ch === "|" || ch === ",") {
+      return { type: "symbol", value: ch, raw: ch, length: 1 };
     }
     return null;
   }
 
   private skipWs() {
-    while (this.idx < this.src.length && /\s/.test(this.src[this.idx])) this.idx++;
+    while (this.idx < this.src.length && /\s/.test(this.src[this.idx]))
+      this.idx++;
   }
 
   private peek(s: string): boolean {
@@ -409,5 +422,3 @@ function complement(a: Set<number>, max: number): Set<number> {
   for (let i = 1; i <= max; i++) if (!a.has(i)) out.add(i);
   return out;
 }
-
-

@@ -5,9 +5,9 @@
 
 export interface WidgetCoordinates {
   pageIndex: number;
-  x: number;      // PDF points, un-rotated, CSS upper-left origin
-  y: number;      // PDF points, un-rotated, CSS upper-left origin
-  width: number;  // PDF points
+  x: number; // PDF points, un-rotated, CSS upper-left origin
+  y: number; // PDF points, un-rotated, CSS upper-left origin
+  width: number; // PDF points
   height: number; // PDF points
   /** Export value for this specific widget (radio/checkbox only) */
   exportValue?: string;
@@ -39,21 +39,21 @@ export interface FormField {
 }
 
 export type FormFieldType =
-  | 'text'
-  | 'checkbox'
-  | 'combobox'
-  | 'listbox'
-  | 'radio'
-  | 'button'
-  | 'signature';
+  | "text"
+  | "checkbox"
+  | "combobox"
+  | "listbox"
+  | "radio"
+  | "button"
+  | "signature";
 
 export type ButtonActionType =
-  | 'named'
-  | 'javascript'
-  | 'submitForm'
-  | 'resetForm'
-  | 'uri'
-  | 'none';
+  | "named"
+  | "javascript"
+  | "submitForm"
+  | "resetForm"
+  | "uri"
+  | "none";
 
 export interface ButtonAction {
   type: ButtonActionType;

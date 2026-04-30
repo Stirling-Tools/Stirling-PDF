@@ -1,7 +1,7 @@
-import { Text, Button } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '@app/auth/UseSession';
-import { useNavigate } from 'react-router-dom';
+import { Text, Button } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/UseSession";
+import { useNavigate } from "react-router-dom";
 
 export function OverviewHeader() {
   const { t } = useTranslation();
@@ -11,19 +11,31 @@ export function OverviewHeader() {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "0.5rem",
+        }}
+      >
         <div>
-          <Text fw={600} size="lg">{t('config.overview.title', 'Application Configuration')}</Text>
+          <Text fw={600} size="lg">
+            {t("config.overview.title", "Application Configuration")}
+          </Text>
           <Text size="sm" c="dimmed">
-            {t('config.overview.description', 'Current application settings and configuration details.')}
+            {t(
+              "config.overview.description",
+              "Current application settings and configuration details.",
+            )}
           </Text>
           {user?.email && (
             <Text size="xs" c="dimmed" mt="0.25rem">

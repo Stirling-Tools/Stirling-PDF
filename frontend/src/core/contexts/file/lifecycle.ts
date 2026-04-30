@@ -2,10 +2,14 @@
  * File lifecycle management - Resource cleanup and memory management
  */
 
-import { FileId } from '@app/types/file';
-import { FileContextAction, StirlingFileStub, ProcessedFilePage } from '@app/types/fileContext';
+import { FileId } from "@app/types/file";
+import {
+  FileContextAction,
+  StirlingFileStub,
+  ProcessedFilePage,
+} from "@app/types/fileContext";
 
-const DEBUG = process.env.NODE_ENV === 'development';
+const DEBUG = process.env.NODE_ENV === "development";
 
 /**
  * Resource tracking and cleanup utilities
@@ -17,7 +21,7 @@ export class FileLifecycleManager {
 
   constructor(
     private filesRef: React.MutableRefObject<Map<FileId, File>>,
-    private dispatch: React.Dispatch<FileContextAction>
+    private dispatch: React.Dispatch<FileContextAction>,
   ) {}
 
   /**
@@ -25,21 +29,23 @@ export class FileLifecycleManager {
    */
   trackBlobUrl = (url: string): void => {
     // Only track actual blob URLs to avoid trying to revoke other schemes
-    if (url.startsWith('blob:')) {
+    if (url.startsWith("blob:")) {
       this.blobUrls.add(url);
     }
   };
 
-
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
-  cleanupFile = (fileId: FileId, stateRef?: React.MutableRefObject<any>): void => {
+  cleanupFile = (
+    fileId: FileId,
+    stateRef?: React.MutableRefObject<any>,
+  ): void => {
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
     // Remove file from state
-    this.dispatch({ type: 'REMOVE_FILES', payload: { fileIds: [fileId] } });
+    this.dispatch({ type: "REMOVE_FILES", payload: { fileIds: [fileId] } });
   };
 
   /**
@@ -47,7 +53,7 @@ export class FileLifecycleManager {
    */
   cleanupAllFiles = (): void => {
     // Revoke all blob URLs
-    this.blobUrls.forEach(url => {
+    this.blobUrls.forEach((url) => {
       try {
         URL.revokeObjectURL(url);
       } catch {
@@ -57,7 +63,7 @@ export class FileLifecycleManager {
     this.blobUrls.clear();
 
     // Clear all cleanup timers and generations
-    this.cleanupTimers.forEach(timer => clearTimeout(timer));
+    this.cleanupTimers.forEach((timer) => clearTimeout(timer));
     this.cleanupTimers.clear();
     this.fileGenerations.clear();
 
@@ -68,7 +74,11 @@ export class FileLifecycleManager {
   /**
    * Schedule delayed cleanup for a file with generation token to prevent stale cleanup
    */
-  scheduleCleanup = (fileId: FileId, delay: number = 30000, stateRef?: React.MutableRefObject<any>): void => {
+  scheduleCleanup = (
+    fileId: FileId,
+    delay: number = 30000,
+    stateRef?: React.MutableRefObject<any>,
+  ): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
     if (existingTimer) {
@@ -91,7 +101,10 @@ export class FileLifecycleManager {
       if (this.fileGenerations.get(fileId) === currentGen) {
         this.cleanupFile(fileId, stateRef);
       } else {
-        if (DEBUG) console.log(`🗂️ Skipped stale cleanup for file ${fileId} (generation mismatch)`);
+        if (DEBUG)
+          console.log(
+            `🗂️ Skipped stale cleanup for file ${fileId} (generation mismatch)`,
+          );
       }
     }, delay);
 
@@ -101,20 +114,26 @@ export class FileLifecycleManager {
   /**
    * Remove a file immediately with complete resource cleanup
    */
-  removeFiles = (fileIds: FileId[], stateRef?: React.MutableRefObject<any>): void => {
-    fileIds.forEach(fileId => {
+  removeFiles = (
+    fileIds: FileId[],
+    stateRef?: React.MutableRefObject<any>,
+  ): void => {
+    fileIds.forEach((fileId) => {
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });
 
     // Dispatch removal action once for all files (reducer only updates state)
-    this.dispatch({ type: 'REMOVE_FILES', payload: { fileIds } });
+    this.dispatch({ type: "REMOVE_FILES", payload: { fileIds } });
   };
 
   /**
    * Complete resource cleanup for a single file
    */
-  private cleanupAllResourcesForFile = (fileId: FileId, stateRef?: React.MutableRefObject<any>): void => {
+  private cleanupAllResourcesForFile = (
+    fileId: FileId,
+    stateRef?: React.MutableRefObject<any>,
+  ): void => {
     // Remove from files ref
     this.filesRef.current.delete(fileId);
 
@@ -131,7 +150,7 @@ export class FileLifecycleManager {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
         // Clean up thumbnail blob URLs
-        if (record.thumbnailUrl && record.thumbnailUrl.startsWith('blob:')) {
+        if (record.thumbnailUrl && record.thumbnailUrl.startsWith("blob:")) {
           try {
             URL.revokeObjectURL(record.thumbnailUrl);
           } catch {
@@ -139,7 +158,7 @@ export class FileLifecycleManager {
           }
         }
 
-        if (record.blobUrl && record.blobUrl.startsWith('blob:')) {
+        if (record.blobUrl && record.blobUrl.startsWith("blob:")) {
           try {
             URL.revokeObjectURL(record.blobUrl);
           } catch {
@@ -150,7 +169,7 @@ export class FileLifecycleManager {
         // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage) => {
-            if (page.thumbnail && page.thumbnail.startsWith('blob:')) {
+            if (page.thumbnail && page.thumbnail.startsWith("blob:")) {
               try {
                 URL.revokeObjectURL(page.thumbnail);
               } catch {
@@ -166,20 +185,31 @@ export class FileLifecycleManager {
   /**
    * Update file record with race condition guards
    */
-  updateStirlingFileStub = (fileId: FileId, updates: Partial<StirlingFileStub>, stateRef?: React.MutableRefObject<any>): void => {
+  updateStirlingFileStub = (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+    stateRef?: React.MutableRefObject<any>,
+  ): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
-      if (DEBUG) console.warn(`🗂️ Attempted to update removed file (filesRef): ${fileId}`);
+      if (DEBUG)
+        console.warn(
+          `🗂️ Attempted to update removed file (filesRef): ${fileId}`,
+        );
       return;
     }
 
     // Additional state guard for rare race conditions
     if (stateRef && !stateRef.current.files.byId[fileId]) {
-      if (DEBUG) console.warn(`🗂️ Attempted to update removed file (state): ${fileId}`);
+      if (DEBUG)
+        console.warn(`🗂️ Attempted to update removed file (state): ${fileId}`);
       return;
     }
 
-    this.dispatch({ type: 'UPDATE_FILE_RECORD', payload: { id: fileId, updates } });
+    this.dispatch({
+      type: "UPDATE_FILE_RECORD",
+      payload: { id: fileId, updates },
+    });
   };
 
   /**

@@ -11,5 +11,5 @@ import { type ProprietaryToolRegistry } from "@app/data/toolsTaxonomy";
 
 // Empty hook that returns empty registry (overridden in proprietary version)
 export function useProprietaryToolRegistry(): ProprietaryToolRegistry {
-  return useMemo(() => ({} as ProprietaryToolRegistry), []);
+  return useMemo(() => ({}) as ProprietaryToolRegistry, []);
 }

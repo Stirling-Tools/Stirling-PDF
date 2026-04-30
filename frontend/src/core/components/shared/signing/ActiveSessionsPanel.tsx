@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next';
-import { Loader, Center, Text, Badge } from '@mantine/core';
+import { useTranslation } from "react-i18next";
+import { Loader, Center, Text, Badge } from "@mantine/core";
 
 interface SessionItem {
-  itemType: 'signRequest' | 'mySession';
+  itemType: "signRequest" | "mySession";
   sessionId: string;
   documentName: string;
   createdAt: string;
@@ -28,54 +28,62 @@ const ActiveSessionsPanel = ({
 }: ActiveSessionsPanelProps) => {
   const { t } = useTranslation();
 
-  const getStatusColor = (status?: string, itemType?: string, item?: SessionItem): string => {
-    if (itemType === 'mySession' && item) {
+  const getStatusColor = (
+    status?: string,
+    itemType?: string,
+    item?: SessionItem,
+  ): string => {
+    if (itemType === "mySession" && item) {
       const signedCount = item.signedCount ?? 0;
       const totalCount = item.participantCount ?? 0;
 
       if (signedCount === totalCount && totalCount > 0) {
-        return 'green';  // All signed
+        return "green"; // All signed
       }
       if (signedCount > 0) {
-        return 'yellow'; // Partial
+        return "yellow"; // Partial
       }
-      return 'blue';     // None signed
+      return "blue"; // None signed
     }
     switch (status) {
-      case 'VIEWED':
-        return 'blue';
-      case 'NOTIFIED':
-      case 'PENDING':
-        return 'orange';
+      case "VIEWED":
+        return "blue";
+      case "NOTIFIED":
+      case "PENDING":
+        return "orange";
       default:
-        return 'gray';
+        return "gray";
     }
   };
 
   const getStatusLabel = (item: SessionItem): string => {
-    if (item.itemType === 'mySession') {
+    if (item.itemType === "mySession") {
       const signedCount = item.signedCount ?? 0;
       const totalCount = item.participantCount ?? 0;
       if (signedCount === totalCount && totalCount > 0) {
-        return t('certSign.readyToFinalize', 'Ready to finalize');
+        return t("certSign.readyToFinalize", "Ready to finalize");
       }
       // Show progress for all cases (including 0/X)
       if (totalCount > 0) {
-        return t('certSign.signatureProgress', '{{signedCount}}/{{totalCount}} signatures', { signedCount, totalCount });
+        return t(
+          "certSign.signatureProgress",
+          "{{signedCount}}/{{totalCount}} signatures",
+          { signedCount, totalCount },
+        );
       }
-      return t('certSign.awaitingSignatures', 'Awaiting signatures');
+      return t("certSign.awaitingSignatures", "Awaiting signatures");
     }
 
     // For sign requests
     switch (item.myStatus) {
-      case 'VIEWED':
-        return t('certSign.viewed', 'Viewed');
-      case 'NOTIFIED':
-        return t('certSign.notified', 'Pending');
-      case 'PENDING':
-        return t('certSign.pending', 'Pending');
+      case "VIEWED":
+        return t("certSign.viewed", "Viewed");
+      case "NOTIFIED":
+        return t("certSign.notified", "Pending");
+      case "PENDING":
+        return t("certSign.pending", "Pending");
       default:
-        return item.myStatus || 'PENDING';
+        return item.myStatus || "PENDING";
     }
   };
 
@@ -90,7 +98,10 @@ const ActiveSessionsPanel = ({
           {sessions.length === 0 ? (
             <div className="quick-access-popout__section">
               <Text size="sm" c="dimmed" ta="center" py="xl">
-                {t('quickAccess.noActiveSessions', 'No pending sign requests or active sessions')}
+                {t(
+                  "quickAccess.noActiveSessions",
+                  "No pending sign requests or active sessions",
+                )}
               </Text>
             </div>
           ) : (
@@ -102,16 +113,20 @@ const ActiveSessionsPanel = ({
                   onClick={() => onSessionClick(session)}
                 >
                   <div className="quick-access-popout__sign-request-info">
-                    <div className="quick-access-popout__row-title">{session.documentName}</div>
+                    <div className="quick-access-popout__row-title">
+                      {session.documentName}
+                    </div>
                     <div className="quick-access-popout__row-subtitle">
-                      {session.itemType === 'signRequest' ? (
+                      {session.itemType === "signRequest" ? (
                         <>
                           From: {session.ownerUsername}
-                          {session.dueDate && ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
+                          {session.dueDate &&
+                            ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
                         </>
                       ) : (
                         <>
-                          Created: {new Date(session.createdAt).toLocaleDateString()}
+                          Created:{" "}
+                          {new Date(session.createdAt).toLocaleDateString()}
                           {session.signedCount !== undefined &&
                             session.participantCount !== undefined &&
                             ` • ${session.signedCount}/${session.participantCount} signed`}
@@ -120,7 +135,14 @@ const ActiveSessionsPanel = ({
                     </div>
                   </div>
                   <div className="quick-access-popout__sign-request-badge">
-                    <Badge size="sm" color={getStatusColor(session.myStatus, session.itemType, session)}>
+                    <Badge
+                      size="sm"
+                      color={getStatusColor(
+                        session.myStatus,
+                        session.itemType,
+                        session,
+                      )}
+                    >
                       {getStatusLabel(session)}
                     </Badge>
                   </div>
@@ -128,7 +150,6 @@ const ActiveSessionsPanel = ({
               ))}
             </>
           )}
-
         </>
       )}
     </div>

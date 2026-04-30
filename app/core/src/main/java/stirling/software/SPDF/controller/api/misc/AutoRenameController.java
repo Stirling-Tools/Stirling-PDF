@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,6 +25,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -35,6 +37,7 @@ public class AutoRenameController {
     private static final int LINE_LIMIT = 200;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/auto-rename")
     @Operation(
@@ -42,7 +45,7 @@ public class AutoRenameController {
             description =
                     "This endpoint accepts a PDF file and attempts to extract its title or header"
                             + " based on heuristics. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> extractHeader(@ModelAttribute ExtractHeaderRequest request)
+    public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());
@@ -140,11 +143,14 @@ public class AutoRenameController {
                                 .matcher(header)
                                 .replaceAll("")
                                 .trim();
-                return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document, header + ".pdf", tempFileManager);
             } else {
                 log.info("File has no good title to be found");
                 return WebResponseUtils.pdfDocToWebResponse(
-                        document, Filenames.toSimpleFileName(file.getOriginalFilename()));
+                        document,
+                        Filenames.toSimpleFileName(file.getOriginalFilename()),
+                        tempFileManager);
             }
         }
     }

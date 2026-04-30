@@ -5,7 +5,7 @@
  * is offline (i.e. tools whose endpoints the local bundled backend does not support).
  */
 export function useSelfHostedToolAvailability(
-  _tools: Array<{ id: string; endpoints?: string[] }>
+  _tools: Array<{ id: string; endpoints?: string[] }>,
 ): Set<string> {
   return new Set<string>();
 }

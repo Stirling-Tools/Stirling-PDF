@@ -2,8 +2,8 @@
  * Utilities for managing file resources and blob URLs
  */
 
-import { useCallback } from 'react';
-import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
+import { useCallback } from "react";
+import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
 
 export class ResourceManager {
   private static blobUrls = new Set<string>();
@@ -31,7 +31,7 @@ export class ResourceManager {
    * Revoke all tracked blob URLs
    */
   static revokeAllBlobUrls(): void {
-    this.blobUrls.forEach(url => URL.revokeObjectURL(url));
+    this.blobUrls.forEach((url) => URL.revokeObjectURL(url));
     this.blobUrls.clear();
   }
 
@@ -39,10 +39,10 @@ export class ResourceManager {
    * Create a File with proper naming convention
    */
   static createResultFile(
-    data: BlobPart, 
-    originalName: string, 
+    data: BlobPart,
+    originalName: string,
     prefix: string = AUTOMATION_CONSTANTS.PROCESSED_FILE_PREFIX,
-    type: string = 'application/pdf'
+    type: string = "application/pdf",
   ): File {
     return new File([data], `${prefix}${originalName}`, { type });
   }
@@ -53,8 +53,8 @@ export class ResourceManager {
   static createTimestampedFile(
     data: BlobPart,
     prefix: string,
-    extension: string = '.pdf',
-    type: string = 'application/pdf'
+    extension: string = ".pdf",
+    type: string = "application/pdf",
   ): File {
     const timestamp = Date.now();
     return new File([data], `${prefix}${timestamp}${extension}`, { type });

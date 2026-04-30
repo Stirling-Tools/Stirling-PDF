@@ -5,7 +5,11 @@
  * and ensuring proper cleanup when operations complete.
  */
 
-import { GlobalWorkerOptions, getDocument, PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import {
+  GlobalWorkerOptions,
+  getDocument,
+  PDFDocumentProxy,
+} from "pdfjs-dist/legacy/build/pdf.mjs";
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -31,8 +35,8 @@ class PDFWorkerManager {
   private initializeWorker(): void {
     if (!this.isInitialized) {
       GlobalWorkerOptions.workerSrc = new URL(
-        'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
-        import.meta.url
+        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+        import.meta.url,
       ).toString();
       (GlobalWorkerOptions as any).docBaseUrl = undefined;
       this.isInitialized = true;
@@ -50,7 +54,7 @@ class PDFWorkerManager {
       disableStream?: boolean;
       stopAtErrors?: boolean;
       verbosity?: number;
-    } = {}
+    } = {},
   ): Promise<PDFDocumentProxy> {
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
@@ -61,32 +65,34 @@ class PDFWorkerManager {
     let pdfData: any;
     if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
       pdfData = { data };
-    } else if (typeof data === 'string') {
+    } else if (typeof data === "string") {
       pdfData = data; // URL string
-    } else if (data && typeof data === 'object' && 'data' in data) {
+    } else if (data && typeof data === "object" && "data" in data) {
       pdfData = data; // Already in {data: ArrayBuffer} format
     } else {
       pdfData = data; // Pass through as-is
     }
 
     const loadingTask = getDocument(
-      typeof pdfData === 'string' ? {
-        url: pdfData,
-        disableAutoFetch: options.disableAutoFetch ?? true,
-        disableStream: options.disableStream ?? true,
-        stopAtErrors: options.stopAtErrors ?? false,
-        verbosity: options.verbosity ?? 0,
-        // Suppress warnings about unimplemented widget types and other non-critical issues
-        isEvalSupported: false,
-      } : {
-        ...pdfData,
-        disableAutoFetch: options.disableAutoFetch ?? true,
-        disableStream: options.disableStream ?? true,
-        stopAtErrors: options.stopAtErrors ?? false,
-        verbosity: options.verbosity ?? 0,
-        // Suppress warnings about unimplemented widget types and other non-critical issues
-        isEvalSupported: false,
-      }
+      typeof pdfData === "string"
+        ? {
+            url: pdfData,
+            disableAutoFetch: options.disableAutoFetch ?? true,
+            disableStream: options.disableStream ?? true,
+            stopAtErrors: options.stopAtErrors ?? false,
+            verbosity: options.verbosity ?? 0,
+            // Suppress warnings about unimplemented widget types and other non-critical issues
+            isEvalSupported: false,
+          }
+        : {
+            ...pdfData,
+            disableAutoFetch: options.disableAutoFetch ?? true,
+            disableStream: options.disableStream ?? true,
+            stopAtErrors: options.stopAtErrors ?? false,
+            verbosity: options.verbosity ?? 0,
+            // Suppress warnings about unimplemented widget types and other non-critical issues
+            isEvalSupported: false,
+          },
     );
 
     try {
@@ -130,7 +136,7 @@ class PDFWorkerManager {
    */
   destroyAllDocuments(): void {
     const documentsToDestroy = Array.from(this.activeDocuments);
-    documentsToDestroy.forEach(pdf => {
+    documentsToDestroy.forEach((pdf) => {
       this.destroyDocument(pdf);
     });
 
@@ -161,7 +167,7 @@ class PDFWorkerManager {
     return {
       active: this.activeDocuments.size,
       max: this.maxWorkers,
-      total: this.workerCount
+      total: this.workerCount,
     };
   }
 
@@ -170,7 +176,7 @@ class PDFWorkerManager {
    */
   emergencyCleanup(): void {
     // Force destroy all documents
-    this.activeDocuments.forEach(pdf => {
+    this.activeDocuments.forEach((pdf) => {
       try {
         pdf.destroy();
       } catch {

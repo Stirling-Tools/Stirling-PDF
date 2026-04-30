@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { BASE_PATH } from '@app/constants/app';
+import { useCallback, useEffect, useState } from "react";
+import { BASE_PATH } from "@app/constants/app";
 
-type BackendStatus = 'up' | 'starting' | 'down';
+type BackendStatus = "up" | "starting" | "down";
 
 interface BackendProbeState {
   status: BackendStatus;
@@ -15,57 +15,57 @@ interface BackendProbeState {
  */
 export function useBackendProbe() {
   const [state, setState] = useState<BackendProbeState>({
-    status: 'starting',
+    status: "starting",
     loginDisabled: false,
     loading: true,
   });
 
   const probe = useCallback(async () => {
-    const statusUrl = `${BASE_PATH || ''}/api/v1/info/status`;
-    const loginUrl = `${BASE_PATH || ''}/api/v1/proprietary/ui-data/login`;
+    const statusUrl = `${BASE_PATH || ""}/api/v1/info/status`;
+    const loginUrl = `${BASE_PATH || ""}/api/v1/proprietary/ui-data/login`;
 
     const next: BackendProbeState = {
-      status: 'starting',
+      status: "starting",
       loginDisabled: false,
       loading: false,
     };
 
     try {
-      const res = await fetch(statusUrl, { method: 'GET', cache: 'no-store' });
+      const res = await fetch(statusUrl, { method: "GET", cache: "no-store" });
       if (res.ok) {
         const data = await res.json().catch(() => null);
-        if (data && data.status === 'UP') {
-          next.status = 'up';
+        if (data && data.status === "UP") {
+          next.status = "up";
           setState(next);
           return next;
         }
-        next.status = 'starting';
+        next.status = "starting";
       } else if (res.status === 404 || res.status === 503) {
-        next.status = 'starting';
+        next.status = "starting";
       } else {
-        next.status = 'down';
+        next.status = "down";
       }
     } catch {
-      next.status = 'down';
+      next.status = "down";
     }
 
     // Fallback: proprietary login endpoint to detect disabled login and backend availability
     try {
-      const res = await fetch(loginUrl, { method: 'GET', cache: 'no-store' });
+      const res = await fetch(loginUrl, { method: "GET", cache: "no-store" });
       if (res.ok) {
-        next.status = 'up';
+        next.status = "up";
         const data = await res.json().catch(() => null);
         if (data && data.enableLogin === false) {
           next.loginDisabled = true;
         }
       } else if (res.status === 404) {
         // Endpoint missing usually means login disabled
-        next.status = 'up';
+        next.status = "up";
         next.loginDisabled = true;
       } else if (res.status === 503) {
-        next.status = 'starting';
+        next.status = "starting";
       } else {
-        next.status = 'down';
+        next.status = "down";
       }
     } catch {
       // keep previous inferred state (down/starting)

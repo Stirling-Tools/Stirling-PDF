@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import apiClient from '@app/services/apiClient';
-import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
+import { useState, useEffect } from "react";
+import apiClient from "@app/services/apiClient";
+import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
 
 // Track whether we've done the global fetch to prevent duplicate requests
 let globalFetchDone = false;
@@ -30,13 +30,16 @@ export function useEndpointEnabled(endpoint: string): {
     try {
       setLoading(true);
       setError(null);
-      console.debug('[useEndpointConfig] Fetch endpoint status', { endpoint });
+      console.debug("[useEndpointConfig] Fetch endpoint status", { endpoint });
 
-      const response = await apiClient.get<boolean>(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`);
+      const response = await apiClient.get<boolean>(
+        `/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`,
+      );
       const isEnabled = response.data;
       setEnabled(isEnabled);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -66,15 +69,19 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
-  const [endpointDetails, setEndpointDetails] = useState<Record<string, EndpointAvailabilityDetails>>({});
+  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [endpointDetails, setEndpointDetails] = useState<
+    Record<string, EndpointAvailabilityDetails>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllEndpointStatuses = async (force = false) => {
     // Skip if already fetched globally and not forced
     if (!force && globalFetchDone) {
-      console.debug('[useEndpointConfig] Using global cache');
+      console.debug("[useEndpointConfig] Using global cache");
       const cached = endpoints.reduce(
         (acc, endpoint) => {
           const cachedDetails = globalEndpointCache[endpoint];
@@ -86,10 +93,13 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           }
           return acc;
         },
-        { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> }
+        {
+          status: {} as Record<string, boolean>,
+          details: {} as Record<string, EndpointAvailabilityDetails>,
+        },
       );
       setEndpointStatus(cached.status);
-      setEndpointDetails(prev => ({ ...prev, ...cached.details }));
+      setEndpointDetails((prev) => ({ ...prev, ...cached.details }));
       setLoading(false);
       return;
     }
@@ -104,10 +114,14 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     try {
       setLoading(true);
       setError(null);
-      console.debug('[useEndpointConfig] Fetching all endpoint statuses from server');
+      console.debug(
+        "[useEndpointConfig] Fetching all endpoint statuses from server",
+      );
 
       // Fetch all endpoints at once - no query params needed
-      const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(`/api/v1/config/endpoints-availability`);
+      const response = await apiClient.get<
+        Record<string, EndpointAvailabilityDetails>
+      >(`/api/v1/config/endpoints-availability`);
 
       // Populate global cache with all results
       Object.entries(response.data).forEach(([endpoint, details]) => {
@@ -130,16 +144,21 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           }
           return acc;
         },
-        { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> }
+        {
+          status: {} as Record<string, boolean>,
+          details: {} as Record<string, EndpointAvailabilityDetails>,
+        },
       );
 
       setEndpointStatus(fullStatus.status);
-      setEndpointDetails(prev => ({ ...prev, ...fullStatus.details }));
+      setEndpointDetails((prev) => ({ ...prev, ...fullStatus.details }));
     } catch (err: any) {
       // On 401 (auth error), use optimistic fallback instead of disabling
       if (err.response?.status === 401) {
-        console.warn('[useEndpointConfig] 401 error - using optimistic fallback');
-        endpoints.forEach(endpoint => {
+        console.warn(
+          "[useEndpointConfig] 401 error - using optimistic fallback",
+        );
+        endpoints.forEach((endpoint) => {
           globalEndpointCache[endpoint] = { enabled: true, reason: null };
         });
         const optimisticStatus = endpoints.reduce(
@@ -148,17 +167,24 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
             acc.details[endpoint] = { enabled: true, reason: null };
             return acc;
           },
-          { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> }
+          {
+            status: {} as Record<string, boolean>,
+            details: {} as Record<string, EndpointAvailabilityDetails>,
+          },
         );
         setEndpointStatus(optimisticStatus.status);
-        setEndpointDetails(prev => ({ ...prev, ...optimisticStatus.details }));
+        setEndpointDetails((prev) => ({
+          ...prev,
+          ...optimisticStatus.details,
+        }));
         setLoading(false);
         return;
       }
 
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMessage);
-      console.error('[EndpointConfig] Failed to check endpoints:', err);
+      console.error("[EndpointConfig] Failed to check endpoints:", err);
 
       // Fallback: assume all endpoints are enabled on error (optimistic)
       const optimisticStatus = endpoints.reduce(
@@ -167,10 +193,13 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           acc.details[endpoint] = { enabled: true, reason: null };
           return acc;
         },
-        { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> }
+        {
+          status: {} as Record<string, boolean>,
+          details: {} as Record<string, EndpointAvailabilityDetails>,
+        },
       );
       setEndpointStatus(optimisticStatus.status);
-      setEndpointDetails(prev => ({ ...prev, ...optimisticStatus.details }));
+      setEndpointDetails((prev) => ({ ...prev, ...optimisticStatus.details }));
     } finally {
       setLoading(false);
     }
@@ -178,20 +207,25 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
   useEffect(() => {
     fetchAllEndpointStatuses();
-  }, [endpoints.join(',')]); // Re-run when endpoints array changes
+  }, [endpoints.join(",")]); // Re-run when endpoints array changes
 
   // Listen for JWT availability (triggered on login/signup)
   useEffect(() => {
     const handleJwtAvailable = () => {
-      console.debug('[useEndpointConfig] JWT available event - clearing cache for refetch with auth');
+      console.debug(
+        "[useEndpointConfig] JWT available event - clearing cache for refetch with auth",
+      );
       globalFetchDone = false;
-      Object.keys(globalEndpointCache).forEach(key => delete globalEndpointCache[key]);
+      Object.keys(globalEndpointCache).forEach(
+        (key) => delete globalEndpointCache[key],
+      );
       fetchAllEndpointStatuses(true);
     };
 
-    window.addEventListener('jwt-available', handleJwtAvailable);
-    return () => window.removeEventListener('jwt-available', handleJwtAvailable);
-  }, [endpoints.join(',')]);
+    window.addEventListener("jwt-available", handleJwtAvailable);
+    return () =>
+      window.removeEventListener("jwt-available", handleJwtAvailable);
+  }, [endpoints.join(",")]);
 
   return {
     endpointStatus,

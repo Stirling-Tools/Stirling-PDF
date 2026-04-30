@@ -1,4 +1,4 @@
-import { PlanTierGroup } from '@app/services/licenseService';
+import { PlanTierGroup } from "@app/services/licenseService";
 
 export interface StripeCheckoutProps {
   opened: boolean;
@@ -7,14 +7,24 @@ export interface StripeCheckoutProps {
   minimumSeats?: number;
   onSuccess?: (sessionId: string) => void;
   onError?: (error: string) => void;
-  onLicenseActivated?: (licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => void;
+  onLicenseActivated?: (licenseInfo: {
+    licenseType: string;
+    enabled: boolean;
+    maxUsers: number;
+    hasKey: boolean;
+  }) => void;
   hostedCheckoutSuccess?: {
     isUpgrade: boolean;
     licenseKey?: string;
   } | null;
 }
 
-export type CheckoutStage = 'email' | 'plan-selection' | 'payment' | 'success' | 'error';
+export type CheckoutStage =
+  | "email"
+  | "plan-selection"
+  | "payment"
+  | "success"
+  | "error";
 
 export type CheckoutState = {
   currentStage: CheckoutStage;
@@ -25,7 +35,7 @@ export type CheckoutState = {
   loading?: boolean;
 };
 
-export type PollingStatus = 'idle' | 'polling' | 'ready' | 'timeout';
+export type PollingStatus = "idle" | "polling" | "ready" | "timeout";
 
 export interface SavingsCalculation {
   amount: number;

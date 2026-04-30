@@ -9,13 +9,22 @@
  * the dedicated FormFill tool panel is NOT active. It provides a clean
  * save UX that users expect from browser PDF viewers.
  */
-import React, { useCallback, useState } from 'react';
-import { Stack, Group, Text, Button, Transition, CloseButton, Paper, Badge } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import DownloadIcon from '@mui/icons-material/Download';
-import SaveIcon from '@mui/icons-material/Save';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import { useFormFill } from '@app/tools/formFill/FormFillContext';
+import React, { useCallback, useState } from "react";
+import {
+  Stack,
+  Group,
+  Text,
+  Button,
+  Transition,
+  CloseButton,
+  Paper,
+  Badge,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import DownloadIcon from "@mui/icons-material/Download";
+import SaveIcon from "@mui/icons-material/Save";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import { useFormFill } from "@app/tools/formFill/FormFillContext";
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -26,7 +35,11 @@ interface FormSaveBarProps {
   onApply?: (filledBlob: Blob) => Promise<void>;
 }
 
-export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBarProps) {
+export function FormSaveBar({
+  file,
+  isFormFillToolActive,
+  onApply,
+}: FormSaveBarProps) {
   const { t } = useTranslation();
   const { state, submitForm } = useFormFill();
   const { fields, isDirty, loading } = state;
@@ -53,7 +66,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
         await onApply(filledBlob);
       }
     } catch (err) {
-      console.error('[FormSaveBar] Apply failed:', err);
+      console.error("[FormSaveBar] Apply failed:", err);
     } finally {
       setApplying(false);
     }
@@ -66,15 +79,15 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
       const blob = await submitForm(file, false);
       // Trigger browser download
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = file instanceof File ? file.name : 'filled-form.pdf';
+      a.download = file instanceof File ? file.name : "filled-form.pdf";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('[FormSaveBar] Download failed:', err);
+      console.error("[FormSaveBar] Download failed:", err);
     } finally {
       setSaving(false);
     }
@@ -85,7 +98,9 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
   // - no form fields found
   // - still loading
   // - user dismissed the bar
-  const hasFields = fields.some(f => f.type !== 'signature' && f.type !== 'button');
+  const hasFields = fields.some(
+    (f) => f.type !== "signature" && f.type !== "button",
+  );
   const visible = !isFormFillToolActive && hasFields && !loading && !dismissed;
 
   return (
@@ -94,11 +109,11 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
         <div
           style={{
             ...styles,
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
             zIndex: 100,
-            pointerEvents: 'none',
+            pointerEvents: "none",
           }}
         >
           <Paper
@@ -106,10 +121,10 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
             radius="md"
             withBorder
             style={{
-              pointerEvents: 'auto',
-              minWidth: '320px',
-              maxWidth: '420px',
-              overflow: 'hidden',
+              pointerEvents: "auto",
+              minWidth: "320px",
+              maxWidth: "420px",
+              overflow: "hidden",
             }}
           >
             <Stack gap="xs" p="md">
@@ -118,24 +133,32 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
                   <EditNoteIcon
                     sx={{
                       fontSize: 24,
-                      color: isDirty ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-6)'
+                      color: isDirty
+                        ? "var(--mantine-color-blue-6)"
+                        : "var(--mantine-color-gray-6)",
                     }}
                   />
                   <div>
                     <Group gap="xs">
                       <Text size="sm" fw={600}>
-                        {t('viewer.formBar.title', 'Form Fields')}
+                        {t("viewer.formBar.title", "Form Fields")}
                       </Text>
                       {isDirty && (
                         <Badge size="xs" color="blue" variant="light">
-                          {t('viewer.formBar.unsavedBadge', 'Unsaved')}
+                          {t("viewer.formBar.unsavedBadge", "Unsaved")}
                         </Badge>
                       )}
                     </Group>
                     <Text size="xs" c="dimmed" mt={2}>
                       {isDirty
-                        ? t('viewer.formBar.unsavedDesc', 'You have unsaved changes')
-                        : t('viewer.formBar.hasFieldsDesc', 'This PDF contains fillable fields')}
+                        ? t(
+                            "viewer.formBar.unsavedDesc",
+                            "You have unsaved changes",
+                          )
+                        : t(
+                            "viewer.formBar.hasFieldsDesc",
+                            "This PDF contains fillable fields",
+                          )}
                     </Text>
                   </div>
                 </Group>
@@ -143,7 +166,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
                   size="sm"
                   variant="subtle"
                   onClick={() => setDismissed(true)}
-                  aria-label={t('viewer.formBar.dismiss', 'Dismiss')}
+                  aria-label={t("viewer.formBar.dismiss", "Dismiss")}
                 />
               </Group>
 
@@ -159,7 +182,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
                     onClick={handleApply}
                     flex={1}
                   >
-                    {t('viewer.formBar.apply', 'Apply Changes')}
+                    {t("viewer.formBar.apply", "Apply Changes")}
                   </Button>
                   <Button
                     size="sm"
@@ -171,7 +194,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
                     onClick={handleDownload}
                     flex={1}
                   >
-                    {t('viewer.formBar.download', 'Download PDF')}
+                    {t("viewer.formBar.download", "Download PDF")}
                   </Button>
                 </Group>
               )}

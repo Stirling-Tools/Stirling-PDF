@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.14
+    rev: v0.15.11
     hooks:
       - id: ruff
         args:
@@ -12,11 +12,11 @@ repos:
         files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist
+          - --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(html|css|js|py|md)$
@@ -35,7 +35,7 @@ repos:
         files: ^.*(\.js|\.java|\.py|\.yml)$
         exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
   - repo: https://github.com/pappasam/toml-sort
-    rev: v0.24.3
+    rev: v0.24.4
     hooks:
       - id: toml-sort-fix
         files: frontend/public/locales/.*\.toml$

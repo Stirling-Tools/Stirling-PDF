@@ -1,28 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { markOnboardingCompleted } from '@app/components/onboarding/orchestrator/onboardingStorage';
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { markOnboardingCompleted } from "@app/components/onboarding/orchestrator/onboardingStorage";
 
-const SESSION_KEY = 'onboarding::bypass-all';
-const PARAM_KEY = 'bypassOnboarding';
+const SESSION_KEY = "onboarding::bypass-all";
+const PARAM_KEY = "bypassOnboarding";
 
 function isTruthy(value: string | null): boolean {
-  return value?.toLowerCase() === 'true';
+  return value?.toLowerCase() === "true";
 }
 
 function readStoredBypass(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   try {
-    return sessionStorage.getItem(SESSION_KEY) === 'true';
+    return sessionStorage.getItem(SESSION_KEY) === "true";
   } catch {
     return false;
   }
 }
 
 function setStoredBypass(enabled: boolean): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     if (enabled) {
-      sessionStorage.setItem(SESSION_KEY, 'true');
+      sessionStorage.setItem(SESSION_KEY, "true");
     } else {
       sessionStorage.removeItem(SESSION_KEY);
     }
@@ -38,7 +38,9 @@ function setStoredBypass(enabled: boolean): void {
  */
 export function useBypassOnboarding(): boolean {
   const location = useLocation();
-  const [bypassOnboarding, setBypassOnboarding] = useState<boolean>(() => readStoredBypass());
+  const [bypassOnboarding, setBypassOnboarding] = useState<boolean>(() =>
+    readStoredBypass(),
+  );
 
   const shouldBypassFromSearch = useMemo(() => {
     try {

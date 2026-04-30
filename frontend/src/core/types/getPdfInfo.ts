@@ -20,16 +20,16 @@ export interface PdfBasicInfo {
   Compression?: boolean;
   CompressionType?: string;
   Language?: string | null;
-  'Number of pages'?: number;
+  "Number of pages"?: number;
   TotalImages?: number;
   [key: string]: unknown;
 }
 
 /** Document info section */
 export interface PdfDocumentInfo {
-  'PDF version'?: string;
+  "PDF version"?: string;
   Trapped?: string | null;
-  'Page Mode'?: string;
+  "Page Mode"?: string;
   [key: string]: unknown;
 }
 
@@ -43,14 +43,14 @@ export interface PdfEncryption {
 
 /** Permissions section - values are "Allowed" or "Not Allowed" */
 export interface PdfPermissions {
-  'Document Assembly'?: 'Allowed' | 'Not Allowed';
-  'Extracting Content'?: 'Allowed' | 'Not Allowed';
-  'Extracting for accessibility'?: 'Allowed' | 'Not Allowed';
-  'Form Filling'?: 'Allowed' | 'Not Allowed';
-  'Modifying'?: 'Allowed' | 'Not Allowed';
-  'Modifying annotations'?: 'Allowed' | 'Not Allowed';
-  'Printing'?: 'Allowed' | 'Not Allowed';
-  [key: string]: 'Allowed' | 'Not Allowed' | undefined;
+  "Document Assembly"?: "Allowed" | "Not Allowed";
+  "Extracting Content"?: "Allowed" | "Not Allowed";
+  "Extracting for accessibility"?: "Allowed" | "Not Allowed";
+  "Form Filling"?: "Allowed" | "Not Allowed";
+  Modifying?: "Allowed" | "Not Allowed";
+  "Modifying annotations"?: "Allowed" | "Not Allowed";
+  Printing?: "Allowed" | "Not Allowed";
+  [key: string]: "Allowed" | "Not Allowed" | undefined;
 }
 
 /** Compliance section */
@@ -108,13 +108,13 @@ export interface PdfAnnotationsInfo {
 
 /** Size/dimensions info within a page */
 export interface PdfSizeInfo {
-  'Width (px)'?: string;
-  'Height (px)'?: string;
-  'Width (in)'?: string;
-  'Height (in)'?: string;
-  'Width (cm)'?: string;
-  'Height (cm)'?: string;
-  'Standard Page'?: string;
+  "Width (px)"?: string;
+  "Height (px)"?: string;
+  "Width (in)"?: string;
+  "Height (in)"?: string;
+  "Width (cm)"?: string;
+  "Height (cm)"?: string;
+  "Standard Page"?: string;
   [key: string]: unknown;
 }
 
@@ -128,25 +128,25 @@ export interface PdfXObjectCounts {
 
 /** ICC Profile info */
 export interface PdfICCProfile {
-  'ICC Profile Length'?: number;
+  "ICC Profile Length"?: number;
 }
 
 /** Page-level information */
 export interface PdfPageInfo {
   Size?: PdfSizeInfo;
   Rotation?: number;
-  'Page Orientation'?: string;
+  "Page Orientation"?: string;
   MediaBox?: string;
   CropBox?: string;
   BleedBox?: string;
   TrimBox?: string;
   ArtBox?: string;
-  'Text Characters Count'?: number;
+  "Text Characters Count"?: number;
   Annotations?: PdfAnnotationsInfo;
   Images?: PdfImageInfo[];
   Links?: PdfLinkInfo[];
   Fonts?: PdfFontInfo[];
-  'Color Spaces & ICC Profiles'?: PdfICCProfile[];
+  "Color Spaces & ICC Profiles"?: PdfICCProfile[];
   XObjectCounts?: PdfXObjectCounts;
   Multimedia?: Record<string, unknown>[];
 }
@@ -174,8 +174,8 @@ export interface PdfAttachmentInfo {
 
 /** JavaScript info */
 export interface PdfJavaScriptInfo {
-  'JS Name'?: string;
-  'JS Script Length'?: number;
+  "JS Name"?: string;
+  "JS Script Length"?: number;
 }
 
 /** Layer info */
@@ -197,7 +197,7 @@ export interface PdfOtherInfo {
   JavaScript?: PdfJavaScriptInfo[];
   Layers?: PdfLayerInfo[];
   StructureTree?: PdfStructureTreeElement[];
-  'Bookmarks/Outline/TOC'?: PdfTocEntry[];
+  "Bookmarks/Outline/TOC"?: PdfTocEntry[];
   XMPMetadata?: string | null;
 }
 
@@ -253,13 +253,13 @@ export interface PdfInfoBackendData {
   PerPageInfo?: PdfPerPageInfo;
   SummaryData?: PdfSummaryData;
   // Legacy/alternative keys for backwards compatibility
-  'Form Fields'?: PdfFormFields;
-  'Basic Info'?: PdfBasicInfo;
-  'Document Info'?: PdfDocumentInfo;
+  "Form Fields"?: PdfFormFields;
+  "Basic Info"?: PdfBasicInfo;
+  "Document Info"?: PdfDocumentInfo;
   Compliance?: PdfCompliance;
-  'Bookmarks/Outline/TOC'?: PdfTocEntry[];
-  'Table of Contents'?: PdfTocEntry[];
-  'Per Page Info'?: PdfPerPageInfo;
+  "Bookmarks/Outline/TOC"?: PdfTocEntry[];
+  "Table of Contents"?: PdfTocEntry[];
+  "Per Page Info"?: PdfPerPageInfo;
 }
 
 export interface PdfInfoReportEntry {
@@ -278,5 +278,5 @@ export interface PdfInfoReportData {
   entries: PdfInfoReportEntry[];
 }
 
-export const INFO_JSON_FILENAME = 'response.json';
-export const INFO_PDF_FILENAME = 'pdf-information-report.pdf';
+export const INFO_JSON_FILENAME = "response.json";
+export const INFO_PDF_FILENAME = "pdf-information-report.pdf";

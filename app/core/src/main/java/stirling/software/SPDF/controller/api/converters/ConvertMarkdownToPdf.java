@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -46,7 +48,7 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to"
                             + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
@@ -79,7 +81,7 @@ public class ConvertMarkdownToPdf {
                 java.nio.file.Path tempDirPath = tempDir.getPath();
                 try (java.util.zip.ZipInputStream zipIn =
                         io.github.pixee.security.ZipSecurity.createHardenedInputStream(
-                                new java.io.ByteArrayInputStream(fileInput.getBytes()))) {
+                                fileInput.getInputStream())) {
                     java.util.zip.ZipEntry entry;
                     while ((entry = zipIn.getNextEntry()) != null) {
                         if (!entry.isDirectory()) {
@@ -141,7 +143,7 @@ public class ConvertMarkdownToPdf {
             List<Extension> extensions = List.of(TablesExtension.create());
             Parser parser = Parser.builder().extensions(extensions).build();
 
-            Node document = parser.parse(new String(fileInput.getBytes()));
+            Node document = parser.parse(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
             HtmlRenderer renderer =
                     HtmlRenderer.builder()
                             .attributeProviderFactory(context -> new TableAttributeProvider())
@@ -154,7 +156,7 @@ public class ConvertMarkdownToPdf {
                     FileToPdf.convertHtmlToPdf(
                             runtimePathConfig.getWeasyPrintPath(),
                             null,
-                            htmlContent.getBytes(),
+                            htmlContent.getBytes(StandardCharsets.UTF_8),
                             "converted.html",
                             tempFileManager,
                             customHtmlSanitizer);
@@ -163,7 +165,15 @@ public class ConvertMarkdownToPdf {
         }
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
-        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+
+        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            java.nio.file.Files.write(tempOut.getPath(), pdfBytes);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
+        return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
     }
 
     /**

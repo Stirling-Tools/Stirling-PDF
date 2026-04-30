@@ -1,13 +1,26 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, ScrollArea, Text, Checkbox, Stack, Loader, ActionIcon, Tooltip } from '@mantine/core';
-import LayersIcon from '@mui/icons-material/Layers';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import '@app/components/viewer/SidebarBase.css';
-import '@app/components/viewer/LayerSidebar.css';
-import { readPdfLayers, applyOCGVisibilityToPdf, collectLeafIds } from '@app/components/viewer/layerUtils';
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Box,
+  ScrollArea,
+  Text,
+  Checkbox,
+  Stack,
+  Loader,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
+import LayersIcon from "@mui/icons-material/Layers";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import "@app/components/viewer/SidebarBase.css";
+import "@app/components/viewer/LayerSidebar.css";
+import {
+  readPdfLayers,
+  applyOCGVisibilityToPdf,
+  collectLeafIds,
+} from "@app/components/viewer/layerUtils";
 
-import type { LayerInfo } from '@app/components/viewer/layerUtils';
+import type { LayerInfo } from "@app/components/viewer/layerUtils";
 export type { LayerInfo };
 
 interface LayerSidebarProps {
@@ -24,9 +37,9 @@ interface LayerSidebarProps {
   onLayersDetected?: (hasLayers: boolean) => void;
 }
 
-const SIDEBAR_WIDTH = '15rem';
+const SIDEBAR_WIDTH = "15rem";
 
-type LoadStatus = 'idle' | 'loading' | 'ready' | 'no-layers' | 'error';
+type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
 
 export function LayerSidebar({
   visible,
@@ -38,7 +51,7 @@ export function LayerSidebar({
 }: LayerSidebarProps) {
   const [layers, setLayers] = useState<LayerInfo[]>([]);
   const [visibility, setVisibility] = useState<Record<string, boolean>>({});
-  const [status, setStatus] = useState<LoadStatus>('idle');
+  const [status, setStatus] = useState<LoadStatus>("idle");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -49,7 +62,7 @@ export function LayerSidebar({
   // Load layers when the document changes
   useEffect(() => {
     if (!file || !documentCacheKey) {
-      setStatus('idle');
+      setStatus("idle");
       setLayers([]);
       setVisibility({});
       loadedKeyRef.current = null;
@@ -60,18 +73,18 @@ export function LayerSidebar({
 
     if (loadedKeyRef.current === documentCacheKey) return;
 
-    setStatus('loading');
+    setStatus("loading");
     setLoadError(null);
     userChangedRef.current = false;
 
     let cancelled = false;
 
     readPdfLayers(file)
-      .then(layerList => {
+      .then((layerList) => {
         if (cancelled) return;
 
         if (layerList.length === 0) {
-          setStatus('no-layers');
+          setStatus("no-layers");
           setLayers([]);
           setVisibility({});
           loadedKeyRef.current = documentCacheKey;
@@ -94,14 +107,16 @@ export function LayerSidebar({
 
         setLayers(layerList);
         setVisibility(visMap);
-        setStatus('ready');
+        setStatus("ready");
         loadedKeyRef.current = documentCacheKey;
         onLayersDetected?.(true);
       })
-      .catch(err => {
+      .catch((err) => {
         if (cancelled) return;
-        setStatus('error');
-        setLoadError(err instanceof Error ? err.message : 'Failed to read PDF layers');
+        setStatus("error");
+        setLoadError(
+          err instanceof Error ? err.message : "Failed to read PDF layers",
+        );
         onLayersDetected?.(false);
       });
 
@@ -118,7 +133,8 @@ export function LayerSidebar({
 
   // Auto-apply: debounce visibility changes from user interaction
   useEffect(() => {
-    if (!userChangedRef.current || !file || isApplying || layers.length === 0) return;
+    if (!userChangedRef.current || !file || isApplying || layers.length === 0)
+      return;
 
     const timer = setTimeout(async () => {
       setIsApplying(true);
@@ -136,12 +152,17 @@ export function LayerSidebar({
         collectNames(layers);
 
         const arrayBuffer = await file.arrayBuffer();
-        const modifiedBytes = await applyOCGVisibilityToPdf(arrayBuffer, nameVisibility);
-        const blob = new Blob([new Uint8Array(modifiedBytes)], { type: 'application/pdf' });
+        const modifiedBytes = await applyOCGVisibilityToPdf(
+          arrayBuffer,
+          nameVisibility,
+        );
+        const blob = new Blob([new Uint8Array(modifiedBytes)], {
+          type: "application/pdf",
+        });
 
         await onApplyLayers(blob);
       } catch (err) {
-        console.error('[LayerSidebar] Failed to apply layer changes:', err);
+        console.error("[LayerSidebar] Failed to apply layer changes:", err);
       } finally {
         setIsApplying(false);
         userChangedRef.current = false;
@@ -153,12 +174,12 @@ export function LayerSidebar({
 
   const toggleLayerVisibility = useCallback((id: string) => {
     userChangedRef.current = true;
-    setVisibility(prev => ({ ...prev, [id]: !prev[id] }));
+    setVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
   const showAll = useCallback(() => {
     userChangedRef.current = true;
-    setVisibility(prev => {
+    setVisibility((prev) => {
       const updated: Record<string, boolean> = {};
       for (const id of Object.keys(prev)) {
         updated[id] = true;
@@ -169,7 +190,7 @@ export function LayerSidebar({
 
   const hideAll = useCallback(() => {
     userChangedRef.current = true;
-    setVisibility(prev => {
+    setVisibility((prev) => {
       const updated: Record<string, boolean> = {};
       for (const id of Object.keys(prev)) {
         updated[id] = false;
@@ -179,7 +200,7 @@ export function LayerSidebar({
   }, []);
 
   const toggleExpanded = useCallback((id: string) => {
-    setExpanded(prev => ({ ...prev, [id]: !(prev[id] ?? true) }));
+    setExpanded((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
   }, []);
 
   const renderLayer = (layer: LayerInfo & { depth: number }) => {
@@ -188,17 +209,21 @@ export function LayerSidebar({
     const isLeaf = !hasChildren;
 
     const isVisible = isLeaf
-      ? visibility[layer.id] ?? layer.visible
-      : collectLeafIds(layer.children ?? []).every(id => visibility[id] ?? true);
+      ? (visibility[layer.id] ?? layer.visible)
+      : collectLeafIds(layer.children ?? []).every(
+          (id) => visibility[id] ?? true,
+        );
 
     return (
       <div
         key={layer.id}
         className="layer-item-wrapper"
-        style={{ marginLeft: layer.depth > 0 ? `${layer.depth * 0.875}rem` : '0' }}
+        style={{
+          marginLeft: layer.depth > 0 ? `${layer.depth * 0.875}rem` : "0",
+        }}
       >
         <div
-          className={`layer-item ${!isVisible ? 'layer-item--hidden' : ''}`}
+          className={`layer-item ${!isVisible ? "layer-item--hidden" : ""}`}
           onClick={() => {
             if (hasChildren) {
               toggleExpanded(layer.id);
@@ -208,8 +233,8 @@ export function LayerSidebar({
           }}
           role="button"
           tabIndex={0}
-          onKeyDown={e => {
-            if (e.key === 'Enter' || e.key === ' ') {
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               if (hasChildren) {
                 toggleExpanded(layer.id);
@@ -222,17 +247,27 @@ export function LayerSidebar({
           {hasChildren ? (
             <span
               className="layer-item__expand-btn"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 toggleExpanded(layer.id);
               }}
             >
               {isExpanded ? (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="currentColor"
+                >
                   <path d="M2 4l4 4 4-4z" />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="currentColor"
+                >
                   <path d="M4 2l4 4-4 4z" />
                 </svg>
               )}
@@ -246,7 +281,7 @@ export function LayerSidebar({
               size="xs"
               checked={visibility[layer.id] ?? layer.visible}
               onChange={() => toggleLayerVisibility(layer.id)}
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               style={{ flexShrink: 0 }}
             />
           )}
@@ -257,15 +292,15 @@ export function LayerSidebar({
             withinPortal
             disabled={layer.name.length < 20}
           >
-            <span className="layer-item__label">
-              {layer.name}
-            </span>
+            <span className="layer-item__label">{layer.name}</span>
           </Tooltip>
         </div>
 
         {hasChildren && isExpanded && (
           <div className="layer-item__children">
-            {(layer.children ?? []).map(child => renderLayer({ ...child, depth: 0 }))}
+            {(layer.children ?? []).map((child) =>
+              renderLayer({ ...child, depth: 0 }),
+            )}
           </div>
         )}
       </div>
@@ -275,14 +310,14 @@ export function LayerSidebar({
   if (!visible) return null;
 
   const leafIds = collectLeafIds(layers);
-  const allVisible = leafIds.every(id => visibility[id] !== false);
-  const allHidden = leafIds.every(id => visibility[id] === false);
+  const allVisible = leafIds.every((id) => visibility[id] !== false);
+  const allHidden = leafIds.every((id) => visibility[id] === false);
 
   return (
     <Box
       className="sidebar-base layer-sidebar"
       style={{
-        position: 'fixed',
+        position: "fixed",
         right: `${rightOffset}rem`,
         top: 0,
         bottom: 0,
@@ -302,7 +337,7 @@ export function LayerSidebar({
           {isApplying && <Loader size="xs" type="dots" />}
         </div>
 
-        {status === 'ready' && leafIds.length > 0 && (
+        {status === "ready" && leafIds.length > 0 && (
           <div className="layer-sidebar__header-actions">
             <ActionIcon
               variant="subtle"
@@ -312,7 +347,7 @@ export function LayerSidebar({
               aria-label="Show all layers"
               title="Show all"
             >
-              <VisibilityIcon sx={{ fontSize: '1rem' }} />
+              <VisibilityIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>
             <ActionIcon
               variant="subtle"
@@ -322,7 +357,7 @@ export function LayerSidebar({
               aria-label="Hide all layers"
               title="Hide all"
             >
-              <VisibilityOffIcon sx={{ fontSize: '1rem' }} />
+              <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>
           </div>
         )}
@@ -331,7 +366,7 @@ export function LayerSidebar({
       {/* Content */}
       <ScrollArea style={{ flex: 1 }}>
         <Box p="sm" className="sidebar-base__content">
-          {status === 'idle' && (
+          {status === "idle" && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 Open a PDF to view its layers.
@@ -339,8 +374,14 @@ export function LayerSidebar({
             </div>
           )}
 
-          {status === 'loading' && (
-            <Stack gap="md" align="center" c="dimmed" py="xl" className="sidebar-base__loading">
+          {status === "loading" && (
+            <Stack
+              gap="md"
+              align="center"
+              c="dimmed"
+              py="xl"
+              className="sidebar-base__loading"
+            >
               <Loader size="md" type="dots" />
               <Text size="sm" ta="center">
                 Loading layers...
@@ -348,15 +389,15 @@ export function LayerSidebar({
             </Stack>
           )}
 
-          {status === 'error' && (
+          {status === "error" && (
             <div className="sidebar-base__error">
               <Text size="sm" c="red" ta="center">
-                {loadError ?? 'Failed to load layers.'}
+                {loadError ?? "Failed to load layers."}
               </Text>
             </div>
           )}
 
-          {status === 'no-layers' && (
+          {status === "no-layers" && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 This document has no layers.
@@ -364,14 +405,13 @@ export function LayerSidebar({
             </div>
           )}
 
-          {status === 'ready' && layers.length > 0 && (
+          {status === "ready" && layers.length > 0 && (
             <div className="layer-list">
-              {layers.map(layer => renderLayer({ ...layer, depth: 0 }))}
+              {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}
             </div>
           )}
         </Box>
       </ScrollArea>
-
     </Box>
   );
 }

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
-import { tauriBackendService } from '@app/services/tauriBackendService';
+import { useState, useEffect } from "react";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { tauriBackendService } from "@app/services/tauriBackendService";
 
 /**
  * Desktop hook to check if a tool endpoint will use cloud backend
@@ -28,13 +28,16 @@ export function useToolCloudStatus(endpointName?: string): boolean {
 
         // Check if in SaaS mode
         const mode = await connectionModeService.getCurrentMode();
-        if (mode !== 'saas') {
+        if (mode !== "saas") {
           setUsesCloud(false);
           return;
         }
 
         // Check if supported on SaaS first (if not, no point showing cloud badge)
-        const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointName);
+        const supportedOnSaaS =
+          await endpointAvailabilityService.isEndpointSupportedOnSaaS(
+            endpointName,
+          );
 
         if (!supportedOnSaaS) {
           // Not available on SaaS, don't show cloud badge
@@ -43,10 +46,11 @@ export function useToolCloudStatus(endpointName?: string): boolean {
         }
 
         // Available on SaaS, check if also available locally
-        const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
-          endpointName,
-          tauriBackendService.getBackendUrl()
-        );
+        const supportedLocally =
+          await endpointAvailabilityService.isEndpointSupportedLocally(
+            endpointName,
+            tauriBackendService.getBackendUrl(),
+          );
         // Show cloud badge only if SaaS supports it but local doesn't
         setUsesCloud(!supportedLocally);
       } catch {
@@ -59,7 +63,7 @@ export function useToolCloudStatus(endpointName?: string): boolean {
 
     // Subscribe to backend status changes to re-check when backend becomes healthy
     const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
-      if (status === 'healthy') {
+      if (status === "healthy") {
         checkCloudRouting();
       }
     });

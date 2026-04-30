@@ -1,25 +1,44 @@
-import { Stack, Text, Checkbox, Slider, NumberInput, Group } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Checkbox,
+  Slider,
+  NumberInput,
+  Group,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import NumberInputWithUnit from "@app/components/tools/shared/NumberInputWithUnit";
 import { RemoveBlanksParameters } from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
 
 interface RemoveBlanksSettingsProps {
   parameters: RemoveBlanksParameters;
-  onParameterChange: <K extends keyof RemoveBlanksParameters>(key: K, value: RemoveBlanksParameters[K]) => void;
+  onParameterChange: <K extends keyof RemoveBlanksParameters>(
+    key: K,
+    value: RemoveBlanksParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false }: RemoveBlanksSettingsProps) => {
+const RemoveBlanksSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: RemoveBlanksSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="lg" mt="md">
       <Stack gap="xs">
         <NumberInputWithUnit
-          label={t('removeBlanks.threshold.label', 'Pixel Whiteness Threshold')}
+          label={t("removeBlanks.threshold.label", "Pixel Whiteness Threshold")}
           value={parameters.threshold}
-          onChange={(v) => onParameterChange('threshold', typeof v === 'string' ? Number(v) : v)}
-          unit=''
+          onChange={(v) =>
+            onParameterChange(
+              "threshold",
+              typeof v === "string" ? Number(v) : v,
+            )
+          }
+          unit=""
           min={0}
           max={255}
           disabled={disabled}
@@ -28,23 +47,25 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
 
       <Stack gap="xs">
         <Text size="sm" fw={500}>
-          {t('removeBlanks.whitePercent.label', 'White Percent')}
+          {t("removeBlanks.whitePercent.label", "White Percent")}
         </Text>
         <Group align="center">
           <NumberInput
             value={parameters.whitePercent}
-            onChange={(v) => onParameterChange('whitePercent', typeof v === 'number' ? v : 0.1)}
+            onChange={(v) =>
+              onParameterChange("whitePercent", typeof v === "number" ? v : 0.1)
+            }
             min={0.1}
             max={100}
             step={0.1}
             size="sm"
             rightSection="%"
-            style={{ width: '80px' }}
+            style={{ width: "80px" }}
             disabled={disabled}
           />
           <Slider
             value={parameters.whitePercent}
-            onChange={(value) => onParameterChange('whitePercent', value)}
+            onChange={(value) => onParameterChange("whitePercent", value)}
             min={0.1}
             max={100}
             step={0.1}
@@ -57,11 +78,18 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
       <Stack gap="xs">
         <Checkbox
           checked={parameters.includeBlankPages}
-          onChange={(event) => onParameterChange('includeBlankPages', event.currentTarget.checked)}
+          onChange={(event) =>
+            onParameterChange("includeBlankPages", event.currentTarget.checked)
+          }
           disabled={disabled}
           label={
             <div>
-              <Text size="sm">{t('removeBlanks.includeBlankPages.label', 'Include detected blank pages')}</Text>
+              <Text size="sm">
+                {t(
+                  "removeBlanks.includeBlankPages.label",
+                  "Include detected blank pages",
+                )}
+              </Text>
             </div>
           }
         />
@@ -71,5 +99,3 @@ const RemoveBlanksSettings = ({ parameters, onParameterChange, disabled = false 
 };
 
 export default RemoveBlanksSettings;
-
-

@@ -1,6 +1,13 @@
-import { ChangePermissionsParameters, ChangePermissionsParametersHook, useChangePermissionsParameters } from '@app/hooks/tools/changePermissions/useChangePermissionsParameters';
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import {
+  ChangePermissionsParameters,
+  ChangePermissionsParametersHook,
+  useChangePermissionsParameters,
+} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface AddPasswordParameters extends BaseParameters {
   password: string;
@@ -18,8 +25,8 @@ export interface AddPasswordParametersHook extends BaseParametersHook<AddPasswor
 }
 
 export const defaultParameters: AddPasswordParameters = {
-  password: '',
-  ownerPassword: '',
+  password: "",
+  ownerPassword: "",
   keyLength: 128,
 };
 
@@ -28,7 +35,7 @@ export const useAddPasswordParameters = (): AddPasswordParametersHook => {
 
   const baseHook = useBaseParameters({
     defaultParameters,
-    endpointName: 'add-password',
+    endpointName: "add-password",
     validateFn: () => {
       // No required parameters for Add Password. Defer to permissions validation.
       return permissions.validateParameters();

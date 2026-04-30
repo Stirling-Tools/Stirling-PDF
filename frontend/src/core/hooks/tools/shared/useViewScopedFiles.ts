@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { useAllFiles, useSelectedFiles } from '@app/contexts/FileContext';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useNavigationState } from '@app/contexts/NavigationContext';
-import { StirlingFile } from '@app/types/fileContext';
+import { useMemo } from "react";
+import { useAllFiles, useSelectedFiles } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useNavigationState } from "@app/contexts/NavigationContext";
+import { StirlingFile } from "@app/types/fileContext";
 
 /**
  * Returns the effective file set for tool operations.
@@ -18,12 +18,12 @@ export function useViewScopedFiles(ignoreViewerScope = false): StirlingFile[] {
   const { selectedFiles } = useSelectedFiles();
 
   return useMemo(() => {
-    if (workbench === 'viewer' && !ignoreViewerScope) {
+    if (workbench === "viewer" && !ignoreViewerScope) {
       const viewerFile = allFiles[activeFileIndex];
       return viewerFile ? [viewerFile] : allFiles;
     }
 
-    if (workbench === 'fileEditor') {
+    if (workbench === "fileEditor") {
       return selectedFiles;
     }
 

@@ -19,8 +19,8 @@ export interface CreditSummary {
 
 export interface SubscriptionInfo {
   id?: string;
-  status: 'active' | 'inactive' | 'cancelled' | 'expired';
-  tier: 'free' | 'basic' | 'premium' | 'enterprise';
+  status: "active" | "inactive" | "cancelled" | "expired";
+  tier: "free" | "basic" | "premium" | "enterprise";
   startDate?: string; // ISO date string
   endDate?: string; // ISO date string
   creditsPerWeek?: number;
@@ -33,5 +33,3 @@ export interface CreditCheckResult {
   requiredCredits: number;
   shortfall?: number;
 }
-
-

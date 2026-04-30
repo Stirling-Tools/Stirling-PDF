@@ -1,10 +1,19 @@
-import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { AddWatermarkParameters, defaultParameters } from '@app/hooks/tools/addWatermark/useAddWatermarkParameters';
+import { useTranslation } from "react-i18next";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import {
+  AddWatermarkParameters,
+  defaultParameters,
+} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 // Static function that can be used by both the hook and automation executor
-export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, file: File): FormData => {
+export const buildAddWatermarkFormData = (
+  parameters: AddWatermarkParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -12,9 +21,12 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
   formData.append("watermarkType", parameters.watermarkType || "text");
 
   // Add watermark content based on type
-  if (parameters.watermarkType === 'text') {
+  if (parameters.watermarkType === "text") {
     formData.append("watermarkText", parameters.watermarkText);
-  } else if (parameters.watermarkType === 'image' && parameters.watermarkImage) {
+  } else if (
+    parameters.watermarkType === "image" &&
+    parameters.watermarkImage
+  ) {
     formData.append("watermarkImage", parameters.watermarkImage);
   }
 
@@ -28,7 +40,10 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
   // Backend-expected parameters from user input
   formData.append("alphabet", parameters.alphabet || "");
   formData.append("customColor", parameters.customColor || "");
-  formData.append("convertPDFToImage", (parameters.convertPDFToImage ?? false).toString());
+  formData.append(
+    "convertPDFToImage",
+    (parameters.convertPDFToImage ?? false).toString(),
+  );
 
   return formData;
 };
@@ -37,8 +52,8 @@ export const buildAddWatermarkFormData = (parameters: AddWatermarkParameters, fi
 export const addWatermarkOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildAddWatermarkFormData,
-  operationType: 'watermark',
-  endpoint: '/api/v1/security/add-watermark',
+  operationType: "watermark",
+  endpoint: "/api/v1/security/add-watermark",
   defaultParameters,
 } as const;
 
@@ -47,6 +62,11 @@ export const useAddWatermarkOperation = () => {
 
   return useToolOperation<AddWatermarkParameters>({
     ...addWatermarkOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('watermark.error.failed', 'An error occurred while adding watermark to the PDF.'))
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "watermark.error.failed",
+        "An error occurred while adding watermark to the PDF.",
+      ),
+    ),
   });
 };

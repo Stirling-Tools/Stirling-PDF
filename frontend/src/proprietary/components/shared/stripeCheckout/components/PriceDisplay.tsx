@@ -1,10 +1,10 @@
-import React from 'react';
-import { Text, Stack } from '@mantine/core';
-import { formatPrice } from '@app/components/shared/stripeCheckout/utils/pricingUtils';
-import { PRICE_FONT_WEIGHT } from '@app/components/shared/stripeCheckout/utils/cardStyles';
+import React from "react";
+import { Text, Stack } from "@mantine/core";
+import { formatPrice } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
+import { PRICE_FONT_WEIGHT } from "@app/components/shared/stripeCheckout/utils/cardStyles";
 
 interface SimplePriceProps {
-  mode: 'simple';
+  mode: "simple";
   price: number;
   currency: string;
   period: string;
@@ -12,21 +12,21 @@ interface SimplePriceProps {
 }
 
 interface EnterprisePriceProps {
-  mode: 'enterprise';
+  mode: "enterprise";
   basePrice: number;
   seatPrice: number;
   totalPrice?: number;
   currency: string;
-  period: 'month' | 'year';
+  period: "month" | "year";
   seatCount?: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
 type PriceDisplayProps = SimplePriceProps | EnterprisePriceProps;
 
 export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
-  if (props.mode === 'simple') {
-    const fontSize = props.size || '2.25rem';
+  if (props.mode === "simple") {
+    const fontSize = props.size || "2.25rem";
     return (
       <>
         <Text size={fontSize} fw={PRICE_FONT_WEIGHT} style={{ lineHeight: 1 }}>
@@ -40,9 +40,17 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
   }
 
   // Enterprise mode
-  const { basePrice, seatPrice, totalPrice, currency, period, seatCount, size = 'md' } = props;
-  const fontSize = size === 'lg' ? '2rem' : size === 'sm' ? 'md' : 'xl';
-  const totalFontSize = size === 'lg' ? '2rem' : '2rem';
+  const {
+    basePrice,
+    seatPrice,
+    totalPrice,
+    currency,
+    period,
+    seatCount,
+    size = "md",
+  } = props;
+  const fontSize = size === "lg" ? "2rem" : size === "sm" ? "md" : "xl";
+  const totalFontSize = size === "lg" ? "2rem" : "2rem";
 
   return (
     <Stack gap="sm">
@@ -53,7 +61,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
         <Text size={fontSize} fw={PRICE_FONT_WEIGHT}>
           {formatPrice(basePrice, currency)}
           <Text component="span" size="sm" c="dimmed" fw={400}>
-            {' '}
+            {" "}
             /{period}
           </Text>
         </Text>
@@ -65,7 +73,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
         <Text size={fontSize} fw={PRICE_FONT_WEIGHT}>
           {formatPrice(seatPrice, currency)}
           <Text component="span" size="sm" c="dimmed" fw={400}>
-            {' '}
+            {" "}
             /seat/{period}
           </Text>
         </Text>
@@ -75,11 +83,15 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = (props) => {
           <Text size="sm" c="dimmed" mb="xs">
             Total ({seatCount} seats)
           </Text>
-          <Text size={totalFontSize} fw={PRICE_FONT_WEIGHT} style={{ lineHeight: 1 }}>
+          <Text
+            size={totalFontSize}
+            fw={PRICE_FONT_WEIGHT}
+            style={{ lineHeight: 1 }}
+          >
             {formatPrice(totalPrice, currency)}
             <Text component="span" size="sm" c="dimmed" fw={400}>
-              {' '}
-              /{period === 'year' ? 'month' : period}
+              {" "}
+              /{period === "year" ? "month" : period}
             </Text>
           </Text>
         </div>

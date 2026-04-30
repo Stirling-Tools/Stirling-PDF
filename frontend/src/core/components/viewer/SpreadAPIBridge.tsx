@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useEffect, useRef } from "react";
+import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * SpreadAPIBridge - Updated for embedPDF v2.6.0
@@ -41,7 +41,7 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
       isDualPage: spreadMode !== SpreadMode.None,
     };
 
-    registerBridge('spread', {
+    registerBridge("spread", {
       state: newState,
       api: {
         setSpreadMode: (mode: SpreadMode) => {
@@ -50,7 +50,8 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
         getSpreadMode: () => currentSpread.getSpreadMode(),
         toggleSpreadMode: () => {
           const current = currentSpread.getSpreadMode();
-          const nextMode = current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
+          const nextMode =
+            current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
           currentSpread.setSpreadMode(nextMode);
         },
         SpreadMode,
@@ -60,7 +61,7 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
     triggerImmediateSpreadUpdate(spreadMode);
 
     return () => {
-      registerBridge('spread', null);
+      registerBridge("spread", null);
     };
   }, [spreadMode, registerBridge, triggerImmediateSpreadUpdate]);
 

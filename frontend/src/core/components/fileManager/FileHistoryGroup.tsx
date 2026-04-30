@@ -1,8 +1,8 @@
-import React from 'react';
-import { Box, Text, Collapse, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { StirlingFileStub } from '@app/types/fileContext';
-import FileListItem from '@app/components/fileManager/FileListItem';
+import React from "react";
+import { Box, Text, Collapse, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { StirlingFileStub } from "@app/types/fileContext";
+import FileListItem from "@app/components/fileManager/FileListItem";
 
 interface FileHistoryGroupProps {
   leafFile: StirlingFileStub;
@@ -27,7 +27,7 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
 
   // Sort history files by version number (oldest first, excluding the current leaf file)
   const sortedHistory = historyFiles
-    .filter(file => file.id !== leafFile.id) // Exclude the leaf file itself
+    .filter((file) => file.id !== leafFile.id) // Exclude the leaf file itself
     .sort((a, b) => (b.versionNumber || 1) - (a.versionNumber || 1));
 
   if (!isExpanded || sortedHistory.length === 0) {
@@ -39,7 +39,8 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
       <Box ml="md" mt="xs" mb="sm">
         <Group align="center" mb="sm">
           <Text size="xs" fw={600} c="dimmed">
-            {t('fileManager.fileHistory', 'File History')} ({sortedHistory.length})
+            {t("fileManager.fileHistory", "File History")} (
+            {sortedHistory.length})
           </Text>
         </Group>
 

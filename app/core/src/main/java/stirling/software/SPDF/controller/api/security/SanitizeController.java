@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -25,6 +24,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -41,6 +41,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @Slf4j
@@ -49,6 +50,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class SanitizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/sanitize-pdf")
     @StandardPdfResponse
@@ -57,7 +59,7 @@ public class SanitizeController {
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
                             + " provided options. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
+    public ResponseEntity<Resource> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean removeJavaScript = Boolean.TRUE.equals(request.getRemoveJavaScript());
@@ -92,14 +94,11 @@ public class SanitizeController {
                 sanitizeFonts(document);
             }
 
-            // Save the sanitized document to output stream
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            document.save(outputStream);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    outputStream.toByteArray(),
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
                     GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_sanitized.pdf"));
+                            inputFile.getOriginalFilename(), "_sanitized.pdf"),
+                    tempFileManager);
         }
     }
 

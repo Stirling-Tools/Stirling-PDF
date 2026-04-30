@@ -11,11 +11,13 @@ import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -305,33 +307,28 @@ public class JobExecutorService {
                 Object body = response.getBody();
 
                 if (body instanceof byte[]) {
-                    // Extract filename from content-disposition header if available
-                    String filename = "result.pdf";
-                    String contentType = MediaType.APPLICATION_PDF_VALUE;
+                    String filename = extractResponseFilename(response);
+                    String contentType = extractResponseContentType(response);
 
-                    if (response.getHeaders().getContentDisposition() != null) {
-                        String disposition =
-                                response.getHeaders().getContentDisposition().toString();
-                        if (disposition.contains("filename=")) {
-                            filename =
-                                    disposition.substring(
-                                            disposition.indexOf("filename=") + 9,
-                                            disposition.lastIndexOf('"'));
-                        }
-                    }
-
-                    MediaType mediaType = response.getHeaders().getContentType();
-
-                    if (mediaType != null) {
-                        contentType = mediaType.toString();
-                    }
-
-                    // Store byte array directly to disk
                     String fileId = fileStorage.storeBytes((byte[]) body, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
                     log.debug("Stored ResponseEntity<byte[]> result with fileId: {}", fileId);
+                } else if (body instanceof StreamingResponseBody streamingBody) {
+                    String filename = extractResponseFilename(response);
+                    String contentType = extractResponseContentType(response);
 
-                    // Let the GC handle the memory naturally
+                    String fileId = fileStorage.storeFromStreamingBody(streamingBody, filename);
+                    taskManager.setFileResult(jobId, fileId, filename, contentType);
+                    log.debug(
+                            "Stored ResponseEntity<StreamingResponseBody> result with fileId: {}",
+                            fileId);
+                } else if (body instanceof Resource resource) {
+                    String filename = extractResponseFilename(response);
+                    String contentType = extractResponseContentType(response);
+
+                    String fileId = fileStorage.storeFromResource(resource, filename);
+                    taskManager.setFileResult(jobId, fileId, filename, contentType);
+                    log.debug("Stored ResponseEntity<Resource> result with fileId: {}", fileId);
                 } else {
                     // Check if the response body contains a fileId
                     if (body != null && body.toString().contains("fileId")) {
@@ -479,6 +476,21 @@ public class JobExecutorService {
             // Default case: return as JSON
             return ResponseEntity.ok(result);
         }
+    }
+
+    private static String extractResponseFilename(ResponseEntity<?> response) {
+        if (response.getHeaders().getContentDisposition() != null) {
+            String filename = response.getHeaders().getContentDisposition().getFilename();
+            if (filename != null && !filename.isEmpty()) {
+                return filename;
+            }
+        }
+        return "result.pdf";
+    }
+
+    private static String extractResponseContentType(ResponseEntity<?> response) {
+        MediaType mediaType = response.getHeaders().getContentType();
+        return mediaType != null ? mediaType.toString() : MediaType.APPLICATION_PDF_VALUE;
     }
 
     /**

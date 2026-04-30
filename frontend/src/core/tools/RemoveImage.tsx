@@ -9,10 +9,10 @@ const RemoveImage = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'removeImage',
+    "removeImage",
     useRemoveImageParameters,
     useRemoveImageOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -42,5 +42,3 @@ const RemoveImage = (props: BaseToolProps) => {
 RemoveImage.tool = () => useRemoveImageOperation;
 
 export default RemoveImage as ToolComponent;
-
-

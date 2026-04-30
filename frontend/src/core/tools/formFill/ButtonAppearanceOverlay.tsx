@@ -8,8 +8,11 @@
  * Uses the same EPDF_RenderAnnotBitmap / FPDF_FFLDraw pipeline as
  * SignatureFieldOverlay to produce the button's native PDF appearance.
  */
-import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
-import { renderButtonFieldAppearances, type SignatureFieldAppearance } from '@app/services/pdfiumService';
+import React, { useEffect, useMemo, useRef, useState, memo } from "react";
+import {
+  renderButtonFieldAppearances,
+  type SignatureFieldAppearance,
+} from "@app/services/pdfiumService";
 
 interface ButtonAppearanceOverlayProps {
   pageIndex: number;
@@ -20,13 +23,21 @@ interface ButtonAppearanceOverlayProps {
 let _cachedSource: File | Blob | null = null;
 let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
 
-async function resolveButtonAppearances(source: File | Blob): Promise<SignatureFieldAppearance[]> {
+async function resolveButtonAppearances(
+  source: File | Blob,
+): Promise<SignatureFieldAppearance[]> {
   if (source === _cachedSource && _cachePromise) return _cachePromise;
   _cachedSource = source;
-  _cachePromise = source.arrayBuffer().then((buf) => renderButtonFieldAppearances(buf));
+  _cachePromise = source
+    .arrayBuffer()
+    .then((buf) => renderButtonFieldAppearances(buf));
   return _cachePromise;
 }
-function ButtonBitmapCanvas({ imageData, cssWidth, cssHeight }: {
+function ButtonBitmapCanvas({
+  imageData,
+  cssWidth,
+  cssHeight,
+}: {
   imageData: ImageData;
   cssWidth: number;
   cssHeight: number;
@@ -38,14 +49,14 @@ function ButtonBitmapCanvas({ imageData, cssWidth, cssHeight }: {
     if (!canvas) return;
     canvas.width = imageData.width;
     canvas.height = imageData.height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (ctx) ctx.putImageData(imageData, 0, 0);
   }, [imageData]);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: cssWidth, height: cssHeight, display: 'block' }}
+      style={{ width: cssWidth, height: cssHeight, display: "block" }}
     />
   );
 }
@@ -55,19 +66,33 @@ function ButtonAppearanceOverlayInner({
   pageWidth,
   pageHeight,
 }: ButtonAppearanceOverlayProps) {
-  const [appearances, setAppearances] = useState<SignatureFieldAppearance[]>([]);
+  const [appearances, setAppearances] = useState<SignatureFieldAppearance[]>(
+    [],
+  );
 
   useEffect(() => {
-    if (!pdfSource) { setAppearances([]); return; }
+    if (!pdfSource) {
+      setAppearances([]);
+      return;
+    }
     let cancelled = false;
     resolveButtonAppearances(pdfSource)
-      .then((res) => { if (!cancelled) setAppearances(res); })
-      .catch(() => { if (!cancelled) setAppearances([]); });
-    return () => { cancelled = true; };
+      .then((res) => {
+        if (!cancelled) setAppearances(res);
+      })
+      .catch(() => {
+        if (!cancelled) setAppearances([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [pdfSource]);
 
   const pageAppearances = useMemo(
-    () => appearances.filter((a) => a.pageIndex === pageIndex && a.imageData !== null),
+    () =>
+      appearances.filter(
+        (a) => a.pageIndex === pageIndex && a.imageData !== null,
+      ),
     [appearances, pageIndex],
   );
 
@@ -76,34 +101,36 @@ function ButtonAppearanceOverlayInner({
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
         zIndex: 4,
       }}
       data-button-appearance-page={pageIndex}
     >
       {pageAppearances.map((btn, idx) => {
-        const sx = btn.sourcePageWidth  > 0 ? pageWidth  / btn.sourcePageWidth  : 1;
-        const sy = btn.sourcePageHeight > 0 ? pageHeight / btn.sourcePageHeight : 1;
-        const left   = btn.x * sx;
-        const top    = btn.y * sy;
-        const width  = btn.width  * sx;
+        const sx =
+          btn.sourcePageWidth > 0 ? pageWidth / btn.sourcePageWidth : 1;
+        const sy =
+          btn.sourcePageHeight > 0 ? pageHeight / btn.sourcePageHeight : 1;
+        const left = btn.x * sx;
+        const top = btn.y * sy;
+        const width = btn.width * sx;
         const height = btn.height * sy;
 
         return (
           <div
             key={`btn-appearance-${btn.fieldName}-${idx}`}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left,
               top,
               width,
               height,
-              overflow: 'hidden',
+              overflow: "hidden",
             }}
           >
             <ButtonBitmapCanvas

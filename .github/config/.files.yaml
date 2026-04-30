@@ -46,8 +46,7 @@ frontend: &frontend
   - testing/**
   - docker/**
   - scripts/translations/*.py
-  - scripts/build-tauri-jlink.bat
-  - scripts/build-tauri-jlink.sh
+  - .taskfiles/desktop.yml
   - scripts/convert_cff_to_ttf.py
   - scripts/harvest_type3_fonts.py
   - scripts/ignore_translation.toml
@@ -55,6 +54,25 @@ frontend: &frontend
   - scripts/summarize_type3_signatures.py
   - scripts/type3_to_cff.py
   - scripts/update_type3_library.py
+
+# Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
+# job on changes to any of these.
+tauri: &tauri
+  - frontend/src-tauri/**
+  - frontend/src/desktop/**
+  - frontend/tsconfig.desktop.json
+  - frontend/package.json
+  - frontend/package-lock.json
+  - frontend/vite.config.ts
+  - .github/workflows/tauri-build.yml
+
+# Files that affect the AI engine (Python tool models, fixers, tests). Gate
+# the engine validation job on changes to engine sources or to the Java
+# tool surfaces it generates models from.
+engine: &engine
+  - engine/**
+  - app/(common|core|proprietary)/src/main/java/**
+  - .github/workflows/ai-engine.yml
 
 licenses-frontend: &licenses-frontend
   - ".github/workflows/frontend-backend-licenses-update.yml"
@@ -65,3 +83,22 @@ licenses-frontend: &licenses-frontend
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - *build
+
+# Files that can affect premium / enterprise behaviour. Gate the enterprise
+# Playwright job on changes to any of these on PRs.
+proprietary: &proprietary
+  - app/proprietary/**
+  - frontend/src/proprietary/**
+  - frontend/src/core/tests/enterprise/**
+  - testing/compose/docker-compose-keycloak-oauth.yml
+  - testing/compose/docker-compose-keycloak-saml.yml
+  - testing/compose/keycloak-realm-oauth.json
+  - testing/compose/keycloak-realm-saml.json
+  - testing/compose/start-oauth-test.sh
+  - testing/compose/start-saml-test.sh
+  - testing/compose/validate-oauth-test.sh
+  - testing/compose/validate-saml-test.sh
+  - configs/settings.yml.template
+  - build.gradle
+  - app/proprietary/build.gradle
+  - .github/workflows/build-enterprise.yml

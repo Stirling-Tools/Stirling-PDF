@@ -1,0 +1,158 @@
+version: '3'
+
+output: prefixed
+
+vars:
+  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts\find-free-port.ps1 -Preferred
+  FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
+
+includes:
+  backend:
+    taskfile: .taskfiles/backend.yml
+    dir: .
+  frontend:
+    taskfile: .taskfiles/frontend.yml
+    dir: frontend
+  engine:
+    taskfile: .taskfiles/engine.yml
+    dir: engine
+  docker:
+    taskfile: .taskfiles/docker.yml
+    dir: .
+  desktop:
+    taskfile: .taskfiles/desktop.yml
+    dir: frontend
+
+tasks:
+  # ============================================================
+  # Setup & Prerequisites
+  # ============================================================
+
+  install:
+    desc: "Install all project dependencies"
+    cmds:
+      - task: frontend:install
+      - task: engine:install
+
+  # ============================================================
+  # Development
+  # ============================================================
+
+  dev:
+    desc: "Start backend + frontend concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080,5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+      - task: frontend:dev
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  dev:all:
+    desc: "Start backend + frontend + engine concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080,5173,5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      ENGINE_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+    deps:
+      - task: engine:dev
+        vars:
+          PORT: '{{.ENGINE_PORT}}'
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+      - task: frontend:dev:prototypes
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  # ============================================================
+  # Build
+  # ============================================================
+
+  build:
+    desc: "Build all components"
+    cmds:
+      - task: backend:build
+      - task: frontend:build
+
+  # ============================================================
+  # Test
+  # ============================================================
+
+  test:
+    desc: "Run ALL tests (backend + frontend + engine)"
+    cmds:
+      - task: backend:test
+      - task: frontend:test
+      - task: engine:test
+
+  # ============================================================
+  # Lint & Format
+  # ============================================================
+
+  lint:
+    desc: "Run all linters"
+    cmds:
+      - task: frontend:lint
+      - task: engine:lint
+
+  fix:
+    desc: "Auto-fix all components"
+    cmds:
+      - task: backend:fix
+      - task: frontend:fix
+      - task: engine:fix
+
+  format:
+    desc: "Auto-fix formatting across all components"
+    cmds:
+      - task: backend:format
+      - task: frontend:format
+      - task: engine:format
+
+  format:check:
+    desc: "Check formatting across all components"
+    cmds:
+      - task: backend:format:check
+      - task: frontend:format:check
+      - task: engine:format:check
+
+  # ============================================================
+  # Quality Gate
+  # ============================================================
+
+  check:
+    desc: "Quick quality gate for local development"
+    cmds:
+      - task: backend:check
+      - task: frontend:check
+      - task: engine:check
+
+  check:all:
+    desc: "Full CI quality gate"
+    cmds:
+      - task: backend:check
+      - task: frontend:check:all
+      - task: engine:check
+
+  # ============================================================
+  # Clean
+  # ============================================================
+
+  clean:
+    desc: "Clean all build artifacts"
+    cmds:
+      - task: backend:clean
+      - task: engine:clean

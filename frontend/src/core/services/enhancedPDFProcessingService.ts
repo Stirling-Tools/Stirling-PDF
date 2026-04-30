@@ -1,39 +1,48 @@
-import { ProcessedFile, ProcessingState, PDFPage, ProcessingConfig, ProcessingMetrics } from '@app/types/processing';
-import { ProcessingCache } from '@app/services/processingCache';
-import { FileHasher } from '@app/utils/fileHash';
-import { FileAnalyzer } from '@app/services/fileAnalyzer';
-import { ProcessingErrorHandler } from '@app/services/processingErrorHandler';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { createQuickKey } from '@app/types/fileContext';
+import {
+  ProcessedFile,
+  ProcessingState,
+  PDFPage,
+  ProcessingConfig,
+  ProcessingMetrics,
+} from "@app/types/processing";
+import { ProcessingCache } from "@app/services/processingCache";
+import { FileHasher } from "@app/utils/fileHash";
+import { FileAnalyzer } from "@app/services/fileAnalyzer";
+import { ProcessingErrorHandler } from "@app/services/processingErrorHandler";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { createQuickKey } from "@app/types/fileContext";
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;
   private cache = new ProcessingCache();
   private processing = new Map<string, ProcessingState>();
-  private processingListeners = new Set<(states: Map<string, ProcessingState>) => void>();
+  private processingListeners = new Set<
+    (states: Map<string, ProcessingState>) => void
+  >();
   private metrics: ProcessingMetrics = {
     totalFiles: 0,
     completedFiles: 0,
     failedFiles: 0,
     averageProcessingTime: 0,
     cacheHitRate: 0,
-    memoryUsage: 0
+    memoryUsage: 0,
   };
 
   private defaultConfig: ProcessingConfig = {
-    strategy: 'immediate_full',
+    strategy: "immediate_full",
     chunkSize: 20,
-    thumbnailQuality: 'medium',
+    thumbnailQuality: "medium",
     priorityPageCount: 10,
     useWebWorker: false,
-    maxRetries: 3
+    maxRetries: 3,
   };
 
   private constructor() {}
 
   static getInstance(): EnhancedPDFProcessingService {
     if (!EnhancedPDFProcessingService.instance) {
-      EnhancedPDFProcessingService.instance = new EnhancedPDFProcessingService();
+      EnhancedPDFProcessingService.instance =
+        new EnhancedPDFProcessingService();
     }
     return EnhancedPDFProcessingService.instance;
   }
@@ -41,13 +50,16 @@ export class EnhancedPDFProcessingService {
   /**
    * Process a file with intelligent strategy selection
    */
-  async processFile(file: File, customConfig?: Partial<ProcessingConfig>): Promise<ProcessedFile | null> {
+  async processFile(
+    file: File,
+    customConfig?: Partial<ProcessingConfig>,
+  ): Promise<ProcessedFile | null> {
     const fileKey = await this.generateFileKey(file);
 
     // Check cache first
     const cached = this.cache.get(fileKey);
     if (cached) {
-      this.updateMetrics('cacheHit');
+      this.updateMetrics("cacheHit");
       return cached;
     }
 
@@ -66,11 +78,16 @@ export class EnhancedPDFProcessingService {
     const config: ProcessingConfig = {
       ...this.defaultConfig,
       strategy: analysis.recommendedStrategy,
-      ...customConfig
+      ...customConfig,
     };
 
     // Start processing
-    this.startProcessing(file, fileKey, config, analysis.estimatedProcessingTime);
+    this.startProcessing(
+      file,
+      fileKey,
+      config,
+      analysis.estimatedProcessingTime,
+    );
     return null;
   }
 
@@ -81,7 +98,7 @@ export class EnhancedPDFProcessingService {
     file: File,
     fileKey: string,
     config: ProcessingConfig,
-    estimatedTime: number
+    estimatedTime: number,
   ): Promise<void> {
     // Create cancellation token
     const cancellationToken = new AbortController();
@@ -90,17 +107,17 @@ export class EnhancedPDFProcessingService {
     const state: ProcessingState = {
       fileKey,
       fileName: file.name,
-      status: 'processing',
+      status: "processing",
       progress: 0,
       strategy: config.strategy,
       startedAt: Date.now(),
       estimatedTimeRemaining: estimatedTime,
-      cancellationToken
+      cancellationToken,
     };
 
     this.processing.set(fileKey, state);
     this.notifyListeners();
-    this.updateMetrics('started');
+    this.updateMetrics("started");
 
     try {
       // Execute processing with retry logic
@@ -110,33 +127,33 @@ export class EnhancedPDFProcessingService {
           state.error = error;
           this.notifyListeners();
         },
-        config.maxRetries
+        config.maxRetries,
       );
 
       // Cache the result
       this.cache.set(fileKey, processedFile);
 
       // Update state to completed
-      state.status = 'completed';
+      state.status = "completed";
       state.progress = 100;
       state.completedAt = Date.now();
       this.notifyListeners();
-      this.updateMetrics('completed', Date.now() - state.startedAt);
+      this.updateMetrics("completed", Date.now() - state.startedAt);
 
       // Remove from processing map after brief delay
       setTimeout(() => {
         this.processing.delete(fileKey);
         this.notifyListeners();
       }, 2000);
-
     } catch (error) {
-      console.error('Processing failed for', file.name, ':', error);
+      console.error("Processing failed for", file.name, ":", error);
 
-      const processingError = ProcessingErrorHandler.createProcessingError(error);
-      state.status = 'error';
+      const processingError =
+        ProcessingErrorHandler.createProcessingError(error);
+      state.status = "error";
       state.error = processingError;
       this.notifyListeners();
-      this.updateMetrics('failed');
+      this.updateMetrics("failed");
 
       // Remove failed processing after delay
       setTimeout(() => {
@@ -152,19 +169,19 @@ export class EnhancedPDFProcessingService {
   private async executeProcessingStrategy(
     file: File,
     config: ProcessingConfig,
-    state: ProcessingState
+    state: ProcessingState,
   ): Promise<ProcessedFile> {
     switch (config.strategy) {
-      case 'immediate_full':
+      case "immediate_full":
         return this.processImmediateFull(file, config, state);
 
-      case 'priority_pages':
+      case "priority_pages":
         return this.processPriorityPages(file, config, state);
 
-      case 'progressive_chunked':
+      case "progressive_chunked":
         return this.processProgressiveChunked(file, config, state);
 
-      case 'metadata_only':
+      case "metadata_only":
         return this.processMetadataOnly(file, config, state);
 
       default:
@@ -178,7 +195,7 @@ export class EnhancedPDFProcessingService {
   private async processImmediateFull(
     file: File,
     config: ProcessingConfig,
-    state: ProcessingState
+    state: ProcessingState,
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
@@ -194,11 +211,14 @@ export class EnhancedPDFProcessingService {
       for (let i = 1; i <= totalPages; i++) {
         // Check for cancellation
         if (state.cancellationToken?.signal.aborted) {
-          throw new Error('Processing cancelled');
+          throw new Error("Processing cancelled");
         }
 
         const page = await pdf.getPage(i);
-        const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+        const thumbnail = await this.renderPageThumbnail(
+          page,
+          config.thumbnailQuality,
+        );
 
         const rotation = page.rotate || 0;
 
@@ -207,7 +227,7 @@ export class EnhancedPDFProcessingService {
           pageNumber: i,
           thumbnail,
           rotation,
-          selected: false
+          selected: false,
         });
 
         // Update progress
@@ -230,7 +250,7 @@ export class EnhancedPDFProcessingService {
   private async processPriorityPages(
     file: File,
     config: ProcessingConfig,
-    state: ProcessingState
+    state: ProcessingState,
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
@@ -246,18 +266,21 @@ export class EnhancedPDFProcessingService {
     for (let i = 1; i <= priorityCount; i++) {
       if (state.cancellationToken?.signal.aborted) {
         pdfWorkerManager.destroyDocument(pdf);
-        throw new Error('Processing cancelled');
+        throw new Error("Processing cancelled");
       }
 
       const page = await pdf.getPage(i);
-      const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+      const thumbnail = await this.renderPageThumbnail(
+        page,
+        config.thumbnailQuality,
+      );
 
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
         rotation: page.rotate || 0,
-        selected: false
+        selected: false,
       });
 
       state.progress = 10 + (i / priorityCount) * 60;
@@ -272,7 +295,7 @@ export class EnhancedPDFProcessingService {
         pageNumber: i,
         thumbnail: null, // Will be loaded lazily
         rotation: 0,
-        selected: false
+        selected: false,
       });
     }
 
@@ -289,7 +312,7 @@ export class EnhancedPDFProcessingService {
   private async processProgressiveChunked(
     file: File,
     config: ProcessingConfig,
-    state: ProcessingState
+    state: ProcessingState,
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
@@ -308,18 +331,21 @@ export class EnhancedPDFProcessingService {
     for (let i = 1; i <= firstChunkEnd; i++) {
       if (state.cancellationToken?.signal.aborted) {
         pdfWorkerManager.destroyDocument(pdf);
-        throw new Error('Processing cancelled');
+        throw new Error("Processing cancelled");
       }
 
       const page = await pdf.getPage(i);
-      const thumbnail = await this.renderPageThumbnail(page, config.thumbnailQuality);
+      const thumbnail = await this.renderPageThumbnail(
+        page,
+        config.thumbnailQuality,
+      );
 
       pages.push({
         id: `${createQuickKey(file)}-page-${i}`,
         pageNumber: i,
         thumbnail,
         rotation: page.rotate || 0,
-        selected: false
+        selected: false,
       });
 
       processedPages++;
@@ -329,7 +355,7 @@ export class EnhancedPDFProcessingService {
 
       // Small delay to prevent UI blocking
       if (i % 5 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
 
@@ -340,7 +366,7 @@ export class EnhancedPDFProcessingService {
         pageNumber: i,
         thumbnail: null,
         rotation: 0,
-        selected: false
+        selected: false,
       });
     }
 
@@ -357,7 +383,7 @@ export class EnhancedPDFProcessingService {
   private async processMetadataOnly(
     file: File,
     _config: ProcessingConfig,
-    state: ProcessingState
+    state: ProcessingState,
   ): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
@@ -374,7 +400,7 @@ export class EnhancedPDFProcessingService {
         pageNumber: i,
         thumbnail: null,
         rotation: 0,
-        selected: false
+        selected: false,
       });
     }
 
@@ -388,28 +414,35 @@ export class EnhancedPDFProcessingService {
   /**
    * Render a page thumbnail with specified quality
    */
-  private async renderPageThumbnail(page: any, quality: 'low' | 'medium' | 'high'): Promise<string> {
+  private async renderPageThumbnail(
+    page: any,
+    quality: "low" | "medium" | "high",
+  ): Promise<string> {
     const scales = { low: 0.2, medium: 0.5, high: 0.8 }; // Reduced low quality for page editor
     const scale = scales[quality];
 
     const viewport = page.getViewport({ scale, rotation: 0 });
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
     canvas.height = viewport.height;
 
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
     if (!context) {
-      throw new Error('Could not get canvas context');
+      throw new Error("Could not get canvas context");
     }
 
     await page.render({ canvasContext: context, viewport }).promise;
-    return canvas.toDataURL('image/jpeg', 0.8); // Use JPEG for better compression
+    return canvas.toDataURL("image/jpeg", 0.8); // Use JPEG for better compression
   }
 
   /**
    * Create a ProcessedFile object
    */
-  private createProcessedFile(file: File, pages: PDFPage[], totalPages: number): ProcessedFile {
+  private createProcessedFile(
+    file: File,
+    pages: PDFPage[],
+    totalPages: number,
+  ): ProcessedFile {
     return {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       pages,
@@ -417,11 +450,10 @@ export class EnhancedPDFProcessingService {
       metadata: {
         title: file.name,
         createdAt: new Date().toISOString(),
-        modifiedAt: new Date().toISOString()
-      }
+        modifiedAt: new Date().toISOString(),
+      },
     };
   }
-
 
   /**
    * Generate a unique, collision-resistant cache key
@@ -437,7 +469,7 @@ export class EnhancedPDFProcessingService {
     const state = this.processing.get(fileKey);
     if (state && state.cancellationToken) {
       state.cancellationToken.abort();
-      state.status = 'cancelled';
+      state.status = "cancelled";
       this.notifyListeners();
     }
   }
@@ -445,26 +477,35 @@ export class EnhancedPDFProcessingService {
   /**
    * Update processing metrics
    */
-  private updateMetrics(event: 'started' | 'completed' | 'failed' | 'cacheHit', processingTime?: number): void {
+  private updateMetrics(
+    event: "started" | "completed" | "failed" | "cacheHit",
+    processingTime?: number,
+  ): void {
     switch (event) {
-      case 'started':
+      case "started":
         this.metrics.totalFiles++;
         break;
-      case 'completed':
+      case "completed":
         this.metrics.completedFiles++;
         if (processingTime) {
           // Update rolling average
-          const totalProcessingTime = this.metrics.averageProcessingTime * (this.metrics.completedFiles - 1) + processingTime;
-          this.metrics.averageProcessingTime = totalProcessingTime / this.metrics.completedFiles;
+          const totalProcessingTime =
+            this.metrics.averageProcessingTime *
+              (this.metrics.completedFiles - 1) +
+            processingTime;
+          this.metrics.averageProcessingTime =
+            totalProcessingTime / this.metrics.completedFiles;
         }
         break;
-      case 'failed':
+      case "failed":
         this.metrics.failedFiles++;
         break;
-      case 'cacheHit': {
+      case "cacheHit": {
         // Update cache hit rate
         const totalAttempts = this.metrics.totalFiles + 1;
-        this.metrics.cacheHitRate = (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) / totalAttempts;
+        this.metrics.cacheHitRate =
+          (this.metrics.cacheHitRate * this.metrics.totalFiles + 1) /
+          totalAttempts;
         break;
       }
     }
@@ -480,7 +521,9 @@ export class EnhancedPDFProcessingService {
   /**
    * State subscription for components
    */
-  onProcessingChange(callback: (states: Map<string, ProcessingState>) => void): () => void {
+  onProcessingChange(
+    callback: (states: Map<string, ProcessingState>) => void,
+  ): () => void {
     this.processingListeners.add(callback);
     return () => this.processingListeners.delete(callback);
   }
@@ -490,7 +533,7 @@ export class EnhancedPDFProcessingService {
   }
 
   private notifyListeners(): void {
-    this.processingListeners.forEach(callback => callback(this.processing));
+    this.processingListeners.forEach((callback) => callback(this.processing));
   }
 
   /**
@@ -552,4 +595,5 @@ export class EnhancedPDFProcessingService {
 }
 
 // Export singleton instance
-export const enhancedPDFProcessingService = EnhancedPDFProcessingService.getInstance();
+export const enhancedPDFProcessingService =
+  EnhancedPDFProcessingService.getInstance();

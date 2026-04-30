@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface OnboardingStepperProps {
   totalSteps: number;
@@ -10,25 +10,29 @@ interface OnboardingStepperProps {
  * Renders a progress indicator where the active step is a pill and others are dots.
  * Colors come from theme.css variables.
  */
-export function OnboardingStepper({ totalSteps, activeStep, className }: OnboardingStepperProps) {
+export function OnboardingStepper({
+  totalSteps,
+  activeStep,
+  className,
+}: OnboardingStepperProps) {
   const items = Array.from({ length: totalSteps }, (_, index) => index);
 
   return (
     <div
       className={className}
       style={{
-        display: 'flex',
+        display: "flex",
         gap: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {items.map((index) => {
         const isActive = index === activeStep;
         const baseStyles: React.CSSProperties = {
           background: isActive
-            ? 'var(--onboarding-step-active)'
-            : 'var(--onboarding-step-inactive)',
+            ? "var(--onboarding-step-active)"
+            : "var(--onboarding-step-inactive)",
         };
 
         return (
@@ -48,5 +52,3 @@ export function OnboardingStepper({ totalSteps, activeStep, className }: Onboard
 }
 
 export default OnboardingStepper;
-
-

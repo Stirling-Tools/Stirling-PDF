@@ -1,6 +1,15 @@
-import React from 'react';
-import { Modal, Stack, ColorPicker as MantineColorPicker, Group, Button, ColorSwatch, Slider, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import React from "react";
+import {
+  Modal,
+  Stack,
+  ColorPicker as MantineColorPicker,
+  Group,
+  Button,
+  ColorSwatch,
+  Slider,
+  Text,
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 interface ColorPickerProps {
   isOpen: boolean;
@@ -26,8 +35,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   opacityLabel,
 }) => {
   const { t } = useTranslation();
-  const resolvedTitle = title ?? t('colorPicker.title', 'Choose colour');
-  const resolvedOpacityLabel = opacityLabel ?? t('annotation.opacity', 'Opacity');
+  const resolvedTitle = title ?? t("colorPicker.title", "Choose colour");
+  const resolvedOpacityLabel =
+    opacityLabel ?? t("annotation.opacity", "Opacity");
 
   return (
     <Modal
@@ -42,32 +52,39 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           format="hex"
           value={selectedColor}
           onChange={onColorChange}
-          swatches={['#000000', '#0066cc', '#cc0000', '#cc6600', '#009900', '#6600cc']}
+          swatches={[
+            "#000000",
+            "#0066cc",
+            "#cc0000",
+            "#cc6600",
+            "#009900",
+            "#6600cc",
+          ]}
           swatchesPerRow={6}
           size="lg"
           fullWidth
         />
         {showOpacity && onOpacityChange && opacity !== undefined && (
           <Stack gap="xs">
-            <Text size="sm" fw={500}>{resolvedOpacityLabel}</Text>
+            <Text size="sm" fw={500}>
+              {resolvedOpacityLabel}
+            </Text>
             <Slider
               min={10}
               max={100}
               value={opacity}
               onChange={onOpacityChange}
               marks={[
-                { value: 25, label: '25%' },
-                { value: 50, label: '50%' },
-                { value: 75, label: '75%' },
-                { value: 100, label: '100%' },
+                { value: 25, label: "25%" },
+                { value: 50, label: "50%" },
+                { value: 75, label: "75%" },
+                { value: 100, label: "100%" },
               ]}
             />
           </Stack>
         )}
         <Group justify="flex-end">
-          <Button onClick={onClose}>
-            {t('common.done', 'Done')}
-          </Button>
+          <Button onClick={onClose}>{t("common.done", "Done")}</Button>
         </Group>
       </Stack>
     </Modal>
@@ -83,14 +100,14 @@ interface ColorSwatchButtonProps {
 export const ColorSwatchButton: React.FC<ColorSwatchButtonProps> = ({
   color,
   onClick,
-  size = 24
+  size = 24,
 }) => {
   return (
     <ColorSwatch
       color={color}
       size={size}
       radius={0}
-      style={{ cursor: 'pointer' }}
+      style={{ cursor: "pointer" }}
       onClick={onClick}
     />
   );

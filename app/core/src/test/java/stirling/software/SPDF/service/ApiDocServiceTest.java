@@ -9,6 +9,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -346,6 +348,123 @@ class ApiDocServiceTest {
         setApiDocumentation(Map.of("/miso", endpoint));
         setApiDocsJsonRootNode();
         assertTrue(apiDocService.isMultiInput("/miso"));
+    }
+
+    @Test
+    void shouldUnpackZipResponseDetectsMultiOutputType() throws Exception {
+        String json = "{\"description\": \"Output:PDF Type:SIMO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/split", postNode);
+        setApiDocumentation(Map.of("/split", endpoint));
+        setApiDocsJsonRootNode();
+        assertTrue(apiDocService.shouldUnpackZipResponse("/split"));
+    }
+
+    @Test
+    void shouldUnpackZipResponseDetectsMimoType() throws Exception {
+        String json = "{\"description\": \"Output:PDF Type:MIMO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/overlay", postNode);
+        setApiDocumentation(Map.of("/overlay", endpoint));
+        setApiDocsJsonRootNode();
+        assertTrue(apiDocService.shouldUnpackZipResponse("/overlay"));
+    }
+
+    @Test
+    void shouldUnpackZipResponseDetectsZipOutputDeclaration() throws Exception {
+        String json = "{\"description\": \"Output:ZIP-PDF Type:SISO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/split-by-sections", postNode);
+        setApiDocumentation(Map.of("/split-by-sections", endpoint));
+        setApiDocsJsonRootNode();
+        assertTrue(apiDocService.shouldUnpackZipResponse("/split-by-sections"));
+    }
+
+    @Test
+    void shouldUnpackZipResponseReturnsFalseForSisoPdf() throws Exception {
+        String json = "{\"description\": \"Input:PDF Output:PDF Type:SISO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/rotate", postNode);
+        setApiDocumentation(Map.of("/rotate", endpoint));
+        setApiDocsJsonRootNode();
+        assertFalse(apiDocService.shouldUnpackZipResponse("/rotate"));
+    }
+
+    @Test
+    void shouldUnpackZipResponseReturnsFalseForUnknownOperation() throws Exception {
+        setApiDocumentation(Map.of());
+        assertFalse(apiDocService.shouldUnpackZipResponse("/unknown"));
+    }
+
+    /**
+     * Coverage test: every Stirling endpoint whose ZIP response is a transport for multiple typed
+     * results (SIMO/MIMO or Output:ZIP-PDF / Output:IMAGE/ZIP etc.) must be classified as {@code
+     * shouldUnpackZipResponse = true}. Descriptions below are the real
+     * {@code @Operation(description=...)} strings from each controller, so if a controller is
+     * renamed, tweaked or introduced without a {@code Type:} / {@code Output:ZIP-*} tag, this test
+     * breaks, surfacing the bug before {@code AiWorkflowService} silently registers a multi-result
+     * ZIP as a single file.
+     *
+     * <p>Add a new row here whenever a new unpack-eligible endpoint is introduced. Descriptions can
+     * be trimmed to the part containing the relevant tags.
+     */
+    @ParameterizedTest(name = "{0} → shouldUnpackZipResponse")
+    @CsvSource(
+            textBlock =
+                    """
+                    /api/v1/general/split-pages,              'Split pages. Input:PDF Output:PDF Type:SIMO'
+                    /api/v1/general/split-pdf-by-sections,    'Split. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/general/split-by-size-or-count,   'Split by size. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/general/split-pdf-by-chapters,    'Split by chapters. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/general/split-for-poster-print,   'Poster split. Input: PDF Output: ZIP-PDF Type: SISO'
+                    /api/v1/general/overlay-pdfs,             'Overlay PDFs. Input:PDF Output:PDF Type:MIMO'
+                    /api/v1/misc/auto-split-pdf,              'Auto split. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/misc/extract-images,              'Extract images. Output:IMAGE/ZIP Type:SIMO'
+                    /api/v1/misc/extract-image-scans,         'Extract image scans. Input:PDF Output:IMAGE/ZIP Type:SIMO'
+                    """)
+    void shouldUnpackZipResponseClassifiesKnownUnpackableEndpoints(
+            String endpoint, String description) throws Exception {
+        String json = mapper.writeValueAsString(Map.of("description", description));
+        JsonNode postNode = mapper.readTree(json);
+        setApiDocumentation(Map.of(endpoint, new ApiEndpoint(endpoint, postNode)));
+        setApiDocsJsonRootNode();
+        assertTrue(
+                apiDocService.shouldUnpackZipResponse(endpoint),
+                () ->
+                        "Expected shouldUnpackZipResponse=true for "
+                                + endpoint
+                                + " with description: "
+                                + description);
+    }
+
+    /**
+     * Inverse coverage: endpoints whose ZIP response is the deliverable itself (or that return
+     * single non-ZIP files) must not be flagged for unpacking. Catches regressions where a change
+     * to the classifier accidentally widens the positive match.
+     */
+    @ParameterizedTest(name = "{0} → !shouldUnpackZipResponse")
+    @CsvSource(
+            textBlock =
+                    """
+                    /api/v1/general/rotate-pdf,        'Rotate. Input:PDF Output:PDF Type:SISO'
+                    /api/v1/general/merge-pdfs,        'Merge. Input:PDF Output:PDF Type:MISO'
+                    /api/v1/misc/compress-pdf,         'Compress. Input:PDF Output:PDF Type:SISO'
+                    /api/v1/misc/flatten,              'Flatten forms. Input:PDF Output:PDF Type:SISO'
+                    /api/v1/security/get-attachments,  'Extract attachments. Input:PDF Output:ZIP Type:SISO'
+                    """)
+    void shouldUnpackZipResponseRejectsNonUnpackableEndpoints(String endpoint, String description)
+            throws Exception {
+        String json = mapper.writeValueAsString(Map.of("description", description));
+        JsonNode postNode = mapper.readTree(json);
+        setApiDocumentation(Map.of(endpoint, new ApiEndpoint(endpoint, postNode)));
+        setApiDocsJsonRootNode();
+        assertFalse(
+                apiDocService.shouldUnpackZipResponse(endpoint),
+                () ->
+                        "Expected shouldUnpackZipResponse=false for "
+                                + endpoint
+                                + " with description: "
+                                + description);
     }
 
     @Test

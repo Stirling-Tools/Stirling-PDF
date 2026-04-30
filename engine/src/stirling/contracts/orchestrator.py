@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import Field
@@ -8,32 +7,47 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
+from .common import (
+    ArtifactKind,
+    ConversationMessage,
+    ExtractedFileText,
+    NeedContentResponse,
+    SupportedCapability,
+    WorkflowOutcome,
+)
 from .execution import NextExecutionAction
-from .pdf_edit import PdfEditResponse
-from .pdf_questions import PdfQuestionResponse
+from .pdf_edit import PdfEditTerminalResponse
+from .pdf_questions import PdfQuestionTerminalResponse
 
 
-class SupportedCapability(StrEnum):
-    ORCHESTRATE = "orchestrate"
-    PDF_EDIT = "pdf_edit"
-    PDF_QUESTION = "pdf_question"
-    AGENT_DRAFT = "agent_draft"
-    AGENT_REVISE = "agent_revise"
-    AGENT_NEXT_ACTION = "agent_next_action"
+class ExtractedTextArtifact(ApiModel):
+    kind: Literal[ArtifactKind.EXTRACTED_TEXT] = ArtifactKind.EXTRACTED_TEXT
+    files: list[ExtractedFileText] = Field(default_factory=list)
+
+
+WorkflowArtifact = Annotated[ExtractedTextArtifact, Field(discriminator="kind")]
 
 
 class OrchestratorRequest(ApiModel):
     user_message: str
-    conversation_id: str | None = None
+    file_names: list[str]
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
+    artifacts: list[WorkflowArtifact] = Field(default_factory=list)
+    resume_with: SupportedCapability | None = None
 
 
 class UnsupportedCapabilityResponse(ApiModel):
-    outcome: Literal["unsupported_capability"] = "unsupported_capability"
+    outcome: Literal[WorkflowOutcome.UNSUPPORTED_CAPABILITY] = WorkflowOutcome.UNSUPPORTED_CAPABILITY
     capability: str
     message: str
 
 
-OrchestratorResponse = Annotated[
-    PdfEditResponse | PdfQuestionResponse | AgentDraftResponse | NextExecutionAction | UnsupportedCapabilityResponse,
+type OrchestratorResponse = Annotated[
+    PdfEditTerminalResponse
+    | PdfQuestionTerminalResponse
+    | NeedContentResponse
+    | AgentDraftResponse
+    | NextExecutionAction
+    | UnsupportedCapabilityResponse,
     Field(discriminator="outcome"),
 ]

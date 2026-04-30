@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, TextInput, ActionIcon, Text, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
-import { ViewerContext } from '@app/contexts/ViewerContext';
+import React, { useState, useEffect, useRef } from "react";
+import { Box, TextInput, ActionIcon, Text, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { ViewerContext } from "@app/contexts/ViewerContext";
 
 interface SearchInterfaceProps {
   visible: boolean;
@@ -19,8 +19,8 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const searchResults = searchState?.results;
   const searchActiveIndex = searchState?.activeIndex;
   const searchActions = viewerContext?.searchActions;
-  const [searchQuery, setSearchQuery] = useState('');
-  const [jumpToValue, setJumpToValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [jumpToValue, setJumpToValue] = useState("");
   const [resultInfo, setResultInfo] = useState<{
     currentIndex: number;
     totalResults: number;
@@ -42,9 +42,9 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       inputRef.current?.select();
     };
 
-    window.addEventListener('refocus-search-input', handleRefocus);
+    window.addEventListener("refocus-search-input", handleRefocus);
     return () => {
-      window.removeEventListener('refocus-search-input', handleRefocus);
+      window.removeEventListener("refocus-search-input", handleRefocus);
     };
   }, []);
 
@@ -69,7 +69,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         try {
           await searchActions.search(searchQuery.trim());
         } catch (error) {
-          console.error('Search failed:', error);
+          console.error("Search failed:", error);
         } finally {
           setIsSearching(false);
         }
@@ -95,14 +95,14 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         setResultInfo({
           currentIndex: activeIndex,
           totalResults: searchResults.length,
-          query: searchQuery // Use local search query
+          query: searchQuery, // Use local search query
         });
       } else if (searchQuery && searchResults?.length === 0) {
         // Show "no results" state
         setResultInfo({
           currentIndex: 0,
           totalResults: 0,
-          query: searchQuery
+          query: searchQuery,
         });
       } else {
         setResultInfo(null);
@@ -117,17 +117,17 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   }, [visible, searchResults, searchActiveIndex, searchQuery]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       // Navigate to next result on Enter
       event.preventDefault();
       handleNext();
-    } else if (event.key === 'Escape') {
+    } else if (event.key === "Escape") {
       onClose();
-    } else if (event.key === 'ArrowDown') {
+    } else if (event.key === "ArrowDown") {
       // Navigate to next result
       event.preventDefault();
       handleNext();
-    } else if (event.key === 'ArrowUp') {
+    } else if (event.key === "ArrowUp") {
       // Navigate to previous result
       event.preventDefault();
       handlePrevious();
@@ -144,7 +144,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
   const handleClearSearch = () => {
     searchActions?.clear();
-    setSearchQuery('');
+    setSearchQuery("");
     setResultInfo(null);
   };
 
@@ -159,14 +159,19 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
   const handleJumpToSubmit = () => {
     const index = parseInt(jumpToValue, 10);
-    if (!isNaN(index) && resultInfo && index >= 1 && index <= resultInfo.totalResults) {
+    if (
+      !isNaN(index) &&
+      resultInfo &&
+      index >= 1 &&
+      index <= resultInfo.totalResults
+    ) {
       handleJumpToResult(index);
-      setJumpToValue(''); // Clear the input after jumping
+      setJumpToValue(""); // Clear the input after jumping
     }
   };
 
   const handleJumpToKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleJumpToSubmit();
     }
   };
@@ -183,17 +188,16 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     onClose();
   };
 
-
   return (
     <Box
       style={{
-        padding: '0px'
+        padding: "0px",
       }}
     >
       {/* Header with close button */}
       <Group mb="md" justify="space-between">
         <Text size="sm" fw={600}>
-          {t('search.title', 'Search PDF')}
+          {t("search.title", "Search PDF")}
         </Text>
         <ActionIcon
           variant="subtle"
@@ -209,7 +213,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       <Group mb="md">
         <TextInput
           ref={inputRef}
-          placeholder={t('search.placeholder', 'Enter search term...')}
+          placeholder={t("search.placeholder", "Enter search term...")}
           value={searchQuery}
           onChange={(e) => {
             const newValue = e.currentTarget.value;
@@ -244,14 +248,19 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
               // Jump immediately as user types
               const index = parseInt(newValue, 10);
-              if (resultInfo && !isNaN(index) && index >= 1 && index <= resultInfo.totalResults) {
+              if (
+                resultInfo &&
+                !isNaN(index) &&
+                index >= 1 &&
+                index <= resultInfo.totalResults
+              ) {
                 handleJumpToResult(index);
               }
             }}
             onKeyDown={handleJumpToKeyDown}
-            onBlur={() => setJumpToValue('')} // Clear on blur instead of submit
+            onBlur={() => setJumpToValue("")} // Clear on blur instead of submit
             placeholder={(resultInfo?.currentIndex || 0).toString()}
-            style={{ width: '3rem' }}
+            style={{ width: "3rem" }}
             type="number"
             min="1"
             max={resultInfo?.totalResults || 0}
@@ -276,7 +285,9 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             variant="subtle"
             size="sm"
             onClick={handleNext}
-            disabled={!resultInfo || resultInfo.currentIndex >= resultInfo.totalResults}
+            disabled={
+              !resultInfo || resultInfo.currentIndex >= resultInfo.totalResults
+            }
             aria-label="Next result"
           >
             <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
@@ -287,7 +298,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
       {/* Loading state */}
       {isSearching && (
         <Text size="xs" c="dimmed" ta="center" mt="sm">
-          {t('search.searching', 'Searching...')}
+          {t("search.searching", "Searching...")}
         </Text>
       )}
     </Box>

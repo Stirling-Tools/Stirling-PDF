@@ -538,9 +538,9 @@ public final class RegexPatternUtils {
         getPattern("[^a-zA-Z0-9 ]"); // Input sanitization
         getPattern("[^a-zA-Z0-9]"); // Filename sanitization
         // API doc patterns
-        getPattern("Output:(\\w+)"); // precompiled single-escaped for runtime regex \w
-        getPattern("Input:(\\w+)");
-        getPattern("Type:(\\w+)");
+        getPattern("Output:\\s*(\\w+)");
+        getPattern("Input:\\s*(\\w+)");
+        getPattern("Type:\\s*(\\w+)");
         log.debug("Pre-compiled {} common regex patterns", patternCache.size());
     }
 
@@ -552,19 +552,19 @@ public final class RegexPatternUtils {
 
     /* Pattern for matching Output:<TYPE> in API descriptions */
     public Pattern getApiDocOutputTypePattern() {
-        return getPattern("Output:(\\w+)");
+        return getPattern("Output:\\s*(\\w+)");
     }
 
     /* Pattern for matching Input:<TYPE> in API descriptions */
     public Pattern getApiDocInputTypePattern() {
-        return getPattern("Input:(\\w+)");
+        return getPattern("Input:\\s*(\\w+)");
     }
 
     /**
      * Pattern for matching Type:<CODE> in API descriptions
      */
     public Pattern getApiDocTypePattern() {
-        return getPattern("Type:(\\w+)");
+        return getPattern("Type:\\s*(\\w+)");
     }
 
     /* Pattern for validating file extensions (2-4 alphanumeric, case-insensitive) */

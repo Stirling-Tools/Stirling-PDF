@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Loader, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useIsMobile } from '@app/hooks/useIsMobile';
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Loader, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
   mapChangesForDropdown,
   getFileFromSelection,
@@ -10,22 +10,25 @@ import {
   computeProgressPct,
   computeCountsText,
   computeMaxSharedPages,
-} from '@app/components/tools/compare/compare';
+} from "@app/components/tools/compare/compare";
+import { CompareResultData, CompareWorkbenchData } from "@app/types/compare";
+import ComparePixelWorkbenchView from "@app/components/tools/compare/ComparePixelWorkbenchView";
+import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useRightRailButtons } from "@app/hooks/useRightRailButtons";
+import CompareDocumentPane from "@app/components/tools/compare/CompareDocumentPane";
+import { useComparePagePreviews } from "@app/components/tools/compare/hooks/useComparePagePreviews";
+import { useComparePanZoom } from "@app/components/tools/compare/hooks/useComparePanZoom";
+import { useCompareHighlights } from "@app/components/tools/compare/hooks/useCompareHighlights";
+import { useCompareChangeNavigation } from "@app/components/tools/compare/hooks/useCompareChangeNavigation";
+import "@app/components/tools/compare/compareView.css";
+import { useCompareRightRailButtons } from "@app/components/tools/compare/hooks/useCompareRightRailButtons";
 import {
-  CompareResultData,
-  CompareWorkbenchData,
-} from '@app/types/compare';
-import { useFileContext } from '@app/contexts/file/fileHooks';
-import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
-import CompareDocumentPane from '@app/components/tools/compare/CompareDocumentPane';
-import { useComparePagePreviews } from '@app/components/tools/compare/hooks/useComparePagePreviews';
-import { useComparePanZoom } from '@app/components/tools/compare/hooks/useComparePanZoom';
-import { useCompareHighlights } from '@app/components/tools/compare/hooks/useCompareHighlights';
-import { useCompareChangeNavigation } from '@app/components/tools/compare/hooks/useCompareChangeNavigation';
-import '@app/components/tools/compare/compareView.css';
-import { useCompareRightRailButtons } from '@app/components/tools/compare/hooks/useCompareRightRailButtons';
-import { alert, updateToast, updateToastProgress, dismissToast } from '@app/components/toast';
-import type { ToastLocation } from '@app/components/toast/types';
+  alert,
+  updateToast,
+  updateToastProgress,
+  dismissToast,
+} from "@app/components/toast";
+import type { ToastLocation } from "@app/components/toast/types";
 
 interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;
@@ -34,29 +37,61 @@ interface CompareWorkbenchViewProps {
 // helpers moved to compare.ts
 
 const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
+  const rawResult = data?.result ?? null;
+  if (rawResult && rawResult.mode === "pixel") {
+    return <ComparePixelWorkbenchView result={rawResult} />;
+  }
+  return <CompareTextWorkbenchView data={data} />;
+};
+
+interface CompareTextWorkbenchViewProps {
+  data: CompareWorkbenchData | null;
+}
+
+const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
   const { t } = useTranslation();
   const prefersStacked = useIsMobile();
   const { selectors } = useFileContext();
 
-  const result: CompareResultData | null = data?.result ?? null;
+  const rawResult = data?.result ?? null;
+  const result: CompareResultData | null =
+    rawResult && rawResult.mode === "text" ? rawResult : null;
   const baseFileId = data?.baseFileId ?? null;
   const comparisonFileId = data?.comparisonFileId ?? null;
   const isOperationLoading = data?.isLoading ?? false;
 
-  const baseFile = getFileFromSelection(data?.baseLocalFile, baseFileId, selectors);
-  const comparisonFile = getFileFromSelection(data?.comparisonLocalFile, comparisonFileId, selectors);
+  const baseFile = getFileFromSelection(
+    data?.baseLocalFile,
+    baseFileId,
+    selectors,
+  );
+  const comparisonFile = getFileFromSelection(
+    data?.comparisonLocalFile,
+    comparisonFileId,
+    selectors,
+  );
   const baseStub = getStubFromSelection(baseFileId, selectors);
   const comparisonStub = getStubFromSelection(comparisonFileId, selectors);
 
   const processedAt = result?.totals.processedAt ?? null;
 
-  const { pages: basePages, loading: baseLoading, totalPages: baseTotal, renderedPages: baseRendered } = useComparePagePreviews({
+  const {
+    pages: basePages,
+    loading: baseLoading,
+    totalPages: baseTotal,
+    renderedPages: baseRendered,
+  } = useComparePagePreviews({
     file: baseFile,
     enabled: Boolean(result && baseFile),
     cacheKey: processedAt,
   });
 
-  const { pages: comparisonPages, loading: comparisonLoading, totalPages: compTotal, renderedPages: compRendered } = useComparePagePreviews({
+  const {
+    pages: comparisonPages,
+    loading: comparisonLoading,
+    totalPages: compTotal,
+    renderedPages: compRendered,
+  } = useComparePagePreviews({
     file: comparisonFile,
     enabled: Boolean(result && comparisonFile),
     cacheKey: processedAt,
@@ -76,7 +111,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     isPanMode,
     setIsPanMode,
     baseZoom,
-    setBaseZoom,  
+    setBaseZoom,
     comparisonZoom,
     setComparisonZoom,
     setPanToTopLeft,
@@ -101,44 +136,78 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     getRowHeightPx,
   } = useCompareHighlights(result, basePages, comparisonPages);
 
-  const temporarilySuppressScrollLink = useCallback((fn: () => void, durationMs = 700) => {
-    const wasLinked = isScrollLinked;
-    if (wasLinked) setIsScrollLinked(false);
-    try {
-      fn();
-    } finally {
-      window.setTimeout(() => {
-        if (wasLinked) {
-          // recapture anchors to keep panes aligned when relinking
-          captureScrollLinkDelta();
-          setIsScrollLinked(true);
-        }
-      }, Math.max(200, durationMs));
-    }
-  }, [isScrollLinked, setIsScrollLinked, captureScrollLinkDelta]);
+  const temporarilySuppressScrollLink = useCallback(
+    (fn: () => void, durationMs = 700) => {
+      const wasLinked = isScrollLinked;
+      if (wasLinked) setIsScrollLinked(false);
+      try {
+        fn();
+      } finally {
+        window.setTimeout(
+          () => {
+            if (wasLinked) {
+              // recapture anchors to keep panes aligned when relinking
+              captureScrollLinkDelta();
+              setIsScrollLinked(true);
+            }
+          },
+          Math.max(200, durationMs),
+        );
+      }
+    },
+    [isScrollLinked, setIsScrollLinked, captureScrollLinkDelta],
+  );
 
   const handleChangeNavigation = useCompareChangeNavigation(
     baseScrollRef,
     comparisonScrollRef,
-    { temporarilySuppressScrollLink }
+    {
+      temporarilySuppressScrollLink,
+    },
   );
 
-  const processingMessage = t('compare.status.processing', 'Analyzing differences...');
-  const baseDocumentLabel = t('compare.summary.baseHeading', 'Original document');
-  const comparisonDocumentLabel = t('compare.summary.comparisonHeading', 'Edited document');
-  const pageLabel = t('compare.summary.pageLabel', 'Page');
+  const processingMessage = t(
+    "compare.status.processing",
+    "Analyzing differences...",
+  );
+  const baseDocumentLabel = t(
+    "compare.summary.baseHeading",
+    "Original document",
+  );
+  const comparisonDocumentLabel = t(
+    "compare.summary.comparisonHeading",
+    "Edited document",
+  );
+  const pageLabel = t("compare.summary.pageLabel", "Page");
 
   // Always show the selected file names from the sidebar; they are known before diff results
-  const baseTitle = baseStub?.name || result?.base?.fileName || '';
-  const comparisonTitle = comparisonStub?.name || result?.comparison?.fileName || '';
+  const baseTitle = baseStub?.name || result?.base?.fileName || "";
+  const comparisonTitle =
+    comparisonStub?.name || result?.comparison?.fileName || "";
 
   // During diff processing, show compact spinners in the dropdown badges
-  const baseDropdownPlaceholder = (isOperationLoading || !result)
-    ? (<span className="inline-flex flex-row items-center gap-1">{t('compare.dropdown.deletionsLabel', 'Deletions')} <Loader size="xs" color="currentColor" /></span>)
-    : t('compare.dropdown.deletions', 'Deletions ({{count}})', { count: baseWordChanges.length });
-  const comparisonDropdownPlaceholder = (isOperationLoading || !result)
-    ? (<span className="inline-flex flex-row items-center gap-1">{t('compare.dropdown.additionsLabel', 'Additions')} <Loader size="xs" color="currentColor" /></span>)
-    : t('compare.dropdown.additions', 'Additions ({{count}})', { count: comparisonWordChanges.length });
+  const baseDropdownPlaceholder =
+    isOperationLoading || !result ? (
+      <span className="inline-flex flex-row items-center gap-1">
+        {t("compare.dropdown.deletionsLabel", "Deletions")}{" "}
+        <Loader size="xs" color="currentColor" />
+      </span>
+    ) : (
+      t("compare.dropdown.deletions", "Deletions ({{count}})", {
+        count: baseWordChanges.length,
+      })
+    );
+  const comparisonDropdownPlaceholder =
+    isOperationLoading || !result ? (
+      <span className="inline-flex flex-row items-center gap-1">
+        {t("compare.dropdown.additionsLabel", "Additions")}{" "}
+        <Loader size="xs" color="currentColor" />
+      </span>
+    ) : (
+      t("compare.dropdown.additions", "Additions ({{count}})", {
+        count: comparisonWordChanges.length,
+      })
+    );
 
   const rightRailButtons = useCompareRightRailButtons({
     layout,
@@ -166,11 +235,26 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   // Rendering progress toast for very large PDFs
   const LARGE_PAGE_THRESHOLD = 400; // show banner when one or both exceed threshold
   const totalsKnown = (baseTotal ?? 0) > 0 && (compTotal ?? 0) > 0;
-  const showProgressBanner = useMemo(() => (
-    computeShowProgressBanner(totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading, LARGE_PAGE_THRESHOLD)
-  ), [totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading]);
+  const showProgressBanner = useMemo(
+    () =>
+      computeShowProgressBanner(
+        totalsKnown,
+        baseTotal,
+        compTotal,
+        baseLoading,
+        comparisonLoading,
+        LARGE_PAGE_THRESHOLD,
+      ),
+    [totalsKnown, baseTotal, compTotal, baseLoading, comparisonLoading],
+  );
 
-  const progressPct = computeProgressPct(totalsKnown, baseTotal, compTotal, baseRendered, compRendered);
+  const progressPct = computeProgressPct(
+    totalsKnown,
+    baseTotal,
+    compTotal,
+    baseRendered,
+    compRendered,
+  );
 
   const progressToastIdRef = useRef<string | null>(null);
   const completionTimerRef = useRef<number | null>(null);
@@ -189,10 +273,21 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
   }, []);
 
   const allDone = useMemo(() => {
-    const baseDone = (baseTotal || basePages.length) > 0 && baseRendered >= (baseTotal || basePages.length);
-    const compDone = (compTotal || comparisonPages.length) > 0 && compRendered >= (compTotal || comparisonPages.length);
+    const baseDone =
+      (baseTotal || basePages.length) > 0 &&
+      baseRendered >= (baseTotal || basePages.length);
+    const compDone =
+      (compTotal || comparisonPages.length) > 0 &&
+      compRendered >= (compTotal || comparisonPages.length);
     return baseDone && compDone;
-  }, [baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length]);
+  }, [
+    baseRendered,
+    compRendered,
+    baseTotal,
+    compTotal,
+    basePages.length,
+    comparisonPages.length,
+  ]);
 
   // Drive toast lifecycle and progress updates
   useEffect(() => {
@@ -217,10 +312,13 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       // Create toast if missing
       if (!progressToastIdRef.current) {
         const id = alert({
-          alertType: 'neutral',
-          title: t('compare.rendering.inProgress', "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
-          body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
-          location: 'bottom-right' as ToastLocation,
+          alertType: "neutral",
+          title: t(
+            "compare.rendering.inProgress",
+            "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+          ),
+          body: `${countsText} ${t("compare.rendering.pagesRendered", "pages rendered")}`,
+          location: "bottom-right" as ToastLocation,
           isPersistentPopup: true,
           durationMs: 0,
           expandable: false,
@@ -229,11 +327,14 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
         progressToastIdRef.current = id;
       } else {
         updateToast(progressToastIdRef.current, {
-          title: t('compare.rendering.inProgress', "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete"),
-          body: `${countsText} ${t('compare.rendering.pagesRendered', 'pages rendered')}`,
-          location: 'bottom-right' as ToastLocation,
+          title: t(
+            "compare.rendering.inProgress",
+            "At least one of these PDFs are very large, scrolling won't be smooth until the rendering is complete",
+          ),
+          body: `${countsText} ${t("compare.rendering.pagesRendered", "pages rendered")}`,
+          location: "bottom-right" as ToastLocation,
           isPersistentPopup: true,
-          alertType: 'neutral', // ensure it stays neutral until completion
+          alertType: "neutral", // ensure it stays neutral until completion
         });
         updateToastProgress(progressToastIdRef.current, progressPct);
       }
@@ -241,13 +342,14 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
       // Completed: update then auto-dismiss after 3s
       if (progressToastIdRef.current) {
         updateToast(progressToastIdRef.current, {
-          title: t('compare.rendering.complete', 'Page rendering complete'),
+          title: t("compare.rendering.complete", "Page rendering complete"),
           body: undefined,
           isPersistentPopup: false,
           durationMs: 3000,
         });
         updateToastProgress(progressToastIdRef.current, 100);
-        if (completionTimerRef.current != null) window.clearTimeout(completionTimerRef.current);
+        if (completionTimerRef.current != null)
+          window.clearTimeout(completionTimerRef.current);
         completionTimerRef.current = window.setTimeout(() => {
           if (progressToastIdRef.current) {
             dismissToast(progressToastIdRef.current);
@@ -267,14 +369,32 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
         completionTimerRef.current = null;
       }
     };
-  }, [showProgressBanner, allDone, progressPct, baseRendered, compRendered, baseTotal, compTotal, basePages.length, comparisonPages.length, t]);
+  }, [
+    showProgressBanner,
+    allDone,
+    progressPct,
+    baseRendered,
+    compRendered,
+    baseTotal,
+    compTotal,
+    basePages.length,
+    comparisonPages.length,
+    t,
+  ]);
 
   // Shared page navigation state/input
-  const maxSharedPages = useMemo(() => (
-    computeMaxSharedPages(baseTotal, compTotal, basePages.length, comparisonPages.length)
-  ), [baseTotal, compTotal, basePages.length, comparisonPages.length]);
+  const maxSharedPages = useMemo(
+    () =>
+      computeMaxSharedPages(
+        baseTotal,
+        compTotal,
+        basePages.length,
+        comparisonPages.length,
+      ),
+    [baseTotal, compTotal, basePages.length, comparisonPages.length],
+  );
 
-  const [pageInputValue, setPageInputValue] = useState<string>('1');
+  const [pageInputValue, setPageInputValue] = useState<string>("1");
   const typingTimerRef = useRef<number | null>(null);
   const isTypingRef = useRef(false);
 
@@ -287,133 +407,161 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     }
   }, [maxSharedPages]);
 
-  const scrollBothToPage = useCallback((pageNum: number) => {
-    const scrollOne = (container: HTMLDivElement | null) => {
-      if (!container) return false;
-      const pageEl = container.querySelector(`.compare-diff-page[data-page-number="${pageNum}"]`) as HTMLElement | null;
-      if (!pageEl) return false;
-      const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
-      const desired = Math.max(0, Math.min(maxTop, pageEl.offsetTop - Math.round(container.clientHeight * 0.2)));
-      container.scrollTop = desired;
-      return true;
-    };
+  const scrollBothToPage = useCallback(
+    (pageNum: number) => {
+      const scrollOne = (container: HTMLDivElement | null) => {
+        if (!container) return false;
+        const pageEl = container.querySelector(
+          `.compare-diff-page[data-page-number="${pageNum}"]`,
+        ) as HTMLElement | null;
+        if (!pageEl) return false;
+        const maxTop = Math.max(
+          0,
+          container.scrollHeight - container.clientHeight,
+        );
+        const desired = Math.max(
+          0,
+          Math.min(
+            maxTop,
+            pageEl.offsetTop - Math.round(container.clientHeight * 0.2),
+          ),
+        );
+        container.scrollTop = desired;
+        return true;
+      };
 
-    const hitBase = scrollOne(baseScrollRef.current);
-    const hitComp = scrollOne(comparisonScrollRef.current);
+      const hitBase = scrollOne(baseScrollRef.current);
+      const hitComp = scrollOne(comparisonScrollRef.current);
 
-    // Warn if one or both pages are not yet rendered
-    const baseHas = basePages.some(p => p.pageNumber === pageNum);
-    const compHas = comparisonPages.some(p => p.pageNumber === pageNum);
-    if (!baseHas || !compHas) {
-      alert({
-        alertType: 'warning',
-        title: t('compare.rendering.pageNotReadyTitle', 'Page not rendered yet'),
-        body: t('compare.rendering.pageNotReadyBody', 'Some pages are still rendering. Navigation will snap once they are ready.'),
-        location: 'bottom-right' as ToastLocation,
-        isPersistentPopup: false,
-        durationMs: 2500,
-      });
-    }
-
-    return hitBase || hitComp;
-  }, [basePages, comparisonPages, baseScrollRef, comparisonScrollRef, t]);
-
-  const handleTypingChange = useCallback((next: string) => {
-    // Only digits; allow empty while editing
-    const digits = next.replace(/[^0-9]/g, '');
-    if (digits.length === 0) {
-      setPageInputValue('');
-      if (typingTimerRef.current != null) {
-        window.clearTimeout(typingTimerRef.current);
-        typingTimerRef.current = null;
+      // Warn if one or both pages are not yet rendered
+      const baseHas = basePages.some((p) => p.pageNumber === pageNum);
+      const compHas = comparisonPages.some((p) => p.pageNumber === pageNum);
+      if (!baseHas || !compHas) {
+        alert({
+          alertType: "warning",
+          title: t(
+            "compare.rendering.pageNotReadyTitle",
+            "Page not rendered yet",
+          ),
+          body: t(
+            "compare.rendering.pageNotReadyBody",
+            "Some pages are still rendering. Navigation will snap once they are ready.",
+          ),
+          location: "bottom-right" as ToastLocation,
+          isPersistentPopup: false,
+          durationMs: 2500,
+        });
       }
-      return;
-    }
 
-    const parsed = Math.max(1, parseInt(digits, 10));
-    const capped = maxSharedPages > 0 ? Math.min(parsed, maxSharedPages) : parsed;
-    const display = String(capped);
-    setPageInputValue(display);
+      return hitBase || hitComp;
+    },
+    [basePages, comparisonPages, baseScrollRef, comparisonScrollRef, t],
+  );
 
-    isTypingRef.current = true;
-    if (typingTimerRef.current != null) window.clearTimeout(typingTimerRef.current);
-    typingTimerRef.current = window.setTimeout(() => {
-      isTypingRef.current = false;
-      scrollBothToPage(capped);
-    }, 300);
-  }, [maxSharedPages, scrollBothToPage]);
+  const handleTypingChange = useCallback(
+    (next: string) => {
+      // Only digits; allow empty while editing
+      const digits = next.replace(/[^0-9]/g, "");
+      if (digits.length === 0) {
+        setPageInputValue("");
+        if (typingTimerRef.current != null) {
+          window.clearTimeout(typingTimerRef.current);
+          typingTimerRef.current = null;
+        }
+        return;
+      }
+
+      const parsed = Math.max(1, parseInt(digits, 10));
+      const capped =
+        maxSharedPages > 0 ? Math.min(parsed, maxSharedPages) : parsed;
+      const display = String(capped);
+      setPageInputValue(display);
+
+      isTypingRef.current = true;
+      if (typingTimerRef.current != null)
+        window.clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = window.setTimeout(() => {
+        isTypingRef.current = false;
+        scrollBothToPage(capped);
+      }, 300);
+    },
+    [maxSharedPages, scrollBothToPage],
+  );
 
   return (
     <Stack className="compare-workbench">
-
-        <Stack gap="lg" className="compare-workbench__content">
-          <div
-            className={`compare-workbench__columns ${layout === 'stacked' ? 'compare-workbench__columns--stacked' : ''}`}
-          >
-            <CompareDocumentPane
-              pane="base"
-              layout={layout}
-              scrollRef={baseScrollRef}
-              peerScrollRef={comparisonScrollRef}
-              handleScrollSync={handleScrollSync}
-              handleWheelZoom={handleWheelZoom}
-              handleWheelOverscroll={handleWheelOverscroll}
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-              isPanMode={isPanMode}
-              zoom={baseZoom}
-              title={baseTitle}
-              dropdownPlaceholder={baseDropdownPlaceholder}
-              changes={mapChangesForDropdown(baseWordChanges)}
-              onNavigateChange={(value, pageNumber) => handleChangeNavigation(value, 'base', pageNumber)}
-              isLoading={isOperationLoading || baseLoading}
-              processingMessage={processingMessage}
-              pages={basePages}
-              pairedPages={comparisonPages}
-              getRowHeightPx={getRowHeightPx}
-              wordHighlightMap={wordHighlightMaps.base}
-              metaIndexToGroupId={metaIndexToGroupId.base}
-              documentLabel={baseDocumentLabel}
-              pageLabel={pageLabel}
-              altLabel={baseDocumentLabel}
+      <Stack gap="lg" className="compare-workbench__content">
+        <div
+          className={`compare-workbench__columns ${layout === "stacked" ? "compare-workbench__columns--stacked" : ""}`}
+        >
+          <CompareDocumentPane
+            pane="base"
+            layout={layout}
+            scrollRef={baseScrollRef}
+            peerScrollRef={comparisonScrollRef}
+            handleScrollSync={handleScrollSync}
+            handleWheelZoom={handleWheelZoom}
+            handleWheelOverscroll={handleWheelOverscroll}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            isPanMode={isPanMode}
+            zoom={baseZoom}
+            title={baseTitle}
+            dropdownPlaceholder={baseDropdownPlaceholder}
+            changes={mapChangesForDropdown(baseWordChanges)}
+            onNavigateChange={(value, pageNumber) =>
+              handleChangeNavigation(value, "base", pageNumber)
+            }
+            isLoading={isOperationLoading || baseLoading}
+            processingMessage={processingMessage}
+            pages={basePages}
+            pairedPages={comparisonPages}
+            getRowHeightPx={getRowHeightPx}
+            wordHighlightMap={wordHighlightMaps.base}
+            metaIndexToGroupId={metaIndexToGroupId.base}
+            documentLabel={baseDocumentLabel}
+            pageLabel={pageLabel}
+            altLabel={baseDocumentLabel}
             pageInputValue={pageInputValue}
             onPageInputChange={handleTypingChange}
             maxSharedPages={maxSharedPages}
-            />
-            <CompareDocumentPane
-              pane="comparison"
-              layout={layout}
-              scrollRef={comparisonScrollRef}
-              peerScrollRef={baseScrollRef}
-              handleScrollSync={handleScrollSync}
-              handleWheelZoom={handleWheelZoom}
-              handleWheelOverscroll={handleWheelOverscroll}
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-              isPanMode={isPanMode}
-              zoom={comparisonZoom}
-              title={comparisonTitle}
-              dropdownPlaceholder={comparisonDropdownPlaceholder}
+          />
+          <CompareDocumentPane
+            pane="comparison"
+            layout={layout}
+            scrollRef={comparisonScrollRef}
+            peerScrollRef={baseScrollRef}
+            handleScrollSync={handleScrollSync}
+            handleWheelZoom={handleWheelZoom}
+            handleWheelOverscroll={handleWheelOverscroll}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            isPanMode={isPanMode}
+            zoom={comparisonZoom}
+            title={comparisonTitle}
+            dropdownPlaceholder={comparisonDropdownPlaceholder}
             changes={mapChangesForDropdown(comparisonWordChanges)}
-              onNavigateChange={(value, pageNumber) => handleChangeNavigation(value, 'comparison', pageNumber)}
-              isLoading={isOperationLoading || comparisonLoading}
-              processingMessage={processingMessage}
-              pages={comparisonPages}
-              pairedPages={basePages}
-              getRowHeightPx={getRowHeightPx}
-              wordHighlightMap={wordHighlightMaps.comparison}
-              metaIndexToGroupId={metaIndexToGroupId.comparison}
-              documentLabel={comparisonDocumentLabel}
-              pageLabel={pageLabel}
-              altLabel={comparisonDocumentLabel}
+            onNavigateChange={(value, pageNumber) =>
+              handleChangeNavigation(value, "comparison", pageNumber)
+            }
+            isLoading={isOperationLoading || comparisonLoading}
+            processingMessage={processingMessage}
+            pages={comparisonPages}
+            pairedPages={basePages}
+            getRowHeightPx={getRowHeightPx}
+            wordHighlightMap={wordHighlightMaps.comparison}
+            metaIndexToGroupId={metaIndexToGroupId.comparison}
+            documentLabel={comparisonDocumentLabel}
+            pageLabel={pageLabel}
+            altLabel={comparisonDocumentLabel}
             pageInputValue={pageInputValue}
             onPageInputChange={handleTypingChange}
             maxSharedPages={maxSharedPages}
-            />
-          </div>
-        </Stack>
+          />
+        </div>
+      </Stack>
     </Stack>
   );
 };

@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -246,6 +247,60 @@ class FormUtilsAdditionalTest {
             // Should not throw in non-strict mode even if appearance is missing
             FormUtils.applyFieldValues(doc, Map.of("subscribed", true), false, false);
             FormUtils.applyFieldValues(doc, Map.of("subscribed", false), false, false);
+        }
+    }
+
+    // Regression: PDFBOX-5962. Flattening with an empty values map used to force
+    // setNeedAppearances(true), triggering PDFBox's refreshAppearances loop which
+    // could hang indefinitely. The call must complete quickly and clear form fields.
+    @Test
+    void testApplyFieldValues_emptyValuesWithFlatten_completesAndFlattens() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            SetupDocument setup = createBasicDocument(doc);
+            PDTextField textField = new PDTextField(setup.acroForm);
+            textField.setPartialName("company");
+            attachWidget(setup, textField, new PDRectangle(60, 720, 220, 20));
+
+            assertTrue(setup.acroForm.getNeedAppearances());
+
+            assertTimeoutPreemptively(
+                    Duration.ofSeconds(10),
+                    () -> FormUtils.applyFieldValues(doc, Map.of(), true, false));
+
+            PDAcroForm after = doc.getDocumentCatalog().getAcroForm();
+            assertTrue(after == null || after.getFields().isEmpty());
+        }
+    }
+
+    @Test
+    void testApplyFieldValues_nullValuesWithFlatten_completesAndFlattens() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            SetupDocument setup = createBasicDocument(doc);
+            PDTextField textField = new PDTextField(setup.acroForm);
+            textField.setPartialName("company");
+            attachWidget(setup, textField, new PDRectangle(60, 720, 220, 20));
+
+            assertTimeoutPreemptively(
+                    Duration.ofSeconds(10),
+                    () -> FormUtils.applyFieldValues(doc, null, true, false));
+
+            PDAcroForm after = doc.getDocumentCatalog().getAcroForm();
+            assertTrue(after == null || after.getFields().isEmpty());
+        }
+    }
+
+    @Test
+    void testApplyFieldValues_valuesWithFlatten_appliesValueAndFlattens() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            SetupDocument setup = createBasicDocument(doc);
+            PDTextField textField = new PDTextField(setup.acroForm);
+            textField.setPartialName("company");
+            attachWidget(setup, textField, new PDRectangle(60, 720, 220, 20));
+
+            FormUtils.applyFieldValues(doc, Map.of("company", "Stirling"), true, false);
+
+            PDAcroForm after = doc.getDocumentCatalog().getAcroForm();
+            assertTrue(after == null || after.getFields().isEmpty());
         }
     }
 

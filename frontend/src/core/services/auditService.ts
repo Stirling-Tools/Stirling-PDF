@@ -1,4 +1,4 @@
-import apiClient from '@app/services/apiClient';
+import apiClient from "@app/services/apiClient";
 
 export interface AuditSystemStatus {
   enabled: boolean;
@@ -73,9 +73,12 @@ const auditService = {
    * Get audit system status
    */
   async getSystemStatus(): Promise<AuditSystemStatus> {
-    const response = await apiClient.get('/api/v1/proprietary/ui-data/audit-dashboard', {
-      suppressErrorToast: true,
-    });
+    const response = await apiClient.get(
+      "/api/v1/proprietary/ui-data/audit-dashboard",
+      {
+        suppressErrorToast: true,
+      },
+    );
     const data = response.data;
 
     // Map V1 response to expected format
@@ -94,10 +97,15 @@ const auditService = {
   /**
    * Get audit statistics and KPI data
    */
-  async getStats(timePeriod: 'day' | 'week' | 'month' = 'week'): Promise<AuditStats> {
-    const response = await apiClient.get<AuditStats>('/api/v1/proprietary/ui-data/audit-stats', {
-      params: { period: timePeriod },
-    });
+  async getStats(
+    timePeriod: "day" | "week" | "month" = "week",
+  ): Promise<AuditStats> {
+    const response = await apiClient.get<AuditStats>(
+      "/api/v1/proprietary/ui-data/audit-stats",
+      {
+        params: { period: timePeriod },
+      },
+    );
     return response.data;
   },
 
@@ -105,19 +113,27 @@ const auditService = {
    * Get audit events with pagination and filters
    */
   async getEvents(filters: AuditFilters = {}): Promise<AuditEventsResponse> {
-    const response = await apiClient.get<AuditEventsResponse>('/api/v1/proprietary/ui-data/audit-events', {
-      params: filters,
-    });
+    const response = await apiClient.get<AuditEventsResponse>(
+      "/api/v1/proprietary/ui-data/audit-events",
+      {
+        params: filters,
+      },
+    );
     return response.data;
   },
 
   /**
    * Get chart data for dashboard
    */
-  async getChartsData(timePeriod: 'day' | 'week' | 'month' = 'week'): Promise<AuditChartsData> {
-    const response = await apiClient.get<AuditChartsData>('/api/v1/proprietary/ui-data/audit-charts', {
-      params: { period: timePeriod },
-    });
+  async getChartsData(
+    timePeriod: "day" | "week" | "month" = "week",
+  ): Promise<AuditChartsData> {
+    const response = await apiClient.get<AuditChartsData>(
+      "/api/v1/proprietary/ui-data/audit-charts",
+      {
+        params: { period: timePeriod },
+      },
+    );
     return response.data;
   },
 
@@ -125,13 +141,16 @@ const auditService = {
    * Export audit data with custom field selection
    */
   async exportData(
-    format: 'csv' | 'json',
-    filters: AuditFilters = {}
+    format: "csv" | "json",
+    filters: AuditFilters = {},
   ): Promise<Blob> {
-    const response = await apiClient.get('/api/v1/proprietary/ui-data/audit-export', {
-      params: { format, ...filters },
-      responseType: 'blob',
-    });
+    const response = await apiClient.get(
+      "/api/v1/proprietary/ui-data/audit-export",
+      {
+        params: { format, ...filters },
+        responseType: "blob",
+      },
+    );
     return response.data;
   },
 
@@ -139,7 +158,9 @@ const auditService = {
    * Get available event types for filtering
    */
   async getEventTypes(): Promise<string[]> {
-    const response = await apiClient.get<string[]>('/api/v1/proprietary/ui-data/audit-event-types');
+    const response = await apiClient.get<string[]>(
+      "/api/v1/proprietary/ui-data/audit-event-types",
+    );
     return response.data;
   },
 
@@ -147,7 +168,9 @@ const auditService = {
    * Get list of users for filtering
    */
   async getUsers(): Promise<string[]> {
-    const response = await apiClient.get<string[]>('/api/v1/proprietary/ui-data/audit-users');
+    const response = await apiClient.get<string[]>(
+      "/api/v1/proprietary/ui-data/audit-users",
+    );
     return response.data;
   },
 
@@ -155,7 +178,7 @@ const auditService = {
    * Clear all audit data from the database (irreversible)
    */
   async clearAllAuditData(): Promise<void> {
-    await apiClient.post('/api/v1/proprietary/ui-data/audit-clear-all', {});
+    await apiClient.post("/api/v1/proprietary/ui-data/audit-clear-all", {});
   },
 };
 

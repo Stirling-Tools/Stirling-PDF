@@ -1,10 +1,19 @@
-import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { BookletImpositionParameters, defaultParameters } from '@app/hooks/tools/bookletImposition/useBookletImpositionParameters';
+import { useTranslation } from "react-i18next";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import {
+  BookletImpositionParameters,
+  defaultParameters,
+} from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
 
 // Static configuration that can be used by both the hook and automation executor
-export const buildBookletImpositionFormData = (parameters: BookletImpositionParameters, file: File): FormData => {
+export const buildBookletImpositionFormData = (
+  parameters: BookletImpositionParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("pagesPerSheet", parameters.pagesPerSheet.toString());
@@ -22,8 +31,8 @@ export const buildBookletImpositionFormData = (parameters: BookletImpositionPara
 export const bookletImpositionOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildBookletImpositionFormData,
-  operationType: 'bookletImposition',
-  endpoint: '/api/v1/general/booklet-imposition',
+  operationType: "bookletImposition",
+  endpoint: "/api/v1/general/booklet-imposition",
   defaultParameters,
 } as const;
 
@@ -32,6 +41,11 @@ export const useBookletImpositionOperation = () => {
 
   return useToolOperation<BookletImpositionParameters>({
     ...bookletImpositionOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('bookletImposition.error.failed', 'An error occurred while creating the booklet imposition.'))
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "bookletImposition.error.failed",
+        "An error occurred while creating the booklet imposition.",
+      ),
+    ),
   });
 };
