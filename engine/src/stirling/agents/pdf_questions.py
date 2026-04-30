@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
+from pydantic_ai.output import NativeOutput, ToolOutput
+from pydantic_ai.tools import RunContext
 
-from stirling.agents._page_text import format_page_text, has_page_text
+from stirling.agents._page_text import format_page_text, has_page_text, page_text_from_artifacts
+from stirling.agents._registry import DelegatableAgent, DelegateRegistrar, OrchestratorDeps
 from stirling.contracts import (
     NeedContentFileRequest,
     NeedContentResponse,
+    OrchestratorRequest,
     PdfContentType,
     PdfQuestionAnswerResponse,
     PdfQuestionNotFoundResponse,
@@ -18,7 +21,7 @@ from stirling.contracts import (
 from stirling.services import AppRuntime
 
 
-class PdfQuestionAgent:
+class PdfQuestionAgent(DelegateRegistrar):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         rag = runtime.rag_capability
@@ -71,4 +74,28 @@ class PdfQuestionAgent:
             f"Files: {file_names}\n"
             f"Question: {request.question}\n"
             f"Extracted page text:\n{pages}"
+        )
+
+    async def run_as_delegate(self, request: OrchestratorRequest) -> PdfQuestionResponse:
+        return await self.handle(
+            PdfQuestionRequest(
+                question=request.user_message,
+                file_names=request.file_names,
+                page_text=page_text_from_artifacts(request.artifacts),
+                conversation_history=request.conversation_history,
+            )
+        )
+
+    async def delegate(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
+        return await self.run_as_delegate(ctx.deps.request)
+
+    def register_delegate(self) -> DelegatableAgent:
+        return DelegatableAgent(
+            capability=SupportedCapability.PDF_QUESTION,
+            tool_output=ToolOutput(
+                self.delegate,
+                name="delegate_pdf_question",
+                description="Delegate questions about PDF contents and return the PDF question result.",
+            ),
+            run=self.run_as_delegate,
         )

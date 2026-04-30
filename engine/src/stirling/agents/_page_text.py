@@ -1,6 +1,17 @@
 from __future__ import annotations
 
-from stirling.contracts import ExtractedFileText
+from collections.abc import Iterable
+
+from stirling.contracts import ExtractedFileText, ExtractedTextArtifact, WorkflowArtifact
+
+
+def page_text_from_artifacts(artifacts: Iterable[WorkflowArtifact]) -> list[ExtractedFileText]:
+    """Pull the page text from an :class:`ExtractedTextArtifact` in ``artifacts``, if present.
+    Returns an empty list when no extracted text artifact has been attached."""
+    for artifact in artifacts:
+        if isinstance(artifact, ExtractedTextArtifact):
+            return artifact.files
+    return []
 
 
 def has_page_text(page_text: list[ExtractedFileText]) -> bool:

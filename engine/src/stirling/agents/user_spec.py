@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
+from pydantic_ai.output import NativeOutput, ToolOutput
+from pydantic_ai.tools import RunContext
 
+from stirling.agents._registry import DelegatableAgent, DelegateRegistrar, OrchestratorDeps
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.contracts import (
     AgentDraft,
@@ -15,8 +17,10 @@ from stirling.contracts import (
     AiToolAgentStep,
     ConversationMessage,
     EditPlanResponse,
+    OrchestratorRequest,
     PdfEditRequest,
     PdfEditTerminalResponse,
+    SupportedCapability,
     format_conversation_history,
 )
 from stirling.models import ApiModel
@@ -29,7 +33,7 @@ class UserSpecMetadata(ApiModel):
     objective: str
 
 
-class UserSpecAgent:
+class UserSpecAgent(DelegateRegistrar):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.pdf_edit_agent = PdfEditAgent(runtime)
@@ -105,4 +109,26 @@ class UserSpecAgent:
         return await self.pdf_edit_agent.handle(
             PdfEditRequest(user_message=user_message, conversation_history=conversation_history),
             allow_need_content=False,
+        )
+
+    async def run_as_delegate(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
+        return await self.draft(
+            AgentDraftRequest(
+                user_message=request.user_message,
+                conversation_history=request.conversation_history,
+            )
+        )
+
+    async def delegate(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
+        return await self.run_as_delegate(ctx.deps.request)
+
+    def register_delegate(self) -> DelegatableAgent:
+        return DelegatableAgent(
+            capability=SupportedCapability.AGENT_DRAFT,
+            tool_output=ToolOutput(
+                self.delegate,
+                name="delegate_user_spec",
+                description="Delegate requests to create or revise a user agent spec and return the draft result.",
+            ),
+            run=self.run_as_delegate,
         )

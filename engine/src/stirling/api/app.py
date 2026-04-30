@@ -7,7 +7,14 @@ from fastapi import Depends, FastAPI
 from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
 
-from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.agents import (
+    ExecutionPlanningAgent,
+    OrchestratorAgent,
+    PdfEditAgent,
+    PdfQuestionAgent,
+    UserSpecAgent,
+    build_delegates,
+)
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
@@ -38,12 +45,22 @@ async def lifespan(fast_api: FastAPI):
     runtime = build_runtime(settings)
     fast_api.state.settings = settings
     fast_api.state.runtime = runtime
-    fast_api.state.orchestrator_agent = OrchestratorAgent(runtime)
     fast_api.state.pdf_edit_agent = PdfEditAgent(runtime)
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
+    fast_api.state.orchestrator_agent = OrchestratorAgent(
+        runtime,
+        build_delegates(
+            [
+                fast_api.state.pdf_edit_agent,
+                fast_api.state.pdf_question_agent,
+                fast_api.state.user_spec_agent,
+                fast_api.state.math_auditor_agent,
+            ]
+        ),
+    )
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
