@@ -41,6 +41,17 @@ const AppConfigModal = lazy(
   () => import("@app/components/shared/AppConfigModal"),
 );
 
+// Preload heavy components to avoid waterfall by starting imports as soon as HomePage loads
+const preloadImports = () => {
+  import("@app/components/tools/ToolPanel");
+  import("@app/components/layout/Workbench");
+  import("@app/components/shared/QuickAccessBar");
+  import("@app/components/shared/RightRail");
+  import("@app/components/FileManager");
+  import("@app/components/shared/AppConfigModal");
+};
+preloadImports();
+
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 
 import "@app/pages/HomePage.css";
@@ -380,7 +391,7 @@ export default function HomePage() {
             </button>
           </div>
           <Suspense fallback={null}>
-            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+            <FileManager selectedTool={selectedTool} />
           </Suspense>
           <Suspense fallback={null}>
             <AppConfigModal
@@ -406,7 +417,7 @@ export default function HomePage() {
             <RightRail />
           </Suspense>
           <Suspense fallback={null}>
-            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+            <FileManager selectedTool={selectedTool} />
           </Suspense>
         </Group>
       )}
