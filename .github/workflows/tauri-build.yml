@@ -1,6 +1,17 @@
 name: Build Tauri Applications
 
+# Multi-OS Tauri desktop bundle build matrix (Windows / macOS arm+intel /
+# Linux). Called from build.yml on PRs that touch desktop sources (gated
+# via the `tauri` filter in .github/config/.files.yaml). Also runnable
+# on demand via workflow_dispatch with a per-platform selector.
 on:
+  workflow_call:
+    inputs:
+      platform:
+        description: "Platform to build (windows, macos, linux, or all)."
+        required: false
+        type: string
+        default: "all"
   workflow_dispatch:
     inputs:
       platform:
@@ -13,17 +24,6 @@ on:
           - windows
           - macos
           - linux
-  pull_request:
-    branches: [main]
-    types: [opened, reopened, synchronize, ready_for_review]
-    paths:
-      - "frontend/src-tauri/**"
-      - "frontend/src/desktop/**"
-      - "frontend/tsconfig.desktop.json"
-      - "frontend/package.json"
-      - "frontend/package-lock.json"
-      - "frontend/vite.config.ts"
-      - ".github/workflows/tauri-build.yml"
 
 permissions:
   contents: read
@@ -45,20 +45,15 @@ jobs:
         id: set-matrix
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          PLATFORM: ${{ inputs.platform }}
         run: |
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
           MACOS_ARM='{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}'
           MACOS_INTEL='{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}'
 
-          # Resolve requested platform (non-dispatch events always build all)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PLATFORM="${{ github.event.inputs.platform }}"
-          else
-            PLATFORM="all"
-          fi
-
-          # Build candidate list
+          # Resolve requested platform — populated by either workflow_dispatch
+          # or workflow_call inputs; both paths default to "all".
           case "$PLATFORM" in
             windows) ENTRIES=("$WINDOWS") ;;
             macos)   ENTRIES=("$MACOS_ARM" "$MACOS_INTEL") ;;
