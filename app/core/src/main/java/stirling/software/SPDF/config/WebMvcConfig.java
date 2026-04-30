@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.EncodedResourceResolver;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,8 +44,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/assets/")
                 .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic())
                 .resourceChain(true)
-                .addResolver(
-                        new org.springframework.web.servlet.resource.EncodedResourceResolver());
+                .addResolver(new EncodedResourceResolver());
 
         // Don't cache index.html - it needs to be fresh to reference latest hashed assets
         // Note: index.html is handled by ReactRoutingController for dynamic processing
@@ -54,7 +54,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 + stirling.software.common.configuration.InstallationPathConfig
                                         .getStaticPath(),
                         "classpath:/static/")
-                .setCacheControl(CacheControl.noCache().mustRevalidate());
+                .setCacheControl(CacheControl.noCache().mustRevalidate())
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
 
         // Handle all other static resources (js, css, images, fonts, etc.)
         // Check customFiles/static first for user overrides
@@ -66,8 +68,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS))
                 .resourceChain(true)
-                .addResolver(
-                        new org.springframework.web.servlet.resource.EncodedResourceResolver());
+                .addResolver(new EncodedResourceResolver());
     }
 
     @Override
@@ -164,7 +165,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         } else {
             // Default to allowing all origins when nothing is configured
             logger.debug(
-                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
+                    "No CORS allowed origins configured in settings.yml"
+                            + " (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
             registry.addMapping("/**")
                     .allowedOriginPatterns("*")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
