@@ -19,9 +19,9 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 
 /**
  * Discovers every {@code /api/v1/...} request mapping in the application and exposes the subset
- * that {@link EndpointConfiguration} reports as currently enabled. The AI engine receives this
- * list as-is and silently drops anything it doesn't recognise, so we don't try to predict what
- * the engine considers a tool - we just emit what's enabled here.
+ * that {@link EndpointConfiguration} reports as currently enabled. The AI engine receives this list
+ * as-is and silently drops anything it doesn't recognise, so we don't try to predict what the
+ * engine considers a tool - we just emit what's enabled here.
  */
 @Slf4j
 @Service
@@ -31,6 +31,9 @@ public class AiEngineEndpointResolver {
 
     private final ApplicationContext applicationContext;
     private final EndpointConfiguration endpointConfiguration;
+    // Written once on the Spring startup thread during ContextRefreshedEvent, read on HTTP
+    // request threads. Spring's lifecycle establishes happens-before (the servlet container
+    // and its worker threads are started after refresh completes), so no volatile is needed.
     private Set<String> apiUrls = Set.of();
 
     public AiEngineEndpointResolver(
@@ -42,13 +45,16 @@ public class AiEngineEndpointResolver {
     @EventListener(ContextRefreshedEvent.class)
     public void discoverApiUrls() {
         Set<String> discovered = new TreeSet<>();
-        applicationContext
-                .getBeansOfType(RequestMappingHandlerMapping.class)
-                .values()
-                .forEach(mapping -> mapping.getHandlerMethods().keySet().forEach(
-                        info -> extractPatterns(info).stream()
-                                .filter(p -> p.startsWith(API_PREFIX))
-                                .forEach(discovered::add)));
+        for (RequestMappingHandlerMapping mapping :
+                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
+            for (RequestMappingInfo info : mapping.getHandlerMethods().keySet()) {
+                for (String pattern : extractPatterns(info)) {
+                    if (pattern.startsWith(API_PREFIX)) {
+                        discovered.add(pattern);
+                    }
+                }
+            }
+        }
         apiUrls = Set.copyOf(discovered);
         log.debug("Discovered {} /api/v1/ endpoint URLs for AI engine filtering", apiUrls.size());
     }
