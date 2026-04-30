@@ -119,13 +119,19 @@ jobs:
 
       - name: Set base image and platform for this build
         id: build-params
+        # Pass workflow inputs through env vars rather than expanding `${{ }}`
+        # directly into the shell — defense-in-depth against template injection
+        # if any upstream provider of these values ever becomes less trusted.
+        # GITHUB_EVENT_NAME is already provided by the runner.
+        env:
+          DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
         run: |
-          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.docker-base-changed }}" == "true" ]; then
-            echo "base_image=stirling-pdf-base:pr-test" >> $GITHUB_OUTPUT
-            echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$DOCKER_BASE_CHANGED" = "true" ]; then
+            echo "base_image=stirling-pdf-base:pr-test" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
           else
-            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
-            echo "platforms=linux/amd64,linux/arm64/v8" >> $GITHUB_OUTPUT
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build ${{ matrix.docker-rev }}
