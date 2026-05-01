@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "4.0.5"
+    id "org.springframework.boot" version "4.0.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.4.0"
@@ -193,6 +193,7 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+
 
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:
