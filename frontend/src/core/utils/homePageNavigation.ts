@@ -13,8 +13,9 @@ export function getStartupNavigationAction(
   selectedToolKey: string | null,
   currentWorkbench: WorkbenchType,
 ): StartupNavigationAction | null {
-  // pdfTextEditor handles its own empty state
-  if (selectedToolKey === "pdfTextEditor") {
+  // These tools manage their own state when files are added and should not be
+  // auto-navigated away from their workbench.
+  if (selectedToolKey === "pdfTextEditor" || selectedToolKey === "multiTool") {
     return null;
   }
 
