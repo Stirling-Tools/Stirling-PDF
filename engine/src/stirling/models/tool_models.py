@@ -1397,7 +1397,7 @@ class ToolEndpoint(StrEnum):
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
-    REDACT_EXECUTE = "/api/v1/security/redact/execute"
+    REDACT_EXECUTE = "/api/v1/security/redact-execute"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
