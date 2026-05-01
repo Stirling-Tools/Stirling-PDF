@@ -24,7 +24,9 @@ test.describe("13. Language / Localization", () => {
         .locator('[data-testid="language-selector-button"]')
         .first();
 
-      if (!(await languageButton.isVisible({ timeout: 1000 }).catch(() => false))) {
+      if (
+        !(await languageButton.isVisible({ timeout: 1000 }).catch(() => false))
+      ) {
         // Open Settings to access the language selector in the General section
         await page.locator('[data-testid="config-button"]').first().click();
         await page

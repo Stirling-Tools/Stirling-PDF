@@ -6,7 +6,10 @@ test.describe("15. Tour/Onboarding", () => {
       // The help/tours button was in the old QuickAccessBar which is not rendered
       // in the redesigned UI (replaced by FileSidebar). Skip until a tour entry
       // point is added to the new layout.
-      test.skip(true, "Help/tour button not yet present in redesigned FileSidebar UI");
+      test.skip(
+        true,
+        "Help/tour button not yet present in redesigned FileSidebar UI",
+      );
 
       // Step 1: Click the Tours button (identified by data-tour="help-button")
       const tourButton = page.locator('[data-tour="help-button"]').first();

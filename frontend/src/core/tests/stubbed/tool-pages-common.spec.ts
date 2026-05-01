@@ -38,7 +38,9 @@ test.describe("4. PDF Tool Pages - Common Patterns", () => {
 
       // Step 2: Click the "Back to tools" button in ToolPanel to go back to /.
       // In the redesigned UI this replaces the old "Tools" sidebar link.
-      const homeLink = page.getByRole("button", { name: /Back to tools/i }).first();
+      const homeLink = page
+        .getByRole("button", { name: /Back to tools/i })
+        .first();
       await homeLink.click();
 
       // Step 3: Verify navigation back to the home dashboard
