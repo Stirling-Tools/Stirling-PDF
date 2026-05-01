@@ -155,8 +155,8 @@ class PdfEditAgent:
             request.enabled_endpoints,
             request.user_message,
         )
-        supported_operations = self._supported_operations(request)
-        unavailable_operations = self._unavailable_operations(supported_operations)
+        supported_operations = self._get_supported_operations(request)
+        unavailable_operations = self._get_unavailable_operations(supported_operations)
         if not supported_operations:
             return EditCannotDoResponse(reason="No PDF edit operations are available on this server.")
         selection = await self._select_plan(
@@ -268,11 +268,11 @@ class PdfEditAgent:
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
-    def _supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
+    def _get_supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
         return request.enabled_endpoints
 
     @staticmethod
-    def _unavailable_operations(supported_operations: Iterable[ToolEndpoint]) -> Iterable[ToolEndpoint]:
+    def _get_unavailable_operations(supported_operations: Iterable[ToolEndpoint]) -> Iterable[ToolEndpoint]:
         supported_set = set(supported_operations)
         return [op for op in OPERATIONS if op not in supported_set]
 
