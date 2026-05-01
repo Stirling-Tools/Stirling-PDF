@@ -14,6 +14,7 @@ from stirling.contracts import (
     PdfContentType,
     PdfQuestionAnswerResponse,
     PdfQuestionNotFoundResponse,
+    PdfQuestionOrchestrateResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
@@ -120,14 +121,15 @@ class PdfQuestionAgent:
             )
         return await self._run_answer_agent(request)
 
-    async def orchestrate(self, request: OrchestratorRequest) -> PdfQuestionResponse:
+    async def orchestrate(self, request: OrchestratorRequest) -> PdfQuestionOrchestrateResponse:
         """Entry point for the orchestrator delegate.
 
         Decides math intent locally via a small classifier LLM (language-agnostic).
-        On a math first turn, embeds an :class:`EditPlanResponse` in the answer
-        response; on the resume turn, digests the captured :class:`Verdict` into
-        a localised prose answer. Non-math first turns fall through to the
-        text-grounded :meth:`handle` pipeline.
+        On a math first turn, returns an :class:`EditPlanResponse` (``outcome=PLAN``)
+        with ``resume_with=PDF_QUESTION`` so the caller runs the math specialist
+        and re-invokes the orchestrator. On the resume turn, the captured
+        :class:`Verdict` is digested into a localised prose answer. Non-math
+        first turns fall through to the text-grounded :meth:`handle` pipeline.
         """
         verdict = extract_math_verdict(request)
         if verdict is not None:
@@ -138,22 +140,18 @@ class PdfQuestionAgent:
             return PdfQuestionAnswerResponse(answer=answer, evidence=[])
 
         if await self._math_intent_classifier.classify(request.user_message):
-            # First turn — ask the caller to run the math specialist and come back.
-            # The plan rides on the answer response as a nullable member; ``answer``
-            # is empty on this turn and the caller resumes once the plan is run.
-            return PdfQuestionAnswerResponse(
-                answer="",
-                evidence=[],
-                edit_plan=EditPlanResponse(
-                    summary="",
-                    steps=[
-                        ToolOperationStep(
-                            tool=AgentToolId.MATH_AUDITOR_AGENT,
-                            parameters=MathAuditorAgentParams(),
-                        )
-                    ],
-                    resume_with=SupportedCapability.PDF_QUESTION,
-                ),
+            # First turn — emit a one-step plan calling the math specialist,
+            # with resume_with set so the caller comes back with the verdict
+            # in artifacts (handled by the resume branch above).
+            return EditPlanResponse(
+                summary="",
+                steps=[
+                    ToolOperationStep(
+                        tool=AgentToolId.MATH_AUDITOR_AGENT,
+                        parameters=MathAuditorAgentParams(),
+                    )
+                ],
+                resume_with=SupportedCapability.PDF_QUESTION,
             )
 
         return await self.handle(

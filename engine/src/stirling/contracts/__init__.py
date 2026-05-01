@@ -74,6 +74,7 @@ from .pdf_edit import (
 from .pdf_questions import (
     PdfQuestionAnswerResponse,
     PdfQuestionNotFoundResponse,
+    PdfQuestionOrchestrateResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
@@ -140,6 +141,7 @@ __all__ = [
     "PdfEditTerminalResponse",
     "PdfQuestionAnswerResponse",
     "PdfQuestionNotFoundResponse",
+    "PdfQuestionOrchestrateResponse",
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",

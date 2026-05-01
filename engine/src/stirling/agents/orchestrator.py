@@ -18,7 +18,7 @@ from stirling.contracts import (
     OrchestratorRequest,
     OrchestratorResponse,
     PdfEditResponse,
-    PdfQuestionResponse,
+    PdfQuestionOrchestrateResponse,
     SupportedCapability,
     UnsupportedCapabilityResponse,
     format_conversation_history,
@@ -139,10 +139,10 @@ class OrchestratorAgent:
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
         return await PdfEditAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
+    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionOrchestrateResponse:
         return await self._run_pdf_question(ctx.deps.request)
 
-    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse:
+    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionOrchestrateResponse:
         return await PdfQuestionAgent(self.runtime).orchestrate(request)
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:

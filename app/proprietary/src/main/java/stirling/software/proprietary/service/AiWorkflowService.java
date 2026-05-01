@@ -39,7 +39,6 @@ import stirling.software.proprietary.model.api.ai.AiConversationMessage;
 import stirling.software.proprietary.model.api.ai.AiFile;
 import stirling.software.proprietary.model.api.ai.AiRagIngestRequest;
 import stirling.software.proprietary.model.api.ai.AiRagPageText;
-import stirling.software.proprietary.model.api.ai.AiWorkflowEditPlan;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -347,19 +346,6 @@ public class AiWorkflowService {
             Map<String, MultipartFile> filesById,
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
-        AiWorkflowEditPlan plan = response.getEditPlan();
-        if (plan != null) {
-            // The engine wants us to run a side-quest before the answer is final.
-            // Run the embedded plan and resume the orchestrator with the captured
-            // report; the real answer arrives on the resume turn.
-            return runPlan(
-                    plan.getSteps(),
-                    plan.getResumeWith(),
-                    plan.getSummary(),
-                    filesById,
-                    previousRequest,
-                    listener);
-        }
         return new WorkflowState.Terminal(response);
     }
 

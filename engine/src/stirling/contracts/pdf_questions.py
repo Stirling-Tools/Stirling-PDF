@@ -26,15 +26,6 @@ class PdfQuestionAnswerResponse(ApiModel):
     outcome: Literal[WorkflowOutcome.ANSWER] = WorkflowOutcome.ANSWER
     answer: str
     evidence: list[ExtractedFileText] = Field(default_factory=list)
-    edit_plan: EditPlanResponse | None = Field(
-        default=None,
-        description=(
-            "Optional plan the caller must run before the answer is final. When"
-            " populated, ``answer`` is empty on this turn — the caller executes"
-            " the plan and re-invokes the orchestrator with ``resume_with`` set"
-            " to PDF_QUESTION; the real answer arrives on the resume turn."
-        ),
-    )
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
@@ -47,3 +38,11 @@ type PdfQuestionResponse = Annotated[
     PdfQuestionTerminalResponse | NeedIngestResponse,
     Field(discriminator="outcome"),
 ]
+
+
+# ``orchestrate`` may also emit an ``EditPlanResponse`` on the math-routing
+# first turn (``outcome=PLAN`` with ``resume_with=PDF_QUESTION``). It's not in
+# ``PdfQuestionTerminalResponse`` because that alias would otherwise duplicate
+# the PLAN branch already provided by ``PdfEditTerminalResponse`` in the
+# top-level :class:`OrchestratorResponse` discriminated union.
+type PdfQuestionOrchestrateResponse = PdfQuestionResponse | EditPlanResponse
