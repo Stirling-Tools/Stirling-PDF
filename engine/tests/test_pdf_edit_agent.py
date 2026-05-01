@@ -316,7 +316,7 @@ async def test_pdf_edit_agent_supports_literal_find_replace(runtime: AppRuntime)
     response = await agent.handle(
         PdfEditRequest(
             user_message="Change every 2025 to 2026.",
-            file_names=["contract.pdf"],
+            files=[AiFile(id=FileId("contract-id"), name="contract.pdf")],
         )
     )
 
@@ -362,7 +362,7 @@ async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRun
     response = await agent.handle(
         PdfEditRequest(
             user_message="Fix typos on page 3.",
-            file_names=["memo.pdf"],
+            files=[AiFile(id=FileId("memo-id"), name="memo.pdf")],
             page_text=page_text,
         )
     )
@@ -411,7 +411,7 @@ async def test_pdf_edit_agent_supports_natural_language_directed_edit(runtime: A
     response = await agent.handle(
         PdfEditRequest(
             user_message="Update the company name to Acme Corp.",
-            file_names=["agreement.pdf"],
+            files=[AiFile(id=FileId("agreement-id"), name="agreement.pdf")],
             page_text=page_text,
         )
     )
@@ -447,7 +447,7 @@ async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: 
     response = await agent.handle(
         PdfEditRequest(
             user_message="Remove the DRAFT watermark text and then rotate.",
-            file_names=["draft.pdf"],
+            files=[AiFile(id=FileId("draft-id"), name="draft.pdf")],
         )
     )
 

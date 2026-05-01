@@ -174,8 +174,10 @@ class InternalApiClientTest {
                                     .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
                         })) {
 
+            // Reconstruct the client so its cached RestTemplate is the mocked one.
+            InternalApiClient mockedClient = newClient();
             ResponseEntity<Resource> response =
-                    client.post("/api/v1/ai/tools/pdf-comment-agent", body);
+                    mockedClient.post("/api/v1/ai/tools/pdf-comment-agent", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
