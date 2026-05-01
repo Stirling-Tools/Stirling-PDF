@@ -44,10 +44,6 @@ def get_rag_service(request: Request) -> RagService:
     return request.app.state.runtime.rag_service
 
 
-def get_rag_embedding_model(request: Request) -> str:
-    return request.app.state.runtime.settings.rag_embedding_model
-
-
 def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
     return request.app.state.math_auditor_agent
 

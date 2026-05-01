@@ -20,9 +20,9 @@ from stirling.agents.pdf_review import (
     _LocalisedComment,
     _LocalisedVerdict,
 )
-from stirling.contracts import EditPlanResponse, OrchestratorRequest, SupportedCapability
+from stirling.contracts import AiFile, EditPlanResponse, OrchestratorRequest, SupportedCapability
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
-from stirling.models import ToolEndpoint
+from stirling.models import FileId, ToolEndpoint
 from stirling.models.agent_tool_models import AgentToolId, PdfCommentAgentParams
 from stirling.services.runtime import AppRuntime
 
@@ -144,7 +144,10 @@ async def test_orchestrate_classifier_true_emits_math_audit_plan(runtime: AppRun
     """First turn — when the math-intent classifier says yes, emit a one-step plan
     calling the math auditor with resume_with=PDF_REVIEW."""
     agent = PdfReviewAgent(runtime)
-    request = OrchestratorRequest(user_message="vérifie les totaux", file_names=["report.pdf"])
+    request = OrchestratorRequest(
+        user_message="vérifie les totaux",
+        files=[AiFile(id=FileId("report-id"), name="report.pdf")],
+    )
 
     with patch.object(agent._math_intent_classifier, "classify", AsyncMock(return_value=True)):
         response = await agent.orchestrate(request)
@@ -161,7 +164,7 @@ async def test_orchestrate_classifier_false_routes_to_pdf_comment_agent(runtime:
     agent = PdfReviewAgent(runtime)
     request = OrchestratorRequest(
         user_message="review the invoices for ambiguous wording",
-        file_names=["contract.pdf"],
+        files=[AiFile(id=FileId("contract-id"), name="contract.pdf")],
     )
 
     with patch.object(agent._math_intent_classifier, "classify", AsyncMock(return_value=False)):
@@ -187,7 +190,7 @@ async def test_orchestrate_resume_uses_verdict_without_calling_classifier(
     verdict = _make_verdict([_discrepancy(page=0, stated="$100")])
     request = OrchestratorRequest(
         user_message="flag math errors",
-        file_names=["report.pdf"],
+        files=[AiFile(id=FileId("report-id"), name="report.pdf")],
         artifacts=[MathAuditorToolReportArtifact(report=verdict)],
     )
     canned = _LocalisedVerdict(
