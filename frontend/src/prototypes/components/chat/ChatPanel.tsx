@@ -33,7 +33,7 @@ import {
   type AiWorkflowProgress,
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { ContentInspectorModal } from "./ContentInspectorModal";
+import { ContentInspectorModal } from "@app/components/chat/ContentInspectorModal";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
