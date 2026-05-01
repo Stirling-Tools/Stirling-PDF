@@ -13,6 +13,7 @@ from .common import (
     ExtractedFileText,
     NeedContentResponse,
     SupportedCapability,
+    ToolReportArtifact,
     WorkflowOutcome,
     drop_unknown_tool_endpoints,
 )
@@ -26,7 +27,7 @@ class ExtractedTextArtifact(ApiModel):
     files: list[ExtractedFileText] = Field(default_factory=list)
 
 
-WorkflowArtifact = Annotated[ExtractedTextArtifact, Field(discriminator="kind")]
+WorkflowArtifact = Annotated[ExtractedTextArtifact | ToolReportArtifact, Field(discriminator="kind")]
 
 
 class OrchestratorRequest(ApiModel):
