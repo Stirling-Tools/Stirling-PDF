@@ -24,6 +24,7 @@ import {
   useFieldValue,
 } from "@app/tools/formFill/FormFillContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { openUrl } from "@app/utils/urlUtils";
 import type {
   FormField,
   WidgetCoordinates,
@@ -87,7 +88,7 @@ function executePdfJs(
     try {
       const u = new URL(url);
       if (["http:", "https:", "mailto:"].includes(u.protocol)) {
-        window.open(url, "_blank", "noopener,noreferrer");
+        openUrl(url, "_blank", "noopener,noreferrer");
       }
     } catch {
       /* invalid URL — ignore */
@@ -667,7 +668,7 @@ export function FormFieldOverlay({
         try {
           const u = new URL(url);
           if (["http:", "https:", "mailto:"].includes(u.protocol)) {
-            window.open(url, "_blank", "noopener,noreferrer");
+            openUrl(url, "_blank", "noopener,noreferrer");
           }
         } catch {
           /* invalid URL */

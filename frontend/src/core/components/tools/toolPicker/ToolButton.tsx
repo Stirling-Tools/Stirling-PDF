@@ -6,10 +6,11 @@ import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { useToolNavigation } from "@app/hooks/useToolNavigation";
 import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
+import { openUrl } from "@app/utils/urlUtils";
 import FitText from "@app/components/shared/FitText";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
-import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
+import FavoriteStar from "@app/components/tools/toolpicker/FavoriteStar";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import type { ToolId } from "@app/types/toolId";
 import {
@@ -80,7 +81,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     }
     if (tool.link) {
       // Open external link in new tab
-      window.open(tool.link, "_blank", "noopener,noreferrer");
+      openUrl(tool.link, "_blank", "noopener,noreferrer");
       return;
     }
     // Normal tool selection

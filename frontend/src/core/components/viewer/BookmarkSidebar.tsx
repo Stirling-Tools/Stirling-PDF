@@ -12,6 +12,7 @@ import {
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
+import { openUrl } from "@app/utils/urlUtils";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/BookmarkSidebar.css";
@@ -330,12 +331,12 @@ export const BookmarkSidebar = ({
       const action = target.action;
       if (action.type === PdfActionType.URI && action.uri) {
         event.preventDefault();
-        window.open(action.uri, "_blank", "noopener");
+        openUrl(action.uri, "_blank", "noopener");
         return;
       }
       if (action.type === PdfActionType.LaunchAppOrOpenFile && action.path) {
         event.preventDefault();
-        window.open(action.path, "_blank", "noopener");
+        openUrl(action.path, "_blank", "noopener");
         return;
       }
     }
