@@ -1,0 +1,175 @@
+name: Backend build, format check, and coverage
+
+# Reusable workflow called from build.yml. Runs the full backend build matrix
+# (JDK 21/25 × spring-security on/off), Spotless formatting check, JUnit, and
+# posts Jacoco coverage to PRs.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk-version: [21, 25]
+        spring-security: [true, false]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK ${{ matrix.jdk-version }}
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: ${{ matrix.jdk-version }}
+          distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 9.3.1
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Check Java formatting (Spotless)
+        if: matrix.jdk-version == 25 && matrix.spring-security == false
+        id: spotless-check
+        run: task backend:format:check
+        continue-on-error: true
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Comment on Java formatting failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.spotless-check.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const marker = '<!-- java-formatting-check -->';
+            const body = [
+              marker,
+              '### Java Formatting Check Failed',
+              '',
+              'Your code has formatting issues. Run the following command to fix them:',
+              '',
+              '```bash',
+              'task backend:format',
+              '```',
+              '',
+              'Then commit and push the changes.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if Java formatting issues found
+        if: steps.spotless-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Java Formatting Check Failed"
+          echo "============================================"
+          echo ""
+          echo "Your code has formatting issues."
+          echo "Run the following command to fix them:"
+          echo ""
+          echo "  task backend:format"
+          echo ""
+          echo "Then commit and push the changes."
+          echo "============================================"
+          exit 1
+
+      - name: Build with Gradle and spring security ${{ matrix.spring-security }}
+        run: task backend:build:ci
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
+
+      - name: Check Test Reports Exist
+        if: always()
+        run: |
+          declare -a dirs=(
+            "app/core/build/reports/tests/"
+            "app/core/build/test-results/"
+            "app/common/build/reports/tests/"
+            "app/common/build/test-results/"
+            "app/proprietary/build/reports/tests/"
+            "app/proprietary/build/test-results/"
+          )
+          for dir in "${dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "Missing $dir"
+              exit 1
+            fi
+          done
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
+          path: |
+            app/**/build/reports/jacoco/test
+            app/**/build/reports/tests/
+            app/**/build/test-results/
+            app/**/build/reports/problems/
+            build/reports/problems/
+          retention-days: 3
+          if-no-files-found: warn
+
+      - name: Add coverage to PR with spring security ${{ matrix.spring-security }} and JDK ${{ matrix.jdk-version }}
+        # The action only supports the pull_request event (it posts a PR comment),
+        # so skip it for merge_group runs and workflow_dispatch.
+        if: github.event_name == 'pull_request'
+        id: jacoco
+        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
+        with:
+          paths: |
+            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 10
+          min-coverage-changed-files: 0
+          comment-type: summary
