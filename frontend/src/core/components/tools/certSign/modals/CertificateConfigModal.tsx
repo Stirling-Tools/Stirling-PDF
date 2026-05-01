@@ -112,9 +112,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           subjectName: string | null;
           notAfter: string | null;
           error: string | null;
-        }>(endpoint, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        }>(endpoint, formData);
 
         if (response.data.valid) {
           setCertValidation({
