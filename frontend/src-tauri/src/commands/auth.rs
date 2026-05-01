@@ -52,32 +52,38 @@ pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(),
         log::debug!("Auth token had surrounding whitespace; storing trimmed token");
     }
 
-    // Try keyring first (works in environments where Credential Manager persists writes)
-    let entry = get_keyring_entry()?;
-    match entry.set_password(trimmed) {
-        Ok(_) => {
-            // Verify it persists. On managed Win10 Pro environments (GPO restricting
-            // Credential Manager, AV/EDR rules, roaming-profile DPAPI quirks) the
-            // read-back can return the wrong value or NoEntry even when set succeeded.
-            match entry.get_password() {
-                Ok(saved) if saved == trimmed => {
-                    // Clear any stale fallback copy so the keyring stays authoritative.
-                    if let Ok(store) = app_handle.store(TOKENS_STORE_FILE) {
-                        if store.get(AUTH_TOKEN_STORE_KEY).is_some() {
-                            store.delete(AUTH_TOKEN_STORE_KEY);
-                            let _ = store.save();
+    // Try keyring first (works in environments where Credential Manager persists writes).
+    // Any failure - including entry creation - falls through to the Tauri Store fallback
+    // below, never an early return, so restricted environments still persist the token.
+    match get_keyring_entry() {
+        Ok(entry) => match entry.set_password(trimmed) {
+            Ok(_) => {
+                // Verify it persists. On managed Win10 Pro environments (GPO restricting
+                // Credential Manager, AV/EDR rules, roaming-profile DPAPI quirks) the
+                // read-back can return the wrong value or NoEntry even when set succeeded.
+                match entry.get_password() {
+                    Ok(saved) if saved == trimmed => {
+                        // Clear any stale fallback copy so the keyring stays authoritative.
+                        if let Ok(store) = app_handle.store(TOKENS_STORE_FILE) {
+                            if store.get(AUTH_TOKEN_STORE_KEY).is_some() {
+                                store.delete(AUTH_TOKEN_STORE_KEY);
+                                let _ = store.save();
+                            }
                         }
+                        log::info!("Auth token saved to keyring");
+                        return Ok(());
                     }
-                    log::info!("Auth token saved to keyring");
-                    return Ok(());
-                }
-                _ => {
-                    log::info!("Keyring did not persist auth token - using Tauri Store fallback");
+                    _ => {
+                        log::info!("Keyring did not persist auth token - using Tauri Store fallback");
+                    }
                 }
             }
-        }
+            Err(e) => {
+                log::info!("Keyring set failed for auth token: {} - using Tauri Store fallback", e);
+            }
+        },
         Err(e) => {
-            log::info!("Keyring set failed for auth token: {} - using Tauri Store fallback", e);
+            log::info!("Keyring entry unavailable for auth token: {} - using Tauri Store fallback", e);
         }
     }
 
@@ -102,15 +108,20 @@ pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(),
 
 #[tauri::command]
 pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, String> {
-    // Try keyring first (production / unrestricted environments)
-    let entry = get_keyring_entry()?;
-    match entry.get_password() {
-        Ok(token) => return Ok(Some(token)),
-        Err(keyring::Error::NoEntry) => {
-            log::debug!("No auth token in keyring, trying Tauri Store");
-        }
+    // Try keyring first (production / unrestricted environments). Any failure -
+    // including entry creation - falls through to the Tauri Store fallback below.
+    match get_keyring_entry() {
+        Ok(entry) => match entry.get_password() {
+            Ok(token) => return Ok(Some(token)),
+            Err(keyring::Error::NoEntry) => {
+                log::debug!("No auth token in keyring, trying Tauri Store");
+            }
+            Err(e) => {
+                log::warn!("Keyring error reading auth token: {} - trying Tauri Store", e);
+            }
+        },
         Err(e) => {
-            log::warn!("Keyring error reading auth token: {} - trying Tauri Store", e);
+            log::warn!("Keyring entry unavailable for auth token: {} - trying Tauri Store", e);
         }
     }
 
@@ -128,16 +139,21 @@ pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, Str
 
 #[tauri::command]
 pub async fn clear_auth_token(app_handle: AppHandle) -> Result<(), String> {
-    // Clear from keyring (best-effort)
-    let entry = get_keyring_entry()?;
-    match entry.delete_credential() {
-        Ok(_) | Err(keyring::Error::NoEntry) => {}
-        Err(e) => {
-            log::warn!("Failed to delete keyring credential: {}. Attempting overwrite with empty token.", e);
-            // Overwrite with an empty token so a stale value cannot be reused
-            if let Err(e2) = entry.set_password("") {
-                log::warn!("Failed to overwrite keyring auth token: {}", e2);
+    // Clear from keyring (best-effort). Entry creation failure must not block clearing
+    // the disk fallback, otherwise a stale fallback token could survive sign-out.
+    match get_keyring_entry() {
+        Ok(entry) => match entry.delete_credential() {
+            Ok(_) | Err(keyring::Error::NoEntry) => {}
+            Err(e) => {
+                log::warn!("Failed to delete keyring credential: {}. Attempting overwrite with empty token.", e);
+                // Overwrite with an empty token so a stale value cannot be reused
+                if let Err(e2) = entry.set_password("") {
+                    log::warn!("Failed to overwrite keyring auth token: {}", e2);
+                }
             }
+        },
+        Err(e) => {
+            log::warn!("Keyring entry unavailable while clearing auth token: {} - clearing Tauri Store fallback only", e);
         }
     }
 
