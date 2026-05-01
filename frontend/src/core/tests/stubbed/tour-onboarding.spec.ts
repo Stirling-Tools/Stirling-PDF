@@ -3,7 +3,12 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 test.describe("15. Tour/Onboarding", () => {
   test.describe("15.1 Tour Button", () => {
     test("should start and dismiss tour guide", async ({ page }) => {
-      // Step 1: Click the Tours button in the quick access bar (identified by data-tour="help-button")
+      // The help/tours button was in the old QuickAccessBar which is not rendered
+      // in the redesigned UI (replaced by FileSidebar). Skip until a tour entry
+      // point is added to the new layout.
+      test.skip(true, "Help/tour button not yet present in redesigned FileSidebar UI");
+
+      // Step 1: Click the Tours button (identified by data-tour="help-button")
       const tourButton = page.locator('[data-tour="help-button"]').first();
       await expect(tourButton).toBeVisible({ timeout: 5000 });
       await tourButton.click();

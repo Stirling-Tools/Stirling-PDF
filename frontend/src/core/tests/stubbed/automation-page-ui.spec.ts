@@ -8,11 +8,7 @@ test.describe("11. Automation Page", () => {
 
   test.describe("11.1 Automation - Suggested Workflows", () => {
     test("should display saved and suggested workflows", async ({ page }) => {
-      // Step 1: Verify the Automate link in the navigation is visible
-      const automateLink = page.locator('a[href="/automate"]').first();
-      await expect(automateLink).toBeVisible();
-
-      // Step 2: Verify the Automation Selection header is present
+      // Step 1: Verify the Automation Selection header is present
       await expect(
         page.getByText(/Automation Selection/i).first(),
       ).toBeVisible();

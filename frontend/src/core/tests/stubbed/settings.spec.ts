@@ -54,8 +54,9 @@ test.describe("Settings dialog", () => {
   }) => {
     await openSettings(page);
     await closeSettings(page);
+    // Verify the main UI is restored — the FileSidebar is always visible
     await expect(
-      page.locator('[data-tour="quick-access-bar"]').first(),
+      page.locator('[data-testid="files-button"]').first(),
     ).toBeVisible();
   });
 

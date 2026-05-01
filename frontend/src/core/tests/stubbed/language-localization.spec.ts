@@ -17,14 +17,24 @@ test.describe("13. Language / Localization", () => {
 
   test.describe("13.1 Language Switcher", () => {
     test("should switch UI text when language is changed", async ({ page }) => {
-      // Step 1: Locate the Language selector in the right rail
-      // The LanguageSelector uses an ActionIcon with a "language" icon and optional title="Language"
-      const languageButton = page
-        .locator(".right-rail-icon")
-        .filter({ has: page.locator('[class*="language"]') })
-        .first()
-        .or(page.locator('button[title="Language"]').first())
-        .or(page.locator('[data-tour="right-rail-settings"] button').nth(1));
+      // Step 1: Locate the Language selector.
+      // In the redesigned UI the right rail is only shown in the mobile layout, so
+      // the language selector is accessed via Settings > General on desktop.
+      let languageButton = page
+        .locator('[data-testid="language-selector-button"]')
+        .first();
+
+      if (!(await languageButton.isVisible({ timeout: 1000 }).catch(() => false))) {
+        // Open Settings to access the language selector in the General section
+        await page.locator('[data-testid="config-button"]').first().click();
+        await page
+          .locator(".mantine-Modal-content")
+          .first()
+          .waitFor({ state: "visible", timeout: 5000 });
+        languageButton = page
+          .locator('[data-testid="language-selector-button"]')
+          .first();
+      }
 
       // Step 2: Click the language button
       await expect(languageButton).toBeVisible({ timeout: 5000 });

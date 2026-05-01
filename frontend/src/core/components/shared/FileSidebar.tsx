@@ -549,6 +549,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               ? (e) => e.key === "Enter" && onOpenSettings()
               : undefined
           }
+          data-testid={onOpenSettings ? "config-button" : undefined}
           aria-label={
             onOpenSettings
               ? t("fileSidebar.openSettings", "Open settings")

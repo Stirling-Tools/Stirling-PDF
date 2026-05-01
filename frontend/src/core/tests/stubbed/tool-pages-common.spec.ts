@@ -17,10 +17,9 @@ test.describe("4. PDF Tool Pages - Common Patterns", () => {
       await expect(actionButton).toBeDisabled();
 
       // Step 3: Verify the file upload area is displayed
+      // (input[type="file"] is excluded — it is hidden in the FileSidebar)
       await expect(
-        page
-          .locator('[class*="upload"], [class*="dropzone"], input[type="file"]')
-          .first(),
+        page.locator('[class*="upload"], [class*="dropzone"]').first(),
       ).toBeVisible();
 
       // Step 4: Verify that clicking the disabled action button does nothing
@@ -37,10 +36,9 @@ test.describe("4. PDF Tool Pages - Common Patterns", () => {
       await page.goto("/compress");
       await page.waitForLoadState("domcontentloaded");
 
-      // Step 2: Click the sidebar "Tools" link to go back to /.
-      // Prefer the sidebar link to the breadcrumb: on webkit the breadcrumb
-      // click doesn't always trigger router navigation.
-      const homeLink = page.getByRole("link", { name: /^Tools$/i }).first();
+      // Step 2: Click the "Back to tools" button in ToolPanel to go back to /.
+      // In the redesigned UI this replaces the old "Tools" sidebar link.
+      const homeLink = page.getByRole("button", { name: /Back to tools/i }).first();
       await homeLink.click();
 
       // Step 3: Verify navigation back to the home dashboard

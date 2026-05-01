@@ -275,6 +275,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               variant="subtle"
               radius="md"
               className="right-rail-icon"
+              data-testid="language-selector-button"
               title={!opened && tooltip ? tooltip : undefined}
               styles={{
                 root: {
@@ -292,6 +293,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <Button
               variant="subtle"
               size="sm"
+              data-testid="language-selector-button"
               leftSection={
                 <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
               }
