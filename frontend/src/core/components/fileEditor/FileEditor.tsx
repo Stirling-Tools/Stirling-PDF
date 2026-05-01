@@ -12,7 +12,10 @@ import {
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { zipFileService } from "@app/services/zipFileService";
-import { detectFileExtension } from "@app/utils/fileUtils";
+import {
+  buildAcceptAttribute,
+  detectFileExtension,
+} from "@app/utils/fileUtils";
 import FileEditorThumbnail from "@app/components/fileEditor/FileEditorThumbnail";
 import AddFileCard from "@app/components/fileEditor/AddFileCard";
 import FilePickerModal from "@app/components/shared/FilePickerModal";
@@ -521,6 +524,9 @@ const FileEditor = ({
                 <AddFileCard
                   key="add-file-card"
                   onFileSelect={handleFileUpload}
+                  accept={
+                    buildAcceptAttribute(supportedExtensions) || undefined
+                  }
                 />
               )}
 

@@ -8,6 +8,7 @@ export interface FilesToolStepProps {
   isCollapsed?: boolean;
   onCollapsedClick?: () => void;
   minFiles?: number;
+  supportedFormats?: string[];
 }
 
 export function createFilesToolStep(
@@ -28,6 +29,7 @@ export function createFilesToolStep(
     <FileStatusIndicator
       selectedFiles={props.selectedFiles}
       minFiles={props.minFiles}
+      supportedFormats={props.supportedFormats}
     />,
   );
 }

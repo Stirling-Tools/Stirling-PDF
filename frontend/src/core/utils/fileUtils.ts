@@ -157,3 +157,59 @@ export function detectNonPdfFileType(
 
   return "unknown";
 }
+
+const EXTENSION_MIME_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  webp: "image/webp",
+  html: "text/html",
+  htm: "text/html",
+  txt: "text/plain",
+  text: "text/plain",
+  csv: "text/csv",
+  json: "application/json",
+  xml: "application/xml",
+  rtf: "application/rtf",
+  zip: "application/zip",
+  md: "text/markdown",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  odt: "application/vnd.oasis.opendocument.text",
+  ods: "application/vnd.oasis.opendocument.spreadsheet",
+  odp: "application/vnd.oasis.opendocument.presentation",
+  eml: "message/rfc822",
+  epub: "application/epub+zip",
+};
+
+/**
+ * Builds an HTML file input `accept` attribute string from a list of file
+ * extensions. The result includes both the extension form (".pdf") and the
+ * MIME type form ("application/pdf") when known, so browsers reliably restrict
+ * the native picker.
+ */
+export function buildAcceptAttribute(extensions?: string[] | null): string {
+  if (!extensions || extensions.length === 0) return "";
+
+  const tokens = new Set<string>();
+  for (const raw of extensions) {
+    if (!raw) continue;
+    const ext = raw.replace(/^\./, "").toLowerCase();
+    if (!ext) continue;
+    tokens.add(`.${ext}`);
+    const mime = EXTENSION_MIME_TYPES[ext];
+    if (mime) tokens.add(mime);
+  }
+
+  return Array.from(tokens).join(",");
+}

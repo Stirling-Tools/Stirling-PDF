@@ -1042,6 +1042,18 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         maxFiles: -1,
+        // Backend accepts a PDF *or* a raw scanned image (jpg/png/...).
+        supportedFormats: [
+          "pdf",
+          "jpg",
+          "jpeg",
+          "png",
+          "bmp",
+          "gif",
+          "tif",
+          "tiff",
+          "webp",
+        ],
         endpoints: ["extract-image-scans"],
         operationConfig: scannerImageSplitOperationConfig,
         automationSettings: ScannerImageSplitSettings,

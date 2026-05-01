@@ -36,7 +36,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   });
 
   const automateOperation = useAutomateOperation();
-  const { regularTools: toolRegistry } = useToolRegistry();
+  const { regularTools: toolRegistry, superTools } = useToolRegistry();
   const hasResults =
     automateOperation.files.length > 0 ||
     automateOperation.downloadUrl !== null;
@@ -209,6 +209,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const filesStep = createFilesToolStep(createStep, {
     selectedFiles,
     isCollapsed: hasResults,
+    supportedFormats: superTools.automate?.supportedFormats,
   });
 
   const automationSteps = [

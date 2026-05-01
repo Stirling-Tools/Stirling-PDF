@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Text, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -8,21 +8,29 @@ import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { StirlingFile } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { buildAcceptAttribute } from "@app/utils/fileUtils";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
   minFiles?: number;
+  supportedFormats?: string[];
 }
 
 const FileStatusIndicator = ({
   selectedFiles = [],
   minFiles = 1,
+  supportedFormats,
 }: FileStatusIndicatorProps) => {
   const { t } = useTranslation();
   const { openFilesModal, onFileUpload } = useFilesModalContext();
   const { files: stirlingFileStubs } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
   const [hasRecentFiles, setHasRecentFiles] = useState<boolean | null>(null);
+
+  const acceptAttribute = useMemo(
+    () => buildAcceptAttribute(supportedFormats ?? ["pdf"]),
+    [supportedFormats],
+  );
 
   // Check if there are recent files
   useEffect(() => {
@@ -42,7 +50,9 @@ const FileStatusIndicator = ({
     const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
-    input.accept = ".pdf,application/pdf";
+    if (acceptAttribute) {
+      input.accept = acceptAttribute;
+    }
     input.onchange = (event) => {
       const files = Array.from((event.target as HTMLInputElement).files || []);
       if (files.length > 0) {

@@ -13,6 +13,7 @@ import {
 import { StirlingFile } from "@app/types/fileContext";
 import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -20,6 +21,12 @@ export interface FilesStepConfig {
   minFiles?: number;
   onCollapsedClick?: () => void;
   isVisible?: boolean;
+  /**
+   * Override the file types that the upload picker accepts. Defaults to the
+   * `supportedFormats` declared on the currently selected tool (or just
+   * `["pdf"]` when a tool does not declare any).
+   */
+  supportedFormats?: string[];
 }
 
 export interface MiddleStepConfig {
@@ -94,11 +101,18 @@ export interface ToolFlowConfig<TParams = unknown> {
 /**
  * Creates a flexible tool flow with configurable steps and state management left to the tool.
  * Reduces boilerplate while allowing tools to manage their own collapse/expansion logic.
+ *
+ * NOTE: This must be called from inside a React function component (or another
+ * hook) — it uses `useToolWorkflow()` to look up the active tool's
+ * `supportedFormats` for the files-step upload picker.
  */
 export function createToolFlow<TParams = unknown>(
   config: ToolFlowConfig<TParams>,
 ) {
+  const { selectedTool } = useToolWorkflow();
   const steps = createToolSteps();
+  const filesSupportedFormats =
+    config.files.supportedFormats ?? selectedTool?.supportedFormats;
 
   return (
     <Stack gap="sm" p="sm">
@@ -113,6 +127,7 @@ export function createToolFlow<TParams = unknown>(
             isCollapsed: config.files.isCollapsed,
             minFiles: config.files.minFiles,
             onCollapsedClick: config.files.onCollapsedClick,
+            supportedFormats: filesSupportedFormats,
           })}
 
         {/* Middle Steps */}
