@@ -266,7 +266,6 @@ export class ReorderPagesCommand extends DOMCommand {
       reorderedPages = working;
     }
 
-    // Fresh objects, not mutation — DraggableItem's memo skips re-render otherwise.
     const newPages = reorderedPages.map((page, index) => ({
       ...page,
       pageNumber: index + 1,
