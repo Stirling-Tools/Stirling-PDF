@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from enum import StrEnum
-from typing import Literal, assert_never
+from typing import Annotated, Literal, assert_never
 
 from pydantic import Field, model_validator
 
+from stirling.contracts.contradiction import ContradictionVerdict
 from stirling.contracts.ledger import Verdict
 from stirling.models import OPERATIONS, ApiModel, FileId, ToolEndpoint
 from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
@@ -148,9 +149,16 @@ class NeedContentResponse(ApiModel):
 class MathAuditorToolReportArtifact(ApiModel):
     """Structured Verdict produced by the math-auditor on a previous orchestrator turn.
 
-    New specialists that the orchestrator needs to digest on a resume turn
-    should add a sibling artifact type here and lift this into a discriminated
-    union keyed on ``source_tool``.
+    Meta-agents (e.g. ``delegate_pdf_review``, ``delegate_pdf_question``) receive
+    this artifact when they emit a plan with ``resume_with`` set — Java runs the
+    math-auditor step, captures the Verdict, and re-enters the orchestrator with
+    it attached. The ``report`` is type-validated against :class:`Verdict` on
+    receipt rather than the previous free-form ``dict[str, Any]``.
+
+    Sibling artifact types for additional specialists are unioned via the
+    ``source_tool`` discriminator below. Java's ``AiWorkflowService`` populates
+    ``source_tool`` with the endpoint path string, which equals the
+    ``AgentToolId`` enum value — keep these in lockstep on both sides.
 
     Java counterpart: {@code PdfContentExtractor.ToolReportArtifact}.
     """
@@ -160,10 +168,27 @@ class MathAuditorToolReportArtifact(ApiModel):
     report: Verdict
 
 
-# Type alias kept around so callers don't have to know there's only one variant
-# today; lifts into a discriminated union when a second consumer-side report
-# appears.
-ToolReportArtifact = MathAuditorToolReportArtifact
+class ContradictionToolReportArtifact(ApiModel):
+    """Structured ContradictionVerdict produced by the contradiction agent.
+
+    Sibling of :class:`MathAuditorToolReportArtifact`; both are nested into the
+    ``ToolReportArtifact`` discriminated union on ``source_tool`` so the
+    orchestrator's resume-turn dispatch is type-safe.
+    """
+
+    kind: Literal[ArtifactKind.TOOL_REPORT] = ArtifactKind.TOOL_REPORT
+    source_tool: Literal[AgentToolId.CONTRADICTION_AGENT] = AgentToolId.CONTRADICTION_AGENT
+    report: ContradictionVerdict
+
+
+# Discriminated union of every tool-report artifact variant. The outer
+# ``WorkflowArtifact`` is keyed on ``kind`` (extracted_text vs tool_report);
+# this inner union splits the tool-report bucket on ``source_tool`` so each
+# specialist's verdict deserialises into its own concrete model.
+ToolReportArtifact = Annotated[
+    MathAuditorToolReportArtifact | ContradictionToolReportArtifact,
+    Field(discriminator="source_tool"),
+]
 
 
 class NeedIngestResponse(ApiModel):

@@ -9,6 +9,7 @@ from stirling.agents import (
     PdfQuestionAgent,
     UserSpecAgent,
 )
+from stirling.agents.contradiction import ContradictionAgent
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.rag import RagService
@@ -49,3 +50,7 @@ def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
 
 def get_pdf_comment_agent(request: Request) -> PdfCommentAgent:
     return request.app.state.pdf_comment_agent
+
+
+def get_contradiction_agent(request: Request) -> ContradictionAgent:
+    return request.app.state.contradiction_agent

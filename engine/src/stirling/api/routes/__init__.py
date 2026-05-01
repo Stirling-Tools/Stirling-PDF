@@ -1,4 +1,5 @@
 from .agent_drafts import router as agent_draft_router
+from .contradiction import router as contradiction_router
 from .execution import router as execution_router
 from .ledger import router as ledger_router
 from .orchestrator import router as orchestrator_router
@@ -9,6 +10,7 @@ from .rag import router as rag_router
 
 __all__ = [
     "agent_draft_router",
+    "contradiction_router",
     "execution_router",
     "ledger_router",
     "orchestrator_router",

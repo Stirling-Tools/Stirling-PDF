@@ -12,6 +12,7 @@ from .comments import CommentSpec
 from .common import (
     AiFile,
     ArtifactKind,
+    ContradictionToolReportArtifact,
     ConversationMessage,
     ExtractedFileText,
     MathAuditorToolReportArtifact,
@@ -27,6 +28,12 @@ from .common import (
     WorkflowOutcome,
     format_conversation_history,
     format_file_names,
+)
+from .contradiction import (
+    Claim,
+    Contradiction,
+    ContradictionSeverity,
+    ContradictionVerdict,
 )
 from .execution import (
     AgentExecutionRequest,
@@ -101,8 +108,13 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "Claim",
     "CommentSpec",
     "CompletedExecutionAction",
+    "Contradiction",
+    "ContradictionSeverity",
+    "ContradictionToolReportArtifact",
+    "ContradictionVerdict",
     "ConversationMessage",
     "DeleteDocumentResponse",
     "Discrepancy",

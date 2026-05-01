@@ -21,14 +21,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Coroutine
 from decimal import Decimal, InvalidOperation
-from typing import Any
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import AgentRunError
 
+from stirling.agents._concurrency import throttled
 from stirling.contracts.ledger import (
     Discrepancy,
     DiscrepancyKind,
@@ -254,9 +253,9 @@ class MathAuditorAgent:
         )
 
         # Fire all LLM calls concurrently (bounded by _llm_semaphore)
-        formula_coros = [self._throttled(self._infer_formulas(csv)) for _, csv in table_tasks]
-        figure_coros = [self._throttled(self._extract_figures_for_page(f)) for f in folios_with_text]
-        statement_coros = [self._throttled(self._verify_statements(f)) for f in folios_with_text]
+        formula_coros = [throttled(self._infer_formulas(csv), self._llm_semaphore) for _, csv in table_tasks]
+        figure_coros = [throttled(self._extract_figures_for_page(f), self._llm_semaphore) for f in folios_with_text]
+        statement_coros = [throttled(self._verify_statements(f), self._llm_semaphore) for f in folios_with_text]
         all_results = await asyncio.gather(
             *formula_coros,
             *figure_coros,
@@ -415,11 +414,6 @@ class MathAuditorAgent:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-
-    async def _throttled[T](self, coro: Coroutine[Any, Any, T]) -> T:
-        """Wrap a coroutine with the LLM concurrency semaphore."""
-        async with self._llm_semaphore:
-            return await coro
 
     async def _infer_formulas(self, table_csv: str) -> TableFormulas:
         """Ask the fast model to infer verifiable formulas from a CSV table."""
