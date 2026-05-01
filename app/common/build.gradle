@@ -29,20 +29,20 @@ spotless {
     }
 }
 dependencies {
-    api 'com.google.guava:guava:33.5.0-jre'
+    api 'com.google.guava:guava:33.6.0-jre'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
     api 'org.apache.commons:commons-lang3:3.20.0'
-    api 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
+    api 'com.drewnoakes:metadata-extractor:2.20.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
     api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:7.5.8' // RAR archive support for CBR files
+    api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2"
