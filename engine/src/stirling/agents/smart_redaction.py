@@ -16,6 +16,7 @@ import logging
 from pydantic_ai import Agent
 
 from stirling.contracts import (
+    AiFile,
     AnalyserOutput,
     EditCannotDoResponse,
     EditPlanResponse,
@@ -195,7 +196,7 @@ class SmartRedactionWorkflow:
                     return plan
                 return EditCannotDoResponse(reason="Could not resolve redaction patterns for the request.")
 
-            return SmartRedactionWorkflow.need_content_response(request.file_names)
+            return SmartRedactionWorkflow.need_content_response(request.files)
 
         pages_text = "\n".join(
             f"--- {('Page ' + str(page.page_number)) if page.page_number is not None else 'Page'}"
@@ -322,17 +323,17 @@ class SmartRedactionWorkflow:
         )
 
     @staticmethod
-    def need_content_response(file_names: list[str]) -> NeedContentResponse:
+    def need_content_response(files: list[AiFile]) -> NeedContentResponse:
         """Build a NEED_CONTENT response requesting full page text for all files."""
         return NeedContentResponse(
             resume_with=SupportedCapability.SMART_REDACTION_AGENT,
             reason="Need document text to identify content for semantic redaction.",
             files=[
                 NeedContentFileRequest(
-                    file_name=f,
+                    file=f,
                     content_types=[PdfContentType.PAGE_TEXT],
                 )
-                for f in file_names
+                for f in files
             ],
             max_pages=200,
             max_characters=100_000,
