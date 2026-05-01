@@ -23,7 +23,6 @@ import HoverActionMenu, {
 } from "@app/components/shared/HoverActionMenu";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { useDndContext } from "@dnd-kit/core";
 
 interface PageThumbnailProps {
   page: PDFPage;
@@ -34,6 +33,7 @@ interface PageThumbnailProps {
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
+  isOverTarget?: boolean;
   isBoxSelected?: boolean;
   clearBoxSelection?: () => void;
   activeDragIds: string[];
@@ -80,6 +80,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   selectionMode,
   movingPage,
   isAnimating,
+  isOverTarget = false,
   isBoxSelected = false,
   clearBoxSelection,
   activeDragIds,
@@ -121,9 +122,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
 
   // Check if this page is currently being dragged
   const isDragging = activeDragIds.includes(page.id);
-
-  const { over } = useDndContext();
-  const isOver = over?.id === page.id;
 
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
@@ -559,7 +557,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             padding: "6px 8px",
             borderRadius: 8,
             zIndex: 20,
-            opacity: isHovered || isOver ? 0.6 : 0,
+            opacity: isHovered || (isOverTarget && !isDragging) ? 0.6 : 0,
             transition: "opacity 0.2s ease-in-out",
           }}
         >
