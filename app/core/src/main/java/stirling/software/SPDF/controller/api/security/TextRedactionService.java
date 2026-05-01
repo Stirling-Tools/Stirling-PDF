@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +35,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
-import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
@@ -43,6 +43,7 @@ import stirling.software.SPDF.utils.text.WidthCalculator;
 @Slf4j
 class TextRedactionService {
 
+    private static final int MAX_XOBJECT_DEPTH = 10;
     private static final float PRECISION_THRESHOLD = 1e-3f;
     private static final int FONT_SCALE_FACTOR = 1000;
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
@@ -54,44 +55,41 @@ class TextRedactionService {
 
     Map<Integer, List<PDFText>> findTextToRedact(
             PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
-        Map<Integer, List<PDFText>> allFoundTextsByPage = new HashMap<>();
 
-        for (String text : listOfText) {
-            text = text.trim();
-            if (text.isEmpty()) continue;
+        Set<String> terms =
+                Arrays.stream(listOfText)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toSet());
 
-            log.debug(
-                    "Searching for text: '{}' (regex: {}, wholeWord: {})",
-                    text,
-                    useRegex,
-                    wholeWordSearch);
-
-            try {
-                TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearch);
-                textFinder.getText(document);
-
-                List<PDFText> foundTexts = textFinder.getFoundTexts();
-                log.debug("TextFinder found {} instances of '{}'", foundTexts.size(), text);
-
-                for (PDFText found : foundTexts) {
-                    allFoundTextsByPage
-                            .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
-                            .add(found);
-                    log.debug(
-                            "Added match on page {} at ({},{},{},{}): '{}'",
-                            found.getPageIndex(),
-                            found.getX1(),
-                            found.getY1(),
-                            found.getX2(),
-                            found.getY2(),
-                            found.getText());
-                }
-            } catch (Exception e) {
-                log.error("Error processing search term '{}': {}", text, e.getMessage());
-            }
+        if (terms.isEmpty()) {
+            return new HashMap<>();
         }
 
-        return allFoundTextsByPage;
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(terms, useRegex, wholeWordSearch);
+
+        if (patterns.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        log.debug(
+                "Scanning document once for {} pattern(s) (useRegex={}, wholeWord={})",
+                patterns.size(),
+                useRegex,
+                wholeWordSearch);
+
+        try {
+            MultiPatternTextFinder finder = new MultiPatternTextFinder(patterns);
+            finder.getText(document);
+            Map<Integer, List<PDFText>> result = finder.getFoundTextsByPage();
+            int total = result.values().stream().mapToInt(List::size).sum();
+            log.debug("Multi-pattern scan: {} match(es) across {} page(s)", total, result.size());
+            return result;
+        } catch (Exception e) {
+            log.error("Multi-pattern text search failed: {}", e.getMessage());
+            return new HashMap<>();
+        }
     }
 
     boolean performTextReplacement(
@@ -613,12 +611,42 @@ class TextRedactionService {
             Set<String> targetWords,
             boolean useRegex,
             boolean wholeWordSearch) {
+        processPageXObjects(
+                document, resources, targetWords, useRegex, wholeWordSearch, 0, new HashSet<>());
+    }
+
+    private void processPageXObjects(
+            PDDocument document,
+            PDResources resources,
+            Set<String> targetWords,
+            boolean useRegex,
+            boolean wholeWordSearch,
+            int depth,
+            Set<COSBase> visited) {
+
+        if (depth > MAX_XOBJECT_DEPTH) {
+            log.warn("[redact] XObject nesting depth {} exceeded limit, stopping traversal", depth);
+            return;
+        }
 
         for (COSName xobjName : resources.getXObjectNames()) {
             try {
                 PDXObject xobj = resources.getXObject(xobjName);
                 if (xobj instanceof PDFormXObject formXObj) {
-                    processFormXObject(document, formXObj, targetWords, useRegex, wholeWordSearch);
+                    if (!visited.add(formXObj.getCOSObject())) {
+                        log.debug(
+                                "[redact] Cycle detected in XObject graph, skipping {}",
+                                xobjName.getName());
+                        continue;
+                    }
+                    processFormXObject(
+                            document,
+                            formXObj,
+                            targetWords,
+                            useRegex,
+                            wholeWordSearch,
+                            depth + 1,
+                            visited);
                     log.debug("Processed Form XObject: {}", xobjName.getName());
                 }
             } catch (Exception e) {
@@ -632,7 +660,9 @@ class TextRedactionService {
             PDFormXObject formXObject,
             Set<String> targetWords,
             boolean useRegex,
-            boolean wholeWordSearch) {
+            boolean wholeWordSearch,
+            int depth,
+            Set<COSBase> visited) {
 
         try {
             PDResources xobjResources = formXObject.getResources();
@@ -640,13 +670,14 @@ class TextRedactionService {
                 return;
             }
 
-            for (COSName xobjName : xobjResources.getXObjectNames()) {
-                PDXObject nestedXObj = xobjResources.getXObject(xobjName);
-                if (nestedXObj instanceof PDFormXObject nestedFormXObj) {
-                    processFormXObject(
-                            document, nestedFormXObj, targetWords, useRegex, wholeWordSearch);
-                }
-            }
+            processPageXObjects(
+                    document,
+                    xobjResources,
+                    targetWords,
+                    useRegex,
+                    wholeWordSearch,
+                    depth,
+                    visited);
 
             PDFStreamParser parser = new PDFStreamParser(formXObject);
             List<Object> tokens = new ArrayList<>();
