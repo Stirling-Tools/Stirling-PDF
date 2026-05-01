@@ -3,7 +3,6 @@ import React, {
   useContext,
   useState,
   useMemo,
-  useEffect,
   ReactNode,
   useRef,
   useCallback,
@@ -240,18 +239,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   // activeFileIndex is derived from activeFileId so they can never desync.
   // ViewerProvider sits inside FileContextProvider so useFileState is valid here.
-  const { selectors, state } = useFileState();
+  const { selectors } = useFileState();
 
-  // Clear activeFileId when its file is removed from the workbench.
-  // Dep on state.files.ids so the effect re-runs on every add/remove.
-  useEffect(() => {
-    if (!activeFileId) return;
-    const stillInWorkbench = state.files.ids.some(
-      (id) => (id as string) === activeFileId,
-    );
-    if (!stillInWorkbench) setActiveFileId(null);
-  }, [activeFileId, state.files.ids]);
-
+  // activeFileIndex falls back to 0 when activeFileId is not found (stale or null),
+  // so we do NOT eagerly clear activeFileId when a file is removed. Doing so races
+  // with tool operations that call setActiveFileId(newId) right after consumeFiles:
+  // the clearing effect fires between the CONSUME_FILES dispatch and the tool's
+  // setActiveFileId call, clobbering the correct new ID with null.
   const activeFileIndex = useMemo(() => {
     if (!activeFileId) return 0;
     const files = selectors.getFiles();
