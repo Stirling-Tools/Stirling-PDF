@@ -139,7 +139,7 @@ jobs:
       # PR Event: Check licenses and comment on PR
       - name: Delete previous license check comments
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -192,7 +192,7 @@ jobs:
 
       - name: Comment on PR - License Check Results
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -382,7 +382,7 @@ jobs:
 
       - name: Delete previous backend license check comments
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -412,7 +412,7 @@ jobs:
 
       - name: Comment on PR - Backend License Check Results
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
