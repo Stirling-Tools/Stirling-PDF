@@ -242,7 +242,7 @@ class PdfEditAgent:
         unavailable_clause = (
             f" The following operations exist on this server but are NOT currently available "
             f"(disabled by the administrator or not installed in this build) and must NOT appear "
-            f"in any plan: {self._operations_prompt(unavailable_operations)}. "
+            f"in any plan: {self._get_operations_prompt(unavailable_operations)}. "
             "If the user asks for one of these, return cannot_do, name the operation, and explain "
             "that it exists but isn't available on this server."
             if unavailable_operations
@@ -252,7 +252,7 @@ class PdfEditAgent:
             self.runtime,
             base_system_prompt=(
                 "Plan PDF edit requests. "
-                f"Supported operations are: {self._operations_prompt(supported_operations)}."
+                f"Supported operations are: {self._get_operations_prompt(supported_operations)}."
                 f"{unavailable_clause} "
                 "Return an ordered list of one or more supported operations for the plan. "
                 "Do not produce operation parameters in this stage. "
@@ -273,7 +273,7 @@ class PdfEditAgent:
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         unavailable_line = (
             "Unavailable operations (exist but not currently usable): "
-            f"{self._operations_prompt(unavailable_operations)}\n"
+            f"{self._get_operations_prompt(unavailable_operations)}\n"
             if unavailable_operations
             else ""
         )
@@ -281,7 +281,7 @@ class PdfEditAgent:
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {file_names}\n"
-            f"Supported operations: {self._operations_prompt(supported_operations)}\n"
+            f"Supported operations: {self._get_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
@@ -295,7 +295,7 @@ class PdfEditAgent:
         return [op for op in OPERATIONS if op not in supported_set]
 
     @staticmethod
-    def _operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
+    def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
         return ", ".join(f"{op.name} ({op.value})" for op in operations)
 
     def _fill_need_content_defaults(
