@@ -88,7 +88,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   onTogglePage,
   onExecuteCommand,
   onSetStatus,
-  onSetMovingPage,
   onDeletePage,
   createRotateCommand,
   createSplitCommand,
