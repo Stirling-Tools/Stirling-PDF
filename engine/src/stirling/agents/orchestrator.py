@@ -20,6 +20,7 @@ from stirling.contracts import (
     PdfEditResponse,
     PdfQuestionOrchestrateResponse,
     SupportedCapability,
+    ToolOperationStep,
     UnsupportedCapabilityResponse,
     format_conversation_history,
     format_file_names,
