@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Box } from "@mantine/core";
+import { useEffect, useState, Suspense, lazy } from "react";
+import { Box, Loader, Center } from "@mantine/core";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -13,13 +13,20 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
-import FileEditor from "@app/components/fileEditor/FileEditor";
-import PageEditor from "@app/components/pageEditor/PageEditor";
-import PageEditorControls from "@app/components/pageEditor/PageEditorControls";
-import Viewer from "@app/components/viewer/Viewer";
+import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
-import LandingPage from "@app/components/shared/LandingPage";
+
+// Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
+// full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
+// is open. Lazy-loading keeps all of that out of the initial bundle.
+const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
+const PageEditor = lazy(() => import("@app/components/pageEditor/PageEditor"));
+const PageEditorControls = lazy(
+  () => import("@app/components/pageEditor/PageEditorControls"),
+);
+const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
@@ -206,7 +213,15 @@ export default function Workbench() {
           ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >
-        {renderMainContent()}
+        <Suspense
+          fallback={
+            <Center style={{ height: "100%" }}>
+              <Loader />
+            </Center>
+          }
+        >
+          {renderMainContent()}
+        </Suspense>
       </Box>
 
       <Footer

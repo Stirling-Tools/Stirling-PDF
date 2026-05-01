@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
-from stirling.models import ApiModel
+from stirling.models import ApiModel, ToolEndpoint
 
 from .common import (
     AiFile,
@@ -14,6 +14,7 @@ from .common import (
     SupportedCapability,
     ToolOperationStep,
     WorkflowOutcome,
+    drop_unknown_tool_endpoints,
 )
 
 
@@ -22,6 +23,13 @@ class PdfEditRequest(ApiModel):
     files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     page_text: list[ExtractedFileText] = Field(default_factory=list)
+    # The set of endpoints the Java backend considers usable. Unknown URLs are silently
+    # dropped so the engine and Java can drift in either direction without breaking
+    # validation. An empty list means no operations are available - the planner will
+    # return `cannot_do`.
+    enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
+        default_factory=list
+    )
 
 
 class EditPlanResponse(ApiModel):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import StrEnum
 from typing import Literal, assert_never
 
@@ -197,3 +198,14 @@ class ToolOperationStep(ApiModel):
             actual_type = type(self.parameters).__name__
             raise ValueError(f"Parameters for tool {self.tool} must be {expected_type.__name__}, got {actual_type}.")
         return self
+
+
+def drop_unknown_tool_endpoints(value: Iterable[str | ToolEndpoint]) -> list[ToolEndpoint]:
+    """Coerce inbound endpoint identifiers into `ToolEndpoint` members, dropping unknowns.
+
+    Java sends the full set of endpoints it considers enabled. The engine and the Java
+    backend may have version drift in either direction, so we silently drop anything we
+    don't recognise rather than failing the request. Anything dropped simply doesn't
+    appear as a supported tool to the planner.
+    """
+    return [ToolEndpoint(item) for item in value if item in ToolEndpoint]
