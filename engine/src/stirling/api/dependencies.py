@@ -11,6 +11,7 @@ from stirling.agents import (
     UserSpecAgent,
 )
 from stirling.agents.ledger import MathAuditorAgent
+from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.rag import RagService
 from stirling.services import AppRuntime
 
@@ -53,3 +54,7 @@ def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
 
 def get_pdf_to_markdown_agent(request: Request) -> PdfToMarkdownAgent:
     return request.app.state.pdf_to_markdown_agent
+
+
+def get_pdf_comment_agent(request: Request) -> PdfCommentAgent:
+    return request.app.state.pdf_comment_agent

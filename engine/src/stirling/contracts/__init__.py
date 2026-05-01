@@ -8,10 +8,12 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
+from .comments import CommentSpec
 from .common import (
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
+    MathAuditorToolReportArtifact,
     NeedContentFileRequest,
     NeedContentResponse,
     PdfContentType,
@@ -19,6 +21,7 @@ from .common import (
     StepKind,
     SupportedCapability,
     ToolOperationStep,
+    ToolReportArtifact,
     WorkflowOutcome,
     format_conversation_history,
 )
@@ -49,6 +52,13 @@ from .orchestrator import (
     OrchestratorResponse,
     UnsupportedCapabilityResponse,
     WorkflowArtifact,
+)
+from .pdf_comments import (
+    PdfCommentInstruction,
+    PdfCommentReport,
+    PdfCommentRequest,
+    PdfCommentResponse,
+    TextChunk,
 )
 from .pdf_edit import (
     EditCannotDoResponse,
@@ -102,6 +112,7 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "CommentSpec",
     "CompletedExecutionAction",
     "ConversationMessage",
     "PdfToMarkdownCannotDoResponse",
@@ -123,6 +134,7 @@ __all__ = [
     "FolioType",
     "format_conversation_history",
     "HealthResponse",
+    "MathAuditorToolReportArtifact",
     "NeedContentFileRequest",
     "NeedContentResponse",
     "NextExecutionAction",
@@ -132,6 +144,10 @@ __all__ = [
     "LayoutLine",
     "PageLayout",
     "ParsedTable",
+    "PdfCommentInstruction",
+    "PdfCommentReport",
+    "PdfCommentRequest",
+    "PdfCommentResponse",
     "PdfContentType",
     "PdfEditRequest",
     "PdfEditResponse",
@@ -154,8 +170,10 @@ __all__ = [
     "Severity",
     "StepKind",
     "SupportedCapability",
+    "TextChunk",
     "ToolCallExecutionAction",
     "ToolOperationStep",
+    "ToolReportArtifact",
     "UnsupportedCapabilityResponse",
     "Verdict",
     "WorkflowArtifact",
