@@ -10,10 +10,15 @@ export const CREDIT_COSTS = {
 } as const;
 
 /**
- * Mapping of tool IDs to their credit costs
- * Based on backend ResourceWeight annotations
+ * Mapping of tool IDs to their credit costs.
+ * Based on backend ResourceWeight annotations.
+ *
+ * Typed as {@code Partial} so overlays can contribute per-build-only tool ids
+ * (e.g. experimental tools in the prototypes build) without every overlay
+ * needing to know every other overlay's ids. Unknown ids fall back to
+ * {@link CREDIT_COSTS.MEDIUM} in {@link getToolCreditCost}.
  */
-export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
+export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   // No cost operations (0 credits)
   showJS: CREDIT_COSTS.NONE,
   devApi: CREDIT_COSTS.NONE,
