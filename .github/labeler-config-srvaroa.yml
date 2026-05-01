@@ -72,6 +72,12 @@ labels:
       - 'frontend/src-tauri/**'
       - 'frontend/src-tauri/.*'
 
+  - label: 'engine'
+    files:
+      - 'engine/**'
+      - 'engine/.*'
+      - 'engine/**/.*'
+
   - label: 'Java'
     files:
       - 'app/common/src/main/java/.*.java'
