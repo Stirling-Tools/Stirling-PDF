@@ -23,6 +23,7 @@ from stirling.contracts import (
     SupportedCapability,
     ToolOperationStep,
     format_conversation_history,
+    format_file_names,
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
@@ -117,7 +118,6 @@ class PdfEditParameterSelector:
     ) -> str:
         operation_id = operation_plan[operation_index]
         operation_list = ", ".join(operation.name for operation in operation_plan)
-        file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         generated_steps_text = (
             "\n".join(
                 f"- Step {step_index + 1}: {step.model_dump_json()}" for step_index, step in enumerate(generated_steps)
@@ -128,7 +128,7 @@ class PdfEditParameterSelector:
         return (
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Operation plan: {operation_list}\n"
             f"Selected operation index: {operation_index + 1} of {len(operation_plan)}\n"
             f"Selected operation: {operation_id.name}\n"
@@ -153,7 +153,7 @@ class PdfEditAgent:
         return await self.handle(
             PdfEditRequest(
                 user_message=request.user_message,
-                file_names=request.file_names,
+                files=request.files,
                 conversation_history=request.conversation_history,
                 page_text=extracted_text.files if extracted_text is not None else [],
                 enabled_endpoints=request.enabled_endpoints,
@@ -167,7 +167,7 @@ class PdfEditAgent:
     async def handle(self, request: PdfEditRequest, allow_need_content: bool = True) -> PdfEditResponse:
         logger.info(
             "[pdf-edit] handle: files=%s has_text=%s allow_need_content=%s enabled=%s msg=%r",
-            request.file_names,
+            [file.name for file in request.files],
             has_page_text(request.page_text),
             allow_need_content,
             request.enabled_endpoints,
@@ -270,7 +270,6 @@ class PdfEditAgent:
         supported_operations: Iterable[ToolEndpoint],
         unavailable_operations: Iterable[ToolEndpoint],
     ) -> str:
-        file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         unavailable_line = (
             "Unavailable operations (exist but not currently usable): "
             f"{self._get_operations_prompt(unavailable_operations)}\n"
@@ -280,7 +279,7 @@ class PdfEditAgent:
         return (
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Supported operations: {self._get_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
@@ -304,8 +303,7 @@ class PdfEditAgent:
         request: PdfEditRequest,
     ) -> NeedContentResponse:
         files = selection.files or [
-            NeedContentFileRequest(file_name=file_name, content_types=[PdfContentType.PAGE_TEXT])
-            for file_name in request.file_names
+            NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
         ]
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_EDIT,

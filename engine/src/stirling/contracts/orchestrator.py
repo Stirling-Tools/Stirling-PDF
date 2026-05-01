@@ -8,10 +8,12 @@ from stirling.models import ApiModel, ToolEndpoint
 
 from .agent_drafts import AgentDraftResponse
 from .common import (
+    AiFile,
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
     NeedContentResponse,
+    NeedIngestResponse,
     SupportedCapability,
     ToolReportArtifact,
     WorkflowOutcome,
@@ -32,7 +34,7 @@ WorkflowArtifact = Annotated[ExtractedTextArtifact | ToolReportArtifact, Field(d
 
 class OrchestratorRequest(ApiModel):
     user_message: str
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
@@ -52,6 +54,7 @@ type OrchestratorResponse = Annotated[
     PdfEditTerminalResponse
     | PdfQuestionTerminalResponse
     | NeedContentResponse
+    | NeedIngestResponse
     | AgentDraftResponse
     | NextExecutionAction
     | UnsupportedCapabilityResponse,

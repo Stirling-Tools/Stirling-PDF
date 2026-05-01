@@ -43,20 +43,36 @@ public class AiEngineClient {
 
     public String post(String path, String jsonBody) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        return postWithTimeout(path, jsonBody, Duration.ofSeconds(config.getTimeoutSeconds()));
+    }
+
+    /**
+     * POST with an explicit per-call timeout, for heavy operations (e.g. RAG ingestion of a large
+     * document) that legitimately take longer than the default timeout.
+     */
+    public String postLongRunning(String path, String jsonBody) throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        return postWithTimeout(
+                path, jsonBody, Duration.ofSeconds(config.getLongRunningTimeoutSeconds()));
+    }
+
+    private String postWithTimeout(String path, String jsonBody, Duration timeout)
+            throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
         String url = config.getUrl().stripTrailing() + path;
-        log.debug("Proxying AI engine request to {}", url);
+        log.debug("Proxying AI engine request to {} (timeout {}s)", url, timeout.toSeconds());
 
         HttpRequest request =
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
-                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                        .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                         .build();
 

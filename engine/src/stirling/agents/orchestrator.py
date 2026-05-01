@@ -18,10 +18,11 @@ from stirling.contracts import (
     OrchestratorRequest,
     OrchestratorResponse,
     PdfEditResponse,
-    PdfQuestionResponse,
+    PdfQuestionOrchestrateResponse,
     SupportedCapability,
     UnsupportedCapabilityResponse,
     format_conversation_history,
+    format_file_names,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
 from stirling.services import AppRuntime
@@ -78,12 +79,13 @@ class OrchestratorAgent:
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
-                "Use delegate_pdf_question for questions about PDF contents. "
+                "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
-                "Use unsupported_capability only when none of the other outputs fit."
+                "Use unsupported_capability when the user asks about the assistant itself "
+                "or when none of the other outputs fit; supply a helpful message."
             ),
             model_settings=runtime.fast_model_settings,
         )
@@ -91,7 +93,7 @@ class OrchestratorAgent:
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
         logger.info(
             "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
-            request.file_names,
+            [file.name for file in request.files],
             request.resume_with,
             [type(a).__name__ for a in request.artifacts],
             request.user_message,
@@ -137,10 +139,10 @@ class OrchestratorAgent:
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
         return await PdfEditAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
+    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionOrchestrateResponse:
         return await self._run_pdf_question(ctx.deps.request)
 
-    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse:
+    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionOrchestrateResponse:
         return await PdfQuestionAgent(self.runtime).orchestrate(request)
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
@@ -165,12 +167,11 @@ class OrchestratorAgent:
 
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
-        file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
         history = format_conversation_history(request.conversation_history)
         return (
             f"Conversation history:\n{history}\n"
             f"User message: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Available artifacts:\n{artifact_summary}"
         )
 
