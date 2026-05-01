@@ -321,13 +321,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           {/* Header: hamburger + branding */}
           <div
             className="file-sidebar-header"
-            onClick={() => {
-              if (searchActive) {
-                handleSearchClose();
-              } else {
-                onToggleCollapse?.();
-              }
-            }}
+            onClick={() => onToggleCollapse?.()}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && onToggleCollapse?.()}
@@ -337,11 +331,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 : t("fileSidebar.collapse", "Collapse sidebar")
             }
           >
-            {searchActive && !collapsed ? (
-              <CloseIcon className="file-sidebar-menu-icon" />
-            ) : (
-              <MenuIcon className="file-sidebar-menu-icon" />
-            )}
+            <MenuIcon className="file-sidebar-menu-icon" />
             {!collapsed && (
               <span className="file-sidebar-brand-text sidebar-content-fade">
                 Stirling PDF
@@ -362,7 +352,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   : undefined
               }
             >
-              <SearchIcon className="file-sidebar-search-icon" />
+              {searchActive && !collapsed ? (
+                <CloseIcon
+                  className="file-sidebar-search-icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSearchClose();
+                  }}
+                />
+              ) : (
+                <SearchIcon className="file-sidebar-search-icon" />
+              )}
               {!collapsed &&
                 (searchActive ? (
                   <input
