@@ -9,7 +9,7 @@ import {
 } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useToolSections } from "@app/hooks/useToolSections";
-import { openUrl } from "@app/utils/urlUtils";
+import { openUrl } from "@app/utils/urlExtensions";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";

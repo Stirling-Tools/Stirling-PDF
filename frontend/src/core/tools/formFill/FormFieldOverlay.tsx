@@ -24,7 +24,7 @@ import {
   useFieldValue,
 } from "@app/tools/formFill/FormFillContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { openUrl } from "@app/utils/urlUtils";
+import { openUrl } from "@app/utils/urlExtensions";
 import type {
   FormField,
   WidgetCoordinates,

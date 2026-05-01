@@ -7,7 +7,7 @@ import {
   PdfActionType,
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
-import { openUrl, isSafeUrlProtocol } from "@app/utils/urlUtils";
+import { openUrl, isSafeUrlProtocol } from "@app/utils/urlExtensions";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)

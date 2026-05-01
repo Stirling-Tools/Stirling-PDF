@@ -12,7 +12,7 @@ import {
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
-import { openUrl } from "@app/utils/urlUtils";
+import { openUrl } from "@app/utils/urlExtensions";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/BookmarkSidebar.css";
