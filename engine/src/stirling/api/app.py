@@ -15,12 +15,14 @@ from stirling.agents import (
     UserSpecAgent,
 )
 from stirling.agents.ledger import MathAuditorAgent
+from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
     ledger_router,
     orchestrator_router,
+    pdf_comments_router,
     pdf_edit_router,
     pdf_question_router,
     rag_router,
@@ -50,6 +52,7 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
+    fast_api.state.pdf_comment_agent = PdfCommentAgent(runtime)
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
@@ -68,6 +71,7 @@ app.include_router(agent_draft_router)
 app.include_router(execution_router)
 app.include_router(rag_router)
 app.include_router(ledger_router)
+app.include_router(pdf_comments_router)
 
 
 @app.get("/health", response_model=HealthResponse)
