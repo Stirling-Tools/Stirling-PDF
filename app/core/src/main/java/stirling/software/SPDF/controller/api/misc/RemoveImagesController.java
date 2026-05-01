@@ -12,11 +12,11 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -47,7 +47,7 @@ public class RemoveImagesController {
             description =
                     "This endpoint removes all embedded images from a PDF file and returns the"
                             + " modified document. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> removeImages(@ModelAttribute PDFFile request)
+    public ResponseEntity<Resource> removeImages(@ModelAttribute PDFFile request)
             throws IOException {
 
         MultipartFile inputFile = request.getFileInput();

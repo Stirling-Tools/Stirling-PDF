@@ -14,10 +14,9 @@ from stirling.contracts import (
     AgentRevisionWorkflowResponse,
     AiToolAgentStep,
     ConversationMessage,
-    EditCannotDoResponse,
-    EditClarificationRequest,
     EditPlanResponse,
     PdfEditRequest,
+    PdfEditTerminalResponse,
     format_conversation_history,
 )
 from stirling.models import ApiModel
@@ -102,7 +101,8 @@ class UserSpecAgent:
         self,
         user_message: str,
         conversation_history: list[ConversationMessage],
-    ) -> EditPlanResponse | EditClarificationRequest | EditCannotDoResponse:
+    ) -> PdfEditTerminalResponse:
         return await self.pdf_edit_agent.handle(
-            PdfEditRequest(user_message=user_message, conversation_history=conversation_history)
+            PdfEditRequest(user_message=user_message, conversation_history=conversation_history),
+            allow_need_content=False,
         )

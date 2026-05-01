@@ -6,6 +6,7 @@ import { useNavigation } from "@app/contexts/NavigationContext";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { BaseToolProps } from "@app/types/tool";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import type {
   AnnotationToolId,
@@ -85,6 +86,7 @@ const Annotate = (_props: BaseToolProps) => {
     placementPreviewSize,
     setPlacementPreviewSize,
   } = useSignature();
+  const { activateAnnotationToolRef } = useAnnotationContext();
   const viewerContext = useContext(ViewerContext);
   const viewerContextRef = useRef(viewerContext);
   useEffect(() => {
@@ -374,6 +376,9 @@ const Annotate = (_props: BaseToolProps) => {
       manualToolSwitch.current = false;
     }, 300);
   };
+
+  // Keep ref in sync so external callers (e.g. CommentsSidebar) get the latest closure
+  activateAnnotationToolRef.current = activateAnnotationTool;
 
   useEffect(() => {
     // push style updates to EmbedPDF when sliders/colors change

@@ -12,13 +12,13 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,7 +51,7 @@ public class BookletImpositionController {
                     "This operation combines page reordering for booklet printing with multi-page layout. "
                             + "It rearranges pages in the correct order for booklet printing and places multiple pages "
                             + "on each sheet for proper folding and binding. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> createBookletImposition(
+    public ResponseEntity<Resource> createBookletImposition(
             @ModelAttribute BookletImpositionRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();

@@ -12,11 +12,11 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,7 +62,7 @@ public class ConvertEbookToPDFController {
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
                             + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> convertEbookToPdf(
+    public ResponseEntity<Resource> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
@@ -162,7 +162,7 @@ public class ConvertEbookToPDFController {
                     document.save(tempOut.getFile());
                 }
             }
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
             tempOut = null;
             return response;
