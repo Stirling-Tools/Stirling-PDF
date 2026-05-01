@@ -6,7 +6,8 @@ name: Enterprise E2E (Playwright)
 # situations:
 #
 #   - PRs that touch proprietary / premium / SSO compose / enterprise tests
-#     (path-filtered against .github/config/.files.yaml `proprietary`),
+#     (driven by build.yml via workflow_call, path-filtered against
+#     .github/config/.files.yaml `proprietary`),
 #   - every push to main (post-merge safety net),
 #   - on a nightly cron schedule (catches Keycloak image drift, license
 #     expiry, upstream proprietary changes),
@@ -15,49 +16,26 @@ name: Enterprise E2E (Playwright)
 # Auto-skipped when secrets.PREMIUM_KEY_ENTERPRISE is missing (forks, dependabot).
 
 on:
+  workflow_call:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-  merge_group:
     branches: ["main"]
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
-  cancel-in-progress: true
+# No `concurrency:` block here on purpose. When this workflow is called via
+# workflow_call from build.yml, ${{ github.workflow }}/event_name/pr_number
+# resolve to the *caller's* values, producing the same group key as build.yml
+# and causing the workflow_call instantiation to self-cancel — the job
+# silently fails to spawn while `${{ needs.X.result }}` still reports
+# `failure`. Standalone runs (push-to-main, nightly cron, dispatch) don't
+# overlap often enough to need explicit concurrency control.
 
 permissions:
   contents: read
 
 jobs:
-  files-changed:
-    name: detect what files changed
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    outputs:
-      proprietary: ${{ steps.changes.outputs.proprietary }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Check for file changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
-        id: changes
-        with:
-          filters: .github/config/.files.yaml
-
   playwright-e2e-enterprise:
-    # Run on PRs only if relevant files changed; always run on push-to-main,
-    # cron, and manual dispatch. Fork PRs without the secret will fail at
-    # the compose step (PREMIUM_KEY empty) — that's intentional, not silent.
-    if: github.event_name != 'pull_request' || needs.files-changed.outputs.proprietary == 'true'
-    needs: files-changed
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
