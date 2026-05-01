@@ -31,7 +31,7 @@ from stirling.contracts import (
     ToolOperationStep,
 )
 from stirling.models import ToolEndpoint
-from stirling.models.tool_models import ExecuteParams, Strategy
+from stirling.models.tool_models import RedactExecuteParams, Strategy
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -243,8 +243,8 @@ class SmartRedactionWorkflow:
                 rationale=planner_output.rationale,
                 steps=[
                     ToolOperationStep(
-                        tool=ToolEndpoint.EXECUTE,
-                        parameters=ExecuteParams(  # type: ignore[call-arg]
+                        tool=ToolEndpoint.REDACT_EXECUTE,
+                        parameters=RedactExecuteParams(  # type: ignore[call-arg]
                             redact_all_images=True,
                             image_pages=image_pages_str,
                             strategy=Strategy.auto,
@@ -265,8 +265,8 @@ class SmartRedactionWorkflow:
             rationale=planner_output.rationale,
             steps=[
                 ToolOperationStep(
-                    tool=ToolEndpoint.EXECUTE,
-                    parameters=ExecuteParams(  # type: ignore[call-arg]
+                    tool=ToolEndpoint.REDACT_EXECUTE,
+                    parameters=RedactExecuteParams(  # type: ignore[call-arg]
                         texts_to_redact="\n".join(texts) if texts else None,
                         regex_patterns="\n".join(regex_patterns) if regex_patterns else None,
                         strategy=Strategy.auto,
@@ -309,8 +309,8 @@ class SmartRedactionWorkflow:
             summary=analyser_output.summary or user_message,
             steps=[
                 ToolOperationStep(
-                    tool=ToolEndpoint.EXECUTE,
-                    parameters=ExecuteParams(  # type: ignore[call-arg]
+                    tool=ToolEndpoint.REDACT_EXECUTE,
+                    parameters=RedactExecuteParams(  # type: ignore[call-arg]
                         texts_to_redact="\n".join(strings) if strings else None,
                         text_ranges=text_ranges,
                         page_numbers=page_nums,

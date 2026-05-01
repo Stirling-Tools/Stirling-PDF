@@ -398,7 +398,7 @@ class Strategy(StrEnum):
     image_finalize = "IMAGE_FINALIZE"
 
 
-class ExecuteParams(ApiModel):
+class RedactExecuteParams(ApiModel):
     convert_pdf_to_image: bool | None = Field(
         False, description="Rasterize the output PDF after redaction. Equivalent to strategy=IMAGE_FINALIZE."
     )
@@ -1190,7 +1190,7 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
-        | ExecuteParams
+        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1258,7 +1258,7 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
-        | ExecuteParams
+        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1327,7 +1327,7 @@ type ParamToolModel = (
     | SessionsParams
     | ValidateCertificateParams
     | RedactParams
-    | ExecuteParams
+    | RedactExecuteParams
     | RemovePasswordParams
     | SanitizePdfParams
     | TimestampPdfParams
@@ -1397,7 +1397,7 @@ class ToolEndpoint(StrEnum):
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
-    EXECUTE = "/api/v1/security/redact/execute"
+    REDACT_EXECUTE = "/api/v1/security/redact/execute"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
@@ -1465,7 +1465,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
-    ToolEndpoint.EXECUTE: ExecuteParams,
+    ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
     ToolEndpoint.TIMESTAMP_PDF: TimestampPdfParams,
