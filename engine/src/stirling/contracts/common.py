@@ -5,6 +5,7 @@ from typing import Literal, assert_never
 
 from pydantic import Field, model_validator
 
+from stirling.contracts.ledger import Verdict
 from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
 from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
@@ -67,6 +68,7 @@ class ArtifactKind(StrEnum):
     """
 
     EXTRACTED_TEXT = "extracted_text"
+    TOOL_REPORT = "tool_report"
 
 
 class StepKind(StrEnum):
@@ -80,6 +82,7 @@ class SupportedCapability(StrEnum):
     ORCHESTRATE = "orchestrate"
     PDF_EDIT = "pdf_edit"
     PDF_QUESTION = "pdf_question"
+    PDF_REVIEW = "pdf_review"
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
@@ -120,6 +123,27 @@ class NeedContentResponse(ApiModel):
     files: list[NeedContentFileRequest] = Field(default_factory=list)
     max_pages: int
     max_characters: int
+
+
+class MathAuditorToolReportArtifact(ApiModel):
+    """Structured Verdict produced by the math-auditor on a previous orchestrator turn.
+
+    New specialists that the orchestrator needs to digest on a resume turn
+    should add a sibling artifact type here and lift this into a discriminated
+    union keyed on ``source_tool``.
+
+    Java counterpart: {@code PdfContentExtractor.ToolReportArtifact}.
+    """
+
+    kind: Literal[ArtifactKind.TOOL_REPORT] = ArtifactKind.TOOL_REPORT
+    source_tool: Literal[AgentToolId.MATH_AUDITOR_AGENT] = AgentToolId.MATH_AUDITOR_AGENT
+    report: Verdict
+
+
+# Type alias kept around so callers don't have to know there's only one variant
+# today; lifts into a discriminated union when a second consumer-side report
+# appears.
+ToolReportArtifact = MathAuditorToolReportArtifact
 
 
 class ToolOperationStep(ApiModel):

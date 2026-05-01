@@ -1791,6 +1791,22 @@ bullet3 = "Keeps the original name if no suitable title is found"
 text = "Automatically finds the title from your PDF content and uses it as the filename."
 title = "Smart Renaming"
 
+[pdfCommentAgent]
+submit = "Generate comments"
+prompt.label = "What should the AI comment on?"
+prompt.placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.error]
+failed = "Failed to generate comments"
+emptyPrompt = "Please describe what the AI should comment on"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
 [automate]
 copyToSaved = "Copy to Saved"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
@@ -4051,6 +4067,11 @@ title = "Automate"
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
+
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
 
 [home.autoSizeSplitPDF]
 desc = "Automatically split PDFs by file size or page count"

@@ -12,6 +12,7 @@ from .common import (
     NeedContentResponse,
     WorkflowOutcome,
 )
+from .pdf_edit import EditPlanResponse
 
 
 class PdfQuestionRequest(ApiModel):
@@ -25,6 +26,15 @@ class PdfQuestionAnswerResponse(ApiModel):
     outcome: Literal[WorkflowOutcome.ANSWER] = WorkflowOutcome.ANSWER
     answer: str
     evidence: list[ExtractedFileText] = Field(default_factory=list)
+    edit_plan: EditPlanResponse | None = Field(
+        default=None,
+        description=(
+            "Optional plan the caller must run before the answer is final. When"
+            " populated, ``answer`` is empty on this turn — the caller executes"
+            " the plan and re-invokes the orchestrator with ``resume_with`` set"
+            " to PDF_QUESTION; the real answer arrives on the resume turn."
+        ),
+    )
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
