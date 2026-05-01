@@ -3,8 +3,11 @@ package stirling.software.proprietary.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,6 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +37,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -72,6 +78,7 @@ class AiWorkflowServiceTest {
     @Mock private InternalApiClient internalApiClient;
     @Mock private FileStorage fileStorage;
     @Mock private ToolMetadataService toolMetadataService;
+    @Mock private FileIdStrategy fileIdStrategy;
 
     @TempDir Path tempDir;
 
@@ -80,12 +87,18 @@ class AiWorkflowServiceTest {
     private AiWorkflowService service;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         ApplicationProperties props = new ApplicationProperties();
         props.getSystem().getTempFileManagement().setBaseTmpDir(tempDir.toString());
         props.getSystem().getTempFileManagement().setPrefix("ai-test-");
         tempFileManager = new TempFileManager(new TempFileRegistry(), props);
         objectMapper = JsonMapper.builder().build();
+
+        // Mock strategy yields the filename as id so each MockMultipartFile in a test gets a
+        // distinct collection key. Real strategy (ByteHashFileIdStrategy) hashes bytes.
+        lenient()
+                .when(fileIdStrategy.idFor(any(MultipartFile.class)))
+                .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
         service =
                 new AiWorkflowService(
@@ -96,7 +109,8 @@ class AiWorkflowServiceTest {
                         internalApiClient,
                         fileStorage,
                         toolMetadataService,
-                        tempFileManager);
+                        tempFileManager,
+                        fileIdStrategy);
     }
 
     @Test
@@ -244,6 +258,46 @@ class AiWorkflowServiceTest {
         assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
         assertNotNull(result.getReason());
         verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
+    void needIngestExtractsPageTextAndPostsToRagThenRetries() throws IOException {
+        MockMultipartFile input = pdf("report.pdf", "bytes");
+        when(fileIdStrategy.idFor(any())).thenReturn("report-id");
+
+        PDDocument document = new PDDocument();
+        document.addPage(new PDPage());
+        document.addPage(new PDPage());
+        when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean())).thenReturn(document);
+        when(pdfContentExtractor.extractPageTextRaw(eq(document), anyInt()))
+                .thenReturn("page content");
+
+        int[] orchestratorCalls = {0};
+        when(aiEngineClient.post(eq("/api/v1/orchestrator"), anyString()))
+                .thenAnswer(
+                        inv -> {
+                            orchestratorCalls[0]++;
+                            if (orchestratorCalls[0] == 1) {
+                                return """
+                                       {
+                                         "outcome":"need_ingest",
+                                         "resumeWith":"pdf_question",
+                                         "reason":"ingest first",
+                                         "filesToIngest":[{"id":"report-id","name":"report.pdf"}],
+                                         "contentTypes":["page_text"]
+                                       }
+                                       """;
+                            }
+                            return """
+                                   {"outcome":"answer","answer":"done","evidence":[]}
+                                   """;
+                        });
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
+
+        assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
+        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/rag/documents"), anyString());
+        verify(aiEngineClient, times(2)).post(eq("/api/v1/orchestrator"), anyString());
     }
 
     // --- helpers ---

@@ -7,6 +7,7 @@ import pytest
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
 from stirling.agents.pdf_edit import PdfEditPlanOutput
 from stirling.contracts import (
+    AiFile,
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
@@ -19,6 +20,7 @@ from stirling.contracts import (
     SupportedCapability,
     ToolOperationStep,
 )
+from stirling.models import FileId
 from stirling.models.tool_models import Angle, FlattenParams, RotatePdfParams, ToolEndpoint
 from stirling.services.runtime import AppRuntime
 
@@ -91,7 +93,7 @@ async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> Non
     response = await agent.handle(
         PdfEditRequest(
             user_message="Rotate the PDF clockwise and then compress it.",
-            file_names=["scan.pdf"],
+            files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
         )
     )
 
@@ -117,7 +119,7 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtim
 
     request = PdfEditRequest(
         user_message="Rotate the PDF clockwise and then compress it.",
-        file_names=["scan.pdf"],
+        files=[AiFile(id=FileId("scan-id"), name="scan.pdf")],
     )
     response = await agent.handle(request)
 
@@ -181,13 +183,18 @@ async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime
     response = await agent.handle(
         PdfEditRequest(
             user_message="Split after every page that says 'NEW PAGE'.",
-            file_names=["report.pdf"],
+            files=[AiFile(id=FileId("report-id"), name="report.pdf")],
         )
     )
 
     assert isinstance(response, NeedContentResponse)
     assert response.resume_with == SupportedCapability.PDF_EDIT
-    assert response.files == [NeedContentFileRequest(file_name="report.pdf", content_types=[PdfContentType.PAGE_TEXT])]
+    assert response.files == [
+        NeedContentFileRequest(
+            file=AiFile(id=FileId("report-id"), name="report.pdf"),
+            content_types=[PdfContentType.PAGE_TEXT],
+        )
+    ]
     assert response.max_pages == runtime.settings.max_pages
     assert response.max_characters == runtime.settings.max_characters
     assert parameter_selector.calls == []
@@ -269,7 +276,7 @@ async def test_pdf_edit_agent_passes_page_text_to_parameter_selector(runtime: Ap
     await agent.handle(
         PdfEditRequest(
             user_message="Rotate clockwise.",
-            file_names=["report.pdf"],
+            files=[AiFile(id=FileId("report-id"), name="report.pdf")],
             page_text=page_text,
         )
     )

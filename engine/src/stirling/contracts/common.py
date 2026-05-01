@@ -6,7 +6,7 @@ from typing import Literal, assert_never
 from pydantic import Field, model_validator
 
 from stirling.contracts.ledger import Verdict
-from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
+from stirling.models import OPERATIONS, ApiModel, FileId, ToolEndpoint
 from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
 
@@ -50,6 +50,7 @@ class WorkflowOutcome(StrEnum):
 
     ANSWER = "answer"
     NEED_CONTENT = "need_content"
+    NEED_INGEST = "need_ingest"
     NOT_FOUND = "not_found"
     PLAN = "plan"
     NEED_CLARIFICATION = "need_clarification"
@@ -94,10 +95,28 @@ class ConversationMessage(ApiModel):
     content: str
 
 
+class AiFile(ApiModel):
+    """A file the user has supplied, identified by both a stable id and a display name.
+
+    The id is opaque to the engine: Java generates it (content hash, file path, UUID, etc.)
+    and the engine uses it as the RAG collection key for any agent that indexes content.
+    The name is used in user-facing prompts and responses.
+    """
+
+    id: FileId = Field(min_length=1)
+    name: str = Field(min_length=1)
+
+
 def format_conversation_history(conversation_history: list[ConversationMessage]) -> str:
     if not conversation_history:
         return "None"
     return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
+
+
+def format_file_names(files: list[AiFile]) -> str:
+    if not files:
+        return "No file names were provided."
+    return ", ".join(file.name for file in files)
 
 
 class PdfTextSelection(ApiModel):
@@ -111,7 +130,7 @@ class ExtractedFileText(ApiModel):
 
 
 class NeedContentFileRequest(ApiModel):
-    file_name: str
+    file: AiFile
     page_numbers: list[int] = Field(default_factory=list)
     content_types: list[PdfContentType]
 
@@ -144,6 +163,20 @@ class MathAuditorToolReportArtifact(ApiModel):
 # today; lifts into a discriminated union when a second consumer-side report
 # appears.
 ToolReportArtifact = MathAuditorToolReportArtifact
+
+
+class NeedIngestResponse(ApiModel):
+    """Signal that the listed files must be ingested into RAG before the agent can continue.
+
+    Java's handling: for each file, extract the requested content types, POST to
+    ``/api/v1/rag/documents`` keyed by ``file.id``, then retry the original request.
+    """
+
+    outcome: Literal[WorkflowOutcome.NEED_INGEST] = WorkflowOutcome.NEED_INGEST
+    resume_with: SupportedCapability
+    reason: str
+    files_to_ingest: list[AiFile]
+    content_types: list[PdfContentType] = Field(default_factory=list)
 
 
 class ToolOperationStep(ApiModel):
