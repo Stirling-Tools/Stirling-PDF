@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from stirling.agents.math_presentation import extract_math_verdict
 from stirling.contracts import (
+    AiFile,
     ExtractedFileText,
     ExtractedTextArtifact,
     MathAuditorToolReportArtifact,
@@ -21,6 +22,7 @@ from stirling.contracts import (
     WorkflowArtifact,
 )
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
+from stirling.models import FileId
 
 
 def _make_verdict(discrepancies: list[Discrepancy]) -> Verdict:
@@ -42,7 +44,7 @@ def _make_verdict(discrepancies: list[Discrepancy]) -> Verdict:
 def _orchestrator_request_with_artifacts(artifacts: list[WorkflowArtifact]) -> OrchestratorRequest:
     return OrchestratorRequest(
         user_message="review the math",
-        file_names=["report.pdf"],
+        files=[AiFile(id=FileId("report-id"), name="report.pdf")],
         artifacts=artifacts,
     )
 

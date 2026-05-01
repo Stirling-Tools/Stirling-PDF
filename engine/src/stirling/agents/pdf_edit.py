@@ -153,7 +153,7 @@ class PdfEditAgent:
         return await self.handle(
             PdfEditRequest(
                 user_message=request.user_message,
-                file_names=request.file_names,
+                files=request.files,
                 conversation_history=request.conversation_history,
                 page_text=extracted_text.files if extracted_text is not None else [],
             )

@@ -148,7 +148,7 @@ public class AiWorkflowService {
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
-            case ANSWER -> onAnswer(response, filesByName, request, listener);
+            case ANSWER -> onAnswer(response, filesById, request, listener);
             case NOT_FOUND,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
@@ -317,7 +317,9 @@ public class AiWorkflowService {
             ToolResult result = executeStep(endpointPath, parameters, inputFiles);
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            response.getRationale(), result.files(), inputFileNames(filesById),
+                            response.getRationale(),
+                            result.files(),
+                            inputFileNames(filesById),
                             result.report()));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
@@ -335,14 +337,14 @@ public class AiWorkflowService {
                 response.getSteps(),
                 response.getResumeWith(),
                 response.getSummary(),
-                filesByName,
+                filesById,
                 previousRequest,
                 listener);
     }
 
     private WorkflowState onAnswer(
             AiWorkflowResponse response,
-            Map<String, MultipartFile> filesByName,
+            Map<String, MultipartFile> filesById,
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
         AiWorkflowEditPlan plan = response.getEditPlan();
@@ -354,7 +356,7 @@ public class AiWorkflowService {
                     plan.getSteps(),
                     plan.getResumeWith(),
                     plan.getSummary(),
-                    filesByName,
+                    filesById,
                     previousRequest,
                     listener);
         }
@@ -366,7 +368,7 @@ public class AiWorkflowService {
             List<Map<String, Object>> steps,
             String resumeWith,
             String summary,
-            Map<String, MultipartFile> filesByName,
+            Map<String, MultipartFile> filesById,
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
         if (steps == null || steps.isEmpty()) {
@@ -408,7 +410,7 @@ public class AiWorkflowService {
             if (resumeWith != null && !resumeWith.isBlank() && lastReport != null) {
                 WorkflowTurnRequest resumeRequest = new WorkflowTurnRequest();
                 resumeRequest.setUserMessage(previousRequest.getUserMessage());
-                resumeRequest.setFileNames(previousRequest.getFileNames());
+                resumeRequest.setFiles(previousRequest.getFiles());
                 resumeRequest.setConversationHistory(previousRequest.getConversationHistory());
                 resumeRequest.setArtifacts(new ArrayList<>(previousRequest.getArtifacts()));
                 resumeRequest
@@ -422,8 +424,7 @@ public class AiWorkflowService {
 
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            summary, currentFiles, inputFileNames(filesById),
-                            lastReport));
+                            summary, currentFiles, inputFileNames(filesById), lastReport));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(

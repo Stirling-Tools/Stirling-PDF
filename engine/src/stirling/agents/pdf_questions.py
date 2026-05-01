@@ -5,17 +5,10 @@ import logging
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents._page_text import (
-    format_page_text,
-    get_extracted_text_artifact,
-    has_page_text,
-)
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.contracts import (
     AiFile,
     EditPlanResponse,
-    NeedContentFileRequest,
-    NeedContentResponse,
     NeedIngestResponse,
     OrchestratorRequest,
     PdfContentType,
@@ -30,8 +23,8 @@ from stirling.contracts import (
     format_conversation_history,
     format_file_names,
 )
-from stirling.rag import RagCapability
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.rag import RagCapability
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -163,12 +156,10 @@ class PdfQuestionAgent:
                 ),
             )
 
-        extracted_text = get_extracted_text_artifact(request)
         return await self.handle(
             PdfQuestionRequest(
                 question=request.user_message,
                 files=request.files,
-                page_text=extracted_text.files if extracted_text is not None else [],
                 conversation_history=request.conversation_history,
             )
         )

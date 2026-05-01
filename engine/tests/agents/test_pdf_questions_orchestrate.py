@@ -12,12 +12,14 @@ import pytest
 
 from stirling.agents.pdf_questions import _MATH_SYNTH_SYSTEM_PROMPT, PdfQuestionAgent
 from stirling.contracts import (
+    AiFile,
     MathAuditorToolReportArtifact,
     OrchestratorRequest,
     PdfQuestionAnswerResponse,
     SupportedCapability,
 )
 from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity, Verdict
+from stirling.models import FileId
 from stirling.models.agent_tool_models import AgentToolId
 from stirling.services.runtime import AppRuntime
 
@@ -56,7 +58,7 @@ async def test_orchestrate_classifier_true_embeds_plan_in_answer(runtime: AppRun
     agent = PdfQuestionAgent(runtime)
     request = OrchestratorRequest(
         user_message="ist die mathematik korrekt?",
-        file_names=["report.pdf"],
+        files=[AiFile(id=FileId("report-id"), name="report.pdf")],
     )
 
     with patch.object(agent._math_intent_classifier, "classify", AsyncMock(return_value=True)):
@@ -81,7 +83,7 @@ async def test_orchestrate_resume_synthesises_answer_without_calling_classifier(
     verdict = _make_verdict()
     request = OrchestratorRequest(
         user_message="ist die mathematik korrekt?",
-        file_names=["report.pdf"],
+        files=[AiFile(id=FileId("report-id"), name="report.pdf")],
         artifacts=[MathAuditorToolReportArtifact(report=verdict)],
     )
     canned_answer = "Die Summe stimmt nicht: angegeben $215,000, erwartet $215,500."
