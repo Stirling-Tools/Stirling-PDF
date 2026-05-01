@@ -7,9 +7,10 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .common import (
+    AiFile,
     ConversationMessage,
     ExtractedFileText,
-    NeedContentResponse,
+    NeedIngestResponse,
     WorkflowOutcome,
 )
 from .pdf_edit import EditPlanResponse
@@ -17,8 +18,7 @@ from .pdf_edit import EditPlanResponse
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    page_text: list[ExtractedFileText] = Field(default_factory=list)
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
 
 
@@ -26,15 +26,6 @@ class PdfQuestionAnswerResponse(ApiModel):
     outcome: Literal[WorkflowOutcome.ANSWER] = WorkflowOutcome.ANSWER
     answer: str
     evidence: list[ExtractedFileText] = Field(default_factory=list)
-    edit_plan: EditPlanResponse | None = Field(
-        default=None,
-        description=(
-            "Optional plan the caller must run before the answer is final. When"
-            " populated, ``answer`` is empty on this turn — the caller executes"
-            " the plan and re-invokes the orchestrator with ``resume_with`` set"
-            " to PDF_QUESTION; the real answer arrives on the resume turn."
-        ),
-    )
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
@@ -44,6 +35,14 @@ class PdfQuestionNotFoundResponse(ApiModel):
 
 type PdfQuestionTerminalResponse = PdfQuestionAnswerResponse | PdfQuestionNotFoundResponse
 type PdfQuestionResponse = Annotated[
-    PdfQuestionTerminalResponse | NeedContentResponse,
+    PdfQuestionTerminalResponse | NeedIngestResponse,
     Field(discriminator="outcome"),
 ]
+
+
+# ``orchestrate`` may also emit an ``EditPlanResponse`` on the math-routing
+# first turn (``outcome=PLAN`` with ``resume_with=PDF_QUESTION``). It's not in
+# ``PdfQuestionTerminalResponse`` because that alias would otherwise duplicate
+# the PLAN branch already provided by ``PdfEditTerminalResponse`` in the
+# top-level :class:`OrchestratorResponse` discriminated union.
+type PdfQuestionOrchestrateResponse = PdfQuestionResponse | EditPlanResponse
