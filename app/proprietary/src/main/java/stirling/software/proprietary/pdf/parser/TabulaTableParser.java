@@ -51,21 +51,16 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 @Slf4j
 public class TabulaTableParser implements TableParser {
 
-    private static final SpreadsheetExtractionAlgorithm LATTICE_ALGORITHM =
-            new SpreadsheetExtractionAlgorithm();
-
-    private static final BasicExtractionAlgorithm STREAM_ALGORITHM = new BasicExtractionAlgorithm();
-
     /** Lattice mode — reliable for tables with visible ruled borders. */
     @Override
     public List<TableFragment> parse(PDDocument document, RawPage rawPage) throws IOException {
-        return parseWithAlgorithm(document, rawPage, LATTICE_ALGORITHM, "lattice");
+        return parseWithAlgorithm(document, rawPage, new SpreadsheetExtractionAlgorithm(), "lattice");
     }
 
     /** Stream mode — whitespace-based column detection for borderless tables. */
     public List<TableFragment> parseStream(PDDocument document, RawPage rawPage)
             throws IOException {
-        return parseWithAlgorithm(document, rawPage, STREAM_ALGORITHM, "stream");
+        return parseWithAlgorithm(document, rawPage, new BasicExtractionAlgorithm(), "stream");
     }
 
     private List<TableFragment> parseWithAlgorithm(

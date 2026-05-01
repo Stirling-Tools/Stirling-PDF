@@ -75,6 +75,14 @@ class OrchestratorAgent:
                     description=("Delegate requests to reconstruct a PDF as a Markdown document."),
                 ),
                 ToolOutput(
+                    self.math_auditor_agent,
+                    name="math_auditor_agent",
+                    description=(
+                        "Delegate requests to check arithmetic, validate table totals, audit"
+                        " financial calculations, or verify math in PDFs."
+                    ),
+                ),
+                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
