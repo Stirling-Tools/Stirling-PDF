@@ -1,0 +1,40 @@
+name: Playwright E2E (stubbed)
+
+# Reusable workflow called from build.yml. Backend-free Playwright suite —
+# fast, no Spring Boot required. Runs against the `stubbed` project which
+# mocks API responses in the browser.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  playwright-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+      - name: Install Playwright (chromium only)
+        run: task frontend:test:e2e:install -- chromium
+      - name: Run stubbed E2E tests (chromium)
+        run: task frontend:test:e2e -- --project=stubbed --workers=3
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-report-stubbed-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 7

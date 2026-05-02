@@ -44,7 +44,11 @@ public class PdfContentExtractor {
 
     private static final int TEXT_PRESENCE_THRESHOLD = 20;
 
-    record LoadedFile(String fileName, PDDocument document) {}
+    /**
+     * A loaded PDF alongside the opaque file id used by the AI engine as its RAG collection key.
+     * Keyed by id (not name) because filenames aren't unique across an upload.
+     */
+    record LoadedFile(String id, String fileName, PDDocument document) {}
 
     // -----------------------------------------------------------------------
     // Low-level extraction methods (usable by any agent)
@@ -126,7 +130,7 @@ public class PdfContentExtractor {
      */
     List<PdfContentResult> extractContent(
             List<LoadedFile> loadedFiles,
-            Map<String, AiWorkflowFileRequest> requestedByName,
+            Map<String, AiWorkflowFileRequest> requestedById,
             int maxPages,
             int maxCharacters)
             throws IOException {
@@ -136,7 +140,7 @@ public class PdfContentExtractor {
 
         for (LoadedFile lf : loadedFiles) {
             if (remainingPages <= 0 || remainingCharacters <= 0) break;
-            AiWorkflowFileRequest fileReq = requestedByName.get(lf.fileName());
+            AiWorkflowFileRequest fileReq = requestedById.get(lf.id());
             List<AiPdfContentType> contentTypes =
                     fileReq != null && !fileReq.getContentTypes().isEmpty()
                             ? fileReq.getContentTypes()
@@ -210,6 +214,12 @@ public class PdfContentExtractor {
                 artifact.setFiles(results.stream().map(ExtractedFileText.class::cast).toList());
                 yield artifact;
             }
+            case TOOL_REPORT ->
+                    // TOOL_REPORT artifacts don't come from PDF content extraction — they're
+                    // built by AiWorkflowService from tool-response metadata. Never reached
+                    // from this code path; presence in the enum is to satisfy the switch.
+                    throw new IllegalArgumentException(
+                            "TOOL_REPORT artifacts are not produced by PdfContentExtractor");
         };
     }
 
@@ -320,7 +330,8 @@ public class PdfContentExtractor {
      * Values MUST match {@code ArtifactKind} in {@code engine/src/stirling/contracts/common.py}.
      */
     enum ArtifactKind {
-        EXTRACTED_TEXT("extracted_text");
+        EXTRACTED_TEXT("extracted_text"),
+        TOOL_REPORT("tool_report");
 
         private final String value;
 
@@ -363,5 +374,24 @@ public class PdfContentExtractor {
     static final class ExtractedTextArtifact implements WorkflowArtifact {
         private final ArtifactKind kind = ArtifactKind.EXTRACTED_TEXT;
         private List<ExtractedFileText> files = new ArrayList<>();
+    }
+
+    /**
+     * Carries a structured report produced by a specialist tool back to the orchestrator on a
+     * resume turn. Shape matches {@code engine/src/stirling/contracts/common.py ToolReportArtifact}
+     * — {@code sourceTool} must be a valid endpoint path string.
+     */
+    @Data
+    static final class ToolReportArtifact implements WorkflowArtifact {
+        private final ArtifactKind kind = ArtifactKind.TOOL_REPORT;
+        private String sourceTool;
+        private tools.jackson.databind.JsonNode report;
+
+        ToolReportArtifact() {}
+
+        ToolReportArtifact(String sourceTool, tools.jackson.databind.JsonNode report) {
+            this.sourceTool = sourceTool;
+            this.report = report;
+        }
     }
 }
