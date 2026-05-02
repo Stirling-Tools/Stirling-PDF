@@ -138,6 +138,17 @@ export default function HomePage() {
     setActiveMobileView(view);
   }, []);
 
+  // Sync slider position on mount and orientation changes
+  useEffect(() => {
+    if (isMobile) {
+      const container = sliderRef.current;
+      if (container) {
+        const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
+        container.scrollLeft = offset;
+      }
+    }
+  }, [isMobile]);
+
   useEffect(() => {
     if (isMobile) {
       const container = sliderRef.current;
@@ -146,6 +157,10 @@ export default function HomePage() {
 
         // Skip if already at the target position to avoid fighting with user swipes
         if (Math.abs(container.scrollLeft - offset) < 10) {
+          // Force exact alignment if slightly off
+          if (container.scrollLeft !== offset) {
+            container.scrollLeft = offset;
+          }
           return;
         }
 

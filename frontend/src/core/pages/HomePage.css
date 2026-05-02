@@ -97,6 +97,8 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x pinch-zoom;
+  /* Prevent background peeking through during snaps */
+  background-color: var(--bg-toolbar);
 }
 
 .mobile-slider::-webkit-scrollbar {
@@ -108,9 +110,12 @@
   width: 100%;
   height: 100%;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 .mobile-slide-content {
