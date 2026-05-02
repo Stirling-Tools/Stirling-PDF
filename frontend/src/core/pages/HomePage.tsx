@@ -326,8 +326,8 @@ export default function HomePage() {
               aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
             >
               <div className="mobile-slide-content">
-                <Suspense fallback={<ToolPanelSkeleton />}>
-                  <ToolPanel />
+                <Suspense fallback={<ToolPanelSkeleton isMobile />}>
+                  <ToolPanel isMobile />
                 </Suspense>
               </div>
             </div>
@@ -421,8 +421,8 @@ export default function HomePage() {
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
           <QuickAccessBar ref={quickAccessRef} />
           {!hideToolPanel && (
-            <Suspense fallback={<ToolPanelSkeleton />}>
-              <ToolPanel />
+            <Suspense fallback={<ToolPanelSkeleton isMobile={false} />}>
+              <ToolPanel isMobile={false} />
             </Suspense>
           )}
           <Suspense fallback={<LoadingFallback />}>

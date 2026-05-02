@@ -19,14 +19,17 @@ import { useRightRail } from "@app/contexts/RightRailContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import "@app/components/tools/ToolPanel.css";
 
-// No props needed - component uses context
+interface ToolPanelProps {
+  isMobile?: boolean;
+}
 
-export default function ToolPanel() {
+export default function ToolPanel({ isMobile: isMobileProp }: ToolPanelProps) {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef, rightRailRef } = sidebarRefs;
-  const isMobile = useIsMobile();
+  const isMobileHook = useIsMobile();
+  const isMobile = isMobileProp ?? isMobileHook;
 
   const {
     leftPanelView,
