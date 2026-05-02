@@ -78,7 +78,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </Box>
       ))}
       {/* Global spacer to allow scrolling past last row in search mode */}
-      <div aria-hidden style={{ height: 200 }} />
+      <div aria-hidden style={{ height: 64 }} />
     </Stack>
   );
 };

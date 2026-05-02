@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Group, Stack } from "@mantine/core";
 
 interface SkeletonLoaderProps {
-  type: "pageGrid" | "fileGrid" | "controls" | "viewer" | "block";
+  type: "pageGrid" | "fileGrid" | "controls" | "viewer" | "block" | "toolList";
   count?: number;
   animated?: boolean;
   width?: number | string;
@@ -33,6 +33,36 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
         ...animationStyle,
       }}
     />
+  );
+
+  const renderToolListSkeleton = () => (
+    <Stack gap="xs" p="sm" h="100%" w="100%">
+      {/* Search bar placeholder */}
+      <Box
+        h={40}
+        bg="gray.1"
+        style={{ borderRadius: 8, ...animationStyle }}
+        mb="xs"
+      />
+
+      {/* List items */}
+      {Array.from({ length: count }).map((_, i) => (
+        <Group key={i} wrap="nowrap" gap="sm" py={4}>
+          <Box
+            w={32}
+            h={32}
+            bg="gray.1"
+            style={{ borderRadius: 6, ...animationStyle }}
+          />
+          <Box
+            flex={1}
+            h={20}
+            bg="gray.1"
+            style={{ borderRadius: 4, ...animationStyle }}
+          />
+        </Group>
+      ))}
+    </Stack>
   );
 
   const renderPageGridSkeleton = () => (
@@ -150,6 +180,8 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   switch (type) {
     case "block":
       return renderBlock();
+    case "toolList":
+      return renderToolListSkeleton();
     case "pageGrid":
       return renderPageGridSkeleton();
     case "fileGrid":

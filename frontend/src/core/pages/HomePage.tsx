@@ -24,22 +24,14 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
-import ToolPanel from "@app/components/tools/ToolPanel";
-import Workbench from "@app/components/layout/Workbench";
 import QuickAccessBar from "@app/components/shared/QuickAccessBar";
 import RightRail from "@app/components/shared/RightRail";
-import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-
-import QuickAccessBar from "@app/components/shared/QuickAccessBar";
-import RightRail from "@app/components/shared/RightRail";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import ToolPanelSkeleton from "@app/components/tools/ToolPanelSkeleton";
 
 import "@app/pages/HomePage.css";
 
@@ -150,8 +142,14 @@ export default function HomePage() {
     if (isMobile) {
       const container = sliderRef.current;
       if (container) {
-        isProgrammaticScroll.current = true;
         const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
+
+        // Skip if already at the target position to avoid fighting with user swipes
+        if (Math.abs(container.scrollLeft - offset) < 10) {
+          return;
+        }
+
+        isProgrammaticScroll.current = true;
         container.scrollTo({ left: offset, behavior: "smooth" });
 
         // Re-enable scroll listener after animation completes
@@ -165,7 +163,9 @@ export default function HomePage() {
     setActiveMobileView("tools");
     const container = sliderRef.current;
     if (container) {
-      container.scrollTo({ left: 0, behavior: "auto" });
+      if (container.scrollLeft !== 0) {
+        container.scrollTo({ left: 0, behavior: "auto" });
+      }
     }
   }, [activeMobileView, isMobile]);
 
@@ -311,7 +311,7 @@ export default function HomePage() {
               aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
             >
               <div className="mobile-slide-content">
-                <Suspense fallback={<LoadingFallback />}>
+                <Suspense fallback={<ToolPanelSkeleton />}>
                   <ToolPanel />
                 </Suspense>
               </div>
@@ -406,7 +406,7 @@ export default function HomePage() {
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
           <QuickAccessBar ref={quickAccessRef} />
           {!hideToolPanel && (
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<ToolPanelSkeleton />}>
               <ToolPanel />
             </Suspense>
           )}
