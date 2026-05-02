@@ -68,4 +68,9 @@ reportDeprecated = "warning"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+# ``tests`` is on the path so test modules can import shared helpers (e.g.
+# ``from conftest import build_app_settings``) without packaging the tests dir.
+pythonpath = ["src", "tests"]
+# Use importlib import mode so test directories don't need __init__.py files
+# and duplicate basenames (e.g. multiple test_routes.py) collect cleanly.
+addopts = "--import-mode=importlib"
