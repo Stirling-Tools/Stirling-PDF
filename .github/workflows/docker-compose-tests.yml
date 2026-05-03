@@ -61,9 +61,34 @@ jobs:
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Install Docker Compose
+        env:
+          COMPOSE_VERSION: "2.39.4"
+          # Pinned SHA256 from https://github.com/docker/compose/releases/download/v2.39.4/checksums.txt
+          SHA256_LINUX_X86_64: 7af95166a730b87e172d4fc9aefea8725d3c6c7327d59149267b452114ddb7d4
+          SHA256_LINUX_AARCH64: 49082844b87f03cdcd5f5bbef1ba8c9c897b7a2dfb80cea18d61ec8ca6117e0c
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m)"
+          case "${os}-${arch}" in
+            linux-x86_64)
+              artifact="docker-compose-linux-x86_64"
+              expected="${SHA256_LINUX_X86_64}"
+              ;;
+            linux-aarch64)
+              artifact="docker-compose-linux-aarch64"
+              expected="${SHA256_LINUX_AARCH64}"
+              ;;
+            *)
+              echo "Unsupported platform for Docker Compose install: ${os}-${arch}" >&2
+              exit 1
+              ;;
+          esac
+          tmp="$(mktemp)"
+          curl -fsSL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/${artifact}" -o "${tmp}"
+          echo "${expected}  ${tmp}" | sha256sum -c -
+          sudo install -m 0755 "${tmp}" /usr/local/bin/docker-compose
+          rm -f "${tmp}"
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
