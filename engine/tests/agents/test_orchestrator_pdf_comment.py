@@ -23,8 +23,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from stirling.agents import OrchestratorAgent
-from stirling.contracts import OrchestratorRequest
+from stirling.contracts import AiFile, OrchestratorRequest
 from stirling.contracts.pdf_edit import EditPlanResponse
+from stirling.models import FileId
 from stirling.models.agent_tool_models import AgentToolId, PdfCommentAgentParams
 from stirling.services.runtime import AppRuntime
 
@@ -39,7 +40,7 @@ async def test_delegate_pdf_review_wires_prompt_to_tool_step(runtime: AppRuntime
     orchestrator = OrchestratorAgent(runtime)
     request = OrchestratorRequest(
         user_message="please add review comments flagging ambiguous dates",
-        file_names=["contract.pdf"],
+        files=[AiFile(id=FileId("contract-id"), name="contract.pdf")],
     )
     ctx = SimpleNamespace(deps=_FakeDeps(request=request))
 

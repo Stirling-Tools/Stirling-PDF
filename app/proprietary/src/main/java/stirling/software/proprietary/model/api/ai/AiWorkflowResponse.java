@@ -73,6 +73,12 @@ public class AiWorkflowResponse {
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
 
+    @Schema(
+            description =
+                    "Files the AI engine requires to be ingested into RAG before it can continue"
+                            + " the workflow. Populated on need_ingest outcomes.")
+    private List<AiFile> filesToIngest = new ArrayList<>();
+
     @Schema(description = "Maximum number of pages the AI engine wants text extracted from")
     private Integer maxPages;
 
@@ -89,11 +95,4 @@ public class AiWorkflowResponse {
                             + " body or via the X-Stirling-Tool-Report header. May be null for tools"
                             + " that produce only a file.")
     private JsonNode report;
-
-    @Schema(
-            description =
-                    "Optional plan attached to an answer outcome. When non-null on outcome=ANSWER,"
-                            + " run the plan steps before delivering the answer; the resumed call"
-                            + " produces the real answer.")
-    private AiWorkflowEditPlan editPlan;
 }
