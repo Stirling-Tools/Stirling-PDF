@@ -55,6 +55,25 @@ frontend: &frontend
   - scripts/type3_to_cff.py
   - scripts/update_type3_library.py
 
+# Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
+# job on changes to any of these.
+tauri: &tauri
+  - frontend/src-tauri/**
+  - frontend/src/desktop/**
+  - frontend/tsconfig.desktop.json
+  - frontend/package.json
+  - frontend/package-lock.json
+  - frontend/vite.config.ts
+  - .github/workflows/tauri-build.yml
+
+# Files that affect the AI engine (Python tool models, fixers, tests). Gate
+# the engine validation job on changes to engine sources or to the Java
+# tool surfaces it generates models from.
+engine: &engine
+  - engine/**
+  - app/(common|core|proprietary)/src/main/java/**
+  - .github/workflows/ai-engine.yml
+
 licenses-frontend: &licenses-frontend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - "frontend/package.json"

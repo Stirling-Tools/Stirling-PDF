@@ -237,6 +237,13 @@ public class ApplicationProperties {
         private boolean enabled = false;
         private String url = "http://localhost:5001";
         private int timeoutSeconds = 120;
+
+        /**
+         * Longer timeout for heavy operations like RAG ingestion, which embeds the whole document
+         * and can take multiple minutes for large books. Applied per-call when the caller
+         * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
+         */
+        private int longRunningTimeoutSeconds = 600;
     }
 
     @Data

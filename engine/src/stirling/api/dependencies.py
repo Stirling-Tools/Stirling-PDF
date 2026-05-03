@@ -2,8 +2,15 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.agents import (
+    ExecutionPlanningAgent,
+    OrchestratorAgent,
+    PdfEditAgent,
+    PdfQuestionAgent,
+    UserSpecAgent,
+)
 from stirling.agents.ledger import MathAuditorAgent
+from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.rag import RagService
 from stirling.services import AppRuntime
 
@@ -36,9 +43,9 @@ def get_rag_service(request: Request) -> RagService:
     return request.app.state.runtime.rag_service
 
 
-def get_rag_embedding_model(request: Request) -> str:
-    return request.app.state.runtime.settings.rag_embedding_model
-
-
 def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
     return request.app.state.math_auditor_agent
+
+
+def get_pdf_comment_agent(request: Request) -> PdfCommentAgent:
+    return request.app.state.pdf_comment_agent
