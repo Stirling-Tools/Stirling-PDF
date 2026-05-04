@@ -1223,9 +1223,7 @@ const SignSettings = ({
           <SegmentedControl
             value={signatureSource}
             fullWidth
-            onChange={(value) =>
-              handleSignatureSourceChange(value as SignatureSource)
-            }
+            onChange={(value) => handleSignatureSourceChange(value)}
             data={sourceOptions}
           />
         )}

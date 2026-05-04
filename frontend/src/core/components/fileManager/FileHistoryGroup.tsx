@@ -35,7 +35,7 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
   }
 
   return (
-    <Collapse in={isExpanded}>
+    <Collapse expanded={isExpanded}>
       <Box ml="md" mt="xs" mb="sm">
         <Group align="center" mb="sm">
           <Text size="xs" fw={600} c="dimmed">

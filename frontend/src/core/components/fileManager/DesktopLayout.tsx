@@ -13,7 +13,7 @@ const DesktopLayout: React.FC = () => {
 
   return (
     <Grid
-      gutter="xs"
+      gap="xs"
       h="100%"
       grow={false}
       style={{ flexWrap: "nowrap", minWidth: 0 }}

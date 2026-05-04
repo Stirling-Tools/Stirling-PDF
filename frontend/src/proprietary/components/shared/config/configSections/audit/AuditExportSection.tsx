@@ -103,7 +103,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
             value={exportFormat}
             onChange={(value) => {
               if (!loginEnabled) return;
-              setExportFormat(value as "csv" | "json");
+              setExportFormat(value);
             }}
             disabled={!loginEnabled}
             data={[

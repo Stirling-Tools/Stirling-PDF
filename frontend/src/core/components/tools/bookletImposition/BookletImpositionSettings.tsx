@@ -125,7 +125,7 @@ const BookletImpositionSettings = ({
           {advancedOpen ? "▲" : "▼"}
         </Button>
 
-        <Collapse in={advancedOpen}>
+        <Collapse expanded={advancedOpen}>
           <Stack gap="md" mt="md">
             {/* Right-to-Left Binding */}
             <Checkbox
