@@ -46,6 +46,16 @@ const FileEditor = ({
   const { actions: fileActions } = useFileActions();
   const { selectedFileIds, setSelectedFiles } = useFileSelection();
 
+  const handleToggleFile = useCallback(
+    (fileId: FileId) => {
+      const next = selectedFileIds.includes(fileId)
+        ? selectedFileIds.filter((id) => id !== fileId)
+        : [...selectedFileIds, fileId];
+      setSelectedFiles(next);
+    },
+    [selectedFileIds, setSelectedFiles],
+  );
+
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeStirlingFileStubs = useMemo(
     () => selectors.getStirlingFileStubs(),
@@ -404,6 +414,9 @@ const FileEditor = ({
                     file={record}
                     index={index}
                     totalFiles={activeStirlingFileStubs.length}
+                    selectedFiles={selectedFileIds}
+                    selectionMode={false}
+                    onToggleFile={handleToggleFile}
                     onCloseFile={handleCloseFile}
                     onViewFile={handleViewFile}
                     onReorderFiles={handleReorderFiles}
