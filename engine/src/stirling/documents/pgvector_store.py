@@ -5,14 +5,20 @@ import json
 import psycopg
 from pgvector.psycopg import register_vector_async
 
-from stirling.rag.store import Document, SearchResult, VectorStore
+from stirling.contracts.documents import Page, PageRange
+from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
 
 
-class PgVectorStore(VectorStore):
+class PgVectorStore(DocumentStore):
     """PostgreSQL + pgvector backed store.
 
     Connects to an external Postgres instance (DSN provided via config) and uses the
     `vector` extension for similarity search. The schema is created on first use.
+
+    Holds two tables under the same connection:
+
+    * ``rag_documents`` - vector chunks for RAG search.
+    * ``document_pages`` - ordered page text for whole-document reading.
     """
 
     def __init__(self, dsn: str) -> None:
@@ -45,6 +51,18 @@ class PgVectorStore(VectorStore):
                     """
                 )
                 await cur.execute("CREATE INDEX IF NOT EXISTS idx_rag_collection ON rag_documents(collection)")
+                await cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS document_pages (
+                        collection TEXT NOT NULL,
+                        page_number INTEGER NOT NULL,
+                        text TEXT NOT NULL,
+                        char_count INTEGER NOT NULL,
+                        PRIMARY KEY (collection, page_number)
+                    )
+                    """
+                )
+                await cur.execute("CREATE INDEX IF NOT EXISTS idx_pages_collection ON document_pages(collection)")
                 await conn.commit()
         self._initialized = True
 
@@ -106,18 +124,67 @@ class PgVectorStore(VectorStore):
             for r in rows
         ]
 
+    async def add_pages(self, collection: str, pages: list[StoredPage]) -> None:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("DELETE FROM document_pages WHERE collection = %s", (collection,))
+                if pages:
+                    await cur.executemany(
+                        """
+                        INSERT INTO document_pages (collection, page_number, text, char_count)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                        [(collection, p.page_number, p.text, p.char_count) for p in pages],
+                    )
+                await conn.commit()
+
+    async def read_pages(
+        self,
+        collection: str,
+        page_range: PageRange | None = None,
+    ) -> list[Page]:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
+            async with conn.cursor() as cur:
+                if page_range is None:
+                    await cur.execute(
+                        "SELECT page_number, text, char_count FROM document_pages "
+                        "WHERE collection = %s ORDER BY page_number",
+                        (collection,),
+                    )
+                else:
+                    await cur.execute(
+                        "SELECT page_number, text, char_count FROM document_pages "
+                        "WHERE collection = %s AND page_number BETWEEN %s AND %s "
+                        "ORDER BY page_number",
+                        (collection, page_range.start, page_range.end),
+                    )
+                rows = await cur.fetchall()
+        return [Page(page_number=r[0], text=r[1], char_count=r[2]) for r in rows]
+
     async def delete_collection(self, collection: str) -> None:
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("DELETE FROM rag_documents WHERE collection = %s", (collection,))
+                await cur.execute("DELETE FROM document_pages WHERE collection = %s", (collection,))
                 await conn.commit()
 
     async def list_collections(self) -> list[str]:
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
-                await cur.execute("SELECT DISTINCT collection FROM rag_documents ORDER BY collection")
+                await cur.execute(
+                    """
+                    SELECT collection FROM (
+                        SELECT DISTINCT collection FROM rag_documents
+                        UNION
+                        SELECT DISTINCT collection FROM document_pages
+                    ) AS c
+                    ORDER BY collection
+                    """
+                )
                 rows = await cur.fetchall()
         return [r[0] for r in rows]
 
@@ -126,8 +193,13 @@ class PgVectorStore(VectorStore):
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT 1 FROM rag_documents WHERE collection = %s LIMIT 1",
-                    (collection,),
+                    """
+                    SELECT 1 FROM rag_documents WHERE collection = %s
+                    UNION ALL
+                    SELECT 1 FROM document_pages WHERE collection = %s
+                    LIMIT 1
+                    """,
+                    (collection, collection),
                 )
                 row = await cur.fetchone()
         return row is not None

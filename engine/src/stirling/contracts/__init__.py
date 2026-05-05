@@ -28,6 +28,7 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .documents import Page, PageRange
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -131,6 +132,8 @@ __all__ = [
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",
+    "Page",
+    "PageRange",
     "PdfCommentInstruction",
     "PdfCommentReport",
     "PdfCommentRequest",

@@ -6,9 +6,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from stirling.api import app
-from stirling.api.dependencies import get_rag_service
+from stirling.api.dependencies import get_document_service
+from stirling.documents import Document, DocumentService, SqliteVecStore
 from stirling.models import FileId
-from stirling.rag import Document, RagService, SqliteVecStore
 
 
 class StubEmbedder:
@@ -30,7 +30,7 @@ class StubEmbedder:
         source: str = "",
         base_metadata: dict[str, str] | None = None,
     ) -> list[Document]:
-        from stirling.rag.chunker import chunk_text
+        from stirling.documents.chunker import chunk_text
 
         chunks = chunk_text(text, 100, 10)
         docs = []
@@ -43,8 +43,8 @@ class StubEmbedder:
         return docs
 
 
-def _build_service() -> RagService:
-    return RagService(
+def _build_service() -> DocumentService:
+    return DocumentService(
         embedder=StubEmbedder(),  # type: ignore[arg-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=3,
@@ -52,23 +52,23 @@ def _build_service() -> RagService:
 
 
 @pytest.fixture
-def service() -> RagService:
+def service() -> DocumentService:
     return _build_service()
 
 
 @pytest.fixture
-def client(service: RagService) -> Iterator[TestClient]:
-    app.dependency_overrides[get_rag_service] = lambda: service
+def client(service: DocumentService) -> Iterator[TestClient]:
+    app.dependency_overrides[get_document_service] = lambda: service
     try:
         yield TestClient(app)
     finally:
-        app.dependency_overrides.pop(get_rag_service, None)
+        app.dependency_overrides.pop(get_document_service, None)
 
 
 # ── POST /documents ─────────────────────────────────────────────────────
 
 
-def test_ingest_document_indexes_page_text(client: TestClient, service: RagService) -> None:
+def test_ingest_document_indexes_page_text(client: TestClient, service: DocumentService) -> None:
     response = client.post(
         "/api/v1/rag/documents",
         json={
@@ -87,7 +87,7 @@ def test_ingest_document_indexes_page_text(client: TestClient, service: RagServi
 
 
 @pytest.mark.anyio
-async def test_ingest_document_replaces_existing_content(client: TestClient, service: RagService) -> None:
+async def test_ingest_document_replaces_existing_content(client: TestClient, service: DocumentService) -> None:
     client.post(
         "/api/v1/rag/documents",
         json={
@@ -195,7 +195,7 @@ def test_delete_document_is_idempotent(client: TestClient) -> None:
 
 
 @pytest.mark.anyio
-async def test_delete_document_removes_collection(client: TestClient, service: RagService) -> None:
+async def test_delete_document_removes_collection(client: TestClient, service: DocumentService) -> None:
     client.post(
         "/api/v1/rag/documents",
         json={"documentId": "gone", "source": "gone.pdf", "pageText": [{"pageNumber": 1, "text": "Text."}]},

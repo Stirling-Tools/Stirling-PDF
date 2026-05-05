@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import pytest
 
+from stirling.contracts import IngestedPageText
+from stirling.documents.chunker import chunk_text
+from stirling.documents.rag_capability import RagCapability
+from stirling.documents.service import DocumentService
+from stirling.documents.sqlite_vec_store import SqliteVecStore
+from stirling.documents.store import Document, SearchResult
 from stirling.models import FileId
-from stirling.rag.capability import RagCapability
-from stirling.rag.chunker import chunk_text
-from stirling.rag.service import RagService
-from stirling.rag.sqlite_vec_store import SqliteVecStore
-from stirling.rag.store import Document, SearchResult
 
-# ── chunk_text ──────────────────────────────────────────────────────────
+# chunk_text
 
 
 class TestChunkText:
@@ -26,7 +27,6 @@ class TestChunkText:
     def test_splits_on_paragraph_boundaries(self) -> None:
         text = "First paragraph.\n\nSecond paragraph.\n\nThird paragraph."
         chunks = chunk_text(text, chunk_size=30, overlap=0)
-        # Each paragraph fits in 30 chars, so they should be split
         assert len(chunks) >= 2
         assert "First paragraph." in chunks[0]
 
@@ -35,22 +35,19 @@ class TestChunkText:
         chunks = chunk_text(text, chunk_size=100, overlap=10)
         assert len(chunks) > 1
         for chunk in chunks:
-            # Chunks may slightly exceed due to sentence boundary snapping
-            assert len(chunk) <= 200  # generous upper bound
+            assert len(chunk) <= 200
 
     def test_overlap_produces_shared_content(self) -> None:
         sentences = [f"Sentence number {i}." for i in range(20)]
         text = " ".join(sentences)
         chunks = chunk_text(text, chunk_size=100, overlap=30)
         if len(chunks) >= 2:
-            # After word-boundary snapping, the second chunk should share
-            # some content with the tail of the first chunk
-            words_in_first_tail = chunks[0].split()[-3:]  # last 3 words
+            words_in_first_tail = chunks[0].split()[-3:]
             overlap_text = " ".join(words_in_first_tail)
             assert overlap_text in chunks[1], f"Expected overlap '{overlap_text}' in chunk[1]: '{chunks[1][:80]}...'"
 
 
-# ── SqliteVecStore ──────────────────────────────────────────────────────
+# SqliteVecStore
 
 
 class TestSqliteVecStore:
@@ -64,7 +61,6 @@ class TestSqliteVecStore:
             Document(id="2", text="Java is another programming language", metadata={"source": "test"}),
             Document(id="3", text="The weather today is sunny", metadata={"source": "test"}),
         ]
-        # Simple 3-dimensional embeddings for testing
         embeddings = [
             [1.0, 0.0, 0.0],
             [0.9, 0.1, 0.0],
@@ -72,11 +68,9 @@ class TestSqliteVecStore:
         ]
         await store.add_documents("test-col", docs, embeddings)
 
-        # Search with a query close to the programming-related docs
         results = await store.search("test-col", [1.0, 0.05, 0.0], top_k=2)
         assert len(results) == 2
         assert isinstance(results[0], SearchResult)
-        # The closest should be doc "1" (exact match on first dimension)
         assert results[0].document.id == "1"
         assert results[0].score > 0.5
 
@@ -117,7 +111,7 @@ class TestSqliteVecStore:
             await store.add_documents("bad", docs, [[1.0], [2.0]])
 
 
-# ── RagService (with stub embedder) ────────────────────────────────────
+# DocumentService (with stub embedder)
 
 
 class StubEmbeddingService:
@@ -127,7 +121,6 @@ class StubEmbeddingService:
         self._dim = dim
 
     async def embed_query(self, text: str) -> list[float]:
-        # Deterministic embedding based on hash of text
         h = hash(text) % 1000
         return [(h + i) / 1000.0 for i in range(self._dim)]
 
@@ -140,8 +133,6 @@ class StubEmbeddingService:
         source: str = "",
         base_metadata: dict[str, str] | None = None,
     ) -> list[Document]:
-        from stirling.rag.chunker import chunk_text
-
         chunks = chunk_text(text, 100, 10)
         docs = []
         for i, chunk in enumerate(chunks):
@@ -154,53 +145,113 @@ class StubEmbeddingService:
 
 
 @pytest.fixture
-def rag_service() -> RagService:
-    """Each RagService test gets its own fresh ephemeral store to avoid dimension conflicts."""
+def documents() -> DocumentService:
+    """Each DocumentService test gets its own fresh ephemeral store to avoid dimension conflicts."""
     store = SqliteVecStore.ephemeral()
-    return RagService(embedder=StubEmbeddingService(), store=store, default_top_k=3)  # type: ignore[arg-type]
+    return DocumentService(embedder=StubEmbeddingService(), store=store, default_top_k=3)  # type: ignore[arg-type]
 
 
-class TestRagService:
+def _pages(text: str) -> list[IngestedPageText]:
+    return [IngestedPageText(page_number=1, text=text)]
+
+
+class TestDocumentService:
     @pytest.mark.anyio
-    async def test_index_and_search(self, rag_service: RagService) -> None:
+    async def test_ingest_and_search(self, documents: DocumentService) -> None:
         text = "Python is great for data science. It has many libraries like pandas and numpy."
-        count = await rag_service.index_text(FileId("docs"), text, source="guide.pdf")
+        count = await documents.ingest(FileId("docs"), _pages(text), source="guide.pdf")
         assert count > 0
 
-        results = await rag_service.search("Python libraries", collection=FileId("docs"))
+        results = await documents.search("Python libraries", collection=FileId("docs"))
         assert len(results) > 0
-        assert results[0].document.text  # non-empty text
+        assert results[0].document.text
 
     @pytest.mark.anyio
-    async def test_index_empty_text_returns_zero(self, rag_service: RagService) -> None:
-        count = await rag_service.index_text(FileId("docs"), "", source="empty.pdf")
+    async def test_ingest_empty_text_returns_zero_chunks(self, documents: DocumentService) -> None:
+        count = await documents.ingest(FileId("docs"), _pages(""), source="empty.pdf")
         assert count == 0
 
     @pytest.mark.anyio
-    async def test_search_nonexistent_collection_returns_empty(self, rag_service: RagService) -> None:
-        results = await rag_service.search("anything", collection=FileId("nonexistent"))
+    async def test_search_nonexistent_collection_returns_empty(self, documents: DocumentService) -> None:
+        results = await documents.search("anything", collection=FileId("nonexistent"))
         assert results == []
 
     @pytest.mark.anyio
-    async def test_search_all_collections(self, rag_service: RagService) -> None:
-        await rag_service.index_text(FileId("col-a"), "Machine learning overview.", source="ml.pdf")
-        await rag_service.index_text(FileId("col-b"), "Deep learning with neural networks.", source="dl.pdf")
+    async def test_search_all_collections(self, documents: DocumentService) -> None:
+        await documents.ingest(FileId("col-a"), _pages("Machine learning overview."), source="ml.pdf")
+        await documents.ingest(FileId("col-b"), _pages("Deep learning with neural networks."), source="dl.pdf")
 
-        results = await rag_service.search("neural networks")
+        results = await documents.search("neural networks")
         assert len(results) > 0
 
     @pytest.mark.anyio
-    async def test_delete_collection(self, rag_service: RagService) -> None:
-        await rag_service.index_text(FileId("temp"), "Temporary data.", source="tmp.pdf")
-        collections = await rag_service.list_collections()
+    async def test_delete_collection(self, documents: DocumentService) -> None:
+        await documents.ingest(FileId("temp"), _pages("Temporary data."), source="tmp.pdf")
+        collections = await documents.list_collections()
         assert "temp" in collections
 
-        await rag_service.delete_collection(FileId("temp"))
-        collections = await rag_service.list_collections()
+        await documents.delete_collection(FileId("temp"))
+        collections = await documents.list_collections()
         assert "temp" not in collections
 
+    @pytest.mark.anyio
+    async def test_ingest_stores_pages_in_order(self, documents: DocumentService) -> None:
+        pages = [
+            IngestedPageText(page_number=1, text="First page text."),
+            IngestedPageText(page_number=2, text="Second page text."),
+            IngestedPageText(page_number=3, text="Third page text."),
+        ]
+        await documents.ingest(FileId("ordered"), pages, source="ordered.pdf")
 
-# ── RagCapability ──────────────────────────────────────────────────────
+        stored = await documents.read_pages(FileId("ordered"))
+        assert [p.page_number for p in stored] == [1, 2, 3]
+        assert stored[0].text == "First page text."
+        assert stored[0].char_count == len("First page text.")
+
+    @pytest.mark.anyio
+    async def test_read_pages_with_range(self, documents: DocumentService) -> None:
+        from stirling.contracts import PageRange
+
+        pages = [IngestedPageText(page_number=i, text=f"page {i}") for i in range(1, 6)]
+        await documents.ingest(FileId("ranged"), pages, source="r.pdf")
+
+        subset = await documents.read_pages(FileId("ranged"), PageRange(start=2, end=4))
+        assert [p.page_number for p in subset] == [2, 3, 4]
+
+    @pytest.mark.anyio
+    async def test_ingest_replaces_previous_pages(self, documents: DocumentService) -> None:
+        await documents.ingest(
+            FileId("doc"),
+            [IngestedPageText(page_number=1, text="old"), IngestedPageText(page_number=2, text="old2")],
+            source="v1.pdf",
+        )
+        await documents.ingest(
+            FileId("doc"),
+            [IngestedPageText(page_number=1, text="new")],
+            source="v2.pdf",
+        )
+
+        stored = await documents.read_pages(FileId("doc"))
+        assert [p.page_number for p in stored] == [1]
+        assert stored[0].text == "new"
+
+    @pytest.mark.anyio
+    async def test_ingest_keeps_blank_pages_in_page_store(self, documents: DocumentService) -> None:
+        """Blank pages are skipped for embedding but retained in the page store
+        so page numbering stays continuous when reading back."""
+        pages = [
+            IngestedPageText(page_number=1, text="Real text on page 1."),
+            IngestedPageText(page_number=2, text="   "),
+            IngestedPageText(page_number=3, text="Real text on page 3."),
+        ]
+        await documents.ingest(FileId("with-blanks"), pages, source="blanks.pdf")
+
+        stored = await documents.read_pages(FileId("with-blanks"))
+        assert [p.page_number for p in stored] == [1, 2, 3]
+        assert stored[1].text.strip() == ""
+
+
+# RagCapability
 
 
 async def _invoke_search_knowledge(capability: RagCapability, query: str, max_results: int = 5) -> str:
@@ -210,27 +261,27 @@ async def _invoke_search_knowledge(capability: RagCapability, query: str, max_re
     toolset = capability.toolset
     assert isinstance(toolset, FunctionToolset)
     tool = toolset.tools["search_knowledge"]
-    return await tool.function(query=query, max_results=max_results)  # type: ignore[call-arg] — pyright can't infer the generic tool function's kwargs
+    return await tool.function(query=query, max_results=max_results)  # type: ignore[call-arg]
 
 
 class TestRagCapability:
-    def test_instructions_static_when_collections_pinned(self, rag_service: RagService) -> None:
-        cap = RagCapability(rag_service, collections=[FileId("docs"), FileId("manuals")])
+    def test_instructions_static_when_collections_pinned(self, documents: DocumentService) -> None:
+        cap = RagCapability(documents, collections=[FileId("docs"), FileId("manuals")])
         instructions = cap.instructions
         assert isinstance(instructions, str)
         assert "docs, manuals" in instructions
         assert "search_knowledge" in instructions
 
-    def test_instructions_dynamic_when_no_collections(self, rag_service: RagService) -> None:
-        cap = RagCapability(rag_service)
+    def test_instructions_dynamic_when_no_collections(self, documents: DocumentService) -> None:
+        cap = RagCapability(documents)
         instructions = cap.instructions
         assert callable(instructions)
 
     @pytest.mark.anyio
-    async def test_dynamic_instructions_list_available_collections(self, rag_service: RagService) -> None:
-        await rag_service.index_text(FileId("col-a"), "Alpha content.", source="a.pdf")
-        await rag_service.index_text(FileId("col-b"), "Beta content.", source="b.pdf")
-        cap = RagCapability(rag_service)
+    async def test_dynamic_instructions_list_available_collections(self, documents: DocumentService) -> None:
+        await documents.ingest(FileId("col-a"), _pages("Alpha content."), source="a.pdf")
+        await documents.ingest(FileId("col-b"), _pages("Beta content."), source="b.pdf")
+        cap = RagCapability(documents)
         instructions_fn = cap.instructions
         assert callable(instructions_fn)
         text = await instructions_fn()
@@ -238,23 +289,23 @@ class TestRagCapability:
         assert "col-b" in text
 
     @pytest.mark.anyio
-    async def test_dynamic_instructions_when_store_empty(self, rag_service: RagService) -> None:
-        cap = RagCapability(rag_service)
+    async def test_dynamic_instructions_when_store_empty(self, documents: DocumentService) -> None:
+        cap = RagCapability(documents)
         instructions_fn = cap.instructions
         assert callable(instructions_fn)
         text = await instructions_fn()
         assert "empty" in text.lower()
 
     @pytest.mark.anyio
-    async def test_search_knowledge_returns_no_results_message_when_empty(self, rag_service: RagService) -> None:
-        cap = RagCapability(rag_service)
+    async def test_search_knowledge_returns_no_results_message_when_empty(self, documents: DocumentService) -> None:
+        cap = RagCapability(documents)
         output = await _invoke_search_knowledge(cap, "anything")
         assert output == "No relevant results found in the knowledge base."
 
     @pytest.mark.anyio
-    async def test_search_knowledge_formats_results_with_source_and_score(self, rag_service: RagService) -> None:
-        await rag_service.index_text(FileId("docs"), "Python is a programming language.", source="guide.pdf")
-        cap = RagCapability(rag_service)
+    async def test_search_knowledge_formats_results_with_source_and_score(self, documents: DocumentService) -> None:
+        await documents.ingest(FileId("docs"), _pages("Python is a programming language."), source="guide.pdf")
+        cap = RagCapability(documents)
         output = await _invoke_search_knowledge(cap, "Python")
         assert "[Result 1" in output
         assert "source: guide.pdf" in output
@@ -262,43 +313,39 @@ class TestRagCapability:
         assert "relevance:" in output
 
     @pytest.mark.anyio
-    async def test_search_knowledge_restricts_to_pinned_collections(self, rag_service: RagService) -> None:
-        await rag_service.index_text(FileId("pinned"), "Pinned collection content.", source="pinned.pdf")
-        await rag_service.index_text(FileId("other"), "Content in another collection.", source="other.pdf")
+    async def test_search_knowledge_restricts_to_pinned_collections(self, documents: DocumentService) -> None:
+        await documents.ingest(FileId("pinned"), _pages("Pinned collection content."), source="pinned.pdf")
+        await documents.ingest(FileId("other"), _pages("Content in another collection."), source="other.pdf")
 
-        cap = RagCapability(rag_service, collections=[FileId("pinned")])
+        cap = RagCapability(documents, collections=[FileId("pinned")])
         output = await _invoke_search_knowledge(cap, "content")
         assert "pinned.pdf" in output
         assert "other.pdf" not in output
 
     @pytest.mark.anyio
-    async def test_search_knowledge_respects_max_results(self, rag_service: RagService) -> None:
+    async def test_search_knowledge_respects_max_results(self, documents: DocumentService) -> None:
         paragraphs = "\n\n".join(f"Paragraph {i} about topic." for i in range(10))
-        await rag_service.index_text(FileId("bulk"), paragraphs, source="bulk.pdf")
+        await documents.ingest(FileId("bulk"), _pages(paragraphs), source="bulk.pdf")
 
-        cap = RagCapability(rag_service)
+        cap = RagCapability(documents)
         output = await _invoke_search_knowledge(cap, "topic", max_results=2)
-        # Only two results requested, so only Result 1 and Result 2 should appear
         assert "[Result 1" in output
         assert "[Result 2" in output
         assert "[Result 3" not in output
 
     @pytest.mark.anyio
-    async def test_search_knowledge_tool_is_hidden_after_budget_exhausted(self, rag_service: RagService) -> None:
+    async def test_search_knowledge_tool_is_hidden_after_budget_exhausted(self, documents: DocumentService) -> None:
         """The prepare callback must return None once max_searches has been reached
         so the agent can no longer call the tool on subsequent turns."""
-        await rag_service.index_text(FileId("docs"), "Some content.", source="x.pdf")
-        cap = RagCapability(rag_service, max_searches=2)
+        await documents.ingest(FileId("docs"), _pages("Some content."), source="x.pdf")
+        cap = RagCapability(documents, max_searches=2)
         tool_def = _dummy_tool_def()
 
-        # Budget intact: prepare returns the tool definition.
         assert await cap._prepare_search_knowledge(None, tool_def) is tool_def  # type: ignore[arg-type]
 
-        # Use the budget.
         await _invoke_search_knowledge(cap, "content")
         await _invoke_search_knowledge(cap, "content")
 
-        # Budget spent: prepare returns None, removing the tool from the agent's next turn.
         assert await cap._prepare_search_knowledge(None, tool_def) is None  # type: ignore[arg-type]
 
 

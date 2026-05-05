@@ -8,13 +8,13 @@ from pydantic_ai.models import Model, infer_model
 from pydantic_ai.settings import ModelSettings
 
 from stirling.config import ENGINE_ROOT, AppSettings, RagBackend
-from stirling.rag import (
+from stirling.documents import (
+    DocumentService,
+    DocumentStore,
     EmbeddingService,
     PgVectorStore,
     RagCapability,
-    RagService,
     SqliteVecStore,
-    VectorStore,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class AppRuntime:
     settings: AppSettings
     fast_model: Model
     smart_model: Model
-    rag_service: RagService
+    documents: DocumentService
     rag_capability: RagCapability
 
     @property
@@ -53,32 +53,32 @@ def validate_structured_output_support(model: Model, model_name: str) -> None:
         raise ValueError(f"Unsupported model {model_name}. This model does not support structured outputs.")
 
 
-def _build_vector_store(settings: AppSettings) -> VectorStore:
-    """Build the configured vector store backend."""
+def _build_document_store(settings: AppSettings) -> DocumentStore:
+    """Build the configured document store backend."""
     if settings.rag_backend == RagBackend.SQLITE:
         store_path = settings.rag_store_path
         # Treat ":memory:" as a special in-process token; otherwise resolve against the engine root.
         if str(store_path) != ":memory:" and not store_path.is_absolute():
             store_path = ENGINE_ROOT / store_path
-        logger.info("RAG backend=sqlite, db_path=%s", store_path)
+        logger.info("Document store backend=sqlite, db_path=%s", store_path)
         return SqliteVecStore(db_path=store_path)
     if settings.rag_backend == RagBackend.PGVECTOR:
-        logger.info("RAG backend=pgvector, dsn=<configured>")
+        logger.info("Document store backend=pgvector, dsn=<configured>")
         return PgVectorStore(dsn=settings.rag_pgvector_dsn)
     assert_never(settings.rag_backend)
 
 
-def _build_rag(settings: AppSettings) -> tuple[RagService, RagCapability]:
-    """Build the RAG service and capability."""
-    logger.info("RAG: embedding_model=%s", settings.rag_embedding_model)
+def _build_documents(settings: AppSettings) -> tuple[DocumentService, RagCapability]:
+    """Build the document service and the RAG-search capability that wraps it."""
+    logger.info("Documents: embedding_model=%s", settings.rag_embedding_model)
     embedder = EmbeddingService(
         model_name=settings.rag_embedding_model,
         chunk_size=settings.rag_chunk_size,
         chunk_overlap=settings.rag_chunk_overlap,
     )
-    store = _build_vector_store(settings)
-    service = RagService(embedder=embedder, store=store, default_top_k=settings.rag_default_top_k)
-    capability = RagCapability(rag_service=service, top_k=settings.rag_default_top_k)
+    store = _build_document_store(settings)
+    service = DocumentService(embedder=embedder, store=store, default_top_k=settings.rag_default_top_k)
+    capability = RagCapability(documents=service, top_k=settings.rag_default_top_k)
     return service, capability
 
 
@@ -88,12 +88,12 @@ def build_runtime(settings: AppSettings) -> AppRuntime:
     validate_structured_output_support(fast_model, settings.fast_model_name)
     validate_structured_output_support(smart_model, settings.smart_model_name)
 
-    rag_service, rag_capability = _build_rag(settings)
+    documents, rag_capability = _build_documents(settings)
 
     return AppRuntime(
         settings=settings,
         fast_model=fast_model,
         smart_model=smart_model,
-        rag_service=rag_service,
+        documents=documents,
         rag_capability=rag_capability,
     )
