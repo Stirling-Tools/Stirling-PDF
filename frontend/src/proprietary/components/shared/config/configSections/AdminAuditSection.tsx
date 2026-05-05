@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { isAxiosError } from "axios";
 import {
   Tabs,
@@ -8,6 +8,7 @@ import {
   Text,
   Button,
   Accordion,
+  Center,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +17,14 @@ import auditService, {
 } from "@app/services/auditService";
 import AuditSystemStatus from "@app/components/shared/config/configSections/audit/AuditSystemStatus";
 import AuditStatsCards from "@app/components/shared/config/configSections/audit/AuditStatsCards";
-import AuditChartsSection from "@app/components/shared/config/configSections/audit/AuditChartsSection";
+
+// AuditChartsSection pulls in recharts (~200 kB gzip). It's only rendered when
+// the user expands the "Events Over Time" accordion on this page, so we keep
+// the rest of the audit page eager and lazy-load just the charts.
+const AuditChartsSection = lazy(
+  () =>
+    import("@app/components/shared/config/configSections/audit/AuditChartsSection"),
+);
 import AuditEventsTable from "@app/components/shared/config/configSections/audit/AuditEventsTable";
 import AuditExportSection from "@app/components/shared/config/configSections/audit/AuditExportSection";
 import AuditClearDataSection from "@app/components/shared/config/configSections/audit/AuditClearDataSection";
@@ -217,11 +225,19 @@ const AdminAuditSection: React.FC = () => {
                     {t("audit.charts.overTime", "Events Over Time")}
                   </Accordion.Control>
                   <Accordion.Panel>
-                    <AuditChartsSection
-                      loginEnabled={isEnabled}
-                      timePeriod={timePeriod}
-                      onTimePeriodChange={setTimePeriod}
-                    />
+                    <Suspense
+                      fallback={
+                        <Center style={{ padding: "2rem" }}>
+                          <Loader />
+                        </Center>
+                      }
+                    >
+                      <AuditChartsSection
+                        loginEnabled={isEnabled}
+                        timePeriod={timePeriod}
+                        onTimePeriodChange={setTimePeriod}
+                      />
+                    </Suspense>
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>
