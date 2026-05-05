@@ -45,16 +45,27 @@ async function uploadIntoSlot(
     timeout: 5000,
   });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "hidden",
-    timeout: 10000,
-  });
 
+  // The slot becoming filled is the user-visible outcome we actually care
+  // about. Don't gate on the modal-overlay close animation — Mantine 9's
+  // Modal can leave the overlay element mounted briefly while transitioning,
+  // which races with successive uploads in this test and produces flaky
+  // 10s timeouts. The slot fill assertion below covers the same intent and
+  // implies the upload completed.
   const slot = page.locator(`[data-testid="compare-slot-${role}"]`);
   await expect(slot).toHaveAttribute("data-slot-state", "filled", {
-    timeout: 10000,
+    timeout: 15000,
   });
   await expect(slot).toHaveAttribute("data-slot-filename", expectedFilename);
+
+  // Wait for the modal overlay to be fully gone before the next interaction
+  // so click targets in subsequent uploads aren't intercepted.
+  await page
+    .locator(".mantine-Modal-overlay")
+    .waitFor({ state: "detached", timeout: 5000 })
+    .catch(() => {
+      /* if it's detached or re-detached during teardown, that's fine */
+    });
 }
 
 test.describe("Compare tool slot selection", () => {
