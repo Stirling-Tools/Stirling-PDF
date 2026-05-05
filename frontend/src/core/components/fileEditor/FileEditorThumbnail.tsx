@@ -43,7 +43,6 @@ import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import FileEditorFileName from "@app/components/fileEditor/FileEditorFileName";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
