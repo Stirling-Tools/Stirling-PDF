@@ -1019,9 +1019,7 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException ex, HttpServletRequest request) {
         log.warn("Data integrity violation at {}: {}", request.getRequestURI(), ex.getMessage());
 
-        String title =
-                getLocalizedMessage(
-                        "error.conflict.title", ErrorTitles.CONFLICT_DEFAULT);
+        String title = getLocalizedMessage("error.conflict.title", ErrorTitles.CONFLICT_DEFAULT);
 
         // Do NOT leak the underlying SQL / constraint message — the root cause often includes DB
         // identifiers that we'd rather not echo back to the caller. A fixed, neutral detail is

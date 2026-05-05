@@ -91,6 +91,15 @@ function dispatchChange() {
   window.dispatchEvent(new Event(SMART_FOLDER_STORAGE_CHANGE_EVENT));
 }
 
+/**
+ * Per-browser flags derived from local APIs (e.g. FileSystemDirectoryHandle in IDB).
+ * The server doesn't store these; they must be carried over from the local "client-intended"
+ * folder so a server roundtrip doesn't wipe them.
+ */
+function mergeLocalFlags(serverFolder: SmartFolder, clientIntended: SmartFolder): SmartFolder {
+  return { ...serverFolder, hasOutputDirectory: clientIntended.hasOutputDirectory };
+}
+
 // ── Sync helper: pull server state into IDB ───────────────────────────────
 
 let lastSyncAt = 0;
@@ -104,11 +113,19 @@ async function syncFoldersToIdb(force = false): Promise<SmartFolder[]> {
   }
 
   const dtos = await watchFolderApi.list();
-  const folders = dtos.map(toSmartFolder);
+  const fromServer = dtos.map(toSmartFolder);
   lastSyncAt = Date.now();
 
-  // Overwrite IDB with server state
+  // Per-browser flags that depend on local APIs (FileSystemDirectoryHandle in IDB) are
+  // NOT roundtripped through the server. Read them off the existing IDB rows and merge
+  // back onto the server payload so a sync doesn't wipe them.
   const existing = await smartFolderStorage.getAllFolders();
+  const existingById = new Map(existing.map((f) => [f.id, f]));
+  const folders = fromServer.map((f) => {
+    const prior = existingById.get(f.id);
+    return prior ? { ...f, hasOutputDirectory: prior.hasOutputDirectory } : f;
+  });
+
   const serverIds = new Set(folders.map((f) => f.id));
   // Remove folders from IDB that no longer exist on server
   for (const f of existing) {
@@ -139,7 +156,10 @@ export const serverBackend: WatchFolderStorageBackend = {
   async getFolder(id) {
     try {
       const dto = await watchFolderApi.get(id);
-      const folder = toSmartFolder(dto);
+      const fromServer = toSmartFolder(dto);
+      // Preserve per-browser flags from any existing IDB row (server doesn't store them).
+      const prior = await smartFolderStorage.getFolder(id);
+      const folder = prior ? mergeLocalFlags(fromServer, prior) : fromServer;
       await smartFolderStorage.createFolderWithId(folder).catch(() => {});
       return folder;
     } catch (err) {
@@ -161,7 +181,7 @@ export const serverBackend: WatchFolderStorageBackend = {
     };
     try {
       const created = await watchFolderApi.create(toDTO(folder));
-      const result = toSmartFolder(created);
+      const result = mergeLocalFlags(toSmartFolder(created), folder);
       await smartFolderStorage.createFolderWithId(result).catch(() => {});
       lastSyncAt = 0; // Invalidate sync cache
       dispatchChange();
@@ -175,7 +195,7 @@ export const serverBackend: WatchFolderStorageBackend = {
   async createFolderWithId(folder) {
     try {
       const created = await watchFolderApi.create(toDTO(folder));
-      const result = toSmartFolder(created);
+      const result = mergeLocalFlags(toSmartFolder(created), folder);
       await smartFolderStorage.createFolderWithId(result).catch(() => {});
       lastSyncAt = 0;
       dispatchChange();
@@ -189,7 +209,7 @@ export const serverBackend: WatchFolderStorageBackend = {
   async updateFolder(folder) {
     try {
       const updated = await watchFolderApi.update(folder.id, toDTO(folder));
-      const result = toSmartFolder(updated);
+      const result = mergeLocalFlags(toSmartFolder(updated), folder);
       await smartFolderStorage.createFolderWithId(result).catch(() => {});
       lastSyncAt = 0;
       dispatchChange();
@@ -292,16 +312,17 @@ export const serverBackend: WatchFolderStorageBackend = {
   },
 
   async removeFileFromFolder(folderId, fileId) {
-    await folderStorage.removeFileFromFolder(folderId, fileId);
+    // Server first: if the server delete fails the IDB row stays intact and the user can
+    // retry. The opposite order (IDB-first) would make the file appear deleted in the UI,
+    // then resurrect on the next getFolderData call when the server replies with the row
+    // still present — confusing and harder to recover from.
     try {
       await watchFolderApi.deleteFile(folderId, fileId);
     } catch (err) {
-      if (isNotFound(err)) {
-        // Already gone server-side — DELETE is idempotent.
-      } else if (!isNetworkError(err)) {
-        throw err;
-      }
+      if (!isNotFound(err)) throw err;
+      // 404: already gone server-side — fall through to IDB cleanup.
     }
+    await folderStorage.removeFileFromFolder(folderId, fileId);
   },
 
   async clearFolder(folderId) {
@@ -356,16 +377,17 @@ export const serverBackend: WatchFolderStorageBackend = {
   },
 
   async clearFolderRunState(folderId) {
-    await folderRunStateStorage.clearFolderRunState(folderId);
+    // Server first — see removeFileFromFolder above for the reasoning.
     try {
       await watchFolderApi.deleteRuns(folderId);
     } catch (err) {
-      if (isNotFound(err)) {
-        // Folder already gone or no runs — fine.
-      } else if (!isNetworkError(err)) {
+      if (!isNotFound(err)) {
+        // Network failure or auth/4xx — surface so caller can retry.
         throw err;
       }
+      // 404: folder gone or no runs — fall through to IDB cleanup.
     }
+    await folderRunStateStorage.clearFolderRunState(folderId);
   },
 
   onChange(callback) {

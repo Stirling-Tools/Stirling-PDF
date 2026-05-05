@@ -23,7 +23,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import JSZip from "jszip";
 import { useSmartFolders } from "@app/hooks/useSmartFolders";
 import { useFolderData } from "@app/hooks/useFolderData";
-import { useFolderRunState } from "@app/hooks/useFolderRunState";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from "@app/components/smartFolders/SmartFoldersRegistration";
 import { useFolderAutomation, resolveInputFile, resolveFolderAutomation } from "@app/hooks/useFolderAutomation";
@@ -134,10 +133,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { runPipeline } = useFolderAutomation(toolRegistry);
   useLocalFolderPoller(runPipeline);
 
-  const { folderRecord, fileIds, processingFileIds, processedFileIds, addFile, updateFileMetadata, removeFile } =
+  const { folderRecord, fileIds, processingFileIds, addFile, updateFileMetadata, removeFile } =
     useFolderData(folderId ?? "");
-
-  const { recentRuns } = useFolderRunState(folderId ?? "");
 
   const isServerFolder = folder ? isServerFolderInput(folder) : false;
   const isLocalFolder = folder?.inputSource === "local-folder";
@@ -447,7 +444,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         const id = ids[cur];
         setSelectedActivityIds((prev) => {
           const n = new Set(prev);
-          n.has(id) ? n.delete(id) : n.add(id);
+          if (n.has(id)) n.delete(id);
+          else n.add(id);
           return n;
         });
       } else if (e.key === "Enter" && cur >= 0) {
@@ -1294,7 +1292,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                           onClick={() =>
                             setSelectedActivityIds((prev) => {
                               const n = new Set(prev);
-                              n.has(fileId) ? n.delete(fileId) : n.add(fileId);
+                              if (n.has(fileId)) n.delete(fileId);
+                              else n.add(fileId);
                               return n;
                             })
                           }

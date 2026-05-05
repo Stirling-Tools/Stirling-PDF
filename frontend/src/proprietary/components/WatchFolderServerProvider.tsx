@@ -8,6 +8,7 @@
  */
 
 import React, { useEffect, useRef } from "react";
+import { AxiosError } from "axios";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { WatchFolderStorageProvider } from "@app/contexts/WatchFolderStorageContext";
 import { serverBackend } from "@proprietary/services/watchFolderServerBackend";
@@ -19,32 +20,52 @@ import { watchFolderApi } from "@proprietary/services/watchFolderApiService";
 const MIGRATION_KEY = "watch_folders_migrated_to_server";
 const MIGRATION_LOCK = "watch-folders-migration";
 
-async function migrateOne(folderId: string, serverIds: Set<string>): Promise<boolean> {
-  const folder = await smartFolderStorage.getFolder(folderId);
-  if (!folder) return true;
+/** True if the error indicates the folder already exists on the server. */
+function isFolderAlreadyExistsError(err: unknown): boolean {
+  if (!(err instanceof AxiosError) || !err.response) return false;
+  // Spring maps DataIntegrityViolationException → 409 Conflict (or 500 in some configs);
+  // a duplicate-id race during create resolves either way — treat both as "already exists".
+  return err.response.status === 409 || err.response.status === 500;
+}
 
-  // 1. Folder definition (skip if already on server — another tab/device may have done it)
-  if (!serverIds.has(folder.id)) {
+/**
+ * Migrate a single folder (definition + file metadata + runs) from IDB to the server.
+ *
+ * Coarse-grained idempotency: if the folder is already on the server (`serverIds.has(id)`),
+ * skip ALL three steps — file/run rows are presumed to have been migrated by a prior run.
+ * Re-migrating run rows would duplicate them (`addRuns` is not idempotent server-side).
+ *
+ * The Web Lock around `runMigration` ensures only one tab migrates at a time, so we won't
+ * race with ourselves over a folder that's mid-migration in another tab.
+ */
+async function migrateOne(folderId: string, serverIds: Set<string>): Promise<void> {
+  const folder = await smartFolderStorage.getFolder(folderId);
+  if (!folder) return;
+
+  // Folder already on server — assume its files/runs were migrated previously and skip.
+  if (serverIds.has(folder.id)) return;
+
+  // 1. Folder definition. Tolerate duplicate-id races (another tab snuck in).
+  try {
     await serverBackend.createFolderWithId(folder);
+  } catch (err) {
+    if (!isFolderAlreadyExistsError(err)) throw err;
   }
 
-  // 2. File metadata
+  // 2. File metadata. updateFileMetadata is idempotent server-side (PUT keyed by folderId+fileId)
+  // and pushes the full snapshot, so we don't need a separate addFileToFolder roundtrip.
   const record = await folderStorage.getFolderData(folder.id);
   if (record) {
     for (const [fileId, meta] of Object.entries(record.files)) {
-      await serverBackend.addFileToFolder(folder.id, fileId, meta);
-      // updateFileMetadata pushes the full snapshot; addFileToFolder only pushes the basics.
       await serverBackend.updateFileMetadata(folder.id, fileId, meta);
     }
   }
 
-  // 3. Run history
+  // 3. Run history.
   const runs = await folderRunStateStorage.getFolderRunState(folder.id);
   if (runs.length > 0) {
     await serverBackend.addFolderRunEntries(folder.id, runs);
   }
-
-  return true;
 }
 
 async function runMigration(): Promise<boolean> {

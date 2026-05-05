@@ -123,7 +123,6 @@ function FileRow({
     .map(id => folders.find(f => f.id === id))
     .filter(Boolean) as typeof folders;
 
-  const hasTags = isInCurrentFolder || otherFolders.length > 0;
   const hasBottomRow = file.size > 0 || otherFolders.length > 0;
 
   const handleRowClick = (e: React.MouseEvent) => {
