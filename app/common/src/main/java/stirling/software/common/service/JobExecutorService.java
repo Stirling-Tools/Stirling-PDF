@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -321,6 +322,13 @@ public class JobExecutorService {
                     log.debug(
                             "Stored ResponseEntity<StreamingResponseBody> result with fileId: {}",
                             fileId);
+                } else if (body instanceof Resource resource) {
+                    String filename = extractResponseFilename(response);
+                    String contentType = extractResponseContentType(response);
+
+                    String fileId = fileStorage.storeFromResource(resource, filename);
+                    taskManager.setFileResult(jobId, fileId, filename, contentType);
+                    log.debug("Stored ResponseEntity<Resource> result with fileId: {}", fileId);
                 } else {
                     // Check if the response body contains a fileId
                     if (body != null && body.toString().contains("fileId")) {

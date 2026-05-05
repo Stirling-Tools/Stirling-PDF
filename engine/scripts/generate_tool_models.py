@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -72,7 +73,11 @@ class ToolDiscovery:
         for path, path_item in sorted(self.spec.get("paths", {}).items()):
             if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
                 continue
-            properties = self._get_request_properties(path_item)
+            body_props = self._get_request_properties(path_item) or {}
+            query_props = self._get_query_parameters(path_item)
+            # Body properties win on name collision — body is the canonical param source
+            # for the existing tools; query params are additive.
+            properties = {**query_props, **body_props}
             if not properties:
                 continue
             clean_props = self._filter_properties(properties)
@@ -85,11 +90,29 @@ class ToolDiscovery:
             defs[class_name] = {"type": "object", "properties": clean_props}
             tools.append(ToolSpec(path, enum_name, class_name))
 
+        self._inline_component_refs(defs)
+
         combined_schema: dict[str, Any] = {
             "$defs": defs,
             "anyOf": [{"$ref": f"#/$defs/{t.class_name}"} for t in tools],
         }
         return DiscoveryResult(tools=tools, combined_schema=combined_schema)
+
+    def _inline_component_refs(self, defs: dict[str, Any]) -> None:
+        """Pull every component transitively referenced from tool param schemas into ``defs``
+        and rewrite the refs from ``#/components/schemas/X`` to ``#/$defs/X``.
+
+        Without this, nested refs (e.g. ``list[RedactionArea]``) are unresolvable when the
+        combined schema is handed to datamodel-code-generator, producing ``RootModel[Any]``
+        shells that downstream JSON-schema strict-mode transformers reject.
+        """
+        schemas = self.spec.get("components", {}).get("schemas", {})
+        queue: list[object] = list(defs.values())
+        while queue:
+            for name in _rewrite_refs(queue.pop()):
+                if name not in defs and name in schemas:
+                    defs[name] = schemas[name]
+                    queue.append(schemas[name])
 
     def _resolve_ref(self, schema: dict[str, Any]) -> dict[str, Any]:
         if "$ref" in schema:
@@ -108,6 +131,26 @@ class ToolDiscovery:
                     return self._resolve_ref(schema).get("properties")
         return None
 
+    def _get_query_parameters(self, path_item: dict[str, Any]) -> dict[str, Any]:
+        """Extract query parameters as a property map — AI tools expose their main
+        inputs (e.g. ``prompt``, ``tolerance``) here rather than in the request body,
+        and a handful of converters use query strings alongside multipart files.
+        """
+        post = path_item.get("post") or {}
+        props: dict[str, Any] = {}
+        for param in post.get("parameters") or []:
+            if param.get("in") != "query":
+                continue
+            name = param.get("name")
+            schema = param.get("schema")
+            if not name or not schema:
+                continue
+            resolved = dict(self._resolve_ref(schema))
+            if "description" not in resolved and param.get("description"):
+                resolved["description"] = param["description"]
+            props[name] = resolved
+        return props
+
     def _filter_properties(self, properties: dict[str, Any]) -> dict[str, Any]:
         """Remove base-class fields and binary upload fields, resolving any $refs."""
         clean: dict[str, Any] = {}
@@ -119,6 +162,26 @@ class ToolDiscovery:
                 continue
             clean[name] = prop
         return clean
+
+
+_COMPONENT_REF_PREFIX = "#/components/schemas/"
+
+
+def _rewrite_refs(obj: object) -> Iterable[str]:
+    """Rewrite ``#/components/schemas/X`` refs to ``#/$defs/X`` in place, yielding each
+    component name encountered so the caller can pull referenced schemas into ``$defs``.
+    """
+    if isinstance(obj, dict):
+        ref = obj.get("$ref")
+        if isinstance(ref, str) and ref.startswith(_COMPONENT_REF_PREFIX):
+            name = ref.removeprefix(_COMPONENT_REF_PREFIX)
+            obj["$ref"] = "#/$defs/" + name
+            yield name
+        for value in obj.values():
+            yield from _rewrite_refs(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            yield from _rewrite_refs(value)
 
 
 def _tool_name_segments(path: str) -> str:
@@ -207,7 +270,7 @@ def main() -> None:
         raise SystemExit(f"OpenAPI spec not found at {spec_path}\nRun 'task engine:tool-models' to generate it.")
     output_path = Path(args.output)
 
-    with open(spec_path) as f:
+    with open(spec_path, encoding="utf-8") as f:
         spec = json.load(f)
 
     result = ToolDiscovery(spec).discover()
@@ -216,7 +279,7 @@ def main() -> None:
 
     print(f"Generated {len(result.tools)} tool models from {spec_path.name}")
     for tool in result.tools:
-        print(f"  {tool.enum_name}: {tool.path} → {tool.class_name}")
+        print(f"  {tool.enum_name}: {tool.path} -> {tool.class_name}")
 
 
 if __name__ == "__main__":

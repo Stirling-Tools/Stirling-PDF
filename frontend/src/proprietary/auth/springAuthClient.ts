@@ -53,6 +53,8 @@ const OAUTH_REDIRECT_COOKIE = "stirling_redirect_path";
 const OAUTH_REDIRECT_COOKIE_MAX_AGE = 60 * 5; // 5 minutes
 const DEFAULT_REDIRECT_PATH = `${BASE_PATH || ""}/auth/callback`;
 
+export const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
+
 function normalizeRedirectPath(target?: string): string {
   if (!target || typeof target !== "string") {
     return DEFAULT_REDIRECT_PATH;
@@ -77,6 +79,52 @@ function persistRedirectPath(path: string): void {
     document.cookie = `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent(path)}; path=/; max-age=${OAUTH_REDIRECT_COOKIE_MAX_AGE}; SameSite=Lax`;
   } catch (_error) {
     // console.warn('[SpringAuth] Failed to persist OAuth redirect path', _error);
+  }
+}
+
+// Same-origin relative path, not pointing at auth plumbing. Rejects protocol-relative
+// URLs to guard against open-redirect abuse if the stored value is tampered with.
+export function isSafePostLoginRedirect(path: unknown): path is string {
+  if (typeof path !== "string" || path.length === 0) return false;
+  if (!path.startsWith("/") || path.startsWith("//")) return false;
+  if (path.startsWith("/\\")) return false;
+  const lowered = path.toLowerCase();
+  if (
+    lowered.startsWith("/login") ||
+    lowered.startsWith("/auth/") ||
+    lowered.startsWith("/oauth2") ||
+    lowered.startsWith("/saml2")
+  ) {
+    return false;
+  }
+  return true;
+}
+
+export function setPostLoginRedirectPath(
+  path: string | null | undefined,
+): void {
+  try {
+    if (typeof window === "undefined") return;
+    if (isSafePostLoginRedirect(path)) {
+      window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
+    } else {
+      window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
+    }
+  } catch (_error) {
+    // sessionStorage unavailable (private mode) — fail open
+  }
+}
+
+export function consumePostLoginRedirectPath(): string | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const value = window.sessionStorage.getItem(
+      POST_LOGIN_REDIRECT_STORAGE_KEY,
+    );
+    window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
+    return isSafePostLoginRedirect(value) ? value : null;
+  } catch (_error) {
+    return null;
   }
 }
 

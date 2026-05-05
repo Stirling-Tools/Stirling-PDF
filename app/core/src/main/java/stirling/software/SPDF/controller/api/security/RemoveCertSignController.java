@@ -7,11 +7,11 @@ import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -40,7 +40,7 @@ public class RemoveCertSignController {
             description =
                     "This endpoint accepts a PDF file and returns the PDF file without the digital"
                             + " signature. Input:PDF, Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> removeCertSignPDF(@ModelAttribute PDFFile request)
+    public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
 

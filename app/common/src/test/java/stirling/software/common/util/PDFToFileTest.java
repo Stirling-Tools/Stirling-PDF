@@ -25,12 +25,12 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.ZipSecurity;
 
@@ -83,9 +83,11 @@ class PDFToFileTest {
         pdfToFile = new PDFToFile(mockTempFileManager, mockRuntimePathConfig);
     }
 
-    private static byte[] drain(ResponseEntity<StreamingResponseBody> response) throws IOException {
+    private static byte[] drain(ResponseEntity<Resource> response) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
+        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+            __in.transferTo(baos);
+        }
         return baos.toByteArray();
     }
 
@@ -100,7 +102,7 @@ class PDFToFileTest {
                         "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<StreamingResponseBody> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
+        ResponseEntity<Resource> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
 
         // Verify
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -117,7 +119,7 @@ class PDFToFileTest {
                         "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<StreamingResponseBody> response = pdfToFile.processPdfToHtml(nonPdfFile);
+        ResponseEntity<Resource> response = pdfToFile.processPdfToHtml(nonPdfFile);
 
         // Verify
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -135,7 +137,7 @@ class PDFToFileTest {
                         "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<StreamingResponseBody> response =
+        ResponseEntity<Resource> response =
                 pdfToFile.processPdfToOfficeFormat(nonPdfFile, "docx", "draw_pdf_import");
 
         // Verify
@@ -154,7 +156,7 @@ class PDFToFileTest {
                         "Fake PDF content".getBytes());
 
         // Execute with invalid format
-        ResponseEntity<StreamingResponseBody> response =
+        ResponseEntity<Resource> response =
                 pdfToFile.processPdfToOfficeFormat(pdfFile, "invalid_format", "draw_pdf_import");
 
         // Verify
@@ -205,8 +207,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<StreamingResponseBody> response =
-                    pdfToFile.processPdfToMarkdown(pdfFile);
+            ResponseEntity<Resource> response = pdfToFile.processPdfToMarkdown(pdfFile);
 
             // Verify - should now return a ZIP file instead of plain markdown
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -298,8 +299,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<StreamingResponseBody> response =
-                    pdfToFile.processPdfToMarkdown(pdfFile);
+            ResponseEntity<Resource> response = pdfToFile.processPdfToMarkdown(pdfFile);
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -377,7 +377,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<StreamingResponseBody> response = pdfToFile.processPdfToHtml(pdfFile);
+            ResponseEntity<Resource> response = pdfToFile.processPdfToHtml(pdfFile);
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -463,7 +463,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method with docx format
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "draw_pdf_import");
 
             // Verify
@@ -535,7 +535,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method with ODP format
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "odp", "draw_pdf_import");
 
             // Verify
@@ -620,7 +620,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method with text format
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "txt:Text", "draw_pdf_import");
 
             // Verify
@@ -679,7 +679,7 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "draw_pdf_import");
 
             // Verify
@@ -726,7 +726,7 @@ class PDFToFileTest {
                                 return mockExecutorResult;
                             });
 
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     pdfToFileWithUno.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -790,7 +790,7 @@ class PDFToFileTest {
                                 return mockExecutorResult;
                             });
 
-            ResponseEntity<StreamingResponseBody> response =
+            ResponseEntity<Resource> response =
                     pdfToFileWithUno.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
