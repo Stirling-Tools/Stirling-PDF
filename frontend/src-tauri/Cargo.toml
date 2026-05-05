@@ -42,7 +42,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 tiny_http = "0.12"
 url = "2.5"
 urlencoding = "2.1"
-sha2 = "0.10"
+sha2 = "0.11"
 base64 = "0.22"
 rand = "0.9"
 
