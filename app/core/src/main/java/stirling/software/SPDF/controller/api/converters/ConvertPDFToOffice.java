@@ -6,11 +6,11 @@ import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -44,7 +44,7 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a given PDF file to a Presentation format. Input:PDF"
                             + " Output:PPT Type:SISO")
-    public ResponseEntity<StreamingResponseBody> processPdfToPresentation(
+    public ResponseEntity<Resource> processPdfToPresentation(
             @ModelAttribute PdfToPresentationRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -59,7 +59,7 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a given PDF file to Text or RTF format. Input:PDF"
                             + " Output:TXT Type:SISO")
-    public ResponseEntity<StreamingResponseBody> processPdfToRTForTXT(
+    public ResponseEntity<Resource> processPdfToRTForTXT(
             @ModelAttribute PdfToTextOrRTFRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -89,8 +89,8 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a given PDF file to a Word document format. Input:PDF"
                             + " Output:WORD Type:SISO")
-    public ResponseEntity<StreamingResponseBody> processPdfToWord(
-            @ModelAttribute PdfToWordRequest request) throws IOException, InterruptedException {
+    public ResponseEntity<Resource> processPdfToWord(@ModelAttribute PdfToWordRequest request)
+            throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
@@ -103,8 +103,7 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
                             + " Type:SISO")
-    public ResponseEntity<StreamingResponseBody> processPdfToXML(@ModelAttribute PDFFile file)
-            throws Exception {
+    public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);

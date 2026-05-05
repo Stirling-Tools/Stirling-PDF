@@ -2,14 +2,23 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import AuthCallback from "@app/routes/AuthCallback";
-import { springAuth } from "@app/auth/springAuthClient";
+import {
+  POST_LOGIN_REDIRECT_STORAGE_KEY,
+  springAuth,
+} from "@app/auth/springAuthClient";
 
-// Mock springAuth
-vi.mock("@app/auth/springAuthClient", () => ({
-  springAuth: {
-    getSession: vi.fn(),
-  },
-}));
+// Mock springAuth; keep the real redirect-path helpers.
+vi.mock("@app/auth/springAuthClient", async () => {
+  const actual = await vi.importActual<
+    typeof import("@app/auth/springAuthClient")
+  >("@app/auth/springAuthClient");
+  return {
+    ...actual,
+    springAuth: {
+      getSession: vi.fn(),
+    },
+  };
+});
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -24,6 +33,7 @@ vi.mock("react-router-dom", async () => {
 describe("AuthCallback", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     vi.clearAllMocks();
     // Reset window.location.hash
     window.location.hash = "";
@@ -147,6 +157,82 @@ describe("AuthCallback", () => {
         state: { error: "OAuth login failed. Please try again." },
       });
     });
+  });
+
+  it("should navigate to the stored post-login path when one is present", async () => {
+    const mockToken = "oauth-jwt-token";
+    const mockUser = {
+      id: "123",
+      email: "oauth@example.com",
+      username: "oauthuser",
+      role: "USER",
+    };
+
+    window.location.hash = `#access_token=${mockToken}`;
+    sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, "/share/abc123");
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: mockUser,
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/share/abc123", {
+        replace: true,
+      });
+    });
+    // Stored path is single-use
+    expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("should fall back to home when the stored post-login path is unsafe", async () => {
+    const mockToken = "oauth-jwt-token";
+    const mockUser = {
+      id: "123",
+      email: "oauth@example.com",
+      username: "oauthuser",
+      role: "USER",
+    };
+
+    window.location.hash = `#access_token=${mockToken}`;
+    // Protocol-relative URL — must not be followed
+    sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, "//evil.example");
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: mockUser,
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+    });
+    expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
   });
 
   it("should display loading state while processing", () => {

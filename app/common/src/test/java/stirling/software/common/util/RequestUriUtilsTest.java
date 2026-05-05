@@ -161,4 +161,46 @@ class RequestUriUtilsTest {
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }
+
+    // --- share-link SPA bootstrap ---
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkToken() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkTokenTrailingSlash() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkWithContextPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/share/abc123", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareRootNotPublic() {
+        // Avoid matching bare "/share" or "/share/" — must have a token segment
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareNestedPathNotPublic() {
+        // Guard against future additions like /share/<token>/download becoming accidentally public
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/download", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc/admin", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareApiStillProtected() {
+        // Share-link data APIs must NOT be public — they enforce auth + access checks
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/share-links/abc123/metadata", ""));
+    }
 }
