@@ -124,7 +124,7 @@
   background: transparent;
 }
 .file-sidebar-scroll::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: rgb(var(--border));
   border-radius: 2px;
 }
 
@@ -218,6 +218,26 @@
   display: flex;
   flex-direction: column;
   margin-top: 4px;
+}
+
+.file-sidebar-file-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: scroll;
+}
+
+.file-sidebar-file-list::-webkit-scrollbar {
+  width: 4px;
+}
+.file-sidebar-file-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.file-sidebar-file-list::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 2px;
+}
+.file-sidebar-file-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .file-sidebar-section-divider {

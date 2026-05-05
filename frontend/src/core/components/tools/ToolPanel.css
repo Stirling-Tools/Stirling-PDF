@@ -120,16 +120,8 @@
     var(--text-primary) 20%,
     var(--border-subtle)
   );
-  --fullscreen-text-icon: color-mix(
-    in srgb,
-    var(--text-primary) 90%,
-    var(--text-muted)
-  );
-  --fullscreen-text-icon-compact: color-mix(
-    in srgb,
-    var(--text-primary) 88%,
-    var(--text-muted)
-  );
+  --fullscreen-text-icon: var(--text-primary);
+  --fullscreen-text-icon-compact: var(--text-primary);
 }
 
 .tool-panel {
@@ -190,7 +182,9 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.35rem 0.5rem;
+  height: 48px;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
 }
 
 .tool-panel__search-row .search-input-container {
@@ -523,6 +517,8 @@
 
 .tool-panel__fullscreen-name {
   color: var(--text-primary);
+  font-size: 13px !important;
+  font-weight: 500 !important;
 }
 
 .tool-panel__fullscreen-description {

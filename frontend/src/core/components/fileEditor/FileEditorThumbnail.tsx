@@ -5,7 +5,6 @@ import {
   Button,
   Group,
   Stack,
-  Loader,
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
@@ -28,6 +27,7 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
+import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
@@ -43,6 +43,7 @@ import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { truncateCenter } from "@app/utils/textUtils";
+import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
@@ -85,6 +86,11 @@ const FileEditorThumbnail = ({
   } = useFileContext();
   const { state, selectors } = useFileState();
   const isMobile = useIsMobile();
+  const {
+    isEncrypted,
+    thumbnail: displayThumbnail,
+    isGenerating: isThumbGenerating,
+  } = useFileThumbnail(file);
 
   const actualFile = useMemo(
     () => activeFiles.find((f) => f.fileId === file.id),
@@ -96,7 +102,6 @@ const FileEditorThumbnail = ({
 
   const hasError = state.ui.errorFileIds.includes(file.id);
   const pageCount = file.processedFile?.totalPages || 0;
-  const isEncrypted = Boolean(file.processedFile?.isEncrypted);
 
   // Aspect ratio from page dimensions, falling back to letter size
   const firstPage = file.processedFile?.pages?.[0];
@@ -481,33 +486,23 @@ const FileEditorThumbnail = ({
               )}
 
               {/* Thumbnail image or loading state */}
-              {file.thumbnailUrl ? (
-                <PrivateContent>
-                  <img
-                    src={file.thumbnailUrl}
-                    alt={file.name}
-                    className={styles.thumbImage}
-                    draggable={false}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                </PrivateContent>
-              ) : file.type?.startsWith("application/pdf") ? (
-                <Stack
-                  align="center"
-                  justify="center"
-                  gap="xs"
-                  style={{ height: "100%" }}
-                >
-                  <Loader size="sm" />
-                  <Text size="xs" c="dimmed">
-                    Loading thumbnail...
-                  </Text>
-                </Stack>
-              ) : null}
+              <DocumentThumbnail
+                file={file}
+                thumbnail={displayThumbnail || undefined}
+                isEncrypted={isEncrypted}
+                isLoading={
+                  !isEncrypted &&
+                  !displayThumbnail &&
+                  (isThumbGenerating ||
+                    file.type?.startsWith("application/pdf") ||
+                    file.type?.startsWith("image/"))
+                }
+                iconSize="6rem"
+                imgClassName={styles.thumbImage}
+                onImageError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
 
               {/* Badges — visible on hover via CSS */}
               <div className={styles.thumbBadges}>

@@ -3,8 +3,12 @@ import { createPortal } from "react-dom";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
+import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { useFileManagement } from "@app/contexts/FileContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
 import "@app/components/shared/FileSidebarFileItem.css";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
@@ -18,6 +22,7 @@ function useLazyThumbnail(
   const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
   const attempted = useRef(false);
   const indexedDB = useIndexedDB();
+  const { updateStirlingFileStub } = useFileManagement();
 
   // Sync prop changes (e.g. thumbnail arrives after TTL bump)
   useEffect(() => {
@@ -38,6 +43,7 @@ function useLazyThumbnail(
         if (cancelled || !thumbnail) return;
         setThumb(thumbnail);
         void indexedDB.updateThumbnail(fileId, thumbnail);
+        updateStirlingFileStub(fileId, { thumbnailUrl: thumbnail });
       } catch {
         // non-critical
       }
@@ -46,7 +52,7 @@ function useLazyThumbnail(
     return () => {
       cancelled = true;
     };
-  }, [fileId, size, thumbnailUrl, indexedDB]);
+  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
 
   return thumb;
 }
@@ -128,85 +134,6 @@ export function formatFileDate(lastModifiedTs: number): string {
   });
 }
 
-function FilePdfIcon({
-  className,
-  style,
-}: {
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <svg
-      className={className}
-      style={style}
-      width="16"
-      height="20"
-      viewBox="0 0 16 20"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M1 2C1 .895 1.895 0 3 0H9.5L15 5.5V18C15 19.105 14.105 20 13 20H3C1.895 20 1 19.105 1 18V2Z"
-        fill="currentColor"
-      />
-      <path
-        d="M9.5 0L15 5.5H11C10.172 5.5 9.5 4.828 9.5 4V0Z"
-        fill="rgba(0,0,0,0.2)"
-      />
-      <rect
-        x="3.5"
-        y="8.5"
-        width="7"
-        height="1.2"
-        rx=".6"
-        fill="rgba(255,255,255,.85)"
-      />
-      <rect
-        x="3.5"
-        y="11"
-        width="9"
-        height="1.2"
-        rx=".6"
-        fill="rgba(255,255,255,.85)"
-      />
-      <rect
-        x="3.5"
-        y="13.5"
-        width="5.5"
-        height="1.2"
-        rx=".6"
-        fill="rgba(255,255,255,.85)"
-      />
-    </svg>
-  );
-}
-
-function FileGenericIcon({
-  className,
-  style,
-}: {
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <svg
-      className={className}
-      style={style}
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
-    </svg>
-  );
-}
-
 function CheckIcon({
   className,
   style,
@@ -230,6 +157,11 @@ function CheckIcon({
       <polyline points="20 6 9 17 4 12" />
     </svg>
   );
+}
+
+function getSidebarFileIcon(ext: string): React.ReactElement {
+  const cls = "file-sidebar-file-icon file-sidebar-file-icon-hover-hide";
+  return <FileDocIcon className={cls} variant={getFileDocVariant(ext)} />;
 }
 
 export interface FileItemProps {
@@ -258,11 +190,16 @@ export function FileItem({
   onEyeClick,
 }: FileItemProps) {
   const ext = getFileExtension(name);
-  const isPdf = ext === "pdf";
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
-  const typeLabel = isPdf ? "" : ext ? ext.toUpperCase() : "File";
+  const typeLabel = ext ? ext.toUpperCase() : "File";
 
-  const resolvedThumbnail = useLazyThumbnail(fileId, size ?? 0, thumbnailUrl);
+  // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
+  const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
+  const resolvedThumbnail = useLazyThumbnail(
+    fileId,
+    size ?? 0,
+    useRasterThumb ? thumbnailUrl : undefined,
+  );
 
   const itemRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
@@ -302,17 +239,7 @@ export function FileItem({
           ) : (
             <>
               <div className="file-sidebar-file-checkbox-hover" />
-              {isPdf ? (
-                <FilePdfIcon
-                  className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide"
-                  style={{ color: "#DC2626" }}
-                />
-              ) : (
-                <FileGenericIcon
-                  className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide"
-                  style={{ color: "#71717A" }}
-                />
-              )}
+              {getSidebarFileIcon(ext)}
             </>
           )}
         </div>
@@ -349,7 +276,8 @@ export function FileItem({
         </button>
       </div>
 
-      {thumbPos &&
+      {useRasterThumb &&
+        thumbPos &&
         resolvedThumbnail &&
         createPortal(
           <div

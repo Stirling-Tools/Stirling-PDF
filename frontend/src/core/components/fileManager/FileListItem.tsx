@@ -39,7 +39,6 @@ import { alert } from "@app/components/toast";
 interface FileListItemProps {
   file: StirlingFileStub;
   isSelected: boolean;
-  isSupported: boolean;
   onSelect: (shiftKey?: boolean) => void;
   onRemove: () => void;
   onDownload?: () => void;
@@ -53,7 +52,6 @@ interface FileListItemProps {
 const FileListItem: React.FC<FileListItemProps> = ({
   file,
   isSelected,
-  isSupported,
   onSelect,
   onRemove,
   onDownload,
@@ -192,7 +190,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
             isSelected || shouldShowHovered
               ? "var(--mantine-color-gray-1)"
               : "var(--bg-file-list)",
-          opacity: isSupported ? 1 : 0.5,
+          opacity: 1,
           transition: "background-color 0.15s ease",
           userSelect: "none",
           WebkitUserSelect: "none",

@@ -8,7 +8,7 @@ import ToolRenderer from "@app/components/tools/ToolRenderer";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import rainbowStyles from "@app/styles/rainbow.module.css";
-import { ActionIcon, ScrollArea } from "@mantine/core";
+import { ActionIcon, Button, ScrollArea } from "@mantine/core";
 import { ToolId } from "@app/types/toolId";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useTranslation } from "react-i18next";
@@ -73,10 +73,6 @@ export default function ToolPanel() {
     quickAccessRef,
     rightRailRef,
   });
-
-  const toggleLabel = isFullscreenMode
-    ? t("toolPanel.toggle.sidebar", "Switch to sidebar mode")
-    : t("toolPanel.toggle.fullscreen", "Switch to fullscreen mode");
 
   const handleExpand = () => {
     if (readerMode) setReaderMode(false);
@@ -196,20 +192,6 @@ export default function ToolPanel() {
               toolRegistry={toolRegistry}
               mode="filter"
               autoFocus={focusSearch}
-              iconOverride={
-                leftPanelView === "toolContent" ? (
-                  <ActionIcon
-                    variant="transparent"
-                    radius="md"
-                    size="1.25rem"
-                    onClick={handleBackToTools}
-                    aria-label={t("toolPanel.backToTools", "Back to tools")}
-                    style={{ color: "var(--search-text-and-icon-color)" }}
-                  >
-                    <ArrowBackIcon sx={{ fontSize: "1.25rem" }} />
-                  </ActionIcon>
-                ) : undefined
-              }
             />
             <ActionIcon
               variant="outline"
@@ -245,6 +227,26 @@ export default function ToolPanel() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
+              <div
+                style={{
+                  borderBottom: "1px solid var(--border-subtle)",
+                  flexShrink: 0,
+                }}
+              >
+                <Button
+                  variant="light"
+                  color="blue"
+                  size="sm"
+                  fullWidth
+                  radius={0}
+                  leftSection={<ArrowBackIcon sx={{ fontSize: "0.9rem" }} />}
+                  onClick={handleBackToTools}
+                  aria-label={t("toolPanel.backToTools", "Back to all tools")}
+                  styles={{ root: { justifyContent: "flex-start" } }}
+                >
+                  {t("toolPanel.backToTools", "Back to all tools")}
+                </Button>
+              </div>
               <div className="flex-1 min-h-0 overflow-hidden">
                 <ScrollArea h="100%">
                   {selectedToolKey ? (
@@ -284,7 +286,6 @@ export default function ToolPanel() {
             )
           }
           onExitFullscreenMode={() => setToolPanelMode("sidebar")}
-          toggleLabel={toggleLabel}
           geometry={fullscreenGeometry}
         />
       )}

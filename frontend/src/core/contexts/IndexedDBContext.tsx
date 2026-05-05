@@ -92,9 +92,10 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       fileId: FileId,
       existingThumbnail?: string,
     ): Promise<StirlingFileStub> => {
-      // Use existing thumbnail or generate new one if none provided
-      const thumbnail =
+      // Use existing thumbnail or generate new one if none provided (empty string = no raster thumbnail)
+      const generated =
         existingThumbnail || (await generateThumbnailForFile(file));
+      const thumbnail = generated || undefined;
 
       // History is handled via direct fileStorage calls, not here
       const stirlingFile = createStirlingFile(file, fileId);
