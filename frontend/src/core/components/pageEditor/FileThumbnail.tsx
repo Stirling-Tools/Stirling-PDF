@@ -8,7 +8,7 @@ import React, {
 import { ActionIcon, CheckboxIndicator } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
