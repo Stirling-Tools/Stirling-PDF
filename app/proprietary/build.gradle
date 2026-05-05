@@ -39,7 +39,7 @@ spotless {
 }
 dependencies {
     implementation project(':common')
-    api 'com.google.guava:guava:33.5.0-jre'
+    api 'com.google.guava:guava:33.6.0-jre'
 
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
