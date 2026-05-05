@@ -5,11 +5,11 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -40,8 +40,8 @@ public class PasswordController {
             description =
                     "This endpoint removes the password from a protected PDF file. Users need to"
                             + " provide the existing password. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<StreamingResponseBody> removePassword(
-            @ModelAttribute PDFPasswordRequest request) throws IOException {
+    public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request)
+            throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
 
@@ -70,8 +70,8 @@ public class PasswordController {
                     "This endpoint adds password protection to a PDF file. Users can specify a set"
                             + " of permissions that should be applied to the file. Input:PDF"
                             + " Output:PDF")
-    public ResponseEntity<StreamingResponseBody> addPassword(
-            @ModelAttribute AddPasswordRequest request) throws IOException {
+    public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
+            throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String ownerPassword = request.getOwnerPassword();
         String password = request.getPassword();

@@ -8,9 +8,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
@@ -24,7 +26,12 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -178,6 +185,46 @@ class JobExecutorServiceTest {
 
         // Then
         verify(spy).runJobGeneric(eq(false), any(Supplier.class), eq(customTimeout));
+    }
+
+    @Test
+    void shouldPersistResponseEntityResourceBodyViaFileStorage() throws Exception {
+        // Given: an async job whose result is a ResponseEntity<Resource> — the new
+        // branch added by the stream-to-Resource migration. The executor must route
+        // the body through FileStorage.storeFromResource and then record the result
+        // via TaskManager.setFileResult with the filename/content-type extracted
+        // from the response headers.
+        byte[] payload = "resource-bytes".getBytes(StandardCharsets.UTF_8);
+        Resource resource = new ByteArrayResource(payload);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+                ContentDisposition.formData().name("attachment").filename("result.pdf").build());
+
+        Supplier<Object> work = () -> new ResponseEntity<>(resource, headers, HttpStatus.OK);
+
+        when(fileStorage.storeFromResource(any(Resource.class), anyString()))
+                .thenReturn("stored-file-id");
+
+        // When: run the job asynchronously — processJobResult runs on the executor.
+        ResponseEntity<?> response = jobExecutorService.runJobGeneric(true, work);
+
+        // Then: the immediate return must be the JobResponse envelope.
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertInstanceOf(JobResponse.class, response.getBody());
+
+        // Wait for async processing and verify the Resource branch was taken —
+        // FileStorage.storeFromResource was invoked with the same Resource instance,
+        // and TaskManager.setFileResult recorded the extracted filename + content-type.
+        verify(fileStorage, timeout(5000)).storeFromResource(eq(resource), eq("result.pdf"));
+        verify(taskManager, timeout(5000))
+                .setFileResult(
+                        anyString(),
+                        eq("stored-file-id"),
+                        eq("result.pdf"),
+                        eq(MediaType.APPLICATION_PDF_VALUE));
+        verify(taskManager, timeout(5000)).setComplete(anyString());
     }
 
     @Test

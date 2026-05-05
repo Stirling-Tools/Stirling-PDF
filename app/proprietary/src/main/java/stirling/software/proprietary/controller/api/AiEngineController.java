@@ -34,11 +34,14 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
+import stirling.software.proprietary.service.AiEngineEndpointResolver;
 import stirling.software.proprietary.service.AiWorkflowService;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 @Slf4j
 @RestController
@@ -53,6 +56,7 @@ public class AiEngineController {
     private final Executor aiStreamExecutor;
     private final TaskManager taskManager;
     private final JobOwnershipService jobOwnershipService;
+    private final AiEngineEndpointResolver endpointResolver;
 
     /**
      * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
@@ -68,13 +72,15 @@ public class AiEngineController {
             ObjectMapper objectMapper,
             @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
             TaskManager taskManager,
-            JobOwnershipService jobOwnershipService) {
+            JobOwnershipService jobOwnershipService,
+            AiEngineEndpointResolver endpointResolver) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
         this.objectMapper = objectMapper;
         this.aiStreamExecutor = aiStreamExecutor;
         this.taskManager = taskManager;
         this.jobOwnershipService = jobOwnershipService;
+        this.endpointResolver = endpointResolver;
     }
 
     @GetMapping("/health")
@@ -197,17 +203,36 @@ public class AiEngineController {
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
     public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
-        validateJson(requestBody);
-        String response = aiEngineClient.post("/api/v1/pdf/edit", requestBody);
+        JsonNode parsed = parseJson(requestBody);
+        if (!parsed.isObject()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
+        }
+        String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
+        String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
-    private void validateJson(String body) {
+    private JsonNode parseJson(String body) {
         try {
-            objectMapper.readValue(body, JsonNode.class);
+            return objectMapper.readValue(body, JsonNode.class);
         } catch (JacksonException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
         }
+    }
+
+    /**
+     * Always overwrite {@code enabled_endpoints} with the server's view of which endpoints are
+     * usable. The engine must not trust a client-supplied list - the gate is owned by the Java
+     * EndpointConfiguration. Values are full URL paths (e.g. {@code /api/v1/misc/compress-pdf})
+     * that the engine matches against its {@code ToolEndpoint} enum, silently dropping any it
+     * doesn't recognise (which lets the two sides drift in either direction without breaking).
+     */
+    private String withEnabledEndpoints(ObjectNode body) {
+        ArrayNode enabled = objectMapper.createArrayNode();
+        endpointResolver.getEnabledEndpointUrls().forEach(enabled::add);
+        body.set("enabled_endpoints", enabled);
+        return body.toString();
     }
 }

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -157,10 +158,45 @@ public class FileStorage {
             success = true;
         } finally {
             if (!success) {
-                Files.deleteIfExists(filePath);
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
             }
         }
         log.debug("Stored StreamingResponseBody with ID: {}", fileId);
+        return fileId;
+    }
+
+    /**
+     * Persist a {@link Resource} body to disk, returning the generated file ID. Used by the async
+     * job pipeline to capture {@code ResponseEntity<Resource>} results produced by controllers.
+     */
+    public String storeFromResource(Resource resource, String originalName) throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        boolean success = false;
+        try (InputStream in = resource.getInputStream()) {
+            Files.copy(in, filePath);
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (IOException cleanupEx) {
+                    log.warn(
+                            "Failed to clean up partial file {} after store failure",
+                            filePath,
+                            cleanupEx);
+                }
+            }
+        }
+        log.debug("Stored Resource with ID: {}", fileId);
         return fileId;
     }
 

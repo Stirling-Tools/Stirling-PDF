@@ -12,10 +12,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -51,7 +51,7 @@ public class ConvertPDFToExcelController {
             description =
                     "Extracts tabular data from each page of a PDF and writes it into an Excel"
                             + " workbook, one sheet per table. Input:PDF Output:XLSX Type:SISO")
-    public ResponseEntity<StreamingResponseBody> pdfToExcel(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
             throws Exception {
         String baseName =
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());

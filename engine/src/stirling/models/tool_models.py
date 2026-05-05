@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum, StrEnum
-from typing import Any
 
 from pydantic import Field, RootModel, SecretStr
 
@@ -16,6 +15,16 @@ class AddAttachmentsParams(ApiModel):
     attachments: list[bytes] | None = Field(None, description="The image file to be overlaid onto the PDF.")
     convert_to_pdf_a3b: bool | None = Field(
         False, description="Convert the resulting PDF to PDF/A-3b format after adding attachments"
+    )
+
+
+class AddCommentsParams(ApiModel):
+    comments: str | None = Field(
+        None,
+        description="JSON array of comment specs. Each element has: {pageIndex, x, y, width, height, text, author?, subject?}. Coordinates are PDF user-space with origin at the page's bottom-left.",
+        examples=[
+            '[{"pageIndex":0,"x":72,"y":720,"width":20,"height":20,"text":"Check this paragraph","author":"Reviewer","subject":"Unclear wording"}]'
+        ],
     )
 
 
@@ -448,6 +457,7 @@ class MergePdfsParams(ApiModel):
     client_file_ids: str | None = Field(
         None, description="JSON array of client-provided IDs for each uploaded file (same order as fileInput)"
     )
+    file_order: str | None = None
     generate_toc: bool | None = Field(
         False,
         description="Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
@@ -689,6 +699,10 @@ class PdfToPresentationParams(ApiModel):
     output_format: OutputFormat2 | None = Field(None, description="The output Presentation format")
 
 
+class PdfToTextEditorParams(ApiModel):
+    lightweight: bool | None = False
+
+
 class OutputFormat3(StrEnum):
     rtf = "rtf"
     txt = "txt"
@@ -754,6 +768,15 @@ class RearrangePagesParams(ApiModel):
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
+
+
+class RedactionArea(ApiModel):
+    color: str | None = Field(None, description="The color used to redact the specified area.")
+    height: float | None = Field(None, description="The height of the area to be redacted.")
+    page: int | None = Field(None, description="The page on which the area should be redacted.")
+    width: float | None = Field(None, description="The width of the area to be redacted.")
+    x: float | None = Field(None, description="The left edge point of the area to be redacted.")
+    y: float | None = Field(None, description="The top edge point of the area to be redacted.")
 
 
 class RemoveBlanksParams(ApiModel):
@@ -949,7 +972,7 @@ class SplitForPosterPrintParams(ApiModel):
 class SplitPagesParams(ApiModel):
     page_numbers: str | None = Field(
         "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
+        description='Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.',
     )
 
 
@@ -1029,6 +1052,11 @@ class UrlToPdfParams(ApiModel):
     url_input: str | None = Field(None, description="The input URL to be converted to a PDF file")
 
 
+class ValidateCertificateParams(ApiModel):
+    cert_type: str | None = None
+    password: str | None = None
+
+
 class OutputFormat6(StrEnum):
     eps = "eps"
     ps = "ps"
@@ -1039,10 +1067,6 @@ class OutputFormat6(StrEnum):
 class VectorToPdfParams(ApiModel):
     output_format: OutputFormat6 | None = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class RedactionArea(RootModel[Any]):
-    root: Any
 
 
 class RedactParams(ApiModel):
@@ -1071,6 +1095,7 @@ class Model(
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
+        | PdfToTextEditorParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
@@ -1093,6 +1118,7 @@ class Model(
         | SplitPdfByChaptersParams
         | SplitPdfBySectionsParams
         | AddAttachmentsParams
+        | AddCommentsParams
         | AddImageParams
         | AddPageNumbersParams
         | AddStampParams
@@ -1114,6 +1140,7 @@ class Model(
         | AutoRedactParams
         | CertSignParams
         | SessionsParams
+        | ValidateCertificateParams
         | RedactParams
         | RemovePasswordParams
         | SanitizePdfParams
@@ -1135,6 +1162,7 @@ class Model(
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
+        | PdfToTextEditorParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
@@ -1157,6 +1185,7 @@ class Model(
         | SplitPdfByChaptersParams
         | SplitPdfBySectionsParams
         | AddAttachmentsParams
+        | AddCommentsParams
         | AddImageParams
         | AddPageNumbersParams
         | AddStampParams
@@ -1178,6 +1207,7 @@ class Model(
         | AutoRedactParams
         | CertSignParams
         | SessionsParams
+        | ValidateCertificateParams
         | RedactParams
         | RemovePasswordParams
         | SanitizePdfParams
@@ -1200,6 +1230,7 @@ type ParamToolModel = (
     | PdfToPdfaParams
     | PdfToPresentationParams
     | PdfToTextParams
+    | PdfToTextEditorParams
     | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
@@ -1222,6 +1253,7 @@ type ParamToolModel = (
     | SplitPdfByChaptersParams
     | SplitPdfBySectionsParams
     | AddAttachmentsParams
+    | AddCommentsParams
     | AddImageParams
     | AddPageNumbersParams
     | AddStampParams
@@ -1243,6 +1275,7 @@ type ParamToolModel = (
     | AutoRedactParams
     | CertSignParams
     | SessionsParams
+    | ValidateCertificateParams
     | RedactParams
     | RemovePasswordParams
     | SanitizePdfParams
@@ -1266,6 +1299,7 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PDFA = "/api/v1/convert/pdf/pdfa"
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
+    PDF_TO_TEXT_EDITOR = "/api/v1/convert/pdf/text-editor"
     PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
@@ -1288,6 +1322,7 @@ class ToolEndpoint(StrEnum):
     SPLIT_PDF_BY_CHAPTERS = "/api/v1/general/split-pdf-by-chapters"
     SPLIT_PDF_BY_SECTIONS = "/api/v1/general/split-pdf-by-sections"
     ADD_ATTACHMENTS = "/api/v1/misc/add-attachments"
+    ADD_COMMENTS = "/api/v1/misc/add-comments"
     ADD_IMAGE = "/api/v1/misc/add-image"
     ADD_PAGE_NUMBERS = "/api/v1/misc/add-page-numbers"
     ADD_STAMP = "/api/v1/misc/add-stamp"
@@ -1309,6 +1344,7 @@ class ToolEndpoint(StrEnum):
     AUTO_REDACT = "/api/v1/security/auto-redact"
     CERT_SIGN = "/api/v1/security/cert-sign"
     SESSIONS = "/api/v1/security/cert-sign/sessions"
+    VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
@@ -1330,6 +1366,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PDFA: PdfToPdfaParams,
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
+    ToolEndpoint.PDF_TO_TEXT_EDITOR: PdfToTextEditorParams,
     ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
@@ -1352,6 +1389,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SPLIT_PDF_BY_CHAPTERS: SplitPdfByChaptersParams,
     ToolEndpoint.SPLIT_PDF_BY_SECTIONS: SplitPdfBySectionsParams,
     ToolEndpoint.ADD_ATTACHMENTS: AddAttachmentsParams,
+    ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
     ToolEndpoint.ADD_IMAGE: AddImageParams,
     ToolEndpoint.ADD_PAGE_NUMBERS: AddPageNumbersParams,
     ToolEndpoint.ADD_STAMP: AddStampParams,
@@ -1373,6 +1411,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
     ToolEndpoint.CERT_SIGN: CertSignParams,
     ToolEndpoint.SESSIONS: SessionsParams,
+    ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
