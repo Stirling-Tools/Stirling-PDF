@@ -15,7 +15,7 @@ import {
 import { Dropzone as MantineDropzone } from "@mantine/dropzone";
 import ManageSearchIcon from "@mui/icons-material/ManageSearch";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 
 interface ExtractedPage {
