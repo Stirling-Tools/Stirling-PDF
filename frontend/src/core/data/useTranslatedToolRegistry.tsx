@@ -491,7 +491,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         description: t('home.aiFormFill.desc', 'Use AI to automatically fill PDF form fields from your knowledge base'),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.GENERAL,
-        workbench: 'viewer' as const,
+        workbench: 'fileEditor' as const,
         endpoints: [],
         automationSettings: null,
         supportsAutomate: false,

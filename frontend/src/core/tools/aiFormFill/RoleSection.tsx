@@ -7,7 +7,7 @@ import {
   Stack,
   Group,
   Text,
-  Select,
+  MultiSelect,
   Badge,
   Collapse,
   UnstyledButton,
@@ -41,21 +41,21 @@ interface SelectGroupItem {
 interface RoleSectionProps {
   role: CrossFileRole;
   entitySelectData: SelectGroupItem[];
-  selectedEntityId: string | undefined;
-  onEntityChange: (entityId: string) => void;
+  selectedEntityIds: string[];
+  onEntitiesChange: (entityIds: string[]) => void;
   fieldsByFile: Record<string, FormField[]>;
   cleanedLabelsByFile: Record<string, CleanedLabel[]>;
   skippedFieldsByFile: Record<string, Set<string>>;
   fileNames: Record<string, string>;
-  fileRoleOverrides: Record<string, Record<string, string>>;
-  onFileOverride: (fileId: string, entityId: string) => void;
+  fileRoleOverrides: Record<string, Record<string, string[]>>;
+  onFileOverride: (fileId: string, entityIds: string[]) => void;
 }
 
 export function RoleSection({
   role,
   entitySelectData,
-  selectedEntityId,
-  onEntityChange,
+  selectedEntityIds,
+  onEntitiesChange,
   fieldsByFile,
   cleanedLabelsByFile,
   skippedFieldsByFile,
@@ -66,6 +66,7 @@ export function RoleSection({
   const [expanded, setExpanded] = useState(false);
   const roleFieldNames = role.fieldNamesByFile;
   const fileCount = role.fileIds.length;
+  const variantCount = selectedEntityIds.length;
 
   return (
     <Stack gap={4} style={{ borderBottom: '1px solid var(--mantine-color-default-border)', paddingBottom: 8 }}>
@@ -78,19 +79,23 @@ export function RoleSection({
         <Badge size="xs" variant="light">
           {fileCount} file{fileCount !== 1 ? 's' : ''}
         </Badge>
+        {variantCount > 1 && (
+          <Badge size="xs" variant="light" color="grape">×{variantCount}</Badge>
+        )}
         {role.isPrimaryPerson && (
           <Badge size="xs" variant="light" color="blue">primary</Badge>
         )}
       </Group>
 
-      {/* Entity selector (grouped by type) */}
-      <Select
+      {/* Entity selector — pick one or many. N entities = N filled outputs. */}
+      <MultiSelect
         size="xs"
         data={entitySelectData}
-        value={selectedEntityId || null}
-        onChange={(v) => v && onEntityChange(v)}
-        placeholder="Select entity..."
+        value={selectedEntityIds}
+        onChange={onEntitiesChange}
+        placeholder="Select entities..."
         searchable
+        clearable
         styles={{ input: { fontSize: '0.8125rem' } }}
       />
 
@@ -126,21 +131,21 @@ export function RoleSection({
                 {fileCount > 1 && (
                   <Group gap={4}>
                     <Text size="xs" fw={500} c="dimmed">{fileNames[fileId] || fileId}</Text>
-                    {fileOverride && (
-                      <Badge size="xs" variant="outline" color="orange">override: {fileOverride}</Badge>
+                    {fileOverride && fileOverride.length > 0 && (
+                      <Badge size="xs" variant="outline" color="orange">
+                        override: {fileOverride.length === 1 ? fileOverride[0] : `${fileOverride.length} entities`}
+                      </Badge>
                     )}
-                    {fileCount > 1 && (
-                      <Select
-                        size="xs"
-                        data={entitySelectData}
-                        value={fileOverride || ''}
-                        onChange={(v) => onFileOverride(fileId, v || '')}
-                        placeholder="Default"
-                        clearable
-                        searchable
-                        styles={{ input: { fontSize: '0.75rem', minHeight: 24 }, root: { maxWidth: 160 } }}
-                      />
-                    )}
+                    <MultiSelect
+                      size="xs"
+                      data={entitySelectData}
+                      value={fileOverride || []}
+                      onChange={(v) => onFileOverride(fileId, v)}
+                      placeholder="Default"
+                      clearable
+                      searchable
+                      styles={{ input: { fontSize: '0.75rem', minHeight: 24 }, root: { maxWidth: 220 } }}
+                    />
                   </Group>
                 )}
                 {visibleFields.map((field) => {

@@ -9,7 +9,7 @@ from stirling.models import ApiModel
 from .common import ConversationMessage, WorkflowOutcome
 
 MAX_FILES_PER_REQUEST = 50
-MAX_FIELDS_PER_FILE = 500
+MAX_FIELDS_PER_FILE = 2000
 MAX_DOCUMENTS_PER_REQUEST = 20
 MAX_LABEL_CHARS = 500
 MAX_TOOLTIP_CHARS = 1000

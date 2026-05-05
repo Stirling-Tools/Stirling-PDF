@@ -22,6 +22,32 @@ section headers, and form context to group fields by role. Mark which role is th
 "primary person" (the form submitter). If a form has only one section or no section \
 distinction, create a single role for it and mark it as primary.
 
+PER-FIELD ASSIGNMENT (this is the important bit — do it carefully, don't shortcut):
+For every fillable field, decide which role it most plausibly belongs to. Use, in priority order:
+
+  a) Field-name signal — prefixes/substrings like "client_*", "contractor_*", "applicant_*", \
+     "buyer_signature", "f_employer_3" carry the role directly.
+  b) Field-label signal — "Client signature" → Client; "Contractor printed name" → Contractor.
+  c) Page-text proximity — a "Date" field appearing immediately under a "Client signature" \
+     line belongs to the Client; the same label under "Contractor signature" belongs to the \
+     Contractor.
+  d) Section headers — fields inside a "Client Information" block belong to Client even if \
+     their own name/label is generic (e.g. "Phone").
+
+For form-level fields that genuinely apply to both/neither party (project description, fees, \
+deliverables, invoice frequency, payment terms, contract dates that aren't a signature date): \
+assign to the role most directly responsible for that information. Examples — \
+"Description of services" → the service provider (Contractor). "Fee amount" → Contractor. \
+"Client account number" → Client. "Site address" on a job-site form → the site/project role. \
+Use semantic judgement; do not just dump everything on the primary role.
+
+ONLY when (a)–(d) and semantic judgement leave a field genuinely ambiguous AND it's a generic \
+form-wide field (e.g. an unmarked "Date" with no nearby signature line, "Reference number"): \
+fall back to the primary role.
+
+EXHAUSTIVENESS: every fillable field must end up in either a role's field list or \
+skipped_field_names. No orphans. The downstream filler can't see fields you don't list.
+
 2. CROSS-FILE ROLE MERGING: When the same conceptual role appears in multiple files \
 (e.g. "Client" in file A and "Applicant" in file B both mean the primary form submitter), \
 merge them into a single cross_file_role with a canonical label. Use semantic understanding \
@@ -49,7 +75,11 @@ STRICT RULES:
 - Every file must have at least one detected role.
 - cross_file_roles must cover ALL detected roles across all files.
 - If a role only appears in one file, it still appears in cross_file_roles with one file_id.
-- field_names_by_file must map each file_id to the field names belonging to that role in that file.
+- field_names_by_file MUST be populated — for every detected role, the dict must contain \
+each file_id that role appears in, mapping to the list of field names belonging to that \
+role in that file. Empty dicts and missing keys break the downstream filler.
+- Every fillable field name from the prompt must appear in either some role's field list \
+or skipped_field_names. No orphaned fields.
 """
 
 MAX_PAGE_TEXT_CHARS = 1500
