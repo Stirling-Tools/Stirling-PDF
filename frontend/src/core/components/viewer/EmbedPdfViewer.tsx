@@ -63,15 +63,18 @@ async function extractPageMeasureScales(
     // Parse a Measure dict into a MeasureScale, or return null if malformed.
     const parseScale = (measureObj: unknown) => {
       if (!(measureObj instanceof PDFDict)) return null;
-      const rObj = measureObj.lookup(PDFName.of("R"));
+      // TS 5.9 no longer narrows `unknown` via instanceof when the constructor
+      // is `any` (pdf-lib v2.6.5 ships without individual .d.ts files)
+      const measure = measureObj as typeof PDFDict.prototype;
+      const rObj = measure.lookup(PDFName.of("R"));
       const ratioLabel =
         rObj instanceof PDFString || rObj instanceof PDFHexString
           ? rObj.decodeText()
           : "";
       // D = distance array, X = x-axis fallback
-      let fmtArray = measureObj.lookup(PDFName.of("D"));
+      let fmtArray = measure.lookup(PDFName.of("D"));
       if (!(fmtArray instanceof PDFArray))
-        fmtArray = measureObj.lookup(PDFName.of("X"));
+        fmtArray = measure.lookup(PDFName.of("X"));
       if (!(fmtArray instanceof PDFArray)) return null;
       const firstFmt = fmtArray.lookup(0);
       if (!(firstFmt instanceof PDFDict)) return null;

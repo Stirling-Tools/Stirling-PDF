@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,9 +15,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -37,11 +33,9 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
-import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineEndpointResolver;
 import stirling.software.proprietary.service.AiWorkflowService;
-import stirling.software.proprietary.service.PdfContentExtractor;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -58,7 +52,6 @@ public class AiEngineController {
 
     private final AiEngineClient aiEngineClient;
     private final AiWorkflowService aiWorkflowService;
-    private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
     private final Executor aiStreamExecutor;
     private final TaskManager taskManager;
@@ -76,7 +69,6 @@ public class AiEngineController {
     public AiEngineController(
             AiEngineClient aiEngineClient,
             AiWorkflowService aiWorkflowService,
-            PdfContentExtractor pdfContentExtractor,
             ObjectMapper objectMapper,
             @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
             TaskManager taskManager,
@@ -84,7 +76,6 @@ public class AiEngineController {
             AiEngineEndpointResolver endpointResolver) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
-        this.pdfContentExtractor = pdfContentExtractor;
         this.objectMapper = objectMapper;
         this.aiStreamExecutor = aiStreamExecutor;
         this.taskManager = taskManager;
@@ -220,21 +211,6 @@ public class AiEngineController {
         String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
         String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
-    }
-
-    @PostMapping(value = "/debug/extract-text", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "Debug: extract PDF text as the AI engine sees it",
-            description =
-                    "Runs the same text-extraction and image-annotation pipeline used by "
-                            + "the AI workflow and returns the raw per-page text. Dev/testing only.")
-    public ResponseEntity<Map<String, Object>> debugExtractText(
-            @RequestParam("fileInput") MultipartFile file) throws IOException {
-        try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
-            List<AiWorkflowTextSelection> pages =
-                    pdfContentExtractor.extractPagesForDebug(doc, 200, 100_000);
-            return ResponseEntity.ok(Map.of("pages", pages, "pageCount", pages.size()));
-        }
     }
 
     private JsonNode parseJson(String body) {

@@ -135,30 +135,6 @@ public class PdfContentExtractor {
     }
 
     // -----------------------------------------------------------------------
-    // Debug extraction (used by dev tooling only)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Extracts the full page text for all pages using the same text-extraction and image-annotation
-     * pipeline that the AI workflow uses. Intended for the debug {@code POST
-     * /api/v1/ai/debug/extract-text} endpoint only — not for production workflows.
-     *
-     * @param document the open PDF
-     * @param maxPages maximum number of pages to process
-     * @param maxCharacters total character budget across all pages
-     * @return per-page text selections (1-based page numbers), in page order
-     */
-    public List<AiWorkflowTextSelection> extractPagesForDebug(
-            PDDocument document, int maxPages, int maxCharacters) throws IOException {
-        List<Integer> pages = new ArrayList<>();
-        int total = document.getNumberOfPages();
-        for (int p = 1; p <= total && pages.size() < maxPages; p++) {
-            pages.add(p);
-        }
-        return extractPageText(document, pages, maxCharacters);
-    }
-
-    // -----------------------------------------------------------------------
     // Workflow extraction (used by AiWorkflowService)
     // -----------------------------------------------------------------------
 
