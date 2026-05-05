@@ -123,10 +123,14 @@ public class InternalApiClient {
                         }
                     });
         } catch (ResourceAccessException e) {
-            // Read timeout, connect timeout, or other low-level I/O failure. Re-throw as a
-            // dedicated exception so callers (e.g. the AI workflow executor) can produce a
-            // user-friendly "tool timed out" message instead of a generic stack trace.
-            throw new InternalApiTimeoutException(endpointPath, readTimeout, e);
+            // RestTemplate wraps low-level I/O failures in ResourceAccessException. Only the
+            // SocketTimeoutException-rooted case is a real timeout; other I/O failures (connection
+            // refused, DNS, etc.) propagate as-is so the upstream generic handler can describe
+            // them accurately.
+            if (e.getCause() instanceof java.net.SocketTimeoutException) {
+                throw new InternalApiTimeoutException(endpointPath, readTimeout, e);
+            }
+            throw e;
         }
     }
 

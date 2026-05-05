@@ -381,7 +381,7 @@ class EditTextOperation(ApiModel):
 class EditTextParams(ApiModel):
     edits: list[EditTextOperation] | None = Field(
         None,
-        description='Ordered list of find/replace operations to apply to the PDF text. Each operation runs against the current state of the document, so a later operation can match text produced by an earlier one. Pass as a JSON array, e.g. [{"find":"foo","replace":"bar"},{"find":"baz","replace":"qux"}].',
+        description="Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').",
     )
     page_numbers: str | None = Field(
         "all",

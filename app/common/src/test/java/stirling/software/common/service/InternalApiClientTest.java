@@ -103,11 +103,12 @@ class InternalApiClientTest {
     }
 
     @Test
-    void postWrapsResourceAccessExceptionAsInternalApiTimeoutException() {
-        // Simulates the read-timeout case: RestTemplate raises ResourceAccessException when the
-        // underlying socket times out. The client must repackage that into a typed timeout
-        // exception that carries the failing endpoint and the configured read timeout, so the
-        // workflow layer can surface a clean "tool didn't respond" message to the user.
+    void postWrapsSocketTimeoutAsInternalApiTimeoutException() {
+        // Simulates the read-timeout case: RestTemplate wraps SocketTimeoutException in
+        // ResourceAccessException when the underlying socket times out. The client must repackage
+        // that into a typed timeout exception that carries the failing endpoint and the configured
+        // read timeout, so the workflow layer can surface a clean "tool didn't respond" message
+        // to the user.
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("fileInput", namedResource("input.pdf", "data"));
 
@@ -120,7 +121,9 @@ class InternalApiClientTest {
                             when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
                                     .thenThrow(
                                             new ResourceAccessException(
-                                                    "I/O error on POST request: Read timed out"));
+                                                    "I/O error on POST request: Read timed out",
+                                                    new java.net.SocketTimeoutException(
+                                                            "Read timed out")));
                         })) {
 
             InternalApiClient mockedClient = newClient();
@@ -132,6 +135,36 @@ class InternalApiClientTest {
             assertEquals("/api/v1/general/merge-pdfs", thrown.getEndpointPath());
             assertNotNull(thrown.getReadTimeout());
             assertTrue(thrown.getMessage().contains("/api/v1/general/merge-pdfs"));
+        }
+    }
+
+    @Test
+    void postRethrowsNonTimeoutResourceAccessExceptionAsIs() {
+        // ResourceAccessException covers more than just timeouts (e.g. connection refused, DNS
+        // failure). Only SocketTimeoutException-rooted failures are timeouts; everything else
+        // must propagate so the upstream generic handler can label it correctly instead of lying
+        // about a "tool didn't respond" timeout.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenAnswer(inv -> (RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenThrow(
+                                            new ResourceAccessException(
+                                                    "I/O error on POST request: Connection refused",
+                                                    new java.net.ConnectException(
+                                                            "Connection refused")));
+                        })) {
+
+            InternalApiClient mockedClient = newClient();
+            assertThrows(
+                    ResourceAccessException.class,
+                    () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
         }
     }
 

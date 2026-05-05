@@ -16,11 +16,10 @@ public class EditTextRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Ordered list of find/replace operations to apply to the PDF text. Each"
-                            + " operation runs against the current state of the document, so a"
-                            + " later operation can match text produced by an earlier one. Pass as"
-                            + " a JSON array, e.g."
-                            + " [{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}].",
+                    "Ordered list of find/replace operations. Each replaces every occurrence on"
+                            + " the selected pages, in order; later operations see the result of"
+                            + " earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo'"
+                            + " into 'bars').",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private List<EditTextOperation> edits;
 
