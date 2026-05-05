@@ -27,7 +27,6 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
-import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
@@ -43,6 +42,7 @@ import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { truncateCenter } from "@app/utils/textUtils";
+import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface FileEditorThumbnailProps {
@@ -86,11 +86,6 @@ const FileEditorThumbnail = ({
   } = useFileContext();
   const { state, selectors } = useFileState();
   const isMobile = useIsMobile();
-  const {
-    isEncrypted,
-    thumbnail: displayThumbnail,
-    isGenerating: isThumbGenerating,
-  } = useFileThumbnail(file);
 
   const actualFile = useMemo(
     () => activeFiles.find((f) => f.fileId === file.id),
@@ -102,6 +97,11 @@ const FileEditorThumbnail = ({
 
   const hasError = state.ui.errorFileIds.includes(file.id);
   const pageCount = file.processedFile?.totalPages || 0;
+  const {
+    isEncrypted,
+    thumbnail: displayThumbnail,
+    isGenerating: isThumbGenerating,
+  } = useFileThumbnail(file);
 
   // Aspect ratio from page dimensions, falling back to letter size
   const firstPage = file.processedFile?.pages?.[0];
