@@ -27,6 +27,7 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
+import { truncateCenter } from "@app/utils/textUtils";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
