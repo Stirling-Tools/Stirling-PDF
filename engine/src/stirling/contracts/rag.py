@@ -4,48 +4,36 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-MAX_INDEX_TEXT_LENGTH = 1_000_000  # 1MB text limit per index request
+from .common import FileId
 
 
-class RagStatusResponse(ApiModel):
-    embedding_model: str
-    collections: list[str]
+class IngestedPageText(ApiModel):
+    page_number: int = Field(ge=1)
+    text: str
 
 
-class RagIndexRequest(ApiModel):
-    collection: str = Field(min_length=1)
-    text: str = Field(max_length=MAX_INDEX_TEXT_LENGTH)
-    source: str = ""
-    metadata: dict[str, str] = Field(default_factory=dict)
+class IngestDocumentRequest(ApiModel):
+    """Replace-ingest a document's content into RAG under the given document_id.
+
+    Each content-type field is optional; the endpoint replaces the document's entire
+    stored content with whatever is provided. To add a content type later, call again
+    with all content types the document should have (incremental-add-without-replace
+    will be a separate endpoint if/when we need it).
+
+    ``source`` is a human-readable label (typically the original filename) that flows
+    into chunk metadata so search results are readable when document_id is a hash.
+    """
+
+    document_id: FileId = Field(min_length=1)
+    source: str = Field(min_length=1)
+    page_text: list[IngestedPageText] | None = None
 
 
-class RagIndexResponse(ApiModel):
-    collection: str
+class IngestDocumentResponse(ApiModel):
+    document_id: FileId
     chunks_indexed: int
 
 
-class RagSearchRequest(ApiModel):
-    query: str
-    collection: str | None = Field(default=None, min_length=1)
-    top_k: int = 5
-
-
-class RagSearchResultItem(ApiModel):
-    text: str
-    source: str
-    chunk_id: str
-    score: float
-
-
-class RagSearchResponse(ApiModel):
-    query: str
-    results: list[RagSearchResultItem]
-
-
-class RagCollectionsResponse(ApiModel):
-    collections: list[str]
-
-
-class RagDeleteCollectionResponse(ApiModel):
-    status: str
-    collection: str
+class DeleteDocumentResponse(ApiModel):
+    document_id: FileId
+    deleted: bool
