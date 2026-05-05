@@ -77,7 +77,10 @@ public class TabulaTableParser implements TableParser {
         int pageNumber = rawPage.pageNumber();
 
         List<Table> tabulaTables;
-        try (ObjectExtractor extractor = new ObjectExtractor(document)) {
+        try {
+            // Do NOT use try-with-resources: ObjectExtractor.close() closes the underlying
+            // PDDocument, which we don't own. The extractor holds no resources of its own.
+            ObjectExtractor extractor = new ObjectExtractor(document);
             Page page = extractor.extract(pageNumber);
             tabulaTables = new ArrayList<>(algorithm.extract(page));
         } catch (Exception e) {

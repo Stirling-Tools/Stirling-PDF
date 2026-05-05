@@ -26,7 +26,7 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams, PdfToMarkdownAgentParams
+from stirling.models.agent_tool_models import AgentToolId, PdfToMarkdownAgentParams
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -76,14 +76,6 @@ class OrchestratorAgent:
                     description=("Delegate requests to reconstruct a PDF as a Markdown document."),
                 ),
                 ToolOutput(
-                    self.math_auditor_agent,
-                    name="math_auditor_agent",
-                    description=(
-                        "Delegate requests to check arithmetic, validate table totals, audit"
-                        " financial calculations, or verify math in PDFs."
-                    ),
-                ),
-                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -96,8 +88,6 @@ class OrchestratorAgent:
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
                 "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
-                "Use math_auditor_agent for requests to check arithmetic, validate "
-                "table totals, audit financial calculations, or verify math in PDFs. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
@@ -149,10 +139,7 @@ class OrchestratorAgent:
                 | SupportedCapability.AGENT_NEXT_ACTION
                 | SupportedCapability.MATH_AUDITOR_AGENT
             ):
-                return UnsupportedCapabilityResponse(
-                    capability=capability.value,
-                    message=f"Capability {capability.value!r} cannot be resumed via the orchestrator.",
-                )
+                raise ValueError(f"Cannot resume orchestrator with capability: {capability}")
             case _ as unreachable:
                 assert_never(unreachable)
 
@@ -184,17 +171,6 @@ class OrchestratorAgent:
                     parameters=PdfToMarkdownAgentParams(
                         user_message=ctx.deps.request.user_message,
                     ),
-                )
-            ],
-        )
-
-    async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
-        return EditPlanResponse(
-            summary="Validate mathematical calculations in the document.",
-            steps=[
-                ToolOperationStep(
-                    tool=AgentToolId.MATH_AUDITOR_AGENT,
-                    parameters=MathAuditorAgentParams(),
                 )
             ],
         )

@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -47,8 +46,15 @@ public class PdfToMarkdownOrchestrator {
 
     private static final String EXTRACT_PATH = "/api/v1/pdf/to-markdown";
 
-    /** Max chars per chunk — keeps output tokens safely below the LLM's 8192-token limit. */
-    private static final int MAX_CHUNK_INPUT_CHARS = 10_000;
+    /** Max text chars per chunk — coarse proxy for LLM output token cost. */
+    private static final int MAX_CHUNK_INPUT_CHARS = 3_000;
+
+    /**
+     * Max fragments per chunk — tighter proxy for actual JSON payload size. Each fragment carries
+     * x/y/width/fontSize/bold metadata beyond its text, so fragment count drives payload size more
+     * than text length alone.
+     */
+    private static final int MAX_CHUNK_FRAGMENTS = 1_000;
 
     /** Page cap — prevents low-text pages from accumulating into an oversized chunk. */
     private static final int MAX_CHUNK_PAGES = 10;
@@ -57,11 +63,10 @@ public class PdfToMarkdownOrchestrator {
     private static final int MIN_PAGE_CHARS = 300;
 
     /** Max concurrent LLM calls — limits upstream API rate pressure on large documents. */
-    private static final int MAX_PARALLEL_CHUNKS = 5;
+    private static final int MAX_PARALLEL_CHUNKS = 3;
 
     private final AiEngineClient aiEngineClient;
     private final PdfIngester pdfIngester;
-    private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
@@ -88,46 +93,26 @@ public class PdfToMarkdownOrchestrator {
         // qpdf decompresses content streams so PDFBox 3.x can parse them.
         repairWithQpdf(file.getFile());
 
-        // Hold the byte array in scope for the entire method. PDFBox 3.x closes the
-        // RandomAccessReadBuffer after the initial xref parse; keeping a strong local reference
-        // prevents the GC from collecting the backing array before lazy dereferences complete.
-        byte[] pdfBytes = java.nio.file.Files.readAllBytes(file.getFile().toPath());
-
         List<ParsedPage> allPages;
-        ArrayNode allPageTextJson;
-
         long tLoad = System.currentTimeMillis();
-        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+        try (PDDocument document = Loader.loadPDF(file.getFile())) {
             log.info("[timing] load={}ms", System.currentTimeMillis() - tLoad);
 
             allPages = pdfIngester.parse(document); // parse emits its own [timing] line
-
-            long tText = System.currentTimeMillis();
-            allPageTextJson = extractPageTextJson(document, file.getFile(), baseName + ".pdf");
-            log.info("[timing] extract-text={}ms", System.currentTimeMillis() - tText);
         }
 
         int totalPages = allPages.size();
         int layoutPages = (int) allPages.stream().filter(p -> !p.layoutLines().isEmpty()).count();
-        int totalFragments =
-                allPages.stream()
-                        .mapToInt(
-                                p ->
-                                        p.layoutLines().stream()
-                                                .mapToInt(l -> l.fragments().size())
-                                                .sum())
-                        .sum();
-        int totalTables = allPages.stream().mapToInt(p -> p.tables().size()).sum();
+        int totalFragments = allPages.stream().mapToInt(PdfToMarkdownOrchestrator::countPageFragments).sum();
         List<List<ParsedPage>> pageChunks = buildPageChunks(allPages);
         int totalChunks = pageChunks.size();
 
         log.info(
-                "[data-extraction] file={} pages={} layout-pages={} fragments={} tables={} chunks={}",
+                "[data-extraction] file={} pages={} layout-pages={} fragments={} chunks={}",
                 baseName,
                 totalPages,
                 layoutPages,
                 totalFragments,
-                totalTables,
                 totalChunks);
 
         long tTotal = System.currentTimeMillis();
@@ -138,82 +123,23 @@ public class PdfToMarkdownOrchestrator {
         for (int ci = 0; ci < pageChunks.size(); ci++) {
             int chunkNum = ci + 1;
             List<ParsedPage> chunkPages = pageChunks.get(ci);
-            int firstPage = chunkPages.get(0).pageNumber();
-            int lastPage = chunkPages.get(chunkPages.size() - 1).pageNumber();
-
-            ArrayNode chunkTables = buildParsedTablesJson(chunkPages);
             ArrayNode chunkLayout = buildPageLayoutJson(chunkPages);
-            ArrayNode chunkText = filterPageText(allPageTextJson, firstPage, lastPage);
-
-            int chunkLayoutPages =
-                    (int) chunkPages.stream().filter(p -> !p.layoutLines().isEmpty()).count();
-            log.info(
-                    "[data-extraction] chunk {}/{} pages={}-{} layout-pages={} tables={}"
-                            + " text-pages={}",
-                    chunkNum,
-                    totalChunks,
-                    firstPage,
-                    lastPage,
-                    chunkLayoutPages,
-                    chunkTables.size(),
-                    chunkText.isEmpty() ? 0 : chunkText.get(0).path("pages").size());
-
-            ObjectNode req = buildRequest(userMessage, chunkTables, chunkText, chunkLayout);
-            chunks.add(new ChunkSpec(chunkNum, objectMapper.writeValueAsString(req)));
+            String reqJson =
+                    objectMapper.writeValueAsString(buildRequest(userMessage, chunkLayout));
+            chunks.add(new ChunkSpec(chunkNum, reqJson));
         }
-
-        log.info(
-                "[data-extraction] firing {} chunks (max {} in parallel)",
-                totalChunks,
-                MAX_PARALLEL_CHUNKS);
         Semaphore semaphore = new Semaphore(MAX_PARALLEL_CHUNKS);
         List<CompletableFuture<String>> futures = new ArrayList<>(totalChunks);
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (ChunkSpec chunk : chunks) {
-                final ChunkSpec c = chunk;
                 futures.add(
                         CompletableFuture.supplyAsync(
-                                () -> {
-                                    try {
-                                        semaphore.acquire();
-                                    } catch (InterruptedException e) {
-                                        Thread.currentThread().interrupt();
-                                        throw new RuntimeException(
-                                                "Interrupted waiting for chunk slot", e);
-                                    }
-                                    long tChunk = System.currentTimeMillis();
-                                    try {
-                                        String body = aiEngineClient.post(EXTRACT_PATH, c.json());
-                                        tools.jackson.databind.JsonNode root =
-                                                objectMapper.readTree(body);
-                                        String outcome = root.path("outcome").asText("");
-                                        if ("document_reconstructed".equals(outcome)) {
-                                            String md = root.path("markdown").asText("");
-                                            log.info(
-                                                    "[timing] chunk {}/{} http={}ms"
-                                                            + " markdown-chars={}",
-                                                    c.chunkNum(),
-                                                    totalChunks,
-                                                    System.currentTimeMillis() - tChunk,
-                                                    md.length());
-                                            return md;
-                                        }
-                                        if ("cannot_do".equals(outcome)) {
-                                            log.warn(
-                                                    "[data-extraction] chunk {}/{} cannot_do: {}",
-                                                    c.chunkNum(),
-                                                    totalChunks,
-                                                    root.path("reason").asText("unknown"));
-                                            return "";
-                                        }
-                                        throw new IllegalStateException(
-                                                "Unexpected outcome: " + outcome);
-                                    } catch (IOException e) {
-                                        throw new java.io.UncheckedIOException(e);
-                                    } finally {
-                                        semaphore.release();
-                                    }
-                                },
+                                () ->
+                                        processChunk(
+                                                chunk.chunkNum(),
+                                                chunk.json(),
+                                                semaphore,
+                                                totalChunks),
                                 executor));
             }
 
@@ -237,6 +163,12 @@ public class PdfToMarkdownOrchestrator {
                 }
             }
 
+            log.info(
+                    "[data-extraction] assembly: {}/{} chunks produced output (dropped={})",
+                    markdownParts.size(),
+                    totalChunks,
+                    totalChunks - markdownParts.size());
+
             if (markdownParts.isEmpty()) {
                 throw new IOException(
                         "Data extraction could not reconstruct any pages of: " + baseName);
@@ -258,25 +190,73 @@ public class PdfToMarkdownOrchestrator {
      * Groups pages into content-size chunks; a page that exceeds the budget alone forms its own
      * chunk.
      */
+    private String processChunk(int chunkNum, String json, Semaphore semaphore, int totalChunks) {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted waiting for chunk slot", e);
+        }
+        long tChunk = System.currentTimeMillis();
+        try {
+            String body = aiEngineClient.post(EXTRACT_PATH, json);
+            tools.jackson.databind.JsonNode root = objectMapper.readTree(body);
+            String outcome = root.path("outcome").asText("");
+            if ("document_reconstructed".equals(outcome)) {
+                String md = root.path("markdown").asText("");
+                log.info(
+                        "[timing] chunk {}/{} http={}ms markdown-chars={}",
+                        chunkNum,
+                        totalChunks,
+                        System.currentTimeMillis() - tChunk,
+                        md.length());
+                return md;
+            }
+            if ("cannot_do".equals(outcome)) {
+                log.warn(
+                        "[data-extraction] chunk {}/{} DROPPED — cannot_do: {}",
+                        chunkNum,
+                        totalChunks,
+                        root.path("reason").asText("unknown"));
+                return "";
+            }
+            throw new IllegalStateException("Unexpected outcome: " + outcome);
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        } finally {
+            semaphore.release();
+        }
+    }
+
     private static List<List<ParsedPage>> buildPageChunks(List<ParsedPage> pages) {
         List<List<ParsedPage>> chunks = new ArrayList<>();
         List<ParsedPage> current = new ArrayList<>();
         int currentChars = 0;
+        int currentFragments = 0;
         for (ParsedPage page : pages) {
             int pageChars = Math.max(countPageChars(page), MIN_PAGE_CHARS);
+            int pageFragments = countPageFragments(page);
             boolean charBudgetFull =
                     !current.isEmpty() && currentChars + pageChars > MAX_CHUNK_INPUT_CHARS;
+            boolean fragmentBudgetFull =
+                    !current.isEmpty() && currentFragments + pageFragments > MAX_CHUNK_FRAGMENTS;
             boolean pageBudgetFull = current.size() >= MAX_CHUNK_PAGES;
-            if (charBudgetFull || pageBudgetFull) {
+            if (charBudgetFull || fragmentBudgetFull || pageBudgetFull) {
                 chunks.add(current);
                 current = new ArrayList<>();
                 currentChars = 0;
+                currentFragments = 0;
             }
             current.add(page);
             currentChars += pageChars;
+            currentFragments += pageFragments;
         }
         if (!current.isEmpty()) chunks.add(current);
         return chunks;
+    }
+
+    private static int countPageFragments(ParsedPage page) {
+        return page.layoutLines().stream().mapToInt(l -> l.fragments().size()).sum();
     }
 
     /** Raw text character count for a page — proxy for output token cost. */
@@ -285,57 +265,6 @@ public class PdfToMarkdownOrchestrator {
                 .flatMap(line -> line.fragments().stream())
                 .mapToInt(f -> f.text().length())
                 .sum();
-    }
-
-    /** Filters {@code pageTextJson} to pages in [{@code first}, {@code last}]. */
-    private ArrayNode filterPageText(ArrayNode pageTextJson, int first, int last) {
-        ArrayNode result = objectMapper.createArrayNode();
-        for (tools.jackson.databind.JsonNode fileNode : pageTextJson) {
-            ObjectNode filtered = objectMapper.createObjectNode();
-            filtered.put("fileName", fileNode.path("fileName").asText(""));
-            ArrayNode filteredPages = objectMapper.createArrayNode();
-            for (tools.jackson.databind.JsonNode pageNode : fileNode.path("pages")) {
-                int num = pageNode.path("pageNumber").asInt();
-                if (num >= first && num <= last) filteredPages.add(pageNode);
-            }
-            filtered.set("pages", filteredPages);
-            result.add(filtered);
-        }
-        return result;
-    }
-
-    /** Converts all table fragments from all pages into a Jackson ArrayNode. */
-    private ArrayNode buildParsedTablesJson(List<ParsedPage> pages) {
-        ArrayNode tables = objectMapper.createArrayNode();
-        for (ParsedPage page : pages) {
-            for (TableFragment fragment : page.tables()) {
-                tables.add(tableFragmentToJson(fragment));
-            }
-        }
-        return tables;
-    }
-
-    private ObjectNode tableFragmentToJson(TableFragment f) {
-        ObjectNode node = objectMapper.createObjectNode();
-        node.put("tableId", f.tableId());
-        node.put("pageNumber", f.pageNumber());
-        node.set("rawRows", rawRowsToJson(f.rawRows()));
-        node.put("columnCount", f.columnCount());
-        node.put("confidence", f.confidence());
-        ArrayNode warnings = objectMapper.createArrayNode();
-        f.warnings().forEach(warnings::add);
-        node.set("warnings", warnings);
-        return node;
-    }
-
-    private ArrayNode rawRowsToJson(List<List<String>> rawRows) {
-        ArrayNode outer = objectMapper.createArrayNode();
-        for (List<String> row : rawRows) {
-            ArrayNode inner = objectMapper.createArrayNode();
-            row.forEach(inner::add);
-            outer.add(inner);
-        }
-        return outer;
     }
 
     /**
@@ -371,96 +300,9 @@ public class PdfToMarkdownOrchestrator {
         }
     }
 
-    /**
-     * Extracts text per page via PDFBox and pdftotext, keeping whichever yields more characters. No
-     * OCR.
-     */
-    private ArrayNode extractPageTextJson(PDDocument document, File pdfFile, String fileName)
-            throws IOException {
-        int numPages = document.getNumberOfPages();
-
-        Map<Integer, String> pdfboxPages = new java.util.LinkedHashMap<>();
-        for (int page = 1; page <= numPages; page++) {
-            String text = pdfContentExtractor.extractPageTextRaw(document, page);
-            if (!text.isBlank()) {
-                pdfboxPages.put(page, text);
-            }
-        }
-
-        Map<Integer, String> pdftotextPages = extractViaPdfToText(pdfFile);
-
-        // Per page: prefer whichever source extracted more characters.
-        ArrayNode pagesArray = objectMapper.createArrayNode();
-        java.util.TreeSet<Integer> allPageNums = new java.util.TreeSet<>();
-        allPageNums.addAll(pdfboxPages.keySet());
-        allPageNums.addAll(pdftotextPages.keySet());
-
-        for (int page : allPageNums) {
-            String pdfbox = pdfboxPages.getOrDefault(page, "");
-            String pdftt = pdftotextPages.getOrDefault(page, "");
-            String best = pdftt.length() > pdfbox.length() ? pdftt : pdfbox;
-            if (!best.isBlank()) {
-                addPageNode(pagesArray, page, best);
-            }
-        }
-
-        log.info("[data-extraction] text: {}/{} page(s) non-empty", pagesArray.size(), numPages);
-        ObjectNode fileText = objectMapper.createObjectNode();
-        fileText.put("fileName", fileName);
-        fileText.set("pages", pagesArray);
-        ArrayNode result = objectMapper.createArrayNode();
-        result.add(fileText);
-        return result;
-    }
-
-    private Map<Integer, String> extractViaPdfToText(File pdfFile) {
-        Map<Integer, String> pages = new java.util.LinkedHashMap<>();
-        try {
-            Process process =
-                    new ProcessBuilder("pdftotext", "-layout", pdfFile.getAbsolutePath(), "-")
-                            .redirectErrorStream(false)
-                            .start();
-            String allText;
-            try (var is = process.getInputStream()) {
-                allText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            }
-            try (var err = process.getErrorStream()) {
-                err.transferTo(java.io.OutputStream.nullOutputStream());
-            }
-            boolean finished = process.waitFor(30, TimeUnit.SECONDS);
-            if (!finished) {
-                process.destroyForcibly();
-                return pages;
-            }
-            if (process.exitValue() != 0) {
-                return pages;
-            }
-            String[] pageTexts = allText.split("\f");
-            for (int i = 0; i < pageTexts.length; i++) {
-                String text = pageTexts[i].trim();
-                if (!text.isBlank()) {
-                    pages.put(i + 1, text);
-                }
-            }
-        } catch (Exception e) {
-            log.debug("[data-extraction] pdftotext unavailable: {}", e.getMessage());
-        }
-        return pages;
-    }
-
-    private void addPageNode(ArrayNode arr, int pageNumber, String text) {
-        ObjectNode node = objectMapper.createObjectNode();
-        node.put("pageNumber", pageNumber);
-        node.put("text", text);
-        arr.add(node);
-    }
-
-    private ObjectNode buildRequest(
-            String userMessage, ArrayNode parsedTables, ArrayNode pageText, ArrayNode pageLayout) {
+    private ObjectNode buildRequest(String userMessage, ArrayNode pageLayout) {
         ObjectNode req = objectMapper.createObjectNode();
         req.put("userMessage", userMessage);
-        req.set("parsedTables", parsedTables);
-        req.set("pageText", pageText);
         req.set("pageLayout", pageLayout);
         req.set("fileNames", objectMapper.createArrayNode());
         req.set("conversationHistory", objectMapper.createArrayNode());

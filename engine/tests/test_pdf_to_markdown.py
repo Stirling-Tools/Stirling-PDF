@@ -1,10 +1,8 @@
 """Tests for PDF to Markdown agent.
 
-Three cases:
+Two cases:
 1. Narrative-only page: request validates and routes to reconstruction.
 2. Mixed text + table page: layout with table region validates correctly.
-3. Malformed parsed_tables (Algonquin-style column collapse) alongside valid page_layout:
-   the request validates, parsed_table is below confidence threshold, layout has correct rows.
 """
 
 from __future__ import annotations
@@ -13,7 +11,6 @@ from stirling.contracts.pdf_to_markdown import (
     LayoutFragment,
     LayoutLine,
     PageLayout,
-    ParsedTable,
     PdfToMarkdownRequest,
     PdfToMarkdownSuccessResponse,
 )
@@ -110,99 +107,3 @@ def test_mixed_page_layout_validates() -> None:
     # Data rows have matching x-positions
     data_row = request.page_layout[0].lines[2]
     assert [f.x for f in data_row.fragments] == [72.0, 200.0, 290.0]
-
-
-# ── Test 3: Malformed parsed_tables alongside valid page_layout ───────────────────────────────────
-
-
-def test_malformed_parsed_table_with_valid_layout() -> None:
-    """Algonquin-style: Tabula collapses all project names into one cell.
-
-    The parsed_table has low confidence and a single collapsed cell.
-    The page_layout has the correct word-level rows across two lines.
-    The request validates cleanly; agent routing should prefer the layout.
-    """
-    collapsed_table = ParsedTable(
-        table_id="tbl-p1-0",
-        page_number=1,
-        raw_rows=[
-            # Tabula collapsed all project names into one cell
-            ["Chaplin Wind 1 Amherst Island 2 Val Eo 1 Morse Wind 3, 4"],
-            # and all locations into one cell
-            ["Saskatchewan Ontario Quebec Saskatchewan"],
-        ],
-        column_count=1,
-        confidence=0.3,
-        warnings=["Inconsistent column count: modal=1 max=4"],
-    )
-
-    correct_layout = PageLayout(
-        page_number=1,
-        lines=[
-            # Each visual row is a separate line in the layout
-            _line(
-                95.0,
-                _frag("Chaplin Wind 1", x=72.0, y=95.0),
-                _frag("Saskatchewan", x=200.0, y=95.0),
-                _frag("177", x=310.0, y=95.0),
-                _frag("$355.0", x=380.0, y=95.0),
-            ),
-            _line(
-                110.0,
-                _frag("Amherst Island 2", x=72.0, y=110.0),
-                _frag("Ontario", x=200.0, y=110.0),
-                _frag("75", x=310.0, y=110.0),
-                _frag("$230.0", x=380.0, y=110.0),
-            ),
-            _line(
-                125.0,
-                _frag("Val Eo 1", x=72.0, y=125.0),
-                _frag("Quebec", x=200.0, y=125.0),
-                _frag("24", x=310.0, y=125.0),
-                _frag("$70.0", x=380.0, y=125.0),
-            ),
-            _line(
-                140.0,
-                _frag("Morse Wind 3, 4", x=72.0, y=140.0),
-                _frag("Saskatchewan", x=200.0, y=140.0),
-                _frag("25", x=310.0, y=140.0),
-                _frag("$70.0", x=380.0, y=140.0),
-            ),
-        ],
-    )
-
-    request = PdfToMarkdownRequest(
-        user_message="reconstruct",
-        parsed_tables=[collapsed_table],
-        page_layout=[correct_layout],
-    )
-
-    # The collapsed table is below confidence threshold — agent should not use it as source of truth
-    assert request.parsed_tables[0].confidence < 0.5
-
-    # The layout has 4 separate rows (not 1 collapsed row)
-    assert len(request.page_layout[0].lines) == 4
-
-    # Each layout row has 4 fragments at consistent x-positions — the correct column structure
-    for line in request.page_layout[0].lines:
-        assert len(line.fragments) == 4
-        xs = [f.x for f in line.fragments]
-        assert xs == [72.0, 200.0, 310.0, 380.0]
-
-    # The response type accepts a reconstruction outcome
-    reconstruction = PdfToMarkdownSuccessResponse(
-        markdown=(
-            "| Project Name | Location | Size (MW) | Capital Cost |\n"
-            "| --- | --- | ---: | ---: |\n"
-            "| Chaplin Wind 1 | Saskatchewan | 177 | $355.0 |\n"
-            "| Amherst Island 2 | Ontario | 75 | $230.0 |\n"
-            "| Val Eo 1 | Quebec | 24 | $70.0 |\n"
-            "| Morse Wind 3, 4 | Saskatchewan | 25 | $70.0 |\n"
-        ),
-    )
-    assert reconstruction.outcome == "document_reconstructed"
-    # Each project is a separate row — not collapsed into one cell
-    assert "| Chaplin Wind 1 |" in reconstruction.markdown
-    assert "| Amherst Island 2 |" in reconstruction.markdown
-    assert "| Val Eo 1 |" in reconstruction.markdown
-    assert "| Morse Wind 3, 4 |" in reconstruction.markdown

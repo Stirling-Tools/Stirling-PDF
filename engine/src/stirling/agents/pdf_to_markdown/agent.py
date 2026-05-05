@@ -14,13 +14,11 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents._page_text import format_page_text, has_page_text
 from stirling.contracts import (
     format_conversation_history,
 )
 from stirling.contracts.pdf_to_markdown import (
     PageLayout,
-    ParsedTable,
     PdfToMarkdownCannotDoResponse,
     PdfToMarkdownRequest,
     PdfToMarkdownResponse,
@@ -53,16 +51,13 @@ class PdfToMarkdownAgent:
             output_type=NativeOutput(_ReconstructionOutput),
             system_prompt=(
                 "You reconstruct PDF pages into clean Markdown from spatial fragment data.\n"
-                "Two input sources are provided in priority order:\n"
-                "  1. PAGE LAYOUT — per-fragment x/y/font data for structural analysis.\n"
-                "  2. PAGE TEXT / PARSED TABLES — unreliable fallback only.\n\n"
+                "Input: PAGE LAYOUT — per-fragment x/y/font data for structural analysis.\n\n"
                 "COLUMN DETECTION (for tables in page_layout):\n"
                 "- Look at the x-positions of fragments across 3+ consecutive lines.\n"
                 "- If fragments cluster at the same x-positions across multiple lines, those are table columns.\n"
                 "- Each distinct x-cluster is one column."
                 " Name them from the header row (the first line in the cluster).\n"
-                "- Do NOT merge values from different x-columns into one cell.\n"
-                "- Do NOT trust parsed_tables if they collapse multiple x-positions into one cell.\n\n"
+                "- Do NOT merge values from different x-columns into one cell.\n\n"
                 "ROW DETECTION:\n"
                 "- Each unique y-coordinate (or group within 3pt) is one table row.\n"
                 "- Every line of layout data is its own row — do not merge rows.\n"
@@ -101,19 +96,12 @@ class PdfToMarkdownAgent:
                 "- Lines where x-positions vary across lines (not repeating columns) are prose.\n"
                 "- Merge lines at the same x-level into paragraphs. Separate indented lines.\n\n"
                 "HEADINGS:\n"
-                "- When font data is available: a line is a heading when it is bold OR font_size ≥2pt above body.\n"
+                "- A line is a heading when it is bold OR font_size ≥2pt above body.\n"
                 "  CRITICAL EXCEPTION: a bold fragment is a TABLE HEADER CELL, not a document heading, when\n"
                 "  the same y-row in page_layout contains other fragments at different x-positions.\n"
                 "  Only classify a bold line as a document heading when it is the SOLE fragment on its y-row.\n"
                 "  Example: 'Non-current assets' at y=120 with '2010'@x=350, '2009'@x=420, '2008'@x=490\n"
                 "  → this is a table header row, NOT a heading. Render it as the first cell of the table.\n"
-                "- When font data is absent: you MUST detect headings from page_text patterns.\n"
-                "  Do not output any section title as plain unmarked text.\n"
-                "  * The document title (first short standalone line on the first page) → # heading.\n"
-                "    If the title spans multiple consecutive bold lines, join them into ONE # heading.\n"
-                "  * Short lines under ~60 chars naming a section before a paragraph or table → ## heading.\n"
-                "    e.g. 'Financial Highlights', 'Ratios and Supplemental Data', 'Net assets per unit'\n"
-                "  * Lines matching 'Table N' or 'Table N:' → ### heading.\n"
                 "- Use ## for section headings, ### for sub-headings. Use # only for the document title.\n\n"
                 "ORDERING:\n"
                 "- Process content top-to-bottom as it appears on the page.\n"
@@ -121,24 +109,20 @@ class PdfToMarkdownAgent:
                 "- Do not move text that appears before a table to after it, or vice versa.\n\n"
                 "FIDELITY:\n"
                 "- Do NOT invent, summarise, or omit any content.\n"
-                "- Do NOT add commentary, metadata, or JSON — output Markdown only.\n"
-                "- If parsed_tables contradicts page_layout, prefer page_layout."
+                "- Do NOT add commentary, metadata, or JSON — output Markdown only."
             ),
             model_settings={**runtime.smart_model_settings, "temperature": 0.0},
         )
 
     async def handle(self, request: PdfToMarkdownRequest) -> PdfToMarkdownResponse:
         total_fragments = sum(len(line.fragments) for page in request.page_layout for line in page.lines)
-        total_text_pages = sum(len(ft.pages) for ft in request.page_text)
         logger.info(
-            "[pdf-to-markdown] received layout-pages=%d fragments=%d tables=%d text-pages=%d",
+            "[pdf-to-markdown] received layout-pages=%d fragments=%d",
             len(request.page_layout),
             total_fragments,
-            len(request.parsed_tables),
-            total_text_pages,
         )
 
-        if not request.page_layout and not has_page_text(request.page_text) and not request.parsed_tables:
+        if not request.page_layout:
             logger.warning("[data-extraction] no content extracted from document; returning cannot_do")
             return PdfToMarkdownCannotDoResponse(
                 reason=(
@@ -186,20 +170,7 @@ class PdfToMarkdownAgent:
 def _build_reconstruction_prompt(request: PdfToMarkdownRequest) -> str:
     history = format_conversation_history(request.conversation_history)
     file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
-    text_section = format_page_text(request.page_text, empty="None")
     layout_section = _format_layout(request.page_layout)
-    # Promote parsed tables to primary source only when both layout AND text are absent.
-    no_layout = not request.page_layout
-    no_text = not has_page_text(request.page_text)
-    if no_layout and no_text and request.parsed_tables:
-        tables_section = _format_tables(request.parsed_tables)
-        tables_header = (
-            "PARSED TABLES (primary source — no layout or text data available):\n"
-            "Reconstruct all tables faithfully as Markdown. Include every page.\n"
-        )
-    else:
-        tables_section = _format_tables_as_hint(request.parsed_tables)
-        tables_header = "PARSED TABLES (parser hints only — treat as unreliable; prefer layout and text):\n"
 
     return (
         f"Files: {file_names}\n\n"
@@ -211,11 +182,7 @@ def _build_reconstruction_prompt(request: PdfToMarkdownRequest) -> str:
         "- x=NNN is the horizontal position (column). Consistent x across rows = a column.\n"
         "- fs=N is font size. Larger = likely a heading.\n"
         "- **bold** markers indicate bold text.\n\n"
-        f"{layout_section}\n\n"
-        f"{tables_header}"
-        f"{tables_section}\n\n"
-        f"{'PAGE TEXT (primary prose source):' if no_layout else 'PAGE TEXT (fallback reference only):'}\n"
-        f"{text_section}"
+        f"{layout_section}"
     )
 
 
@@ -279,39 +246,6 @@ def _remove_extra_separators(markdown: str) -> str:
 
 
 # ── Formatting helpers (module-level, no state) ──────────────────────────────────────────────────
-
-
-def _format_tables(tables: list[ParsedTable]) -> str:
-    """Full table data — used as primary source when page_layout is unavailable."""
-    if not tables:
-        return "None"
-    parts: list[str] = []
-    for table in tables:
-        headers = table.raw_rows[0] if table.raw_rows else []
-        header_line = " | ".join(headers) if headers else "(no headers)"
-        row_lines = [" | ".join(row) for row in table.raw_rows[:20]]
-        truncated = f"\n... ({len(table.raw_rows) - 20} more rows)" if len(table.raw_rows) > 20 else ""
-        parts.append(
-            f"[Table {table.table_id}, page {table.page_number}, "
-            f"confidence {table.confidence:.2f}, {len(table.raw_rows)} row(s)]\n"
-            f"{header_line}\n" + "\n".join(row_lines) + truncated
-        )
-    return "\n\n".join(parts)
-
-
-def _format_tables_as_hint(tables: list[ParsedTable]) -> str:
-    """Compact summary of parsed tables for use as an unreliable hint alongside page_layout."""
-    if not tables:
-        return "None"
-    parts: list[str] = []
-    for t in tables:
-        confidence_note = f"confidence={t.confidence:.2f}"
-        warn_note = f" warnings={t.warnings}" if t.warnings else ""
-        rows_preview = t.raw_rows[:3]
-        preview = "; ".join(" | ".join(r) for r in rows_preview)
-        truncated = f" ... ({len(t.raw_rows) - 3} more rows)" if len(t.raw_rows) > 3 else ""
-        parts.append(f"[{t.table_id} page={t.page_number} {confidence_note}{warn_note}]\n{preview}{truncated}")
-    return "\n\n".join(parts)
 
 
 def _format_layout(pages: list[PageLayout]) -> str:

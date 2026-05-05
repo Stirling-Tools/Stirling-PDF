@@ -235,17 +235,8 @@ public class LineAlignmentTableParser implements TableParser {
                                 .distinct() // weight each line equally regardless of token count
                                 .mapToDouble(
                                         lineIdx ->
-                                                anchors.get(lineIdx).numeric().stream()
-                                                        .filter(
-                                                                t ->
-                                                                        bucket(t.right())
-                                                                                == entry.getKey())
-                                                        .mapToDouble(LineToken::right)
-                                                        .average()
-                                                        .orElse(
-                                                                entry.getKey()
-                                                                        * (double)
-                                                                                COLUMN_BUCKET_PT))
+                                                avgRightEdgeForBucket(
+                                                        anchors, lineIdx, entry.getKey()))
                                 .average()
                                 .orElse(entry.getKey() * (double) COLUMN_BUCKET_PT);
                 confirmed.put(entry.getKey(), (float) avg);
@@ -253,6 +244,19 @@ public class LineAlignmentTableParser implements TableParser {
         }
 
         return new ArrayList<>(confirmed.values()); // already sorted by bucket (left to right)
+    }
+
+    /**
+     * Returns the average right-edge position of tokens in {@code line} whose bucket matches {@code
+     * targetBucket}, falling back to the bucket's nominal centre when no tokens match.
+     */
+    private double avgRightEdgeForBucket(
+            List<TokenizedLine> anchors, int lineIdx, int targetBucket) {
+        return anchors.get(lineIdx).numeric().stream()
+                .filter(t -> bucket(t.right()) == targetBucket)
+                .mapToDouble(LineToken::right)
+                .average()
+                .orElse(targetBucket * (double) COLUMN_BUCKET_PT);
     }
 
     // ── grouping ─────────────────────────────────────────────────────────────────────────────────
@@ -299,18 +303,12 @@ public class LineAlignmentTableParser implements TableParser {
 
         if (!current.isEmpty()) groups.add(current);
 
-        return groups.stream()
-                .filter(
-                        g ->
-                                g.stream()
-                                                .filter(
-                                                        r ->
-                                                                r.isAnchor()
-                                                                        && matchesGrid(
-                                                                                r, columnGrid))
-                                                .count()
-                                        >= MIN_TABLE_ROWS)
-                .toList();
+        return groups.stream().filter(g -> hasEnoughAnchorRows(g, columnGrid)).toList();
+    }
+
+    private boolean hasEnoughAnchorRows(List<TokenizedLine> group, List<Float> columnGrid) {
+        return group.stream().filter(r -> r.isAnchor() && matchesGrid(r, columnGrid)).count()
+                >= MIN_TABLE_ROWS;
     }
 
     /** A line "matches" the grid when ≥ 60 % of its numeric tokens land in confirmed columns. */
@@ -321,6 +319,15 @@ public class LineAlignmentTableParser implements TableParser {
                         .filter(t -> nearestColumnIndex(t.right(), columnGrid) >= 0)
                         .count();
         return (double) matches / tl.numeric().size() >= 0.60;
+    }
+
+    private boolean hasInconsistentColumnMatch(TokenizedLine tl, List<Float> columnGrid) {
+        if (tl.numeric().isEmpty()) return false;
+        long hits =
+                tl.numeric().stream()
+                        .filter(t -> nearestColumnIndex(t.right(), columnGrid) >= 0)
+                        .count();
+        return (double) hits / tl.numeric().size() < 0.60;
     }
 
     // ── fragment assembly ────────────────────────────────────────────────────────────────────────
@@ -436,20 +443,7 @@ public class LineAlignmentTableParser implements TableParser {
         long inconsistent =
                 group.stream()
                         .filter(TokenizedLine::isAnchor)
-                        .filter(
-                                tl -> {
-                                    long hits =
-                                            tl.numeric().stream()
-                                                    .filter(
-                                                            t ->
-                                                                    nearestColumnIndex(
-                                                                                    t.right(),
-                                                                                    columnGrid)
-                                                                            >= 0)
-                                                    .count();
-                                    return tl.numeric().size() > 0
-                                            && (double) hits / tl.numeric().size() < 0.60;
-                                })
+                        .filter(tl -> hasInconsistentColumnMatch(tl, columnGrid))
                         .count();
         if (inconsistent > anchorCount * 0.30) {
             score -= 0.15f;
