@@ -225,3 +225,19 @@ class SqliteVecStore(VectorStore):
     def _sync_has_collection(self, collection: str) -> bool:
         row = self._conn.execute("SELECT 1 FROM collections WHERE name = ?", (collection,)).fetchone()
         return row is not None
+
+    async def close(self) -> None:
+        async with self._lock:
+            await asyncio.to_thread(self._sync_close)
+
+    def _sync_close(self) -> None:
+        """Checkpoint the WAL into the main database file and close the connection so
+        the .db-shm and .db-wal files are cleaned up on graceful shutdown."""
+        if self._db_path is not None:
+            try:
+                self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                self._conn.commit()
+            except sqlite3.Error:
+                # Best effort: if checkpointing fails we still want to close the connection.
+                pass
+        self._conn.close()
