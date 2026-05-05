@@ -7,7 +7,13 @@ from fastapi import Depends, FastAPI
 from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
 
-from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.agents import (
+    ExecutionPlanningAgent,
+    OrchestratorAgent,
+    PdfEditAgent,
+    PdfQuestionAgent,
+    UserSpecAgent,
+)
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.api.middleware import UserIdMiddleware
@@ -51,6 +57,7 @@ async def lifespan(fast_api: FastAPI):
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     yield
+    await runtime.rag_service.close()
     if tracer_provider:
         tracer_provider.shutdown()
 

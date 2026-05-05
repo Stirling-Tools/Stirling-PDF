@@ -131,3 +131,7 @@ class PgVectorStore(VectorStore):
                 )
                 row = await cur.fetchone()
         return row is not None
+
+    async def close(self) -> None:
+        # Connections are opened and closed per call, so nothing persistent to release.
+        return None
