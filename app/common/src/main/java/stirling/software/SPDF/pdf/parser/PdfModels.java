@@ -1,4 +1,4 @@
-package stirling.software.proprietary.pdf.parser;
+package stirling.software.SPDF.pdf.parser;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,8 +10,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 /**
  * All PDF parser model types and the table-parser contract in one place.
  *
- * <p>Import as {@code import static stirling.software.proprietary.pdf.parser.PdfModels.*;} to use
- * all nested types without qualification.
+ * <p>Import as {@code import static stirling.software.SPDF.pdf.parser.PdfModels.*;} to use all
+ * nested types without qualification.
  */
 public final class PdfModels {
 

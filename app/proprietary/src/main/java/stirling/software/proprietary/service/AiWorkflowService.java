@@ -70,7 +70,6 @@ public class AiWorkflowService {
     private final FileStorage fileStorage;
     private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
-    private final PdfToMarkdownOrchestrator pdfToMarkdownOrchestrator;
     private final FileIdStrategy fileIdStrategy;
 
     @FunctionalInterface
@@ -314,11 +313,7 @@ public class AiWorkflowService {
         try {
             List<Resource> inputFiles = toResources(filesById);
             listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
-            ToolResult result =
-                    pdfToMarkdownOrchestrator.handles(endpointPath)
-                            ? new ToolResult(
-                                    pdfToMarkdownOrchestrator.execute(parameters, inputFiles), null)
-                            : executeStep(endpointPath, parameters, inputFiles);
+            ToolResult result = executeStep(endpointPath, parameters, inputFiles);
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
                             response.getRationale(),
@@ -388,13 +383,7 @@ public class AiWorkflowService {
 
                 listener.onProgress(
                         AiWorkflowProgressEvent.executingTool(endpointPath, i + 1, steps.size()));
-                ToolResult stepResult =
-                        pdfToMarkdownOrchestrator.handles(endpointPath)
-                                ? new ToolResult(
-                                        pdfToMarkdownOrchestrator.execute(
-                                                parameters, currentFiles),
-                                        null)
-                                : executeStep(endpointPath, parameters, currentFiles);
+                ToolResult stepResult = executeStep(endpointPath, parameters, currentFiles);
                 currentFiles = stepResult.files();
                 if (stepResult.report() != null) {
                     lastReport = stepResult.report();

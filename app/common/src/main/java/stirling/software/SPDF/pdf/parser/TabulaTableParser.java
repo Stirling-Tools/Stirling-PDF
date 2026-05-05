@@ -1,6 +1,6 @@
-package stirling.software.proprietary.pdf.parser;
+package stirling.software.SPDF.pdf.parser;
 
-import static stirling.software.proprietary.pdf.parser.PdfModels.*;
+import static stirling.software.SPDF.pdf.parser.PdfModels.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,7 +54,15 @@ public class TabulaTableParser implements TableParser {
     /** Lattice mode — reliable for tables with visible ruled borders. */
     @Override
     public List<TableFragment> parse(PDDocument document, RawPage rawPage) throws IOException {
-        return parseWithAlgorithm(document, rawPage, new SpreadsheetExtractionAlgorithm(), "lattice");
+        return parseWithAlgorithm(
+                document, rawPage, new SpreadsheetExtractionAlgorithm(), "lattice");
+    }
+
+    /**
+     * Convenience overload for callers that only have a page number, not a full {@link RawPage}.
+     */
+    public List<TableFragment> parse(PDDocument document, int pageNumber) throws IOException {
+        return parse(document, new RawPage(pageNumber, 0f, 0f, List.of()));
     }
 
     /** Stream mode — whitespace-based column detection for borderless tables. */

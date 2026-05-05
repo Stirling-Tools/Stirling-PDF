@@ -1,6 +1,6 @@
-package stirling.software.proprietary.pdf.parser;
+package stirling.software.SPDF.pdf.parser;
 
-import static stirling.software.proprietary.pdf.parser.PdfModels.*;
+import static stirling.software.SPDF.pdf.parser.PdfModels.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;

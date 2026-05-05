@@ -1,7 +1,7 @@
-package stirling.software.proprietary.pdf.parser;
+package stirling.software.SPDF.pdf.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static stirling.software.proprietary.pdf.parser.PdfModels.*;
+import static stirling.software.SPDF.pdf.parser.PdfModels.*;
 
 import java.util.List;
 

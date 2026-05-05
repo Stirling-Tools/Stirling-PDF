@@ -1,6 +1,6 @@
 package stirling.software.proprietary.service;
 
-import static stirling.software.proprietary.pdf.parser.PdfModels.*;
+import static stirling.software.SPDF.pdf.parser.PdfModels.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,13 +20,16 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.pdf.parser.PdfIngester;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.proprietary.pdf.parser.PdfIngester;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -41,9 +44,6 @@ import tools.jackson.databind.node.ObjectNode;
 @Service
 @RequiredArgsConstructor
 public class PdfToMarkdownOrchestrator {
-
-    /** The {@code tool} value returned by the Python orchestrator for this agent. */
-    public static final String AGENT_TOOL_ID = "pdfToMarkdownAgent";
 
     private static final String EXTRACT_PATH = "/api/v1/pdf/to-markdown";
 
@@ -65,19 +65,19 @@ public class PdfToMarkdownOrchestrator {
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
-    public boolean handles(String toolId) {
-        return AGENT_TOOL_ID.equals(toolId);
-    }
-
-    /** Convert all input PDFs to Markdown. Parameters must contain {@code "userMessage"}. */
-    public List<Resource> execute(Map<String, Object> parameters, List<Resource> inputFiles)
-            throws IOException {
-        String userMessage = (String) parameters.getOrDefault("userMessage", "");
-        List<Resource> results = new ArrayList<>();
-        for (Resource file : inputFiles) {
-            results.addAll(extractFromFile(file, userMessage));
-        }
-        return results;
+    /** Convert a PDF to Markdown. */
+    public List<Resource> execute(MultipartFile fileInput, String userMessage) throws IOException {
+        TempFile tempFile = tempFileManager.createManagedTempFile("pdf-to-markdown");
+        fileInput.transferTo(tempFile.getPath());
+        String name = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
+        Resource resource =
+                new FileSystemResource(tempFile.getFile()) {
+                    @Override
+                    public String getFilename() {
+                        return name;
+                    }
+                };
+        return extractFromFile(resource, userMessage);
     }
 
     // ── private helpers ──────────────────────────────────────────────────────────────────────────

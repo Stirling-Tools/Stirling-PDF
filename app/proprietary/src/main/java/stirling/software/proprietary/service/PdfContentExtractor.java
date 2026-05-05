@@ -3,7 +3,6 @@ package stirling.software.proprietary.service;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -21,24 +21,24 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
+import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.proprietary.model.api.ai.FolioType;
-import stirling.software.proprietary.pdf.FlexibleCSVWriter;
-
-import technology.tabula.ObjectExtractor;
-import technology.tabula.Page;
-import technology.tabula.Table;
-import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PdfContentExtractor {
+
+    private final TabulaTableParser tabulaTableParser;
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
 
@@ -101,21 +101,21 @@ public class PdfContentExtractor {
      * @return list of CSV strings (one per table), empty if no tables found
      */
     public List<String> extractTablesAsCsv(PDDocument document, int pageNumber) throws IOException {
-        SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
+        List<TableFragment> fragments = tabulaTableParser.parse(document, pageNumber);
+        if (fragments.isEmpty()) return List.of();
+
         CSVFormat format =
                 CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
         List<String> csvStrings = new ArrayList<>();
 
-        try (ObjectExtractor extractor = new ObjectExtractor(document)) {
-            Page tabulaPage = extractor.extract(pageNumber);
-            List<Table> tables = sea.extract(tabulaPage);
-
-            for (Table table : tables) {
-                StringWriter sw = new StringWriter();
-                FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
-                csvWriter.write(sw, Collections.singletonList(table));
-                csvStrings.add(sw.toString());
+        for (TableFragment fragment : fragments) {
+            StringWriter sw = new StringWriter();
+            try (CSVPrinter printer = format.print(sw)) {
+                for (List<String> row : fragment.rawRows()) {
+                    printer.printRecord(row);
+                }
             }
+            csvStrings.add(sw.toString());
         }
         return csvStrings;
     }

@@ -1,6 +1,6 @@
-package stirling.software.proprietary.pdf.parser;
+package stirling.software.SPDF.pdf.parser;
 
-import static stirling.software.proprietary.pdf.parser.PdfModels.*;
+import static stirling.software.SPDF.pdf.parser.PdfModels.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +32,7 @@ public class CompositeTableParser implements TableParser {
     @Override
     public List<TableFragment> parse(PDDocument document, RawPage rawPage) throws IOException {
         // Step 1: Tabula lattice mode (ruled/bordered tables).
-        List<TableFragment> latticeResults = confident(tabulaParser.parse(document, rawPage));
+        List<TableFragment> latticeResults = filterConfident(tabulaParser.parse(document, rawPage));
         if (!latticeResults.isEmpty()) {
             log.debug(
                     "Page {}: using Tabula lattice ({} table(s))",
@@ -44,7 +44,8 @@ public class CompositeTableParser implements TableParser {
         // Step 2: Tabula stream mode (borderless/whitespace-delimited tables).
         // parseStream is not on the TableParser interface — this intentionally couples to the
         // concrete TabulaTableParser since stream mode is a Tabula-specific concept.
-        List<TableFragment> streamResults = confident(tabulaParser.parseStream(document, rawPage));
+        List<TableFragment> streamResults =
+                filterConfident(tabulaParser.parseStream(document, rawPage));
         if (!streamResults.isEmpty()) {
             log.debug(
                     "Page {}: using Tabula stream ({} table(s))",
@@ -66,7 +67,7 @@ public class CompositeTableParser implements TableParser {
         return List.of();
     }
 
-    private List<TableFragment> confident(List<TableFragment> tables) {
+    private List<TableFragment> filterConfident(List<TableFragment> tables) {
         return tables.stream().filter(t -> t.confidence() >= TABULA_CONFIDENCE_THRESHOLD).toList();
     }
 }
