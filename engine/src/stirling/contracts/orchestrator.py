@@ -2,19 +2,22 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
-from stirling.models import ApiModel
+from stirling.models import ApiModel, ToolEndpoint
 
 from .agent_drafts import AgentDraftResponse
 from .common import (
+    AiFile,
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
     NeedContentResponse,
+    NeedIngestResponse,
     SupportedCapability,
     ToolReportArtifact,
     WorkflowOutcome,
+    drop_unknown_tool_endpoints,
 )
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditTerminalResponse
@@ -31,10 +34,14 @@ WorkflowArtifact = Annotated[ExtractedTextArtifact | ToolReportArtifact, Field(d
 
 class OrchestratorRequest(ApiModel):
     user_message: str
-    file_names: list[str]
+    files: list[AiFile] = Field(default_factory=list)
     conversation_history: list[ConversationMessage] = Field(default_factory=list)
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None
+    # See `PdfEditRequest.enabled_endpoints`.
+    enabled_endpoints: Annotated[list[ToolEndpoint], BeforeValidator(drop_unknown_tool_endpoints)] = Field(
+        default_factory=list
+    )
 
 
 class UnsupportedCapabilityResponse(ApiModel):
@@ -47,6 +54,7 @@ type OrchestratorResponse = Annotated[
     PdfEditTerminalResponse
     | PdfQuestionTerminalResponse
     | NeedContentResponse
+    | NeedIngestResponse
     | AgentDraftResponse
     | NextExecutionAction
     | UnsupportedCapabilityResponse,

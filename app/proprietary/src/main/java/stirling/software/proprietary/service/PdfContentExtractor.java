@@ -44,7 +44,11 @@ public class PdfContentExtractor {
 
     private static final int TEXT_PRESENCE_THRESHOLD = 20;
 
-    record LoadedFile(String fileName, PDDocument document) {}
+    /**
+     * A loaded PDF alongside the opaque file id used by the AI engine as its RAG collection key.
+     * Keyed by id (not name) because filenames aren't unique across an upload.
+     */
+    record LoadedFile(String id, String fileName, PDDocument document) {}
 
     // -----------------------------------------------------------------------
     // Low-level extraction methods (usable by any agent)
@@ -126,7 +130,7 @@ public class PdfContentExtractor {
      */
     List<PdfContentResult> extractContent(
             List<LoadedFile> loadedFiles,
-            Map<String, AiWorkflowFileRequest> requestedByName,
+            Map<String, AiWorkflowFileRequest> requestedById,
             int maxPages,
             int maxCharacters)
             throws IOException {
@@ -136,7 +140,7 @@ public class PdfContentExtractor {
 
         for (LoadedFile lf : loadedFiles) {
             if (remainingPages <= 0 || remainingCharacters <= 0) break;
-            AiWorkflowFileRequest fileReq = requestedByName.get(lf.fileName());
+            AiWorkflowFileRequest fileReq = requestedById.get(lf.id());
             List<AiPdfContentType> contentTypes =
                     fileReq != null && !fileReq.getContentTypes().isEmpty()
                             ? fileReq.getContentTypes()
