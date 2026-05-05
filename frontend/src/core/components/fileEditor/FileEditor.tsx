@@ -46,7 +46,6 @@ const FileEditor = ({
   const { actions: fileActions } = useFileActions();
   const { selectedFileIds, setSelectedFiles } = useFileSelection();
 
-
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeStirlingFileStubs = useMemo(
     () => selectors.getStirlingFileStubs(),
