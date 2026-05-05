@@ -36,9 +36,9 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
+import stirling.software.proprietary.model.api.ai.AiDocumentIngestRequest;
 import stirling.software.proprietary.model.api.ai.AiFile;
-import stirling.software.proprietary.model.api.ai.AiRagIngestRequest;
-import stirling.software.proprietary.model.api.ai.AiRagPageText;
+import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -60,7 +60,7 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class AiWorkflowService {
 
-    private static final String RAG_DOCUMENTS_ENDPOINT = "/api/v1/rag/documents";
+    private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
@@ -277,22 +277,22 @@ public class AiWorkflowService {
     }
 
     private void ingestFile(AiFile file, MultipartFile multipartFile) throws IOException {
-        List<AiRagPageText> pages = new ArrayList<>();
+        List<AiPageText> pages = new ArrayList<>();
         try (PDDocument document = pdfDocumentFactory.load(multipartFile, true)) {
             int pageCount = document.getNumberOfPages();
             for (int pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
                 String pageText = pdfContentExtractor.extractPageTextRaw(document, pageNumber);
                 if (pageText != null && !pageText.isBlank()) {
-                    pages.add(new AiRagPageText(pageNumber, pageText));
+                    pages.add(new AiPageText(pageNumber, pageText));
                 }
             }
         }
-        AiRagIngestRequest ingestRequest =
-                new AiRagIngestRequest(file.getId(), file.getName(), pages);
+        AiDocumentIngestRequest ingestRequest =
+                new AiDocumentIngestRequest(file.getId(), file.getName(), pages);
         String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(RAG_DOCUMENTS_ENDPOINT, body);
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body);
         log.debug(
-                "Ingested file into RAG: id={}, name={}, pages={}",
+                "Ingested document: id={}, name={}, pages={}",
                 file.getId(),
                 file.getName(),
                 pages.size());

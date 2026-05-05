@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from stirling.contracts import IngestedPageText
+from stirling.contracts import PageText
 from stirling.documents.chunker import chunk_text
 from stirling.documents.rag_capability import RagCapability
 from stirling.documents.service import DocumentService
@@ -56,6 +56,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_add_and_search(self) -> None:
         store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("test-col", "test.pdf")
         docs = [
             Document(id="1", text="Python is a programming language", metadata={"source": "test"}),
             Document(id="2", text="Java is another programming language", metadata={"source": "test"}),
@@ -77,6 +78,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_list_and_has_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("my-collection", "test.pdf")
         docs = [Document(id="1", text="test", metadata={})]
         await store.add_documents("my-collection", docs, [[1.0, 0.0]])
 
@@ -88,6 +90,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_delete_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("to-delete", "test.pdf")
         docs = [Document(id="1", text="test", metadata={})]
         await store.add_documents("to-delete", docs, [[1.0]])
 
@@ -98,6 +101,7 @@ class TestSqliteVecStore:
     @pytest.mark.anyio
     async def test_search_empty_collection(self) -> None:
         store = SqliteVecStore.ephemeral()
+        await store.ensure_collection("empty-test", "test.pdf")
         docs = [Document(id="1", text="test", metadata={})]
         await store.add_documents("empty-test", docs, [[1.0, 0.0]])
         results = await store.search("empty-test", [1.0, 0.0], top_k=5)
@@ -151,8 +155,8 @@ def documents() -> DocumentService:
     return DocumentService(embedder=StubEmbeddingService(), store=store, default_top_k=3)  # type: ignore[arg-type]
 
 
-def _pages(text: str) -> list[IngestedPageText]:
-    return [IngestedPageText(page_number=1, text=text)]
+def _pages(text: str) -> list[PageText]:
+    return [PageText(page_number=1, text=text)]
 
 
 class TestDocumentService:
@@ -197,9 +201,9 @@ class TestDocumentService:
     @pytest.mark.anyio
     async def test_ingest_stores_pages_in_order(self, documents: DocumentService) -> None:
         pages = [
-            IngestedPageText(page_number=1, text="First page text."),
-            IngestedPageText(page_number=2, text="Second page text."),
-            IngestedPageText(page_number=3, text="Third page text."),
+            PageText(page_number=1, text="First page text."),
+            PageText(page_number=2, text="Second page text."),
+            PageText(page_number=3, text="Third page text."),
         ]
         await documents.ingest(FileId("ordered"), pages, source="ordered.pdf")
 
@@ -212,7 +216,7 @@ class TestDocumentService:
     async def test_read_pages_with_range(self, documents: DocumentService) -> None:
         from stirling.contracts import PageRange
 
-        pages = [IngestedPageText(page_number=i, text=f"page {i}") for i in range(1, 6)]
+        pages = [PageText(page_number=i, text=f"page {i}") for i in range(1, 6)]
         await documents.ingest(FileId("ranged"), pages, source="r.pdf")
 
         subset = await documents.read_pages(FileId("ranged"), PageRange(start=2, end=4))
@@ -222,12 +226,12 @@ class TestDocumentService:
     async def test_ingest_replaces_previous_pages(self, documents: DocumentService) -> None:
         await documents.ingest(
             FileId("doc"),
-            [IngestedPageText(page_number=1, text="old"), IngestedPageText(page_number=2, text="old2")],
+            [PageText(page_number=1, text="old"), PageText(page_number=2, text="old2")],
             source="v1.pdf",
         )
         await documents.ingest(
             FileId("doc"),
-            [IngestedPageText(page_number=1, text="new")],
+            [PageText(page_number=1, text="new")],
             source="v2.pdf",
         )
 
@@ -240,9 +244,9 @@ class TestDocumentService:
         """Blank pages are skipped for embedding but retained in the page store
         so page numbering stays continuous when reading back."""
         pages = [
-            IngestedPageText(page_number=1, text="Real text on page 1."),
-            IngestedPageText(page_number=2, text="   "),
-            IngestedPageText(page_number=3, text="Real text on page 3."),
+            PageText(page_number=1, text="Real text on page 1."),
+            PageText(page_number=2, text="   "),
+            PageText(page_number=3, text="Real text on page 3."),
         ]
         await documents.ingest(FileId("with-blanks"), pages, source="blanks.pdf")
 

@@ -28,7 +28,14 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
-from .documents import Page, PageRange
+from .documents import (
+    DeleteDocumentResponse,
+    IngestDocumentRequest,
+    IngestDocumentResponse,
+    Page,
+    PageRange,
+    PageText,
+)
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -80,12 +87,6 @@ from .pdf_questions import (
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
 )
-from .rag import (
-    DeleteDocumentResponse,
-    IngestDocumentRequest,
-    IngestDocumentResponse,
-    IngestedPageText,
-)
 
 __all__ = [
     "AiFile",
@@ -124,7 +125,6 @@ __all__ = [
     "HealthResponse",
     "IngestDocumentRequest",
     "IngestDocumentResponse",
-    "IngestedPageText",
     "MathAuditorToolReportArtifact",
     "NeedContentFileRequest",
     "NeedContentResponse",
@@ -134,6 +134,7 @@ __all__ = [
     "OrchestratorResponse",
     "Page",
     "PageRange",
+    "PageText",
     "PdfCommentInstruction",
     "PdfCommentReport",
     "PdfCommentRequest",

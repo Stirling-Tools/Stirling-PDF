@@ -3,8 +3,8 @@
 A reusable primitive for any agent that needs to answer a question that
 requires reading a whole document end-to-end. The document is sliced into
 contiguous page groups, each slice is read by a parallel worker that extracts
-question-relevant notes, and a single synthesis call produces the final
-answer from those notes.
+question-relevant notes, and the notes can either be returned as-is (for tool
+use) or fed into a synthesis call (for self-contained map-then-reduce).
 
 Used wherever pure RAG retrieval is the wrong tool: aggregations ("largest
 number"), comparisons ("shortest chapter"), and full summaries.
@@ -21,21 +21,13 @@ from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.contracts.documents import Page
+from stirling.models import ApiModel
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
 
 
-# Default per-worker slice size. Sized to fit comfortably in any modern fast
-# model's context with room for the worker prompt and the structured output.
-DEFAULT_CHARS_PER_SLICE = 16_000
-
-# Default cap on parallel worker LLM calls. Mirrors the math auditor's
-# semaphore so a single long-doc question can't saturate provider quotas.
-DEFAULT_CONCURRENCY = 10
-
-
-class ChunkNotes(BaseModel):
+class ChunkNotes(ApiModel):
     """Notes extracted by a single worker from one slice of pages.
 
     The shape is deliberately question-agnostic: the worker is told what the
@@ -84,43 +76,80 @@ _WORKER_SYSTEM_PROMPT = (
 
 
 class ChunkedReasoner:
-    """Run a question against a long document by slicing, mapping, and synthesising.
+    """Run a question against a long document by slicing and mapping in parallel.
 
-    Workflow:
+    Two consumption styles:
 
-    1. Group consecutive pages into character-budgeted slices.
-    2. For each slice in parallel, run a fast-model worker that emits
-       :class:`ChunkNotes` containing summary, excerpts, and facts relevant
-       to the question.
-    3. Pass the ordered notes plus the question to a smart-model synthesis
-       agent governed by the caller's ``answer_prompt`` and ``answer_type``.
+    * Tools that already have a synthesising LLM call upstream call
+      :meth:`gather_notes` to get the structured notes and format them
+      themselves with :meth:`format_notes`.
+    * Callers that just want an answer call :meth:`reason`, which runs
+      :meth:`gather_notes` and then a single synthesis call governed by the
+      caller's ``answer_prompt`` and ``answer_type``.
 
     Lifetime:
         Construct once per agent that uses it. The worker agent is built at
-        construction time and reused; the synthesis agent is built per call
-        because its output type is generic.
+        construction time and reused; the synthesis agent in :meth:`reason`
+        is built per call because its output type is generic.
     """
 
     def __init__(
         self,
         runtime: AppRuntime,
         *,
-        chars_per_slice: int = DEFAULT_CHARS_PER_SLICE,
-        concurrency: int = DEFAULT_CONCURRENCY,
+        chars_per_slice: int | None = None,
+        concurrency: int | None = None,
     ) -> None:
-        if chars_per_slice <= 0:
+        chars = chars_per_slice if chars_per_slice is not None else runtime.settings.chunked_reasoner_chars_per_slice
+        conc = concurrency if concurrency is not None else runtime.settings.chunked_reasoner_concurrency
+        if chars <= 0:
             raise ValueError("chars_per_slice must be positive")
-        if concurrency <= 0:
+        if conc <= 0:
             raise ValueError("concurrency must be positive")
         self._runtime = runtime
-        self._chars_per_slice = chars_per_slice
-        self._semaphore = asyncio.Semaphore(concurrency)
+        self._chars_per_slice = chars
+        self._semaphore = asyncio.Semaphore(conc)
         self._worker: Agent[None, ChunkNotes] = Agent(
             model=runtime.fast_model,
             output_type=NativeOutput(ChunkNotes),
             system_prompt=_WORKER_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )
+
+    async def gather_notes(self, pages: list[Page], question: str) -> list[ChunkNotes]:
+        """Run the map phase: slice pages, fan out workers, collect notes.
+
+        Worker failures are tolerated: surviving workers' notes are returned.
+        Returns an empty list only when every worker raises, which the caller
+        can treat as a hard failure.
+        """
+        if not pages:
+            raise ValueError("ChunkedReasoner.gather_notes requires at least one page")
+
+        slices = self._slice_pages(pages)
+        logger.info(
+            "[chunked-reasoner] question=%r pages=%d slices=%d",
+            question,
+            len(pages),
+            len(slices),
+        )
+
+        results = await asyncio.gather(
+            *(self._run_worker(s, question) for s in slices),
+            return_exceptions=True,
+        )
+
+        notes: list[ChunkNotes] = []
+        for slice_, result in zip(slices, results):
+            if isinstance(result, BaseException):
+                logger.warning(
+                    "[chunked-reasoner] worker failed on pages %s: %s",
+                    [p.page_number for p in slice_.pages],
+                    result,
+                )
+                continue
+            notes.append(result)
+        return notes
 
     async def reason[T: BaseModel](
         self,
@@ -130,7 +159,7 @@ class ChunkedReasoner:
         answer_prompt: str,
         answer_type: type[T],
     ) -> T:
-        """Read ``pages`` end-to-end and synthesise an answer of type ``T``.
+        """Map over pages, then synthesise a structured answer of type ``T``.
 
         Args:
             pages: Document pages in order.
@@ -145,37 +174,36 @@ class ChunkedReasoner:
         Returns:
             An instance of ``answer_type`` produced by the synthesis stage.
         """
-        if not pages:
-            raise ValueError("ChunkedReasoner.reason requires at least one page")
-
-        slices = self._slice_pages(pages)
-        logger.info(
-            "[chunked-reasoner] question=%r pages=%d slices=%d",
-            question,
-            len(pages),
-            len(slices),
-        )
-
-        notes_results = await asyncio.gather(
-            *(self._run_worker(s, question) for s in slices),
-            return_exceptions=True,
-        )
-
-        notes: list[ChunkNotes] = []
-        for slice_, result in zip(slices, notes_results):
-            if isinstance(result, BaseException):
-                logger.warning(
-                    "[chunked-reasoner] worker failed on pages %s: %s",
-                    [p.page_number for p in slice_.pages],
-                    result,
-                )
-                continue
-            notes.append(result)
-
+        notes = await self.gather_notes(pages, question)
         if not notes:
             raise RuntimeError("All chunked-reasoning workers failed; no notes to synthesise from")
-
         return await self._synthesise(question, notes, answer_prompt, answer_type)
+
+    @staticmethod
+    def format_notes(notes: list[ChunkNotes]) -> str:
+        """Render notes as readable text for inclusion in another agent's tool result.
+
+        Order is preserved. Page numbers, summary, excerpts and facts are all
+        emitted; empty sections are omitted.
+        """
+        sections: list[str] = []
+        for n in notes:
+            page_label = (
+                f"pages {n.pages[0]}-{n.pages[-1]}"
+                if len(n.pages) > 1
+                else f"page {n.pages[0]}"
+                if n.pages
+                else "unknown pages"
+            )
+            block = [f"[Notes from {page_label}]", f"Summary: {n.summary}"]
+            if n.relevant_excerpts:
+                block.append("Relevant excerpts:")
+                block.extend(f"- {e}" for e in n.relevant_excerpts)
+            if n.facts:
+                block.append("Facts:")
+                block.extend(f"- {f}" for f in n.facts)
+            sections.append("\n".join(block))
+        return "\n\n".join(sections)
 
     def _slice_pages(self, pages: list[Page]) -> list[_Slice]:
         """Group consecutive pages into character-budgeted slices.
@@ -224,27 +252,6 @@ class ChunkedReasoner:
             system_prompt=answer_prompt,
             model_settings=self._runtime.smart_model_settings,
         )
-        prompt = self._build_synthesis_prompt(question, notes)
+        prompt = f"User question:\n{question}\n\nNotes from across the document:\n\n{self.format_notes(notes)}"
         result = await agent.run(prompt)
         return result.output
-
-    @staticmethod
-    def _build_synthesis_prompt(question: str, notes: list[ChunkNotes]) -> str:
-        sections: list[str] = []
-        for n in notes:
-            page_label = (
-                f"pages {n.pages[0]}-{n.pages[-1]}"
-                if len(n.pages) > 1
-                else f"page {n.pages[0]}"
-                if n.pages
-                else "unknown pages"
-            )
-            block = [f"[Notes from {page_label}]", f"Summary: {n.summary}"]
-            if n.relevant_excerpts:
-                block.append("Relevant excerpts:")
-                block.extend(f"- {e}" for e in n.relevant_excerpts)
-            if n.facts:
-                block.append("Facts:")
-                block.extend(f"- {f}" for f in n.facts)
-            sections.append("\n".join(block))
-        return f"User question:\n{question}\n\nNotes from across the document:\n\n" + "\n\n".join(sections)

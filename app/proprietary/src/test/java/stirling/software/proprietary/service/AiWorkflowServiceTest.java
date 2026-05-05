@@ -264,7 +264,7 @@ class AiWorkflowServiceTest {
     }
 
     @Test
-    void needIngestExtractsPageTextAndPostsToRagThenRetries() throws IOException {
+    void needIngestExtractsPageTextAndPostsThenRetries() throws IOException {
         MockMultipartFile input = pdf("report.pdf", "bytes");
         when(fileIdStrategy.idFor(any())).thenReturn("report-id");
 
@@ -299,7 +299,7 @@ class AiWorkflowServiceTest {
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/rag/documents"), anyString());
+        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString());
         verify(aiEngineClient, times(2)).post(eq("/api/v1/orchestrator"), anyString());
     }
 

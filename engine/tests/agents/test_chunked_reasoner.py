@@ -212,16 +212,14 @@ class TestPromptConstruction:
         assert "page two body" in prompt
         assert "Slice covers pages 2 to 3" in prompt
 
-    def test_synthesis_prompt_groups_notes_with_page_labels(self, runtime: AppRuntime) -> None:
-        reasoner = ChunkedReasoner(runtime)
+    def test_format_notes_groups_by_page_label(self) -> None:
         notes = [
             ChunkNotes(pages=[1], summary="single", facts=["f-1"]),
             ChunkNotes(pages=[2, 3, 4], summary="range", relevant_excerpts=["quote-1"]),
         ]
-        prompt = reasoner._build_synthesis_prompt("summarise", notes)
+        rendered = ChunkedReasoner.format_notes(notes)
 
-        assert "User question:\nsummarise" in prompt
-        assert "[Notes from page 1]" in prompt
-        assert "[Notes from pages 2-4]" in prompt
-        assert "f-1" in prompt
-        assert "quote-1" in prompt
+        assert "[Notes from page 1]" in rendered
+        assert "[Notes from pages 2-4]" in rendered
+        assert "f-1" in rendered
+        assert "quote-1" in rendered

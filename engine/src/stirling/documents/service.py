@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import logging
 
-from stirling.contracts.documents import Page, PageRange
-from stirling.contracts.rag import IngestedPageText
+from stirling.contracts.documents import Page, PageRange, PageText
 from stirling.documents.embedder import EmbeddingService
 from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
 from stirling.models import FileId
 
 logger = logging.getLogger(__name__)
-
 
 PAGE_NUMBER_METADATA_KEY = "page_number"
 CONTENT_TYPE_METADATA_KEY = "content_type"
@@ -37,7 +35,7 @@ class DocumentService:
     async def ingest(
         self,
         collection: FileId,
-        pages: list[IngestedPageText],
+        pages: list[PageText],
         source: str,
     ) -> int:
         """Replace-ingest a document. Returns the number of vector chunks indexed.
@@ -49,6 +47,7 @@ class DocumentService:
         preserved end-to-end.
         """
         await self._store.delete_collection(collection)
+        await self._store.ensure_collection(collection, source)
 
         stored_pages = [StoredPage(page_number=p.page_number, text=p.text, char_count=len(p.text)) for p in pages]
         await self._store.add_pages(collection, stored_pages)

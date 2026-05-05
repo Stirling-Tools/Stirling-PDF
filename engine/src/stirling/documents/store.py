@@ -42,8 +42,19 @@ class DocumentStore(ABC):
       used for whole-document reading.
 
     Both representations live under the same ``collection`` (file id) and are
-    deleted together by :meth:`delete_collection`.
+    rooted at a single parent row in ``documents_meta``. Removing that parent
+    row cascades to both child representations, so :meth:`delete_collection`
+    is one logical delete.
     """
+
+    @abstractmethod
+    async def ensure_collection(self, collection: str, source: str) -> None:
+        """Upsert the top-level ``documents_meta`` row for this collection.
+
+        Must be called before :meth:`add_pages` or :meth:`add_documents`. Both
+        of those write into child tables that hold a foreign key to the parent
+        row, so it must exist first.
+        """
 
     @abstractmethod
     async def add_documents(

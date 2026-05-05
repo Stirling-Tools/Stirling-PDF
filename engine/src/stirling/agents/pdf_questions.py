@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import logging
 
-from pydantic import Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
-from stirling.agents.shared import ChunkedReasoner
+from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
     AiFile,
     EditPlanResponse,
@@ -27,7 +26,6 @@ from stirling.contracts import (
     format_file_names,
 )
 from stirling.documents import RagCapability
-from stirling.models import ApiModel
 from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
 
@@ -35,67 +33,36 @@ logger = logging.getLogger(__name__)
 
 
 PDF_QUESTION_SYSTEM_PROMPT = (
-    "You answer questions about PDF documents by retrieving relevant content with the "
-    "search_knowledge tool. Use it before answering. Do not guess or use outside knowledge.\n"
+    "You answer questions about PDF documents using two retrieval tools:\n"
     "\n"
-    "The search_knowledge tool has a finite call budget per run. When it is no longer "
-    "available, answer from what you have already retrieved.\n"
+    "1. search_knowledge(query) - returns the passages most semantically similar "
+    "to the query. Use it for targeted lookups: a specific fact, a named section, "
+    "a particular passage. Typically one or two calls is enough.\n"
+    "\n"
+    "2. read_full_document(query) - reads every page of the attached documents in "
+    "parallel and returns notes relevant to the query. Use it when answering "
+    "requires seeing the whole document end-to-end: summaries, aggregations "
+    "(largest, shortest, count), comparisons across sections. It is more "
+    "expensive than search_knowledge, so prefer search_knowledge when one or two "
+    "passages would suffice.\n"
+    "\n"
+    "Pick the right tool, call it, then answer from what you got back. Do not "
+    "guess or use outside knowledge.\n"
     "\n"
     "Guidelines:\n"
-    "- Make targeted search_knowledge calls. Typically one or two is enough.\n"
-    "- Answer from the retrieved text. If the retrieved content doesn't support a confident "
-    "answer, return not_found.\n"
-    "- Include a short list of evidence snippets (with page numbers where available) drawn "
-    "from what search_knowledge returned.\n"
+    "- If the retrieved content does not support a confident answer, return not_found.\n"
+    "- Include a short list of evidence snippets (with page numbers where available) "
+    "drawn from what the tools returned.\n"
     "\n"
     "Writing the not_found reason:\n"
     "- The reason is shown directly to the end user, so write it in plain, friendly "
     "language. One or two short sentences.\n"
     "- NEVER mention 'RAG', 'retrieval', 'chunks', 'search results', 'targeted search', "
-    "'search_knowledge', or other implementation details.\n"
+    "'search_knowledge', 'read_full_document', or other implementation details.\n"
     "- For questions where the answer just isn't in the document, say so directly: "
     "'I couldn't find that information in the document.'\n"
-    "- Do not make it sound like you're choosing not to answer. Be clear that it's "
-    "a genuine constraint."
+    "- Do not make it sound like you're choosing not to answer."
 )
-
-
-_WHOLE_DOC_INTENT_SYSTEM_PROMPT = (
-    "Decide whether answering the user's question requires reading the document "
-    "end-to-end rather than looking up specific passages. Set is_whole_doc=true when "
-    "the answer depends on aggregating, comparing or summarising content across the "
-    "whole document. Examples: 'summarise this PDF', 'what's the shortest chapter', "
-    "'how many tables are there', 'what's the largest number used', 'list every "
-    "person mentioned'. Set it false when the answer is a specific fact or passage "
-    "that targeted retrieval can find. Examples: 'what is the invoice total', 'who "
-    "signed the contract', 'what does section 4 say'. Decide from meaning, not "
-    "specific keywords; the prompt may be in any language."
-)
-
-
-_WHOLE_DOC_ANSWER_PROMPT = (
-    "You are answering the user's question using notes that were extracted from "
-    "every part of the document by parallel readers. Each note carries the page "
-    "numbers it covers, a short summary, relevant excerpts, and extracted facts.\n"
-    "\n"
-    "Answer ONLY from the notes. Do not invent information. If the notes do not "
-    "support a confident answer, write a brief plain-language explanation in the "
-    "answer field rather than guessing.\n"
-    "\n"
-    "Reply in the SAME LANGUAGE as the user's question. Keep the answer focused "
-    "and concise. Populate the evidence field with up to a handful of supporting "
-    "excerpts pulled from the notes' relevant_excerpts, each tagged with its "
-    "page number where the notes provide one."
-)
-
-
-class _WholeDocIntentDecision(ApiModel):
-    is_whole_doc: bool = Field(
-        description=(
-            "True if answering the question requires reading the document "
-            "end-to-end rather than looking up a specific passage."
-        ),
-    )
 
 
 _MATH_SYNTH_SYSTEM_PROMPT = (
@@ -119,12 +86,8 @@ class PdfQuestionAgent:
             model_settings=runtime.fast_model_settings,
         )
         self._math_intent_classifier = MathIntentClassifier(runtime)
-        self._whole_doc_intent_agent: Agent[None, _WholeDocIntentDecision] = Agent(
-            model=runtime.fast_model,
-            output_type=_WholeDocIntentDecision,
-            system_prompt=_WHOLE_DOC_INTENT_SYSTEM_PROMPT,
-            model_settings=runtime.fast_model_settings,
-        )
+        # Shared across whole-doc-reader instances so the worker agent and
+        # semaphore are constructed once and reused per request.
         self._chunked_reasoner = ChunkedReasoner(runtime)
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
@@ -142,8 +105,6 @@ class PdfQuestionAgent:
                 files_to_ingest=missing,
                 content_types=[PdfContentType.PAGE_TEXT],
             )
-        if len(request.files) == 1 and await self._needs_whole_doc(request.question):
-            return await self._run_whole_doc_answer(request)
         return await self._run_answer_agent(request)
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfQuestionOrchestrateResponse:
@@ -194,61 +155,33 @@ class PdfQuestionAgent:
                 missing.append(file)
         return missing
 
-    async def _needs_whole_doc(self, question: str) -> bool:
-        """Decide via a small classifier LLM whether the question needs full-doc reasoning.
-
-        Multi-file requests skip this check in :meth:`handle` for now and fall
-        through to the RAG-search path; the chunked reasoner is single-document
-        in v1.
-        """
-        if not question:
-            return False
-        result = await self._whole_doc_intent_agent.run(question)
-        return result.output.is_whole_doc
-
-    async def _run_whole_doc_answer(self, request: PdfQuestionRequest) -> PdfQuestionTerminalResponse:
-        """Answer a whole-document question by chunked map-then-synthesise.
-
-        Reads the file's stored pages, fans them out into worker LLM calls that
-        extract question-relevant notes, then synthesises a single answer. Used
-        for aggregations, comparisons and summaries that targeted RAG retrieval
-        cannot answer well.
-        """
-        file = request.files[0]
-        pages = await self.runtime.documents.read_pages(file.id)
-        if not pages:
-            logger.info(
-                "[pdf-question] whole-doc requested but no pages stored for %s; falling back to RAG-search path",
-                file.name,
-            )
-            return await self._run_answer_agent(request)
-
-        logger.info(
-            "[pdf-question] whole-doc path: file=%s pages=%d question=%r",
-            file.name,
-            len(pages),
-            request.question,
-        )
-        return await self._chunked_reasoner.reason(
-            pages=pages,
-            question=request.question,
-            answer_prompt=_WHOLE_DOC_ANSWER_PROMPT,
-            answer_type=PdfQuestionAnswerResponse,
-        )
-
     async def _run_answer_agent(self, request: PdfQuestionRequest) -> PdfQuestionTerminalResponse:
+        """Drive a single smart-model agent with both retrieval tools.
+
+        The agent picks ``search_knowledge`` for targeted lookups and
+        ``read_full_document`` for whole-document questions. Removing the
+        upstream classifier keeps that judgement in the same call that writes
+        the answer, and lets the agent mix tools when the question warrants it.
+        """
         rag = RagCapability(
             documents=self.runtime.documents,
             collections=[file.id for file in request.files],
             top_k=self.runtime.settings.rag_default_top_k,
             max_searches=self.runtime.settings.rag_max_searches,
         )
+        whole_doc = WholeDocReaderCapability(
+            runtime=self.runtime,
+            files=request.files,
+            reasoner=self._chunked_reasoner,
+        )
         agent = Agent(
             model=self.runtime.smart_model,
             output_type=NativeOutput([PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse]),
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
-            instructions=rag.instructions,
-            toolsets=[rag.toolset],
+            # pydantic-ai accepts a list of (string-or-callable) instruction sources;
+            # it resolves each at run time and concatenates them for the model.
+            instructions=[rag.instructions, whole_doc.instructions],
+            toolsets=[rag.toolset, whole_doc.toolset],
             model_settings=self.runtime.smart_model_settings,
         )
         prompt = self._build_prompt(request)
@@ -271,5 +204,5 @@ class PdfQuestionAgent:
             f"Conversation history:\n{history}\n"
             f"Files: {format_file_names(request.files)}\n"
             f"Question: {request.question}\n"
-            "Use search_knowledge to retrieve the relevant content, then answer."
+            "Pick the right retrieval tool for this question, then answer from what it returns."
         )

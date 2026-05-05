@@ -13,10 +13,10 @@ from stirling.contracts import (
 from stirling.documents import DocumentService
 from stirling.models import FileId
 
-router = APIRouter(prefix="/api/v1/rag", tags=["rag"])
+router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 
-@router.post("/documents", response_model=IngestDocumentResponse)
+@router.post("", response_model=IngestDocumentResponse)
 async def ingest_document(
     request: IngestDocumentRequest,
     documents: Annotated[DocumentService, Depends(get_document_service)],
@@ -37,7 +37,7 @@ async def ingest_document(
     return IngestDocumentResponse(document_id=request.document_id, chunks_indexed=chunks_indexed)
 
 
-@router.delete("/documents/{document_id}", response_model=DeleteDocumentResponse)
+@router.delete("/{document_id}", response_model=DeleteDocumentResponse)
 async def delete_document(
     document_id: FileId,
     documents: Annotated[DocumentService, Depends(get_document_service)],

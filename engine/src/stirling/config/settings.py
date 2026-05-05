@@ -38,6 +38,10 @@ class AppSettings(BaseSettings):
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
     rag_max_searches: int = Field(validation_alias="STIRLING_RAG_MAX_SEARCHES")
 
+    # Chunked reasoner settings (whole-document map-reduce).
+    chunked_reasoner_chars_per_slice: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CHARS_PER_SLICE")
+    chunked_reasoner_concurrency: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CONCURRENCY")
+
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
 

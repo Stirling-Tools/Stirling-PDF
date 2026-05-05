@@ -40,9 +40,18 @@ class PgVectorStore(DocumentStore):
                 await cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
                 await cur.execute(
                     """
+                    CREATE TABLE IF NOT EXISTS documents_meta (
+                        collection TEXT PRIMARY KEY,
+                        source TEXT NOT NULL
+                    )
+                    """
+                )
+                await cur.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS rag_documents (
                         id TEXT NOT NULL,
-                        collection TEXT NOT NULL,
+                        collection TEXT NOT NULL
+                            REFERENCES documents_meta(collection) ON DELETE CASCADE,
                         text TEXT NOT NULL,
                         metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
                         embedding vector NOT NULL,
@@ -54,7 +63,8 @@ class PgVectorStore(DocumentStore):
                 await cur.execute(
                     """
                     CREATE TABLE IF NOT EXISTS document_pages (
-                        collection TEXT NOT NULL,
+                        collection TEXT NOT NULL
+                            REFERENCES documents_meta(collection) ON DELETE CASCADE,
                         page_number INTEGER NOT NULL,
                         text TEXT NOT NULL,
                         char_count INTEGER NOT NULL,
@@ -65,6 +75,20 @@ class PgVectorStore(DocumentStore):
                 await cur.execute("CREATE INDEX IF NOT EXISTS idx_pages_collection ON document_pages(collection)")
                 await conn.commit()
         self._initialized = True
+
+    async def ensure_collection(self, collection: str, source: str) -> None:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    """
+                    INSERT INTO documents_meta (collection, source)
+                    VALUES (%s, %s)
+                    ON CONFLICT (collection) DO UPDATE SET source = EXCLUDED.source
+                    """,
+                    (collection, source),
+                )
+                await conn.commit()
 
     async def add_documents(
         self,
@@ -167,24 +191,15 @@ class PgVectorStore(DocumentStore):
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
-                await cur.execute("DELETE FROM rag_documents WHERE collection = %s", (collection,))
-                await cur.execute("DELETE FROM document_pages WHERE collection = %s", (collection,))
+                # Cascade FKs handle rag_documents and document_pages.
+                await cur.execute("DELETE FROM documents_meta WHERE collection = %s", (collection,))
                 await conn.commit()
 
     async def list_collections(self) -> list[str]:
         await self._ensure_schema()
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(
-                    """
-                    SELECT collection FROM (
-                        SELECT DISTINCT collection FROM rag_documents
-                        UNION
-                        SELECT DISTINCT collection FROM document_pages
-                    ) AS c
-                    ORDER BY collection
-                    """
-                )
+                await cur.execute("SELECT collection FROM documents_meta ORDER BY collection")
                 rows = await cur.fetchall()
         return [r[0] for r in rows]
 
@@ -193,13 +208,8 @@ class PgVectorStore(DocumentStore):
         async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    """
-                    SELECT 1 FROM rag_documents WHERE collection = %s
-                    UNION ALL
-                    SELECT 1 FROM document_pages WHERE collection = %s
-                    LIMIT 1
-                    """,
-                    (collection, collection),
+                    "SELECT 1 FROM documents_meta WHERE collection = %s",
+                    (collection,),
                 )
                 row = await cur.fetchone()
         return row is not None

@@ -1,4 +1,14 @@
-# RAG Integration Guide
+# Document Storage
+
+The `documents` package owns all stored content for a document under a single
+`collection` (file id):
+
+* **Vector chunks** — small, embedded chunks for RAG-style retrieval.
+* **Ordered pages** — the original page text retained in document order, used
+  for whole-document reading.
+
+Both representations are populated by a single `ingest()` call and removed
+together by `delete_collection()`.
 
 ## Adding RAG to an Agent
 
@@ -22,19 +32,21 @@ That's it. The agent gets a `search_knowledge` tool it can call autonomously.
 
 ## Scoping to Specific Collections
 
-Collections are named buckets of indexed documents — think folders. By default an agent searches everything in the store. Pass `collections=` to restrict it to only the docs indexed under those names.
+Collections are named buckets of indexed documents - think folders. By default
+an agent searches everything in the store. Pass `collections=` to restrict it
+to only the docs indexed under those names.
 
 ```python
-from stirling.rag import RagCapability
+from stirling.documents import RagCapability
 
-# Only searches docs indexed under "company-docs" — ignores everything else
-scoped = RagCapability(runtime.rag_service, collections=["company-docs"], top_k=3)
+# Only searches docs indexed under "company-docs"
+scoped = RagCapability(runtime.documents, collections=["company-docs"], top_k=3)
 
 # Searches multiple collections
-multi = RagCapability(runtime.rag_service, collections=["company-docs", "product-specs"])
+multi = RagCapability(runtime.documents, collections=["company-docs", "product-specs"])
 
 # No collections arg = searches all collections in the store
-everything = RagCapability(runtime.rag_service)
+everything = RagCapability(runtime.documents)
 ```
 
 ## Config
@@ -51,7 +63,8 @@ STIRLING_RAG_CHUNK_OVERLAP=64
 STIRLING_RAG_TOP_K=5
 ```
 
-Provider credentials (and any local overrides) go in the uncommitted `engine/.env.local`:
+Provider credentials (and any local overrides) go in the uncommitted
+`engine/.env.local`:
 
 ```
 VOYAGE_API_KEY=your-key
@@ -59,13 +72,17 @@ VOYAGE_API_KEY=your-key
 
 ## Backends
 
-**`sqlite`** — Embedded sqlite-vec. Single `.db` file, zero ops. Ideal for dev and self-hosted deployments.
+**`sqlite`** - Embedded sqlite-vec. Single `.db` file, zero ops. Ideal for dev
+and self-hosted deployments.
 
-**`pgvector`** — External PostgreSQL with the `vector` extension. Point `STIRLING_RAG_PGVECTOR_DSN` at your Postgres instance.
+**`pgvector`** - External PostgreSQL with the `vector` extension. Point
+`STIRLING_RAG_PGVECTOR_DSN` at your Postgres instance.
 
-Both backends implement the same `VectorStore` interface, so agents and the RAG service work identically regardless of which you pick.
+Both backends implement the same `DocumentStore` interface, so agents and the
+service work identically regardless of which you pick.
 
-For a self-hosted embedding server (e.g. Ollama, TEI, vLLM) set the model string accordingly and point at the server via its native env var:
+For a self-hosted embedding server (e.g. Ollama, TEI, vLLM) set the model
+string accordingly and point at the server via its native env var:
 
 ```
 # Ollama running on another machine
@@ -81,8 +98,5 @@ OPENAI_BASE_URL=http://192.168.1.50:8080/v1
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/v1/rag/status` | Report embedding model and existing collections |
-| POST | `/api/v1/rag/index` | Index text into a collection |
-| POST | `/api/v1/rag/search` | Search a collection |
-| GET | `/api/v1/rag/collections` | List collections |
-| DELETE | `/api/v1/rag/collections/{name}` | Delete a collection |
+| POST | `/api/v1/documents` | Replace-ingest a document's pages |
+| DELETE | `/api/v1/documents/{document_id}` | Delete a document's stored content |

@@ -43,6 +43,8 @@ class StubSettingsProvider:
             rag_chunk_overlap=64,
             rag_default_top_k=5,
             rag_max_searches=5,
+            chunked_reasoner_chars_per_slice=16_000,
+            chunked_reasoner_concurrency=10,
             max_pages=100,
             max_characters=100_000,
             posthog_enabled=False,
