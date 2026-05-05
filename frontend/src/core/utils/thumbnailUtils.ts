@@ -139,7 +139,6 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
 
   // Handle image files - convert to data URL for persistence
   if (file.type.startsWith("image/")) {
-    if (file.size >= 100 * 1024 * 1024) return "";
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
