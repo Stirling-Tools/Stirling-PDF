@@ -201,3 +201,6 @@
 - name: "license-review-required"
   color: "EDEDED"
   description: "This PR requires a license review"
+- name: "Gittensor"
+  color: "8B5CF6"
+  description: "Pull request from a Gittensor (Bittensor SN74) miner — tracked at gittensor.io"

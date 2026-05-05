@@ -47,3 +47,66 @@ jobs:
           name: playwright-nightly-${{ github.run_id }}
           path: frontend/playwright-report/
           retention-days: 14
+
+  label-gittensor-prs:
+    name: Label PRs tracked by Gittensor
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Apply Gittensor label
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const LABEL = "Gittensor";
+            const repoFull = `${context.repo.owner}/${context.repo.repo}`;
+            const repoKey = repoFull.toLowerCase();
+
+            const res = await fetch("https://api.gittensor.io/prs", {
+              headers: {
+                accept: "application/json",
+                "user-agent": "Mozilla/5.0 (gha-gittensor-labeler)",
+              },
+            });
+            if (!res.ok) {
+              throw new Error(`Gittensor API returned ${res.status} ${res.statusText}`);
+            }
+            const data = await res.json();
+
+            const numbers = [...new Set(
+              data
+                .filter(p => p.repository && p.repository.toLowerCase() === repoKey)
+                .map(p => p.pullRequestNumber)
+                .filter(n => Number.isInteger(n) && n > 0)
+            )];
+            core.info(`Gittensor reports ${numbers.length} tracked PRs for ${repoFull}`);
+
+            let added = 0, skipped = 0, failed = 0;
+            for (const issue_number of numbers) {
+              try {
+                const existing = await github.rest.issues.listLabelsOnIssue({
+                  ...context.repo,
+                  issue_number,
+                });
+                if (existing.data.some(l => l.name === LABEL)) {
+                  skipped++;
+                  continue;
+                }
+                await github.rest.issues.addLabels({
+                  ...context.repo,
+                  issue_number,
+                  labels: [LABEL],
+                });
+                core.info(`#${issue_number}: added "${LABEL}"`);
+                added++;
+              } catch (e) {
+                core.warning(`#${issue_number}: ${e.message}`);
+                failed++;
+              }
+            }
+            core.notice(`Gittensor labeling: ${added} added, ${skipped} already labeled, ${failed} failed`);
