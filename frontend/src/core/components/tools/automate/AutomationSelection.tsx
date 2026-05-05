@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
-import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
+import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
