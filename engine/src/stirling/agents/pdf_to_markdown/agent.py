@@ -132,7 +132,11 @@ class PdfToMarkdownAgent:
                 "- Do NOT invent, summarise, or omit any content.\n"
                 "- Do NOT add commentary, metadata, or JSON — output Markdown only."
             ),
-            model_settings={**runtime.smart_model_settings, "temperature": 0.0},
+            model_settings={
+                **runtime.smart_model_settings,
+                "temperature": 0.0,
+                "max_tokens": _OUTPUT_TOKEN_TRUNCATION_THRESHOLD,
+            },
         )
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
