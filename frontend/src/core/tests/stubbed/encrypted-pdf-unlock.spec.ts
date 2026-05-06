@@ -174,13 +174,18 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       },
     ]);
 
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 15000 });
+    // The "Use for all" affordance only appears once BOTH files have been
+    // detected as encrypted. PDF.js encryption probing runs per-file and
+    // can lag the modal opening (which fires as soon as the first file
+    // surfaces a password prompt). A 10s timeout was occasionally too tight
+    // on heavily-loaded CI runners — bump to 20s.
     const unlockAllBtn = page.getByRole("button", { name: /Use for all/ });
-    await expect(unlockAllBtn).toBeVisible({ timeout: 10000 });
+    await expect(unlockAllBtn).toBeVisible({ timeout: 20000 });
 
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill("testpass123");
     await unlockAllBtn.click();
 
-    await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
+    await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 15000 });
   });
 });
