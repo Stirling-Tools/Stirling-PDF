@@ -256,10 +256,7 @@ jobs:
         if: matrix.platform == 'macos-15'
         env:
           AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
-        run: |
-          export JLINK_MODULES="$(tr -d '\n' < frontend/src-tauri/jlink-modules.txt)"
-          export OUTPUT_DIR="frontend/src-tauri/runtime/jre"
-          ./frontend/scripts/build-universal-mac-jre.sh
+        run: task desktop:jlink:universal-mac
 
       - name: Prepare desktop build
         run: task desktop:prepare
