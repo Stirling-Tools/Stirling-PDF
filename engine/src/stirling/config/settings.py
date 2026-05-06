@@ -41,6 +41,9 @@ class AppSettings(BaseSettings):
     # Chunked reasoner settings (whole-document map-reduce).
     chunked_reasoner_chars_per_slice: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CHARS_PER_SLICE")
     chunked_reasoner_concurrency: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CONCURRENCY")
+    chunked_reasoner_worker_timeout_seconds: float = Field(
+        validation_alias="STIRLING_CHUNKED_REASONER_WORKER_TIMEOUT_SECONDS"
+    )
 
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")

@@ -194,6 +194,36 @@ class TestReason:
                 answer_type=_Answer,
             )
 
+    @pytest.mark.anyio
+    async def test_worker_timeout_drops_stalled_slices(self, runtime: AppRuntime) -> None:
+        """A worker that exceeds ``worker_timeout_seconds`` is abandoned, not awaited.
+
+        Without this guard one stuck upstream call would pin gather_notes to its
+        provider HTTP timeout (~10 minutes), starving the orchestrator request.
+        """
+        import asyncio
+
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=10, worker_timeout_seconds=0.05)
+        pages = [_page(i, "x" * 8) for i in range(1, 4)]
+
+        async def _hang(*_args: object, **_kwargs: object) -> _StubAgentResult[ChunkNotes]:
+            await asyncio.sleep(10)
+            return _StubAgentResult(output=ChunkNotes(pages=[0], summary="never"))
+
+        with (
+            patch.object(reasoner._worker, "run", AsyncMock(side_effect=_hang)),
+            patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
+            pytest.raises(RuntimeError, match="no notes"),
+        ):
+            await reasoner.reason(
+                pages=pages,
+                question="anything",
+                answer_prompt="answer",
+                answer_type=_Answer,
+            )
+
+        synth_mock.assert_not_awaited()
+
 
 # Prompt construction
 

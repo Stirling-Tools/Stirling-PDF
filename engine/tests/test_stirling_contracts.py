@@ -94,6 +94,7 @@ def test_app_settings_accepts_model_configuration() -> None:
         rag_max_searches=5,
         chunked_reasoner_chars_per_slice=16_000,
         chunked_reasoner_concurrency=10,
+        chunked_reasoner_worker_timeout_seconds=60.0,
         max_pages=200,
         max_characters=200_000,
         posthog_enabled=False,

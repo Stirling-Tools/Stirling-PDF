@@ -109,15 +109,24 @@ class ChunkedReasoner:
         *,
         chars_per_slice: int | None = None,
         concurrency: int | None = None,
+        worker_timeout_seconds: float | None = None,
     ) -> None:
         chars = chars_per_slice if chars_per_slice is not None else runtime.settings.chunked_reasoner_chars_per_slice
         conc = concurrency if concurrency is not None else runtime.settings.chunked_reasoner_concurrency
+        timeout = (
+            worker_timeout_seconds
+            if worker_timeout_seconds is not None
+            else runtime.settings.chunked_reasoner_worker_timeout_seconds
+        )
         if chars <= 0:
             raise ValueError("chars_per_slice must be positive")
         if conc <= 0:
             raise ValueError("concurrency must be positive")
+        if timeout <= 0:
+            raise ValueError("worker_timeout_seconds must be positive")
         self._runtime = runtime
         self._chars_per_slice = chars
+        self._worker_timeout_seconds = timeout
         self._semaphore = asyncio.Semaphore(conc)
         self._worker: Agent[None, ChunkNotes] = Agent(
             model=runtime.fast_model,
@@ -268,7 +277,19 @@ class ChunkedReasoner:
         prompt = self._build_worker_prompt(slice_, question)
         async with self._semaphore:
             start = time.perf_counter()
-            result = await self._worker.run(prompt)
+            try:
+                result = await asyncio.wait_for(self._worker.run(prompt), timeout=self._worker_timeout_seconds)
+            except TimeoutError:
+                duration = time.perf_counter() - start
+                logger.warning(
+                    "[chunked-reasoner] slice %d/%d %s timed out after %dms (limit %.1fs)",
+                    index,
+                    total,
+                    _page_range_label(slice_.pages),
+                    int(duration * 1000),
+                    self._worker_timeout_seconds,
+                )
+                raise
             duration = time.perf_counter() - start
         notes = result.output
         logger.debug(
