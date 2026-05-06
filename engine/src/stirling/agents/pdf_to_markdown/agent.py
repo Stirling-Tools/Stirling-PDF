@@ -6,6 +6,7 @@ headings, paragraphs, and tables in reading order.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import time
@@ -32,6 +33,15 @@ logger = logging.getLogger(__name__)
 # Warn when output tokens are close to the typical model output limit (~8192 for most
 # configurations). The actual limit is model-specific; this threshold catches likely truncation.
 _OUTPUT_TOKEN_TRUNCATION_THRESHOLD = 7500
+
+# Chunking limits — keep each LLM call to a manageable payload size.
+# Fragment count is the primary driver of JSON payload size (each fragment carries x/y/width/
+# fontSize/bold metadata beyond its text). Page cap prevents low-text pages accumulating.
+_MAX_CHUNK_FRAGMENTS = 1_000
+_MAX_CHUNK_PAGES = 10
+
+# Max concurrent LLM calls — limits API rate pressure on large documents.
+_MAX_PARALLEL_CHUNKS = 3
 
 # ── LLM output model ────────────────────────────────────────────────────────────────────────────
 
@@ -123,7 +133,7 @@ class PdfToMarkdownAgent:
         )
 
         if not request.page_layout:
-            logger.warning("[data-extraction] no content extracted from document; returning cannot_do")
+            logger.warning("[pdf-to-markdown] no content extracted from document; returning cannot_do")
             return PdfToMarkdownCannotDoResponse(
                 reason=(
                     "No content was extracted from the document. "
@@ -132,24 +142,68 @@ class PdfToMarkdownAgent:
                 )
             )
 
+        chunks = _build_page_chunks(request.page_layout)
+        logger.info("[pdf-to-markdown] chunks=%d (max %d in parallel)", len(chunks), _MAX_PARALLEL_CHUNKS)
+
+        if len(chunks) == 1:
+            return await self._reconstruct_chunk(request, chunks[0], chunk_num=1, total_chunks=1)
+
+        sem = asyncio.Semaphore(_MAX_PARALLEL_CHUNKS)
+
+        async def process(pages: list[PageLayout], chunk_num: int) -> PdfToMarkdownResponse:
+            async with sem:
+                return await self._reconstruct_chunk(request, pages, chunk_num=chunk_num, total_chunks=len(chunks))
+
+        results = await asyncio.gather(*(process(chunk, i + 1) for i, chunk in enumerate(chunks)))
+
+        markdown_parts: list[str] = []
+        for result in results:
+            if isinstance(result, PdfToMarkdownSuccessResponse) and result.markdown:
+                markdown_parts.append(result.markdown)
+            elif isinstance(result, PdfToMarkdownCannotDoResponse):
+                logger.warning("[pdf-to-markdown] chunk dropped: %s", result.reason)
+
+        if not markdown_parts:
+            return PdfToMarkdownCannotDoResponse(reason="The document could not be reconstructed. All chunks failed.")
+
+        logger.info("[pdf-to-markdown] assembly: %d/%d chunks produced output", len(markdown_parts), len(chunks))
+        return PdfToMarkdownSuccessResponse(markdown="\n\n".join(markdown_parts))
+
+    async def _reconstruct_chunk(
+        self,
+        request: PdfToMarkdownRequest,
+        pages: list[PageLayout],
+        chunk_num: int,
+        total_chunks: int,
+    ) -> PdfToMarkdownResponse:
+        chunk_request = PdfToMarkdownRequest(
+            user_message=request.user_message,
+            file_names=request.file_names,
+            conversation_history=request.conversation_history,
+            page_layout=pages,
+        )
         try:
-            return await self._reconstruct_document(request)
+            return await self._reconstruct_document(chunk_request, chunk_num, total_chunks)
         except Exception as e:
-            logger.error("[pdf-to-markdown] LLM reconstruction failed: %s", e, exc_info=True)
+            logger.error("[pdf-to-markdown] chunk %d/%d failed: %s", chunk_num, total_chunks, e, exc_info=True)
             return PdfToMarkdownCannotDoResponse(
                 reason="The document could not be reconstructed. The AI model failed to process it."
             )
 
-    async def _reconstruct_document(self, request: PdfToMarkdownRequest) -> PdfToMarkdownSuccessResponse:
+    async def _reconstruct_document(
+        self, request: PdfToMarkdownRequest, chunk_num: int = 1, total_chunks: int = 1
+    ) -> PdfToMarkdownSuccessResponse:
         content = _build_reconstruction_prompt(request)
-        logger.info("[timing] llm-call prompt-chars=%d", len(content))
+        logger.info("[timing] chunk %d/%d llm-call prompt-chars=%d", chunk_num, total_chunks, len(content))
         t0 = time.monotonic()
         result = await self._reconstruct_agent.run([content])
         llm_ms = int((time.monotonic() - t0) * 1000)
         output: _ReconstructionOutput = result.output
         usage = result.usage()
         logger.info(
-            "[timing] llm-done ms=%d input-tokens=%s output-tokens=%s markdown-chars=%d",
+            "[timing] chunk %d/%d llm-done ms=%d input-tokens=%s output-tokens=%s markdown-chars=%d",
+            chunk_num,
+            total_chunks,
             llm_ms,
             usage.input_tokens,
             usage.output_tokens,
@@ -157,11 +211,35 @@ class PdfToMarkdownAgent:
         )
         if usage.output_tokens and usage.output_tokens >= _OUTPUT_TOKEN_TRUNCATION_THRESHOLD:
             logger.warning(
-                "[timing] output likely truncated by token limit (output-tokens=%d)",
+                "[timing] chunk %d/%d output likely truncated (output-tokens=%d)",
+                chunk_num,
+                total_chunks,
                 usage.output_tokens,
             )
-        markdown = _remove_extra_separators(_fix_markdown_tables(output.markdown))
+        markdown = _remove_extra_separators(_fix_markdown_tables(_merge_orphaned_table_rows(output.markdown)))
         return PdfToMarkdownSuccessResponse(markdown=markdown)
+
+
+# ── Chunking ────────────────────────────────────────────────────────────────────────────────────
+
+
+def _build_page_chunks(pages: list[PageLayout]) -> list[list[PageLayout]]:
+    chunks: list[list[PageLayout]] = []
+    current: list[PageLayout] = []
+    current_fragments = 0
+    for page in pages:
+        page_fragments = sum(len(line.fragments) for line in page.lines)
+        fragment_full = current and current_fragments + page_fragments > _MAX_CHUNK_FRAGMENTS
+        page_full = len(current) >= _MAX_CHUNK_PAGES
+        if fragment_full or page_full:
+            chunks.append(current)
+            current = []
+            current_fragments = 0
+        current.append(page)
+        current_fragments += page_fragments
+    if current:
+        chunks.append(current)
+    return chunks
 
 
 # ── Prompt builders (module-level, no state) ────────────────────────────────────────────────────
@@ -219,14 +297,52 @@ def _is_sep_row(line: str) -> bool:
     return bool(cells) and all(_SEP_CELL.match(c) for c in cells)
 
 
-def _remove_extra_separators(markdown: str) -> str:
-    """Within each contiguous table block, keep only the first separator row.
+def _merge_orphaned_table_rows(markdown: str) -> str:
+    """Merge pipe-row blocks that lack a separator into the preceding table.
 
-    _fix_markdown_tables joins adjacent tables by stripping blank lines between |
-    rows, which leaves duplicate | --- | rows inline. This pass removes all but the
-    first separator within each block, turning the LLM's per-row-mini-table pattern
-    into a single well-formed table.
+    When the LLM incorrectly breaks a table (e.g. on a false group-header), it emits
+    orphaned pipe rows with no header or separator. These are invalid markdown and get
+    merged back into the preceding table, discarding the intervening non-table content.
     """
+    lines = markdown.split("\n")
+
+    segments: list[tuple[str, list[str]]] = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip().startswith("|"):
+            block: list[str] = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                block.append(lines[i])
+                i += 1
+            has_sep = any(_is_sep_row(row) for row in block)
+            segments.append(("table" if has_sep else "orphan", block))
+        else:
+            block = []
+            while i < len(lines) and not lines[i].strip().startswith("|"):
+                block.append(lines[i])
+                i += 1
+            segments.append(("prose", block))
+
+    result: list[tuple[str, list[str]]] = []
+    for seg_type, seg_lines in segments:
+        if seg_type == "orphan":
+            last_table = next(
+                (j for j in range(len(result) - 1, -1, -1) if result[j][0] == "table"),
+                None,
+            )
+            if last_table is not None:
+                result = result[: last_table + 1]
+                result[-1] = ("table", result[-1][1] + seg_lines)
+            else:
+                result.append((seg_type, seg_lines))
+        else:
+            result.append((seg_type, seg_lines))
+
+    return "\n".join(line for _, seg_lines in result for line in seg_lines)
+
+
+def _remove_extra_separators(markdown: str) -> str:
+    """Within each contiguous table block, keep only the first separator row."""
     lines = markdown.split("\n")
     result: list[str] = []
     seen_sep = False
@@ -238,7 +354,7 @@ def _remove_extra_separators(markdown: str) -> str:
             continue
         if _is_sep_row(line):
             if seen_sep:
-                continue  # drop the duplicate separator
+                continue
             seen_sep = True
         result.append(line)
 

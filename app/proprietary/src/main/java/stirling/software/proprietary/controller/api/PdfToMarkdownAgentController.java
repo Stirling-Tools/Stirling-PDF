@@ -23,13 +23,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.service.AiToolInputValidator;
-import stirling.software.proprietary.service.PdfToMarkdownOrchestrator;
+import stirling.software.proprietary.service.PdfToMarkdownService;
 
 /**
  * Public entry point for the PDF-to-Markdown Agent.
  *
- * <p>Accepts a PDF, delegates to {@link PdfToMarkdownOrchestrator} which chunks the layout data and
- * calls the Python engine in parallel, then streams the reconstructed Markdown back as a download.
+ * <p>Accepts a PDF, delegates to {@link PdfToMarkdownService} which parses the layout and posts it
+ * to the Python engine, then streams the reconstructed Markdown back as a download.
  *
  * <p>Lives under {@code /api/v1/ai/tools/} so it is dispatchable by the AI orchestrator via the
  * standard {@code InternalApiClient} allowlist — no special-case plumbing needed.
@@ -43,7 +43,7 @@ import stirling.software.proprietary.service.PdfToMarkdownOrchestrator;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class PdfToMarkdownAgentController {
 
-    private final PdfToMarkdownOrchestrator orchestrator;
+    private final PdfToMarkdownService pdfToMarkdownService;
 
     @PostMapping(value = "/pdf-to-markdown-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -75,7 +75,7 @@ public class PdfToMarkdownAgentController {
         log.info("[pdf-to-markdown-agent] request file={}", safeName);
 
         try {
-            List<Resource> results = orchestrator.execute(fileInput, userMessage);
+            List<Resource> results = pdfToMarkdownService.execute(fileInput, userMessage);
             if (results.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
