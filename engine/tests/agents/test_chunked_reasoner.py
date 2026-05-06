@@ -195,6 +195,62 @@ class TestReason:
             )
 
     @pytest.mark.anyio
+    async def test_progress_events_carry_monotonic_completion_counter(self, runtime: AppRuntime) -> None:
+        """Workers run in parallel and finish in any order, but the user-facing
+        ``completed`` counter on each ``WholeDocSliceDone`` event must increment by one
+        per emission. We force the second-spawned worker to finish before the first
+        and verify the emitted counters are 1, 2, 3 in arrival order."""
+        import asyncio
+
+        from stirling.contracts import WholeDocSliceDone
+        from stirling.services import reset_progress_emitter, set_progress_emitter
+
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=10)
+        pages = [_page(i, "x" * 8) for i in range(1, 4)]
+
+        # Each slice's worker awaits a different release event; we release them in
+        # reverse order so completion order is the inverse of slice order.
+        release_events = [asyncio.Event() for _ in pages]
+        next_call_index = 0
+
+        async def _gated_worker(*_args: object, **_kwargs: object) -> _StubAgentResult[ChunkNotes]:
+            nonlocal next_call_index
+            this_call = next_call_index
+            next_call_index += 1
+            await release_events[this_call].wait()
+            return _StubAgentResult(output=ChunkNotes(pages=[this_call + 1], summary=f"slice-{this_call}"))
+
+        emitted: list[WholeDocSliceDone] = []
+
+        async def _capture_emitter(event: object) -> None:
+            if isinstance(event, WholeDocSliceDone):
+                emitted.append(event)
+
+        async def _release_in_reverse() -> None:
+            # Wait briefly so all three worker tasks are blocked on their events
+            # before we start releasing them.
+            await asyncio.sleep(0)
+            for ev in reversed(release_events):
+                ev.set()
+                # Yield so the just-released worker can run to completion before
+                # we release the next one — keeps ordering deterministic.
+                await asyncio.sleep(0)
+                await asyncio.sleep(0)
+
+        token = set_progress_emitter(_capture_emitter)
+        try:
+            with patch.object(reasoner._worker, "run", AsyncMock(side_effect=_gated_worker)):
+                gather_task = asyncio.create_task(reasoner.gather_notes(pages, "anything"))
+                await _release_in_reverse()
+                notes = await gather_task
+        finally:
+            reset_progress_emitter(token)
+
+        assert len(notes) == 3
+        assert [event.completed for event in emitted] == [1, 2, 3]
+        assert all(event.total == 3 for event in emitted)
+
+    @pytest.mark.anyio
     async def test_worker_timeout_drops_stalled_slices(self, runtime: AppRuntime) -> None:
         """A worker that exceeds ``worker_timeout_seconds`` is abandoned, not awaited.
 

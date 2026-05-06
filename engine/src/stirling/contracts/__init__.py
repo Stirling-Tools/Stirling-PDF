@@ -87,6 +87,12 @@ from .pdf_questions import (
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
 )
+from .progress import (
+    ProgressEvent,
+    WholeDocReadDone,
+    WholeDocReadStarted,
+    WholeDocSliceDone,
+)
 
 __all__ = [
     "AiFile",
@@ -150,6 +156,7 @@ __all__ = [
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
     "PdfTextSelection",
+    "ProgressEvent",
     "Requisition",
     "Severity",
     "StepKind",
@@ -160,6 +167,9 @@ __all__ = [
     "ToolReportArtifact",
     "UnsupportedCapabilityResponse",
     "Verdict",
+    "WholeDocReadDone",
+    "WholeDocReadStarted",
+    "WholeDocSliceDone",
     "WorkflowArtifact",
     "WorkflowOutcome",
 ]

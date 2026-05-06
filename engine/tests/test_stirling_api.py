@@ -1,3 +1,5 @@
+import json
+
 from conftest import build_app_settings
 from fastapi.testclient import TestClient
 
@@ -25,12 +27,43 @@ from stirling.contracts import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     SupportedCapability,
+    WholeDocReadStarted,
+    WholeDocSliceDone,
 )
 from stirling.models.tool_models import Angle, RotatePdfParams
+from stirling.services import emit_progress
 
 
 class StubOrchestratorAgent:
     async def handle(self, request: OrchestratorRequest) -> NeedContentResponse:
+        return NeedContentResponse(
+            resume_with=SupportedCapability.PDF_QUESTION,
+            reason=request.user_message,
+            files=[],
+            max_pages=1,
+            max_characters=1000,
+        )
+
+
+class StubProgressOrchestratorAgent:
+    """Orchestrator stub that emits two progress events before returning.
+
+    Used to verify the streaming endpoint plumbs the ContextVar emitter through
+    to deep callees and forwards events as NDJSON in order.
+    """
+
+    async def handle(self, request: OrchestratorRequest) -> NeedContentResponse:
+        await emit_progress(WholeDocReadStarted(question="x", pages=10, slices=2))
+        await emit_progress(
+            WholeDocSliceDone(
+                completed=1,
+                total=2,
+                pages="pages=1-5",
+                duration_ms=42,
+                excerpts=2,
+                facts=3,
+            )
+        )
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_QUESTION,
             reason=request.user_message,
@@ -95,6 +128,34 @@ def test_orchestrator_route() -> None:
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "need_content"
+
+
+def test_orchestrator_stream_route() -> None:
+    """Streaming endpoint emits progress events from deep callees, then a result line."""
+    app.dependency_overrides[get_orchestrator_agent] = lambda: StubProgressOrchestratorAgent()
+    try:
+        with client.stream(
+            "POST",
+            "/api/v1/orchestrator/stream",
+            json={"userMessage": "stream this", "files": [{"id": "test-id", "name": "test.pdf"}]},
+        ) as response:
+            assert response.status_code == 200
+            events = [json.loads(line) for line in response.iter_lines() if line]
+    finally:
+        app.dependency_overrides[get_orchestrator_agent] = lambda: StubOrchestratorAgent()
+
+    progress = [e for e in events if e["event"] == "progress"]
+    results = [e for e in events if e["event"] == "result"]
+    assert [p["phase"] for p in progress] == ["whole_doc_read_started", "whole_doc_slice_done"]
+    assert progress[1]["completed"] == 1
+    assert len(results) == 1
+    response = results[0]["response"]
+    assert response["outcome"] == "need_content"
+    # Wire format must be camelCase: Java's Jackson deserializer expects camelCase
+    # field names. ``maxPages`` here doubles as a regression guard against the
+    # snake_case bug that surfaced as "need_ingest without listing any files to ingest".
+    assert "maxPages" in response
+    assert "max_pages" not in response
 
 
 def test_pdf_edit_route() -> None:

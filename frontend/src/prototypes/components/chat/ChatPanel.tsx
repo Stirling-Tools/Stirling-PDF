@@ -90,7 +90,39 @@ function formatProgress(
         })
       : t("chat.progress.executing_tool_generic");
   }
+  if (progress.phase === AiWorkflowPhase.ENGINE_PROGRESS) {
+    return formatEngineProgress(progress.engineDetail, t);
+  }
   return t(`chat.progress.${progress.phase}`);
+}
+
+/**
+ * Render an engine-side progress event (e.g. chunked-reasoner slice progress) into a user-facing
+ * message. Falls through to the generic processing label for unknown sub-phases so adding new
+ * engine events doesn't break the UI.
+ */
+function formatEngineProgress(
+  detail: Record<string, unknown> | undefined,
+  t: TranslateFn,
+): string {
+  const subPhase = typeof detail?.phase === "string" ? detail.phase : null;
+  switch (subPhase) {
+    case "whole_doc_read_started": {
+      const slices = typeof detail?.slices === "number" ? detail.slices : 0;
+      return t("chat.progress.whole_doc_read_started", { slices });
+    }
+    case "whole_doc_slice_done": {
+      const completed =
+        typeof detail?.completed === "number" ? detail.completed : 0;
+      const total = typeof detail?.total === "number" ? detail.total : 0;
+      return t("chat.progress.whole_doc_slice_done", { completed, total });
+    }
+    case "whole_doc_read_done": {
+      return t("chat.progress.whole_doc_read_done");
+    }
+    default:
+      return t("chat.progress.processing");
+  }
 }
 
 function ToolsUsedBlock({

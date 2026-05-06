@@ -143,7 +143,7 @@ public class AiWorkflowService {
             ProgressListener listener)
             throws IOException {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
-        AiWorkflowResponse response = invokeOrchestrator(request);
+        AiWorkflowResponse response = invokeOrchestrator(request, listener);
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
@@ -614,10 +614,57 @@ public class AiWorkflowService {
         return response;
     }
 
-    private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request) throws IOException {
+    /**
+     * Drive the engine's streaming orchestrator endpoint. Progress events are forwarded to {@code
+     * listener} as they arrive (each one keeps the SSE connection to the frontend alive too). The
+     * final {@code result} event carries the full {@link AiWorkflowResponse}; an {@code error}
+     * event surfaces engine-side failures.
+     */
+    private AiWorkflowResponse invokeOrchestrator(
+            WorkflowTurnRequest request, ProgressListener listener) throws IOException {
         String requestBody = objectMapper.writeValueAsString(request);
-        String responseBody = aiEngineClient.post("/api/v1/orchestrator", requestBody);
-        return objectMapper.readValue(responseBody, AiWorkflowResponse.class);
+        AiWorkflowResponse[] resultHolder = new AiWorkflowResponse[1];
+        String[] errorHolder = new String[1];
+
+        aiEngineClient.streamPost(
+                "/api/v1/orchestrator/stream",
+                requestBody,
+                line -> handleStreamLine(line, listener, resultHolder, errorHolder));
+
+        if (errorHolder[0] != null) {
+            throw new IOException("AI engine returned error: " + errorHolder[0]);
+        }
+        if (resultHolder[0] == null) {
+            throw new IOException("AI engine stream ended without a result");
+        }
+        return resultHolder[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleStreamLine(
+            String line,
+            ProgressListener listener,
+            AiWorkflowResponse[] resultHolder,
+            String[] errorHolder) {
+        try {
+            JsonNode node = objectMapper.readTree(line);
+            String event = node.path("event").asText();
+            switch (event) {
+                case "progress" -> {
+                    Map<String, Object> detail = objectMapper.convertValue(node, Map.class);
+                    detail.remove("event");
+                    listener.onProgress(AiWorkflowProgressEvent.engineProgress(detail));
+                }
+                case "result" -> {
+                    JsonNode response = node.path("response");
+                    resultHolder[0] = objectMapper.treeToValue(response, AiWorkflowResponse.class);
+                }
+                case "error" -> errorHolder[0] = node.path("message").asText("unknown error");
+                default -> log.warn("Ignoring unknown engine stream event: {}", event);
+            }
+        } catch (JacksonException e) {
+            log.warn("Failed to parse engine stream line: {}", line, e);
+        }
     }
 
     @Data

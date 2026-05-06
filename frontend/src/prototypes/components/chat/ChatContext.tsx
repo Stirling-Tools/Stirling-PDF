@@ -37,6 +37,7 @@ export enum AiWorkflowPhase {
   EXTRACTING_CONTENT = "extracting_content",
   EXECUTING_TOOL = "executing_tool",
   PROCESSING = "processing",
+  ENGINE_PROGRESS = "engine_progress",
 }
 
 export interface AiWorkflowProgress {
@@ -47,6 +48,12 @@ export interface AiWorkflowProgress {
   stepIndex?: number;
   /** Total number of plan steps, for EXECUTING_TOOL events. */
   stepCount?: number;
+  /**
+   * Raw engine-side event payload, for ENGINE_PROGRESS events. Contains a
+   * sub-phase (e.g. "whole_doc_slice_done") plus phase-specific fields like
+   * slice index/total/page range that the UI can render in detail.
+   */
+  engineDetail?: Record<string, unknown>;
 }
 
 type AiWorkflowOutcome =
@@ -159,6 +166,7 @@ interface ProgressEvent {
   tool?: string;
   stepIndex?: number;
   stepCount?: number;
+  engineDetail?: Record<string, unknown>;
 }
 
 async function consumeSSEStream(
@@ -378,6 +386,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 tool: data.tool,
                 stepIndex: data.stepIndex,
                 stepCount: data.stepCount,
+                engineDetail: data.engineDetail,
               },
             });
           },

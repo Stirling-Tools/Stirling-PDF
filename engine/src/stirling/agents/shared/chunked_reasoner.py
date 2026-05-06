@@ -21,9 +21,10 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.contracts import WholeDocReadDone, WholeDocReadStarted, WholeDocSliceDone
 from stirling.contracts.documents import Page
 from stirling.models import ApiModel
-from stirling.services import AppRuntime
+from stirling.services import AppRuntime, emit_progress
 
 logger = logging.getLogger(__name__)
 
@@ -141,52 +142,35 @@ class ChunkedReasoner:
         Worker failures are tolerated: surviving workers' notes are returned.
         Returns an empty list only when every worker raises, which the caller
         can treat as a hard failure.
+
+        Progress events fire as each worker finishes (in completion order, not
+        slice order) carrying a monotonic ``completed`` counter so consumers
+        can render "Read X of Y" with X advancing by exactly one per event.
         """
         if not pages:
             raise ValueError("ChunkedReasoner.gather_notes requires at least one page")
 
         slices = self._slice_pages(pages)
+        total = len(slices)
         logger.info(
             "[chunked-reasoner] question=%r pages=%d slices=%d",
             question,
             len(pages),
-            len(slices),
+            total,
         )
+        await emit_progress(WholeDocReadStarted(question=question, pages=len(pages), slices=total))
 
-        total = len(slices)
         gather_start = time.perf_counter()
-        results = await asyncio.gather(
-            *(self._run_worker(i + 1, total, s, question) for i, s in enumerate(slices)),
-            return_exceptions=True,
-        )
+        notes, slowest = await self._consume_workers(slices, total, question)
         gather_elapsed = time.perf_counter() - gather_start
 
-        notes: list[ChunkNotes] = []
-        slowest: tuple[int, _Slice, float] | None = None
-        for index, (slice_, result) in enumerate(zip(slices, results), start=1):
-            if isinstance(result, BaseException):
-                logger.warning(
-                    "[chunked-reasoner] slice %d/%d %s failed: %s",
-                    index,
-                    total,
-                    _page_range_label(slice_.pages),
-                    result,
-                )
-                continue
-            chunk_notes, duration = result
-            notes.append(chunk_notes)
-            if slowest is None or duration > slowest[2]:
-                slowest = (index, slice_, duration)
-
         if slowest is not None:
-            slow_index, slow_slice, slow_duration = slowest
+            slow_slice, slow_duration = slowest
             logger.info(
-                "[chunked-reasoner] gathered %d/%d slices in %.1fs; slowest %d/%d %s (%.1fs)",
+                "[chunked-reasoner] gathered %d/%d slices in %.1fs; slowest %s (%.1fs)",
                 len(notes),
                 total,
                 gather_elapsed,
-                slow_index,
-                total,
                 _page_range_label(slow_slice.pages),
                 slow_duration,
             )
@@ -196,7 +180,65 @@ class ChunkedReasoner:
                 total,
                 gather_elapsed,
             )
+        await emit_progress(
+            WholeDocReadDone(
+                completed=len(notes),
+                slices=total,
+                duration_seconds=round(gather_elapsed, 2),
+            )
+        )
         return notes
+
+    async def _consume_workers(
+        self,
+        slices: list[_Slice],
+        total: int,
+        question: str,
+    ) -> tuple[list[ChunkNotes], tuple[_Slice, float] | None]:
+        """Spawn one task per slice and process completions as they arrive.
+
+        Returns the surviving notes (in completion order) and the slowest
+        successful slice for the gather summary log line. Each successful
+        completion emits a :class:`WholeDocSliceDone` event with ``completed``
+        bumped by one, regardless of which slice happens to finish.
+        """
+        pending: dict[asyncio.Task[tuple[ChunkNotes, float]], _Slice] = {
+            asyncio.create_task(self._run_worker(i + 1, total, slice_, question)): slice_
+            for i, slice_ in enumerate(slices)
+        }
+
+        notes: list[ChunkNotes] = []
+        slowest: tuple[_Slice, float] | None = None
+        completed = 0
+
+        while pending:
+            done, _ = await asyncio.wait(pending.keys(), return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
+                slice_ = pending.pop(task)
+                exc = task.exception()
+                if exc is not None:
+                    logger.warning(
+                        "[chunked-reasoner] slice %s failed: %s",
+                        _page_range_label(slice_.pages),
+                        exc,
+                    )
+                    continue
+                chunk_notes, duration = task.result()
+                notes.append(chunk_notes)
+                completed += 1
+                if slowest is None or duration > slowest[1]:
+                    slowest = (slice_, duration)
+                await emit_progress(
+                    WholeDocSliceDone(
+                        completed=completed,
+                        total=total,
+                        pages=_page_range_label(slice_.pages),
+                        duration_ms=int(duration * 1000),
+                        excerpts=len(chunk_notes.relevant_excerpts),
+                        facts=len(chunk_notes.facts),
+                    )
+                )
+        return notes, slowest
 
     async def reason[T: BaseModel](
         self,
@@ -274,6 +316,12 @@ class ChunkedReasoner:
         return slices
 
     async def _run_worker(self, index: int, total: int, slice_: _Slice, question: str) -> tuple[ChunkNotes, float]:
+        """Run one worker and return its notes plus wall-clock duration.
+
+        Pure work: orchestration concerns (counters, progress events, slowest
+        tracking) live in :meth:`_consume_workers`. ``index`` is the slice's
+        position in document order and is only used for log lines.
+        """
         prompt = self._build_worker_prompt(slice_, question)
         async with self._semaphore:
             start = time.perf_counter()
