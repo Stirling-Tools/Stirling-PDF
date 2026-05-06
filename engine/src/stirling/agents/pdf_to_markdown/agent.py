@@ -16,15 +16,26 @@ from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.contracts import (
+    EditCannotDoResponse,
+    EditPlanResponse,
+    NeedContentFileRequest,
+    NeedContentResponse,
+    OrchestratorRequest,
+    PdfContentType,
+    SupportedCapability,
+    ToolOperationStep,
     format_conversation_history,
 )
 from stirling.contracts.pdf_to_markdown import (
     PageLayout,
+    PageLayoutArtifact,
     PdfToMarkdownCannotDoResponse,
+    PdfToMarkdownOrchestrateResponse,
     PdfToMarkdownRequest,
     PdfToMarkdownResponse,
     PdfToMarkdownSuccessResponse,
 )
+from stirling.models.agent_tool_models import AgentToolId, WriteFileAgentParams
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -122,6 +133,54 @@ class PdfToMarkdownAgent:
                 "- Do NOT add commentary, metadata, or JSON — output Markdown only."
             ),
             model_settings={**runtime.smart_model_settings, "temperature": 0.0},
+        )
+
+    async def orchestrate(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
+        """Entry point for the orchestrator delegate.
+
+        First turn: requests PAGE_LAYOUT extraction from Java via NeedContentResponse.
+        Resume turn: runs the LLM reconstruction and returns a write-file plan step.
+        """
+        layout_artifact = next(
+            (a for a in request.artifacts if isinstance(a, PageLayoutArtifact)),
+            None,
+        )
+        if layout_artifact is None:
+            return NeedContentResponse(
+                resume_with=SupportedCapability.PDF_TO_MARKDOWN,
+                reason="Page layout data is required to reconstruct the document.",
+                files=[
+                    NeedContentFileRequest(file=f, content_types=[PdfContentType.PAGE_LAYOUT]) for f in request.files
+                ],
+                max_pages=self.runtime.settings.max_pages,
+                max_characters=self.runtime.settings.max_characters,
+            )
+
+        page_layout = [page for entry in layout_artifact.files for page in entry.pages]
+        file_names = [f.name for f in request.files]
+        result = await self.handle(
+            PdfToMarkdownRequest(
+                user_message=request.user_message,
+                file_names=file_names,
+                conversation_history=request.conversation_history,
+                page_layout=page_layout,
+            )
+        )
+        if isinstance(result, PdfToMarkdownCannotDoResponse):
+            return EditCannotDoResponse(reason=result.reason)
+
+        base = file_names[0].rsplit(".", 1)[0] if file_names else "document"
+        return EditPlanResponse(
+            summary="Reconstructed the document as a Markdown file.",
+            steps=[
+                ToolOperationStep(
+                    tool=AgentToolId.WRITE_FILE_AGENT,
+                    parameters=WriteFileAgentParams(
+                        content=result.markdown,
+                        filename=f"{base}-reconstruction.md",
+                    ),
+                )
+            ],
         )
 
     async def handle(self, request: PdfToMarkdownRequest) -> PdfToMarkdownResponse:

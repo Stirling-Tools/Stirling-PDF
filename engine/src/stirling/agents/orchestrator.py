@@ -11,22 +11,23 @@ from pydantic_ai.tools import RunContext
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
+from stirling.agents.pdf_to_markdown import PdfToMarkdownAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftWorkflowResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
+    PageLayoutArtifact,
     PdfEditResponse,
     PdfQuestionOrchestrateResponse,
     SupportedCapability,
-    ToolOperationStep,
     UnsupportedCapabilityResponse,
     format_conversation_history,
     format_file_names,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, PdfToMarkdownAgentParams
+from stirling.contracts.pdf_to_markdown import PdfToMarkdownOrchestrateResponse
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -132,9 +133,10 @@ class OrchestratorAgent:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
+            case SupportedCapability.PDF_TO_MARKDOWN:
+                return await self._run_pdf_to_markdown(request)
             case (
-                SupportedCapability.PDF_TO_MARKDOWN
-                | SupportedCapability.ORCHESTRATE
+                SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
                 | SupportedCapability.AGENT_NEXT_ACTION
                 | SupportedCapability.MATH_AUDITOR_AGENT
@@ -161,19 +163,11 @@ class OrchestratorAgent:
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
         return await UserSpecAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_to_markdown(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
-        """Return a plan step that tells Java to reconstruct the document as Markdown."""
-        return EditPlanResponse(
-            summary="Reconstructed the document as a clean Markdown file.",
-            steps=[
-                ToolOperationStep(
-                    tool=AgentToolId.PDF_TO_MARKDOWN_AGENT,
-                    parameters=PdfToMarkdownAgentParams(
-                        user_message=ctx.deps.request.user_message,
-                    ),
-                )
-            ],
-        )
+    async def delegate_pdf_to_markdown(self, ctx: RunContext[OrchestratorDeps]) -> PdfToMarkdownOrchestrateResponse:
+        return await self._run_pdf_to_markdown(ctx.deps.request)
+
+    async def _run_pdf_to_markdown(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
+        return await PdfToMarkdownAgent(self.runtime).orchestrate(request)
 
     async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
         return await self._run_pdf_review(ctx.deps.request)
@@ -209,6 +203,11 @@ class OrchestratorAgent:
                 total_pages = sum(len(f.pages) for f in artifact.files)
                 file_names = [f.file_name for f in artifact.files]
                 descriptions.append(f"- extracted_text: {total_pages} pages from {file_names}")
+                continue
+            if isinstance(artifact, PageLayoutArtifact):
+                total_pages = sum(len(f.pages) for f in artifact.files)
+                file_names = [f.file_name for f in artifact.files]
+                descriptions.append(f"- page_layout: {total_pages} pages from {file_names}")
                 continue
             descriptions.append("- unknown artifact")
         return "\n".join(descriptions)

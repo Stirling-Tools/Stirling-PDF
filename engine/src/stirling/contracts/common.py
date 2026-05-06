@@ -61,7 +61,6 @@ class WorkflowOutcome(StrEnum):
     COMPLETED = "completed"
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
-    DOCUMENT_RECONSTRUCTED = "document_reconstructed"
 
 
 class ArtifactKind(StrEnum):
@@ -71,6 +70,7 @@ class ArtifactKind(StrEnum):
     """
 
     EXTRACTED_TEXT = "extracted_text"
+    PAGE_LAYOUT = "page_layout"
     TOOL_REPORT = "tool_report"
 
 

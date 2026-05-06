@@ -7,7 +7,6 @@ from stirling.agents import (
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
-    PdfToMarkdownAgent,
     UserSpecAgent,
 )
 from stirling.agents.ledger import MathAuditorAgent
@@ -46,10 +45,6 @@ def get_rag_service(request: Request) -> RagService:
 
 def get_math_auditor_agent(request: Request) -> MathAuditorAgent:
     return request.app.state.math_auditor_agent
-
-
-def get_pdf_to_markdown_agent(request: Request) -> PdfToMarkdownAgent:
-    return request.app.state.pdf_to_markdown_agent
 
 
 def get_pdf_comment_agent(request: Request) -> PdfCommentAgent:

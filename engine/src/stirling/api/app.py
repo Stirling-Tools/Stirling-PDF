@@ -12,7 +12,6 @@ from stirling.agents import (
     OrchestratorAgent,
     PdfEditAgent,
     PdfQuestionAgent,
-    PdfToMarkdownAgent,
     UserSpecAgent,
 )
 from stirling.agents.ledger import MathAuditorAgent
@@ -26,7 +25,6 @@ from stirling.api.routes import (
     pdf_comments_router,
     pdf_edit_router,
     pdf_question_router,
-    pdf_to_markdown_router,
     rag_router,
 )
 from stirling.config import AppSettings, load_settings
@@ -54,7 +52,6 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
-    fast_api.state.pdf_to_markdown_agent = PdfToMarkdownAgent(runtime)
     fast_api.state.pdf_comment_agent = PdfCommentAgent(runtime)
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
@@ -74,7 +71,6 @@ app.include_router(agent_draft_router)
 app.include_router(execution_router)
 app.include_router(rag_router)
 app.include_router(ledger_router)
-app.include_router(pdf_to_markdown_router)
 app.include_router(pdf_comments_router)
 
 

@@ -5,7 +5,6 @@ from .orchestrator import router as orchestrator_router
 from .pdf_comments import router as pdf_comments_router
 from .pdf_edit import router as pdf_edit_router
 from .pdf_questions import router as pdf_question_router
-from .pdf_to_markdown import router as pdf_to_markdown_router
 from .rag import router as rag_router
 
 __all__ = [
@@ -16,6 +15,5 @@ __all__ = [
     "pdf_comments_router",
     "pdf_edit_router",
     "pdf_question_router",
-    "pdf_to_markdown_router",
     "rag_router",
 ]

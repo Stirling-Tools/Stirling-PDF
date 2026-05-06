@@ -11,6 +11,7 @@ from stirling.contracts.pdf_to_markdown import (
     LayoutFragment,
     LayoutLine,
     PageLayout,
+    PageLayoutArtifact,
     PdfToMarkdownRequest,
     PdfToMarkdownSuccessResponse,
 )
@@ -25,6 +26,34 @@ def _line(y: float, *frags: LayoutFragment) -> LayoutLine:
 
 
 # ── Test 1: Narrative-only reconstruction ────────────────────────────────────────────────────────
+
+
+# ── Contract test: Java serialization ↔ Python deserialization ──────────────────────────────────
+# This JSON is also asserted field-by-field in PageLayoutArtifactContractTest.java.
+# If either side renames a field, one of these tests fails.
+_CONTRACT_JSON = (
+    '{"kind":"page_layout","files":[{"fileName":"test.pdf","pages":'
+    '[{"pageNumber":1,"lines":[{"y":10.0,"fragments":'
+    '[{"text":"Hello","x":1.0,"y":2.0,"width":30.0,"fontSize":12.0,"bold":true}]}]}]}]}'
+)
+
+
+def test_page_layout_artifact_deserialises_java_json() -> None:
+    artifact = PageLayoutArtifact.model_validate_json(_CONTRACT_JSON)
+
+    assert artifact.kind == "page_layout"
+    assert artifact.files[0].file_name == "test.pdf"
+    page = artifact.files[0].pages[0]
+    assert page.page_number == 1
+    line = page.lines[0]
+    assert line.y == 10.0
+    frag = line.fragments[0]
+    assert frag.text == "Hello"
+    assert frag.x == 1.0
+    assert frag.y == 2.0
+    assert frag.width == 30.0
+    assert frag.font_size == 12.0
+    assert frag.bold is True
 
 
 def test_narrative_reconstruction_request_validates() -> None:

@@ -4,8 +4,8 @@ The agent accepts a parsed document and returns a single Markdown document that
 faithfully reconstructs the PDF content — headings, paragraphs, and tables in
 reading order, using page_layout as the primary source of truth for structure.
 
-Java counterpart: the Java layer runs PdfIngester to produce ParsedDocument, then
-calls POST /api/v1/pdf/to-markdown with the layout, text, and page images.
+Java extracts page layout via PdfIngester and returns it as a PageLayoutArtifact
+through the orchestrator resume_with pattern.
 """
 
 from __future__ import annotations
@@ -16,7 +16,8 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ConversationMessage, WorkflowOutcome
+from .common import ArtifactKind, ConversationMessage, NeedContentResponse
+from .pdf_edit import EditCannotDoResponse, EditPlanResponse
 
 # ── Input: layout models (mirror Java's RawLine / TextFragment geometry) ────────────────────────
 
@@ -46,6 +47,23 @@ class PageLayout(ApiModel):
     lines: list[LayoutLine]
 
 
+# ── Artifact: page layout (produced by Java, consumed by orchestrate()) ──────────────────────────
+
+
+class PageLayoutFileEntry(ApiModel):
+    """Page layout data for one file, as extracted by Java's PdfIngester."""
+
+    file_name: str
+    pages: list[PageLayout] = Field(default_factory=list)
+
+
+class PageLayoutArtifact(ApiModel):
+    """Artifact carrying full spatial page layout for all input files."""
+
+    kind: Literal[ArtifactKind.PAGE_LAYOUT] = ArtifactKind.PAGE_LAYOUT
+    files: list[PageLayoutFileEntry] = Field(default_factory=list)
+
+
 # ── Input: full request ──────────────────────────────────────────────────────────────────────────
 
 
@@ -67,16 +85,21 @@ class PdfToMarkdownRequest(ApiModel):
 
 
 class PdfToMarkdownSuccessResponse(ApiModel):
-    outcome: Literal[WorkflowOutcome.DOCUMENT_RECONSTRUCTED] = WorkflowOutcome.DOCUMENT_RECONSTRUCTED
+    outcome: Literal["document_reconstructed"] = "document_reconstructed"
     markdown: str
 
 
 class PdfToMarkdownCannotDoResponse(ApiModel):
-    outcome: Literal[WorkflowOutcome.CANNOT_DO] = WorkflowOutcome.CANNOT_DO
+    outcome: Literal["cannot_do"] = "cannot_do"
     reason: str
 
 
 type PdfToMarkdownResponse = Annotated[
     PdfToMarkdownSuccessResponse | PdfToMarkdownCannotDoResponse,
+    Field(discriminator="outcome"),
+]
+
+type PdfToMarkdownOrchestrateResponse = Annotated[
+    EditPlanResponse | EditCannotDoResponse | NeedContentResponse,
     Field(discriminator="outcome"),
 ]
