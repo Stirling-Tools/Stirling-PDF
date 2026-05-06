@@ -87,7 +87,7 @@ class TestReason:
         canned_answer = _Answer(answer="final answer")
 
         with (
-            patch.object(reasoner, "_run_worker", AsyncMock(return_value=canned_notes)) as worker_mock,
+            patch.object(reasoner, "_run_worker", AsyncMock(return_value=(canned_notes, 0.0))) as worker_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -117,7 +117,7 @@ class TestReason:
         canned_answer = _Answer(answer="ok")
 
         with (
-            patch.object(reasoner, "_run_worker", AsyncMock(return_value=canned_notes)) as worker_mock,
+            patch.object(reasoner, "_run_worker", AsyncMock(return_value=(canned_notes, 0.0))) as worker_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)),
         ):
             await reasoner.reason(
@@ -139,11 +139,11 @@ class TestReason:
         good = ChunkNotes(pages=[1], summary="ok")
         async_results = [good, RuntimeError("worker boom"), good]
 
-        async def _worker(*_args: object, **_kwargs: object) -> ChunkNotes:
+        async def _worker(*_args: object, **_kwargs: object) -> tuple[ChunkNotes, float]:
             value = async_results.pop(0)
             if isinstance(value, BaseException):
                 raise value
-            return value
+            return value, 0.0
 
         canned_answer = _Answer(answer="resilient")
 

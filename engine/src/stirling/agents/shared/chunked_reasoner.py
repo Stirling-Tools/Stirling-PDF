@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
@@ -55,6 +56,15 @@ class ChunkNotes(ApiModel):
 @dataclass(frozen=True)
 class _Slice:
     pages: list[Page]
+
+
+def _page_range_label(pages: list[Page]) -> str:
+    if not pages:
+        return "pages=?"
+    elif len(pages) == 1:
+        return f"pages={pages[0].page_number}"
+    else:
+        return f"pages={pages[0].page_number}-{pages[-1].page_number}"
 
 
 _WORKER_SYSTEM_PROMPT = (
@@ -134,21 +144,49 @@ class ChunkedReasoner:
             len(slices),
         )
 
+        total = len(slices)
+        gather_start = time.perf_counter()
         results = await asyncio.gather(
-            *(self._run_worker(s, question) for s in slices),
+            *(self._run_worker(i + 1, total, s, question) for i, s in enumerate(slices)),
             return_exceptions=True,
         )
+        gather_elapsed = time.perf_counter() - gather_start
 
         notes: list[ChunkNotes] = []
-        for slice_, result in zip(slices, results):
+        slowest: tuple[int, _Slice, float] | None = None
+        for index, (slice_, result) in enumerate(zip(slices, results), start=1):
             if isinstance(result, BaseException):
                 logger.warning(
-                    "[chunked-reasoner] worker failed on pages %s: %s",
-                    [p.page_number for p in slice_.pages],
+                    "[chunked-reasoner] slice %d/%d %s failed: %s",
+                    index,
+                    total,
+                    _page_range_label(slice_.pages),
                     result,
                 )
                 continue
-            notes.append(result)
+            chunk_notes, duration = result
+            notes.append(chunk_notes)
+            if slowest is None or duration > slowest[2]:
+                slowest = (index, slice_, duration)
+
+        if slowest is not None:
+            slow_index, slow_slice, slow_duration = slowest
+            logger.info(
+                "[chunked-reasoner] gathered %d/%d slices in %.1fs; slowest %d/%d %s (%.1fs)",
+                len(notes),
+                total,
+                gather_elapsed,
+                slow_index,
+                total,
+                _page_range_label(slow_slice.pages),
+                slow_duration,
+            )
+        else:
+            logger.info(
+                "[chunked-reasoner] gathered 0/%d slices in %.1fs (all workers failed)",
+                total,
+                gather_elapsed,
+            )
         return notes
 
     async def reason[T: BaseModel](
@@ -226,11 +264,23 @@ class ChunkedReasoner:
             slices.append(_Slice(pages=current))
         return slices
 
-    async def _run_worker(self, slice_: _Slice, question: str) -> ChunkNotes:
+    async def _run_worker(self, index: int, total: int, slice_: _Slice, question: str) -> tuple[ChunkNotes, float]:
         prompt = self._build_worker_prompt(slice_, question)
         async with self._semaphore:
+            start = time.perf_counter()
             result = await self._worker.run(prompt)
-        return result.output
+            duration = time.perf_counter() - start
+        notes = result.output
+        logger.debug(
+            "[chunked-reasoner] slice %d/%d %s: %d excerpt(s), %d fact(s) in %dms",
+            index,
+            total,
+            _page_range_label(slice_.pages),
+            len(notes.relevant_excerpts),
+            len(notes.facts),
+            int(duration * 1000),
+        )
+        return notes, duration
 
     @staticmethod
     def _build_worker_prompt(slice_: _Slice, question: str) -> str:
