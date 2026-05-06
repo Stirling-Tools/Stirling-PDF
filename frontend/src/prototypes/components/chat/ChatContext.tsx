@@ -159,7 +159,6 @@ interface ProgressEvent {
   tool?: string;
   stepIndex?: number;
   stepCount?: number;
-  parameters?: Record<string, unknown>;
 }
 
 async function consumeSSEStream(
@@ -371,10 +370,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               typeof data.tool === "string"
             ) {
               toolsUsed.push(data.tool);
-              console.log(
-                `[AI] tool call (step ${data.stepIndex}/${data.stepCount}): ${data.tool}`,
-                data.parameters ?? {},
-              );
             }
             dispatch({
               type: "SET_PROGRESS",

@@ -209,11 +209,7 @@ const Compare = (props: BaseToolProps) => {
           : null;
       const nextComp: FileId | null =
         keepComp ??
-        (((allIds.length === 2 &&
-        nextBase &&
-        allIds.includes(nextBase as FileId)
-          ? allIds.find((id) => id !== nextBase)
-          : sourceIds.find((id) => id !== nextBase)) ?? null) as FileId | null);
+        ((sourceIds.find((id) => id !== nextBase) ?? null) as FileId | null);
 
       if (prev.baseFileId === nextBase && prev.comparisonFileId === nextComp)
         return prev;

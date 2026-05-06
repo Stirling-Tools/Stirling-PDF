@@ -26,14 +26,12 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ManageSearchIcon from "@mui/icons-material/ManageSearch";
 import {
   useChat,
   AiWorkflowPhase,
   type AiWorkflowProgress,
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { ContentInspectorModal } from "@app/components/chat/ContentInspectorModal";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
@@ -180,7 +178,6 @@ export function ChatPanel() {
     useChat();
   const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
-  const [inspectorOpen, setInspectorOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -207,7 +204,7 @@ export function ChatPanel() {
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isLoading) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -215,11 +212,6 @@ export function ChatPanel() {
 
   return (
     <>
-      <ContentInspectorModal
-        opened={inspectorOpen}
-        onClose={() => setInspectorOpen(false)}
-      />
-
       {/* Toggle button - always visible */}
       {!isOpen && (
         <ActionIcon
@@ -244,25 +236,14 @@ export function ChatPanel() {
               <Text fw={600} size="sm">
                 AI Assistant
               </Text>
-              <Group gap={4}>
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  onClick={() => setInspectorOpen(true)}
-                  aria-label="Inspect PDF content extraction"
-                  title="Content Inspector"
-                >
-                  <ManageSearchIcon sx={{ fontSize: 16 }} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  onClick={toggleOpen}
-                  aria-label="Close chat"
-                >
-                  <CloseIcon sx={{ fontSize: 16 }} />
-                </ActionIcon>
-              </Group>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={toggleOpen}
+                aria-label="Close chat"
+              >
+                <CloseIcon sx={{ fontSize: 16 }} />
+              </ActionIcon>
             </div>
 
             {/* Messages */}
@@ -313,6 +294,7 @@ export function ChatPanel() {
                 value={input}
                 onChange={(e) => setInput(e.currentTarget.value)}
                 onKeyDown={handleKeyDown}
+                disabled={isLoading}
                 rightSection={
                   <ActionIcon
                     variant="filled"
