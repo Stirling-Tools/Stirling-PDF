@@ -103,8 +103,8 @@ jobs:
           DMG_SHA: ${{ needs.get-release-info.outputs.dmg_sha256 }}
         run: |
           CASK="tap/Casks/stirling-pdf.rb"
-          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$CASK"
-          sed -i "s/sha256 \".*\"/sha256 \"${DMG_SHA}\"/g" "$CASK"
+          sed -i "s/version \"[^\"]*\"/version \"${VERSION}\"/" "$CASK"
+          sed -i "s/sha256 \"[^\"]*\"/sha256 \"${DMG_SHA}\"/g" "$CASK"
 
       - name: Update Homebrew formula (Formula/stirling-pdf-server.rb)
         env:
@@ -112,8 +112,8 @@ jobs:
           JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
         run: |
           FORMULA="tap/Formula/stirling-pdf-server.rb"
-          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$FORMULA"
-          sed -i "s/sha256 \".*\"/sha256 \"${JAR_SHA}\"/" "$FORMULA"
+          sed -i "s/version \"[^\"]*\"/version \"${VERSION}\"/" "$FORMULA"
+          sed -i "s/sha256 \"[^\"]*\"/sha256 \"${JAR_SHA}\"/" "$FORMULA"
 
       - name: Update Scoop stirling-pdf.json
         env:

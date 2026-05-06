@@ -26,8 +26,16 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
+# x86_64 jlink runs under Rosetta on Apple Silicon. If Rosetta isn't
+# installed the failure mode is a cryptic "Bad CPU type" from exec, so
+# fail loudly up front when running on arm64 without it.
+if [[ "$(uname -m)" == "arm64" ]] && ! arch -x86_64 /usr/bin/true >/dev/null 2>&1; then
+  echo "Rosetta 2 is required to run x86_64 jlink on Apple Silicon. Install with: softwareupdate --install-rosetta --agree-to-license" >&2
+  exit 1
+fi
+
 WORK_DIR="$(mktemp -d -t universal-jre)"
-trap 'rm -rf "$WORK_DIR"' EXIT
+trap 'rm -rf "$WORK_DIR"' EXIT INT TERM
 
 ARM_JRE="$WORK_DIR/jre-aarch64"
 X64_JRE="$WORK_DIR/jre-x86_64"
@@ -90,9 +98,11 @@ if [[ "$merged" -eq 0 ]]; then
 fi
 
 # Sanity-check: the launcher must be a fat binary or the app crashes on the
-# arch we didn't lipo for.
-if ! lipo -info "$OUTPUT_DIR/bin/java" | grep -q "x86_64 arm64\|arm64 x86_64"; then
-  echo "bin/java is not a universal binary:" >&2
+# arch we didn't lipo for. `lipo -archs` prints just the arch names space-
+# separated (avoiding fragile grep alternation across BSD/GNU grep).
+java_archs="$(lipo -archs "$OUTPUT_DIR/bin/java" 2>/dev/null || true)"
+if [[ "$java_archs" != *arm64* || "$java_archs" != *x86_64* ]]; then
+  echo "bin/java is not a universal binary (archs: ${java_archs:-unknown})" >&2
   lipo -info "$OUTPUT_DIR/bin/java" >&2
   exit 1
 fi

@@ -110,7 +110,7 @@ jobs:
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
-          targets: ${{ (matrix.platform == 'macos-15') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       # x86_64 JDK is set up first so the aarch64 step below can leave its
       # JAVA_HOME as the active one. The macOS universal JRE build needs
@@ -240,7 +240,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: (matrix.platform == 'macos-15') && env.APPLE_CERTIFICATE != ''
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -261,7 +261,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: (matrix.platform == 'macos-15') && env.APPLE_CERTIFICATE != ''
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
