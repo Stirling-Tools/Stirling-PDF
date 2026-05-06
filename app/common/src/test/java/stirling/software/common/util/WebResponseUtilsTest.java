@@ -123,8 +123,7 @@ class WebResponseUtilsTest {
         File backing = tempFile.getFile();
         assertTrue(backing.exists(), "precondition: backing file should exist");
 
-        WebResponseUtils.ManagedTempFileResource resource =
-                new WebResponseUtils.ManagedTempFileResource(tempFile);
+        TempFileBackedResource resource = TempFileBackedResource.managed(tempFile);
 
         byte[] readBack;
         try (InputStream in = resource.getInputStream()) {
@@ -139,8 +138,7 @@ class WebResponseUtilsTest {
 
     @Test
     void closingInputStream_propagatesReadFailure() throws IOException {
-        // ManagedTempFileResource is final, so we can't swap in a mock underlying stream.
-        // Instead: open the resource's stream, close the inner FileInputStream early
+        // Open the resource's stream, close the inner FileInputStream early
         // (by closing the outer stream once), then confirm reading the now-closed stream
         // throws — exercising ClosingInputStream's read() catch/log/rethrow path. Finally
         // confirm the temp file is still cleaned up on close().
@@ -149,8 +147,7 @@ class WebResponseUtilsTest {
         File backing = tempFile.getFile();
         assertTrue(backing.exists());
 
-        WebResponseUtils.ManagedTempFileResource resource =
-                new WebResponseUtils.ManagedTempFileResource(tempFile);
+        TempFileBackedResource resource = TempFileBackedResource.managed(tempFile);
 
         InputStream in = resource.getInputStream();
         // Pre-close the underlying stream to guarantee read() throws.
@@ -188,12 +185,39 @@ class WebResponseUtilsTest {
                 spying.getFile().delete(),
                 "precondition: delete backing so super.getInputStream() fails");
 
-        WebResponseUtils.ManagedTempFileResource resource =
-                new WebResponseUtils.ManagedTempFileResource(spying);
+        TempFileBackedResource resource = TempFileBackedResource.managed(spying);
 
         assertThrows(IOException.class, resource::getInputStream);
         assertTrue(
                 closed.get(),
                 "tempFile.close() must run when super.getInputStream() fails on open");
+    }
+
+    @Test
+    void unmanagedTempFileResource_leavesBackingFileIntactAfterClose() throws IOException {
+        TempFile tempFile = tempFileManager.createManagedTempFile(".bin");
+        byte[] payload = "intermediate-pipeline-result".getBytes(StandardCharsets.UTF_8);
+        Files.write(tempFile.getPath(), payload);
+        File backing = tempFile.getFile();
+
+        TempFileBackedResource resource = TempFileBackedResource.unmanaged(tempFile, "result.bin");
+
+        byte[] firstRead;
+        try (InputStream in = resource.getInputStream()) {
+            firstRead = in.readAllBytes();
+        }
+        assertArrayEquals(payload, firstRead);
+        assertTrue(backing.exists(), "unmanaged resource must not delete backing file on close");
+
+        // Second read — must still work because the unmanaged stream doesn't destroy state.
+        byte[] secondRead;
+        try (InputStream in = resource.getInputStream()) {
+            secondRead = in.readAllBytes();
+        }
+        assertArrayEquals(payload, secondRead);
+        assertTrue(backing.exists());
+
+        // displayFilename is returned from getFilename().
+        assertEquals("result.bin", resource.getFilename());
     }
 }
