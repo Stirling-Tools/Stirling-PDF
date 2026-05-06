@@ -476,7 +476,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
                   "settings.general.defaultStartupViewDescription",
-                  "Choose which tab is active in the left column when the app starts",
+                  "Choose which view is active when the app starts",
                 )}
               </Text>
             </div>

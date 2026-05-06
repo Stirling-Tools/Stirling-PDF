@@ -91,10 +91,10 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
               ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
               : "transparent",
             color: disabled
-              ? "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3))"
+              ? "var(--text-muted)"
               : isSelected
-                ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))"
-                : "light-dark(var(--mantine-color-gray-7), var(--mantine-color-white))",
+                ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3))"
+                : "var(--text-primary)",
             transition: "all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             cursor: disabled ? "not-allowed" : "pointer",
             "&:hover": !disabled
@@ -300,8 +300,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               styles={{
                 root: {
                   border: "none",
-                  color:
-                    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))",
+                  color: "var(--text-primary)",
                   transition:
                     "background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                   "&:hover": {

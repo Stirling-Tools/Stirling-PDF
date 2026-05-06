@@ -500,10 +500,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       );
                       const isActive = isViewedInViewer;
                       // In-memory thumbnail may be fresher than the IndexedDB stub.
-                      const thumbnailUrl =
-                        (workbenchFileId
-                          ? state.files.byId[workbenchFileId]?.thumbnailUrl
-                          : undefined) || stub.thumbnailUrl;
+                      // Encrypted files never get a raster thumbnail — use undefined
+                      // so the sidebar icon is shown instead of a stale canvas thumbnail.
+                      const isEncryptedFile =
+                        stub.processedFile?.isEncrypted === true;
+                      const thumbnailUrl = isEncryptedFile
+                        ? undefined
+                        : (workbenchFileId
+                            ? state.files.byId[workbenchFileId]?.thumbnailUrl
+                            : undefined) || stub.thumbnailUrl;
                       return (
                         <FileItem
                           key={stub.id}

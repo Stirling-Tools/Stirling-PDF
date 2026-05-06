@@ -9,6 +9,7 @@ import {
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
+import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import styles from "@app/components/layout/Workbench.module.css";
 
@@ -107,7 +108,9 @@ export default function Workbench() {
         return (
           <FileEditor
             toolMode={!!selectedToolId}
-            supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
+            supportedExtensions={
+              selectedTool?.supportedFormats || VIEWER_SUPPORTED_EXTENSIONS
+            }
             {...(!selectedToolId && {
               onOpenPageEditor: () => {
                 setCurrentView("pageEditor");

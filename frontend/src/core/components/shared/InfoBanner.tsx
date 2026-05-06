@@ -50,6 +50,7 @@ interface InfoBannerProps {
   buttonVariant?: "light" | "filled" | "white" | "outline" | "subtle";
   minHeight?: number | string;
   closeIconColor?: string;
+  compact?: boolean;
 }
 
 /**
@@ -75,6 +76,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   buttonVariant = "light",
   minHeight = 56,
   closeIconColor,
+  compact = false,
 }) => {
   if (!show) {
     return null;
@@ -85,9 +87,13 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
     onDismiss?.();
   };
 
+  const iconSize = compact ? "1rem" : "1.2rem";
+  const textSize = compact ? "xs" : "sm";
+  const buttonSize = compact ? "xs" : "xs";
+
   return (
     <Paper
-      p="sm"
+      p={compact ? "xs" : "sm"}
       radius={0}
       style={{
         background: background ?? toneStyle.background,
@@ -105,22 +111,22 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
         style={{ width: "100%" }}
       >
         <Group
-          gap="sm"
+          gap={compact ? "xs" : "sm"}
           align="center"
           wrap="nowrap"
           style={{ flex: 1, minWidth: 0 }}
         >
           <LocalIcon
             icon={icon}
-            width="1.2rem"
-            height="1.2rem"
+            width={iconSize}
+            height={iconSize}
             style={{ color: iconColor ?? toneStyle.icon, flexShrink: 0 }}
           />
-          <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+          <Stack gap={compact ? 1 : 2} style={{ flex: 1, minWidth: 0 }}>
             {title && (
               <Text
                 fw={600}
-                size="sm"
+                size={textSize}
                 style={{ color: textColor ?? toneStyle.text }}
               >
                 {title}
@@ -128,9 +134,9 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
             )}
             <Text
               fw={title ? 400 : 500}
-              size="sm"
+              size={textSize}
               style={{ color: textColor ?? toneStyle.text }}
-              lineClamp={2}
+              lineClamp={compact ? 1 : 2}
             >
               {message}
             </Text>
@@ -141,11 +147,15 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
             <Button
               variant={buttonVariant}
               color={buttonColor ?? toneStyle.buttonColor}
-              size="xs"
+              size={buttonSize}
               onClick={onButtonClick}
               loading={loading}
               leftSection={
-                <LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />
+                <LocalIcon
+                  icon={buttonIcon}
+                  width={compact ? "0.75rem" : "0.9rem"}
+                  height={compact ? "0.75rem" : "0.9rem"}
+                />
               }
             >
               {buttonText}
@@ -160,7 +170,11 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               aria-label="Dismiss"
               style={closeIconColor ? { color: closeIconColor } : undefined}
             >
-              <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+              <LocalIcon
+                icon="close-rounded"
+                width={compact ? "0.85rem" : "1rem"}
+                height={compact ? "0.85rem" : "1rem"}
+              />
             </ActionIcon>
           )}
         </Group>
