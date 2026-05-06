@@ -17,13 +17,17 @@ function CopyButton({ text }: { text: string }) {
         position: "absolute",
         top: 8,
         right: 8,
-        background: copied ? "var(--mantine-color-green-0)" : "var(--mantine-color-gray-0)",
+        background: copied
+          ? "var(--mantine-color-green-0)"
+          : "var(--mantine-color-gray-0)",
         border: "1px solid var(--mantine-color-gray-3)",
         borderRadius: 3,
         cursor: "pointer",
         fontSize: "0.7em",
         padding: "2px 8px",
-        color: copied ? "var(--mantine-color-green-7)" : "var(--mantine-color-gray-7)",
+        color: copied
+          ? "var(--mantine-color-green-7)"
+          : "var(--mantine-color-gray-7)",
       }}
     >
       {copied ? "✓ Copied" : "Copy"}
@@ -56,7 +60,13 @@ const components: Components = {
   },
   table: ({ children }) => (
     <div style={{ overflowX: "auto", margin: "10px 0" }}>
-      <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.85em" }}>
+      <table
+        style={{
+          borderCollapse: "collapse",
+          width: "100%",
+          fontSize: "0.85em",
+        }}
+      >
         {children}
       </table>
     </div>
