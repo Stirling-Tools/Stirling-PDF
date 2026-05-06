@@ -17,7 +17,7 @@ from stirling.contracts import ProgressEvent
 
 logger = logging.getLogger(__name__)
 
-ProgressEmitter = Callable[[ProgressEvent], Awaitable[None]]
+type ProgressEmitter = Callable[[ProgressEvent], Awaitable[None]]
 
 _emitter: ContextVar[ProgressEmitter | None] = ContextVar("stirling_progress_emitter", default=None)
 
