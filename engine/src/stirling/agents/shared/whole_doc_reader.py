@@ -24,10 +24,13 @@ from stirling.services import AppRuntime
 logger = logging.getLogger(__name__)
 
 
-# Default cap on per-run calls. Each call fans out a worker per slice of every
-# attached document, so it is genuinely expensive. The agent is told to reach
-# for it sparingly via the tool description.
-DEFAULT_MAX_READS = 2
+# Cap on per-run calls. One pass already reads every page of every attached
+# document, so a second call is almost always the smart model second-guessing
+# itself on a near-identical query (and doubles wall-clock time for a sizeable
+# document). If a follow-up genuinely needs more, ``search_knowledge`` is the
+# right escape hatch. Configurable per-construction in case a future caller
+# can prove a real two-read use case; the default stays at 1.
+DEFAULT_MAX_READS = 1
 
 
 class WholeDocReaderCapability:
@@ -68,9 +71,10 @@ class WholeDocReaderCapability:
             "You have a 'read_full_document' tool that reads every page of "
             f"{names} in parallel and returns notes relevant to a query. "
             "Use it when answering requires seeing the whole document end-to-end "
-            "(summaries, aggregations, comparisons across sections). It is more "
-            "expensive than 'search_knowledge'; prefer search_knowledge for "
-            "specific lookups when one or two passages would suffice."
+            "(summaries, aggregations, comparisons across sections). One call "
+            "already reads everything; phrase the query to cover all the angles "
+            "you need in a single pass. For follow-ups or specific lookups use "
+            "'search_knowledge', which is cheaper and targeted."
         )
 
     @property

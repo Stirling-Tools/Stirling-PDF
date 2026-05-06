@@ -1,6 +1,7 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -120,16 +121,17 @@ public class AiEngineClient {
 
         HttpResponse<Stream<String>> response;
         try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
-        } catch (HttpTimeoutException e) {
-            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
-        } catch (IOException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+            response = sendOnce(request, HttpResponse.BodyHandlers.ofLines());
+        } catch (ConnectException e) {
+            log.debug("Engine connect failed (stream), retrying once: {}", e.getMessage());
+            try {
+                response = sendOnce(request, HttpResponse.BodyHandlers.ofLines());
+            } catch (ConnectException retry) {
+                throw new ResponseStatusException(
+                        HttpStatus.SERVICE_UNAVAILABLE,
+                        "AI engine unreachable: " + retry.getMessage(),
+                        retry);
+            }
         }
 
         int status = response.statusCode();
@@ -176,13 +178,35 @@ public class AiEngineClient {
 
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return sendOnce(request, HttpResponse.BodyHandlers.ofString());
+        } catch (ConnectException e) {
+            // Stale pooled connection (engine restarted, server-side eviction, etc.) — the request
+            // never made it onto the wire so retrying once is side-effect-free and almost always
+            // succeeds with a fresh connection.
+            log.debug("Engine connect failed, retrying once: {}", e.getMessage());
+            try {
+                return sendOnce(request, HttpResponse.BodyHandlers.ofString());
+            } catch (ConnectException retry) {
+                throw new ResponseStatusException(
+                        HttpStatus.SERVICE_UNAVAILABLE,
+                        "AI engine unreachable: " + retry.getMessage(),
+                        retry);
+            }
+        }
+    }
+
+    private <T> HttpResponse<T> sendOnce(
+            HttpRequest request, HttpResponse.BodyHandler<T> bodyHandler)
+            throws IOException, ConnectException {
+        try {
+            return httpClient.send(request, bodyHandler);
         } catch (HttpTimeoutException e) {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
+        } catch (ConnectException e) {
+            throw e;
         } catch (IOException e) {
-            // Connection refused, DNS failure, socket reset, etc. — surface as
-            // SERVICE_UNAVAILABLE so every caller of this client sees a structured
-            // status rather than a raw 500 from an unhandled IOException.
+            // Socket reset, malformed response, etc. — surface as SERVICE_UNAVAILABLE so every
+            // caller of this client sees a structured status rather than a raw 500.
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {

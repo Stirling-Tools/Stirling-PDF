@@ -251,6 +251,71 @@ class TestReason:
         assert all(event.total == 3 for event in emitted)
 
     @pytest.mark.anyio
+    async def test_worker_retries_once_on_timeout(self, runtime: AppRuntime) -> None:
+        """A worker whose first attempt hangs is retried; a successful retry
+        keeps the slice in the result set. This is the mitigation for
+        transport-layer stalls in the upstream model SDK."""
+        import asyncio
+
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=10, worker_timeout_seconds=0.05)
+        pages = [_page(1, "x" * 8)]
+
+        recovered_notes = ChunkNotes(pages=[1], summary="recovered on retry")
+        attempts = 0
+
+        async def _hang_then_succeed(*_args: object, **_kwargs: object) -> _StubAgentResult[ChunkNotes]:
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                await asyncio.sleep(10)
+            return _StubAgentResult(output=recovered_notes)
+
+        canned_answer = _Answer(answer="ok")
+
+        with (
+            patch.object(reasoner._worker, "run", AsyncMock(side_effect=_hang_then_succeed)),
+            patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
+        ):
+            result = await reasoner.reason(
+                pages=pages,
+                question="anything",
+                answer_prompt="answer",
+                answer_type=_Answer,
+            )
+
+        assert result == canned_answer
+        assert attempts == 2
+        synth_args = synth_mock.await_args
+        assert synth_args is not None
+        assert synth_args.args[1] == [recovered_notes]
+
+    @pytest.mark.anyio
+    async def test_worker_gives_up_after_two_timeouts(self, runtime: AppRuntime) -> None:
+        """Both attempts timing out propagates the failure and drops the slice."""
+        import asyncio
+
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=10, worker_timeout_seconds=0.05)
+        pages = [_page(1, "x" * 8), _page(2, "y" * 8)]
+
+        async def _hang_forever(*_args: object, **_kwargs: object) -> _StubAgentResult[ChunkNotes]:
+            await asyncio.sleep(10)
+            return _StubAgentResult(output=ChunkNotes(pages=[0], summary="never"))
+
+        with (
+            patch.object(reasoner._worker, "run", AsyncMock(side_effect=_hang_forever)),
+            patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
+            pytest.raises(RuntimeError, match="no notes"),
+        ):
+            await reasoner.reason(
+                pages=pages,
+                question="anything",
+                answer_prompt="answer",
+                answer_type=_Answer,
+            )
+
+        synth_mock.assert_not_awaited()
+
+    @pytest.mark.anyio
     async def test_worker_timeout_drops_stalled_slices(self, runtime: AppRuntime) -> None:
         """A worker that exceeds ``worker_timeout_seconds`` is abandoned, not awaited.
 
