@@ -14,7 +14,25 @@ import type { Page, Route } from "@playwright/test";
  * patterns.
  */
 
-const ALL_TOOL_IDS = [
+/**
+ * URL-path slugs for backend endpoints under `/api/v1/`. Used only to seed
+ * the stub responses for `endpoints-availability` and `endpoints-enabled`
+ * so the React app sees a populated map at startup.
+ *
+ * NOTE: this is *not* the frontend tool-registry IDs and several entries
+ * here have already drifted from the real registry endpoints (e.g. `merge`
+ * vs `merge-pdfs`, `compress` vs `compress-pdf`, `ocr` vs `ocr-pdf`).
+ * Tests still pass because the frontend's `useEndpointConfig` defaults
+ * absent keys to `enabled: true`, so a wrong key is functionally the same
+ * as a missing key — every endpoint reports enabled either way.
+ *
+ * TODO: derive this from `getAllApplicationEndpoints(registry, …)` instead
+ * of hand-maintaining it. That requires extracting endpoint metadata out of
+ * `useTranslatedToolRegistry` (currently a React hook with deep i18n + tool
+ * component imports — can't be called from Node-side Playwright setup) into
+ * a pure-data module both the hook and this helper can import.
+ */
+const ALL_BACKEND_ENDPOINTS = [
   "pdf-to-img",
   "img-to-pdf",
   "pdf-to-word",
@@ -73,10 +91,28 @@ const ALL_TOOL_IDS = [
   "remove-blanks",
   "remove-annotations",
   "remove-image",
+  "extract-pages",
+  "reorganize-pages",
+  "extract-images",
+  "add-stamp",
+  "add-attachments",
+  "change-metadata",
+  "overlay-pdfs",
+  "get-pdf-info",
+  "validate-signature",
+  "timestamp-pdf",
+  "replace-color",
+  "show-j-s",
+  "booklet-imposition",
+  "pdf-text-editor",
+  "form-fill",
+  "multi-tool",
+  "read",
+  "automate",
 ];
 
 const DEFAULT_ENDPOINTS_AVAILABILITY = Object.fromEntries(
-  ALL_TOOL_IDS.map((k) => [k, { enabled: true }]),
+  ALL_BACKEND_ENDPOINTS.map((k) => [k, { enabled: true }]),
 );
 
 export interface MockAppApiOptions {

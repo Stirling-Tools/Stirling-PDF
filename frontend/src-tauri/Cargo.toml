@@ -24,13 +24,13 @@ tauri-build = { version = "2.5.3", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.10.1", features = [ "devtools"] }
+tauri = { version = "2.10.3", features = [ "devtools"] }
 tauri-plugin-log = "2.8.0"
 tauri-plugin-shell = "2.3.4"
-tauri-plugin-fs = "2.4.5"
-tauri-plugin-dialog = "2.4.2"
-tauri-plugin-http = { version = "2.5.6", features = ["dangerous-settings"] }
-tauri-plugin-single-instance = { version = "2.3.7", features = ["deep-link"] }
+tauri-plugin-fs = "2.5.0"
+tauri-plugin-dialog = "2.7.0"
+tauri-plugin-http = { version = "2.5.8", features = ["dangerous-settings"] }
+tauri-plugin-single-instance = { version = "2.4.1", features = ["deep-link"] }
 tauri-plugin-store = "2.4.2"
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-deep-link = "2.4.6"
@@ -42,7 +42,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 tiny_http = "0.12"
 url = "2.5"
 urlencoding = "2.1"
-sha2 = "0.10"
+sha2 = "0.11"
 base64 = "0.22"
 rand = "0.9"
 
@@ -55,7 +55,7 @@ objc2-foundation = { version = "0.3.2", features = ["NSObject", "NSString", "NSU
 objc2-pdf-kit = { version = "0.3.2", features = ["PDFDocument", "objc2-app-kit"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.58", features = [
+windows = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_System_Com",
     "Win32_UI_Shell",

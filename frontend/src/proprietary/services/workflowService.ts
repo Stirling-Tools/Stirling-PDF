@@ -6,7 +6,10 @@ export interface ParticipantResponse {
   email: string;
   name: string;
   status: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
-  shareToken: string;
+  // Null for participant-facing endpoints (`/api/v1/workflow/participant/...`); the owner-facing
+  // `/api/v1/security/cert-sign/sessions/...` endpoints still populate it for share-link
+  // distribution. Never used to look up other participants — see GHSA-qgg6-mxw4-xg62.
+  shareToken: string | null;
   accessRole: "EDITOR" | "COMMENTER" | "VIEWER";
   expiresAt?: string;
   lastUpdated: string;
