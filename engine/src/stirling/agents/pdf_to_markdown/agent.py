@@ -324,18 +324,17 @@ def _merge_orphaned_table_rows(markdown: str) -> str:
             segments.append(("prose", block))
 
     result: list[tuple[str, list[str]]] = []
+    last_table_idx: int | None = None
     for seg_type, seg_lines in segments:
         if seg_type == "orphan":
-            last_table = next(
-                (j for j in range(len(result) - 1, -1, -1) if result[j][0] == "table"),
-                None,
-            )
-            if last_table is not None:
-                result = result[: last_table + 1]
+            if last_table_idx is not None:
+                result = result[: last_table_idx + 1]
                 result[-1] = ("table", result[-1][1] + seg_lines)
             else:
                 result.append((seg_type, seg_lines))
         else:
+            if seg_type == "table":
+                last_table_idx = len(result)
             result.append((seg_type, seg_lines))
 
     return "\n".join(line for _, seg_lines in result for line in seg_lines)
