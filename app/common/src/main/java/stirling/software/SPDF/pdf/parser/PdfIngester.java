@@ -28,7 +28,11 @@ public class PdfIngester {
     private final TableParser tableParser;
 
     public List<ParsedPage> parse(PDDocument document) throws IOException {
-        int pageCount = document.getNumberOfPages();
+        return parse(document, document.getNumberOfPages());
+    }
+
+    public List<ParsedPage> parse(PDDocument document, int maxPages) throws IOException {
+        int pageCount = Math.min(document.getNumberOfPages(), maxPages);
         List<ParsedPage> pages = new ArrayList<>(pageCount);
         long fragmentsMs = 0;
         long tablesMs = 0;

@@ -215,10 +215,9 @@ public class PdfContentExtractor {
     }
 
     private PageLayoutFileResult extractPageLayout(LoadedFile lf, int maxPages) throws IOException {
-        List<ParsedPage> parsedPages = pdfIngester.parse(lf.document());
+        List<ParsedPage> parsedPages = pdfIngester.parse(lf.document(), maxPages);
         List<LayoutPage> pages = new ArrayList<>();
         for (ParsedPage pp : parsedPages) {
-            if (pages.size() >= maxPages) break;
             if (pp.layoutLines().isEmpty()) continue;
             List<LayoutLine> lines = new ArrayList<>();
             for (RawLine rawLine : pp.layoutLines()) {
