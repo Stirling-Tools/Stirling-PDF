@@ -160,3 +160,58 @@ jobs:
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+  test-build-unoserver-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build docker/unoserver/Dockerfile
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          cache-from: type=gha,scope=stirling-unoserver
+          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Smoke test the built image
+        run: |
+          set -eu
+          docker run -d --name unoserver-smoke \
+            -e UNOSERVER_RECYCLE_INTERVAL_SECONDS=0 \
+            stirling-unoserver:pr-test
+          deadline=$((SECONDS + 60))
+          while [ $SECONDS -lt $deadline ]; do
+            status=$(docker inspect -f '{{.State.Health.Status}}' unoserver-smoke 2>/dev/null || echo "starting")
+            if [ "$status" = "healthy" ]; then
+              echo "unoserver became healthy"
+              docker logs unoserver-smoke | tail -30
+              docker rm -f unoserver-smoke
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "unoserver did not become healthy in time"
+          docker logs unoserver-smoke || true
+          docker rm -f unoserver-smoke || true
+          exit 1
