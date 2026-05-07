@@ -1,18 +1,28 @@
 package stirling.software.common.aop;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -21,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 
@@ -32,6 +43,11 @@ import stirling.software.common.service.JobExecutorService;
 public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private static final ConcurrentHashMap<Method, Boolean> STREAMING_RETURN_CACHE =
+            new ConcurrentHashMap<>();
 
     private final JobExecutorService jobExecutorService;
     private final HttpServletRequest request;
@@ -68,48 +84,56 @@ public class AutoJobAspect {
         int resourceWeight = Math.max(1, Math.min(100, autoJobPostMapping.resourceWeight()));
 
         // Integrate with the JobExecutorService
+        Object result;
         if (retryCount <= 1) {
             // No retries needed, simple execution
-            return jobExecutorService.runJobGeneric(
-                    async,
-                    wrapWithMDC(
-                            () -> {
-                                try {
-                                    // Note: Progress tracking is handled in
-                                    // TaskManager/JobExecutorService
-                                    // The trackProgress flag controls whether detailed progress is
-                                    // stored
-                                    // for REST API queries, not WebSocket notifications
-                                    return joinPoint.proceed(args);
-                                } catch (Throwable ex) {
-                                    log.error(
-                                            "AutoJobAspect caught exception during job execution: {}",
-                                            ex.getMessage(),
-                                            ex);
-                                    // Rethrow RuntimeException as-is to preserve exception type
-                                    if (ex instanceof RuntimeException) {
-                                        throw (RuntimeException) ex;
-                                    }
-                                    // Wrap checked exceptions - GlobalExceptionHandler will unwrap
-                                    // BaseAppException
-                                    throw new RuntimeException(ex);
-                                }
-                            }),
-                    timeout,
-                    queueable,
-                    resourceWeight);
+            result =
+                    jobExecutorService.runJobGeneric(
+                            async,
+                            wrapWithMDC(
+                                    () -> {
+                                        try {
+                                            // Note: Progress tracking is handled in
+                                            // TaskManager/JobExecutorService
+                                            // The trackProgress flag controls whether detailed
+                                            // progress is
+                                            // stored
+                                            // for REST API queries, not WebSocket notifications
+                                            return joinPoint.proceed(args);
+                                        } catch (Throwable ex) {
+                                            log.error(
+                                                    "AutoJobAspect caught exception during job execution: {}",
+                                                    ex.getMessage(),
+                                                    ex);
+                                            // Rethrow RuntimeException as-is to preserve exception
+                                            // type
+                                            if (ex instanceof RuntimeException) {
+                                                throw (RuntimeException) ex;
+                                            }
+                                            // Wrap checked exceptions - GlobalExceptionHandler will
+                                            // unwrap
+                                            // BaseAppException
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }),
+                            timeout,
+                            queueable,
+                            resourceWeight);
         } else {
             // Use retry logic
-            return executeWithRetries(
-                    joinPoint,
-                    args,
-                    async,
-                    timeout,
-                    retryCount,
-                    trackProgress,
-                    queueable,
-                    resourceWeight);
+            result =
+                    executeWithRetries(
+                            joinPoint,
+                            args,
+                            async,
+                            timeout,
+                            retryCount,
+                            trackProgress,
+                            queueable,
+                            resourceWeight);
         }
+
+        return adaptAsyncJobResponseForStreamingBody(result, joinPoint, async);
     }
 
     private Object executeWithRetries(
@@ -297,6 +321,53 @@ public class AutoJobAspect {
             log.debug("Could not retrieve job ID from context: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * When async=true, JobExecutorService returns a ResponseEntity<JobResponse<?>>. If the
+     * controller declares ResponseEntity<StreamingResponseBody>, Spring's
+     * StreamingResponseBodyReturnValueHandler rejects the JobResponse body with
+     * "StreamingResponseBody expected: ...JobResponse". Wrap the JobResponse JSON in a
+     * StreamingResponseBody so the strict handler is satisfied without widening every controller
+     * signature.
+     */
+    private Object adaptAsyncJobResponseForStreamingBody(
+            Object result, ProceedingJoinPoint joinPoint, boolean async) {
+        if (!async
+                || !(result instanceof ResponseEntity<?> re)
+                || !(re.getBody() instanceof JobResponse<?>)
+                || !(joinPoint.getSignature() instanceof MethodSignature methodSignature)
+                || !hasStreamingResponseBodyReturn(methodSignature.getMethod())) {
+            return result;
+        }
+        try {
+            byte[] json = OBJECT_MAPPER.writeValueAsBytes(re.getBody());
+            StreamingResponseBody body = out -> out.write(json);
+            return ResponseEntity.status(re.getStatusCode())
+                    .headers(re.getHeaders())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentLength(json.length)
+                    .body(body);
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to wrap async JobResponse as StreamingResponseBody: {}",
+                    e.getMessage());
+            return result;
+        }
+    }
+
+    private static boolean hasStreamingResponseBodyReturn(Method method) {
+        return STREAMING_RETURN_CACHE.computeIfAbsent(
+                method,
+                m -> {
+                    Type t = m.getGenericReturnType();
+                    if (!(t instanceof ParameterizedType pt)
+                            || pt.getRawType() != ResponseEntity.class) {
+                        return false;
+                    }
+                    Type[] args = pt.getActualTypeArguments();
+                    return args.length == 1 && args[0] == StreamingResponseBody.class;
+                });
     }
 
     /**

@@ -4,6 +4,10 @@ export interface ProcessingProgress {
   current: number;
   total: number;
   currentFileName?: string;
+  /** Percent reported by an async backend job (0-100). */
+  percent?: number;
+  /** Human-readable status from the backend (e.g. "OCR page 5 of 12"). */
+  message?: string;
 }
 
 export interface OperationState {

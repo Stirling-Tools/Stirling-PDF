@@ -46,6 +46,7 @@ export const compressOperationConfig = {
   operationType: "compress",
   endpoint: "/api/v1/misc/compress-pdf",
   defaultParameters,
+  async: true,
 } as const;
 
 export const useCompressOperation = () => {

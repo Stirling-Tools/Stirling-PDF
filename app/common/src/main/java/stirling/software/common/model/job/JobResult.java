@@ -41,6 +41,9 @@ public class JobResult {
     /** The actual result object, if not a file */
     private Object result;
 
+    /** Live progress for a running job. Null until the first update is reported. */
+    private volatile JobProgress progress;
+
     /**
      * Notes attached to this job for tracking purposes. Uses CopyOnWriteArrayList for thread safety
      * when notes are added concurrently.

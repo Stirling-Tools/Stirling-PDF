@@ -26,6 +26,7 @@ export const repairOperationConfig = {
   operationType: "repair",
   endpoint: "/api/v1/misc/repair",
   defaultParameters,
+  async: true,
 } as const;
 
 export const useRepairOperation = () => {

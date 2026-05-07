@@ -21,6 +21,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -37,6 +38,7 @@ public class RepairController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
+    private final JobProgressService jobProgressService;
 
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
@@ -61,6 +63,7 @@ public class RepairController {
         TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf")) {
 
+            jobProgressService.report(1, "Loading PDF");
             // Save the uploaded file to the temporary location
             inputFile.transferTo(tempInputFile.getFile());
 
@@ -69,6 +72,7 @@ public class RepairController {
             // Try Ghostscript first if available
             if (isGhostscriptEnabled()) {
                 try {
+                    jobProgressService.report(30, "Running Ghostscript repair");
                     List<String> gsCommand = new ArrayList<>();
                     gsCommand.add("gs");
                     gsCommand.add("-o");
@@ -91,6 +95,7 @@ public class RepairController {
 
             // Fallback to QPDF if Ghostscript failed or not available
             if (!repairSuccess && isQpdfEnabled()) {
+                jobProgressService.report(60, "Running QPDF repair");
                 List<String> qpdfCommand = new ArrayList<>();
                 qpdfCommand.add("qpdf");
                 qpdfCommand.add("--replace-input"); // Automatically fixes problems it can
@@ -109,6 +114,7 @@ public class RepairController {
             // Use PDFBox as last resort if no external tools are available
             if (!repairSuccess) {
                 if (!isGhostscriptEnabled() && !isQpdfEnabled()) {
+                    jobProgressService.report(60, "Running PDFBox repair");
                     // Basic PDFBox repair - load and save to fix structural issues
                     try (var document = pdfDocumentFactory.load(tempInputFile.getFile())) {
                         document.save(tempOutputFile.getFile());

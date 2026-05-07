@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -40,6 +42,7 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -54,11 +57,21 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class OCRController {
 
+    // OCRmyPDF verbose output progress patterns.
+    // tqdm-style bar: "  7%|█         | 2/27 [...]"
+    private static final Pattern OCRMYPDF_TQDM_PATTERN = Pattern.compile("^\\s*(\\d{1,3})%\\|");
+    // Textual "X/Y" near the word "page" — seen across OCRmyPDF versions.
+    private static final Pattern OCRMYPDF_PAGE_PATTERN =
+            Pattern.compile(
+                    "(?i)(?:page\\s+(\\d+)\\s*(?:/|of)\\s*(\\d+))"
+                            + "|(?:\\b(\\d+)\\s*/\\s*(\\d+)\\b.*page)");
+
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
     private final RuntimePathConfig runtimePathConfig;
+    private final JobProgressService jobProgressService;
 
     private boolean isOcrMyPdfEnabled() {
         return endpointConfiguration.isGroupEnabled("OCRmyPDF");
@@ -131,8 +144,11 @@ public class OCRController {
 
             inputFile.transferTo(tempInputFile.getFile());
 
+            jobProgressService.report(1, "Starting OCR");
+
             // Use OCRmyPDF if available (no fallback - error if it fails)
             if (isOcrMyPdfEnabled()) {
+                jobProgressService.report(5, "Running OCRmyPDF");
                 processWithOcrMyPdf(
                         selectedLanguages,
                         sidecar,
@@ -149,6 +165,7 @@ public class OCRController {
             }
             // Use Tesseract only if OCRmyPDF is not available
             else if (isTesseractEnabled()) {
+                jobProgressService.report(5, "Running Tesseract");
                 processWithTesseract(
                         selectedLanguages,
                         ocrType,
@@ -215,6 +232,44 @@ public class OCRController {
         }
     }
 
+    private void reportOcrMyPdfProgress(String line) {
+        if (line == null || line.isBlank()) {
+            return;
+        }
+        Matcher tqdm = OCRMYPDF_TQDM_PATTERN.matcher(line);
+        if (tqdm.find()) {
+            try {
+                int percent = Integer.parseInt(tqdm.group(1));
+                // Reserve the bar for the subprocess; don't let it hit 100 until the post-merge
+                // work runs.
+                jobProgressService.report(Math.min(95, Math.max(5, percent)), "Running OCRmyPDF");
+                return;
+            } catch (NumberFormatException ignored) {
+                // fall through to page pattern
+            }
+        }
+        Matcher page = OCRMYPDF_PAGE_PATTERN.matcher(line);
+        if (page.find()) {
+            try {
+                int current;
+                int total;
+                if (page.group(1) != null) {
+                    current = Integer.parseInt(page.group(1));
+                    total = Integer.parseInt(page.group(2));
+                } else {
+                    current = Integer.parseInt(page.group(3));
+                    total = Integer.parseInt(page.group(4));
+                }
+                if (total > 0 && current <= total) {
+                    jobProgressService.report(
+                            current, total, "OCR page " + current + " of " + total);
+                }
+            } catch (NumberFormatException ignored) {
+                // ignore malformed numbers
+            }
+        }
+    }
+
     private void processWithOcrMyPdf(
             List<String> selectedLanguages,
             Boolean sidecar,
@@ -275,10 +330,12 @@ public class OCRController {
                         tempInputFile.toString(),
                         tempOutputFile.toString()));
 
-        // Run CLI command
+        // Run CLI command. Parse OCRmyPDF's verbose stderr for progress so the UI updates
+        // mid-run instead of jumping from "starting" to "done" on large files.
+        java.util.function.Consumer<String> progressCallback = this::reportOcrMyPdfProgress;
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
-                        .runCommandWithOutputHandling(command);
+                        .runCommandWithOutputHandling(command, null, progressCallback);
 
         if (result.getRc() != 0
                 && result.getMessages().contains("multiprocessing/synchronize.py")
@@ -287,7 +344,7 @@ public class OCRController {
             command.add("1");
             result =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
-                            .runCommandWithOutputHandling(command);
+                            .runCommandWithOutputHandling(command, null, progressCallback);
         }
 
         if (result.getRc() != 0) {
@@ -342,6 +399,10 @@ public class OCRController {
                 int pageCount = document.getNumberOfPages();
 
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
+                    jobProgressService.report(
+                            pageNum + 1,
+                            pageCount,
+                            "OCR page " + (pageNum + 1) + " of " + pageCount);
                     PDPage page = document.getPage(pageNum);
                     boolean hasText;
 
@@ -441,6 +502,7 @@ public class OCRController {
             }
 
             // Merge all pages into final PDF
+            jobProgressService.report(99, "Merging pages");
             merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
 
             // Copy final output to the expected location

@@ -50,6 +50,7 @@ import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.JobProgressService;
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -67,6 +68,7 @@ public class CompressController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
+    private final JobProgressService jobProgressService;
 
     @Autowired(required = false)
     private LineArtConversionService lineArtConversionService;
@@ -970,12 +972,14 @@ public class CompressController {
         Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
 
         try {
+            jobProgressService.report(2, "Preparing compression");
             if (autoMode) {
                 double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
                 optimizeLevel = determineOptimizeLevel(sizeReductionRatio);
             }
 
             if (Boolean.TRUE.equals(convertToLineArt)) {
+                jobProgressService.report(10, "Converting to line art");
                 if (lineArtConversionService == null) {
                     throw new ResponseStatusException(
                             HttpStatus.FORBIDDEN,
@@ -1004,6 +1008,7 @@ public class CompressController {
 
                 if (isGhostscriptEnabled() && optimizeLevel >= 6) {
                     try {
+                        jobProgressService.report(30, "Running Ghostscript compression");
                         applyGhostscriptCompression(request, optimizeLevel, currentFile);
                         log.info("Ghostscript compression applied successfully");
                         ghostscriptSuccess = true;
@@ -1021,6 +1026,7 @@ public class CompressController {
                 // Always apply QPDF when enabled to recompress/optimize structure
                 if (isQpdfEnabled()) {
                     try {
+                        jobProgressService.report(60, "Running QPDF compression");
                         applyQpdfCompression(request, optimizeLevel, currentFile);
                         log.info("QPDF compression applied successfully");
                     } catch (IOException e) {
@@ -1049,6 +1055,7 @@ public class CompressController {
                             "Applying image compression with scale factor: {} and JPEG quality: {}",
                             scaleFactor,
                             jpegQuality);
+                    jobProgressService.report(80, "Compressing images");
                     TempFile compressedImageFile =
                             compressImagesInPDF(
                                     currentFile,
@@ -1100,6 +1107,7 @@ public class CompressController {
                             inputFile.getOriginalFilename(), "_Optimized.pdf");
 
             try {
+                jobProgressService.report(95, "Finalizing");
                 try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {
                     return WebResponseUtils.pdfDocToWebResponse(
                             document, outputFilename, tempFileManager);
