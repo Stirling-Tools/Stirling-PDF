@@ -1806,7 +1806,11 @@ title = "스마트 이름 변경"
 [automate]
 copyToSaved = "저장됨으로 복사"
 desc = "PDF 작업을 연결해 다단계 워크플로를 구성하세요. 반복 작업에 적합합니다."
+export = "Export"
 exportForFolderScanning = "폴더 스캔용으로 내보내기"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "잘못된 단계"
 reviewTitle = "자동화 결과"
 title = "자동화"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} 구성"
 [automate.creation]
 createTitle = "자동화 만들기"
 editTitle = "자동화 편집"
+export = "Export"
 exportForFolderScanning = "폴더 스캔용으로 내보내기"
 intro = "자동화는 도구를 순차적으로 실행합니다. 시작하려면 실행 순서대로 도구를 추가하세요."
 save = "자동화 저장"
@@ -1852,8 +1857,27 @@ confirm = "돌아가기"
 message = "저장되지 않은 변경 사항이 있습니다. 돌아가시겠습니까? 모든 변경 사항이 사라집니다."
 title = "저장되지 않은 변경 사항"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "이 자동화로 처리할 파일을 선택하세요"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "자동화 실행"
@@ -4203,6 +4227,11 @@ desc = "PDF 문서의 여러 페이지를 하나의 페이지로 병합"
 tags = "레이아웃,배치,결합"
 title = "다중 페이지 레이아웃"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "원하는 순서로 페이지 제거/재배치"
 tags = "정리,재배치,순서변경"
@@ -5278,6 +5307,24 @@ selectMonthly = "월간 선택"
 selectYearly = "연간 선택"
 title = "청구 주기 선택"
 totalForSeats = "합계({{count}} 좌석)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF 페이지 정리"

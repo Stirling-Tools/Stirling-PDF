@@ -1806,7 +1806,11 @@ title = "智慧重新命名"
 [automate]
 copyToSaved = "複製到已儲存"
 desc = "透過串接多個 PDF 操作來建立多步驟工作流程。非常適合重複性工作。"
+export = "Export"
 exportForFolderScanning = "匯出供資料夾掃描"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "無效的步驟"
 reviewTitle = "自動化結果"
 title = "自動化"
@@ -1822,6 +1826,7 @@ title = "設定 {{toolName}}"
 [automate.creation]
 createTitle = "建立自動化"
 editTitle = "編輯自動化"
+export = "Export"
 exportForFolderScanning = "匯出供資料夾掃描"
 intro = "自動化會依序執行工具。開始之前，請按您希望的順序加入工具。"
 save = "儲存自動化"
@@ -1852,8 +1857,27 @@ confirm = "返回"
 message = "您有未儲存的變更。確定要返回嗎？所有變更都將遺失。"
 title = "未儲存的變更"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "選取要由此自動化流程處理的檔案"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "執行自動化"
@@ -4203,6 +4227,11 @@ desc = "將 PDF 檔案的多個頁面合併到單一頁面"
 tags = "版面,排列,組合,layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "多頁版面配置"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "以任何順序移除/重新排列頁面"
 tags = "整理,重新排列,重新排序,organize,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,page organiser,resequence"
@@ -5278,6 +5307,24 @@ selectMonthly = "選擇月繳"
 selectYearly = "選擇年繳"
 title = "選擇您的計費週期"
 totalForSeats = "總計（{{count}} 席）"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF 頁面整理"

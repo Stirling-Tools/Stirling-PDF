@@ -1806,7 +1806,11 @@ title = "Inteligentné premenovanie"
 [automate]
 copyToSaved = "Skopírovať do Uložených"
 desc = "Vytvárajte viacstupňové pracovné postupy spájaním akcií s PDF. Ideálne pre opakujúce sa úlohy."
+export = "Export"
 exportForFolderScanning = "Exportovať pre skenovanie priečinka"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Neplatný krok"
 reviewTitle = "Výsledky automatizácie"
 title = "Automatizácia"
@@ -1822,6 +1826,7 @@ title = "Nakonfigurujte {{toolName}}"
 [automate.creation]
 createTitle = "Vytvoriť automatizáciu"
 editTitle = "Upraviť automatizáciu"
+export = "Export"
 exportForFolderScanning = "Exportovať pre skenovanie priečinka"
 intro = "Automatizácie spúšťajú nástroje postupne. Začnite pridaním nástrojov v poradí, v akom ich chcete spúšťať."
 save = "Uložiť automatizáciu"
@@ -1852,8 +1857,27 @@ confirm = "Vrátiť sa späť"
 message = "Máte neuložené zmeny. Naozaj sa chcete vrátiť? Všetky zmeny sa stratia."
 title = "Neuložené zmeny"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Vyberte súbory na spracovanie touto automatizáciou"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Spustiť automatizáciu"
@@ -4203,6 +4227,11 @@ desc = "Zlúčte viacero stránok PDF dokumentu do jednej stránky"
 tags = "rozloženie,usporiadať,skombinovať"
 title = "Viacstranové usporiadanie"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Odstráňte/preusporiadajte stránky v ľubovoľnom poradí"
 tags = "organizovať,preusporiadať,premenovať"
@@ -5278,6 +5307,24 @@ selectMonthly = "Vybrať mesačne"
 selectYearly = "Vybrať ročne"
 title = "Vyberte fakturačné obdobie"
 totalForSeats = "Spolu ({{count}} miest)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Organizátor stránok PDF"

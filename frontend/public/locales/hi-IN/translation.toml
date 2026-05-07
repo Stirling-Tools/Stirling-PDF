@@ -1806,7 +1806,11 @@ title = "स्मार्ट नामकरण"
 [automate]
 copyToSaved = "सहेजे गए में कॉपी करें"
 desc = "PDF कार्रवाइयों को जोड़कर बहु-चरण वर्कफ़्लो बनाएं। आवर्ती कार्यों के लिए आदर्श।"
+export = "Export"
 exportForFolderScanning = "फ़ोल्डर स्कैनिंग के लिए निर्यात करें"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "अमान्य चरण"
 reviewTitle = "स्वचालन परिणाम"
 title = "स्वचालन"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} कॉन्फ़िगर करें"
 [automate.creation]
 createTitle = "स्वचालन बनाएँ"
 editTitle = "स्वचालन संपादित करें"
+export = "Export"
 exportForFolderScanning = "फ़ोल्डर स्कैनिंग के लिए निर्यात करें"
 intro = "स्वचालन टूल्स को क्रमवार चलाते हैं। शुरू करने के लिए, टूल्स उसी क्रम में जोड़ें जिसमें आप उन्हें चलाना चाहते हैं।"
 save = "स्वचालन सहेजें"
@@ -1852,8 +1857,27 @@ confirm = "वापस जाएँ"
 message = "आपके कुछ बदलाव सहेजे नहीं गए हैं। क्या आप वाकई वापस जाना चाहते हैं? सभी बदलाव खो जाएंगे।"
 title = "असहेजे बदलाव"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "इस स्वचालन के साथ प्रोसेस करने के लिए फ़ाइलें चुनें"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "स्वचालन चलाएँ"
@@ -4203,6 +4227,11 @@ desc = "PDF दस्तावेज के कई पृष्ठों को 
 tags = "लेआउट,व्यवस्थित करें,मिलाएँ"
 title = "मल्टी-पेज लेआउट"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "किसी भी क्रम में पृष्ठ निकालें/पुनर्व्यवस्थित करें"
 tags = "संगठित करें,पुनर्व्यवस्थित करें,क्रम बदलें"
@@ -5278,6 +5307,24 @@ selectMonthly = "मासिक चुनें"
 selectYearly = "वार्षिक चुनें"
 title = "अपनी बिलिंग अवधि चुनें"
 totalForSeats = "कुल ({{count}} सीटें)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF पृष्ठ व्यवस्थापक"

@@ -1806,7 +1806,11 @@ title = "Đổi tên thông minh"
 [automate]
 copyToSaved = "Sao chép vào Đã lưu"
 desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các thao tác PDF. Lý tưởng cho tác vụ lặp lại."
+export = "Export"
 exportForFolderScanning = "Xuất cho quét thư mục"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Bước không hợp lệ"
 reviewTitle = "Kết quả tự động hóa"
 title = "Tự động hóa"
@@ -1822,6 +1826,7 @@ title = "Cấu hình {{toolName}}"
 [automate.creation]
 createTitle = "Tạo tự động hóa"
 editTitle = "Chỉnh sửa tự động hóa"
+export = "Export"
 exportForFolderScanning = "Xuất cho quét thư mục"
 intro = "Tự động hóa chạy các công cụ tuần tự. Để bắt đầu, hãy thêm công cụ theo thứ tự bạn muốn chạy."
 save = "Lưu tự động hóa"
@@ -1852,8 +1857,27 @@ confirm = "Quay lại"
 message = "Bạn có thay đổi chưa lưu. Bạn có chắc muốn quay lại? Mọi thay đổi sẽ bị mất."
 title = "Thay đổi chưa lưu"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Chọn tệp để xử lý với tự động hóa này"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Chạy tự động hóa"
@@ -4203,6 +4227,11 @@ desc = "Ghép nhiều trang của tài liệu PDF thành một trang duy nhất"
 tags = "bố cục,sắp xếp,kết hợp"
 title = "Bố cục nhiều trang"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Xóa/Sắp xếp lại trang theo bất kỳ thứ tự nào"
 tags = "tổ chức,sắp xếp lại,đổi thứ tự"
@@ -5278,6 +5307,24 @@ selectMonthly = "Chọn theo tháng"
 selectYearly = "Chọn theo năm"
 title = "Chọn chu kỳ thanh toán"
 totalForSeats = "Tổng ({{count}} ghế)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Sắp xếp trang PDF"

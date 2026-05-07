@@ -1806,7 +1806,11 @@ title = "Athainmniú Cliste"
 [automate]
 copyToSaved = "Cóipeáil chuig Sábháilte"
 desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a shlabhrú le chéile. Foirfe do thascanna athfhillteacha."
+export = "Export"
 exportForFolderScanning = "Easpórtáil le haghaidh Scanadh Fillteáin"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Céim neamhbhailí"
 reviewTitle = "Torthaí an Uathoibrithe"
 title = "Uathoibriú"
@@ -1822,6 +1826,7 @@ title = "Cumraigh {{toolName}}"
 [automate.creation]
 createTitle = "Cruthaigh Uathoibriú"
 editTitle = "Cuir Uathoibriú in Eagar"
+export = "Export"
 exportForFolderScanning = "Easpórtáil le haghaidh Scanadh Fillteáin"
 intro = "Ritheann uathoibrithe uirlisí as a chéile. Chun tosú, cuir uirlisí leis san ord ina bhfuil tú ag iarraidh iad a rith."
 save = "Sábháil an tUathoibriú"
@@ -1852,8 +1857,27 @@ confirm = "Téigh Ar Ais"
 message = "Tá athruithe gan sábháil agat. An bhfuil tú cinnte gur mhaith leat dul ar ais? Caillefar na hathruithe go léir."
 title = "Athruithe Gan Sábháil"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Roghnaigh comhaid le próiseáil leis an uathoibriú seo"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Rith an tUathoibriú"
@@ -4203,6 +4227,11 @@ desc = "Cumaisc leathanaigh iolracha de dhoiciméad PDF isteach i leathanach amh
 tags = "leagan amach,socrú,cumaisc"
 title = "Leagan Amach Illeathanaigh"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Bain/Atheagraigh na leathanaigh in ord ar bith"
 tags = "eagraigh,athshocraigh,athordaigh"
@@ -5278,6 +5307,24 @@ selectMonthly = "Roghnaigh Míosúil"
 selectYearly = "Roghnaigh Bliantúil"
 title = "Roghnaigh Do Thréimhse Billeála"
 totalForSeats = "Iomlán ({{count}} suíochán)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Eagraí leathanach PDF"

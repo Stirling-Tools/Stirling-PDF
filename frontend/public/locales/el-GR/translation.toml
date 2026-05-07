@@ -1806,7 +1806,11 @@ title = "Έξυπνη μετονομασία"
 [automate]
 copyToSaved = "Αντιγραφή στα Αποθηκευμένα"
 desc = "Δημιουργήστε ροές εργασίας πολλών βημάτων συνδέοντας ενέργειες PDF. Ιδανικό για επαναλαμβανόμενες εργασίες."
+export = "Export"
 exportForFolderScanning = "Εξαγωγή για σάρωση φακέλων"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Μη έγκυρο βήμα"
 reviewTitle = "Αποτελέσματα αυτοματοποίησης"
 title = "Αυτοματοποίηση"
@@ -1822,6 +1826,7 @@ title = "Ρύθμιση {{toolName}}"
 [automate.creation]
 createTitle = "Δημιουργία αυτοματοποίησης"
 editTitle = "Επεξεργασία αυτοματοποίησης"
+export = "Export"
 exportForFolderScanning = "Εξαγωγή για σάρωση φακέλων"
 intro = "Οι αυτοματισμοί εκτελούν εργαλεία διαδοχικά. Για να ξεκινήσετε, προσθέστε εργαλεία με τη σειρά που θέλετε να εκτελεστούν."
 save = "Αποθήκευση αυτοματοποίησης"
@@ -1852,8 +1857,27 @@ confirm = "Επιστροφή"
 message = "Έχετε μη αποθηκευμένες αλλαγές. Είστε βέβαιοι ότι θέλετε να επιστρέψετε; Όλες οι αλλαγές θα χαθούν."
 title = "Μη αποθηκευμένες αλλαγές"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Επιλέξτε αρχεία για επεξεργασία με αυτήν την αυτοματοποίηση"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Εκτέλεση αυτοματοποίησης"
@@ -4203,6 +4227,11 @@ desc = "Συγχώνευση πολλαπλών σελίδων ενός εγγρ
 tags = "διάταξη,τακτοποίηση,συνδυασμός"
 title = "Διάταξη πολλαπλών σελίδων"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Αφαίρεση/Αναδιάταξη σελίδων σε οποιαδήποτε σειρά"
 tags = "οργάνωση,αναδιάταξη,ανακατάταξη"
@@ -5278,6 +5307,24 @@ selectMonthly = "Επιλογή μηνιαίου"
 selectYearly = "Επιλογή ετήσιου"
 title = "Επιλέξτε περίοδο χρέωσης"
 totalForSeats = "Σύνολο ({{count}} θέσεις)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Οργάνωση σελίδων PDF"

@@ -1806,7 +1806,11 @@ title = "Smart navngivning"
 [automate]
 copyToSaved = "Kopier til Lagrede"
 desc = "Bygg flertrinns arbeidsflyter ved å kjede sammen PDF-handlinger. Ideelt for gjentakende oppgaver."
+export = "Export"
 exportForFolderScanning = "Eksporter for mappeskanning"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Ugyldig trinn"
 reviewTitle = "Resultater av automatisering"
 title = "Automatiser"
@@ -1822,6 +1826,7 @@ title = "Konfigurer {{toolName}}"
 [automate.creation]
 createTitle = "Opprett automatisering"
 editTitle = "Rediger automatisering"
+export = "Export"
 exportForFolderScanning = "Eksporter for mappeskanning"
 intro = "Automatiseringer kjører verktøy sekvensielt. For å komme i gang, legg til verktøy i den rekkefølgen du vil at de skal kjøres."
 save = "Lagre automatisering"
@@ -1852,8 +1857,27 @@ confirm = "Gå tilbake"
 message = "Du har ulagrede endringer. Er du sikker på at du vil gå tilbake? Alle endringer vil gå tapt."
 title = "Ulagrede endringer"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Velg filer som skal behandles med denne automatiseringen"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Kjør automatisering"
@@ -4203,6 +4227,11 @@ desc = "Slå sammen flere sider av en PDF-dokument til en enkelt side"
 tags = "oppsett,arranger,kombiner"
 title = "Flersidig Layout"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Fjern/omorganiser sider i hvilken som helst rekkefølge"
 tags = "organiser,omorganiser,endre rekkefølge"
@@ -5278,6 +5307,24 @@ selectMonthly = "Velg månedlig"
 selectYearly = "Velg årlig"
 title = "Velg faktureringsperiode"
 totalForSeats = "Totalt ({{count}} plasser)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF-sideorganisering"

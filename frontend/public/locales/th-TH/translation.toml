@@ -1806,7 +1806,11 @@ title = "การตั้งชื่ออัจฉริยะ"
 [automate]
 copyToSaved = "คัดลอกไปยังที่บันทึกไว้"
 desc = "สร้างเวิร์กโฟลว์หลายขั้นตอนโดยการเชื่อมการทำงานของ PDF เข้าด้วยกัน เหมาะสำหรับงานที่ทำซ้ำ"
+export = "Export"
 exportForFolderScanning = "ส่งออกสำหรับการสแกนโฟลเดอร์"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "ขั้นตอนไม่ถูกต้อง"
 reviewTitle = "ผลลัพธ์ของระบบอัตโนมัติ"
 title = "ทำงานอัตโนมัติ"
@@ -1822,6 +1826,7 @@ title = "กำหนดค่า {{toolName}}"
 [automate.creation]
 createTitle = "สร้างระบบอัตโนมัติ"
 editTitle = "แก้ไขระบบอัตโนมัติ"
+export = "Export"
 exportForFolderScanning = "ส่งออกสำหรับการสแกนโฟลเดอร์"
 intro = "ระบบอัตโนมัติจะเรียกใช้เครื่องมือตามลำดับ เริ่มต้นโดยเพิ่มเครื่องมือในลำดับที่คุณต้องการให้ทำงาน"
 save = "บันทึกระบบอัตโนมัติ"
@@ -1852,8 +1857,27 @@ confirm = "กลับไป"
 message = "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก คุณแน่ใจหรือไม่ว่าต้องการกลับไป การเปลี่ยนแปลงทั้งหมดจะหายไป"
 title = "การเปลี่ยนแปลงที่ยังไม่บันทึก"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "เลือกไฟล์ที่จะประมวลผลด้วยระบบอัตโนมัตินี้"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "เรียกใช้ระบบอัตโนมัติ"
@@ -4203,6 +4227,11 @@ desc = "รวมหน้าหลายหน้าของเอกสาร
 tags = "เลย์เอาต์,จัดเรียง,รวม"
 title = "เลย์เอาต์หลายหน้า"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "ลบ/จัดเรียงหน้าต่างๆ ในลำดับที่ต้องการ"
 tags = "จัดระเบียบ,จัดเรียงใหม่,เรียงลำดับใหม่"
@@ -5278,6 +5307,24 @@ selectMonthly = "เลือกแบบรายเดือน"
 selectYearly = "เลือกแบบรายปี"
 title = "เลือกรอบบิล"
 totalForSeats = "รวม ({{count}} ที่นั่ง)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "ตัวจัดระเบียบหน้า PDF"

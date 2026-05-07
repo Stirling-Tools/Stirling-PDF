@@ -1806,7 +1806,11 @@ title = "Penggantian Nama Cerdas"
 [automate]
 copyToSaved = "Salin ke Tersimpan"
 desc = "Bangun alur kerja multi-langkah dengan merangkaikan aksi PDF. Ideal untuk tugas berulang."
+export = "Export"
 exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Langkah tidak valid"
 reviewTitle = "Hasil Otomatisasi"
 title = "Otomatisasi"
@@ -1822,6 +1826,7 @@ title = "Konfigurasi {{toolName}}"
 [automate.creation]
 createTitle = "Buat Otomatisasi"
 editTitle = "Edit Otomatisasi"
+export = "Export"
 exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
 intro = "Otomatisasi menjalankan alat secara berurutan. Untuk memulai, tambahkan alat sesuai urutan yang Anda inginkan."
 save = "Simpan Otomatisasi"
@@ -1852,8 +1857,27 @@ confirm = "Kembali"
 message = "Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali? Semua perubahan akan hilang."
 title = "Perubahan Belum Disimpan"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Pilih file untuk diproses dengan otomatisasi ini"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Jalankan Otomatisasi"
@@ -4203,6 +4227,11 @@ desc = "Menggabungkan beberapa halaman dokumen PDF menjadi satu halaman"
 tags = "tata-letak,atur,gabungkan"
 title = "Tata Letak Multi-Halaman"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Menghapus/Mengatur ulang halaman dalam urutan apa pun"
 tags = "atur,susun-ulang,ubah-urutan"
@@ -5278,6 +5307,24 @@ selectMonthly = "Pilih Bulanan"
 selectYearly = "Pilih Tahunan"
 title = "Pilih Periode Penagihan"
 totalForSeats = "Total ({{count}} seat)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Pengaturan Halaman PDF"
