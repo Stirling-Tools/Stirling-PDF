@@ -29,7 +29,7 @@ function handleConfigLoaded(config: AppConfig) {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<LoadingFallback fullPage />}>
       <AppProviders
         appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
       >

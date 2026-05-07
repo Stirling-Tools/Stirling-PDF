@@ -28,7 +28,7 @@ function MobileScannerProviders({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<LoadingFallback fullPage />}>
       <Routes>
         {/* Mobile scanner route - no backend needed, pure P2P WebRTC */}
         <Route

@@ -3,7 +3,7 @@
  * Uses 100% height to fill its parent container without causing layout shifts
  * by forcing a 100vh height in contained areas.
  */
-export function LoadingFallback() {
+export function LoadingFallback({ fullPage = false }: { fullPage?: boolean }) {
   return (
     <div
       style={{
@@ -11,9 +11,9 @@ export function LoadingFallback() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        height: "100%",
+        height: fullPage ? "100dvh" : "100%",
         width: "100%",
-        minHeight: "200px",
+        minHeight: fullPage ? "100dvh" : "200px",
         fontSize: "18px",
         color: "var(--text-muted, #666)",
         background: "transparent",

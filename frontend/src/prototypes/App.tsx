@@ -41,7 +41,7 @@ function ParticipantViewPage() {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<LoadingFallback fullPage />}>
       <Routes>
         {/* Participant signing — public, token-gated, no auth required */}
         <Route
