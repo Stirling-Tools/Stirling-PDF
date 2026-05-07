@@ -1,5 +1,9 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
+import {
+  waitForElement,
+  waitForHighlightable,
+} from "@app/components/onboarding/tourUtils";
 
 export enum TourStep {
   ALL_TOOLS,
@@ -26,6 +30,7 @@ interface UserStepActions {
   loadSampleFile: () => void;
   switchToActiveFiles: () => void;
   pinFile: () => void;
+  revealFileCardHoverMenu: () => void;
   modifyCropSettings: () => void;
   executeTool: () => void;
   openFilesModal: () => void;
@@ -48,6 +53,7 @@ export function createUserStepsConfig({
     loadSampleFile,
     switchToActiveFiles,
     pinFile,
+    revealFileCardHoverMenu,
     modifyCropSettings,
     executeTool,
     openFilesModal,
@@ -95,7 +101,7 @@ export function createUserStepsConfig({
       ),
       position: "right",
       padding: 10,
-      action: () => openFilesModal(),
+      actionAfter: () => openFilesModal(),
     },
     [TourStep.FILE_SOURCES]: {
       selector: '[data-tour="file-sources"]',
@@ -105,6 +111,10 @@ export function createUserStepsConfig({
       ),
       position: "right",
       padding: 0,
+      action: async () => {
+        await waitForElement('[data-tour="file-sources"]', 5000);
+        await waitForHighlightable('[data-tour="file-sources"]', 5000);
+      },
       actionAfter: () => {
         loadSampleFile();
         closeFilesModal();
@@ -184,13 +194,14 @@ export function createUserStepsConfig({
       ),
       position: "left",
       padding: 10,
-      action: () => pinFile(),
+      action: () => revealFileCardHoverMenu(),
+      actionAfter: () => pinFile(),
     },
     [TourStep.WRAP_UP]: {
-      selector: '[data-tour="help-button"]',
+      selector: '[data-tour="config-button"]',
       content: t(
         "onboarding.wrapUp",
-        "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again.",
+        "You're all set! To replay this tour anytime, click the <strong>Settings</strong> button here and navigate to the <strong>Tours</strong> section.",
       ),
       position: "right",
       padding: 10,

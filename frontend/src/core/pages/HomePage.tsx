@@ -15,6 +15,7 @@ import {
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useLocation } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -57,6 +58,14 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(false);
+  const location = useLocation();
+
+  // Open the config modal whenever the URL is /settings/* (e.g. from the admin
+  // tour's openConfigModal action which navigates to /settings/overview).
+  useEffect(() => {
+    const isSettings = location.pathname.startsWith("/settings");
+    setConfigModalOpen(isSettings);
+  }, [location.pathname]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();

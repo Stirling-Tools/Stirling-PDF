@@ -31,11 +31,17 @@ export const useConfigNavSections = (
   isAdmin: boolean = false,
   runningEE: boolean = false,
   loginEnabled: boolean = false,
+  onRequestClose: () => void = () => {},
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
-  // Get the core sections (just Preferences)
-  const sections = useCoreConfigNavSections(isAdmin, runningEE, loginEnabled);
+  // Get the core sections (Preferences + Help)
+  const sections = useCoreConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled,
+    onRequestClose,
+  );
 
   // Add account management under Preferences
   const preferencesSection = sections.find((section) =>

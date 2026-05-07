@@ -316,6 +316,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         style={{ width, minWidth: width, maxWidth: width }}
         data-collapsed={collapsed}
         data-sidebar="file-sidebar"
+        data-tour="quick-access-bar"
       >
         <div className="file-sidebar-inner">
           {/* Header: hamburger + branding */}
@@ -392,6 +393,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <div
                   className="file-sidebar-action-row"
                   data-testid="files-button"
+                  data-tour="files-button"
                   onClick={() => {
                     if (collapsed && onToggleCollapse) onToggleCollapse();
                     openFilesModal();
@@ -555,6 +557,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               : undefined
           }
           data-testid={onOpenSettings ? "config-button" : undefined}
+          data-tour={onOpenSettings ? "config-button" : undefined}
           aria-label={
             onOpenSettings
               ? t("fileSidebar.openSettings", "Open settings")

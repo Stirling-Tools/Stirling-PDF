@@ -11,6 +11,7 @@ export interface HoverAction {
   disabled?: boolean;
   color?: string;
   hidden?: boolean;
+  dataTour?: string;
 }
 
 interface HoverActionMenuProps {
@@ -64,6 +65,7 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
             onClick={action.onClick}
             c={action.color}
             style={{ color: action.color || "var(--right-rail-icon)" }}
+            data-tour={action.dataTour}
           >
             {action.icon}
           </ActionIcon>
