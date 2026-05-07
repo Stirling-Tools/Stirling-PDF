@@ -23,7 +23,9 @@ async function uiLogin(page: import("@playwright/test").Page) {
   await page.locator("#password").fill(PASSWORD);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL("/", { timeout: 15_000 });
-  await expect(page.locator('[data-testid="config-button"]').first()).toBeVisible({
+  await expect(
+    page.locator('[data-testid="config-button"]').first(),
+  ).toBeVisible({
     timeout: 15_000,
   });
 }
