@@ -52,9 +52,9 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
     await page.waitForURL((url) => !url.pathname.includes("/login"), {
       timeout: 30_000,
     });
-    await expect(
-      page.getByRole("link", { name: /^Tools$/i }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('[data-testid="config-button"]').first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // ── 2. Identity surfaced in settings → Account ────────────
     await page.locator('[data-testid="config-button"]').first().click();
