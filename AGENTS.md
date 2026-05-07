@@ -6,6 +6,8 @@ This file provides guidance to AI Agents when working with code in this reposito
 
 This project uses [Task](https://taskfile.dev/) as a unified command runner. All build, dev, test, lint, and docker commands can be run from the repo root via `task <command>`. Run `task --list` to see all available commands.
 
+Task `desc:` fields should describe **what** the task does, not **how** it does it. Keep them generic and stable: don't reference implementation details like aliases, internal helpers, mode flags, or which other task delegates to which. The description is for users picking a command from `task --list`, not a changelog of refactors.
+
 ### Quick Reference
 - `task install` — install all dependencies
 - `task dev` — start backend + frontend concurrently
@@ -143,7 +145,7 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 - These files are committed to Git and must not contain private keys
 - Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
-- `task frontend:prepare` / `prepare:saas` / `prepare:desktop` create empty `.local` override files on first run
+- `task frontend:prepare` creates empty `.local` override files on first run; pass `MODE=saas` or `MODE=desktop` to also create the mode-specific `.local` file
 - Prepare runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
 - See `frontend/README.md#environment-variables` for full documentation
 

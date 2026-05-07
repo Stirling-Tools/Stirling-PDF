@@ -45,7 +45,7 @@ import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { truncateCenter } from "@app/utils/textUtils";
+import FileEditorFileName from "@app/components/fileEditor/FileEditorFileName";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
@@ -580,8 +580,19 @@ const FileEditorThumbnail = ({
           marginBottom: "0.5rem",
         }}
       >
-        <Text size="lg" fw={700} className={styles.title} title={file.name}>
-          <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
+        <Text
+          size="lg"
+          fw={700}
+          className={styles.title}
+          title={file.name}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.25rem",
+          }}
+        >
+          <FileEditorFileName file={file} />
         </Text>
         <Text
           size="sm"

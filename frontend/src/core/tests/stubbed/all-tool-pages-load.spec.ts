@@ -90,8 +90,10 @@ async function verifyToolPageLoads(
   page: import("@playwright/test").Page,
   urlPath: string,
 ) {
-  await page.goto(urlPath);
-  await page.waitForLoadState("domcontentloaded");
+  // waitUntil: 'domcontentloaded' avoids hanging on third-party CDN resources
+  // (iconify, posthog, stripe) the stub doesn't mock — the default 'load'
+  // event waits for ALL subresources, which can time out on slow runners.
+  await page.goto(urlPath, { waitUntil: "domcontentloaded" });
 
   // Page should not show an unhandled error / white screen
   await expect(page.locator("body").first()).not.toBeEmpty();

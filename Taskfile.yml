@@ -2,6 +2,10 @@ version: '3'
 
 output: prefixed
 
+vars:
+  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts\find-free-port.ps1 -Preferred
+  FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
+
 includes:
   backend:
     taskfile: .taskfiles/backend.yml
@@ -35,17 +39,43 @@ tasks:
   # ============================================================
 
   dev:
-    desc: "Start backend + frontend concurrently"
+    desc: "Start backend + frontend concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080,5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
     deps:
-      - backend:dev
-      - frontend:dev
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+      - task: frontend:dev
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
 
   dev:all:
-    desc: "Start backend + frontend + engine concurrently"
+    desc: "Start backend + frontend + engine concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080,5173,5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      ENGINE_PORT: '{{index (splitList "\n" .PORTS) 2}}'
     deps:
-      - backend:dev
-      - frontend:dev:prototypes
-      - engine:dev
+      - task: engine:dev
+        vars:
+          PORT: '{{.ENGINE_PORT}}'
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+      - task: frontend:dev:prototypes
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
 
   # ============================================================
   # Build
