@@ -128,8 +128,9 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
-        try (PDDocument doc = pdfDocumentFactory.load(input)) {
+            Boolean showLogo,
+            String pdfPassword) {
+        try (PDDocument doc = pdfDocumentFactory.load(input, pdfPassword, false, true)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
             signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
@@ -152,6 +153,10 @@ public class CertSignController {
             }
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
+            if (e instanceof RuntimeException re) {
+                throw re;
+            }
+            throw new RuntimeException("Failed to sign PDF", e);
         }
     }
 
@@ -184,6 +189,7 @@ public class CertSignController {
         // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
         Boolean showLogo = request.getShowLogo();
+        String pdfPassword = request.getPdfPassword();
 
         if (StringUtils.isBlank(certType)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -263,7 +269,8 @@ public class CertSignController {
                     name,
                     location,
                     reason,
-                    showLogo);
+                    showLogo,
+                    pdfPassword);
         } catch (IOException e) {
             signedOut.close();
             throw e;

@@ -238,9 +238,24 @@ public class CustomPDFDocumentFactory {
         return load(fileInput, password, false);
     }
 
-    public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
+    public PDDocument load(MultipartFile pdfFile, String password, boolean readOnly)
             throws IOException {
-        return streamToTemp(fileInput.getInputStream(), password, readOnly);
+        return streamToTemp(pdfFile.getInputStream(), password, readOnly);
+    }
+
+    public PDDocument load(
+            MultipartFile pdfFile, String password, boolean readOnly, boolean preserveEncryption)
+            throws IOException {
+        PDDocument doc = streamToTemp(pdfFile.getInputStream(), password, true, true);
+        if (preserveEncryption) {
+            return doc;
+        }
+        try {
+            return maybePostProcess(doc, readOnly);
+        } catch (IOException | RuntimeException ex) {
+            doc.close();
+            throw ex;
+        }
     }
 
     /**
@@ -541,11 +556,21 @@ public class CustomPDFDocumentFactory {
     /** Buffers an {@link InputStream} to a managed temp file then delegates to the core loader. */
     private PDDocument streamToTemp(InputStream input, String password, boolean readOnly)
             throws IOException {
+        return streamToTemp(input, password, readOnly, false);
+    }
+
+    private PDDocument streamToTemp(
+            InputStream input, String password, boolean readOnly, boolean skipPostProcess)
+            throws IOException {
         Path tempFile = createTempFilePath("pdf-stream-");
         boolean success = false;
         try {
             Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
             PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile), password);
+            if (skipPostProcess) {
+                success = true;
+                return doc;
+            }
             try {
                 PDDocument result = maybePostProcess(doc, readOnly);
                 success = true;

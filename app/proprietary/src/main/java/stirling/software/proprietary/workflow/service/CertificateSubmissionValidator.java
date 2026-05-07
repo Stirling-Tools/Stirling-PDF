@@ -161,7 +161,7 @@ public class CertificateSubmissionValidator {
         try {
             byte[] blankPdf = createBlankPdf();
             pdfSigningService.signWithKeystore(
-                    blankPdf, keystore, password, false, null, signerName, null, null, false);
+                    blankPdf, null, keystore, password, false, null, signerName, null, null, false);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {

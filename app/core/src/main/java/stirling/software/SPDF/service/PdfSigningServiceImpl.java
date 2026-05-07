@@ -23,6 +23,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
     @Override
     public byte[] signWithKeystore(
             byte[] pdfBytes,
+            String pdfPassword,
             KeyStore keystore,
             char[] password,
             boolean showSignature,
@@ -50,7 +51,8 @@ public class PdfSigningServiceImpl implements PdfSigningService {
                 name,
                 location,
                 reason,
-                showLogo);
+                showLogo,
+                pdfPassword);
 
         return outputStream.toByteArray();
     }

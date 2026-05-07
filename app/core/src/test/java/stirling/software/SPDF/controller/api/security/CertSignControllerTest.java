@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -140,6 +141,16 @@ class CertSignControllerTest {
             derCertBytes = baos.toByteArray();
         }
 
+        lenient()
+                .when(
+                        pdfDocumentFactory.load(
+                                any(MultipartFile.class), any(), anyBoolean(), anyBoolean()))
+                .thenAnswer(
+                        invocation -> {
+                            MultipartFile file = invocation.getArgument(0);
+                            String password = invocation.getArgument(1);
+                            return Loader.loadPDF(file.getBytes(), password);
+                        });
         lenient()
                 .when(pdfDocumentFactory.load(any(MultipartFile.class)))
                 .thenAnswer(

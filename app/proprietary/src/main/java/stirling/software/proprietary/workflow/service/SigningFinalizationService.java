@@ -798,6 +798,7 @@ public class SigningFinalizationService {
         byte[] signed =
                 pdfSigningService.signWithKeystore(
                         pdfBytes,
+                        null,
                         keystore,
                         password != null ? password.toCharArray() : new char[0],
                         showSignature != null ? showSignature : false,

@@ -88,6 +88,7 @@ class CertificateValidationIntegrationTest {
                                 any(),
                                 any(),
                                 any(),
+                                any(),
                                 anyBoolean(),
                                 isNull(),
                                 anyString(),

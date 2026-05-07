@@ -22,6 +22,7 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+  pdfPassword?: string;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -34,6 +35,7 @@ export const defaultParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  pdfPassword: "",
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
