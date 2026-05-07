@@ -76,6 +76,14 @@ public class AiWorkflowService {
     @FunctionalInterface
     public interface ProgressListener {
         void onProgress(AiWorkflowProgressEvent event);
+
+        /**
+         * Called when the engine emits a keep-alive heartbeat. Default is a no-op; consumers that
+         * forward to a downstream connection (e.g. an SSE emitter) override this to push a
+         * heartbeat through, so the next downstream-disconnect surfaces immediately rather than
+         * waiting for the next real progress event.
+         */
+        default void onHeartbeat() {}
     }
 
     private static final ProgressListener NOOP_LISTENER = event -> {};
@@ -660,6 +668,7 @@ public class AiWorkflowService {
                     resultHolder[0] = objectMapper.treeToValue(response, AiWorkflowResponse.class);
                 }
                 case "error" -> errorHolder[0] = node.path("message").asText("unknown error");
+                case "heartbeat" -> listener.onHeartbeat();
                 default -> log.warn("Ignoring unknown engine stream event: {}", event);
             }
         } catch (JacksonException e) {

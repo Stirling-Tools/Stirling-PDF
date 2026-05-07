@@ -1,4 +1,6 @@
+import asyncio
 import json
+from unittest.mock import patch
 
 from conftest import build_app_settings
 from fastapi.testclient import TestClient
@@ -164,6 +166,45 @@ def test_orchestrator_route_streams_progress_then_result() -> None:
     # snake_case bug that surfaced as "need_ingest without listing any files to ingest".
     assert "maxPages" in response
     assert "max_pages" not in response
+
+
+def test_orchestrator_route_emits_heartbeats_while_agent_is_busy() -> None:
+    """While the agent is in flight, the streaming endpoint emits heartbeat
+    frames at the configured cadence so each layer of the connection stays
+    visibly alive and disconnects propagate within bounded latency."""
+
+    class _SlowAgent:
+        async def handle(self, _request: OrchestratorRequest) -> NeedContentResponse:
+            # Sleep long enough for several heartbeats at the patched cadence.
+            await asyncio.sleep(0.2)
+            return NeedContentResponse(
+                resume_with=SupportedCapability.PDF_QUESTION,
+                reason="ok",
+                files=[],
+                max_pages=1,
+                max_characters=1000,
+            )
+
+    app.dependency_overrides[get_orchestrator_agent] = lambda: _SlowAgent()
+    try:
+        with patch("stirling.api.routes.orchestrator.HEARTBEAT_INTERVAL_SECONDS", 0.03):
+            with client.stream(
+                "POST",
+                "/api/v1/orchestrator",
+                json={"userMessage": "wait", "files": [{"id": "test-id", "name": "test.pdf"}]},
+            ) as response:
+                assert response.status_code == 200
+                events = [json.loads(line) for line in response.iter_lines() if line]
+    finally:
+        app.dependency_overrides[get_orchestrator_agent] = lambda: StubOrchestratorAgent()
+
+    heartbeats = [e for e in events if e["event"] == "heartbeat"]
+    results = [e for e in events if e["event"] == "result"]
+    # At least a couple of heartbeats fired during the 0.2s agent sleep at 0.03s cadence.
+    assert len(heartbeats) >= 2
+    # The result still arrives after the agent finishes.
+    assert len(results) == 1
+    assert results[0]["response"]["outcome"] == "need_content"
 
 
 def test_pdf_edit_route() -> None:
