@@ -45,6 +45,7 @@ security:
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
+    registrationId: # optional; overrides the provider name in redirect URIs. Defaults to 'provider' if empty.
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
     provider: "" # The name of your Provider

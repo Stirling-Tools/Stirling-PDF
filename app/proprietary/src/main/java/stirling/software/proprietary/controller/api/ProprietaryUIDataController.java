@@ -191,10 +191,11 @@ public class ProprietaryUIDataController {
                 && oauth.getEnabled()
                 && securityProps.isOauth2Active()) { // This checks loginMethod
             if (oauth.isSettingsValid()) {
-                String firstChar = String.valueOf(oauth.getProvider().charAt(0));
-                String clientName =
-                        oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());
-                providerList.put("/oauth2/authorization/" + oauth.getProvider(), clientName);
+                String name = oauth.getProvider();
+                String registrationId = oauth.getEffectiveRegistrationId();
+                String firstChar = String.valueOf(name.charAt(0));
+                String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase());
+                providerList.put("/oauth2/authorization/" + registrationId, clientName);
             }
 
             Client client = oauth.getClient();
