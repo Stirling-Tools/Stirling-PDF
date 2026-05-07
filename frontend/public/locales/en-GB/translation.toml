@@ -6580,6 +6580,9 @@ toggleComments = "Comments"
 toggleLayers = "Toggle Layers"
 toggleSidebar = "Toggle Sidebar"
 toggleTheme = "Toggle Theme"
+activeFiles = "Active Files"
+multiTool = "Multi-Tool"
+viewer = "Viewer"
 
 [rotate]
 rotateLeft = "Rotate Anticlockwise"
@@ -7004,6 +7007,20 @@ title = "Team"
 [settings.tooltips]
 enableLoginFirst = "Enable login mode first"
 requiresEnterprise = "Requires Enterprise license"
+
+[settings.help]
+label = "Tours"
+title = "Help"
+
+[settings.help.adminTour]
+description = "Explore team management, system settings, and enterprise features."
+start = "Start"
+title = "Admin Tour"
+
+[settings.help.toolsTour]
+description = "Walk through uploading files, picking a tool, and reviewing results."
+start = "Start"
+title = "Tools Tour"
 
 [settings.workspace]
 people = "People"
@@ -8413,11 +8430,6 @@ bullet3 = "Image will be resized to fit signature area"
 description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
 title = "Upload Signature Image"
 
-
-[workbenchBar]
-activeFiles = "Active Files"
-multiTool = "Multi-Tool"
-viewer = "Viewer"
 
 [workspace]
 title = "Workspace"
