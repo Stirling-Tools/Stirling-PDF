@@ -316,63 +316,31 @@ class ChunkedReasoner:
         return slices
 
     async def _run_worker(self, index: int, total: int, slice_: _Slice, question: str) -> tuple[ChunkNotes, float]:
-        """Run one worker and return its notes plus wall-clock duration.
-
-        Retries once on timeout. Stalls in the model SDK are usually
-        transport-layer (HTTP/2 stream wedged with the TCP connection still
-        alive); a fresh request typically uses a different stream and
-        succeeds. Two attempts cap worst-case wall time at twice the
-        per-worker timeout. Pure work otherwise: orchestration concerns
-        (counters, progress, slowest tracking) live in
-        :meth:`_consume_workers`. ``index`` is only used for log lines.
-        """
+        """Run one worker and return its notes plus wall-clock duration."""
         prompt = self._build_worker_prompt(slice_, question)
+        page_label = _page_range_label(slice_.pages)
         async with self._semaphore:
+            start = time.perf_counter()
             try:
-                return await self._attempt_worker(index, total, slice_, prompt, attempt=1)
+                result = await asyncio.wait_for(self._worker.run(prompt), timeout=self._worker_timeout_seconds)
             except TimeoutError:
-                logger.info(
-                    "[chunked-reasoner] slice %d/%d %s retrying after timeout",
+                duration = time.perf_counter() - start
+                logger.warning(
+                    "[chunked-reasoner] slice %d/%d %s timed out after %dms (limit %.1fs)",
                     index,
                     total,
-                    _page_range_label(slice_.pages),
+                    page_label,
+                    int(duration * 1000),
+                    self._worker_timeout_seconds,
                 )
-                return await self._attempt_worker(index, total, slice_, prompt, attempt=2)
-
-    async def _attempt_worker(
-        self,
-        index: int,
-        total: int,
-        slice_: _Slice,
-        prompt: str,
-        *,
-        attempt: int,
-    ) -> tuple[ChunkNotes, float]:
-        page_label = _page_range_label(slice_.pages)
-        start = time.perf_counter()
-        try:
-            result = await asyncio.wait_for(self._worker.run(prompt), timeout=self._worker_timeout_seconds)
-        except TimeoutError:
+                raise
             duration = time.perf_counter() - start
-            logger.warning(
-                "[chunked-reasoner] slice %d/%d %s attempt %d timed out after %dms (limit %.1fs)",
-                index,
-                total,
-                page_label,
-                attempt,
-                int(duration * 1000),
-                self._worker_timeout_seconds,
-            )
-            raise
-        duration = time.perf_counter() - start
         notes = result.output
-        retry_suffix = " (retry)" if attempt > 1 else ""
         logger.debug(
-            "[chunked-reasoner] slice %d/%d %s%s: %d excerpt(s), %d fact(s) in %dms",
+            "[chunked-reasoner] slice %d/%d %s: %d excerpt(s), %d fact(s) in %dms",
             index,
             total,
             page_label,
-            retry_suffix,
             len(notes.relevant_excerpts),
             len(notes.facts),
             int(duration * 1000),

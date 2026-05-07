@@ -6,14 +6,17 @@ LLM calls are stubbed at the agent boundary; the runtime fixture supplies a
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic import BaseModel
 
-from stirling.agents.shared.chunked_reasoner import ChunkedReasoner, ChunkNotes
+from stirling.agents.shared.chunked_reasoner import ChunkedReasoner, ChunkNotes, _Slice
+from stirling.contracts import WholeDocSliceDone
 from stirling.contracts.documents import Page
+from stirling.services import reset_progress_emitter, set_progress_emitter
 from stirling.services.runtime import AppRuntime
 
 
@@ -196,15 +199,6 @@ class TestReason:
 
     @pytest.mark.anyio
     async def test_progress_events_carry_monotonic_completion_counter(self, runtime: AppRuntime) -> None:
-        """Workers run in parallel and finish in any order, but the user-facing
-        ``completed`` counter on each ``WholeDocSliceDone`` event must increment by one
-        per emission. We force the second-spawned worker to finish before the first
-        and verify the emitted counters are 1, 2, 3 in arrival order."""
-        import asyncio
-
-        from stirling.contracts import WholeDocSliceDone
-        from stirling.services import reset_progress_emitter, set_progress_emitter
-
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10)
         pages = [_page(i, "x" * 8) for i in range(1, 4)]
 
@@ -251,53 +245,14 @@ class TestReason:
         assert all(event.total == 3 for event in emitted)
 
     @pytest.mark.anyio
-    async def test_worker_retries_once_on_timeout(self, runtime: AppRuntime) -> None:
-        """A worker whose first attempt hangs is retried; a successful retry
-        keeps the slice in the result set. This is the mitigation for
-        transport-layer stalls in the upstream model SDK."""
-        import asyncio
-
-        reasoner = ChunkedReasoner(runtime, chars_per_slice=10, worker_timeout_seconds=0.05)
-        pages = [_page(1, "x" * 8)]
-
-        recovered_notes = ChunkNotes(pages=[1], summary="recovered on retry")
-        attempts = 0
-
-        async def _hang_then_succeed(*_args: object, **_kwargs: object) -> _StubAgentResult[ChunkNotes]:
-            nonlocal attempts
-            attempts += 1
-            if attempts == 1:
-                await asyncio.sleep(10)
-            return _StubAgentResult(output=recovered_notes)
-
-        canned_answer = _Answer(answer="ok")
-
-        with (
-            patch.object(reasoner._worker, "run", AsyncMock(side_effect=_hang_then_succeed)),
-            patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
-        ):
-            result = await reasoner.reason(
-                pages=pages,
-                question="anything",
-                answer_prompt="answer",
-                answer_type=_Answer,
-            )
-
-        assert result == canned_answer
-        assert attempts == 2
-        synth_args = synth_mock.await_args
-        assert synth_args is not None
-        assert synth_args.args[1] == [recovered_notes]
-
-    @pytest.mark.anyio
-    async def test_worker_gives_up_after_two_timeouts(self, runtime: AppRuntime) -> None:
-        """Both attempts timing out propagates the failure and drops the slice."""
-        import asyncio
-
+    async def test_worker_timeout_is_terminal_for_the_slice(self, runtime: AppRuntime) -> None:
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10, worker_timeout_seconds=0.05)
         pages = [_page(1, "x" * 8), _page(2, "y" * 8)]
+        attempts = 0
 
         async def _hang_forever(*_args: object, **_kwargs: object) -> _StubAgentResult[ChunkNotes]:
+            nonlocal attempts
+            attempts += 1
             await asyncio.sleep(10)
             return _StubAgentResult(output=ChunkNotes(pages=[0], summary="never"))
 
@@ -313,6 +268,8 @@ class TestReason:
                 answer_type=_Answer,
             )
 
+        # One attempt per slice; no retry path.
+        assert attempts == len(pages)
         synth_mock.assert_not_awaited()
 
     @pytest.mark.anyio
@@ -322,8 +279,6 @@ class TestReason:
         Without this guard one stuck upstream call would pin gather_notes to its
         provider HTTP timeout (~10 minutes), starving the orchestrator request.
         """
-        import asyncio
-
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10, worker_timeout_seconds=0.05)
         pages = [_page(i, "x" * 8) for i in range(1, 4)]
 
@@ -351,8 +306,6 @@ class TestReason:
 
 class TestPromptConstruction:
     def test_worker_prompt_includes_question_and_page_markers(self, runtime: AppRuntime) -> None:
-        from stirling.agents.shared.chunked_reasoner import _Slice
-
         reasoner = ChunkedReasoner(runtime)
         slice_ = _Slice(pages=[_page(2, "page two body"), _page(3, "page three body")])
         prompt = reasoner._build_worker_prompt(slice_, "what is on page two?")
