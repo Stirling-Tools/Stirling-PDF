@@ -27,7 +27,6 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { zipFileService } from "@app/services/zipFileService";
-import { truncateCenter } from "@app/utils/textUtils";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
@@ -44,6 +43,8 @@ import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import { truncateCenter } from "@app/utils/textUtils";
+import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
@@ -303,6 +304,7 @@ const FileEditorThumbnail = ({
         label: isPinned
           ? t("unpin", "Unpin File (replace after tool run)")
           : t("pin", "Pin File (keep active after tool run)"),
+        dataTour: "file-card-pin",
         onClick: (e) => {
           e.stopPropagation();
           if (actualFile) {
@@ -504,7 +506,7 @@ const FileEditorThumbnail = ({
                 }}
               />
 
-              {/* Badges — visible on hover via CSS */}
+              {/* Badges — top-left: version, pin, ownership, encrypted */}
               <div className={styles.thumbBadges}>
                 <span className={styles.versionBadgeThumb}>
                   v{file.versionNumber}
@@ -541,6 +543,8 @@ const FileEditorThumbnail = ({
                   </Tooltip>
                 )}
               </div>
+
+              <FileEditorStatusDot file={file} />
             </div>
           </div>
           {/* end thumbUnit */}

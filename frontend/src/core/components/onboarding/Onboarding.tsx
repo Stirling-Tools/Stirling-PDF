@@ -232,12 +232,15 @@ export default function Onboarding() {
           loadSampleFile: tourOrch.loadSampleFile,
           switchToActiveFiles: tourOrch.switchToActiveFiles,
           pinFile: tourOrch.pinFile,
+          revealFileCardHoverMenu: tourOrch.revealFileCardHoverMenu,
           modifyCropSettings: tourOrch.modifyCropSettings,
           executeTool: tourOrch.executeTool,
           openFilesModal,
+          openSettingsHelpSection: () =>
+            adminTourOrch.navigateToSection("help"),
         },
       }),
-    [t, tourOrch, closeFilesModal, openFilesModal],
+    [t, tourOrch, adminTourOrch, closeFilesModal, openFilesModal],
   );
 
   const whatsNewStepsConfig = useMemo(

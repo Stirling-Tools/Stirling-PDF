@@ -1460,14 +1460,14 @@ inactive = "Inactive"
 
 [adminOnboarding]
 adminTools = "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform."
-configButton = "Click the <strong>Config</strong> button to access all system settings and administrative controls."
+configButton = "Open <strong>Settings</strong> to access all system configuration and administrative controls."
 connectionsSection = "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications."
 databaseSection = "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure."
 settingsOverview = "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation."
 systemCustomization = "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users."
 teamsAndUsers = "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself."
 welcome = "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators."
-wrapUp = "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."
+wrapUp = "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
 
 [adminUserSettings]
 actions = "Actions"
@@ -4892,7 +4892,7 @@ toolInterface = "This is the <strong>Crop</strong> tool interface. As you can se
 viewer = "The <strong>Viewer</strong> lets you read and annotate your PDFs."
 viewSwitcher = "Use these controls to select how you want to view your PDFs."
 workbench = "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs."
-wrapUp = "You're all set! You've learnt about the main areas of the app and how to use them. Click the <strong>Help</strong> button whenever you like to see this tour again."
+wrapUp = "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
 
 [onboarding.buttons]
 back = "Back"

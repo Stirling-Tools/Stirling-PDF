@@ -196,6 +196,26 @@
   pointer-events: none;
 }
 
+.thumbBadgesRight {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  z-index: 3;
+  pointer-events: auto;
+}
+
+.statusDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.15);
+}
+
 .ownershipBadge {
   background: var(--mantine-color-blue-6);
   color: white;
