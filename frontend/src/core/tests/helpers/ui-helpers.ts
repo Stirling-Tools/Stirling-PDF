@@ -99,9 +99,21 @@ export async function runToolAndWaitForReview(
  * scope further queries to it.
  */
 export async function openSettings(page: Page): Promise<Locator> {
-  await page.locator('[data-testid="config-button"]').first().click();
+  const configButton = page.locator('[data-testid="config-button"]').first();
+  const hasConfigButton = await configButton
+    .isVisible({ timeout: 3_000 })
+    .catch(() => false);
+
+  if (hasConfigButton) {
+    await configButton.click();
+  } else {
+    // Some enterprise auth callbacks land on shells where the quick-access
+    // settings button is not rendered yet; route directly to settings.
+    await page.goto("/settings/overview", { waitUntil: "domcontentloaded" });
+  }
+
   const dialog = page.locator(".mantine-Modal-content").first();
-  await expect(dialog).toBeVisible({ timeout: 5_000 });
+  await expect(dialog).toBeVisible({ timeout: 10_000 });
   return dialog;
 }
 

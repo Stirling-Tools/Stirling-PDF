@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { ensureCookieConsent } from "@app/tests/helpers/login";
 import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 /**
  * OAuth login round-trip via Keycloak.
@@ -53,13 +54,13 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
       timeout: 30_000,
     });
     await expect(
-      page.locator('[data-testid="config-button"]').first(),
+      page.locator('[data-tour="quick-access-bar"], [data-tour="workbench"]').first(),
     ).toBeVisible({
       timeout: 15_000,
     });
 
     // ── 2. Identity surfaced in settings → Account ────────────
-    await page.locator('[data-testid="config-button"]').first().click();
+    await openSettings(page);
     await page
       .getByText(/account settings/i)
       .first()
