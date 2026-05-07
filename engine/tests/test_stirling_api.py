@@ -120,23 +120,31 @@ def test_health_route() -> None:
     assert response.json()["status"] == "ok"
 
 
-def test_orchestrator_route() -> None:
-    response = client.post(
+def test_orchestrator_route_streams_result_only_when_no_progress() -> None:
+    """The orchestrator endpoint always streams NDJSON. An agent that emits no
+    progress events still produces a single ``result`` frame with the typed
+    response body."""
+    with client.stream(
+        "POST",
         "/api/v1/orchestrator",
         json={"userMessage": "route this", "files": [{"id": "test-id", "name": "test.pdf"}]},
-    )
+    ) as response:
+        assert response.status_code == 200
+        events = [json.loads(line) for line in response.iter_lines() if line]
 
-    assert response.status_code == 200
-    assert response.json()["outcome"] == "need_content"
+    assert [e["event"] for e in events] == ["result"]
+    body = events[0]["response"]
+    assert body["outcome"] == "need_content"
 
 
-def test_orchestrator_stream_route() -> None:
-    """Streaming endpoint emits progress events from deep callees, then a result line."""
+def test_orchestrator_route_streams_progress_then_result() -> None:
+    """When an agent emits progress via the ContextVar emitter, those frames
+    arrive on the wire before the final result frame."""
     app.dependency_overrides[get_orchestrator_agent] = lambda: StubProgressOrchestratorAgent()
     try:
         with client.stream(
             "POST",
-            "/api/v1/orchestrator/stream",
+            "/api/v1/orchestrator",
             json={"userMessage": "stream this", "files": [{"id": "test-id", "name": "test.pdf"}]},
         ) as response:
             assert response.status_code == 200

@@ -627,7 +627,7 @@ public class AiWorkflowService {
         String[] errorHolder = new String[1];
 
         aiEngineClient.streamPost(
-                "/api/v1/orchestrator/stream",
+                "/api/v1/orchestrator",
                 requestBody,
                 line -> handleStreamLine(line, listener, resultHolder, errorHolder));
 

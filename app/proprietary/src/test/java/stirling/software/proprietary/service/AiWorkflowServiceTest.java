@@ -304,14 +304,13 @@ class AiWorkflowServiceTest {
                             return null;
                         })
                 .when(aiEngineClient)
-                .streamPost(eq("/api/v1/orchestrator/stream"), anyString(), any());
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
         verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString());
-        verify(aiEngineClient, times(2))
-                .streamPost(eq("/api/v1/orchestrator/stream"), anyString(), any());
+        verify(aiEngineClient, times(2)).streamPost(eq("/api/v1/orchestrator"), anyString(), any());
     }
 
     // --- helpers ---
@@ -324,7 +323,7 @@ class AiWorkflowServiceTest {
                             return null;
                         })
                 .when(aiEngineClient)
-                .streamPost(eq("/api/v1/orchestrator/stream"), anyString(), any());
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
     }
 
     /**

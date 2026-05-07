@@ -20,16 +20,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 
 
-@router.post("", response_model=OrchestratorResponse)
+@router.post("")
 async def orchestrate(
-    request: OrchestratorRequest,
-    agent: Annotated[OrchestratorAgent, Depends(get_orchestrator_agent)],
-) -> OrchestratorResponse:
-    return await agent.handle(request)
-
-
-@router.post("/stream")
-async def orchestrate_stream(
     request: OrchestratorRequest,
     agent: Annotated[OrchestratorAgent, Depends(get_orchestrator_agent)],
 ) -> StreamingResponse:
@@ -38,12 +30,12 @@ async def orchestrate_stream(
     Each output line is a JSON object with an ``event`` field. ``progress``
     events arrive whenever an inner agent reports work (e.g. each
     chunked-reasoner slice completing); the final ``result`` event carries the
-    same body the unary endpoint would have returned. ``error`` events surface
-    failures without breaking the connection.
+    typed orchestrator response. ``error`` events surface failures without
+    breaking the connection.
 
-    The stream itself is the timeout signal: as long as events flow, work is
+    The stream itself is the liveness signal: as long as events flow, work is
     alive. Java consumes this with a long total timeout and treats line
-    arrival as liveness.
+    arrival as forward progress.
     """
     return StreamingResponse(
         _OrchestratorStream(agent=agent, request=request).iterate(),
