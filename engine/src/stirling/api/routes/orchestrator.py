@@ -5,7 +5,7 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, assert_never
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -78,6 +78,8 @@ def _serialize_frame(frame: _StreamFrame) -> bytes:
             body = {"event": "result", "response": response.model_dump(mode="json")}
         case _ErrorFrame(message=message):
             body = {"event": "error", "message": message}
+        case _:
+            assert_never(frame)
     return (json.dumps(body) + "\n").encode("utf-8")
 
 
@@ -131,4 +133,4 @@ class _OrchestratorStream:
         except asyncio.CancelledError:
             pass
         except Exception:
-            logger.exception("background orchestrator task failed during cancellation")
+            logger.exception("background orchestrator task failed during cancellation", exc_info=True)
