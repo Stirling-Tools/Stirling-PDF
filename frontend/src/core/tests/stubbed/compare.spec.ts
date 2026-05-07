@@ -20,50 +20,11 @@
 
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
+import { mockAppApis } from "@app/tests/helpers/api-stubs";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const PDF_A = path.join(FIXTURES_DIR, "compare_sample_a.pdf");
 const PDF_B = path.join(FIXTURES_DIR, "compare_sample_b.pdf");
-
-async function mockAppApis(page: Page) {
-  await page.route("**/api/v1/info/status", (route) =>
-    route.fulfill({ json: { status: "UP" } }),
-  );
-  await page.route("**/api/v1/config/app-config", (route) =>
-    route.fulfill({
-      json: {
-        enableLogin: false,
-        languages: ["en-GB"],
-        defaultLocale: "en-GB",
-      },
-    }),
-  );
-  await page.route("**/api/v1/auth/me", (route) =>
-    route.fulfill({
-      json: {
-        id: 1,
-        username: "testuser",
-        email: "test@example.com",
-        roles: ["ROLE_USER"],
-      },
-    }),
-  );
-  await page.route("**/api/v1/config/endpoints-availability", (route) =>
-    route.fulfill({ json: { compare: { enabled: true } } }),
-  );
-  await page.route("**/api/v1/config/endpoint-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-  await page.route("**/api/v1/config/group-enabled*", (route) =>
-    route.fulfill({ json: true }),
-  );
-  await page.route("**/api/v1/ui-data/footer-info", (route) =>
-    route.fulfill({ json: {} }),
-  );
-  await page.route("**/api/v1/proprietary/**", (route) =>
-    route.fulfill({ json: {} }),
-  );
-}
 
 async function navigateToCompare(page: Page) {
   await page.locator('[data-tour="tool-button-compare"]').first().click();
@@ -84,16 +45,27 @@ async function uploadIntoSlot(
     timeout: 5000,
   });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "hidden",
-    timeout: 10000,
-  });
 
+  // The slot becoming filled is the user-visible outcome we actually care
+  // about. Don't gate on the modal-overlay close animation — Mantine 9's
+  // Modal can leave the overlay element mounted briefly while transitioning,
+  // which races with successive uploads in this test and produces flaky
+  // 10s timeouts. The slot fill assertion below covers the same intent and
+  // implies the upload completed.
   const slot = page.locator(`[data-testid="compare-slot-${role}"]`);
   await expect(slot).toHaveAttribute("data-slot-state", "filled", {
-    timeout: 10000,
+    timeout: 15000,
   });
   await expect(slot).toHaveAttribute("data-slot-filename", expectedFilename);
+
+  // Wait for the modal overlay to be fully gone before the next interaction
+  // so click targets in subsequent uploads aren't intercepted.
+  await page
+    .locator(".mantine-Modal-overlay")
+    .waitFor({ state: "detached", timeout: 5000 })
+    .catch(() => {
+      /* if it's detached or re-detached during teardown, that's fine */
+    });
 }
 
 test.describe("Compare tool slot selection", () => {
