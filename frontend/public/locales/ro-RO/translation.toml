@@ -1806,7 +1806,11 @@ title = "Redenumire inteligentă"
 [automate]
 copyToSaved = "Copiați în Salvate"
 desc = "Construiți fluxuri de lucru în mai mulți pași, înlănțuind acțiuni PDF. Ideal pentru sarcini recurente."
+export = "Export"
 exportForFolderScanning = "Exportă pentru scanarea folderelor"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Pas nevalid"
 reviewTitle = "Rezultatele automatizării"
 title = "Automatizare"
@@ -1822,6 +1826,7 @@ title = "Configurați {{toolName}}"
 [automate.creation]
 createTitle = "Creați automatizare"
 editTitle = "Editați automatizarea"
+export = "Export"
 exportForFolderScanning = "Exportă pentru scanarea folderelor"
 intro = "Automatizările rulează instrumentele secvențial. Pentru a începe, adăugați instrumente în ordinea în care doriți să ruleze."
 save = "Salvați automatizarea"
@@ -1852,8 +1857,27 @@ confirm = "Înapoi"
 message = "Aveți modificări nesalvate. Sigur doriți să vă întoarceți? Toate modificările vor fi pierdute."
 title = "Modificări nesalvate"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Selectați fișiere de procesat cu această automatizare"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Rulați automatizarea"
@@ -4205,6 +4229,11 @@ desc = "Îmbină mai multe pagini ale unui document PDF într-o singură pagină
 tags = "aspect,aranjează,combină"
 title = "Aspect Multi-Pagină"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Elimină/rearanjează pagini în orice ordine"
 tags = "organizează,rearanjează,reordonează"
@@ -5280,6 +5309,24 @@ selectMonthly = "Selectează lunar"
 selectYearly = "Selectează anual"
 title = "Alege perioada de facturare"
 totalForSeats = "Total ({{count}} locuri)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Organizator de pagini PDF"

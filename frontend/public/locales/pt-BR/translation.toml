@@ -1806,7 +1806,11 @@ title = "Renomeação inteligente"
 [automate]
 copyToSaved = "Copiar para Salvos"
 desc = "Crie fluxos de trabalho de várias etapas encadeando ações de PDF. Ideal para tarefas recorrentes."
+export = "Export"
 exportForFolderScanning = "Exportar para Varredura de Pasta"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Etapa inválida"
 reviewTitle = "Resultados da automação"
 title = "Automatizar"
@@ -1822,6 +1826,7 @@ title = "Configurar {{toolName}}"
 [automate.creation]
 createTitle = "Criar automação"
 editTitle = "Editar automação"
+export = "Export"
 exportForFolderScanning = "Exportar para Varredura de Pasta"
 intro = "As automações executam ferramentas sequencialmente. Para começar, adicione as ferramentas na ordem em que deseja executá-las."
 save = "Salvar automação"
@@ -1852,8 +1857,27 @@ confirm = "Voltar"
 message = "Você tem alterações não salvas. Tem certeza de que deseja voltar? Todas as alterações serão perdidas."
 title = "Alterações não salvas"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Selecione arquivos para processar com esta automação"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Executar automação"
@@ -4205,6 +4229,11 @@ desc = "Mesclar várias páginas de um documento PDF em uma única página."
 tags = "layout,organizar,combinar"
 title = "Layout de Múltiplas Páginas"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Remover/reorganizar as páginas de diversas formas diferentes."
 tags = "organizar,rearranjar,reordenar"
@@ -5280,6 +5309,24 @@ selectMonthly = "Selecionar mensal"
 selectYearly = "Selecionar anual"
 title = "Escolha seu período de cobrança"
 totalForSeats = "Total ({{count}} assentos)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Organizar Páginas"

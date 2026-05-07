@@ -1806,7 +1806,11 @@ title = "スマートリネーム"
 [automate]
 copyToSaved = "保存済みにコピー"
 desc = "PDF アクションを連結して複数ステップのワークフローを構築します。繰り返し作業に最適です。"
+export = "Export"
 exportForFolderScanning = "フォルダー監視用にエクスポート"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "無効なステップ"
 reviewTitle = "自動処理の結果"
 title = "自動化"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} を構成"
 [automate.creation]
 createTitle = "自動処理を作成"
 editTitle = "自動処理を編集"
+export = "Export"
 exportForFolderScanning = "フォルダー監視用にエクスポート"
 intro = "自動処理はツールを順番に実行します。まずは実行したい順にツールを追加してください。"
 save = "自動処理を保存"
@@ -1852,8 +1857,27 @@ confirm = "戻る"
 message = "未保存の変更があります。本当に戻りますか？すべての変更は失われます。"
 title = "未保存の変更"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "この自動処理で処理するファイルを選択"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "自動処理を実行"
@@ -4205,6 +4229,11 @@ desc = "PDFの複数のページを1ページに結合します。"
 tags = "レイアウト,配置,結合"
 title = "マルチページレイアウト"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "ページの削除/並べ替えします。"
 tags = "両面,偶数,奇数,並べ替え,移動"
@@ -5280,6 +5309,24 @@ selectMonthly = "月額を選択"
 selectYearly = "年額を選択"
 title = "請求期間を選択"
 totalForSeats = "合計（{{count}} 席）"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDFページの整理"

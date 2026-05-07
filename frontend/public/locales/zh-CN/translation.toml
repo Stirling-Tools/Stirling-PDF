@@ -1806,7 +1806,11 @@ title = "智能重命名"
 [automate]
 copyToSaved = "复制到“已保存”"
 desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
+export = "Export"
 exportForFolderScanning = "导出用于文件夹扫描"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "无效步骤"
 reviewTitle = "自动化结果"
 title = "自动化"
@@ -1822,6 +1826,7 @@ title = "配置 {{toolName}}"
 [automate.creation]
 createTitle = "创建自动化"
 editTitle = "编辑自动化"
+export = "Export"
 exportForFolderScanning = "导出用于文件夹扫描"
 intro = "自动化会按顺序运行工具。开始前，请按希望的顺序添加工具。"
 save = "保存自动化"
@@ -1852,8 +1857,27 @@ confirm = "返回"
 message = "您有未保存的更改。确定要返回吗？所有更改都将丢失。"
 title = "未保存的更改"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "选择要用此自动化处理的文件"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "运行自动化"
@@ -4205,6 +4229,11 @@ desc = "将 PDF 文档的多个页面合并成一页"
 tags = "布局,排列,组合"
 title = "多页布局"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "按任意顺序删除/重新排列页面。"
 tags = "组织,重新排列,重新排序"
@@ -5280,6 +5309,24 @@ selectMonthly = "选择按月"
 selectYearly = "选择按年"
 title = "选择您的计费周期"
 totalForSeats = "合计（{{count}} 席位）"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF 页面排序"

@@ -1806,7 +1806,11 @@ title = "Berriz-izendatze adimenduna"
 [automate]
 copyToSaved = "Gordetakoetara kopiatu"
 desc = "Eraiki hainbat pausoko lan-fluxuak PDF ekintzak kateatuz. Egokia zeregin errepikakorretarako."
+export = "Export"
 exportForFolderScanning = "Karpeta-eskaneatzerako esportatu"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Urrats baliogabea"
 reviewTitle = "Automatizazioaren emaitzak"
 title = "Automatizatu"
@@ -1822,6 +1826,7 @@ title = "Konfiguratu {{toolName}}"
 [automate.creation]
 createTitle = "Automatizazioa sortu"
 editTitle = "Automatizazioa editatu"
+export = "Export"
 exportForFolderScanning = "Karpeta-eskaneatzerako esportatu"
 intro = "Automatizazioek tresnak sekuentzialki exekutatzen dituzte. Hasteko, gehitu tresnak exekutatu nahi dituzun ordenan."
 save = "Automatizazioa gorde"
@@ -1852,8 +1857,27 @@ confirm = "Itzuli atzera"
 message = "Aldaketak gorde gabe dituzu. Ziur atzera nahi duzula? Aldaketa guztiak galduko dira."
 title = "Gorde gabeko aldaketak"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Hautatu automatizazio honekin prozesatuko diren fitxategiak"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Automatizazioa exekutatu"
@@ -4205,6 +4229,11 @@ desc = "Elkartu orri bakar batean PDF dokumentu baten zenbait orrialde"
 tags = "diseinua,antolatu,kombinatu"
 title = "Zenbait orrialderen diseinua"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Ezabatu/Berrantolatu orrialdeak edozein ordenatan"
 tags = "antolatu,berrordenatu,ordena aldatu"
@@ -5280,6 +5309,24 @@ selectMonthly = "Aukeratu hilero"
 selectYearly = "Aukeratu urtero"
 title = "Aukeratu fakturazio epea"
 totalForSeats = "Guztira ({{count}} eserleku)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF orrialdeen antolatzailea"

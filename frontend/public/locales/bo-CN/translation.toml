@@ -1806,7 +1806,11 @@ title = "མིང་འདོགས་བཟང་པོ།"
 [automate]
 copyToSaved = "སྐྱོབ་པའི་ངོ་བཤུས།"
 desc = "གོམ་པ་མང་པོའི་ལས་ཀའི་འགྲོ་ལུགས་དེ་PDFབྱ་སྤྱོད་མཉམ་དུ་སྒྲིག་ནས་བཟོས། ལས་འགན་ཡང་བསྐྱར་འཚོག་པར་འཚམ་པོ་ཡོད།"
+export = "Export"
 exportForFolderScanning = "ཡིག་སྣོད་ཞིབ་བཤེར་ཆེད་དུ་ཕྱིར་གཏོང"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "གོམ་པ་མི་འདང་བ།"
 reviewTitle = "རང་འགུལ་ཅན་གྱི་གྲུབ་འབྲས།"
 title = "རང་འགུལ་ཅན།"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} སྒྲིག་བཀོད"
 [automate.creation]
 createTitle = "རང་འགུལ་ཅན་གསར་གཏོད།"
 editTitle = "རང་འགུལ་སྒྲིག་བཅོས།"
+export = "Export"
 exportForFolderScanning = "ཡིག་སྣོད་ཞིབ་བཤེར་ཆེད་དུ་ཕྱིར་གཏོང"
 intro = "རང་འགུལ་གྱིས་ལག་ཆ་རིམ་བཞིན་སྤྱོད་ཀྱི་ཡོད། འགོ་འཛུགས་པར་ཁྱེད་ཀྱིས་ཁོང་ཚོ་རྒྱུག་དགོས་པའི་གོ་རིམ་ནང་ལག་ཆ་ཁ་སྣོན་བྱེད་དགོས།"
 save = "རང་འགུལ་ཅན་དུ་འགྱུར་བ།"
@@ -1852,8 +1857,27 @@ confirm = "ཕྱིར་འགྲོ།"
 message = "ཁྱོད་ལ་མ་སྐྱོབ་པའི་འགྱུར་བ་ཡོད། ཁྱེད་རང་ཕྱིར་ལོག་འདོད་ཡོད་དམ། འགྱུར་བ་ཚང་མ་བརླག་འགྲོ་གི་རེད།"
 title = "གསོག་འཇོག་མེད་པའི་འགྱུར་བ།"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "རང་འགུལ་ཅན་འདི་དང་ལས་སྣོན་བྱེད་པའི་ཡིག་ཆ་འདེམས།"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "རང་འགུལ་ཅན་འཛིན།"
@@ -4205,6 +4229,11 @@ desc = "PDFཡིག་ཆའི་ཤོག་ངོས་མང་པོ་ཤ
 tags = "བཀོད་སྒྲིག གཞི་སྒྲིག མཉམ་སྦྱོར།"
 title = "ཤོག་ངོས་མང་པོའི་བཀོད་སྒྲིག།"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "གོ་རིམ་གང་རུང་ནས་ཤོག་བུ་བསུབ་པ་/བསྐྱར་སྒྲིག་བྱེད་པ།"
 tags = "སྒྲིག་འཛུགས་དང་དགོད་བྲོ།"
@@ -5280,6 +5309,24 @@ selectMonthly = "ཟླ་རེར་འདེམས།"
 selectYearly = "ལོ་རེ་འདེམས་པ།"
 title = "ཁྱེད་རང་གི་ཨ་ལིང་གི་དུས་ཡུན་འདེམས།"
 totalForSeats = "བསྡོམས་ ({{count}} རྐུབ་སྟེགས)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF ཤོག་ངོས་གོ་སྒྲིག་བྱེད་མཁན།"

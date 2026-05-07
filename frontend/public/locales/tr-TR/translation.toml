@@ -1806,7 +1806,11 @@ title = "Akıllı Yeniden Adlandırma"
 [automate]
 copyToSaved = "Kayıtlıya Kopyala"
 desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları oluşturun. Tekrarlayan görevler için idealdir."
+export = "Export"
 exportForFolderScanning = "Klasör Tarama için Dışa Aktar"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Geçersiz adım"
 reviewTitle = "Otomasyon Sonuçları"
 title = "Otomatikleştir"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} ayarlarını yapılandır"
 [automate.creation]
 createTitle = "Otomasyon Oluştur"
 editTitle = "Otomasyonu Düzenle"
+export = "Export"
 exportForFolderScanning = "Klasör Tarama için Dışa Aktar"
 intro = "Otomasyonlar araçları sırayla çalıştırır. Başlamak için, çalıştırılmasını istediğiniz sırayla araçlar ekleyin."
 save = "Otomasyonu Kaydet"
@@ -1852,8 +1857,27 @@ confirm = "Geri Dön"
 message = "Kaydedilmemiş değişiklikleriniz var. Geri dönmek istediğinize emin misiniz? Tüm değişiklikler kaybolacak."
 title = "Kaydedilmemiş Değişiklikler"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Bu otomasyonla işlenecek dosyaları seçin"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Otomasyonu Çalıştır"
@@ -4205,6 +4229,11 @@ desc = "Bir PDF belgesinin çoklu sayfalarını tek bir sayfada birleştirir"
 tags = "düzen,yerleştir,birleştir"
 title = "Çoklu-Sayfa Düzeni"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Sayfaları herhangi bir sırayla kaldırın/düzenleyin"
 tags = "düzenle,yeniden_sırala,yeniden_düzenle"
@@ -5280,6 +5309,24 @@ selectMonthly = "Aylığı Seç"
 selectYearly = "Yıllığı Seç"
 title = "Faturalandırma Döneminizi Seçin"
 totalForSeats = "Toplam ({{count}} koltuk)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF Sayfa Organizatörü"

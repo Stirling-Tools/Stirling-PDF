@@ -1806,7 +1806,11 @@ title = "Pametno preimenovanje"
 [automate]
 copyToSaved = "Kopiraj v shranjene"
 desc = "Sestavite večkorakovne poteke dela z veriženjem dejanj PDF. Idealno za ponavljajoče se naloge."
+export = "Export"
 exportForFolderScanning = "Izvozi za skeniranje map"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Neveljaven korak"
 reviewTitle = "Rezultati avtomatizacije"
 title = "Avtomatizacija"
@@ -1822,6 +1826,7 @@ title = "Konfiguriraj {{toolName}}"
 [automate.creation]
 createTitle = "Ustvari avtomatizacijo"
 editTitle = "Uredi avtomatizacijo"
+export = "Export"
 exportForFolderScanning = "Izvozi za skeniranje map"
 intro = "Avtomatizacije poganjajo orodja zaporedno. Za začetek dodajte orodja v vrstnem redu, v katerem jih želite zagnati."
 save = "Shrani avtomatizacijo"
@@ -1852,8 +1857,27 @@ confirm = "Nazaj"
 message = "Imate neshranjene spremembe. Ste prepričani, da želite iti nazaj? Vse spremembe bodo izgubljene."
 title = "Neshranjene spremembe"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Izberite datoteke za obdelavo s to avtomatizacijo"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Zaženi avtomatizacijo"
@@ -4205,6 +4229,11 @@ desc = "Združi več strani dokumenta PDF v eno stran"
 tags = "postavitev,razporedi,združi"
 title = "Večstranska postavitev"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Odstrani/Prerazporedi strani v poljubnem vrstnem redu"
 tags = "organizira,preuredi,razvrsti"
@@ -5280,6 +5309,24 @@ selectMonthly = "Izberi mesečno"
 selectYearly = "Izberi letno"
 title = "Izberite obračunsko obdobje"
 totalForSeats = "Skupaj ({{count}} mest)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "Organizator strani PDF"

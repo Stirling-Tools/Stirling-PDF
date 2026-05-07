@@ -1806,7 +1806,11 @@ title = "Smart namnbyte"
 [automate]
 copyToSaved = "Kopiera till Sparade"
 desc = "Bygg arbetsflöden i flera steg genom att kedja samman PDF-verktyg. Idealiskt för återkommande uppgifter."
+export = "Export"
 exportForFolderScanning = "Exportera för mappskanning"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Ogiltigt steg"
 reviewTitle = "Resultat av automatisering"
 title = "Automatisera"
@@ -1822,6 +1826,7 @@ title = "Konfigurera {{toolName}}"
 [automate.creation]
 createTitle = "Skapa automatisering"
 editTitle = "Redigera automatisering"
+export = "Export"
 exportForFolderScanning = "Exportera för mappskanning"
 intro = "Automatiseringar kör verktyg sekventiellt. Lägg till verktyg i den ordning du vill att de ska köras för att komma igång."
 save = "Spara automatisering"
@@ -1852,8 +1857,27 @@ confirm = "Gå tillbaka"
 message = "Du har osparade ändringar. Är du säker på att du vill gå tillbaka? Alla ändringar kommer att gå förlorade."
 title = "Osparade ändringar"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Välj filer att bearbeta med denna automatisering"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Kör automatisering"
@@ -4205,6 +4229,11 @@ desc = "Slå samman flera sidor av ett PDF-dokument till en enda sida"
 tags = "layout,arrangera,kombinera"
 title = "Flersidig layout"
 
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
+
 [home.pdfOrganiser]
 desc = "Ta bort/ordna om sidor i valfri ordning"
 tags = "organisera,arrangera,ordna om"
@@ -5280,6 +5309,24 @@ selectMonthly = "Välj månadsvis"
 selectYearly = "Välj årsvis"
 title = "Välj din faktureringsperiod"
 totalForSeats = "Totalt ({{count}} platser)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF-sidorganisatör"
