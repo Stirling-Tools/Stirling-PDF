@@ -89,6 +89,7 @@ from .pdf_questions import (
 )
 from .progress import (
     ProgressEvent,
+    WholeDocCompressionRound,
     WholeDocReadDone,
     WholeDocReadStarted,
     WholeDocSliceDone,
@@ -167,6 +168,7 @@ __all__ = [
     "ToolReportArtifact",
     "UnsupportedCapabilityResponse",
     "Verdict",
+    "WholeDocCompressionRound",
     "WholeDocReadDone",
     "WholeDocReadStarted",
     "WholeDocSliceDone",

@@ -117,6 +117,11 @@ function formatEngineProgress(
       const total = typeof detail?.total === "number" ? detail.total : 0;
       return t("chat.progress.whole_doc_slice_done", { completed, total });
     }
+    case "whole_doc_compression_round": {
+      const notes_in =
+        typeof detail?.notes_in === "number" ? detail.notes_in : 0;
+      return t("chat.progress.whole_doc_compression_round", { notes_in });
+    }
     case "whole_doc_read_done": {
       return t("chat.progress.whole_doc_read_done");
     }

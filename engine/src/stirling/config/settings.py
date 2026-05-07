@@ -44,6 +44,12 @@ class AppSettings(BaseSettings):
     chunked_reasoner_worker_timeout_seconds: float = Field(
         validation_alias="STIRLING_CHUNKED_REASONER_WORKER_TIMEOUT_SECONDS"
     )
+    # Maximum size, in characters, of the rendered notes block before the
+    # reasoner folds slice notes hierarchically. The Anthropic context limit
+    # is 200k tokens (~880k chars); we leave a generous margin for the
+    # downstream agent's system prompt, history, tool definitions, and
+    # response budget.
+    chunked_reasoner_notes_char_budget: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_NOTES_CHAR_BUDGET")
 
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")

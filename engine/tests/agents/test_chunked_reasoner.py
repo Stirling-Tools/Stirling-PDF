@@ -90,7 +90,7 @@ class TestReason:
         canned_answer = _Answer(answer="final answer")
 
         with (
-            patch.object(reasoner, "_run_worker", AsyncMock(return_value=(canned_notes, 0.0))) as worker_mock,
+            patch.object(reasoner, "_extract_slice", AsyncMock(return_value=(canned_notes, 0.0))) as worker_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -120,7 +120,7 @@ class TestReason:
         canned_answer = _Answer(answer="ok")
 
         with (
-            patch.object(reasoner, "_run_worker", AsyncMock(return_value=(canned_notes, 0.0))) as worker_mock,
+            patch.object(reasoner, "_extract_slice", AsyncMock(return_value=(canned_notes, 0.0))) as worker_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)),
         ):
             await reasoner.reason(
@@ -151,7 +151,7 @@ class TestReason:
         canned_answer = _Answer(answer="resilient")
 
         with (
-            patch.object(reasoner, "_run_worker", AsyncMock(side_effect=_worker)),
+            patch.object(reasoner, "_extract_slice", AsyncMock(side_effect=_worker)),
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -173,7 +173,7 @@ class TestReason:
         pages = [_page(i, "x" * 8) for i in range(1, 3)]
 
         with (
-            patch.object(reasoner, "_run_worker", AsyncMock(side_effect=RuntimeError("boom"))),
+            patch.object(reasoner, "_extract_slice", AsyncMock(side_effect=RuntimeError("boom"))),
             patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
             pytest.raises(RuntimeError, match="no notes"),
         ):
@@ -233,7 +233,7 @@ class TestReason:
 
         token = set_progress_emitter(_capture_emitter)
         try:
-            with patch.object(reasoner._worker, "run", AsyncMock(side_effect=_gated_worker)):
+            with patch.object(reasoner._extractor, "run", AsyncMock(side_effect=_gated_worker)):
                 gather_task = asyncio.create_task(reasoner.gather_notes(pages, "anything"))
                 await _release_in_reverse()
                 notes = await gather_task
@@ -257,7 +257,7 @@ class TestReason:
             return _StubAgentResult(output=ChunkNotes(pages=[0], summary="never"))
 
         with (
-            patch.object(reasoner._worker, "run", AsyncMock(side_effect=_hang_forever)),
+            patch.object(reasoner._extractor, "run", AsyncMock(side_effect=_hang_forever)),
             patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
             pytest.raises(RuntimeError, match="no notes"),
         ):
@@ -287,7 +287,7 @@ class TestReason:
             return _StubAgentResult(output=ChunkNotes(pages=[0], summary="never"))
 
         with (
-            patch.object(reasoner._worker, "run", AsyncMock(side_effect=_hang)),
+            patch.object(reasoner._extractor, "run", AsyncMock(side_effect=_hang)),
             patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
             pytest.raises(RuntimeError, match="no notes"),
         ):
@@ -305,16 +305,19 @@ class TestReason:
 
 
 class TestPromptConstruction:
-    def test_worker_prompt_includes_question_and_page_markers(self, runtime: AppRuntime) -> None:
+    def test_extraction_prompt_includes_question_and_page_markers(self, runtime: AppRuntime) -> None:
+        """The round-1 extractor sees a prompt built from formatted slice content
+        plus the user question. ``[Page N]`` markers come from the slice
+        formatter; the question header comes from the shared extraction prompt."""
         reasoner = ChunkedReasoner(runtime)
         slice_ = _Slice(pages=[_page(2, "page two body"), _page(3, "page three body")])
-        prompt = reasoner._build_worker_prompt(slice_, "what is on page two?")
+        content = reasoner._format_slice_content(slice_)
+        prompt = reasoner._build_extraction_prompt(content, "what is on page two?")
 
         assert "what is on page two?" in prompt
         assert "[Page 2]" in prompt
         assert "[Page 3]" in prompt
         assert "page two body" in prompt
-        assert "Slice covers pages 2 to 3" in prompt
 
     def test_format_notes_groups_by_page_label(self) -> None:
         notes = [
@@ -327,3 +330,148 @@ class TestPromptConstruction:
         assert "[Notes from pages 2-4]" in rendered
         assert "f-1" in rendered
         assert "quote-1" in rendered
+
+
+# Hierarchical compression
+
+
+class TestCompressNotes:
+    """``_compress_notes`` folds slice notes hierarchically when they would
+    otherwise overflow the synthesis prompt budget."""
+
+    @pytest.mark.anyio
+    async def test_no_fold_when_under_budget(self, runtime: AppRuntime) -> None:
+        """Notes that already fit are returned unchanged with no fold calls."""
+        reasoner = ChunkedReasoner(runtime, notes_char_budget=100_000)
+        notes = [ChunkNotes(pages=[i], summary=f"s-{i}") for i in range(1, 5)]
+
+        with patch.object(reasoner._extractor, "run", AsyncMock()) as folder_mock:
+            result = await reasoner._compress_notes(list(notes), "anything")
+
+        assert result == notes
+        folder_mock.assert_not_awaited()
+
+    @pytest.mark.anyio
+    async def test_folds_when_rendered_size_exceeds_budget(self, runtime: AppRuntime) -> None:
+        """Notes that overflow the budget go through one or more fold rounds;
+        the output is shorter than the input and every input page survives in
+        the folded notes' page lists."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=200, notes_char_budget=100)
+        notes = [
+            ChunkNotes(pages=[i], summary="x" * 60)  # ~80 chars rendered each
+            for i in range(1, 5)
+        ]
+
+        async def _fold(*_args: object, **_kwargs: object) -> _StubAgentResult[object]:
+            return _StubAgentResult(output=_ExtractedNotes(summary="ok"))
+
+        with patch.object(reasoner._extractor, "run", AsyncMock(side_effect=_fold)) as folder_mock:
+            result = await reasoner._compress_notes(notes, "anything")
+
+        assert folder_mock.await_count >= 1
+        assert len(result) < len(notes)  # actually compressed
+        assert all(n.summary == "ok" for n in result)
+        # Pages are preserved across the (possibly multi-round) fold.
+        assert sorted({p for n in result for p in n.pages}) == [1, 2, 3, 4]
+
+    @pytest.mark.anyio
+    async def test_compression_preserves_input_notes_when_a_group_fails(self, runtime: AppRuntime) -> None:
+        """A compression group that raises has its input notes carried forward
+        rather than dropped, so page coverage isn't silently lost. The
+        surviving group's consolidated note replaces its inputs."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
+        # Sized so the post-round survivors (1 preserved input ~78 chars +
+        # 1 consolidated note ~30 chars) fit under the budget, leaving the
+        # failed-group preservation as the observable effect.
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=80, notes_char_budget=140)
+        notes = [ChunkNotes(pages=[i], summary="x" * 50) for i in range(1, 3)]
+
+        call_index = 0
+
+        async def _fold(*_args: object, **_kwargs: object) -> _StubAgentResult[object]:
+            nonlocal call_index
+            call_index += 1
+            if call_index == 1:
+                raise RuntimeError("fold boom")
+            return _StubAgentResult(output=_ExtractedNotes(summary="ok"))
+
+        with patch.object(reasoner._extractor, "run", AsyncMock(side_effect=_fold)):
+            result = await reasoner._compress_notes(notes, "anything")
+
+        # The failed group keeps its original note (page 1, summary 'x...');
+        # the successful group is replaced by its consolidated note (page 2,
+        # summary 'ok').
+        assert len(result) == 2
+        page_to_summary = {n.pages[0]: n.summary for n in result}
+        assert page_to_summary[1].startswith("x")  # original note preserved
+        assert page_to_summary[2] == "ok"  # consolidated note
+
+    @pytest.mark.anyio
+    async def test_compression_bails_when_every_group_fails(self, runtime: AppRuntime) -> None:
+        """If a round produces zero successful folds, returning the same notes
+        for another pass would just retry the same shape forever. The reasoner
+        bails with whatever inputs it preserved so downstream synthesis can
+        still attempt an answer (or fail loudly)."""
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=80, notes_char_budget=50)
+        notes = [ChunkNotes(pages=[i], summary="x" * 50) for i in range(1, 3)]
+
+        with patch.object(
+            reasoner._extractor,
+            "run",
+            AsyncMock(side_effect=RuntimeError("everyone failed")),
+        ):
+            result = await reasoner._compress_notes(notes, "anything")
+
+        # All inputs preserved (the failed-group safety net), no consolidated notes.
+        assert result == notes
+
+
+class TestGroupNotesForFold:
+    """``_group_notes_for_compression`` is pure and packs by rendered char count."""
+
+    def test_packs_consecutive_notes_under_budget(self, runtime: AppRuntime) -> None:
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=10_000)
+        notes = [ChunkNotes(pages=[i], summary=f"s-{i}") for i in range(1, 5)]
+
+        groups = reasoner._group_notes_for_compression(notes)
+
+        assert len(groups) == 1
+        assert [n.pages[0] for n in groups[0]] == [1, 2, 3, 4]
+
+    def test_starts_new_group_when_budget_exceeded(self, runtime: AppRuntime) -> None:
+        """Each note already exceeds the per-group budget, so each becomes its
+        own group; this matches how slice-pages handles oversize pages."""
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=5)
+        notes = [ChunkNotes(pages=[i], summary=f"slice-{i}-with-prose-to-fill-space") for i in range(1, 5)]
+
+        groups = reasoner._group_notes_for_compression(notes)
+
+        assert [[n.pages[0] for n in g] for g in groups] == [[1], [2], [3], [4]]
+
+
+class TestExtractCompressionGroup:
+    @pytest.mark.anyio
+    async def test_pages_are_unioned_from_inputs(self, runtime: AppRuntime) -> None:
+        """``pages`` on the consolidated note is computed deterministically
+        from the inputs - the model output schema doesn't include pages, so
+        there's no path for the model to lose, dedupe, or misreport them."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
+        reasoner = ChunkedReasoner(runtime)
+        group = [
+            ChunkNotes(pages=[1, 2], summary="a"),
+            ChunkNotes(pages=[3], summary="b"),
+            ChunkNotes(pages=[4, 5], summary="c"),
+        ]
+        canned = _ExtractedNotes(summary="merged", facts=["x"], relevant_excerpts=["y"])
+
+        with patch.object(reasoner._extractor, "run", AsyncMock(return_value=_StubAgentResult(output=canned))):
+            folded = await reasoner._extract_compression_group(group, "anything")
+
+        assert folded.pages == [1, 2, 3, 4, 5]
+        assert folded.summary == "merged"
+        assert folded.facts == ["x"]
+        assert folded.relevant_excerpts == ["y"]

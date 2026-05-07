@@ -39,6 +39,24 @@ class WholeDocSliceDone(ApiModel):
     facts: int
 
 
+class WholeDocCompressionRound(ApiModel):
+    """Emitted when the gathered slice notes exceed the synthesis context
+    budget and the reasoner consolidates them with a fast-model fold pass.
+
+    Long documents (a 3000-page novel produces ~900k chars of raw notes)
+    would otherwise overflow the smart-model's prompt. ``notes_in`` is the
+    count entering the round; ``groups`` is the number of fold calls fired
+    (each producing one consolidated note). One or two rounds usually fit;
+    the event fires per round so callers can render "Consolidating notes
+    (round N)..." rather than going silent through the fold.
+    """
+
+    phase: Literal["whole_doc_compression_round"] = "whole_doc_compression_round"
+    round_number: int
+    notes_in: int
+    groups: int
+
+
 class WholeDocReadDone(ApiModel):
     phase: Literal["whole_doc_read_done"] = "whole_doc_read_done"
     completed: int
@@ -47,6 +65,6 @@ class WholeDocReadDone(ApiModel):
 
 
 type ProgressEvent = Annotated[
-    WholeDocReadStarted | WholeDocSliceDone | WholeDocReadDone,
+    WholeDocReadStarted | WholeDocSliceDone | WholeDocCompressionRound | WholeDocReadDone,
     Field(discriminator="phase"),
 ]
