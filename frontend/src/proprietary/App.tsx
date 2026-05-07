@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Routes, Route, useParams } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { FullAppSkeleton } from "@app/components/shared/FullAppSkeleton";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import Landing from "@app/routes/Landing";
@@ -42,7 +42,7 @@ function ParticipantViewPage() {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingFallback fullPage />}>
+    <Suspense fallback={<FullAppSkeleton />}>
       <Routes>
         {/* Mobile scanner route - no backend needed, pure P2P WebRTC */}
         <Route

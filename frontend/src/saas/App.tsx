@@ -4,7 +4,7 @@ import { AppProviders } from "@app/components/AppProviders";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { FullAppSkeleton } from "@app/components/shared/FullAppSkeleton";
 import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
@@ -29,7 +29,7 @@ function handleConfigLoaded(config: AppConfig) {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingFallback fullPage />}>
+    <Suspense fallback={<FullAppSkeleton />}>
       <AppProviders
         appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
       >

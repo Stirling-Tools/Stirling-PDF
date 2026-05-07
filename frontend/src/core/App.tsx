@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { FullAppSkeleton } from "@app/components/shared/FullAppSkeleton";
 import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
@@ -28,7 +28,7 @@ function MobileScannerProviders({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingFallback fullPage />}>
+    <Suspense fallback={<FullAppSkeleton />}>
       <Routes>
         {/* Mobile scanner route - no backend needed, pure P2P WebRTC */}
         <Route
