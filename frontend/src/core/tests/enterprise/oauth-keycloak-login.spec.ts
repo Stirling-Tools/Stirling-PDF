@@ -54,7 +54,9 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
       timeout: 30_000,
     });
     await expect(
-      page.locator('[data-tour="quick-access-bar"], [data-tour="workbench"]').first(),
+      page
+        .locator('[data-tour="quick-access-bar"], [data-tour="workbench"]')
+        .first(),
     ).toBeVisible({
       timeout: 15_000,
     });
