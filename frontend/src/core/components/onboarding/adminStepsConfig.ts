@@ -61,7 +61,7 @@ export function createAdminStepsConfig({
       selector: '[data-tour="config-button"]',
       content: t(
         "adminOnboarding.configButton",
-        "Click the <strong>Config</strong> button to access all system settings and administrative controls.",
+        "Open <strong>Settings</strong> to access all system configuration and administrative controls.",
       ),
       position: "right",
       padding: 10,
@@ -211,7 +211,7 @@ export function createAdminStepsConfig({
       selector: '[data-tour="admin-help-nav"]',
       content: t(
         "adminOnboarding.wrapUp",
-        "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu.",
+        "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
       ),
       position: "right",
       padding: 10,

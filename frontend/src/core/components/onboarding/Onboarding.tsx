@@ -236,9 +236,11 @@ export default function Onboarding() {
           modifyCropSettings: tourOrch.modifyCropSettings,
           executeTool: tourOrch.executeTool,
           openFilesModal,
+          openSettingsHelpSection: () =>
+            adminTourOrch.navigateToSection("help"),
         },
       }),
-    [t, tourOrch, closeFilesModal, openFilesModal],
+    [t, tourOrch, adminTourOrch, closeFilesModal, openFilesModal],
   );
 
   const whatsNewStepsConfig = useMemo(

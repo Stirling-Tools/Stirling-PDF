@@ -34,6 +34,7 @@ interface UserStepActions {
   modifyCropSettings: () => void;
   executeTool: () => void;
   openFilesModal: () => void;
+  openSettingsHelpSection: () => void;
 }
 
 interface CreateUserStepsConfigArgs {
@@ -57,6 +58,7 @@ export function createUserStepsConfig({
     modifyCropSettings,
     executeTool,
     openFilesModal,
+    openSettingsHelpSection,
   } = actions;
 
   return {
@@ -198,13 +200,18 @@ export function createUserStepsConfig({
       actionAfter: () => pinFile(),
     },
     [TourStep.WRAP_UP]: {
-      selector: '[data-tour="config-button"]',
+      selector: '[data-tour="admin-help-nav"]',
       content: t(
         "onboarding.wrapUp",
-        "You're all set! To replay this tour anytime, click the <strong>Settings</strong> button here and navigate to the <strong>Tours</strong> section.",
+        "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
       ),
       position: "right",
       padding: 10,
+      action: async () => {
+        openSettingsHelpSection();
+        await waitForElement('[data-tour="admin-help-nav"]', 5000);
+        await waitForHighlightable('[data-tour="admin-help-nav"]', 5000);
+      },
     },
   };
 }
