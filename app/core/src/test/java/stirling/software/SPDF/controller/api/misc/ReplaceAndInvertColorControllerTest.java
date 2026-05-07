@@ -27,6 +27,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+import stirling.software.SPDF.service.misc.TextColorReplacementService;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.TempFile;
@@ -39,15 +40,8 @@ class ReplaceAndInvertColorControllerTest {
         return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
-
     @Mock private ReplaceAndInvertColorService replaceAndInvertColorService;
+    @Mock private TextColorReplacementService textColorReplacementService;
     @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private ReplaceAndInvertColorController controller;
@@ -215,7 +209,9 @@ class ReplaceAndInvertColorControllerTest {
             controller.replaceAndInvertColor(request);
 
             mockedWebResponse.verify(
-                    () -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()));
+                    () ->
+                            WebResponseUtils.pdfFileToWebResponse(
+                                    any(TempFile.class), eq("test_inverted.pdf")));
         }
     }
 }

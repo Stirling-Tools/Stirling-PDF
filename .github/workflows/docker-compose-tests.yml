@@ -61,9 +61,37 @@ jobs:
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Install Docker Compose
+        env:
+          COMPOSE_VERSION: "2.39.4"
+          # Pinned SHA512 for release binaries (matches docker/compose v2.39.4; cross-checked to
+          # https://github.com/docker/compose/releases/download/v2.39.4/checksums.txt SHA256).
+          SHA512_LINUX_X86_64: d2dd573651d5015743634e2ca67ea8bf299d780062fdae4d28e8f71a4d5b68fe45e879ae3a26d0593f89a8cd3296077a7a9857071ecdbf8ee558f4d9ab33cda3
+          SHA512_LINUX_AARCH64: 7e66799bf70a0c73aabf5d2974d50ca4a8232c2370fed5c32acc252e9593f4f47159c2c565a580f9a830143b0502806369fa6b68916f67c0758c5b2b62cf95c2
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m)"
+          case "${os}-${arch}" in
+            linux-x86_64)
+              artifact="docker-compose-linux-x86_64"
+              expected="${SHA512_LINUX_X86_64}"
+              ;;
+            linux-aarch64)
+              artifact="docker-compose-linux-aarch64"
+              expected="${SHA512_LINUX_AARCH64}"
+              ;;
+            *)
+              echo "Unsupported platform for Docker Compose install: ${os}-${arch}" >&2
+              exit 1
+              ;;
+          esac
+          tmp="$(mktemp)"
+          sumfile="$(mktemp)"
+          trap 'rm -f "${tmp}" "${sumfile}"' EXIT
+          curl -fsSL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/${artifact}" -o "${tmp}"
+          printf '%s  %s\n' "${expected}" "${tmp}" >"${sumfile}"
+          sha512sum -c "${sumfile}"
+          sudo install -m 0755 "${tmp}" /usr/local/bin/docker-compose
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
