@@ -118,6 +118,8 @@ const DEFAULT_ENDPOINTS_AVAILABILITY = Object.fromEntries(
 export interface MockAppApiOptions {
   /** Override `enableLogin`. Default `false` — app loads in anonymous mode. */
   enableLogin?: boolean;
+  /** Override `isAdmin` in app-config. Default `false`. */
+  isAdmin?: boolean;
   /** Override the logged-in user returned by `/auth/me`. */
   user?: {
     id?: number;
@@ -145,6 +147,7 @@ export async function mockAppApis(
 ): Promise<void> {
   const {
     enableLogin = false,
+    isAdmin = false,
     user = {
       id: 1,
       username: "testuser",
@@ -167,6 +170,7 @@ export async function mockAppApis(
     route.fulfill({
       json: {
         enableLogin,
+        isAdmin,
         languages,
         defaultLocale,
       },

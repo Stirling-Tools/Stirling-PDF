@@ -17,19 +17,16 @@ import { uploadFiles, openSettings } from "@app/tests/helpers/ui-helpers";
  *   - whatsNewStepsConfig.ts
  */
 
-const SAMPLE_PDF = path.join(
-  __dirname,
-  "../test-fixtures/sample.pdf",
-);
+const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
 
 // ---------------------------------------------------------------------------
 // 15.1 Static layout — always visible on the main page
 // ---------------------------------------------------------------------------
 test.describe("15.1 Tour selectors — static layout", () => {
   test("tool-panel is present", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="tool-panel"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-tour="tool-panel"]').first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("quick-access-bar (FileSidebar) is present", async ({ page }) => {
@@ -58,10 +55,12 @@ test.describe("15.1 Tour selectors — static layout", () => {
 
   // help-button: not yet implemented in the redesigned FileSidebar layout.
   // Re-enable once a tours/help entry point is added to the new UI.
-  test.skip("help-button is present — TODO: add to new sidebar layout", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="help-button"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
+  test.skip("help-button is present — TODO: add to new sidebar layout", async ({
+    page,
+  }) => {
+    await expect(page.locator('[data-tour="help-button"]').first()).toBeVisible(
+      { timeout: 10_000 },
+    );
   });
 });
 
@@ -87,9 +86,9 @@ test.describe("15.3 Tour selectors — workbench with file", () => {
   });
 
   test("workbench is present", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="workbench"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-tour="workbench"]').first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("view-switcher is present in viewer mode", async ({ page }) => {
@@ -135,9 +134,7 @@ test.describe("15.4 Tour selectors — active files view", () => {
     // The pin button lives inside HoverActionMenu (CSS-hover driven, always
     // attached to DOM).  Hover over the first file card to ensure the element
     // is rendered, then assert it is attached.
-    const fileCard = page
-      .locator('[data-tour="file-card-checkbox"]')
-      .first();
+    const fileCard = page.locator('[data-tour="file-card-checkbox"]').first();
     await expect(fileCard).toBeVisible({ timeout: 15_000 });
     await fileCard.hover();
     await expect(
@@ -162,9 +159,9 @@ test.describe("15.5 Tour selectors — crop tool", () => {
   });
 
   test("run-button is present", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="run-button"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-tour="run-button"]').first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });
 

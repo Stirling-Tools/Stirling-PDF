@@ -98,7 +98,10 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
       style={{
         background: background ?? toneStyle.background,
         border: "none",
-        borderBottom: borderColor === "transparent" ? "none" : `1px solid ${borderColor ?? toneStyle.border}`,
+        borderBottom:
+          borderColor === "transparent"
+            ? "none"
+            : `1px solid ${borderColor ?? toneStyle.border}`,
         minHeight,
         display: "flex",
         alignItems: "center",

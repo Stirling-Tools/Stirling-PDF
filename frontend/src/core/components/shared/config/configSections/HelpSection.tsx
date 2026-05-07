@@ -40,7 +40,11 @@ const HelpSection: React.FC<HelpSectionProps> = ({
               variant="default"
               size="sm"
               leftSection={
-                <LocalIcon icon="build-outline-rounded" width="1rem" height="1rem" />
+                <LocalIcon
+                  icon="build-outline-rounded"
+                  width="1rem"
+                  height="1rem"
+                />
               }
               onClick={() => startTour("tools")}
             >
