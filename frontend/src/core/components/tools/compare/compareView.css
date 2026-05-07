@@ -25,7 +25,7 @@
   padding: 1rem;
   height: 100%;
   min-height: 0;
-  /* Allow the custom workbench to shrink within flex parents (prevents pushing right rail off-screen) */
+  /* Allow the custom workbench to shrink within flex parents */
   min-width: 0;
 }
 

@@ -9,7 +9,6 @@ export enum WhatsNewTourStep {
   QUICK_ACCESS,
   LEFT_PANEL,
   FILE_UPLOAD,
-  RIGHT_RAIL,
   TOP_BAR,
   PAGE_EDITOR_VIEW,
   ACTIVE_FILES_VIEW,
@@ -25,7 +24,6 @@ interface WhatsNewStepActions {
   switchToViewer: () => void;
   switchToPageEditor: () => void;
   switchToActiveFiles: () => void;
-  selectFirstFile: () => void;
 }
 
 interface CreateWhatsNewStepsConfigArgs {
@@ -46,7 +44,6 @@ export function createWhatsNewStepsConfig({
     switchToViewer,
     switchToPageEditor,
     switchToActiveFiles,
-    selectFirstFile,
   } = actions;
 
   return {
@@ -90,23 +87,6 @@ export function createWhatsNewStepsConfig({
         // wait for file render and top controls to mount
         await waitForElement('[data-tour="view-switcher"]', 7000);
         await waitForHighlightable('[data-tour="view-switcher"]', 7000);
-      },
-    },
-    [WhatsNewTourStep.RIGHT_RAIL]: {
-      selector: '[data-tour="right-rail-controls"]',
-      highlightedSelectors: [
-        '[data-tour="right-rail-controls"]',
-        '[data-tour="right-rail-settings"]',
-      ],
-      content: t(
-        "onboarding.whatsNew.rightRail",
-        "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results.",
-      ),
-      position: "left",
-      padding: 10,
-      action: async () => {
-        await waitForElement('[data-tour="right-rail-controls"]', 7000);
-        selectFirstFile();
       },
     },
     [WhatsNewTourStep.TOP_BAR]: {

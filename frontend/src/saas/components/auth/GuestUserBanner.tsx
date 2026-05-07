@@ -16,7 +16,7 @@ let hasShownThisLoad = false;
 
 /**
  * Guest user toast encouraging account creation.
- * Appears 2s after load, top-right of the viewport, offset by right rail.
+ * Appears 2s after load, top-right of the viewport.
  */
 export function GuestUserBanner({ className = "" }: GuestUserBannerProps) {
   const { t } = useTranslation();

@@ -28,7 +28,7 @@ import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
-import { useViewerRightRailButtons } from "@app/components/viewer/useViewerRightRailButtons";
+import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
   RulerOverlay,
@@ -1082,8 +1082,8 @@ const EmbedPdfViewerContent = ({
     };
   }, [effectiveFile]);
 
-  // Register viewer right-rail buttons
-  useViewerRightRailButtons(isRulerActive, setIsRulerActive);
+  // Register workbench bar buttons for the viewer
+  useViewerWorkbenchBarButtons(isRulerActive, setIsRulerActive);
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses PDFium WASM (frontend-only).

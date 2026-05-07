@@ -4,15 +4,15 @@ import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
-  useRightRailButtons,
-  RightRailButtonWithAction,
-} from "@app/hooks/useRightRailButtons";
+  useWorkbenchBarButtons,
+  WorkbenchBarButtonWithAction,
+} from "@app/hooks/useWorkbenchBarButtons";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SearchInterface } from "@app/components/viewer/SearchInterface";
-import ViewerAnnotationControls from "@app/components/shared/rightRail/ViewerAnnotationControls";
+import ViewerAnnotationControls from "@app/components/viewer/ViewerAnnotationControls";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
-import { useRightRailTooltipSide } from "@app/hooks/useRightRailTooltipSide";
+import { useWorkbenchBarTooltipSide } from "@app/hooks/useWorkbenchBarTooltipSide";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   useNavigationState,
@@ -27,7 +27,7 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 
-export function useViewerRightRailButtons(
+export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
 ) {
@@ -46,7 +46,7 @@ export function useViewerRightRailButtons(
   } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const { sidebarRefs } = useSidebarContext();
-  const { position: tooltipPosition } = useRightRailTooltipSide(
+  const { position: tooltipPosition } = useWorkbenchBarTooltipSide(
     sidebarRefs,
     12,
   );
@@ -105,27 +105,27 @@ export function useViewerRightRailButtons(
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isAnnotationsPath]);
 
-  const searchLabel = t("rightRail.search", "Search PDF");
-  const panLabel = t("rightRail.panMode", "Pan Mode");
+  const searchLabel = t("workbenchBar.search", "Search PDF");
+  const panLabel = t("workbenchBar.panMode", "Pan Mode");
   const applyRedactionsLabel = t(
-    "rightRail.applyRedactionsFirst",
+    "workbenchBar.applyRedactionsFirst",
     "Apply redactions first",
   );
-  const rotateLeftLabel = t("rightRail.rotateLeft", "Rotate Left");
-  const rotateRightLabel = t("rightRail.rotateRight", "Rotate Right");
-  const sidebarLabel = t("rightRail.toggleSidebar", "Toggle Sidebar");
-  const bookmarkLabel = t("rightRail.toggleBookmarks", "Toggle Bookmarks");
+  const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
+  const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
+  const sidebarLabel = t("workbenchBar.toggleSidebar", "Toggle Sidebar");
+  const bookmarkLabel = t("workbenchBar.toggleBookmarks", "Toggle Bookmarks");
   const attachmentLabel = t(
-    "rightRail.toggleAttachments",
+    "workbenchBar.toggleAttachments",
     "Toggle Attachments",
   );
-  const layersLabel = t("rightRail.toggleLayers", "Toggle Layers");
-  const commentsLabel = t("rightRail.toggleComments", "Comments");
-  const annotationsLabel = t("rightRail.annotations", "Annotations");
-  const formFillLabel = t("rightRail.formFill", "Fill Form");
-  const rulerLabel = t("rightRail.ruler", "Ruler / Measure");
-  const readAloudLabel = t("rightRail.readAloud", "Read Aloud");
-  const readAloudSpeedLabel = t("rightRail.readAloudSpeed", "Speed");
+  const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
+  const commentsLabel = t("workbenchBar.toggleComments", "Comments");
+  const annotationsLabel = t("workbenchBar.annotations", "Annotations");
+  const formFillLabel = t("workbenchBar.formFill", "Fill Form");
+  const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
+  const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
+  const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
 
@@ -149,8 +149,8 @@ export function useViewerRightRailButtons(
   const shouldShowLanguageSelector =
     supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
-  const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
-    const buttons: RightRailButtonWithAction[] = [
+  const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
+    const buttons: WorkbenchBarButtonWithAction[] = [
       {
         id: "viewer-search",
         tooltip: searchLabel,
@@ -420,9 +420,9 @@ export function useViewerRightRailButtons(
                 />
                 {shouldShowLanguageSelector && (
                   <Select
-                    label={t("rightRail.readAloudLanguage", "Language")}
+                    label={t("workbenchBar.readAloudLanguage", "Language")}
                     placeholder={t(
-                      "rightRail.selectLanguage",
+                      "workbenchBar.selectLanguage",
                       "Select language",
                     )}
                     value={speechLanguage}
@@ -584,5 +584,5 @@ export function useViewerRightRailButtons(
     handleSpeechLanguageChange,
   ]);
 
-  useRightRailButtons(viewerButtons);
+  useWorkbenchBarButtons(viewerButtons);
 }

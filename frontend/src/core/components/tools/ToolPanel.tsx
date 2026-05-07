@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
 import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
-import { useRightRail } from "@app/contexts/RightRailContext";
+import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -28,7 +28,7 @@ export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
-  const { toolPanelRef, quickAccessRef, rightRailRef } = sidebarRefs;
+  const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
 
   const {
@@ -51,7 +51,7 @@ export default function ToolPanel() {
     readerMode,
   } = useToolWorkflow();
 
-  const { setAllRightRailButtonsDisabled } = useRightRail();
+  const { setAllButtonsDisabled } = useWorkbenchBar();
   const { preferences, updatePreference } = usePreferences();
 
   const isFullscreenMode = toolPanelMode === "fullscreen";
@@ -62,16 +62,15 @@ export default function ToolPanel() {
     !isMobile &&
     toolPickerVisible;
 
-  // Disable right rail buttons when fullscreen mode is active
+  // Disable workbench bar buttons when fullscreen mode is active
   useEffect(() => {
-    setAllRightRailButtonsDisabled(fullscreenExpanded);
-  }, [fullscreenExpanded, setAllRightRailButtonsDisabled]);
+    setAllButtonsDisabled(fullscreenExpanded);
+  }, [fullscreenExpanded, setAllButtonsDisabled]);
 
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
     toolPanelRef,
     quickAccessRef,
-    rightRailRef,
   });
 
   const handleExpand = () => {

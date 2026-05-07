@@ -20,7 +20,6 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
-import RightRail from "@app/components/shared/RightRail";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -301,7 +300,6 @@ export default function HomePage() {
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex">
                   <Workbench />
-                  <RightRail />
                 </div>
               </div>
             </div>

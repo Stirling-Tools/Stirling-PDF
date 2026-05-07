@@ -12,9 +12,7 @@ import {
   useNavigationGuard,
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useRightRailTooltipSide } from "@app/hooks/useRightRailTooltipSide";
 import { useRedactionMode, useRedaction } from "@app/contexts/RedactionContext";
 import {
   defaultParameters,
@@ -32,10 +30,7 @@ export default function ViewerAnnotationControls({
   disabled = false,
 }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
-  const { sidebarRefs } = useSidebarContext();
   const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
-  const { position: tooltipPosition, offset: tooltipOffset } =
-    useRightRailTooltipSide(sidebarRefs);
 
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
@@ -129,31 +124,25 @@ export default function ViewerAnnotationControls({
   // Handle redaction mode toggle
   const handleRedactionToggle = async () => {
     if (isRedactMode) {
-      // Exit redaction mode
       exitRedactionMode();
     } else {
-      // Check for unsaved annotation changes
       const hasAnnotationChanges = historyApiRef?.current?.canUndo() ?? false;
 
       const enterRedactionMode = async () => {
         await saveAnnotationsIfNeeded();
 
-        // Set redaction config to manual mode when opening from viewer
         const manualConfig: RedactParameters = {
           ...defaultParameters,
           mode: "manual",
         };
         setRedactionConfig(manualConfig);
 
-        // Set tool and keep viewer workbench
         navActions.setToolAndWorkbench("redact", "viewer");
 
-        // Ensure sidebars are visible and open tool content
         setSidebarsVisible(true);
         setLeftPanelView("toolContent");
 
         setRedactionMode(true);
-        // Activate unified redact mode after a short delay
         setTimeout(() => {
           const currentType = redactionApiRef.current?.getActiveType?.();
           if (currentType !== RedactionMode.Redact) {
@@ -171,7 +160,6 @@ export default function ViewerAnnotationControls({
   };
 
   const handleToggleAnnotationsVisibility = useCallback(() => {
-    // When going from visible → hidden with unsaved changes, prompt to save first
     if (!annotationsHidden && hasUnsavedChanges) {
       requestNavigation(() => viewerContext?.toggleAnnotationsVisibility());
     } else {
@@ -179,7 +167,6 @@ export default function ViewerAnnotationControls({
     }
   }, [annotationsHidden, hasUnsavedChanges, requestNavigation, viewerContext]);
 
-  // Don't show any annotation controls in sign mode
   // NOTE: This early return is placed AFTER all hooks to satisfy React's rules of hooks
   if (isSignMode) {
     return null;
@@ -187,15 +174,14 @@ export default function ViewerAnnotationControls({
 
   return (
     <>
-      {/* Redaction Mode Toggle */}
       <Tooltip
         content={
           isRedactMode
-            ? t("rightRail.exitRedaction", "Exit Redaction Mode")
-            : t("rightRail.redact", "Redact")
+            ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
+            : t("workbenchBar.redact", "Redact")
         }
-        position={tooltipPosition}
-        offset={tooltipOffset}
+        position="bottom"
+        offset={16}
         arrow
         portalTarget={document.body}
       >
@@ -215,14 +201,13 @@ export default function ViewerAnnotationControls({
         </ActionIcon>
       </Tooltip>
 
-      {/* Annotation Visibility Toggle */}
       <Tooltip
         content={t(
-          "rightRail.toggleAnnotations",
+          "workbenchBar.toggleAnnotations",
           "Toggle Annotations Visibility",
         )}
-        position={tooltipPosition}
-        offset={tooltipOffset}
+        position="bottom"
+        offset={16}
         arrow
         portalTarget={document.body}
       >

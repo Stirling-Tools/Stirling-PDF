@@ -96,18 +96,6 @@ test.describe("15.3 Tour selectors — workbench with file", () => {
       page.locator('[data-tour="view-switcher"]').first(),
     ).toBeVisible({ timeout: 10_000 });
   });
-
-  test("right-rail-controls is present", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="right-rail-controls"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
-  });
-
-  test("right-rail-settings is present", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="right-rail-settings"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
-  });
 });
 
 // ---------------------------------------------------------------------------
