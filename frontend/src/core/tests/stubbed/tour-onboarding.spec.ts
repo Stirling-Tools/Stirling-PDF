@@ -182,7 +182,7 @@ test.describe("15.6 Tour selectors — config modal", () => {
 // ---------------------------------------------------------------------------
 test.describe("15.7 Tour selectors — admin modal nav items", () => {
   test.use({
-    stubOptions: { enableLogin: true, isAdmin: true },
+    stubOptions: { enableLogin: true, isAdmin: true, seedAuthToken: true },
   });
 
   const adminNavSections = [

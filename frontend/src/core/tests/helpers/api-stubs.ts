@@ -135,6 +135,12 @@ export interface MockAppApiOptions {
   endpointsAvailability?: Record<string, { enabled: boolean }>;
   /** Backend probe status. Set to `"DOWN"` to exercise offline-mode UI. */
   backendStatus?: "UP" | "DOWN";
+  /**
+   * Seed a dummy JWT in localStorage before the app boots.
+   * Required when `enableLogin: true` so the proprietary client considers the
+   * user authenticated and renders the main UI instead of the login page.
+   */
+  seedAuthToken?: boolean;
 }
 
 /**
@@ -148,6 +154,7 @@ export async function mockAppApis(
   const {
     enableLogin = false,
     isAdmin = false,
+    seedAuthToken = false,
     user = {
       id: 1,
       username: "testuser",
@@ -159,6 +166,17 @@ export async function mockAppApis(
     endpointsAvailability = {},
     backendStatus = "UP",
   } = opts;
+
+  if (seedAuthToken) {
+    await page.addInitScript(() => {
+      // Minimal JWT-shape value — the proprietary client only checks presence
+      // before deciding to call /account, then trusts the API mocks.
+      localStorage.setItem(
+        "jwt",
+        "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciJ9.signature",
+      );
+    });
+  }
 
   // Backend liveness probe — determines whether the UI shows the app or an offline screen
   await page.route("**/api/v1/info/status", (route: Route) =>

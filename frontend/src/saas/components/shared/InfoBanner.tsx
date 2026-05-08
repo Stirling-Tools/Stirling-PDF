@@ -51,6 +51,7 @@ interface InfoBannerProps {
   buttonTextColor?: string; // SaaS-specific for dark theme buttons
   minHeight?: number | string;
   closeIconColor?: string; // SaaS-specific for dark theme
+  compact?: boolean;
 }
 
 /**
@@ -78,6 +79,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   buttonTextColor,
   minHeight = 56,
   closeIconColor,
+  compact: _compact = false,
 }) => {
   if (!show) {
     return null;
