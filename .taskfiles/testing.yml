@@ -2,12 +2,13 @@ version: '3'
 
 tasks:
   e2e:live:
-    desc: "Auto-spawn backend in parallel and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
+    desc: "Auto-spawn backend with an isolated state tree and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
     summary: |
       Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
-      The backend is launched with SPRING_DATASOURCE_URL pointing at
-      .test-state/playwright-db/ (purged on every invocation) so the run
-      never touches the developer's local DB at app/core/configs/.
+      The backend is launched with STIRLING_BASE_PATH pointing at
+      .test-state/playwright/ (purged on every invocation) so the run never
+      touches the developer's local DB, settings.yml, backups or customFiles
+      under app/core/configs/.
 
       The runner blocks until http://localhost:8080/api/v1/info/status is UP,
       then executes `npx playwright test --project=live`. The backend keeps
@@ -22,15 +23,15 @@ tasks:
 
   e2e:live:backend:
     internal: true
-    desc: "Backend launcher used by testing:e2e:live; redirects the H2 DB to a per-run isolated path."
+    desc: "Backend launcher used by testing:e2e:live; redirects all state (configs, backups, customFiles, ...) to a per-run isolated path."
     ignore_error: true
     vars:
-      DB_DIR: '{{.ROOT_DIR}}/.test-state/playwright-db'
+      BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
     env:
-      SPRING_DATASOURCE_URL: 'jdbc:h2:file:{{.DB_DIR}}/stirling-pdf-DB;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL'
+      STIRLING_BASE_PATH: '{{.BASE_DIR}}'
     cmds:
-      - rm -rf "{{.DB_DIR}}"
-      - mkdir -p "{{.DB_DIR}}"
+      - rm -rf "{{.BASE_DIR}}"
+      - mkdir -p "{{.BASE_DIR}}"
       - bash gradlew :stirling-pdf:bootRun
 
   e2e:live:runner:
