@@ -5,6 +5,7 @@ import java.util.Locale;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
@@ -14,15 +15,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @Slf4j
-@Getter
 @Configuration
 @EnableJpaRepositories(
         basePackages = {
@@ -40,24 +38,21 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 })
 public class DatabaseConfig {
 
-    public final String DATASOURCE_DEFAULT_URL;
-
     public static final String DATASOURCE_URL_TEMPLATE = "jdbc:%s://%s:%4d/%s";
     public static final String DEFAULT_USERNAME = "sa";
 
     private final ApplicationProperties.Datasource datasource;
     private final boolean runningProOrHigher;
+    private final String defaultDatasourceUrl;
 
     public DatabaseConfig(
             ApplicationProperties.Datasource datasource,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
-        DATASOURCE_DEFAULT_URL =
-                "jdbc:h2:file:"
-                        + InstallationPathConfig.getConfigPath()
-                        + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
-        log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            @Value("${spring.datasource.url}") String defaultDatasourceUrl) {
         this.datasource = datasource;
         this.runningProOrHigher = runningProOrHigher;
+        this.defaultDatasourceUrl = defaultDatasourceUrl;
+        log.debug("Database URL: {}", defaultDatasourceUrl);
     }
 
     /**
@@ -82,18 +77,10 @@ public class DatabaseConfig {
     }
 
     private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
-        // Support AOT training: override URL via system property to avoid H2 file lock
-        // conflicts when the AOT RECORD phase starts a second Spring context
-        String overrideUrl = System.getProperty("stirling.datasource.url");
-        String url =
-                (overrideUrl != null && !overrideUrl.isBlank())
-                        ? overrideUrl
-                        : DATASOURCE_DEFAULT_URL;
-
         log.info("Using default H2 database");
 
         dataSourceBuilder
-                .url(url)
+                .url(defaultDatasourceUrl)
                 .driverClassName(DatabaseDriver.H2.getDriverClassName())
                 .username(DEFAULT_USERNAME);
 

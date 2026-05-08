@@ -5,16 +5,33 @@ tasks:
     desc: "Auto-spawn backend in parallel and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
     summary: |
       Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
+      The backend is launched with SPRING_DATASOURCE_URL pointing at
+      .test-state/playwright-db/ (purged on every invocation) so the run
+      never touches the developer's local DB at app/core/configs/.
+
       The runner blocks until http://localhost:8080/api/v1/info/status is UP,
       then executes `npx playwright test --project=live`. The backend keeps
-      running after tests finish — Ctrl-C to stop it (same convention as
+      running after tests finish; Ctrl-C to stop it (same convention as
       `task dev`).
 
       Pass extra Playwright flags via -- :
         task testing:e2e:live -- --headed --grep merge
     deps:
-      - ":backend:dev"
+      - e2e:live:backend
       - e2e:live:runner
+
+  e2e:live:backend:
+    internal: true
+    desc: "Backend launcher used by testing:e2e:live; redirects the H2 DB to a per-run isolated path."
+    ignore_error: true
+    vars:
+      DB_DIR: '{{.ROOT_DIR}}/.test-state/playwright-db'
+    env:
+      SPRING_DATASOURCE_URL: 'jdbc:h2:file:{{.DB_DIR}}/stirling-pdf-DB;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL'
+    cmds:
+      - rm -rf "{{.DB_DIR}}"
+      - mkdir -p "{{.DB_DIR}}"
+      - bash gradlew :stirling-pdf:bootRun
 
   e2e:live:runner:
     internal: true
@@ -22,18 +39,18 @@ tasks:
     dir: frontend
     cmds:
       - |
-        echo "Waiting for backend on :8080 (up to 10min — first compile can be slow)..."
+        echo "Waiting for backend on :8080 (up to 10min; first compile can be slow)..."
         WAITED=0
         while [ $WAITED -lt 600 ]; do
           if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
-            echo "Backend ready — starting Playwright"
+            echo "Backend ready, starting Playwright"
             break
           fi
           sleep 2
           WAITED=$((WAITED + 2))
         done
         if [ $WAITED -ge 600 ]; then
-          echo "Backend did not become ready within 10min — aborting"
+          echo "Backend did not become ready within 10min, aborting"
           exit 1
         fi
       - npx playwright test --project=live {{.CLI_ARGS}}

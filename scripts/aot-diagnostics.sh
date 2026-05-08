@@ -310,7 +310,7 @@ if [ "$RUN_SMOKE_TEST" = true ]; then
       -XX:AOTConfiguration="$SMOKE_CONF"
       -Dspring.main.banner-mode=off
       -Dspring.context.exit=onRefresh
-      -Dstirling.datasource.url="jdbc:h2:mem:aotsmoke;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
+      -Dspring.datasource.url="jdbc:h2:mem:aotsmoke;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
 
     case "$JAR_LAYOUT" in
       layered)  SMOKE_CMD+=(-cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication) ;;
