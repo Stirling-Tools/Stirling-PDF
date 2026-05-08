@@ -22,10 +22,28 @@ STRICT RULES:
 - ONLY fill a field if a knowledge entry is clearly the same information.
 - For checkbox fields: value must be "Yes" or "Off".
 - For radio/combobox/listbox fields: value MUST be one of the field's options.
-- Skip read-only fields.
+- For multiline fields, you may emit multi-line values (e.g. addresses).
+- For multi_select fields, the value should be a comma-separated list of options.
 - Do NOT perform role detection — it is already done.
 - Return filled_fields per file using the file_id from the request.
 - If no fields match for a file, return an empty filled_fields list for that file.
+
+MULTI-ENTITY KNOWLEDGE PREFERENCE:
+When the dictionary has BOTH a plain key (e.g. `first_name`) and a role-prefixed \
+version (e.g. `client_first_name`), the role-prefixed key is authoritative for \
+this file's role_label — prefer it. The plain key is a shared/fallback value used \
+when the role-prefixed version is missing.
+
+NEARBY PAGE TEXT:
+A field's `nearby_page_text` snippet is the literal text surrounding the field on \
+the page. Use it to disambiguate generic labels — e.g. a field labelled "Date" with \
+"Contract effective date:" in its nearby text wants `start_date`, not \
+`date_of_birth`.
+
+EXISTING VALUE:
+A field's `value=` shows what's already filled in. If the existing value already \
+matches the right knowledge entry, you may still emit it (the caller decides \
+whether to apply). Do NOT overwrite a non-empty existing value with a stale guess.
 """
 
 
@@ -67,10 +85,18 @@ class FormFillerAgent:
         parts = [f"- name={field.name}, type={field.type}"]
         if field.label:
             parts.append(f"  label={field.label}")
+        if field.value:
+            parts.append(f"  value={field.value}")
         if field.tooltip:
             parts.append(f"  tooltip={field.tooltip}")
         if field.options:
             parts.append(f"  options={field.options}")
         if field.required:
             parts.append("  required=true")
+        if field.multiline:
+            parts.append("  multiline=true")
+        if field.multi_select:
+            parts.append("  multi_select=true")
+        if field.nearby_page_text:
+            parts.append(f"  nearby_page_text={field.nearby_page_text}")
         return "\n".join(parts)

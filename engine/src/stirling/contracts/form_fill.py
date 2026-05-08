@@ -119,9 +119,29 @@ class CrossFileRole(ApiModel):
 
 
 class FormAnalysisResponse(ApiModel):
+    outcome: Literal[WorkflowOutcome.FORM_ANALYSIS] = WorkflowOutcome.FORM_ANALYSIS
     per_file: list[AnalysedFileResult]
     cross_file_roles: list[CrossFileRole]
     message: str
+
+
+class FormAnalysisAmbiguousResponse(ApiModel):
+    """Returned when the analyser cannot confidently identify roles or fields.
+
+    Mirrors the EditClarificationRequest pattern from PdfEditAgent — gives the
+    LLM an escape valve so it can refuse rather than fabricate role assignments
+    on inscrutable forms.
+    """
+
+    outcome: Literal[WorkflowOutcome.FORM_ANALYSIS_AMBIGUOUS] = WorkflowOutcome.FORM_ANALYSIS_AMBIGUOUS
+    reason: str = Field(max_length=2000)
+    suggestion: str | None = Field(default=None, max_length=2000)
+
+
+FormAnalysisWorkflowResponse = Annotated[
+    FormAnalysisResponse | FormAnalysisAmbiguousResponse,
+    Field(discriminator="outcome"),
+]
 
 
 # --- Batch Fill ---

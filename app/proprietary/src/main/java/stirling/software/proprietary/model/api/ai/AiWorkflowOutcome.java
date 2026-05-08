@@ -22,7 +22,9 @@ public enum AiWorkflowOutcome {
     CANNOT_CONTINUE("cannot_continue"),
     KNOWLEDGE_UPDATE("knowledge_update"),
     MULTI_PROFILE_EXTRACTION("multi_profile_extraction"),
-    BATCH_FILL_RESULT("batch_fill_result");
+    BATCH_FILL_RESULT("batch_fill_result"),
+    FORM_ANALYSIS("form_analysis"),
+    FORM_ANALYSIS_AMBIGUOUS("form_analysis_ambiguous");
 
     private final String value;
 

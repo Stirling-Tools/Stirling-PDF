@@ -13,9 +13,12 @@ import { useState, useCallback } from 'react';
 import { fillFormFields } from '@app/tools/formFill/formApi';
 import { useFileManagement } from '@app/contexts/FileContext';
 import { fillFormsBatch } from './aiFormFillApi';
+import { describeError as describeErrorShared } from './errorUtils';
 import { mergeEntitiesForFill, type MergeResult } from './entityTypes';
 import type { Entity } from './entityTypes';
 import { resolveDynamicValues } from './workflowTemplates';
+
+const describeError = (err: unknown) => describeErrorShared(err, 'Batch fill failed.');
 import type {
   FormFillBatchResponse,
   FormField,
@@ -111,36 +114,55 @@ const INITIAL_STATE: BatchFillState = {
 /** Sanity cap so a misclick doesn't try to fill 10,000 PDFs. */
 const MAX_VARIANTS_PER_FILE = 100;
 
+/**
+ * Mirrors MathAuditorAgent._llm_semaphore (engine/.../ledger/agent.py) — bounds
+ * how many filler calls can be in flight at once so a 50-variant batch doesn't
+ * hammer the engine with 50 simultaneous requests.
+ */
+const MAX_CONCURRENT_FILLER_CALLS = 6;
+
+type Settled<R> = { ok: true; value: R } | { ok: false; error: unknown };
+
+/**
+ * Bounded-concurrency map that collects per-item outcomes (allSettled-style).
+ * One failing worker does NOT abort the rest — the caller decides what to do
+ * with the failures. This matters for batch fills: a single 5xx on variant 7
+ * shouldn't throw away the 49 successful variants.
+ */
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<Settled<R>[]> {
+  const results = new Array<Settled<R>>(items.length);
+  let next = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (true) {
+      const i = next++;
+      if (i >= items.length) return;
+      try {
+        results[i] = { ok: true, value: await worker(items[i], i) };
+      } catch (error) {
+        results[i] = { ok: false, error };
+      }
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
 // Match the engine contract caps (engine/src/stirling/contracts/form_fill.py).
 const MAX_LABEL = 500;
 const MAX_TOOLTIP = 1000;
 const MAX_NAME = 200;
 const MAX_VALUE = 2000;
+const MAX_NEARBY_PAGE_TEXT = 8000;
 
 function clamp(s: string | undefined | null, max: number): string | undefined {
   if (s == null) return undefined;
   return s.length > max ? s.slice(0, max) : s;
 }
 
-/** Pull the most useful detail out of an axios/fetch error. */
-function describeError(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const e = err as any;
-    const data = e.response?.data;
-    if (data) {
-      // FastAPI 422 returns {detail: [{loc, msg, type}, ...]}
-      if (Array.isArray(data.detail)) {
-        return data.detail
-          .map((d: any) => `${(d.loc ?? []).join('.')}: ${d.msg ?? d.type ?? ''}`)
-          .join('; ');
-      }
-      if (typeof data.detail === 'string') return data.detail;
-      if (typeof data.message === 'string') return data.message;
-    }
-    if (typeof e.message === 'string') return e.message;
-  }
-  return 'Batch fill failed.';
-}
 
 /**
  * Expand role→entityIds[] into one assignment list per output variant.
@@ -383,54 +405,75 @@ export function useBatchFormFillFlow(
         labelsBySourceFile[pf.fileId] = lbl;
       }
 
+      // Page text per file persisted by the analyser — used to attach
+      // nearby_page_text to each field so the filler can disambiguate generic
+      // labels (e.g. "Date" near a "Contract effective date:" line).
+      const pageTextsByFile = analysis.pageTextsByFile ?? {};
+
       try {
-        // Each variant is its own /fill-batch call: knowledge differs per assignment combo,
-        // and the engine treats one knowledge dict as global per request.
-        const filledOutputs: Array<{
-          plan: VariantPlan;
-          response: FormFillBatchResponse;
-        }> = [];
-
-        for (let i = 0; i < plans.length; i++) {
-          const plan = plans[i];
-          const cleanedLabels = labelsBySourceFile[plan.sourceFile.fileId] ?? {};
-          // Use a stable per-variant fileId so we can correlate results back.
-          const variantFileId = `${plan.sourceFile.fileId}__${i}`;
-          const batchRequest = {
-            files: [
-              {
-                fileId: variantFileId,
-                formFields: plan.fields.map((f) => ({
-                  name: clamp(f.name, MAX_NAME) ?? '',
-                  label: clamp(cleanedLabels[f.name] ?? f.label, MAX_LABEL),
-                  type: f.type,
-                  value: clamp(f.value, MAX_VALUE),
-                  options: f.options,
-                  displayOptions: f.displayOptions,
-                  required: f.required,
-                  readOnly: f.readOnly,
-                  multiSelect: f.multiSelect,
-                  multiline: f.multiline,
-                  tooltip: clamp(f.tooltip, MAX_TOOLTIP),
-                })) as unknown as FormField[],
-                roleLabel: clamp(plan.assignments[0]?.roleLabel ?? 'Primary', MAX_LABEL) ?? 'Primary',
-              },
-            ],
-            knowledge: resolveDynamicValues(plan.mergeResult.knowledge),
-          };
-
-          const response = await fillFormsBatch(batchRequest);
-          filledOutputs.push({ plan, response });
-        }
+        // Each variant is its own /fill-batch call: knowledge differs per assignment
+        // combo, and the engine treats one knowledge dict as global per request.
+        // Variants are independent, so fan them out with bounded concurrency.
+        const filledOutputs = await runWithConcurrency(
+          plans,
+          MAX_CONCURRENT_FILLER_CALLS,
+          async (plan, i): Promise<{ plan: VariantPlan; response: FormFillBatchResponse }> => {
+            const cleanedLabels = labelsBySourceFile[plan.sourceFile.fileId] ?? {};
+            const pageTexts = pageTextsByFile[plan.sourceFile.fileId] ?? {};
+            // Stable per-variant fileId so we can correlate results back.
+            const variantFileId = `${plan.sourceFile.fileId}__${i}`;
+            const batchRequest = {
+              files: [
+                {
+                  fileId: variantFileId,
+                  formFields: plan.fields.map((f) => {
+                    const pageIndex = f.widgets?.[0]?.pageIndex;
+                    const nearbyPageText =
+                      pageIndex != null ? pageTexts[pageIndex] : undefined;
+                    return {
+                      name: clamp(f.name, MAX_NAME) ?? '',
+                      label: clamp(cleanedLabels[f.name] ?? f.label, MAX_LABEL),
+                      type: f.type,
+                      value: clamp(f.value, MAX_VALUE),
+                      options: f.options,
+                      displayOptions: f.displayOptions,
+                      required: f.required,
+                      readOnly: f.readOnly,
+                      multiSelect: f.multiSelect,
+                      multiline: f.multiline,
+                      tooltip: clamp(f.tooltip, MAX_TOOLTIP),
+                      nearbyPageText: clamp(nearbyPageText, MAX_NEARBY_PAGE_TEXT),
+                    };
+                  }) as unknown as FormField[],
+                  roleLabel:
+                    clamp(plan.assignments[0]?.roleLabel ?? 'Primary', MAX_LABEL) ?? 'Primary',
+                },
+              ],
+              knowledge: resolveDynamicValues(plan.mergeResult.knowledge),
+            };
+            const response = await fillFormsBatch(batchRequest);
+            return { plan, response };
+          },
+        );
 
         // Build review proposals — engine has matched fields, user reviews/edits
-        // before we touch the actual PDFs.
+        // before we touch the actual PDFs. Failed variants (HTTP errors etc.)
+        // are skipped here and surfaced via the review-screen message so
+        // partial successes survive.
         const proposed: ProposedVariant[] = [];
         let emptyMatchVariants = 0;
+        let failedVariants = 0;
         const emptyMatchEntityNames: string[] = [];
+        const failureMessages: string[] = [];
 
         for (let i = 0; i < filledOutputs.length; i++) {
-          const { plan, response } = filledOutputs[i];
+          const settled = filledOutputs[i];
+          if (!settled.ok) {
+            failedVariants++;
+            failureMessages.push(describeError(settled.error));
+            continue;
+          }
+          const { plan, response } = settled.value;
           const fileResult = response.perFile[0];
           const filled = fileResult?.filledFields ?? [];
           const cleanedLabels = labelsBySourceFile[plan.sourceFile.fileId] ?? {};
@@ -474,33 +517,56 @@ export function useBatchFormFillFlow(
           });
         }
 
-        // Hard-fail when nothing matched anywhere — same diagnostic as before.
-        if (proposed.length === 0 && emptyMatchVariants > 0) {
-          const uniqueEntities = Array.from(new Set(emptyMatchEntityNames));
-          const summary =
-            uniqueEntities.length === 1
-              ? `entity "${uniqueEntities[0]}"`
-              : `entities ${uniqueEntities.map((n) => `"${n}"`).join(', ')}`;
-          const allEmpty = plans.every(
-            (p) =>
-              Object.keys(p.mergeResult.knowledge).filter((k) => !k.startsWith('_')).length === 0,
-          );
-          const reason = allEmpty
-            ? `the assigned ${summary} ${uniqueEntities.length === 1 ? 'has' : 'have'} no fields. ` +
-              `Open Manage → Entities and add fields like "first_name", "address_line_1", etc.`
-            : `the AI couldn't match any of your entity fields to the form. ` +
-              `Check the field names in ${summary} — try common keys like first_name, last_name, ` +
-              `address_line_1, email, phone.`;
-          setState((s) => ({
-            ...s,
-            phase: 'error',
-            error: `Generated 0 filled files — ${reason}`,
-            plannedVariantCount: plans.length,
-          }));
-          return;
+        // Hard-fail only when EVERY variant either errored or matched zero
+        // fields — otherwise partial successes proceed to review with a
+        // message describing what was lost.
+        if (proposed.length === 0) {
+          if (failedVariants > 0) {
+            // Only failures, no empty-matches: surface the underlying error.
+            const uniq = Array.from(new Set(failureMessages));
+            setState((s) => ({
+              ...s,
+              phase: 'error',
+              error:
+                `All ${failedVariants} variant${failedVariants === 1 ? '' : 's'} failed: ` +
+                uniq.slice(0, 2).join('; ') +
+                (uniq.length > 2 ? ` (+${uniq.length - 2} more)` : ''),
+              plannedVariantCount: plans.length,
+            }));
+            return;
+          }
+          if (emptyMatchVariants > 0) {
+            const uniqueEntities = Array.from(new Set(emptyMatchEntityNames));
+            const summary =
+              uniqueEntities.length === 1
+                ? `entity "${uniqueEntities[0]}"`
+                : `entities ${uniqueEntities.map((n) => `"${n}"`).join(', ')}`;
+            const allEmpty = plans.every(
+              (p) =>
+                Object.keys(p.mergeResult.knowledge).filter((k) => !k.startsWith('_')).length === 0,
+            );
+            const reason = allEmpty
+              ? `the assigned ${summary} ${uniqueEntities.length === 1 ? 'has' : 'have'} no fields. ` +
+                `Open Manage → Entities and add fields like "first_name", "address_line_1", etc.`
+              : `the AI couldn't match any of your entity fields to the form. ` +
+                `Check the field names in ${summary} — try common keys like first_name, last_name, ` +
+                `address_line_1, email, phone.`;
+            setState((s) => ({
+              ...s,
+              phase: 'error',
+              error: `Generated 0 filled files — ${reason}`,
+              plannedVariantCount: plans.length,
+            }));
+            return;
+          }
         }
 
         const reviewMessage = [
+          failedVariants > 0
+            ? `${failedVariants} variant${failedVariants === 1 ? '' : 's'} failed and ${
+                failedVariants === 1 ? 'was' : 'were'
+              } skipped`
+            : null,
           emptyMatchVariants > 0
             ? `${emptyMatchVariants} variant${emptyMatchVariants === 1 ? '' : 's'} skipped (no field matches)`
             : null,

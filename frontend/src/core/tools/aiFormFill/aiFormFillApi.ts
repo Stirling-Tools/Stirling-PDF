@@ -7,7 +7,7 @@ import type {
   DocumentExtractionRequest,
   DocumentExtractionResponse,
   FormAnalysisRequest,
-  FormAnalysisResponse,
+  FormAnalysisWorkflowResponse,
   FormFillBatchRequest,
   FormFillBatchResponse,
 } from './types';
@@ -29,8 +29,8 @@ export async function extractFromDocuments(
 
 export async function analyseMultipleForms(
   request: FormAnalysisRequest
-): Promise<FormAnalysisResponse> {
-  const response = await aiEngineClient.post<FormAnalysisResponse>(
+): Promise<FormAnalysisWorkflowResponse> {
+  const response = await aiEngineClient.post<FormAnalysisWorkflowResponse>(
     '/api/v1/form/ai/analyse',
     request
   );

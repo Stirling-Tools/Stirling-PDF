@@ -89,10 +89,21 @@ export interface CrossFileRole {
 }
 
 export interface FormAnalysisResponse {
+  outcome: 'form_analysis';
   perFile: AnalysedFileResult[];
   crossFileRoles: CrossFileRole[];
   message: string;
 }
+
+export interface FormAnalysisAmbiguousResponse {
+  outcome: 'form_analysis_ambiguous';
+  reason: string;
+  suggestion: string | null;
+}
+
+export type FormAnalysisWorkflowResponse =
+  | FormAnalysisResponse
+  | FormAnalysisAmbiguousResponse;
 
 // --- Batch Fill ---
 

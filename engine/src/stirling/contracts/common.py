@@ -61,6 +61,8 @@ class WorkflowOutcome(StrEnum):
     KNOWLEDGE_UPDATE = "knowledge_update"
     MULTI_PROFILE_EXTRACTION = "multi_profile_extraction"
     BATCH_FILL_RESULT = "batch_fill_result"
+    FORM_ANALYSIS = "form_analysis"
+    FORM_ANALYSIS_AMBIGUOUS = "form_analysis_ambiguous"
 
 
 class ArtifactKind(StrEnum):

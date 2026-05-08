@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { fetchFormFieldsWithCoordinates } from '@app/tools/formFill/formApi';
 import { extractPageTexts } from './pdfTextExtraction';
 import { analyseMultipleForms } from './aiFormFillApi';
+import { describeError as describeErrorShared } from './errorUtils';
 import type {
   AnalysedFileResult,
   CrossFileRole,
@@ -16,12 +17,19 @@ import type {
 import type { FormField as FullFormField } from '@app/tools/formFill/types';
 import type { KnowledgeStore } from './useKnowledgeStore';
 
+const describeError = (err: unknown) => describeErrorShared(err, 'Form analysis failed.');
+
 export type AnalysisPhase = 'idle' | 'fetching_fields' | 'analysing' | 'done' | 'error';
 
 export interface FormAnalysisState {
   phase: AnalysisPhase;
   /** Raw fields fetched from Java backend, keyed by fileId */
   fieldsByFile: Record<string, FullFormField[]>;
+  /**
+   * Page text per file, keyed by fileId then by pageIndex. Persisted so the
+   * fill phase can attach nearby_page_text to fields without re-running pdf.js.
+   */
+  pageTextsByFile: Record<string, Record<number, string>>;
   /** AI analysis result */
   analysis: FormAnalysisResponse | null;
   /**
@@ -38,6 +46,7 @@ export interface FormAnalysisState {
 const INITIAL_STATE: FormAnalysisState = {
   phase: 'idle',
   fieldsByFile: {},
+  pageTextsByFile: {},
   analysis: null,
   roleProfileMap: {},
   fileRoleOverrides: {},
@@ -59,44 +68,26 @@ const MAX_TYPE = 50;
 const MAX_FILE_ID = 200;
 const MAX_FILE_NAME = 500;
 /**
- * Beyond ~200 fields per analyse call, the smart model gets sluggish and risks
- * truncating its structured output. We chunk above this threshold and merge
- * roles back together client-side. Each chunk stays well under the engine's
- * MAX_FIELDS_PER_FILE (engine/src/stirling/contracts/form_fill.py).
+ * Threshold for splitting one logical file into multiple synthetic chunks
+ * before the analyse call. Sonnet 4.6 has a 200K context and the new phase-1
+ * prompt no longer enumerates every field, so chunking is mostly a safety net
+ * for genuinely huge forms. 1500 stays under the engine's MAX_FIELDS_PER_FILE
+ * (2000) with headroom for prompt overhead. See AI_LAYERS_REVIEW.md.
  */
-const FIELDS_PER_CHUNK = 200;
+const FIELDS_PER_CHUNK = 1500;
 
 /**
  * Frontend-only upper bound on a single PDF — beyond this we refuse rather than
- * fan the analyse step into 20+ LLM calls. Independent of the server-side
+ * fan analyse into many LLM calls. Independent of the server-side
  * MAX_FIELDS_PER_FILE cap (which only sees one chunk at a time).
  */
-const MAX_FIELDS_FOR_CHUNKED_ANALYSIS = 4000;
+const MAX_FIELDS_FOR_CHUNKED_ANALYSIS = 6000;
 
 function clamp(s: string | undefined | null, max: number): string | undefined {
   if (s == null) return undefined;
   return s.length > max ? s.slice(0, max) : s;
 }
 
-/** Pull the most useful detail out of an axios/fetch error. */
-function describeError(err: unknown): string {
-  if (err && typeof err === 'object') {
-    const e = err as any;
-    const data = e.response?.data;
-    if (data) {
-      // FastAPI 422 returns {detail: [{loc, msg, type}, ...]}
-      if (Array.isArray(data.detail)) {
-        return data.detail
-          .map((d: any) => `${(d.loc ?? []).join('.')}: ${d.msg ?? d.type ?? ''}`)
-          .join('; ');
-      }
-      if (typeof data.detail === 'string') return data.detail;
-      if (typeof data.message === 'string') return data.message;
-    }
-    if (typeof e.message === 'string') return e.message;
-  }
-  return 'Form analysis failed.';
-}
 
 /**
  * Best-effort fill-in of analysis data the LLM occasionally leaves empty.
@@ -269,6 +260,7 @@ function mergeChunkedAnalysis(
   });
 
   return {
+    outcome: 'form_analysis',
     perFile: Object.values(perFileByLogical),
     crossFileRoles,
     message: analysis.message,
@@ -331,8 +323,8 @@ export function useFormAnalysis(knowledge: KnowledgeStore) {
 
       setState((s) => ({ ...s, phase: 'analysing', fieldsByFile }));
 
-      // Step 3: Refuse hopelessly oversized files upfront — analysing 4000+ fields in
-      // ~200-field chunks means 20+ LLM calls; users should split the document first.
+      // Step 3: Refuse hopelessly oversized files upfront — beyond the cap we fan
+      // into multiple chunked LLM calls; users should split the document first.
       const oversized = files.find(
         (sf) => (fieldsByFile[sf.fileId] ?? []).length > MAX_FIELDS_FOR_CHUNKED_ANALYSIS,
       );
@@ -384,7 +376,20 @@ export function useFormAnalysis(knowledge: KnowledgeStore) {
       }
 
       // Step 5: Call analyser (one request, possibly with chunked synthetic files)
-      const rawAnalysis = await analyseMultipleForms({ files: requestFiles });
+      const rawWorkflowResponse = await analyseMultipleForms({ files: requestFiles });
+
+      // The analyser can refuse via FormAnalysisAmbiguousResponse — same pattern
+      // as PdfEditAgent's EditClarificationRequest. Surface the LLM's reason
+      // instead of silently fabricating roles.
+      if (rawWorkflowResponse.outcome === 'form_analysis_ambiguous') {
+        const reason = rawWorkflowResponse.reason;
+        const suggestion = rawWorkflowResponse.suggestion
+          ? ` ${rawWorkflowResponse.suggestion}`
+          : '';
+        throw new Error(`AI couldn't analyse this form: ${reason}${suggestion}`);
+      }
+
+      const rawAnalysis = rawWorkflowResponse;
       const merged =
         totalChunks > 0 ? mergeChunkedAnalysis(rawAnalysis, realFileNames) : rawAnalysis;
       // Step 5b: Patch up empty / missing field assignments before anything
@@ -410,6 +415,7 @@ export function useFormAnalysis(knowledge: KnowledgeStore) {
         ...s,
         phase: 'done',
         analysis,
+        pageTextsByFile,
         roleProfileMap: initialRoleMap,
         fileRoleOverrides: {},
       }));

@@ -14,7 +14,7 @@ from stirling.contracts.form_fill import (
     DocumentExtractionRequest,
     DocumentExtractionResponse,
     FormAnalysisRequest,
-    FormAnalysisResponse,
+    FormAnalysisWorkflowResponse,
     FormFillBatchRequest,
     FormFillBatchResponse,
 )
@@ -22,11 +22,11 @@ from stirling.contracts.form_fill import (
 router = APIRouter(prefix="/api/v1/form/ai", tags=["form-fill"])
 
 
-@router.post("/analyse", response_model=FormAnalysisResponse)
+@router.post("/analyse", response_model=FormAnalysisWorkflowResponse)
 async def analyse_forms(
     request: FormAnalysisRequest,
     agent: Annotated[FormAnalyserAgent, Depends(get_form_analyser_agent)],
-) -> FormAnalysisResponse:
+) -> FormAnalysisWorkflowResponse:
     return await agent.analyse(request)
 
 
