@@ -106,8 +106,8 @@ class _OrchestratorStream:
 
     Owns the per-request queue and pumps progress events through it; the agent
     runs as a child task so its emissions and the streaming response interleave.
-    A heartbeat task pushes keep-alives onto the same queue at a fixed cadence
-    so the connection stays visibly alive between progress events.
+    A heartbeat task pushes keep-alive messages onto the same queue at a fixed
+    cadence so the connection stays visibly alive between progress events.
     """
 
     def __init__(
