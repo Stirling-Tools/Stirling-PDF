@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -17,18 +24,33 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
-import ToolPanel from "@app/components/tools/ToolPanel";
-import Workbench from "@app/components/layout/Workbench";
 import QuickAccessBar from "@app/components/shared/QuickAccessBar";
 import RightRail from "@app/components/shared/RightRail";
-import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import ToolPanelSkeleton from "@app/components/tools/ToolPanelSkeleton";
 
 import "@app/pages/HomePage.css";
+
+// Lazy load heavy components
+const ToolPanel = lazy(() => import("@app/components/tools/ToolPanel"));
+const Workbench = lazy(() => import("@app/components/layout/Workbench"));
+const FileManager = lazy(() => import("@app/components/FileManager"));
+const AppConfigModal = lazy(
+  () => import("@app/components/shared/AppConfigModal"),
+);
+
+// Preload heavy components to avoid waterfall by starting imports as soon as HomePage loads
+const preloadImports = () => {
+  import("@app/components/tools/ToolPanel");
+  import("@app/components/layout/Workbench");
+  import("@app/components/FileManager");
+  import("@app/components/shared/AppConfigModal");
+};
+preloadImports();
 
 type MobileView = "tools" | "workbench";
 
@@ -116,12 +138,33 @@ export default function HomePage() {
     setActiveMobileView(view);
   }, []);
 
+  // Sync slider position on mount and orientation changes
   useEffect(() => {
     if (isMobile) {
       const container = sliderRef.current;
       if (container) {
-        isProgrammaticScroll.current = true;
         const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
+        container.scrollLeft = offset;
+      }
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) {
+      const container = sliderRef.current;
+      if (container) {
+        const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
+
+        // Skip if already at the target position to avoid fighting with user swipes
+        if (Math.abs(container.scrollLeft - offset) < 10) {
+          // Force exact alignment if slightly off
+          if (container.scrollLeft !== offset) {
+            container.scrollLeft = offset;
+          }
+          return;
+        }
+
+        isProgrammaticScroll.current = true;
         container.scrollTo({ left: offset, behavior: "smooth" });
 
         // Re-enable scroll listener after animation completes
@@ -135,7 +178,9 @@ export default function HomePage() {
     setActiveMobileView("tools");
     const container = sliderRef.current;
     if (container) {
-      container.scrollTo({ left: 0, behavior: "auto" });
+      if (container.scrollLeft !== 0) {
+        container.scrollTo({ left: 0, behavior: "auto" });
+      }
     }
   }, [activeMobileView, isMobile]);
 
@@ -281,7 +326,9 @@ export default function HomePage() {
               aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
             >
               <div className="mobile-slide-content">
-                <ToolPanel />
+                <Suspense fallback={<ToolPanelSkeleton isMobile />}>
+                  <ToolPanel isMobile />
+                </Suspense>
               </div>
             </div>
             <div
@@ -290,7 +337,9 @@ export default function HomePage() {
             >
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex">
-                  <Workbench />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Workbench />
+                  </Suspense>
                   <RightRail />
                 </div>
               </div>
@@ -358,19 +407,31 @@ export default function HomePage() {
               </span>
             </button>
           </div>
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-          <AppConfigModal
-            opened={configModalOpen}
-            onClose={() => setConfigModalOpen(false)}
-          />
+          <Suspense fallback={null}>
+            <FileManager selectedTool={selectedTool} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <AppConfigModal
+              opened={configModalOpen}
+              onClose={() => setConfigModalOpen(false)}
+            />
+          </Suspense>
         </div>
       ) : (
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
           <QuickAccessBar ref={quickAccessRef} />
-          {!hideToolPanel && <ToolPanel />}
-          <Workbench />
+          {!hideToolPanel && (
+            <Suspense fallback={<ToolPanelSkeleton isMobile={false} />}>
+              <ToolPanel isMobile={false} />
+            </Suspense>
+          )}
+          <Suspense fallback={<LoadingFallback />}>
+            <Workbench />
+          </Suspense>
           <RightRail />
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <Suspense fallback={null}>
+            <FileManager selectedTool={selectedTool} />
+          </Suspense>
         </Group>
       )}
     </div>

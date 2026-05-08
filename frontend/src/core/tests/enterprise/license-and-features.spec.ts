@@ -24,8 +24,12 @@ async function uiLogin(page: import("@playwright/test").Page) {
   await page.locator('button[type="submit"]').click();
   await page.waitForURL("/", { timeout: 15_000 });
   await expect(
-    page.getByRole("link", { name: /^Tools$/i }).first(),
-  ).toBeVisible({ timeout: 15_000 });
+    page
+      .locator('[data-tour="quick-access-bar"], [data-tour="workbench"]')
+      .first(),
+  ).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 test.describe("Enterprise license — admin settings UI", () => {

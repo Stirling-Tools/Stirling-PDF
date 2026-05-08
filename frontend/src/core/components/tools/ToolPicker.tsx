@@ -183,7 +183,7 @@ const ToolPicker = ({
             {!quickSection && !allSection && <NoToolsFound />}
 
             {/* bottom spacer to allow scrolling past the last row */}
-            <div aria-hidden style={{ height: 200 }} />
+            <div aria-hidden style={{ height: 64 }} />
           </>
         )}
       </Box>

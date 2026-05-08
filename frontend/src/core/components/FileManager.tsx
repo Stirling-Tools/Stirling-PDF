@@ -18,8 +18,10 @@ import {
 import { loadScript } from "@app/utils/scriptLoader";
 import { useAllFiles } from "@app/contexts/FileContext";
 
+import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+
 interface FileManagerProps {
-  selectedTool?: Tool | null;
+  selectedTool?: Tool | ToolRegistryEntry | null;
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {

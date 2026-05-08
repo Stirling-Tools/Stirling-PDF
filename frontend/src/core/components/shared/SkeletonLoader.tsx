@@ -1,8 +1,8 @@
 import React from "react";
-import { Box, Group, Stack } from "@mantine/core";
+import { Skeleton, Stack, Group } from "@mantine/core";
 
 interface SkeletonLoaderProps {
-  type: "pageGrid" | "fileGrid" | "controls" | "viewer" | "block";
+  type: "pageGrid" | "fileGrid" | "controls" | "viewer" | "block" | "toolList";
   count?: number;
   animated?: boolean;
   width?: number | string;
@@ -18,21 +18,42 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   height,
   radius = 8,
 }) => {
-  const animationStyle = animated ? { animation: "pulse 2s infinite" } : {};
-
   // Generic block skeleton for inline text/inputs/etc.
   const renderBlock = () => (
-    <Box
-      w={typeof width === "number" ? `${width}px` : width}
-      h={typeof height === "number" ? `${height}px` : height}
-      bg="gray.1"
-      style={{
-        borderRadius: radius,
-        display: "inline-block",
-        verticalAlign: "middle",
-        ...animationStyle,
-      }}
+    <Skeleton
+      visible
+      animate={animated}
+      width={width}
+      height={height}
+      radius={radius}
     />
+  );
+
+  const renderToolListSkeleton = () => (
+    <Stack gap="xs" p="sm" h="100%" w="100%">
+      {/* Search bar placeholder */}
+      <Skeleton visible animate={animated} height={40} radius={8} mb="xs" />
+
+      {/* List items */}
+      {Array.from({ length: count }).map((_, i) => (
+        <Group key={i} wrap="nowrap" gap="sm" py={4}>
+          <Skeleton
+            visible
+            animate={animated}
+            width={32}
+            height={32}
+            radius={6}
+          />
+          <Skeleton
+            visible
+            animate={animated}
+            height={20}
+            radius={4}
+            style={{ flex: 1 }}
+          />
+        </Group>
+      ))}
+    </Stack>
   );
 
   const renderPageGridSkeleton = () => (
@@ -44,17 +65,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       }}
     >
       {Array.from({ length: count }).map((_, i) => (
-        <Box
-          key={i}
-          w="100%"
-          h={240}
-          bg="gray.1"
-          style={{
-            borderRadius: "8px",
-            ...animationStyle,
-            animationDelay: animated ? `${i * 0.1}s` : undefined,
-          }}
-        />
+        <Skeleton key={i} visible animate={animated} height={240} radius={8} />
       ))}
     </div>
   );
@@ -68,41 +79,16 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       }}
     >
       {Array.from({ length: count }).map((_, i) => (
-        <Box
-          key={i}
-          w="100%"
-          h={280}
-          bg="gray.1"
-          style={{
-            borderRadius: "8px",
-            ...animationStyle,
-            animationDelay: animated ? `${i * 0.1}s` : undefined,
-          }}
-        />
+        <Skeleton key={i} visible animate={animated} height={280} radius={8} />
       ))}
     </div>
   );
 
   const renderControlsSkeleton = () => (
     <Group mb="md">
-      <Box
-        w={150}
-        h={36}
-        bg="gray.1"
-        style={{ borderRadius: 4, ...animationStyle }}
-      />
-      <Box
-        w={120}
-        h={36}
-        bg="gray.1"
-        style={{ borderRadius: 4, ...animationStyle }}
-      />
-      <Box
-        w={100}
-        h={36}
-        bg="gray.1"
-        style={{ borderRadius: 4, ...animationStyle }}
-      />
+      <Skeleton visible animate={animated} width={150} height={36} radius={4} />
+      <Skeleton visible animate={animated} width={120} height={36} radius={4} />
+      <Skeleton visible animate={animated} width={100} height={36} radius={4} />
     </Group>
   );
 
@@ -110,46 +96,45 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     <Stack gap="md" h="100%">
       {/* Toolbar skeleton */}
       <Group>
-        <Box
-          w={40}
-          h={40}
-          bg="gray.1"
-          style={{ borderRadius: 4, ...animationStyle }}
+        <Skeleton
+          visible
+          animate={animated}
+          width={40}
+          height={40}
+          radius={4}
         />
-        <Box
-          w={40}
-          h={40}
-          bg="gray.1"
-          style={{ borderRadius: 4, ...animationStyle }}
+        <Skeleton
+          visible
+          animate={animated}
+          width={40}
+          height={40}
+          radius={4}
         />
-        <Box
-          w={80}
-          h={40}
-          bg="gray.1"
-          style={{ borderRadius: 4, ...animationStyle }}
+        <Skeleton
+          visible
+          animate={animated}
+          width={80}
+          height={40}
+          radius={4}
         />
-        <Box
-          w={40}
-          h={40}
-          bg="gray.1"
-          style={{ borderRadius: 4, ...animationStyle }}
+        <Skeleton
+          visible
+          animate={animated}
+          width={40}
+          height={40}
+          radius={4}
         />
       </Group>
       {/* Main content skeleton */}
-      <Box
-        flex={1}
-        bg="gray.1"
-        style={{
-          borderRadius: "8px",
-          ...animationStyle,
-        }}
-      />
+      <Skeleton visible animate={animated} radius={8} style={{ flex: 1 }} />
     </Stack>
   );
 
   switch (type) {
     case "block":
       return renderBlock();
+    case "toolList":
+      return renderToolListSkeleton();
     case "pageGrid":
       return renderPageGridSkeleton();
     case "fileGrid":

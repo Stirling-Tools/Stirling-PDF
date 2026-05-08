@@ -33,12 +33,14 @@
   height: 1.5rem;
   width: auto;
   flex-shrink: 0;
+  aspect-ratio: 1 / 1;
 }
 
 .mobile-brand-text {
   height: 1.5rem;
   width: auto;
   max-width: 100%;
+  aspect-ratio: 4 / 1; /* Wordmark usually has around 4:1 ratio */
 }
 
 .mobile-toggle-buttons {
@@ -54,14 +56,18 @@
 .mobile-toggle-button {
   border: none;
   border-radius: 9999px;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.8125rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
   transition:
     background 0.2s ease,
     color 0.2s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mobile-toggle-button:focus-visible {
@@ -91,6 +97,8 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: pan-x pinch-zoom;
+  /* Prevent background peeking through during snaps */
+  background-color: var(--bg-toolbar);
 }
 
 .mobile-slider::-webkit-scrollbar {
@@ -102,9 +110,12 @@
   width: 100%;
   height: 100%;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 .mobile-slide-content {

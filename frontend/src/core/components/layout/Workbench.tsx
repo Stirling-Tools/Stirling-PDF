@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback } from "react";
-import { Box, Loader, Center } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -19,6 +19,8 @@ import TopControls from "@app/components/shared/TopControls";
 import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+
+import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -244,9 +246,19 @@ export default function Workbench() {
       >
         <Suspense
           fallback={
-            <Center style={{ height: "100%" }}>
-              <Loader />
-            </Center>
+            <Box p="md" h="100%">
+              <SkeletonLoader
+                type={
+                  currentView === "viewer"
+                    ? "viewer"
+                    : currentView === "fileEditor"
+                      ? "fileGrid"
+                      : currentView === "pageEditor"
+                        ? "pageGrid"
+                        : "block"
+                }
+              />
+            </Box>
           }
         >
           {renderMainContent()}
