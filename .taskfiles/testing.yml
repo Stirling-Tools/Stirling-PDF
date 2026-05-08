@@ -2,7 +2,7 @@ version: '3'
 
 tasks:
   e2e:live:
-    desc: "Auto-spawn backend with an isolated state tree and run live E2E tests (Ctrl-C when tests finish to stop the backend)"
+    desc: "Auto-spawn backend with an isolated state tree, run live E2E tests, then stop the backend"
     summary: |
       Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
       The backend is launched with STIRLING_BASE_PATH pointing at
@@ -11,9 +11,9 @@ tasks:
       under app/core/configs/.
 
       The runner blocks until http://localhost:8080/api/v1/info/status is UP,
-      then executes `npx playwright test --project=live`. The backend keeps
-      running after tests finish; Ctrl-C to stop it (same convention as
-      `task dev`).
+      then executes `npx playwright test --project=live`. When the runner
+      finishes (pass or fail), the backend is killed and the task exits with
+      Playwright's exit code.
 
       Pass extra Playwright flags via -- :
         task testing:e2e:live -- --headed --grep merge
@@ -32,12 +32,12 @@ tasks:
       # Suppress the analytics opt-in modal that fires on first admin login.
       # It renders a Mantine overlay that intercepts pointer events and blocks
       # FirstLoginSlide from rendering, so the bootstrap spec times out waiting
-      # for the password-change prompt. Mirrors .github/workflows/e2e-live.yml.
+      # for the password-change prompt.
       SYSTEM_ENABLEANALYTICS: "false"
     cmds:
       - rm -rf "{{.BASE_DIR}}"
       - mkdir -p "{{.BASE_DIR}}"
-      - bash gradlew :stirling-pdf:bootRun
+      - bash gradlew :stirling-pdf:bootRun 2>&1 | tee "{{.BASE_DIR}}/backend.log"
 
   e2e:live:runner:
     internal: true
@@ -57,9 +57,26 @@ tasks:
         done
         if [ $WAITED -ge 600 ]; then
           echo "Backend did not become ready within 10min, aborting"
+          # Fall through to the cleanup in the next step via the test runner;
+          # don't kill here because the next step also runs cleanup.
           exit 1
         fi
-      - npx playwright test --project=live {{.CLI_ARGS}}
+      - |
+        # Run tests, then stop the backend so the parent task exits cleanly. 
+        # Capture and re-emit Playwright's exit code so failures propagate.
+        #
+        # bootRun forks a separate Spring Boot JVM (main class
+        # stirling.software.SPDF.SPDFApplication) - killing only the gradle
+        # wrapper leaves the Spring JVM orphaned holding port 8080. So we kill
+        # both, then `lsof` as a last-resort fallback if either pattern misses.
+        set +e
+        npx playwright test --project=live {{.CLI_ARGS}}
+        TEST_EXIT=$?
+        pkill -f "gradlew :stirling-pdf:bootRun" 2>/dev/null || true
+        pkill -f "SPDFApplication" 2>/dev/null || true
+        sleep 1
+        lsof -ti:8080 2>/dev/null | xargs kill 2>/dev/null || true
+        exit $TEST_EXIT
 
   docker:
     desc: "Run full Docker integration test suite (testing/test.sh)"
