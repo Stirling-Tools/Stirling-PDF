@@ -57,3 +57,7 @@ class VectorStore(ABC):
     @abstractmethod
     async def has_collection(self, collection: str) -> bool:
         """Check whether a collection exists."""
+
+    @abstractmethod
+    async def close(self) -> None:
+        """Release any resources held by the store (connections, handles, etc.)."""

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Text, Stack, Group, ActionIcon } from "@mantine/core";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/Close";
-import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
+import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
 import { AutomationTool } from "@app/types/automation";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";

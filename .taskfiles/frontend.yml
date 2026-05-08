@@ -239,6 +239,7 @@ tasks:
       - task: typecheck:saas
       - task: typecheck:desktop
       - task: typecheck:scripts
+      - task: typecheck:prototypes
 
   # ============================================================
   # Quality Gate

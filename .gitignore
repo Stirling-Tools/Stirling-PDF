@@ -266,3 +266,7 @@ docs/type3/signatures/
 
 # Claude
 .claude/
+
+# Playwright MCP screenshots / traces
+.playwright-mcp/
+*.playwright-mcp.png
