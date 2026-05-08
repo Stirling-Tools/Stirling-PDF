@@ -230,6 +230,11 @@ export async function mockAppApis(
     route.fulfill({ json: {} }),
   );
 
+  // License info — stubbed so admin settings doesn't log proxy errors
+  await page.route("**/api/v1/admin/license-info", (route: Route) =>
+    route.fulfill({ json: { licenseType: "FREE", valid: true, maxUsers: 5 } }),
+  );
+
   // Settings sections touched by the settings page
   await page.route("**/api/v1/admin/settings", (route: Route) =>
     route.fulfill({ json: {} }),

@@ -357,7 +357,7 @@ export default function WorkbenchBar({
       data-tour="workbench-bar"
     >
       {/* Left: View switcher */}
-      <div className="workbench-bar-views">
+      <div className="workbench-bar-views" data-tour="view-switcher">
         {hasFiles &&
           viewOptions.map((opt) => (
             <button

@@ -240,10 +240,10 @@ export default function ToolPanel() {
                   radius={0}
                   leftSection={<ArrowBackIcon sx={{ fontSize: "0.9rem" }} />}
                   onClick={handleBackToTools}
-                  aria-label={t("toolPanel.backToTools", "Back to all tools")}
+                  aria-label={t("toolPanel.backToTools", "Back to tools")}
                   styles={{ root: { justifyContent: "flex-start" } }}
                 >
-                  {t("toolPanel.backToTools", "Back to all tools")}
+                  {t("toolPanel.backToTools", "Back to tools")}
                 </Button>
               </div>
               <div className="flex-1 min-h-0 overflow-hidden">

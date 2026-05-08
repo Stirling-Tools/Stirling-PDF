@@ -204,8 +204,11 @@ test.describe("15.7 Tour selectors — admin modal nav items", () => {
       const navItem = page
         .locator(`[data-tour="admin-${section}-nav"]`)
         .first();
+      // Use waitFor attached (not isVisible) because admin nav items live in a
+      // scrollable sidebar and may be below the visible fold even when rendered.
       const isPresent = await navItem
-        .isVisible({ timeout: 5_000 })
+        .waitFor({ state: "attached", timeout: 5_000 })
+        .then(() => true)
         .catch(() => false);
       if (!isPresent) {
         test.skip(
@@ -214,6 +217,7 @@ test.describe("15.7 Tour selectors — admin modal nav items", () => {
         );
         return;
       }
+      await navItem.scrollIntoViewIfNeeded();
       await expect(navItem).toBeVisible();
     });
   }

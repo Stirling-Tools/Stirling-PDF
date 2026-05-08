@@ -7899,7 +7899,7 @@ viewerMode = "Switch to the file editor to add multiple files."
 [toolPanel]
 allTools = "All tools"
 alpha = "Alpha"
-backToTools = "Back to all tools"
+backToTools = "Back to tools"
 collapse = "Collapse panel"
 comingSoon = "Coming soon:"
 expand = "Expand panel"
