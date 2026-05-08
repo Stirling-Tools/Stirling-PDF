@@ -1,7 +1,5 @@
 package stirling.software.proprietary.model.api.ai;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -26,12 +24,12 @@ public class AiWorkflowProgressEvent {
     private Integer stepCount;
 
     /**
-     * Raw engine-emitted event payload, for {@link AiWorkflowPhase#ENGINE_PROGRESS} events. The
-     * payload contains a {@code phase} string (e.g. {@code "whole_doc_slice_done"}) plus
-     * phase-specific fields (slice index, page range, durations, etc.) that the frontend can render
-     * as detailed progress.
+     * Engine-emitted event payload, for {@link AiWorkflowPhase#ENGINE_PROGRESS} events. The payload
+     * is a typed subtype keyed on its {@code phase} string (e.g. {@code "whole_doc_slice_done"})
+     * carrying phase-specific fields (slice index, page range, durations, etc.) that the frontend
+     * can render as detailed progress.
      */
-    private Map<String, Object> engineDetail;
+    private AiEngineProgressDetail engineDetail;
 
     public static AiWorkflowProgressEvent of(AiWorkflowPhase phase) {
         return new AiWorkflowProgressEvent(
@@ -48,7 +46,7 @@ public class AiWorkflowProgressEvent {
                 null);
     }
 
-    public static AiWorkflowProgressEvent engineProgress(Map<String, Object> detail) {
+    public static AiWorkflowProgressEvent engineProgress(AiEngineProgressDetail detail) {
         return new AiWorkflowProgressEvent(
                 AiWorkflowPhase.ENGINE_PROGRESS,
                 System.currentTimeMillis(),

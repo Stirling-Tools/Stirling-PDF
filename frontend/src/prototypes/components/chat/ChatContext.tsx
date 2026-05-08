@@ -40,6 +40,78 @@ export enum AiWorkflowPhase {
   ENGINE_PROGRESS = "engine_progress",
 }
 
+/**
+ * Engine-side progress detail for ENGINE_PROGRESS events. Mirrors the Python
+ * {@code ProgressEvent} discriminated union (engine/src/stirling/contracts/progress.py)
+ * and the Java {@code AiEngineProgressDetail} sealed interface; the {@code phase}
+ * string is the discriminator. Field names are camelCase because the engine
+ * serialises by alias.
+ */
+export interface WholeDocReadStartedDetail {
+  phase: "whole_doc_read_started";
+  question: string;
+  pages: number;
+  slices: number;
+}
+
+export interface WholeDocSliceDoneDetail {
+  phase: "whole_doc_slice_done";
+  completed: number;
+  total: number;
+  /** Page-range label, e.g. "pages=1-5". */
+  pages: string;
+  durationMs: number;
+  excerpts: number;
+  facts: number;
+}
+
+export interface WholeDocCompressionRoundDetail {
+  phase: "whole_doc_compression_round";
+  roundNumber: number;
+  notesIn: number;
+  groups: number;
+}
+
+export interface WholeDocReadDoneDetail {
+  phase: "whole_doc_read_done";
+  completed: number;
+  slices: number;
+  durationSeconds: number;
+}
+
+export type EngineProgressDetail =
+  | WholeDocReadStartedDetail
+  | WholeDocSliceDoneDetail
+  | WholeDocCompressionRoundDetail
+  | WholeDocReadDoneDetail;
+
+/**
+ * What we actually carry across the wire boundary: a known typed variant, or a
+ * forward-compat shape with just the discriminator string. The "unknown" arm
+ * exists so a new engine-side phase rolling out before a frontend update keeps
+ * rendering the generic processing message instead of crashing the union.
+ */
+export interface UnknownEngineProgressDetail {
+  phase: string;
+}
+
+export type AnyEngineProgressDetail =
+  | EngineProgressDetail
+  | UnknownEngineProgressDetail;
+
+const KNOWN_ENGINE_PHASES = new Set<string>([
+  "whole_doc_read_started",
+  "whole_doc_slice_done",
+  "whole_doc_compression_round",
+  "whole_doc_read_done",
+]);
+
+export function isKnownEngineProgressDetail(
+  detail: AnyEngineProgressDetail,
+): detail is EngineProgressDetail {
+  return KNOWN_ENGINE_PHASES.has(detail.phase);
+}
+
 export interface AiWorkflowProgress {
   phase: AiWorkflowPhase;
   /** Tool endpoint path currently executing, for EXECUTING_TOOL events. */
@@ -49,11 +121,10 @@ export interface AiWorkflowProgress {
   /** Total number of plan steps, for EXECUTING_TOOL events. */
   stepCount?: number;
   /**
-   * Raw engine-side event payload, for ENGINE_PROGRESS events. Contains a
-   * sub-phase (e.g. "whole_doc_slice_done") plus phase-specific fields like
-   * slice index/total/page range that the UI can render in detail.
+   * Engine-side event payload, for ENGINE_PROGRESS events. Typed sub-phase
+   * record (e.g. {@link WholeDocSliceDoneDetail}) the UI can render in detail.
    */
-  engineDetail?: Record<string, unknown>;
+  engineDetail?: AnyEngineProgressDetail;
 }
 
 type AiWorkflowOutcome =
@@ -166,7 +237,7 @@ interface ProgressEvent {
   tool?: string;
   stepIndex?: number;
   stepCount?: number;
-  engineDetail?: Record<string, unknown>;
+  engineDetail?: AnyEngineProgressDetail;
 }
 
 async function consumeSSEStream(

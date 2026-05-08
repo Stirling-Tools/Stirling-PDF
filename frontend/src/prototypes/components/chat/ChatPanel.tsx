@@ -29,7 +29,9 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import {
   useChat,
   AiWorkflowPhase,
+  isKnownEngineProgressDetail,
   type AiWorkflowProgress,
+  type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import "@app/components/chat/ChatPanel.css";
@@ -99,34 +101,31 @@ function formatProgress(
 /**
  * Render an engine-side progress event (e.g. chunked-reasoner slice progress) into a user-facing
  * message. Falls through to the generic processing label for unknown sub-phases so adding new
- * engine events doesn't break the UI.
+ * engine events doesn't break the UI before the frontend learns about them.
  */
 function formatEngineProgress(
-  detail: Record<string, unknown> | undefined,
+  detail: AnyEngineProgressDetail | undefined,
   t: TranslateFn,
 ): string {
-  const subPhase = typeof detail?.phase === "string" ? detail.phase : null;
-  switch (subPhase) {
-    case "whole_doc_read_started": {
-      const slices = typeof detail?.slices === "number" ? detail.slices : 0;
-      return t("chat.progress.whole_doc_read_started", { slices });
-    }
-    case "whole_doc_slice_done": {
-      const completed =
-        typeof detail?.completed === "number" ? detail.completed : 0;
-      const total = typeof detail?.total === "number" ? detail.total : 0;
-      return t("chat.progress.whole_doc_slice_done", { completed, total });
-    }
-    case "whole_doc_compression_round": {
-      const notes_in =
-        typeof detail?.notes_in === "number" ? detail.notes_in : 0;
-      return t("chat.progress.whole_doc_compression_round", { notes_in });
-    }
-    case "whole_doc_read_done": {
+  if (!detail || !isKnownEngineProgressDetail(detail)) {
+    return t("chat.progress.processing");
+  }
+  switch (detail.phase) {
+    case "whole_doc_read_started":
+      return t("chat.progress.whole_doc_read_started", {
+        slices: detail.slices,
+      });
+    case "whole_doc_slice_done":
+      return t("chat.progress.whole_doc_slice_done", {
+        completed: detail.completed,
+        total: detail.total,
+      });
+    case "whole_doc_compression_round":
+      return t("chat.progress.whole_doc_compression_round", {
+        notes_in: detail.notesIn,
+      });
+    case "whole_doc_read_done":
       return t("chat.progress.whole_doc_read_done");
-    }
-    default:
-      return t("chat.progress.processing");
   }
 }
 

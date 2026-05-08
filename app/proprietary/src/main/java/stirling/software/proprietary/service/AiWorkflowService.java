@@ -37,6 +37,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiConversationMessage;
 import stirling.software.proprietary.model.api.ai.AiDocumentIngestRequest;
+import stirling.software.proprietary.model.api.ai.AiEngineProgressDetail;
 import stirling.software.proprietary.model.api.ai.AiFile;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
@@ -648,7 +649,6 @@ public class AiWorkflowService {
         return resultHolder[0];
     }
 
-    @SuppressWarnings("unchecked")
     private void handleStreamLine(
             String line,
             ProgressListener listener,
@@ -659,8 +659,8 @@ public class AiWorkflowService {
             String event = node.path("event").asText();
             switch (event) {
                 case "progress" -> {
-                    Map<String, Object> detail = objectMapper.convertValue(node, Map.class);
-                    detail.remove("event");
+                    AiEngineProgressDetail detail =
+                            objectMapper.treeToValue(node, AiEngineProgressDetail.class);
                     listener.onProgress(AiWorkflowProgressEvent.engineProgress(detail));
                 }
                 case "result" -> {

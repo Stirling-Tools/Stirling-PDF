@@ -360,40 +360,51 @@ class ChunkedReasoner:
         slowest: tuple[str, float] | None = None
         completed = 0
 
-        while pending:
-            done, _ = await asyncio.wait(pending.keys(), return_when=asyncio.FIRST_COMPLETED)
-            for task in done:
-                chunk = pending.pop(task)
-                exc = task.exception()
-                if exc is not None:
-                    if chunk.fallback:
-                        logger.warning(
-                            "[chunked-reasoner] chunk %s failed: %s; preserving %d input note(s)",
-                            chunk.label,
-                            exc,
-                            len(chunk.fallback),
+        try:
+            while pending:
+                done, _ = await asyncio.wait(pending.keys(), return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    chunk = pending.pop(task)
+                    exc = task.exception()
+                    if exc is not None:
+                        if chunk.fallback:
+                            logger.warning(
+                                "[chunked-reasoner] chunk %s failed: %s; preserving %d input note(s)",
+                                chunk.label,
+                                exc,
+                                len(chunk.fallback),
+                            )
+                            notes.extend(chunk.fallback)
+                        else:
+                            logger.warning("[chunked-reasoner] chunk %s failed: %s", chunk.label, exc)
+                        continue
+                    extracted, duration = task.result()
+                    notes.append(extracted)
+                    successes += 1
+                    completed += 1
+                    if slowest is None or duration > slowest[1]:
+                        slowest = (chunk.label, duration)
+                    if round_number == 0:
+                        await emit_progress(
+                            WholeDocSliceDone(
+                                completed=completed,
+                                total=total,
+                                pages=chunk.label,
+                                duration_ms=int(duration * 1000),
+                                excerpts=len(extracted.relevant_excerpts),
+                                facts=len(extracted.facts),
+                            )
                         )
-                        notes.extend(chunk.fallback)
-                    else:
-                        logger.warning("[chunked-reasoner] chunk %s failed: %s", chunk.label, exc)
-                    continue
-                extracted, duration = task.result()
-                notes.append(extracted)
-                successes += 1
-                completed += 1
-                if slowest is None or duration > slowest[1]:
-                    slowest = (chunk.label, duration)
-                if round_number == 0:
-                    await emit_progress(
-                        WholeDocSliceDone(
-                            completed=completed,
-                            total=total,
-                            pages=chunk.label,
-                            duration_ms=int(duration * 1000),
-                            excerpts=len(extracted.relevant_excerpts),
-                            facts=len(extracted.facts),
-                        )
-                    )
+        finally:
+            # On cancellation (typically a frontend disconnect propagating up
+            # through the streaming orchestrator) the per-chunk model calls
+            # would otherwise keep running to completion, billing tokens whose
+            # results nobody is reading. Cancel and drain so the upstream
+            # cancellation is the cancellation that matters.
+            if pending:
+                for task in pending:
+                    task.cancel()
+                await asyncio.gather(*pending.keys(), return_exceptions=True)
 
         notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
         return _RoundResult(notes=notes, successes=successes, slowest=slowest)
