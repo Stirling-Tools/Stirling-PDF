@@ -23,7 +23,10 @@ import {
   AutomationTool,
 } from "@app/types/automation";
 import { useAutomationForm } from "@app/hooks/tools/automate/useAutomationForm";
-import { downloadFolderScanningConfig } from "@app/utils/automationConverter";
+import {
+  downloadAutomationConfig,
+  downloadFolderScanningConfig,
+} from "@app/utils/automationConverter";
 
 interface AutomationCreationProps {
   mode: AutomationMode;
@@ -154,6 +157,24 @@ export default function AutomationCreation({
   const currentConfigTool =
     configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
 
+  /**
+   * Build a temporary AutomationConfig from in-progress form state so the
+   * export buttons can run without requiring the user to save first. The
+   * `id` and timestamps are placeholders — the export utilities strip them.
+   */
+  const buildExportableAutomation = (): AutomationConfig => ({
+    id: existingAutomation?.id || "temp",
+    name: automationName.trim(),
+    description: automationDescription.trim(),
+    icon: automationIcon,
+    operations: selectedTools.map((tool) => ({
+      operation: tool.operation,
+      parameters: tool.parameters || {},
+    })),
+    createdAt: existingAutomation?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
   return (
     <div>
       <Text
@@ -237,34 +258,34 @@ export default function AutomationCreation({
             {t("automate.creation.save", "Save Automation")}
           </Button>
 
-          <Button
-            leftSection={<DownloadIcon />}
-            onClick={() => {
-              // Create a temporary automation config from current state
-              const tempAutomation: AutomationConfig = {
-                id: existingAutomation?.id || "temp",
-                name: automationName.trim(),
-                description: automationDescription.trim(),
-                icon: automationIcon,
-                operations: selectedTools.map((tool) => ({
-                  operation: tool.operation,
-                  parameters: tool.parameters || {},
-                })),
-                createdAt:
-                  existingAutomation?.createdAt || new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              };
-              downloadFolderScanningConfig(tempAutomation, toolRegistry);
-            }}
-            disabled={!canSaveAutomation()}
-            variant="light"
-            fullWidth
-          >
-            {t(
-              "automate.creation.exportForFolderScanning",
-              "Export for Folder Scanning",
-            )}
-          </Button>
+          <Group gap="sm" grow>
+            <Button
+              leftSection={<DownloadIcon />}
+              onClick={() => {
+                downloadAutomationConfig(buildExportableAutomation());
+              }}
+              disabled={!canSaveAutomation()}
+              variant="light"
+            >
+              {t("automate.creation.export", "Export")}
+            </Button>
+            <Button
+              leftSection={<DownloadIcon />}
+              onClick={() => {
+                downloadFolderScanningConfig(
+                  buildExportableAutomation(),
+                  toolRegistry,
+                );
+              }}
+              disabled={!canSaveAutomation()}
+              variant="light"
+            >
+              {t(
+                "automate.creation.exportForFolderScanning",
+                "Export for Folder Scanning",
+              )}
+            </Button>
+          </Group>
         </Stack>
       </Stack>
 

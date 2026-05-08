@@ -1,6 +1,6 @@
 name: Build Tauri Applications
 
-# Multi-OS Tauri desktop bundle build matrix (Windows / macOS arm+intel /
+# Multi-OS Tauri desktop bundle build matrix (Windows / macOS universal /
 # Linux). Called from build.yml on PRs that touch desktop sources (gated
 # via the `tauri` filter in .github/config/.files.yaml). Also runnable
 # on demand via workflow_dispatch with a per-platform selector.
@@ -48,17 +48,16 @@ jobs:
           PLATFORM: ${{ inputs.platform }}
         run: |
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
-          MACOS_ARM='{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}'
-          MACOS_INTEL='{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}'
+          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}'
 
           # Resolve requested platform — populated by either workflow_dispatch
           # or workflow_call inputs; both paths default to "all".
           case "$PLATFORM" in
             windows) ENTRIES=("$WINDOWS") ;;
-            macos)   ENTRIES=("$MACOS_ARM" "$MACOS_INTEL") ;;
+            macos)   ENTRIES=("$MACOS") ;;
             linux)   ENTRIES=("$LINUX") ;;
-            *)       ENTRIES=("$WINDOWS" "$MACOS_ARM" "$MACOS_INTEL" "$LINUX") ;;
+            *)       ENTRIES=("$WINDOWS" "$MACOS" "$LINUX") ;;
           esac
 
           # Drop macOS entries when Apple certificate secret is unavailable
@@ -111,7 +110,23 @@ jobs:
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
-          targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      # x86_64 JDK is set up first so the aarch64 step below can leave its
+      # JAVA_HOME as the active one. The macOS universal JRE build needs
+      # jmods from both arches; the x64 path is captured into the env
+      # before the second setup-java overwrites JAVA_HOME.
+      - name: Set up x86_64 JDK 25 (macOS universal JRE)
+        if: matrix.platform == 'macos-15'
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          architecture: "x64"
+
+      - name: Capture x86_64 JAVA_HOME
+        if: matrix.platform == 'macos-15'
+        run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
       - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -126,6 +141,15 @@ jobs:
 
       - name: Setup Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+
+      # Build the universal JRE before desktop:prepare so the jlink:runtime
+      # task short-circuits on its `test -d runtime/jre` status check.
+      - name: Build universal macOS JRE
+        if: matrix.platform == 'macos-15'
+        env:
+          AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+        run: task desktop:jlink:universal-mac
+
       - name: Prepare desktop build
         run: task desktop:prepare
         env:
@@ -213,7 +237,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && env.APPLE_CERTIFICATE != ''
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -234,7 +258,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && env.APPLE_CERTIFICATE != ''
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -246,7 +270,7 @@ jobs:
           echo "Certificate imported successfully."
 
       - name: Check DMG creation dependencies (macOS only)
-        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        if: matrix.platform == 'macos-15'
         run: |
           echo "🔍 Checking DMG creation dependencies on ${{ matrix.platform }}..."
           echo "hdiutil version: $(hdiutil --version || echo 'NOT FOUND')"
@@ -373,7 +397,7 @@ jobs:
           fi
 
       - name: Verify notarization (macOS only)
-        if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
+        if: matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
           cd ./frontend/src-tauri/target
@@ -398,7 +422,7 @@ jobs:
             # Only ship the MSI installer. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
-          elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
+          elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
@@ -491,7 +515,7 @@ jobs:
               echo "❌ No Windows executable found"
               exit 1
             fi
-          elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
+          elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             echo "Checking for macOS artifacts..."
             find . -name "*.dmg" | head -5
             if [ $(find . -name "*.dmg" | wc -l) -eq 0 ]; then
@@ -556,8 +580,7 @@ jobs:
             // Map of expected artifact names to display info
             const artifactMap = {
               'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe, .msi' },
-              'Stirling-PDF-macos-aarch64': { icon: '🍎', platform: 'macOS ARM64', files: '.dmg' },
-              'Stirling-PDF-macos-x86_64': { icon: '🍎', platform: 'macOS Intel', files: '.dmg' },
+              'Stirling-PDF-macos-universal': { icon: '🍎', platform: 'macOS Universal', files: '.dmg' },
               'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .rpm, .AppImage' }
             };
 
