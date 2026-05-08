@@ -513,7 +513,7 @@ generate_aot_cache() {
            -XX:AOTConfiguration="$aot_conf" \
            -Dspring.main.banner-mode=off \
            -Dspring.context.exit=onRefresh \
-           -Dspring.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+           -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
            "$@" >/tmp/aot-record.log 2>&1 || record_exit=$?
   else
     JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
@@ -523,7 +523,7 @@ generate_aot_cache() {
          -XX:AOTConfiguration="$aot_conf" \
          -Dspring.main.banner-mode=off \
          -Dspring.context.exit=onRefresh \
-         -Dspring.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+         -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
          "$@" >/tmp/aot-record.log 2>&1 || record_exit=$?
   fi
 
