@@ -29,6 +29,11 @@ tasks:
       BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
     env:
       STIRLING_BASE_PATH: '{{.BASE_DIR}}'
+      # Suppress the analytics opt-in modal that fires on first admin login.
+      # It renders a Mantine overlay that intercepts pointer events and blocks
+      # FirstLoginSlide from rendering, so the bootstrap spec times out waiting
+      # for the password-change prompt. Mirrors .github/workflows/e2e-live.yml.
+      SYSTEM_ENABLEANALYTICS: "false"
     cmds:
       - rm -rf "{{.BASE_DIR}}"
       - mkdir -p "{{.BASE_DIR}}"
