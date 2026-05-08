@@ -52,8 +52,10 @@ test.describe("Enterprise OAuth (Keycloak) — full SSO flow", () => {
     await page.waitForURL((url) => !url.pathname.includes("/login"), {
       timeout: 30_000,
     });
+    // The redesigned UI has no "Tools" nav link; the config button is the
+    // reliable post-login landmark that's always present on the dashboard.
     await expect(
-      page.getByRole("link", { name: /^Tools$/i }).first(),
+      page.locator('[data-testid="config-button"]').first(),
     ).toBeVisible({ timeout: 15_000 });
 
     // ── 2. Identity surfaced in settings → Account ────────────
