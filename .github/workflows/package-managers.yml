@@ -22,8 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.info.outputs.version }}
-      dmg_arm64_sha256: ${{ steps.hashes.outputs.dmg_arm64_sha256 }}
-      dmg_x86_64_sha256: ${{ steps.hashes.outputs.dmg_x86_64_sha256 }}
+      dmg_sha256: ${{ steps.hashes.outputs.dmg_sha256 }}
       msi_sha256: ${{ steps.hashes.outputs.msi_sha256 }}
       deb_sha256: ${{ steps.hashes.outputs.deb_sha256 }}
       jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
@@ -63,17 +62,15 @@ jobs:
             sha256sum "$file" | awk '{print $1}'
           }
 
-          DMG_ARM64_SHA=$(download_sha256 "${BASE}/Stirling-PDF-macos-aarch64.dmg")
-          DMG_X64_SHA=$(download_sha256 "${BASE}/Stirling-PDF-macos-x86_64.dmg")
+          DMG_SHA=$(download_sha256 "${BASE}/Stirling-PDF-macos-universal.dmg")
           MSI_SHA=$(download_sha256 "${BASE}/Stirling-PDF-windows-x86_64.msi")
           DEB_SHA=$(download_sha256 "${BASE}/Stirling-PDF-linux-x86_64.deb")
           JAR_SHA=$(download_sha256 "${BASE}/Stirling-PDF-with-login.jar")
 
-          echo "dmg_arm64_sha256=$DMG_ARM64_SHA" >> "$GITHUB_OUTPUT"
-          echo "dmg_x86_64_sha256=$DMG_X64_SHA"  >> "$GITHUB_OUTPUT"
-          echo "msi_sha256=$MSI_SHA"              >> "$GITHUB_OUTPUT"
-          echo "deb_sha256=$DEB_SHA"              >> "$GITHUB_OUTPUT"
-          echo "jar_sha256=$JAR_SHA"              >> "$GITHUB_OUTPUT"
+          echo "dmg_sha256=$DMG_SHA" >> "$GITHUB_OUTPUT"
+          echo "msi_sha256=$MSI_SHA" >> "$GITHUB_OUTPUT"
+          echo "deb_sha256=$DEB_SHA" >> "$GITHUB_OUTPUT"
+          echo "jar_sha256=$JAR_SHA" >> "$GITHUB_OUTPUT"
 
   update-homebrew-and-scoop:
     needs: get-release-info
@@ -93,22 +90,21 @@ jobs:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: tap
 
+      # Stirling-PDF now ships a single universal DMG, so the Cask should
+      # have one sha256 line rather than separate on_arm/on_intel blocks.
+      # We rewrite every `sha256 "..."` in the Cask to the same value so
+      # the workflow keeps working through the Cask migration: pre-migration
+      # both arch blocks get the universal SHA (still correct, since both
+      # would resolve to the same DMG), post-migration the lone sha256 line
+      # is updated.
       - name: Update Homebrew cask (Casks/stirling-pdf.rb)
         env:
           VERSION: ${{ needs.get-release-info.outputs.version }}
-          ARM64_SHA: ${{ needs.get-release-info.outputs.dmg_arm64_sha256 }}
-          X64_SHA: ${{ needs.get-release-info.outputs.dmg_x86_64_sha256 }}
+          DMG_SHA: ${{ needs.get-release-info.outputs.dmg_sha256 }}
         run: |
           CASK="tap/Casks/stirling-pdf.rb"
-          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$CASK"
-          awk -v arm="$ARM64_SHA" -v x64="$X64_SHA" '
-            /on_arm/     { in_arm=1 }
-            /on_intel/   { in_arm=0; in_intel=1 }
-            /end/        { in_arm=0; in_intel=0 }
-            in_arm  && /sha256/ { sub(/sha256 ".*"/, "sha256 \"" arm "\"") }
-            in_intel && /sha256/ { sub(/sha256 ".*"/, "sha256 \"" x64 "\"") }
-            { print }
-          ' "$CASK" > tmp && mv tmp "$CASK"
+          sed -i "s/version \"[^\"]*\"/version \"${VERSION}\"/" "$CASK"
+          sed -i "s/sha256 \"[^\"]*\"/sha256 \"${DMG_SHA}\"/g" "$CASK"
 
       - name: Update Homebrew formula (Formula/stirling-pdf-server.rb)
         env:
@@ -116,8 +112,8 @@ jobs:
           JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
         run: |
           FORMULA="tap/Formula/stirling-pdf-server.rb"
-          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$FORMULA"
-          sed -i "s/sha256 \".*\"/sha256 \"${JAR_SHA}\"/" "$FORMULA"
+          sed -i "s/version \"[^\"]*\"/version \"${VERSION}\"/" "$FORMULA"
+          sed -i "s/sha256 \"[^\"]*\"/sha256 \"${JAR_SHA}\"/" "$FORMULA"
 
       - name: Update Scoop stirling-pdf.json
         env:
