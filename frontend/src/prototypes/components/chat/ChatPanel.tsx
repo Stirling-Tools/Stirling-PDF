@@ -112,18 +112,16 @@ function formatEngineProgress(
   }
   switch (detail.phase) {
     case "whole_doc_read_started":
-      return t("chat.progress.whole_doc_read_started", {
-        slices: detail.slices,
-      });
-    case "whole_doc_slice_done":
-      return t("chat.progress.whole_doc_slice_done", {
-        completed: detail.completed,
-        total: detail.total,
-      });
+      return t("chat.progress.whole_doc_read_started");
+    case "whole_doc_slice_done": {
+      const percent =
+        detail.total > 0
+          ? Math.round((detail.completed / detail.total) * 100)
+          : 0;
+      return t("chat.progress.whole_doc_slice_done", { percent });
+    }
     case "whole_doc_compression_round":
-      return t("chat.progress.whole_doc_compression_round", {
-        notes_in: detail.notesIn,
-      });
+      return t("chat.progress.whole_doc_compression_round");
     case "whole_doc_read_done":
       return t("chat.progress.whole_doc_read_done");
   }
