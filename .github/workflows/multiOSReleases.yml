@@ -93,18 +93,18 @@ jobs:
                 echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "macos")
-                echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
                 echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For push/release events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build-jars:
@@ -218,7 +218,23 @@ jobs:
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
-          targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      # x86_64 JDK is set up first so the aarch64 step below can leave its
+      # JAVA_HOME as the active one. The macOS universal JRE build needs
+      # jmods from both arches; the x64 path is captured into the env
+      # before the second setup-java overwrites JAVA_HOME.
+      - name: Set up x86_64 JDK 25 (macOS universal JRE)
+        if: matrix.platform == 'macos-15'
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          architecture: "x64"
+
+      - name: Capture x86_64 JAVA_HOME
+        if: matrix.platform == 'macos-15'
+        run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
       - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -233,6 +249,14 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+
+      # Build the universal JRE before desktop:prepare so the jlink:runtime
+      # task short-circuits on its `test -d runtime/jre` status check.
+      - name: Build universal macOS JRE
+        if: matrix.platform == 'macos-15'
+        env:
+          AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+        run: task desktop:jlink:universal-mac
 
       - name: Prepare desktop build
         run: task desktop:prepare
@@ -321,7 +345,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
+        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -342,7 +366,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
+        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -557,7 +581,7 @@ jobs:
             # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
-          elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
+          elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else

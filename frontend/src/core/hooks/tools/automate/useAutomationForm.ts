@@ -24,7 +24,11 @@ export function useAutomationForm({
 
   const [automationName, setAutomationName] = useState("");
   const [automationDescription, setAutomationDescription] = useState("");
-  const [automationIcon, setAutomationIcon] = useState<string>("");
+  // Default to "SettingsIcon" so the saved entry always has a valid icon key
+  // matching what the IconSelector renders visually. Saving an empty string
+  // here would round-trip into a fallback cog, making it look like the
+  // picker silently lost the user's choice.
+  const [automationIcon, setAutomationIcon] = useState<string>("SettingsIcon");
   const [selectedTools, setSelectedTools] = useState<AutomationTool[]>([]);
 
   const getToolName = useCallback(
@@ -54,7 +58,7 @@ export function useAutomationForm({
     ) {
       setAutomationName(existingAutomation.name || "");
       setAutomationDescription(existingAutomation.description || "");
-      setAutomationIcon(existingAutomation.icon || "");
+      setAutomationIcon(existingAutomation.icon || "SettingsIcon");
 
       const operations = existingAutomation.operations || [];
       const tools = operations.map((op, index) => {

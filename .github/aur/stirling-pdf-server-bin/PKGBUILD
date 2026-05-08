@@ -1,6 +1,6 @@
 # Maintainer: Stirling PDF Inc <contact@stirlingpdf.com>
 pkgname=stirling-pdf-server-bin
-pkgver=2.10.0
+pkgver=2.10.1
 pkgrel=1
 pkgdesc="Locally hosted, web-based PDF manipulation tool (server JAR, prebuilt)"
 arch=('any')
