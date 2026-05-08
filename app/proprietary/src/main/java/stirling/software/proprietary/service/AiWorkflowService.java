@@ -128,7 +128,9 @@ public class AiWorkflowService {
                     CANNOT_CONTINUE,
                     KNOWLEDGE_UPDATE,
                     MULTI_PROFILE_EXTRACTION,
-                    BATCH_FILL_RESULT ->
+                    BATCH_FILL_RESULT,
+                    FORM_ANALYSIS,
+                    FORM_ANALYSIS_AMBIGUOUS ->
                     new WorkflowState.Terminal(response);
         };
     }
