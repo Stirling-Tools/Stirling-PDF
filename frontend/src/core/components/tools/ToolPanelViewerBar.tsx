@@ -1,12 +1,12 @@
 import React, { useCallback } from "react";
 import { ActionIcon } from "@mantine/core";
-import { useRightRail } from "@app/contexts/RightRailContext";
+import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import type {
-  RightRailButtonConfig,
-  RightRailRenderContext,
-} from "@app/types/rightRail";
+  WorkbenchBarButtonConfig,
+  WorkbenchBarRenderContext,
+} from "@app/types/workbenchBar";
 
 /**
  * Mini toolbar rendered at the top of the ToolPanel when in viewer mode.
@@ -14,14 +14,14 @@ import type {
  */
 export function ToolPanelViewerBar() {
   const { workbench } = useNavigationState();
-  const { buttons, actions, allButtonsDisabled } = useRightRail();
+  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
 
   const toolPanelButtons = buttons
     .filter((btn) => btn.section === "tool-panel" && (btn.visible ?? true))
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const renderButton = useCallback(
-    (btn: RightRailButtonConfig) => {
+    (btn: WorkbenchBarButtonConfig) => {
       const action = actions[btn.id];
       const disabled = Boolean(btn.disabled || allButtonsDisabled);
       const isActive = Boolean(btn.active);
@@ -31,7 +31,7 @@ export function ToolPanelViewerBar() {
       };
 
       if (btn.render) {
-        const context: RightRailRenderContext = {
+        const context: WorkbenchBarRenderContext = {
           id: btn.id,
           disabled,
           allButtonsDisabled,

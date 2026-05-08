@@ -1,6 +1,5 @@
 /* ========== WORKBENCH BAR ========== */
-/* Horizontal toolbar at the top of the workbench area.
-   Replaces TopControls (view switcher) and RightRail (action buttons). */
+/* Horizontal toolbar at the top of the workbench area. */
 
 .workbench-bar {
   display: flex;

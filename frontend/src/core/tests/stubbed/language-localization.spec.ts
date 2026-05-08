@@ -18,8 +18,8 @@ test.describe("13. Language / Localization", () => {
   test.describe("13.1 Language Switcher", () => {
     test("should switch UI text when language is changed", async ({ page }) => {
       // Step 1: Locate the Language selector.
-      // In the redesigned UI the right rail is only shown in the mobile layout, so
-      // the language selector is accessed via Settings > General on desktop.
+      // The language selector is accessed via Settings > General.
+
       let languageButton = page
         .locator('[data-testid="language-selector-button"]')
         .first();

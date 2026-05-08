@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  useRightRailButtons,
-  RightRailButtonWithAction,
-} from "@app/hooks/useRightRailButtons";
+  useWorkbenchBarButtons,
+  WorkbenchBarButtonWithAction,
+} from "@app/hooks/useWorkbenchBarButtons";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import PageSelectByNumberButton from "@app/components/pageEditor/PageSelectByNumberButton";
 
-interface PageEditorRightRailButtonsParams {
+interface PageEditorWorkbenchBarButtonsParams {
   totalPages: number;
   selectedPageCount: number;
   csvInput: string;
@@ -23,8 +23,8 @@ interface PageEditorRightRailButtonsParams {
   exportLoading: boolean;
 }
 
-export function usePageEditorRightRailButtons(
-  params: PageEditorRightRailButtonsParams,
+export function usePageEditorWorkbenchBarButtons(
+  params: PageEditorWorkbenchBarButtonsParams,
 ) {
   const {
     totalPages,
@@ -45,22 +45,22 @@ export function usePageEditorRightRailButtons(
   const { t, i18n } = useTranslation();
 
   // Lift i18n labels out of memo for clarity
-  const selectAllLabel = t("rightRail.selectAll", "Select All");
-  const deselectAllLabel = t("rightRail.deselectAll", "Deselect All");
+  const selectAllLabel = t("workbenchBar.selectAll", "Select All");
+  const deselectAllLabel = t("workbenchBar.deselectAll", "Deselect All");
   const selectByNumberLabel = t(
-    "rightRail.selectByNumber",
+    "workbenchBar.selectByNumber",
     "Select by Page Numbers",
   );
   const deleteSelectedLabel = t(
-    "rightRail.deleteSelected",
+    "workbenchBar.deleteSelected",
     "Delete Selected Pages",
   );
   const exportSelectedLabel = t(
-    "rightRail.exportSelected",
+    "workbenchBar.exportSelected",
     "Export Selected Pages",
   );
-  const saveChangesLabel = t("rightRail.saveChanges", "Save Changes");
-  const buttons = useMemo<RightRailButtonWithAction[]>(() => {
+  const saveChangesLabel = t("workbenchBar.saveChanges", "Save Changes");
+  const buttons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
     return [
       {
         id: "page-select-all",
@@ -175,5 +175,5 @@ export function usePageEditorRightRailButtons(
     exportLoading,
   ]);
 
-  useRightRailButtons(buttons);
+  useWorkbenchBarButtons(buttons);
 }

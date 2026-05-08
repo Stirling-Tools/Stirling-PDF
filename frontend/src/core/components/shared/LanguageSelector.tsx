@@ -274,12 +274,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <ActionIcon
               variant="subtle"
               radius="md"
-              className="right-rail-icon"
               data-testid="language-selector-button"
               title={!opened && tooltip ? tooltip : undefined}
               styles={{
                 root: {
-                  color: "var(--right-rail-icon)",
+                  color: "var(--text-secondary)",
                   "&:hover": {
                     backgroundColor:
                       "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",

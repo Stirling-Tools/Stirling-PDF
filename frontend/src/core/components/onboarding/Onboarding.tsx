@@ -256,7 +256,6 @@ export default function Onboarding() {
           switchToViewer: tourOrch.switchToViewer,
           switchToPageEditor: tourOrch.switchToPageEditor,
           switchToActiveFiles: tourOrch.switchToActiveFiles,
-          selectFirstFile: tourOrch.selectFirstFile,
         },
       }),
     [t, tourOrch, closeFilesModal, openFilesModal],

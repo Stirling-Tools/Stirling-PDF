@@ -32,14 +32,13 @@ export default function PageSelectByNumberButton({
       arrow
       portalTarget={document.body}
     >
-      <div className={`right-rail-fade enter`}>
+      <div>
         <Popover position="left" withArrow shadow="md" offset={8}>
           <Popover.Target>
             <div style={{ display: "inline-flex" }}>
               <ActionIcon
                 variant="subtle"
                 radius="md"
-                className="right-rail-icon"
                 disabled={disabled || totalPages === 0}
                 aria-label={label}
               >

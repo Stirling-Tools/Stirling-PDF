@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useRightRail } from "@app/contexts/RightRailContext";
+import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import {
   useFileState,
   useFileSelection,
@@ -18,17 +18,17 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { downloadFile } from "@app/services/downloadService";
 import {
-  RightRailButtonConfig,
-  RightRailRenderContext,
-  RightRailSection,
-} from "@app/types/rightRail";
+  WorkbenchBarButtonConfig,
+  WorkbenchBarRenderContext,
+  WorkbenchBarSection,
+} from "@app/types/workbenchBar";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import "@app/components/shared/WorkbenchBar.css";
 
-const SECTION_ORDER: RightRailSection[] = ["top", "middle", "bottom"];
+const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
 interface ViewOption {
   value: WorkbenchType;
@@ -66,7 +66,7 @@ export default function WorkbenchBar({
   hasFiles,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
-  const { buttons, actions, allButtonsDisabled } = useRightRail();
+  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
   const {
     pageEditorFunctions,
     toolPanelMode,
@@ -227,14 +227,14 @@ export default function WorkbenchBar({
 
   const downloadTooltip = useMemo(() => {
     if (currentView === "pageEditor")
-      return t("rightRail.exportAll", "Export PDF");
+      return t("workbenchBar.exportAll", "Export PDF");
     if (currentView === "viewer") return terminology.download;
     if (selectedCount > 0) return terminology.downloadSelected;
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
 
   const renderButton = useCallback(
-    (btn: RightRailButtonConfig) => {
+    (btn: WorkbenchBarButtonConfig) => {
       const action = actions[btn.id];
       const disabled = Boolean(
         btn.disabled || allButtonsDisabled || disableForFullscreen,
@@ -246,7 +246,7 @@ export default function WorkbenchBar({
       };
 
       if (btn.render) {
-        const context: RightRailRenderContext = {
+        const context: WorkbenchBarRenderContext = {
           id: btn.id,
           disabled,
           allButtonsDisabled,
@@ -408,11 +408,11 @@ export default function WorkbenchBar({
               disabled={
                 totalItems === 0 || allButtonsDisabled || disableForFullscreen
               }
-              aria-label={t("rightRail.print", "Print PDF")}
+              aria-label={t("workbenchBar.print", "Print PDF")}
             >
               <PrintIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>,
-            t("rightRail.print", "Print PDF"),
+            t("workbenchBar.print", "Print PDF"),
           )}
 
         {/* Download */}
@@ -453,7 +453,7 @@ export default function WorkbenchBar({
                 height="1rem"
               />
             </ActionIcon>,
-            t("rightRail.saveAs", "Save As"),
+            t("workbenchBar.saveAs", "Save As"),
           )}
 
         {/* Separator: export group | close */}
@@ -474,15 +474,15 @@ export default function WorkbenchBar({
               }
               aria-label={
                 currentView === "fileEditor"
-                  ? t("rightRail.closeAll", "Close All")
-                  : t("rightRail.closePdf", "Close PDF")
+                  ? t("workbenchBar.closeAll", "Close All")
+                  : t("workbenchBar.closePdf", "Close PDF")
               }
             >
               <CloseIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>,
             currentView === "fileEditor"
-              ? t("rightRail.closeAll", "Close All")
-              : t("rightRail.closePdf", "Close PDF"),
+              ? t("workbenchBar.closeAll", "Close All")
+              : t("workbenchBar.closePdf", "Close PDF"),
           )}
       </div>
     </div>
