@@ -172,9 +172,16 @@ export async function mockAppApis(
       // Minimal JWT-shape value — the proprietary client only checks presence
       // before deciding to call /account, then trusts the API mocks.
       localStorage.setItem(
-        "jwt",
+        "stirling_jwt",
         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciJ9.signature",
       );
+      // Suppress the analytics opt-in and other post-login onboarding overlays
+      // that fire when the orchestrator sees an authenticated session.
+      try {
+        sessionStorage.setItem("onboarding::bypass-all", "true");
+      } catch {
+        /* sessionStorage may be unavailable in some contexts */
+      }
     });
   }
 
