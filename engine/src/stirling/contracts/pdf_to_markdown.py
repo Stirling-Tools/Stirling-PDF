@@ -16,8 +16,8 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ArtifactKind, ConversationMessage, NeedContentResponse
-from .pdf_edit import EditCannotDoResponse, EditPlanResponse
+from .common import ArtifactKind, ConversationMessage, GenerateFileResponse, NeedContentResponse
+from .pdf_edit import EditCannotDoResponse
 
 # ── Input: layout models (mirror Java's RawLine / TextFragment geometry) ────────────────────────
 
@@ -100,6 +100,6 @@ type PdfToMarkdownResponse = Annotated[
 ]
 
 type PdfToMarkdownOrchestrateResponse = Annotated[
-    EditPlanResponse | EditCannotDoResponse | NeedContentResponse,
+    GenerateFileResponse | EditCannotDoResponse | NeedContentResponse,
     Field(discriminator="outcome"),
 ]

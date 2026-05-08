@@ -61,6 +61,7 @@ class WorkflowOutcome(StrEnum):
     COMPLETED = "completed"
     CANNOT_CONTINUE = "cannot_continue"
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
+    GENERATE_FILE = "generate_file"
 
 
 class ArtifactKind(StrEnum):
@@ -200,6 +201,19 @@ class ToolOperationStep(ApiModel):
             actual_type = type(self.parameters).__name__
             raise ValueError(f"Parameters for tool {self.tool} must be {expected_type.__name__}, got {actual_type}.")
         return self
+
+
+class GenerateFileResponse(ApiModel):
+    """Return generated text content directly to Java for file packaging.
+
+    Java converts the content string to bytes and stores it as a result file,
+    avoiding a round-trip through a write-file tool endpoint.
+    """
+
+    outcome: Literal[WorkflowOutcome.GENERATE_FILE] = WorkflowOutcome.GENERATE_FILE
+    content: str
+    filename: str = Field(pattern=r"^[^/\\]+$", description="Output filename; no path separators.")
+    summary: str | None = None
 
 
 def drop_unknown_tool_endpoints(value: Iterable[str | ToolEndpoint]) -> list[ToolEndpoint]:

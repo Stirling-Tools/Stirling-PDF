@@ -12,6 +12,7 @@ from .common import (
     ArtifactKind,
     ConversationMessage,
     ExtractedFileText,
+    GenerateFileResponse,
     NeedContentResponse,
     NeedIngestResponse,
     SupportedCapability,
@@ -57,6 +58,7 @@ class UnsupportedCapabilityResponse(ApiModel):
 type OrchestratorResponse = Annotated[
     PdfEditTerminalResponse
     | PdfQuestionTerminalResponse
+    | GenerateFileResponse
     | NeedContentResponse
     | NeedIngestResponse
     | AgentDraftResponse

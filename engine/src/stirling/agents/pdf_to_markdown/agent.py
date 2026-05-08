@@ -17,13 +17,12 @@ from pydantic_ai.output import NativeOutput
 
 from stirling.contracts import (
     EditCannotDoResponse,
-    EditPlanResponse,
+    GenerateFileResponse,
     NeedContentFileRequest,
     NeedContentResponse,
     OrchestratorRequest,
     PdfContentType,
     SupportedCapability,
-    ToolOperationStep,
     format_conversation_history,
 )
 from stirling.contracts.pdf_to_markdown import (
@@ -35,7 +34,6 @@ from stirling.contracts.pdf_to_markdown import (
     PdfToMarkdownResponse,
     PdfToMarkdownSuccessResponse,
 )
-from stirling.models.agent_tool_models import AgentToolId, WriteFileAgentParams
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -67,6 +65,7 @@ class _ReconstructionOutput(BaseModel):
 class PdfToMarkdownAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
+        self._sem = asyncio.Semaphore(_MAX_PARALLEL_CHUNKS)
         self._reconstruct_agent = Agent(
             model=runtime.smart_model,
             output_type=NativeOutput(_ReconstructionOutput),
@@ -174,17 +173,10 @@ class PdfToMarkdownAgent:
             return EditCannotDoResponse(reason=result.reason)
 
         base = file_names[0].rsplit(".", 1)[0] if file_names else "document"
-        return EditPlanResponse(
+        return GenerateFileResponse(
+            content=result.markdown,
+            filename=f"{base}-reconstruction.md",
             summary="Reconstructed the document as a Markdown file.",
-            steps=[
-                ToolOperationStep(
-                    tool=AgentToolId.WRITE_FILE_AGENT,
-                    parameters=WriteFileAgentParams(
-                        content=result.markdown,
-                        filename=f"{base}-reconstruction.md",
-                    ),
-                )
-            ],
         )
 
     async def handle(self, request: PdfToMarkdownRequest) -> PdfToMarkdownResponse:
@@ -211,13 +203,13 @@ class PdfToMarkdownAgent:
         if len(chunks) == 1:
             return await self._reconstruct_chunk(request, chunks[0], chunk_num=1, total_chunks=1)
 
-        sem = asyncio.Semaphore(_MAX_PARALLEL_CHUNKS)
-
-        async def process(pages: list[PageLayout], chunk_num: int) -> PdfToMarkdownResponse:
-            async with sem:
-                return await self._reconstruct_chunk(request, pages, chunk_num=chunk_num, total_chunks=len(chunks))
-
-        results = await asyncio.gather(*(process(chunk, i + 1) for i, chunk in enumerate(chunks)))
+        total = len(chunks)
+        results = await asyncio.gather(
+            *(
+                self._reconstruct_chunk(request, chunk, chunk_num=i + 1, total_chunks=total)
+                for i, chunk in enumerate(chunks)
+            )
+        )
 
         markdown_parts: list[str] = []
         for result in results:
@@ -246,7 +238,8 @@ class PdfToMarkdownAgent:
             page_layout=pages,
         )
         try:
-            return await self._reconstruct_document(chunk_request, chunk_num, total_chunks)
+            async with self._sem:
+                return await self._reconstruct_document(chunk_request, chunk_num, total_chunks)
         except Exception as e:
             logger.error("[pdf-to-markdown] chunk %d/%d failed: %s", chunk_num, total_chunks, e, exc_info=True)
             return PdfToMarkdownCannotDoResponse(

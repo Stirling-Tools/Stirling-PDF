@@ -150,6 +150,7 @@ public class AiWorkflowService {
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
+            case GENERATE_FILE -> onGenerateFile(response, listener);
             case NOT_FOUND,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
@@ -350,6 +351,29 @@ public class AiWorkflowService {
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
         return new WorkflowState.Terminal(response);
+    }
+
+    private WorkflowState onGenerateFile(AiWorkflowResponse response, ProgressListener listener)
+            throws IOException {
+        String content = response.getGeneratedContent();
+        String filename = response.getGeneratedFilename();
+        if (content == null || filename == null || filename.isBlank()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue(
+                            "AI engine returned generate_file without content or filename."));
+        }
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
+        String safeFilename = Filenames.toSimpleFileName(filename);
+        byte[] bytes = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        org.springframework.core.io.Resource resource =
+                new org.springframework.core.io.ByteArrayResource(bytes) {
+                    @Override
+                    public String getFilename() {
+                        return safeFilename;
+                    }
+                };
+        return new WorkflowState.Terminal(
+                buildCompletedResponse(response.getSummary(), List.of(resource), List.of(), null));
     }
 
     @SuppressWarnings("unchecked")

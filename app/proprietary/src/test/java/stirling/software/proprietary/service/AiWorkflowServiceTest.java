@@ -252,6 +252,31 @@ class AiWorkflowServiceTest {
     }
 
     @Test
+    void generateFileStoresContentDirectlyWithoutToolCall() throws IOException {
+        MockMultipartFile input = pdf("report.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"generate_file",
+                  "content":"# Hello\\n\\nWorld",
+                  "filename":"report-reconstruction.md",
+                  "summary":"Reconstructed the document as a Markdown file."
+                }
+                """);
+        AtomicInteger ids = stubFileStorage();
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "convert to markdown"));
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        assertEquals(1, result.getResultFiles().size());
+        assertEquals("report-reconstruction.md", result.getResultFiles().get(0).getFileName());
+        assertEquals("file-1", result.getResultFiles().get(0).getFileId());
+        assertEquals(1, ids.get());
+        // No tool endpoint should be called — content goes directly to file storage.
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
     void toolCallWithoutEndpointFallsBackToCannotContinue() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator("{\"outcome\":\"tool_call\",\"parameters\":{}}");
