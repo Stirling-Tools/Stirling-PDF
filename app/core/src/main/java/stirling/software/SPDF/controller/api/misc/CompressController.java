@@ -266,7 +266,7 @@ public class CompressController {
             if (references.isEmpty()) continue;
 
             // Get the first instance of this image
-            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));
+            PDImageXObject originalImage = getOriginalImage(doc, references.getFirst());
 
             // Track original size
             int originalSize = (int) originalImage.getCOSObject().getLength();
@@ -1163,7 +1163,7 @@ public class CompressController {
             List<ImageReference> references = entry.getValue();
             if (references.isEmpty()) continue;
 
-            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));
+            PDImageXObject originalImage = getOriginalImage(doc, references.getFirst());
 
             int originalSize = (int) originalImage.getCOSObject().getLength();
             stats.totalOriginalBytes += originalSize;

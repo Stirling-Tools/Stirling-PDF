@@ -109,8 +109,8 @@ class AddCommentsControllerTest {
             List<PDAnnotationText> p1 = textAnnotations(reloaded.getPage(1).getAnnotations());
             assertThat(p0).hasSize(1);
             assertThat(p1).hasSize(1);
-            assertThat(p0.get(0).getContents()).isEqualTo("First");
-            assertThat(p1.get(0).getContents()).isEqualTo("Second");
+            assertThat(p0.getFirst().getContents()).isEqualTo("First");
+            assertThat(p1.getFirst().getContents()).isEqualTo("Second");
         }
     }
 
@@ -137,7 +137,7 @@ class AddCommentsControllerTest {
         try (PDDocument reloaded = Loader.loadPDF(drainBody(response))) {
             List<PDAnnotationText> notes = textAnnotations(reloaded.getPage(0).getAnnotations());
             assertThat(notes).hasSize(1);
-            PDRectangle rect = notes.get(0).getRectangle();
+            PDRectangle rect = notes.getFirst().getRectangle();
             // Line was drawn at user-space y=720 with font size 12; icon should land in that band,
             // not at the fallback y=10. Width/height fixed to 20 by the anchor path.
             assertThat(rect.getWidth()).isEqualTo(20f);
@@ -167,7 +167,7 @@ class AddCommentsControllerTest {
         try (PDDocument reloaded = Loader.loadPDF(drainBody(response))) {
             List<PDAnnotationText> notes = textAnnotations(reloaded.getPage(0).getAnnotations());
             assertThat(notes).hasSize(1);
-            PDRectangle rect = notes.get(0).getRectangle();
+            PDRectangle rect = notes.getFirst().getRectangle();
             assertThat(rect.getLowerLeftX()).isEqualTo(55f);
             assertThat(rect.getLowerLeftY()).isEqualTo(33f);
             assertThat(rect.getWidth()).isEqualTo(7f);

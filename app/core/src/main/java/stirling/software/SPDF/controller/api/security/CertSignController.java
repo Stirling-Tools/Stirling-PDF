@@ -355,7 +355,7 @@ public class CertSignController {
                 PDAcroForm acroForm = new PDAcroForm(doc);
                 doc.getDocumentCatalog().setAcroForm(acroForm);
                 PDSignatureField signatureField = new PDSignatureField(acroForm);
-                PDAnnotationWidget widget = signatureField.getWidgets().get(0);
+                PDAnnotationWidget widget = signatureField.getWidgets().getFirst();
                 List<PDField> acroFormFields = acroForm.getFields();
                 acroForm.setSignaturesExist(true);
                 acroForm.setAppendOnly(true);

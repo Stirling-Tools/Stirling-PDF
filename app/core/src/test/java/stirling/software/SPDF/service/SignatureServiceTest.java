@@ -256,10 +256,12 @@ class SignatureServiceTest {
                     "Should return only shared signatures for empty username");
             assertEquals(
                     "shared.jpg",
-                    signatures.get(0).getFileName(),
+                    signatures.getFirst().getFileName(),
                     "Should have the shared signature");
             assertEquals(
-                    "Shared", signatures.get(0).getCategory(), "Should be categorized as shared");
+                    "Shared",
+                    signatures.getFirst().getCategory(),
+                    "Should be categorized as shared");
         }
     }
 
@@ -283,10 +285,12 @@ class SignatureServiceTest {
                     "Should return only shared signatures for non-existent user");
             assertEquals(
                     "shared.jpg",
-                    signatures.get(0).getFileName(),
+                    signatures.getFirst().getFileName(),
                     "Should have the shared signature");
             assertEquals(
-                    "Shared", signatures.get(0).getCategory(), "Should be categorized as shared");
+                    "Shared",
+                    signatures.getFirst().getCategory(),
+                    "Should be categorized as shared");
         }
     }
 }

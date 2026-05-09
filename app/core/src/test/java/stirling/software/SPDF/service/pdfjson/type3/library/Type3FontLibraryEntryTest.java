@@ -65,7 +65,7 @@ class Type3FontLibraryEntryTest {
                         .signature("sha256:def")
                         .build();
         assertEquals(2, entry.getSignatures().size());
-        assertEquals("sha256:abc", entry.getSignatures().get(0));
+        assertEquals("sha256:abc", entry.getSignatures().getFirst());
     }
 
     @Test

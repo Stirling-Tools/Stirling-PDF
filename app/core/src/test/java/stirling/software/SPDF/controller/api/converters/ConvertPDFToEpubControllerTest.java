@@ -148,7 +148,7 @@ class ConvertPDFToEpubControllerTest {
 
             List<String> command = commandCaptor.getValue();
             assertEquals(13, command.size());
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals("ebook-convert", command.getFirst());
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));
@@ -324,7 +324,7 @@ class ConvertPDFToEpubControllerTest {
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals("ebook-convert", command.getFirst());
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));

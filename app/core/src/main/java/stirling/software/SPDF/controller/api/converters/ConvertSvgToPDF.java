@@ -143,8 +143,7 @@ public class ConvertSvgToPDF {
             String outputFilename =
                     filenames.isEmpty()
                             ? "combined_svgs.pdf"
-                            : GeneralUtils.generateFilename(
-                                    filenames.getFirst(), "_combined.pdf");
+                            : GeneralUtils.generateFilename(filenames.getFirst(), "_combined.pdf");
 
             log.info("Successfully combined {} SVGs into single PDF", sanitizedSvgs.size());
 

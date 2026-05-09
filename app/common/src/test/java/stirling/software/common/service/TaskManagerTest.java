@@ -96,7 +96,7 @@ class TaskManagerTest {
         var resultFiles = result.getAllResultFiles();
         assertEquals(1, resultFiles.size());
 
-        ResultFile resultFile = resultFiles.get(0);
+        ResultFile resultFile = resultFiles.getFirst();
         assertEquals(fileId, resultFile.getFileId());
         assertEquals(originalFileName, resultFile.getFileName());
         assertEquals(contentType, resultFile.getContentType());
@@ -295,7 +295,7 @@ class TaskManagerTest {
         assertNotNull(jobResult);
         assertNotNull(jobResult.getNotes());
         assertEquals(1, jobResult.getNotes().size());
-        assertEquals(note, jobResult.getNotes().get(0));
+        assertEquals(note, jobResult.getNotes().getFirst());
     }
 
     @Test

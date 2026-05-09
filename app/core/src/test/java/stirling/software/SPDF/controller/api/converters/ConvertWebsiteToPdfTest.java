@@ -233,7 +233,7 @@ public class ConvertWebsiteToPdfTest {
             // Assert – WeasyPrint command correct
             List<String> cmd = cmdCaptor.getValue();
             assertNotNull(cmd);
-            assertEquals("/usr/bin/weasyprint", cmd.get(0));
+            assertEquals("/usr/bin/weasyprint", cmd.getFirst());
             assertTrue(cmd.size() >= 6, "WeasyPrint should receive HTML input and output path");
             String htmlPathStr = cmd.get(1);
             assertEquals("--base-url", cmd.get(2));

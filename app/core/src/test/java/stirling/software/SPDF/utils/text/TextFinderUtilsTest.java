@@ -73,8 +73,8 @@ class TextFinderUtilsTest {
         List<Pattern> patterns = TextFinderUtils.createOptimizedSearchPatterns(terms, false, false);
 
         assertEquals(1, patterns.size());
-        assertTrue(patterns.get(0).matcher("hello").find());
-        assertFalse(patterns.get(0).matcher("HELLO").find() == false); // case insensitive
+        assertTrue(patterns.getFirst().matcher("hello").find());
+        assertFalse(patterns.getFirst().matcher("HELLO").find() == false); // case insensitive
     }
 
     @Test
@@ -83,8 +83,8 @@ class TextFinderUtilsTest {
         List<Pattern> patterns = TextFinderUtils.createOptimizedSearchPatterns(terms, true, false);
 
         assertEquals(1, patterns.size());
-        assertTrue(patterns.get(0).matcher("hello").find());
-        assertTrue(patterns.get(0).matcher("helo").find());
+        assertTrue(patterns.getFirst().matcher("hello").find());
+        assertTrue(patterns.getFirst().matcher("helo").find());
     }
 
     @Test
@@ -93,8 +93,8 @@ class TextFinderUtilsTest {
         List<Pattern> patterns = TextFinderUtils.createOptimizedSearchPatterns(terms, false, true);
 
         assertEquals(1, patterns.size());
-        assertTrue(patterns.get(0).matcher("the cat sat").find());
-        assertFalse(patterns.get(0).matcher("concatenate").find());
+        assertTrue(patterns.getFirst().matcher("the cat sat").find());
+        assertFalse(patterns.getFirst().matcher("concatenate").find());
     }
 
     @Test
@@ -136,7 +136,7 @@ class TextFinderUtilsTest {
         List<Pattern> patterns = TextFinderUtils.createOptimizedSearchPatterns(terms, false, true);
 
         assertEquals(1, patterns.size());
-        assertTrue(patterns.get(0).matcher("item 5 here").find());
+        assertTrue(patterns.getFirst().matcher("item 5 here").find());
     }
 
     // --- hasProblematicFonts ---
