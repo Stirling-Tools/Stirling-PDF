@@ -242,6 +242,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         // Use custom handler for special cases (like page insertion)
         customHandler(files, insertAfterPage);
       } else {
+        // Snapshot selection before upload; addFiles may replace the current
+        // selection with only newly uploaded files.
+        const previouslySelected = fileCtx.selectors
+          .getSelectedStirlingFileStubs()
+          .map((s) => s.id);
         // 1) Add via standard flow (auto-selects new files)
         await addFiles(files);
         // 2) Merge all requested file IDs (covers already-present files too)
@@ -253,7 +258,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
             .getSelectedStirlingFileStubs()
             .map((s) => s.id);
           const nextSelection = Array.from(
-            new Set([...currentSelected, ...ids]),
+            new Set([...previouslySelected, ...currentSelected, ...ids]),
           );
           actions.setSelectedFiles(nextSelection);
         }
