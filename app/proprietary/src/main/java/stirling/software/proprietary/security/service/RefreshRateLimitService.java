@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +25,6 @@ public class RefreshRateLimitService {
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
-    @Autowired
     public RefreshRateLimitService(ApplicationProperties applicationProperties) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
     }

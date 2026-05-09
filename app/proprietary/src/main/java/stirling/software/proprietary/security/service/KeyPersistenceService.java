@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -51,7 +50,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     private volatile JwtVerificationKey activeKey;
 
-    @Autowired
     public KeyPersistenceService(
             ApplicationProperties applicationProperties, CacheManager cacheManager) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
@@ -263,7 +261,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                 nativeCache.asMap().size());
 
         return nativeCache.asMap().values().stream()
-                .filter(value -> value instanceof JwtVerificationKey)
+                .filter(JwtVerificationKey.class::isInstance)
                 .map(value -> (JwtVerificationKey) value)
                 .filter(
                         key -> {
@@ -411,6 +409,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 
+    @Override
     public PublicKey decodePublicKey(String encodedKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keyBytes = Base64.getDecoder().decode(encodedKey);

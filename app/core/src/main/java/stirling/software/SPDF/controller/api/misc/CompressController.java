@@ -1216,28 +1216,17 @@ public class CompressController {
 
             // Map optimization levels to Ghostscript settings
             switch (optimizeLevel) {
-                case 1:
-                    command.add("-dPDFSETTINGS=/prepress");
-                    break;
-                case 2:
-                    command.add("-dPDFSETTINGS=/printer");
-                    break;
-                case 3:
-                    command.add("-dPDFSETTINGS=/ebook");
-                    break;
-                case 4:
-                case 5:
-                    command.add("-dPDFSETTINGS=/screen");
-                    break;
-                case 6:
-                case 7:
+                case 1 -> command.add("-dPDFSETTINGS=/prepress");
+                case 2 -> command.add("-dPDFSETTINGS=/printer");
+                case 3 -> command.add("-dPDFSETTINGS=/ebook");
+                case 4, 5 -> command.add("-dPDFSETTINGS=/screen");
+                case 6, 7 -> {
                     command.add("-dPDFSETTINGS=/screen");
                     command.add("-dColorImageResolution=150");
                     command.add("-dGrayImageResolution=150");
                     command.add("-dMonoImageResolution=300");
-                    break;
-                case 8:
-                case 9:
+                }
+                case 8, 9 -> {
                     command.add("-dPDFSETTINGS=/screen");
                     // Use stronger downsampling at the highest level
                     if (optimizeLevel == 9) {
@@ -1249,16 +1238,14 @@ public class CompressController {
                         command.add("-dGrayImageResolution=100");
                         command.add("-dMonoImageResolution=200");
                     }
-                    break;
-                case 10:
+                }
+                case 10 -> {
                     command.add("-dPDFSETTINGS=/screen");
                     command.add("-dColorImageResolution=72");
                     command.add("-dGrayImageResolution=72");
                     command.add("-dMonoImageResolution=150");
-                    break;
-                default:
-                    command.add("-dPDFSETTINGS=/screen");
-                    break;
+                }
+                default -> command.add("-dPDFSETTINGS=/screen");
             }
 
             // If grayscale conversion requested, enforce grayscale color processing in Ghostscript

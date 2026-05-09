@@ -59,45 +59,49 @@ public class MultiPageLayoutController {
             mode = "DEFAULT";
         }
 
-        int rows;
-        int cols;
-        int pagesPerSheet;
+        record LayoutConfig(int rows, int cols, int pagesPerSheet) {}
+        LayoutConfig layoutConfig =
+                switch (mode) {
+                    case "DEFAULT" -> {
+                        int pagesPerSheet = request.getPagesPerSheet();
+                        if (pagesPerSheet != 2
+                                && pagesPerSheet
+                                        != (int) Math.sqrt(pagesPerSheet)
+                                                * Math.sqrt(pagesPerSheet)) {
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.invalidFormat",
+                                    "Invalid {0} format: {1}",
+                                    "pagesPerSheet",
+                                    "must be 2 or a perfect square");
+                        }
 
-        switch (mode) {
-            case "DEFAULT":
-                pagesPerSheet = request.getPagesPerSheet();
-                if (pagesPerSheet != 2
-                        && pagesPerSheet
-                                != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat",
-                            "Invalid {0} format: {1}",
-                            "pagesPerSheet",
-                            "must be 2 or a perfect square");
-                }
-
-                cols = pagesPerSheet == 2 ? pagesPerSheet : (int) Math.sqrt(pagesPerSheet);
-                rows = pagesPerSheet == 2 ? 1 : (int) Math.sqrt(pagesPerSheet);
-                break;
-            case "CUSTOM":
-                rows = request.getRows();
-                cols = request.getCols();
-                if (rows <= 0 || cols <= 0) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.invalidFormat",
-                            "Invalid {0} format: {1}",
-                            "rows and cols",
-                            "only strictly positive values are allowed");
-                }
-                pagesPerSheet = cols * rows;
-                break;
-            default:
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat",
-                        "Invalid {0} format: {1}",
-                        "mode",
-                        "only 'DEFAULT' and 'CUSTOM' are supported");
-        }
+                        int cols =
+                                pagesPerSheet == 2 ? pagesPerSheet : (int) Math.sqrt(pagesPerSheet);
+                        int rows = pagesPerSheet == 2 ? 1 : (int) Math.sqrt(pagesPerSheet);
+                        yield new LayoutConfig(rows, cols, pagesPerSheet);
+                    }
+                    case "CUSTOM" -> {
+                        int rows = request.getRows();
+                        int cols = request.getCols();
+                        if (rows <= 0 || cols <= 0) {
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.invalidFormat",
+                                    "Invalid {0} format: {1}",
+                                    "rows and cols",
+                                    "only strictly positive values are allowed");
+                        }
+                        yield new LayoutConfig(rows, cols, cols * rows);
+                    }
+                    default ->
+                            throw ExceptionUtils.createIllegalArgumentException(
+                                    "error.invalidFormat",
+                                    "Invalid {0} format: {1}",
+                                    "mode",
+                                    "only 'DEFAULT' and 'CUSTOM' are supported");
+                };
+        int rows = layoutConfig.rows();
+        int cols = layoutConfig.cols();
+        int pagesPerSheet = layoutConfig.pagesPerSheet();
 
         if (pagesPerSheet > MAX_PAGES) {
             throw ExceptionUtils.createIllegalArgumentException(

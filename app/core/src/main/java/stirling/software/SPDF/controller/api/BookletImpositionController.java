@@ -292,24 +292,25 @@ public class BookletImpositionController {
 
         // Apply rotation if needed (rotate about origin), then translate to keep in cell
         switch (rot) {
-            case 90:
+            case 90 -> {
                 cs.transform(Matrix.getRotateInstance(Math.PI / 2, 0, 0));
                 // After 90° CCW, the content spans x in [-r.getHeight(), 0] and y in [0,
                 // r.getWidth()]
                 cs.transform(Matrix.getTranslateInstance(0, -r.getWidth()));
-                break;
-            case 180:
+            }
+            case 180 -> {
                 cs.transform(Matrix.getRotateInstance(Math.PI, 0, 0));
                 cs.transform(Matrix.getTranslateInstance(-r.getWidth(), -r.getHeight()));
-                break;
-            case 270:
+            }
+            case 270 -> {
                 cs.transform(Matrix.getRotateInstance(3 * Math.PI / 2, 0, 0));
                 // After 270° CCW, the content spans x in [0, r.getHeight()] and y in
                 // [-r.getWidth(), 0]
                 cs.transform(Matrix.getTranslateInstance(-r.getHeight(), 0));
-                break;
-            default:
+            }
+            default -> {
                 // 0°: no-op
+            }
         }
 
         // Reuse LayerUtility passed from caller

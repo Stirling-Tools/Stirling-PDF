@@ -287,7 +287,7 @@ public class SplitPdfBySectionsController {
         Set<Integer> pagesToSplit = new HashSet<>();
 
         switch (splitMode) {
-            case CUSTOM:
+            case CUSTOM -> {
                 if (pageNumbers == null || pageNumbers.isBlank()) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.argumentRequired",
@@ -299,27 +299,25 @@ public class SplitPdfBySectionsController {
                 List<Integer> pageListToSplit =
                         GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
                 pagesToSplit.addAll(pageListToSplit);
-                break;
+            }
 
-            case SPLIT_ALL:
-                pagesToSplit.addAll(IntStream.range(0, totalPages).boxed().toList());
-                break;
+            case SPLIT_ALL -> pagesToSplit.addAll(IntStream.range(0, totalPages).boxed().toList());
 
-            case SPLIT_ALL_EXCEPT_FIRST:
-                pagesToSplit.addAll(IntStream.range(1, totalPages).boxed().toList());
-                break;
+            case SPLIT_ALL_EXCEPT_FIRST ->
+                    pagesToSplit.addAll(IntStream.range(1, totalPages).boxed().toList());
 
-            case SPLIT_ALL_EXCEPT_LAST:
-                pagesToSplit.addAll(IntStream.range(0, totalPages - 1).boxed().toList());
-                break;
+            case SPLIT_ALL_EXCEPT_LAST ->
+                    pagesToSplit.addAll(IntStream.range(0, totalPages - 1).boxed().toList());
 
-            case SPLIT_ALL_EXCEPT_FIRST_AND_LAST:
-                pagesToSplit.addAll(IntStream.range(1, totalPages - 1).boxed().toList());
-                break;
+            case SPLIT_ALL_EXCEPT_FIRST_AND_LAST ->
+                    pagesToSplit.addAll(IntStream.range(1, totalPages - 1).boxed().toList());
 
-            default:
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat", "Invalid {0} format: {1}", "split mode", splitMode);
+            default ->
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "split mode",
+                            splitMode);
         }
 
         return pagesToSplit;

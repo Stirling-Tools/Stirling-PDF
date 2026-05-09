@@ -12,7 +12,7 @@ bootRun {
 }
 
 spotless {
-        java {
+    java {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)

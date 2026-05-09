@@ -106,40 +106,31 @@ public class PdfJsonCosMapper {
         if (value == null || value.getType() == null) {
             return null;
         }
-        switch (value.getType()) {
-            case NULL:
-                return COSNull.NULL;
-            case BOOLEAN:
-                if (value.getValue() instanceof Boolean bool) {
-                    return COSBoolean.getBoolean(bool);
-                }
-                return null;
-            case INTEGER:
-                if (value.getValue() instanceof Number number) {
-                    return COSInteger.get(number.longValue());
-                }
-                return null;
-            case FLOAT:
-                if (value.getValue() instanceof Number number) {
-                    return new COSFloat(number.floatValue());
-                }
-                return null;
-            case NAME:
-                if (value.getValue() instanceof String name) {
-                    return COSName.getPDFName(name);
-                }
-                return null;
-            case STRING:
+        return switch (value.getType()) {
+            case NULL -> COSNull.NULL;
+            case BOOLEAN ->
+                    value.getValue() instanceof Boolean bool ? COSBoolean.getBoolean(bool) : null;
+            case INTEGER ->
+                    value.getValue() instanceof Number number
+                            ? COSInteger.get(number.longValue())
+                            : null;
+            case FLOAT ->
+                    value.getValue() instanceof Number number
+                            ? new COSFloat(number.floatValue())
+                            : null;
+            case NAME -> value.getValue() instanceof String name ? COSName.getPDFName(name) : null;
+            case STRING -> {
                 if (value.getValue() instanceof String encoded) {
                     try {
                         byte[] bytes = Base64.getDecoder().decode(encoded);
-                        return new COSString(bytes);
+                        yield new COSString(bytes);
                     } catch (IllegalArgumentException ex) {
                         log.debug("Failed to decode COSString value: {}", ex.getMessage());
                     }
                 }
-                return null;
-            case ARRAY:
+                yield null;
+            }
+            case ARRAY -> {
                 COSArray array = new COSArray();
                 if (value.getItems() != null) {
                     for (PdfJsonCosValue item : value.getItems()) {
@@ -151,8 +142,9 @@ public class PdfJsonCosMapper {
                         }
                     }
                 }
-                return array;
-            case DICTIONARY:
+                yield array;
+            }
+            case DICTIONARY -> {
                 COSDictionary dictionary = new COSDictionary();
                 if (value.getEntries() != null) {
                     for (Map.Entry<String, PdfJsonCosValue> entry : value.getEntries().entrySet()) {
@@ -163,15 +155,14 @@ public class PdfJsonCosMapper {
                         }
                     }
                 }
-                return dictionary;
-            case STREAM:
-                if (value.getStream() != null) {
-                    return buildStreamFromModel(value.getStream(), document);
-                }
-                return null;
-            default:
-                return null;
-        }
+                yield dictionary;
+            }
+            case STREAM ->
+                    value.getStream() != null
+                            ? buildStreamFromModel(value.getStream(), document)
+                            : null;
+            default -> null;
+        };
     }
 
     public COSStream buildStreamFromModel(PdfJsonStream streamModel, PDDocument document)
