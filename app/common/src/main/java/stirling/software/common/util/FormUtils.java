@@ -943,7 +943,7 @@ public class FormUtils {
         if (selection == null || selection.trim().isEmpty()) return null;
         List<String> filtered =
                 filterChoiceSelections(List.of(selection), allowedOptions, fieldName);
-        return filtered.isEmpty() ? null : filtered.get(0);
+        return filtered.isEmpty() ? null : filtered.getFirst();
     }
 
     private void applyValueToField(PDField field, String value, boolean strict) throws IOException {
@@ -1467,7 +1467,7 @@ public class FormUtils {
 
         // Only check options for choice-type fields (combobox, listbox, radio)
         if (CHOICE_FIELD_TYPES.contains(type) && options != null && !options.isEmpty()) {
-            String optionCandidate = cleanLabel(options.get(0));
+            String optionCandidate = cleanLabel(options.getFirst());
             if (optionCandidate != null && !looksGeneric(optionCandidate)) {
                 return optionCandidate;
             }
@@ -1559,7 +1559,7 @@ public class FormUtils {
                 continue;
             }
 
-            PDAnnotationWidget widget = widgets.get(0);
+            PDAnnotationWidget widget = widgets.getFirst();
             PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
             PDPage page = resolveWidgetPage(document, widget, null);
             if (page == null || originalRectangle == null) {
@@ -2310,19 +2310,19 @@ public class FormUtils {
 
         private static int firstWidgetPageIndex(FormFieldWithCoordinates f) {
             return (f.getWidgets() != null && !f.getWidgets().isEmpty())
-                    ? f.getWidgets().get(0).getPageIndex()
+                    ? f.getWidgets().getFirst().getPageIndex()
                     : -1;
         }
 
         private static float firstWidgetY(FormFieldWithCoordinates f) {
             return (f.getWidgets() != null && !f.getWidgets().isEmpty())
-                    ? f.getWidgets().get(0).getY()
+                    ? f.getWidgets().getFirst().getY()
                     : 0;
         }
 
         private static float firstWidgetX(FormFieldWithCoordinates f) {
             return (f.getWidgets() != null && !f.getWidgets().isEmpty())
-                    ? f.getWidgets().get(0).getX()
+                    ? f.getWidgets().getFirst().getX()
                     : 0;
         }
 
