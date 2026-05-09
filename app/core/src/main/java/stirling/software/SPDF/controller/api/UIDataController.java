@@ -122,21 +122,14 @@ public class UIDataController {
                                 .toList();
 
                 for (Path jsonFile : jsonFiles) {
-                    String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
-                    pipelineConfigs.add(content);
-                }
-
-                for (String config : pipelineConfigs) {
+                    String config = Files.readString(jsonFile, StandardCharsets.UTF_8);
+                    pipelineConfigs.add(config);
                     Map<String, Object> jsonContent =
                             objectMapper.readValue(
                                     config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.length() < 1) {
-                        String filename =
-                                jsonFiles
-                                        .get(pipelineConfigs.indexOf(config))
-                                        .getFileName()
-                                        .toString();
+                        String filename = jsonFile.getFileName().toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
@@ -302,20 +295,14 @@ public class UIDataController {
         }
 
         private static String getFormatFromExtension(String extension) {
-            switch (extension) {
-                case "ttf":
-                    return "truetype";
-                case "woff":
-                    return "woff";
-                case "woff2":
-                    return "woff2";
-                case "eot":
-                    return "embedded-opentype";
-                case "svg":
-                    return "svg";
-                default:
-                    return "";
-            }
+            return switch (extension) {
+                case "ttf" -> "truetype";
+                case "woff" -> "woff";
+                case "woff2" -> "woff2";
+                case "eot" -> "embedded-opentype";
+                case "svg" -> "svg";
+                default -> "";
+            };
         }
     }
 }
