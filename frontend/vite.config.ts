@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -20,7 +20,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the
   // `VITE_` prefix.
@@ -39,12 +39,35 @@ export default defineConfig(({ mode }) => {
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
+  // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
+  // so the top-level dev launcher can wire a dynamically-assigned backend port.
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  const backendProxy = {
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    xfwd: true,
+  };
+
   return {
     plugins: [
       react(),
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
+      // Set ANALYZE=true to emit dist/stats.html (treemap) alongside the
+      // build; rollup-plugin-visualizer is ESM-only so we import dynamically.
+      ...(process.env.ANALYZE === "true"
+        ? [
+            (await import("rollup-plugin-visualizer")).visualizer({
+              filename: "dist/stats.html",
+              template: "treemap",
+              gzipSize: true,
+              brotliSize: true,
+              emitFile: false,
+            }) as PluginOption,
+          ]
+        : []),
       viteStaticCopy({
         targets: [
           {
@@ -88,48 +111,13 @@ export default defineConfig(({ mode }) => {
         effectiveMode === "desktop"
           ? undefined
           : {
-              "/api": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/oauth2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/saml2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/login/oauth2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/login/saml2": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/swagger-ui": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
-              "/v1/api-docs": {
-                target: "http://localhost:8080",
-                changeOrigin: true,
-                secure: false,
-                xfwd: true,
-              },
+              "/api": backendProxy,
+              "/oauth2": backendProxy,
+              "/saml2": backendProxy,
+              "/login/oauth2": backendProxy,
+              "/login/saml2": backendProxy,
+              "/swagger-ui": backendProxy,
+              "/v1/api-docs": backendProxy,
             },
     },
     base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
