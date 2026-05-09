@@ -5,7 +5,7 @@ tasks:
     desc: "Install engine dependencies"
     run: once
     cmds:
-      - uv python install 3.13
+      - uv python install 3.13.8
       - uv sync
     sources:
       - uv.lock
