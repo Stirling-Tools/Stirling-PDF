@@ -5,8 +5,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,17 +24,40 @@ public class AiEngineClient {
     private final ApplicationProperties applicationProperties;
     private final HttpClient httpClient;
 
+    @Autowired
     public AiEngineClient(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-        this.httpClient =
+        this(
+                applicationProperties,
                 HttpClient.newBuilder()
                         .connectTimeout(
                                 Duration.ofSeconds(
                                         applicationProperties.getAiEngine().getTimeoutSeconds()))
-                        .build();
+                        .build());
+    }
+
+    /** Package-private constructor that accepts an HttpClient directly; intended for tests. */
+    AiEngineClient(ApplicationProperties applicationProperties, HttpClient httpClient) {
+        this.applicationProperties = applicationProperties;
+        this.httpClient = httpClient;
     }
 
     public String post(String path, String jsonBody) throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        return postWithTimeout(path, jsonBody, Duration.ofSeconds(config.getTimeoutSeconds()));
+    }
+
+    /**
+     * POST with an explicit per-call timeout, for heavy operations (e.g. RAG ingestion of a large
+     * document) that legitimately take longer than the default timeout.
+     */
+    public String postLongRunning(String path, String jsonBody) throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        return postWithTimeout(
+                path, jsonBody, Duration.ofSeconds(config.getLongRunningTimeoutSeconds()));
+    }
+
+    private String postWithTimeout(String path, String jsonBody, Duration timeout)
+            throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
             throw new ResponseStatusException(
@@ -40,14 +65,14 @@ public class AiEngineClient {
         }
 
         String url = config.getUrl().stripTrailing() + path;
-        log.debug("Proxying AI engine request to {}", url);
+        log.debug("Proxying AI engine request to {} (timeout {}s)", url, timeout.toSeconds());
 
         HttpRequest request =
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
-                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                        .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                         .build();
 
@@ -86,6 +111,14 @@ public class AiEngineClient {
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (HttpTimeoutException e) {
+            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
+        } catch (IOException e) {
+            // Connection refused, DNS failure, socket reset, etc. — surface as
+            // SERVICE_UNAVAILABLE so every caller of this client sees a structured
+            // status rather than a raw 500 from an unhandled IOException.
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ResponseStatusException(

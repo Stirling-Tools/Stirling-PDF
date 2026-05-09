@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { lazy, useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Drawer } from "@mantine/core";
@@ -23,8 +23,15 @@ import {
 import { useFileSelection } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/FileContext";
-import SignRequestWorkbenchView from "@app/components/tools/certSign/SignRequestWorkbenchView";
-import SessionDetailWorkbenchView from "@app/components/tools/certSign/SessionDetailWorkbenchView";
+// These workbench views pull in the PDF viewer / pdfium / @embedpdf chain, so
+// they are loaded on demand when the certSign collab feature actually opens
+// one of them. Workbench wraps custom views in <Suspense>.
+const SignRequestWorkbenchView = lazy(
+  () => import("@app/components/tools/certSign/SignRequestWorkbenchView"),
+);
+const SessionDetailWorkbenchView = lazy(
+  () => import("@app/components/tools/certSign/SessionDetailWorkbenchView"),
+);
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
 export const SIGN_REQUEST_WORKBENCH_TYPE =
