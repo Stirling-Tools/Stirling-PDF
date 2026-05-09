@@ -97,12 +97,12 @@ public class SplitPdfByChaptersController {
                  */
             }
             if (!bookmarks.isEmpty()
-                    && bookmarks.get(bookmarks.size() - 1).getEndPage() == -2
+                    && bookmarks.getLast().getEndPage() == -2
                     && firstPage
                             >= bookmarks
-                                    .get(bookmarks.size() - 1)
+                                    .getLast()
                                     .getStartPage()) { // for handling the above-mentioned case
-                Bookmark previousBookmark = bookmarks.get(bookmarks.size() - 1);
+                Bookmark previousBookmark = bookmarks.getLast();
                 previousBookmark.setEndPage(firstPage);
             }
             bookmarks.add(new Bookmark(currentTitle, firstPage, endPage));
@@ -158,7 +158,7 @@ public class SplitPdfByChaptersController {
                                 0,
                                 bookmarkLevel);
                 // to handle last page edge case
-                bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
+                bookmarks.getLast().setEndPage(sourceDocument.getNumberOfPages());
 
             } catch (Exception e) {
                 ExceptionUtils.logException("outline extraction", e);

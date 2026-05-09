@@ -51,29 +51,31 @@ public class ImageProcessingUtils {
 
     public static byte[] getImageData(BufferedImage image) {
         DataBuffer dataBuffer = image.getRaster().getDataBuffer();
-        if (dataBuffer instanceof DataBufferByte dataBufferByte) {
-            return dataBufferByte.getData();
-        } else if (dataBuffer instanceof DataBufferInt dataBufferInt) {
-            int[] intData = dataBufferInt.getData();
-            ByteBuffer byteBuffer = ByteBuffer.allocate(intData.length * 4);
-            byteBuffer.asIntBuffer().put(intData);
-            return byteBuffer.array();
-        } else {
-            int width = image.getWidth();
-            int height = image.getHeight();
-            int[] pixels = new int[width * height];
-
-            image.getRGB(0, 0, width, height, pixels, 0, width);
-
-            byte[] data = new byte[width * height * 3];
-            int index = 0;
-            for (int rgb : pixels) {
-                data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
-                data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
-                data[index++] = (byte) (rgb & 0xFF); // Blue
+        return switch (dataBuffer) {
+            case DataBufferByte dataBufferByte -> dataBufferByte.getData();
+            case DataBufferInt dataBufferInt -> {
+                int[] intData = dataBufferInt.getData();
+                ByteBuffer byteBuffer = ByteBuffer.allocate(intData.length * 4);
+                byteBuffer.asIntBuffer().put(intData);
+                yield byteBuffer.array();
             }
-            return data;
-        }
+            default -> {
+                int width = image.getWidth();
+                int height = image.getHeight();
+                int[] pixels = new int[width * height];
+
+                image.getRGB(0, 0, width, height, pixels, 0, width);
+
+                byte[] data = new byte[width * height * 3];
+                int index = 0;
+                for (int rgb : pixels) {
+                    data[index++] = (byte) ((rgb >> 16) & 0xFF); // Red
+                    data[index++] = (byte) ((rgb >> 8) & 0xFF); // Green
+                    data[index++] = (byte) (rgb & 0xFF); // Blue
+                }
+                yield data;
+            }
+        };
     }
 
     public static double extractImageOrientation(InputStream is) throws IOException {
