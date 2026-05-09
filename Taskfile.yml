@@ -3,7 +3,7 @@ version: '3'
 output: prefixed
 
 vars:
-  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts\find-free-port.ps1 -Preferred
+  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts/find-free-port.ps1 -Preferred
   FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
 
 includes:
