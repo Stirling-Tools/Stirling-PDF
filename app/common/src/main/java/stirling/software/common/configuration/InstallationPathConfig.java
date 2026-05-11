@@ -68,7 +68,8 @@ public class InstallationPathConfig {
             override = System.getenv("STIRLING_BASE_PATH");
         }
         if (override != null && !override.isBlank()) {
-            return override.endsWith(File.separator) ? override : override + File.separator;
+            boolean hasTrailingSeparator = override.endsWith("/") || override.endsWith("\\");
+            return hasTrailingSeparator ? override : override + File.separator;
         }
         return "." + File.separator;
     }
