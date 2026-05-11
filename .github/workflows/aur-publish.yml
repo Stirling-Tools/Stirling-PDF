@@ -106,7 +106,7 @@ jobs:
 
       - name: Publish stirling-pdf-desktop to AUR
         if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
-        uses: KSXGitHub/github-actions-deploy-aur@v4.1.2
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.3
         with:
           pkgname: stirling-pdf-desktop
           pkgbuild: .github/aur/stirling-pdf-desktop/PKGBUILD
