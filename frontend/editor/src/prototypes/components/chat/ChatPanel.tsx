@@ -22,6 +22,7 @@ import {
   List,
 } from "@mantine/core";
 import SendIcon from "@mui/icons-material/Send";
+import StopIcon from "@mui/icons-material/Stop";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -208,8 +209,15 @@ function ChatMessageBubble({
 
 export function ChatPanel() {
   const { t } = useTranslation();
-  const { messages, isOpen, isLoading, progress, toggleOpen, sendMessage } =
-    useChat();
+  const {
+    messages,
+    isOpen,
+    isLoading,
+    progress,
+    toggleOpen,
+    sendMessage,
+    cancelMessage,
+  } = useChat();
   const resolveToolName = useToolNameResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -330,17 +338,30 @@ export function ChatPanel() {
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
                 rightSection={
-                  <ActionIcon
-                    variant="filled"
-                    color="blue"
-                    size="sm"
-                    onClick={handleSend}
-                    disabled={!input.trim() || isLoading}
-                    aria-label="Send message"
-                  >
-                    <SendIcon sx={{ fontSize: 14 }} />
-                  </ActionIcon>
+                  isLoading ? (
+                    <ActionIcon
+                      variant="filled"
+                      color="red"
+                      size="sm"
+                      onClick={cancelMessage}
+                      aria-label="Stop generating"
+                    >
+                      <StopIcon sx={{ fontSize: 14 }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="filled"
+                      color="blue"
+                      size="sm"
+                      onClick={handleSend}
+                      disabled={!input.trim()}
+                      aria-label="Send message"
+                    >
+                      <SendIcon sx={{ fontSize: 14 }} />
+                    </ActionIcon>
+                  )
                 }
+                rightSectionPointerEvents="all"
                 rightSectionWidth={36}
                 style={{ flex: 1 }}
               />
