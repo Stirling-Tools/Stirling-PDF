@@ -32,6 +32,7 @@ exampleYmlFiles/stirling/
 /testing/cucumber/junit/
 /testing/cucumber/report.html
 /testing/.failed_tests
+/.test-state/
 SwaggerDoc.json
 
 # Runtime storage for uploaded files and user data (not Java source code)
@@ -50,6 +51,7 @@ app/core/src/main/resources/static/samples/
 app/core/src/main/resources/static/manifest-classic.json
 app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/pdfium/
+app/core/src/main/resources/static/pdfjs/
 app/core/src/main/resources/static/vendor/
 # Note: Keep backend-managed files like fonts/, css/, js/, pdfjs/, etc.
 
@@ -163,15 +165,15 @@ __pycache__/
 *.pyo
 
 # Virtual environments
-.env*
-!.env*.example
-!engine/.env
 .venv*
 env*/
 venv*/
 ENV/
 env.bak/
 venv.bak/
+
+# Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
+.env*
 
 # VS Code
 /.vscode/**/*
@@ -265,3 +267,7 @@ docs/type3/signatures/
 
 # Claude
 .claude/
+
+# Playwright MCP screenshots / traces
+.playwright-mcp/
+*.playwright-mcp.png

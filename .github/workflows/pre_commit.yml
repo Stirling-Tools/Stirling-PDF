@@ -1,10 +1,11 @@
 name: Pre-commit
 
+# Runs `pre-commit run` for ruff / codespell / gitleaks / EOF / trailing-ws.
+# Called from build.yml on PRs and merge_group; also runnable on demand via
+# workflow_dispatch for manual local-equivalent linting.
 on:
+  workflow_call:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -18,7 +19,7 @@ jobs:
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
         with:
           egress-policy: audit
 

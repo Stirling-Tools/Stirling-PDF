@@ -22,7 +22,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import CloseIcon from "@mui/icons-material/Close";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import CheckIcon from "@mui/icons-material/Check";
 
 import {

@@ -9,7 +9,7 @@ import {
   Flex,
 } from "@mantine/core";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useTranslation } from "react-i18next";
 import { useSaaSBilling } from "@app/contexts/SaasBillingContext";

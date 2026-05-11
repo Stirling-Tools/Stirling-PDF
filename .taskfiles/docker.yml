@@ -55,3 +55,9 @@ tasks:
     desc: "Tail docker compose logs"
     cmds:
       - docker compose -f {{.COMPOSE_DIR}}/docker-compose.yml logs -f
+
+  test:
+    desc: "Run full Docker integration test suite (builds all variants and tests them)"
+    ignore_error: true
+    cmds:
+      - bash testing/test.sh {{.CLI_ARGS}}
