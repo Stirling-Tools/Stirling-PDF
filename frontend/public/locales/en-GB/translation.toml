@@ -8603,10 +8603,18 @@ calibrationTooltip = "Calibration mode coming soon"
 customScale = "Custom Scale"
 noneSet = "No custom scale set"
 presets = "Preset Scales"
+ratio = "Ratio"
 ratioHelp = "Ratio: 1 drawing unit = X real-world units"
+ratioPlaceholder = "e.g., 100"
 ratioPositive = "Ratio must be greater than zero"
 ratioRequired = "Ratio is required"
 reset = "Reset to Defaults"
+unit = "Unit"
+unitInvalid = "Invalid unit: {{scaleUnit}}"
+
+[ruler]
+scaled = "Scaled"
+physicalValues = "Physical"
 
 [zipWarning]
 cancel = "Cancel"

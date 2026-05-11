@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Group,
   Button,
@@ -9,7 +9,7 @@ import {
   Grid,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { MeasureScale } from "@app/components/viewer/RulerOverlay";
+import type { MeasureScale } from "@app/components/viewer/RulerOverlay";
 import {
   generateScaleLabel,
   parsePresetRatio,
@@ -41,6 +41,21 @@ export function ScaleSettingsPanel({
   const [unit, setUnit] = useState<string>(currentScale?.unit || "m");
   const [presetSelected, setPresetSelected] = useState<string | null>(null);
   const [ratioError, setRatioError] = useState<string | null>(null);
+  const [unitError, setUnitError] = useState<string | null>(null);
+
+  // Helper functions to clear errors
+  const clearErrors = useCallback(() => {
+    setRatioError(null);
+    setUnitError(null);
+  }, []);
+
+  const clearRatioError = useCallback(() => {
+    setRatioError(null);
+  }, []);
+
+  const clearUnitError = useCallback(() => {
+    setUnitError(null);
+  }, []);
 
   // Sync form fields when currentScale changes
   useEffect(() => {
@@ -48,7 +63,7 @@ export function ScaleSettingsPanel({
       // ratio can be null, so only set it if it exists
       setRatio(currentScale.ratio ?? null);
       setUnit(currentScale.unit);
-      setRatioError(null);
+      clearErrors();
 
       // Check if current scale matches any preset
       const matchedPreset = currentScale.ratio
@@ -62,21 +77,21 @@ export function ScaleSettingsPanel({
       setRatio(null);
       setUnit("m");
       setPresetSelected(null);
-      setRatioError(null);
+      clearErrors();
     }
-  }, [currentScale]);
+  }, [currentScale, clearErrors]);
 
   const handlePresetClick = (preset: string) => {
     setPresetSelected(preset);
     const presetRatio = parsePresetRatio(preset);
     setRatio(presetRatio);
-    setRatioError(null);
+    clearRatioError();
     // Live update: apply immediately for presets
     applyScale(presetRatio, unit);
   };
 
   const handleRatioChange = (value: string | number | undefined) => {
-    setRatioError(null);
+    clearRatioError();
 
     if (value === undefined || value === "") {
       setRatio(null);
@@ -95,6 +110,7 @@ export function ScaleSettingsPanel({
   const handleUnitChange = (val: string | null) => {
     if (!val) return;
     setUnit(val);
+    clearUnitError();
     // Auto-apply immediately if ratio is set (better UX consistency)
     if (ratio && ratio > 0) {
       applyScale(ratio, val);
@@ -133,9 +149,12 @@ export function ScaleSettingsPanel({
       };
 
       onApplyScale(scale);
+      clearUnitError();
     } catch (err) {
       console.error("Invalid unit:", scaleUnit, err);
-      setRatioError(`Invalid unit: ${scaleUnit}`);
+      setUnitError(
+        t("scaleSettings.unitInvalid", `Invalid unit: ${scaleUnit}`),
+      );
     }
   };
 
@@ -181,8 +200,8 @@ export function ScaleSettingsPanel({
             <NumberInput
               ref={ratioInputRef}
               key={`ratio-${currentScale?.ratio ?? "empty"}`}
-              label="Ratio"
-              placeholder="e.g., 100"
+              label={t("scaleSettings.ratio", "Ratio")}
+              placeholder={t("scaleSettings.ratioPlaceholder", "e.g., 100")}
               value={ratio ?? undefined}
               onChange={handleRatioChange}
               min={0.1}
@@ -193,12 +212,13 @@ export function ScaleSettingsPanel({
           </div>
           <div onMouseDown={(e) => e.stopPropagation()}>
             <Select
-              label="Unit"
+              label={t("scaleSettings.unit", "Unit")}
               data={UNIT_OPTIONS}
               value={unit}
               onChange={handleUnitChange}
               size="xs"
               searchable
+              error={unitError}
             />
           </div>
         </Group>

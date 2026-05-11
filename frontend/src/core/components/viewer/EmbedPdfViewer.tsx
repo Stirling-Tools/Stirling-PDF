@@ -31,115 +31,13 @@ import { useViewerRightRailButtons } from "@app/components/viewer/useViewerRight
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
   RulerOverlay,
-  type PageMeasureScales,
-  type PageScaleInfo,
-  type ViewportScale,
-  type MeasureScale,
+  type RulerOverlayHandle,
 } from "@app/components/viewer/RulerOverlay";
-import { POINT_TO_UNIT } from "@app/utils/measurementUtils";
-import type { PDFDict, PDFNumber } from "@cantoo/pdf-lib";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
-
-// ─── Measure dictionary extraction ────────────────────────────────────────────
-
-async function extractPageMeasureScales(
-  file: Blob,
-): Promise<PageMeasureScales | null> {
-  try {
-    const {
-      PDFDocument,
-      PDFDict,
-      PDFName,
-      PDFArray,
-      PDFNumber,
-      PDFString,
-      PDFHexString,
-    } = await import("@cantoo/pdf-lib");
-    const pdfDoc = await PDFDocument.load(await file.arrayBuffer(), {
-      ignoreEncryption: true,
-    });
-
-    // Parse a Measure dict into a MeasureScale, or return null if malformed.
-    // Stores the raw factor from PDF for precise calculations, derives ratio only when needed.
-    const parseScale = (measureObj: unknown) => {
-      if (!(measureObj instanceof PDFDict)) return null;
-      // D = distance array, X = x-axis fallback
-      let fmtArray = measureObj.lookup(PDFName.of("D"));
-      if (!(fmtArray instanceof PDFArray))
-        fmtArray = measureObj.lookup(PDFName.of("X"));
-      if (!(fmtArray instanceof PDFArray)) return null;
-      const firstFmt = fmtArray.lookup(0);
-      if (!(firstFmt instanceof PDFDict)) return null;
-      const cObj = firstFmt.lookup(PDFName.of("C"));
-      const uObj = firstFmt.lookup(PDFName.of("U"));
-      if (!(cObj instanceof PDFNumber) || cObj.asNumber() <= 0) return null;
-      const unit =
-        uObj instanceof PDFString || uObj instanceof PDFHexString
-          ? uObj.decodeText()
-          : "units";
-
-      // Store raw PDF factor (PDF points -> unit) for precise calculations
-      // Ratio is derived from factor only when needed for display labels
-      const factor = cObj.asNumber();
-      const normalized = unit.toLowerCase().trim();
-      const baseFactor = POINT_TO_UNIT[normalized];
-
-      const ratio =
-        typeof baseFactor === "number" && baseFactor > 0
-          ? factor / baseFactor
-          : null;
-
-      return { factor, ratio, unit };
-    };
-
-    const result: PageMeasureScales = new Map();
-
-    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const page = pdfDoc.getPage(i);
-      const pageHeight = page.getHeight();
-      const pageNode = page.node as unknown as PDFDict;
-      const viewports: ViewportScale[] = [];
-
-      // Spec-conformant: /VP array — each viewport can have its own scale and BBox
-      const vpObj = pageNode.lookup(PDFName.of("VP"));
-      if (vpObj instanceof PDFArray) {
-        for (let j = 0; j < vpObj.size(); j++) {
-          const vpEntry = vpObj.lookup(j);
-          if (!(vpEntry instanceof PDFDict)) continue;
-          const scale = parseScale(vpEntry.lookup(PDFName.of("Measure")));
-          if (!scale) continue;
-          let bbox: ViewportScale["bbox"] = null;
-          const bboxObj = vpEntry.lookup(PDFName.of("BBox"));
-          if (bboxObj instanceof PDFArray && bboxObj.size() >= 4) {
-            bbox = [
-              (bboxObj.lookup(0) as PDFNumber).asNumber(),
-              (bboxObj.lookup(1) as PDFNumber).asNumber(),
-              (bboxObj.lookup(2) as PDFNumber).asNumber(),
-              (bboxObj.lookup(3) as PDFNumber).asNumber(),
-            ];
-          }
-          viewports.push({ bbox, scale });
-        }
-      }
-
-      // Fallback: /Measure directly on page (non-conforming but seen in the wild)
-      if (viewports.length === 0) {
-        const scale = parseScale(pageNode.lookup(PDFName.of("Measure")));
-        if (scale) viewports.push({ bbox: null, scale });
-      }
-
-      if (viewports.length > 0)
-        result.set(i, { viewports, pageHeight } satisfies PageScaleInfo);
-    }
-
-    return result.size > 0 ? result : null;
-  } catch {
-    return null;
-  }
-}
+import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -391,6 +289,19 @@ const EmbedPdfViewerContent = ({
     }
     return null;
   }, [previewFile, activeFiles, activeFileIndex]);
+
+  // Stable identifier for the current file, used by form-fill and sidebar state.
+  const currentFileId = React.useMemo(() => {
+    if (!currentFile) {
+      return null;
+    }
+
+    if (isStirlingFile(currentFile)) {
+      return currentFile.fileId;
+    }
+
+    return getFormFillFileId(currentFile);
+  }, [currentFile]);
 
   // Get file with URL for rendering
   const fileWithUrl = useFileWithUrl(currentFile);
@@ -1113,33 +1024,27 @@ const EmbedPdfViewerContent = ({
     };
   }, [applyChanges, setApplyChanges]);
 
-  // Ruler / measurement tool state
-  const [isRulerActive, setIsRulerActive] = useState(false);
-  const [pageMeasureScales, setPageMeasureScales] =
-    useState<PageMeasureScales | null>(null);
-  const [customScale, setCustomScale] = useState<MeasureScale | null>(null);
+  // Ruler / measurement tool state is handled by the dedicated hook.
+  const rulerOverlayRef = useRef<RulerOverlayHandle>(null);
 
-  useEffect(() => {
-    const file = effectiveFile?.file;
-    if (!file) {
-      setPageMeasureScales(null);
-      return;
-    }
-    let cancelled = false;
-    extractPageMeasureScales(file).then((scales) => {
-      if (!cancelled) setPageMeasureScales(scales);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [effectiveFile]);
+  const {
+    isRulerActive,
+    setIsRulerActive,
+    pageMeasureScales,
+    customScale,
+    handleSetCustomScale,
+  } = useMeasurementManager({
+    currentFile,
+    effectiveFile,
+    rulerOverlayRef,
+  });
 
-  // Register viewer right-rail buttons
+  // Register ruler/measurement tool in viewer right-rail
   useViewerRightRailButtons(
     isRulerActive,
     setIsRulerActive,
     customScale,
-    setCustomScale,
+    handleSetCustomScale,
   );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
@@ -1149,10 +1054,6 @@ const EmbedPdfViewerContent = ({
   const formFillProviderRef = useRef(isFormFillToolActive);
 
   // Generate a unique identifier for the current file to detect file changes
-  const currentFileId = React.useMemo(() => {
-    return getFormFillFileId(currentFile);
-  }, [currentFile]);
-
   useEffect(() => {
     const fileChanged = currentFileId !== formFillFileIdRef.current;
     const providerChanged =
@@ -1309,6 +1210,7 @@ const EmbedPdfViewerContent = ({
               signatureConfig={signatureConfig}
             />
             <RulerOverlay
+              ref={rulerOverlayRef}
               containerRef={pdfContainerRef}
               isActive={isRulerActive}
               pageMeasureScales={pageMeasureScales}

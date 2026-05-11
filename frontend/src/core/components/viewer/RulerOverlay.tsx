@@ -1,9 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
+import type { Measurement, PagePoint } from "@app/utils/measurementTypes";
 import {
   POINT_TO_UNIT,
   isImperialUnit,
   convertUnit,
+  generateScaleLabel,
+  validateMeasurement,
 } from "@app/utils/measurementUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -13,29 +17,16 @@ interface Point {
   y: number;
 }
 
-/**
- * A point anchored to a specific PDF page in PDF-unit space.
- * x and y are in PDF points (1/72 inch) relative to the page's top-left corner.
- *
- * This is the only truly zoom-invariant representation. Screen positions are
- * recovered at render time via getBoundingClientRect on the page element, so
- * scroll, zoom, and fixed page margins are all handled by the browser — we never
- * have to track them ourselves.
- */
-interface PagePoint {
-  pageIndex: number;
-  x: number;
-  y: number;
-}
-
-interface Measurement {
-  id: string;
-  start: PagePoint;
-  end: PagePoint;
-}
-
 export interface RulerOverlayHandle {
-  clearAll: () => void;
+  clearAll: (silent?: boolean) => void;
+  getMeasurements: () => Measurement[];
+  setMeasurements: (measurements: Measurement[]) => void;
+  /** Restore measurements without triggering notification */
+  restoreMeasurements: (measurements: Measurement[]) => void;
+  /** Register a callback to be notified when measurements change from user actions */
+  onMeasurementsChange: (
+    callback: (measurements: Measurement[]) => void,
+  ) => () => void;
 }
 
 interface RulerOverlayProps {
@@ -114,11 +105,13 @@ function pickScale(
   pageMeasureScales: PageMeasureScales | null | undefined,
   customScale?: MeasureScale | null,
 ): MeasureScale | null {
+  // Cross-page measurements are meaningless — reject regardless of scale source
+  if (start.pageIndex !== end.pageIndex) return null;
+
   // Priority 1: Use custom scale if provided
   if (customScale) return customScale;
 
   if (!pageMeasureScales) return null;
-  if (start.pageIndex !== end.pageIndex) return null;
   const info = pageMeasureScales.get(start.pageIndex);
   if (!info?.viewports.length) return null;
 
@@ -316,6 +309,7 @@ function MeasurementLine({
   onHover,
   measureScale,
 }: MeasurementLineProps) {
+  const { t } = useTranslation();
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
   const ang = angleDeg(startS, endS);
@@ -333,28 +327,30 @@ function MeasurementLine({
   //   imperial PDF: "Scaled: 10.000 ft / 3.048 m"
   //   metric PDF:   "Scaled: 142.5 m / 467.5 ft"
   //   no scale:     "25.4 mm / 1.00 in"  (metric first, default — no label)
+  const scaledLabel = t("ruler.scaled", "Scaled");
   const hoverLine1 = measureScale
     ? (() => {
         const primary = formatScaled(distPts, measureScale);
         const cross = scaledCross(distPts, measureScale);
-        return cross ? `Scaled: ${primary} / ${cross}` : `Scaled: ${primary}`;
+        return cross
+          ? `${scaledLabel}: ${primary} / ${cross}`
+          : `${scaledLabel}: ${primary}`;
       })()
     : `${formatDist(distPts)} / ${formatInches(distPts)}`;
 
   // Hover line 2 — both physical paper values, same order as line 1:
-  //   imperial PDF: "PDF: 1.00 in / 25.4 mm"
-  //   metric PDF or no scale: "PDF: 25.4 mm / 1.00 in"
+  //   imperial PDF: "Physical: 1.00 in / 25.4 mm"
+  //   metric PDF or no scale: "Physical: 25.4 mm / 1.00 in"
+  const physicalLabel = t("ruler.physicalValues", "Physical");
   const hoverLine2 = measureScale
     ? imperialFirst
-      ? `PDF: ${formatInches(distPts)} / ${formatDist(distPts)}`
-      : `PDF: ${formatDist(distPts)} / ${formatInches(distPts)}`
+      ? `${physicalLabel}: ${formatInches(distPts)} / ${formatDist(distPts)}`
+      : `${physicalLabel}: ${formatDist(distPts)} / ${formatInches(distPts)}`
     : null;
 
   // Hover line 3 (scaled) / line 2 (no scale) — scale label + angle
   const scaleLabel = measureScale
-    ? measureScale.ratio
-      ? `1:${Math.round(measureScale.ratio)} ${measureScale.unit}`
-      : measureScale.unit
+    ? generateScaleLabel(measureScale.ratio, measureScale.unit)
     : null;
   const contextLabel = scaleLabel ? `${scaleLabel}   ${angLabel}` : angLabel;
 
@@ -674,6 +670,12 @@ export const RulerOverlay = React.forwardRef<
   const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  // Callbacks for measurements change notifications (only for user-drawn changes, not restores)
+  const measurementsListenersRef = useRef<
+    Set<(measurements: Measurement[]) => void>
+  >(new Set());
+  const skipNextNotificationRef = useRef(false);
+
   /**
    * Incremented on scroll to trigger re-renders.
    * We no longer store the scroll value — getBoundingClientRect handles that
@@ -683,8 +685,6 @@ export const RulerOverlay = React.forwardRef<
 
   const scrollElRef = useRef<HTMLElement | null>(null);
   const scrollCleanupRef = useRef<(() => void) | null>(null);
-  const idCounter = useRef(0);
-
   const firstPtRef = useRef<PagePoint | null>(null);
   useEffect(() => {
     firstPtRef.current = firstPt;
@@ -719,6 +719,21 @@ export const RulerOverlay = React.forwardRef<
       requestAnimationFrame(() => setScrollVersion((n) => n + 1));
     });
   }, [registerImmediateZoomUpdate]);
+
+  // ── Layout change tracking (menu close, sidebar toggle, etc.) ──────────────
+  // Monitor PDF container for layout changes and force re-render so measurements
+  // use updated getBoundingClientRect positions after layout reflow
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Layout changed - force re-render to recalculate coordinates from getBoundingClientRect
+      setScrollVersion((n) => n + 1);
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [containerRef]);
 
   // ── Scroll tracking ────────────────────────────────────────────────────────
   // We only need re-renders on scroll; getBoundingClientRect gives us accurate
@@ -765,13 +780,54 @@ export const RulerOverlay = React.forwardRef<
 
   // ── Imperative handle ──────────────────────────────────────────────────────
   React.useImperativeHandle(ref, () => ({
-    clearAll: () => {
+    clearAll: (silent = false) => {
+      if (silent) {
+        skipNextNotificationRef.current = true;
+      }
       setMeasurements([]);
       setFirstPt(null);
       setCursorS(null);
       setCursorDoc(null);
     },
+    getMeasurements: () => measurements,
+    setMeasurements: (newMeasurements: Measurement[]) => {
+      // Validate all measurements before setting state
+      const validated = newMeasurements.filter((m) => validateMeasurement(m));
+      setMeasurements(validated);
+    },
+    restoreMeasurements: (newMeasurements: Measurement[]) => {
+      skipNextNotificationRef.current = true;
+      setMeasurements(
+        newMeasurements.filter((measurement) =>
+          validateMeasurement(measurement),
+        ),
+      );
+    },
+    onMeasurementsChange: (callback: (measurements: Measurement[]) => void) => {
+      measurementsListenersRef.current.add(callback);
+      // Return unsubscribe function
+      return () => {
+        measurementsListenersRef.current.delete(callback);
+      };
+    },
   }));
+
+  // Notify listeners when measurements change from user actions (deleteMeasurement)
+  const notifyMeasurementsChange = useCallback(() => {
+    if (skipNextNotificationRef.current) {
+      skipNextNotificationRef.current = false;
+      return;
+    }
+
+    measurementsListenersRef.current.forEach((listener) =>
+      listener(measurements),
+    );
+  }, [measurements]);
+
+  // Trigger notification when measurements change (but not during restore)
+  useEffect(() => {
+    notifyMeasurementsChange();
+  }, [measurements, notifyMeasurementsChange]);
 
   // ── Reset when deactivated ─────────────────────────────────────────────────
   useEffect(() => {
@@ -857,8 +913,23 @@ export const RulerOverlay = React.forwardRef<
           firstPtRef.current = dp;
           return dp;
         }
+
+        // CRITICAL: Reject cross-page measurements
+        // Measurements must have both points on the same page
+        if (prev.pageIndex !== dp.pageIndex) {
+          console.warn(
+            "[Ruler] Cross-page measurements not allowed. Resetting measurement.",
+            `Start: page ${prev.pageIndex}, End: page ${dp.pageIndex}`,
+          );
+          // Reset first point so user can start fresh on same page
+          firstPtRef.current = null;
+          setCursorS(null);
+          setCursorDoc(null);
+          return null;
+        }
+
         firstPtRef.current = null;
-        const id = `ruler-${++idCounter.current}`;
+        const id = `ruler-${crypto.randomUUID()}`;
         setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
         return null;
       });
