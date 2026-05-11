@@ -1,29 +1,36 @@
 version: '3'
 
 tasks:
-  e2e:live:
-    desc: "Auto-spawn backend with an isolated state tree, run live E2E tests, then stop the backend"
-    summary: |
-      Runs backend (gradlew bootRun) and the live Playwright suite in parallel.
-      The backend is launched with STIRLING_BASE_PATH pointing at
-      .test-state/playwright/ (purged on every invocation) so the run never
-      touches the developer's local DB, settings.yml, backups or customFiles
-      under app/core/configs/.
+  install:
+    desc: "Install Playwright browsers"
+    dir: frontend
+    deps: [ ':frontend:install' ]
+    cmds:
+      - npx playwright install {{.CLI_ARGS}} --with-deps
 
-      The runner blocks until http://localhost:8080/api/v1/info/status is UP,
-      then executes `npx playwright test --project=live`. When the runner
-      finishes (pass or fail), the backend is killed and the task exits with
-      Playwright's exit code.
+  stubbed:
+    desc: "Run stubbed E2E tests"
+    dir: frontend
+    deps: [ ':frontend:prepare' ]
+    cmds:
+      - npx playwright test --project=stubbed {{.CLI_ARGS}}
+
+  live:
+    desc: "Run live E2E tests"
+    summary: |
+      Auto-spawns a Spring Boot backend with isolated state under
+      .test-state/playwright/ (purged on every run) so the suite doesn't
+      touch your local DB, settings.yml, backups or customFiles. The
+      backend is stopped automatically when the runner exits.
 
       Pass extra Playwright flags via -- :
-        task testing:e2e:live -- --headed --grep merge
+        task e2e:live -- --headed --grep merge
     deps:
-      - e2e:live:backend
-      - e2e:live:runner
+      - live:backend
+      - live:runner
 
-  e2e:live:backend:
+  live:backend:
     internal: true
-    desc: "Backend launcher used by testing:e2e:live; redirects all state (configs, backups, customFiles, ...) to a per-run isolated path."
     ignore_error: true
     vars:
       BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
@@ -62,9 +69,9 @@ tasks:
           wait $GRADLE_PID
         '
 
-  e2e:live:runner:
+  live:runner:
     internal: true
-    deps: [":frontend:prepare"]
+    deps: [ ':frontend:prepare' ]
     dir: frontend
     vars:
       BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
@@ -127,42 +134,71 @@ tasks:
           npx playwright test --project=live "$@"
         ' bash {{.CLI_ARGS}}
 
-  docker:
-    desc: "Run full Docker integration test suite (testing/test.sh)"
-    ignore_error: true
-    cmds:
-      - bash testing/test.sh {{.CLI_ARGS}}
-
-  oauth:
-    desc: "Start Keycloak + Stirling OAuth test environment (set LICENSE_KEY=<KEY> for premium)"
+  enterprise:
+    desc: "Run enterprise E2E tests"
     summary: |
-      Start the OAuth keycloak compose stack.
+      Requires an already-running keycloak compose stack on :8080. Bring one
+      up first with:
+        task e2e:oauth:up
+        task e2e:saml:up
+    dir: frontend
+    deps: [ ':frontend:prepare' ]
+    cmds:
+      - npx playwright test --project=enterprise {{.CLI_ARGS}}
+
+  cross-browser:
+    desc: "Run stubbed E2E tests on Chromium, Firefox, and WebKit"
+    dir: frontend
+    deps: [ ':frontend:prepare' ]
+    cmds:
+      - npx playwright test --project=stubbed --project=stubbed-firefox --project=stubbed-webkit {{.CLI_ARGS}}
+
+  check:
+    desc: "Run all E2E tests not requiring Docker"
+    cmds:
+      - task: stubbed
+      - task: live
+
+  check:all:
+    desc: "Run all E2E tests"
+    summary: |
+      Includes the enterprise project, which requires a keycloak compose
+      stack on :8080. Bring one up first with:
+        task e2e:oauth:up
+        task e2e:saml:up
+    cmds:
+      - task: stubbed
+      - task: live
+      - task: enterprise
+
+  oauth:up:
+    desc: "Start the OAuth keycloak test environment"
+    summary: |
       Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
-        task testing:oauth LICENSE_KEY=abc123
-      Pass extra flags (e.g. --auto, --nobuild) via -- :
-        task testing:oauth -- --auto
+        task e2e:oauth:up LICENSE_KEY=abc123
+      Pass extra flags via -- :
+        task e2e:oauth:up -- --auto --nobuild
     ignore_error: true
     cmds:
       - bash testing/compose/start-oauth-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
 
   oauth:down:
-    desc: "Stop the OAuth test environment and remove volumes"
+    desc: "Stop the OAuth keycloak test environment"
     cmds:
       - docker compose -f testing/compose/docker-compose-keycloak-oauth.yml down -v
 
-  saml:
-    desc: "Start Keycloak + Stirling SAML test environment (set LICENSE_KEY=<KEY> for premium)"
+  saml:up:
+    desc: "Start the SAML keycloak test environment"
     summary: |
-      Start the SAML keycloak compose stack.
       Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
-        task testing:saml LICENSE_KEY=abc123
-      Pass extra flags (e.g. --auto, --with-storage, --nobuild, --language sv-SE) via -- :
-        task testing:saml -- --auto --with-storage
+        task e2e:saml:up LICENSE_KEY=abc123
+      Pass extra flags via -- :
+        task e2e:saml:up -- --auto --with-storage --nobuild --language sv-SE
     ignore_error: true
     cmds:
       - bash testing/compose/start-saml-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
 
   saml:down:
-    desc: "Stop the SAML test environment and remove volumes"
+    desc: "Stop the SAML keycloak test environment"
     cmds:
       - docker compose -f testing/compose/docker-compose-keycloak-saml.yml down -v

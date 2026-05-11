@@ -22,8 +22,8 @@ includes:
   desktop:
     taskfile: .taskfiles/desktop.yml
     dir: frontend
-  testing:
-    taskfile: .taskfiles/testing.yml
+  e2e:
+    taskfile: .taskfiles/e2e.yml
     dir: .
 
 tasks:

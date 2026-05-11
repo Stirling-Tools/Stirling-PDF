@@ -35,10 +35,10 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install all Playwright browsers
-        run: task frontend:test:e2e:install
+        run: task e2e:install
 
       - name: Run E2E tests (all browsers)
-        run: task frontend:test:e2e
+        run: task e2e:cross-browser
 
       - name: Upload Playwright report
         if: always()
