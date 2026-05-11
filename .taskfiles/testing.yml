@@ -34,49 +34,98 @@ tasks:
       # FirstLoginSlide from rendering, so the bootstrap spec times out waiting
       # for the password-change prompt.
       SYSTEM_ENABLEANALYTICS: "false"
+      # NOTE: SECURITY_INITIALLOGIN_USERNAME/PASSWORD are intentionally NOT set.
+      # The live-setup project's bootstrap spec performs the real first-login
+      # flow against the backend's default admin/stirling user, exercising the
+      # forced-password-change UI and leaving the DB at admin/adminadmin for
+      # the rest of the live suite. This is both real coverage of the first-
+      # login flow and a stronger seed than env-var-driven user creation.
     cmds:
-      - rm -rf "{{.BASE_DIR}}"
-      - mkdir -p "{{.BASE_DIR}}"
-      - bash gradlew :stirling-pdf:bootRun 2>&1 | tee "{{.BASE_DIR}}/backend.log"
+      # Wrapped in `bash -c` because Task's embedded shell (mvdan/sh) doesn't
+      # support `&` + `$!` + `wait` reliably (gradle was never actually
+      # backgrounded, so `$!` recorded a stale PID and the runner saw an
+      # immediate "backend died"). Real bash backgrounds gradle properly and
+      # gives us a stable PID to clean up.
+      - |
+        bash -c '
+          set -e
+          rm -rf "{{.BASE_DIR}}"
+          mkdir -p "{{.BASE_DIR}}"
+          # Background gradle and record its PID so the runner can clean up
+          # the exact process tree (wrapper + forked Spring Boot JVM) without
+          # resorting to fuzzy `pkill -f` patterns. `wait` keeps this script
+          # alive for the lifetime of gradle so Task'"'"'s parallel deps stay
+          # synchronised.
+          bash gradlew :stirling-pdf:bootRun > "{{.BASE_DIR}}/backend.log" 2>&1 &
+          GRADLE_PID=$!
+          echo $GRADLE_PID > "{{.BASE_DIR}}/backend.pid"
+          wait $GRADLE_PID
+        '
 
   e2e:live:runner:
     internal: true
     deps: [":frontend:prepare"]
     dir: frontend
+    vars:
+      BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
     cmds:
+      # Wrapped in `bash -c` because Task's embedded shell (mvdan/sh) only
+      # supports `EXIT`/`ERR` in `trap`, not `INT`/`TERM`. CLI_ARGS are
+      # passed positionally so quoted args like --grep "foo bar" survive.
       - |
-        echo "Waiting for backend on :8080 (up to 10min; first compile can be slow)..."
-        WAITED=0
-        while [ $WAITED -lt 600 ]; do
-          if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
-            echo "Backend ready, starting Playwright"
-            break
+        bash -c '
+          set +e
+          # bootRun forks a separate Spring Boot JVM as a child of the gradle
+          # wrapper; killing only the wrapper leaves that JVM orphaned holding
+          # :8080. Walk the recorded PID'"'"'s process tree via pgrep so we kill
+          # every descendant, then lsof as a last-resort backstop.
+          kill_tree() {
+            local pid=$1
+            for child in $(pgrep -P "$pid" 2>/dev/null); do
+              kill_tree "$child"
+            done
+            kill "$pid" 2>/dev/null || true
+          }
+          cleanup() {
+            if [ -f "{{.BASE_DIR}}/backend.pid" ]; then
+              echo "Stopping backend..."
+              kill_tree "$(cat "{{.BASE_DIR}}/backend.pid")"
+              sleep 1
+              lsof -ti:8080 2>/dev/null | xargs kill 2>/dev/null || true
+              echo "Backend stopped"
+            fi
+          }
+          # Trap so cleanup runs on every exit path: tests pass, tests fail,
+          # backend never starts, user Ctrl-Cs. Without this the gradle JVM
+          # is left orphaned holding :8080 whenever the wait loop times out.
+          trap cleanup EXIT INT TERM
+
+          echo "Waiting for backend on :8080 (up to 10min; first compile can be slow)..."
+          WAITED=0
+          while [ $WAITED -lt 600 ]; do
+            if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
+              echo "Backend ready, starting Playwright"
+              break
+            fi
+            # Bail early if the backend already died: no point waiting 10min.
+            if [ -f "{{.BASE_DIR}}/backend.pid" ]; then
+              BACKEND_PID=$(cat "{{.BASE_DIR}}/backend.pid")
+              if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+                echo "Backend process exited before becoming ready; last 100 log lines:"
+                tail -100 "{{.BASE_DIR}}/backend.log" 2>/dev/null || true
+                exit 1
+              fi
+            fi
+            sleep 2
+            WAITED=$((WAITED + 2))
+          done
+          if [ $WAITED -ge 600 ]; then
+            echo "Backend did not become ready within 10min, aborting"
+            exit 1
           fi
-          sleep 2
-          WAITED=$((WAITED + 2))
-        done
-        if [ $WAITED -ge 600 ]; then
-          echo "Backend did not become ready within 10min, aborting"
-          # Fall through to the cleanup in the next step via the test runner;
-          # don't kill here because the next step also runs cleanup.
-          exit 1
-        fi
-      - |
-        # Run tests, then stop the backend so the parent task exits cleanly. 
-        # Capture and re-emit Playwright's exit code so failures propagate.
-        #
-        # bootRun forks a separate Spring Boot JVM (main class
-        # stirling.software.SPDF.SPDFApplication) - killing only the gradle
-        # wrapper leaves the Spring JVM orphaned holding port 8080. So we kill
-        # both, then `lsof` as a last-resort fallback if either pattern misses.
-        set +e
-        npx playwright test --project=live {{.CLI_ARGS}}
-        TEST_EXIT=$?
-        pkill -f "gradlew :stirling-pdf:bootRun" 2>/dev/null || true
-        pkill -f "SPDFApplication" 2>/dev/null || true
-        sleep 1
-        lsof -ti:8080 2>/dev/null | xargs kill 2>/dev/null || true
-        exit $TEST_EXIT
+
+          npx playwright test --project=live "$@"
+        ' bash {{.CLI_ARGS}}
 
   docker:
     desc: "Run full Docker integration test suite (testing/test.sh)"
