@@ -34,58 +34,26 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
-        run: task frontend:test:e2e:install -- chromium
-      - name: Start Spring Boot backend (background)
+        run: task e2e:install -- chromium
+      - name: Build frontend (production bundle for vite preview)
         env:
-          # Suppress the analytics opt-in modal that fires on first admin login when
-          # enableAnalytics is null (see Onboarding.tsx). The modal renders a Mantine
-          # overlay that intercepts pointer events on every tool page until dismissed,
-          # which causes every "click run button" assertion in the live suite to fail.
-          SYSTEM_ENABLEANALYTICS: "false"
-        # NOTE: SECURITY_INITIALLOGIN_USERNAME/PASSWORD are intentionally NOT set.
-        # The live-setup project's bootstrap spec performs the real first-login
-        # flow against the backend's default admin/stirling user, exercising the
-        # forced-password-change UI and leaving the DB at admin/adminadmin for
-        # the rest of the live suite. This is both real coverage of the first-
-        # login flow and a stronger seed than env-var-driven user creation.
-        run: |
-          nohup ./gradlew :stirling-pdf:bootRun > /tmp/backend.log 2>&1 &
-          echo $! > /tmp/backend.pid
-      - name: Wait for backend to become ready
-        run: |
-          start=$SECONDS
-          # 300 iterations × 2s = 10 minute ceiling
-          for i in $(seq 1 300); do
-            if curl -fsS http://localhost:8080/api/v1/info/status >/dev/null 2>&1; then
-              echo "Backend up after $((SECONDS - start))s"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Backend did not become ready in $((SECONDS - start))s"
-          tail -200 /tmp/backend.log || true
-          exit 1
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
       - name: Run live E2E tests (chromium)
         id: live-tests
-        run: task frontend:test:e2e -- --project=live
+        run: task e2e:live
       - name: Print backend log on failure
         if: failure() && steps.live-tests.conclusion == 'failure'
         run: |
           echo "::group::Spring Boot backend log (last 500 lines)"
-          tail -500 /tmp/backend.log || echo "no backend log found"
+          tail -500 .test-state/playwright/backend.log || echo "no backend log found"
           echo "::endgroup::"
-      - name: Stop backend
-        if: always()
-        run: |
-          if [ -f /tmp/backend.pid ]; then
-            kill "$(cat /tmp/backend.pid)" 2>/dev/null || true
-          fi
       - name: Upload backend log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: backend-log-live-${{ github.run_id }}
-          path: /tmp/backend.log
+          path: .test-state/playwright/backend.log
           retention-days: 7
       - name: Upload Playwright report
         if: always()
