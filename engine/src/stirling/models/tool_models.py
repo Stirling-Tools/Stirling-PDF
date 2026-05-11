@@ -373,6 +373,25 @@ class EditTableOfContentsParams(ApiModel):
     )
 
 
+class EditTextOperation(ApiModel):
+    find: str = Field(..., description="The literal text to find.")
+    replace: str = Field(..., description="The replacement text. May be empty to delete the matched text.")
+
+
+class EditTextParams(ApiModel):
+    edits: list[EditTextOperation] | None = Field(
+        None,
+        description="Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').",
+    )
+    page_numbers: str | None = Field(
+        "all",
+        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
+    )
+    whole_word_search: bool | None = Field(
+        False, description="Whether matches must be whole words (boundaries determined by non-word characters)"
+    )
+
+
 class EmlToPdfParams(ApiModel):
     download_html: bool | None = Field(
         None, description="Download HTML intermediate file instead of PDF", examples=[False]
@@ -1105,6 +1124,7 @@ class Model(
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
+        | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
         | OverlayPdfsParams
@@ -1172,6 +1192,7 @@ class Model(
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
+        | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
         | OverlayPdfsParams
@@ -1240,6 +1261,7 @@ type ParamToolModel = (
     | BookletImpositionParams
     | CropParams
     | EditTableOfContentsParams
+    | EditTextParams
     | MergePdfsParams
     | MultiPageLayoutParams
     | OverlayPdfsParams
@@ -1309,6 +1331,7 @@ class ToolEndpoint(StrEnum):
     BOOKLET_IMPOSITION = "/api/v1/general/booklet-imposition"
     CROP = "/api/v1/general/crop"
     EDIT_TABLE_OF_CONTENTS = "/api/v1/general/edit-table-of-contents"
+    EDIT_TEXT = "/api/v1/general/edit-text"
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
     OVERLAY_PDFS = "/api/v1/general/overlay-pdfs"
@@ -1376,6 +1399,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.BOOKLET_IMPOSITION: BookletImpositionParams,
     ToolEndpoint.CROP: CropParams,
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: EditTableOfContentsParams,
+    ToolEndpoint.EDIT_TEXT: EditTextParams,
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
     ToolEndpoint.OVERLAY_PDFS: OverlayPdfsParams,
