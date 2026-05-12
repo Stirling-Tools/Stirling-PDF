@@ -66,9 +66,9 @@ class PdfEditSelectionAgent:
         )
 
     async def select(self, prompt: str) -> PdfEditPlanOutput:
-        logger.info("[pdf-edit selection] prompt:\n%s", prompt)
+        logger.debug("[pdf-edit selection] prompt:\n%s", prompt)
         result = await self.agent.run(prompt)
-        logger.info("[pdf-edit selection] output: %s", Pretty(result.output))
+        logger.debug("[pdf-edit selection] output: %s", Pretty(result.output))
         return result.output
 
 
