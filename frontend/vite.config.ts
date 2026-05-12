@@ -42,6 +42,14 @@ export default defineConfig(async ({ mode }) => {
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  // Allow host header checks to be configured via env so LAN/reverse-proxy
+  // dev setups don't require editing this file for each machine.
+  const allowedHostsRaw =
+    process.env.FRONTEND_ALLOWED_HOSTS || env.FRONTEND_ALLOWED_HOSTS || "";
+  const allowedHosts = allowedHostsRaw
+    .split(",")
+    .map((host) => host.trim())
+    .filter(Boolean);
   const backendProxy = {
     target: backendUrl,
     changeOrigin: true,
@@ -113,6 +121,7 @@ export default defineConfig(async ({ mode }) => {
     ],
     server: {
       host: true,
+      allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
       // make sure this port matches the devUrl port in tauri.conf.json file
       port: 5173,
       // Tauri expects a fixed port, fail if that port is not available
