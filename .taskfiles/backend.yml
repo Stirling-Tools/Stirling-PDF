@@ -3,6 +3,9 @@ version: '3'
 # All gradle invocations go through `bash gradlew` (the sh wrapper) so they work
 # uniformly on Linux/macOS (native bash) and Windows-with-Git-Bash.
 
+vars:
+  GRADLEW: '{{if eq OS "windows"}}.\\gradlew.bat{{else}}bash ./gradlew{{end}}'
+
 tasks:
   dev:
     desc: "Start backend dev server"
@@ -12,44 +15,46 @@ tasks:
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
+      AIENGINE_URL: '{{.AIENGINE_URL}}'
+      AIENGINE_ENABLED: '{{if .AIENGINE_URL}}true{{else}}false{{end}}'
     cmds:
-      - '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true {{end}}bash gradlew :stirling-pdf:bootRun'
+      - '{{.GRADLEW}} :stirling-pdf:bootRun'
 
   dev:bundled:
     desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
     ignore_error: true
     cmds:
-      - bash gradlew clean bootRun -PbuildWithFrontend=true
+      - '{{.GRADLEW}} clean bootRun -PbuildWithFrontend=true'
 
   build:
     desc: "Full backend build"
     cmds:
-      - bash gradlew clean build
+      - '{{.GRADLEW}} clean build'
 
   build:fast:
     desc: "Build without tests"
     cmds:
-      - bash gradlew clean build -x test
+      - '{{.GRADLEW}} clean build -x test'
 
   build:ci:
     desc: "Build for CI (formatting checked separately)"
     cmds:
-      - bash gradlew build -PnoSpotless
+      - '{{.GRADLEW}} build -PnoSpotless'
 
   test:
     desc: "Run backend tests"
     cmds:
-      - bash gradlew test
+      - '{{.GRADLEW}} test'
 
   format:
     desc: "Auto-fix code formatting"
     cmds:
-      - bash gradlew spotlessApply
+      - '{{.GRADLEW}} spotlessApply'
 
   format:check:
     desc: "Check code formatting"
     cmds:
-      - bash gradlew spotlessCheck
+      - '{{.GRADLEW}} spotlessCheck'
 
   fix:
     desc: "Auto-fix backend"
@@ -59,7 +64,7 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - bash gradlew :stirling-pdf:copySwaggerDoc
+      - '{{.GRADLEW}} :stirling-pdf:copySwaggerDoc'
     sources:
       - app/core/src/main/java/**/*.java
       - app/proprietary/src/main/java/**/*.java
@@ -77,19 +82,19 @@ tasks:
     desc: "Print project version"
     silent: true
     cmds:
-      - bash gradlew printVersion --quiet | tail -1
+      - '{{.GRADLEW}} printVersion --quiet'
 
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - bash gradlew checkLicense --no-parallel
+      - '{{.GRADLEW}} checkLicense --no-parallel'
 
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - bash gradlew checkLicense generateLicenseReport --no-parallel
+      - '{{.GRADLEW}} checkLicense generateLicenseReport --no-parallel'
 
   clean:
     desc: "Clean build artifacts"
     cmds:
-      - bash gradlew clean
+      - '{{.GRADLEW}} clean'
