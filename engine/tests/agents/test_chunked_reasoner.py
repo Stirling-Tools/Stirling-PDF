@@ -481,6 +481,107 @@ class TestGroupNotesForCompression:
         assert [[n.pages[0] for n in g] for g in groups] == [[1], [2], [3], [4]]
 
 
+class TestSliceByChars:
+    """Generic char-budget slicer used by callers that aren't page-shaped."""
+
+    def test_packs_consecutive_items_under_budget(self, runtime: AppRuntime) -> None:
+        items = [("a", 3), ("b", 5), ("c", 2)]  # (label, size)
+        reasoner = ChunkedReasoner(runtime)
+        slices = reasoner.slice_by_chars(items, char_count=lambda i: i[1], max_chars=20)
+        assert [[i[0] for i in s] for s in slices] == [["a", "b", "c"]]
+
+    def test_starts_new_slice_when_budget_exceeded(self, runtime: AppRuntime) -> None:
+        items = [("a", 6), ("b", 6), ("c", 6)]
+        reasoner = ChunkedReasoner(runtime)
+        slices = reasoner.slice_by_chars(items, char_count=lambda i: i[1], max_chars=10)
+        # Two items at 6 chars each exceed 10, so the slicer breaks after each.
+        assert [[i[0] for i in s] for s in slices] == [["a"], ["b"], ["c"]]
+
+    def test_oversized_item_becomes_its_own_slice(self, runtime: AppRuntime) -> None:
+        items = [("small", 2), ("huge", 100), ("tiny", 1)]
+        reasoner = ChunkedReasoner(runtime)
+        slices = reasoner.slice_by_chars(items, char_count=lambda i: i[1], max_chars=10)
+        assert [[i[0] for i in s] for s in slices] == [["small"], ["huge"], ["tiny"]]
+
+    def test_rejects_non_positive_budget(self, runtime: AppRuntime) -> None:
+        reasoner = ChunkedReasoner(runtime)
+        with pytest.raises(ValueError, match="max_chars must be positive"):
+            reasoner.slice_by_chars([("a", 1)], char_count=lambda i: i[1], max_chars=0)
+
+
+class TestGather:
+    """Generic parallel-agent runner used by sibling agents (e.g. PDF Comment).
+
+    Each test builds a throwaway pydantic-ai agent against the runtime's test
+    model so we can patch ``run`` and assert behaviour without invoking any
+    real model.
+    """
+
+    @staticmethod
+    def _build_agent(runtime: AppRuntime):
+        from pydantic_ai import Agent
+        from pydantic_ai.output import NativeOutput
+
+        return Agent(
+            model=runtime.fast_model,
+            output_type=NativeOutput(_Answer),
+            system_prompt="x",
+            model_settings=runtime.fast_model_settings,
+        )
+
+    @pytest.mark.anyio
+    async def test_returns_results_in_input_order_with_metadata_paired(self, runtime: AppRuntime) -> None:
+        reasoner = ChunkedReasoner(runtime)
+        agent = self._build_agent(runtime)
+
+        # Pull the slice tag out of the prompt and echo it back so we can
+        # assert per-slice identity regardless of completion order.
+        async def fake_run(prompt: str):
+            tag = prompt.split("|")[-1]
+            return _StubAgentResult(output=_Answer(answer=f"out-{tag}"))
+
+        slices: list[tuple[str, str]] = [("p|a", "meta-a"), ("p|b", "meta-b"), ("p|c", "meta-c")]
+
+        with patch.object(agent, "run", AsyncMock(side_effect=fake_run)):
+            results = await reasoner.gather(slices=slices, agent=agent)
+
+        assert [(m, r.answer) for m, r in results] == [
+            ("meta-a", "out-a"),
+            ("meta-b", "out-b"),
+            ("meta-c", "out-c"),
+        ]
+
+    @pytest.mark.anyio
+    async def test_partial_failures_are_dropped_survivors_returned(self, runtime: AppRuntime) -> None:
+        reasoner = ChunkedReasoner(runtime)
+        agent = self._build_agent(runtime)
+        canned = _StubAgentResult(output=_Answer(answer="ok"))
+
+        async def maybe_fail(prompt: str):
+            if "fail" in prompt:
+                raise RuntimeError("nope")
+            return canned
+
+        slices: list[tuple[str, str]] = [("ok-1", "m1"), ("fail-2", "m2"), ("ok-3", "m3")]
+
+        with patch.object(agent, "run", AsyncMock(side_effect=maybe_fail)):
+            results = await reasoner.gather(slices=slices, agent=agent)
+
+        # Only the two survivors come back, in input order; the failed slice
+        # is logged and dropped rather than poisoning the run.
+        assert [m for m, _ in results] == ["m1", "m3"]
+
+    @pytest.mark.anyio
+    async def test_reraises_first_error_when_every_slice_fails(self, runtime: AppRuntime) -> None:
+        reasoner = ChunkedReasoner(runtime)
+        agent = self._build_agent(runtime)
+        slices: list[tuple[str, str]] = [("p1", "m1"), ("p2", "m2")]
+
+        with patch.object(agent, "run", AsyncMock(side_effect=RuntimeError("boom"))):
+            with pytest.raises(RuntimeError, match="boom"):
+                await reasoner.gather(slices=slices, agent=agent)
+
+
 class TestExtractChunk:
     @pytest.mark.anyio
     async def test_pages_are_unioned_for_compression_chunks(self, runtime: AppRuntime) -> None:

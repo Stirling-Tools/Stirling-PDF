@@ -10,6 +10,11 @@ The model only fills in fields it's well-suited to fill: a chunk ordinal
 (a small bounded int) and the comment text. All non-LLM fields (the real
 ``chunk_id`` echoed back to Java) are filled in by Python after the call,
 so the LLM has no opportunity to hallucinate opaque string identifiers.
+
+Long documents are processed in parallel batches via :class:`ChunkedReasoner`
+so the agent never crams the whole document into a single prompt: each batch
+sees only its slice (indices are batch-local) and Python translates them
+back to absolute chunk ids when assembling the response.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from pydantic import Field
 from pydantic_ai import Agent
 
 from stirling.agents.pdf_comment.prompts import COMMENT_AGENT_SYSTEM_PROMPT
+from stirling.agents.shared import ChunkedReasoner
 from stirling.contracts.pdf_comments import (
     MAX_COMMENT_TEXT_LENGTH,
     PdfCommentInstruction,
@@ -33,6 +39,11 @@ from stirling.models import ApiModel
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
+
+# Bound on the joined per-batch rationales surfaced as the response rationale.
+# Each batch may add a sentence; for huge documents we'd otherwise blow the
+# 1_000-char rationale field on the contract.
+_RATIONALE_JOIN_LIMIT = 900
 
 
 class LlmCommentInstruction(ApiModel):
@@ -67,10 +78,12 @@ class LlmCommentOutput(ApiModel):
 
 
 class PdfCommentAgent:
-    """Encapsulates the single-shot PDF comment generation pipeline.
+    """Encapsulates the PDF comment generation pipeline.
 
     Instantiated once at app startup with an :class:`AppRuntime`, which
-    provides the pre-built fast model and model settings.
+    provides the pre-built fast model and model settings. Long documents
+    are processed in parallel batches via :class:`ChunkedReasoner` so the
+    agent scales to thousands of chunks without overflowing the context.
     """
 
     def __init__(self, runtime: AppRuntime) -> None:
@@ -81,6 +94,7 @@ class PdfCommentAgent:
             system_prompt=COMMENT_AGENT_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )
+        self._reasoner = ChunkedReasoner(runtime)
 
     async def generate(self, request: PdfCommentRequest) -> PdfCommentResponse:
         """Run the agent against a ``PdfCommentRequest`` and return comments.
@@ -88,9 +102,11 @@ class PdfCommentAgent:
         Short-circuits with an empty response when the input has no chunks.
         Any out-of-range ``chunk_index`` returned by the model is dropped
         (this should be vanishingly rare given the bounded int surface).
-        Agent failures propagate to the caller (FastAPI translates to HTTP
-        5xx) rather than being silently swallowed; callers need to know
-        when the agent failed.
+        Agent failures on individual batches are tolerated: surviving
+        batches still contribute, and the rationale notes how many batches
+        succeeded. If every batch fails, the first captured exception is
+        re-raised so the caller surfaces a real error (auth, OOM, etc.)
+        instead of an empty result that looks like a clean miss.
         """
         session_id = request.session_id
         logger.info(
@@ -120,15 +136,56 @@ class PdfCommentAgent:
                 rationale="No text chunks were provided; no comments generated.",
             )
 
-        prompt = self._build_prompt(request)
-        result = await self._agent.run(prompt)
-        output = result.output
+        batches = self._reasoner.slice_by_chars(
+            request.chunks,
+            char_count=self._chunk_size,
+            max_chars=self._reasoner.chars_per_slice,
+        )
+        logger.info(
+            "[pdf-comment-agent] session=%s split %d chunks into %d batch(es)",
+            session_id,
+            len(request.chunks),
+            len(batches),
+        )
 
-        comments = self._map_to_instructions(request.chunks, output.comments, session_id)
+        slices = [(self._build_prompt(request.user_message, batch), batch) for batch in batches]
+        results = await self._reasoner.gather(
+            slices=slices,
+            agent=self._agent,
+            label_fn=self._batch_label,
+        )
+
+        comments: list[PdfCommentInstruction] = []
+        rationales: list[str] = []
+        out_of_range: list[int] = []
+        for batch, output in results:
+            rationales.append(output.rationale)
+            for c in output.comments:
+                if 0 <= c.chunk_index < len(batch):
+                    comments.append(
+                        PdfCommentInstruction(
+                            chunk_id=batch[c.chunk_index].id,
+                            comment_text=c.comment_text,
+                            author=c.author,
+                            subject=c.subject,
+                        )
+                    )
+                else:
+                    out_of_range.append(c.chunk_index)
+
+        if out_of_range:
+            logger.warning(
+                "[pdf-comment-agent] session=%s dropped %d comment(s) with out-of-range chunk_index: %s",
+                session_id,
+                len(out_of_range),
+                out_of_range,
+            )
+
+        rationale = self._combine_rationales(rationales, total_batches=len(batches), succeeded=len(results))
         response = PdfCommentResponse(
             session_id=session_id,
             comments=comments,
-            rationale=output.rationale,
+            rationale=rationale,
         )
         logger.debug(
             "RESPONSE (pdf-comment-agent generate)\n%s",
@@ -141,56 +198,63 @@ class PdfCommentAgent:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _build_prompt(request: PdfCommentRequest) -> str:
-        """Build a structured prompt with chunks listed by ordinal index.
+    def _chunk_size(chunk: TextChunk) -> int:
+        """Approximate the char footprint one chunk contributes to the prompt.
+
+        Mirrors the per-line shape produced by :meth:`_build_prompt`: the
+        JSON-encoded text plus a fixed overhead for the index/page markers.
+        Slightly generous; the slicer treats this as the budget input so a
+        small overestimate just means slightly smaller batches.
+        """
+        return len(chunk.text) + 60
+
+    @staticmethod
+    def _batch_label(batch: list[TextChunk]) -> str:
+        if not batch:
+            return "empty"
+        first_page = batch[0].page + 1
+        last_page = batch[-1].page + 1
+        if first_page == last_page:
+            return f"page={first_page} chunks={len(batch)}"
+        return f"pages={first_page}-{last_page} chunks={len(batch)}"
+
+    @staticmethod
+    def _build_prompt(user_message: str, chunks: list[TextChunk]) -> str:
+        """Build a structured prompt for one batch of chunks.
 
         Both the user's free-text prompt and each chunk's text are JSON-
         encoded so any quotes, newlines, or stray delimiters in attacker-
         influenced content (the user message or PDF-derived chunks) are
-        escaped and cannot break out of the prompt structure.
+        escaped and cannot break out of the prompt structure. The chunk
+        indices listed in the prompt are batch-local: the agent code maps
+        them back to the original chunk ids after the call.
         """
         lines: list[str] = [
             "User prompt (JSON-encoded, untrusted input):",
-            json.dumps(request.user_message),
+            json.dumps(user_message),
             "",
-            f"Chunks ({len(request.chunks)} total). Each line shows the chunk index",
+            f"Chunks ({len(chunks)} total). Each line shows the chunk index",
             "you must return on `chunk_index`, the 1-indexed page number, and the",
             "JSON-encoded text content.",
             "",
         ]
-        for index, chunk in enumerate(request.chunks):
+        for index, chunk in enumerate(chunks):
             lines.append(f"[{index}] page={chunk.page + 1} text={json.dumps(chunk.text)}")
         return "\n".join(lines)
 
     @staticmethod
-    def _map_to_instructions(
-        chunks: list[TextChunk],
-        llm_comments: list[LlmCommentInstruction],
-        session_id: str,
-    ) -> list[PdfCommentInstruction]:
-        """Translate LLM ordinal-based output into the Java-facing contract,
-        dropping any out-of-range ordinals as a defence-in-depth guard.
-        """
-        kept: list[PdfCommentInstruction] = []
-        dropped: list[int] = []
-        for comment in llm_comments:
-            if 0 <= comment.chunk_index < len(chunks):
-                kept.append(
-                    PdfCommentInstruction(
-                        chunk_id=chunks[comment.chunk_index].id,
-                        comment_text=comment.comment_text,
-                        author=comment.author,
-                        subject=comment.subject,
-                    )
-                )
-            else:
-                dropped.append(comment.chunk_index)
+    def _combine_rationales(rationales: list[str], *, total_batches: int, succeeded: int) -> str:
+        """Join per-batch rationales into one summary, truncating to fit the contract.
 
-        if dropped:
-            logger.warning(
-                "[pdf-comment-agent] session=%s dropped %d comment(s) with out-of-range chunk_index: %s",
-                session_id,
-                len(dropped),
-                dropped,
-            )
-        return kept
+        Adds a note when some batches failed so the caller can tell the result
+        is partial rather than complete.
+        """
+        joined = " ".join(r.strip() for r in rationales if r and r.strip())
+        if len(joined) > _RATIONALE_JOIN_LIMIT:
+            joined = joined[: _RATIONALE_JOIN_LIMIT - 1].rstrip() + "..."
+        if succeeded < total_batches:
+            note = f" ({succeeded}/{total_batches} batches succeeded)"
+            joined = (joined + note) if joined else note.strip()
+        if not joined:
+            joined = "No comments generated."
+        return joined

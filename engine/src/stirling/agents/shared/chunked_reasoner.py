@@ -19,6 +19,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
@@ -223,6 +224,15 @@ class ChunkedReasoner:
             system_prompt=_EXTRACTOR_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )
+
+    @property
+    def chars_per_slice(self) -> int:
+        """Char budget used when slicing pages or items for one worker call.
+
+        Exposed so callers using :meth:`gather` and :meth:`slice_by_chars`
+        match the reasoner's own slicing budget without re-reading settings.
+        """
+        return self._chars_per_slice
 
     async def gather_notes(self, pages: list[Page], question: str) -> list[ChunkNotes]:
         """Return notes covering every page that fit the synthesis budget.
@@ -522,6 +532,119 @@ class ChunkedReasoner:
     def _rendered_notes_size(notes: list[ChunkNotes]) -> int:
         """Length in characters of what :meth:`format_notes` would produce."""
         return len(ChunkedReasoner.format_notes(notes))
+
+    async def gather[M, R: BaseModel](
+        self,
+        *,
+        slices: list[tuple[str, M]],
+        agent: Agent[None, R],
+        label_fn: Callable[[M], str] | None = None,
+    ) -> list[tuple[M, R]]:
+        """Run ``agent`` against each slice in parallel.
+
+        Each slice is a ``(prompt, metadata)`` pair: ``prompt`` is the user
+        prompt fed to the agent, ``metadata`` is opaque to this method and
+        echoed back alongside the agent's structured output. Use it to carry
+        per-slice context (e.g. the underlying items that produced the prompt)
+        through to the caller.
+
+        Concurrency, per-worker timeout, and cancellation drain match the
+        first-round behaviour of :meth:`gather_notes`: workers run under the
+        shared semaphore, time out after ``worker_timeout_seconds``, and are
+        cancelled if the surrounding stream goes away. Partial failures are
+        tolerated: failed slices are logged and dropped so survivors still
+        contribute. If *every* slice fails, the first captured exception is
+        re-raised so the caller can surface a real error (auth, OOM, etc.)
+        instead of receiving an empty result that looks like a clean miss.
+        Survivors are returned in input order so the caller doesn't have to
+        re-sort.
+        """
+        if not slices:
+            return []
+
+        label = label_fn or (lambda _m: "?")
+        pending: dict[asyncio.Task[R], int] = {
+            asyncio.create_task(self._run_generic_agent(agent, prompt, label(metadata))): index
+            for index, (prompt, metadata) in enumerate(slices)
+        }
+        results: dict[int, R] = {}
+        errors: list[BaseException] = []
+
+        try:
+            while pending:
+                done, _ = await asyncio.wait(pending.keys(), return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    index = pending.pop(task)
+                    exc = task.exception()
+                    if exc is not None:
+                        _, metadata = slices[index]
+                        logger.warning(
+                            "[chunked-reasoner] gather slice %s failed: %s",
+                            label(metadata),
+                            exc,
+                        )
+                        errors.append(exc)
+                        continue
+                    results[index] = task.result()
+        finally:
+            if pending:
+                for task in pending:
+                    task.cancel()
+                await asyncio.gather(*pending.keys(), return_exceptions=True)
+
+        if not results and errors:
+            raise errors[0]
+
+        return [(slices[i][1], results[i]) for i in sorted(results)]
+
+    async def _run_generic_agent[R: BaseModel](
+        self,
+        agent: Agent[None, R],
+        prompt: str,
+        label: str,
+    ) -> R:
+        """Run an arbitrary agent under the shared semaphore + timeout."""
+        async with self._semaphore:
+            try:
+                result = await asyncio.wait_for(agent.run(prompt), timeout=self._worker_timeout_seconds)
+            except TimeoutError:
+                logger.warning(
+                    "[chunked-reasoner] gather slice %s timed out (limit %.1fs)",
+                    label,
+                    self._worker_timeout_seconds,
+                )
+                raise
+        return result.output
+
+    @staticmethod
+    def slice_by_chars[T](
+        items: list[T],
+        *,
+        char_count: Callable[[T], int],
+        max_chars: int,
+    ) -> list[list[T]]:
+        """Pack consecutive items into sub-lists whose total char count fits ``max_chars``.
+
+        An item larger than ``max_chars`` on its own becomes a single-item slice
+        rather than being split. Input order is preserved; the slicer is purely
+        structural.
+        """
+        if max_chars <= 0:
+            raise ValueError("max_chars must be positive")
+        slices: list[list[T]] = []
+        current: list[T] = []
+        current_chars = 0
+        for item in items:
+            size = char_count(item)
+            if current and current_chars + size > max_chars:
+                slices.append(current)
+                current = []
+                current_chars = 0
+            current.append(item)
+            current_chars += size
+        if current:
+            slices.append(current)
+        return slices
 
     async def reason[T: BaseModel](
         self,
