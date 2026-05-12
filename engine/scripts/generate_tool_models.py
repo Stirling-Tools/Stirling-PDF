@@ -21,7 +21,7 @@ from datamodel_code_generator.format import Formatter
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
-# Fields inherited from PDFFile base class — not tool parameters.
+# Fields inherited from PDFFile base class - not tool parameters.
 BASE_CLASS_FIELDS = frozenset({"fileInput", "fileId"})
 
 _ENGINE_ROOT = Path(__file__).resolve().parents[1]
@@ -73,8 +73,9 @@ class ToolDiscovery:
         for path, path_item in sorted(self.spec.get("paths", {}).items()):
             if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
                 continue
-            body_props = self._get_request_properties(path_item) or {}
+            body_schema = self._get_request_body_schema(path_item) or {}
             query_props = self._get_query_parameters(path_item)
+            body_props = body_schema.get("properties") or {}
             # Body properties win on name collision — body is the canonical param source
             # for the existing tools; query params are additive.
             properties = {**query_props, **body_props}
@@ -87,7 +88,11 @@ class ToolDiscovery:
             enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
             class_name = _deduplicate(_path_to_class_name(path), used_class)
 
-            defs[class_name] = {"type": "object", "properties": clean_props}
+            defs[class_name] = {
+                "type": "object",
+                "properties": clean_props,
+                "description": body_schema.get("description"),
+            }
             tools.append(ToolSpec(path, enum_name, class_name))
 
         self._inline_component_refs(defs)
@@ -119,7 +124,7 @@ class ToolDiscovery:
             return self.resolver.lookup(schema["$ref"]).contents
         return schema
 
-    def _get_request_properties(self, path_item: dict[str, Any]) -> dict[str, Any] | None:
+    def _get_request_body_schema(self, path_item: dict[str, Any]) -> dict[str, Any] | None:
         post = path_item.get("post")
         if not post:
             return None
@@ -128,7 +133,7 @@ class ToolDiscovery:
             if media_type in content:
                 schema = content[media_type].get("schema")
                 if schema:
-                    return self._resolve_ref(schema).get("properties")
+                    return self._resolve_ref(schema)
         return None
 
     def _get_query_parameters(self, path_item: dict[str, Any]) -> dict[str, Any]:
@@ -227,6 +232,7 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         field_constraints=True,
         no_alias=True,
         set_default_enum_member=True,
+        use_schema_description=True,
         additional_imports=["enum.StrEnum"],
         enable_version_header=False,
         custom_file_header=_FILE_HEADER,
