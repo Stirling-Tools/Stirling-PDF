@@ -66,9 +66,9 @@ class PdfEditSelectionAgent:
         )
 
     async def select(self, prompt: str) -> PdfEditPlanOutput:
-        logger.debug("[pdf-edit selection] prompt:\n%s", prompt)
+        logger.info("[pdf-edit selection] prompt:\n%s", prompt)
         result = await self.agent.run(prompt)
-        logger.debug("[pdf-edit selection] output: %s", Pretty(result.output))
+        logger.info("[pdf-edit selection] output: %s", Pretty(result.output))
         return result.output
 
 
@@ -280,7 +280,7 @@ class PdfEditAgent:
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {format_file_names(request.files)}\n"
-            f"Supported operations: {self._get_operations_prompt(supported_operations)}\n"
+            f"Supported operations:\n{self._get_supported_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
@@ -296,6 +296,29 @@ class PdfEditAgent:
     @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
         return ", ".join(f"{op.name} ({op.value})" for op in operations)
+
+    @staticmethod
+    def _get_supported_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
+        """Render each operation with its description and a flat list of param descriptions.
+
+        The selection step decides which tool fits the user's request, so it just needs
+        what each tool does and what knobs it has, not the full schema.
+        """
+        lines: list[str] = []
+        for op in operations:
+            schema = OPERATIONS[op].model_json_schema()
+            head = f"- {op.name} ({op.value})"
+            description = (schema.get("description") or "").strip()
+            if description:
+                head += f": {description}"
+            lines.append(head)
+            for name, prop in (schema.get("properties") or {}).items():
+                param_description = (prop.get("description") or "").strip()
+                if param_description:
+                    lines.append(f"    {name}: {param_description}")
+                else:
+                    lines.append(f"    {name}")
+        return "\n".join(lines)
 
     def _fill_need_content_defaults(
         self,
