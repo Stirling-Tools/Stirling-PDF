@@ -32,6 +32,7 @@ exampleYmlFiles/stirling/
 /testing/cucumber/junit/
 /testing/cucumber/report.html
 /testing/.failed_tests
+/.test-state/
 SwaggerDoc.json
 
 # Runtime storage for uploaded files and user data (not Java source code)

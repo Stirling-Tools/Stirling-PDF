@@ -30,6 +30,7 @@ import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactTextRange;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -59,7 +60,9 @@ public class RedactController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
-                List.class, "redactions", new StringToArrayListPropertyEditor());
+                List.class,
+                "redactions",
+                new StringToArrayListPropertyEditor<>(RedactionArea.class));
         binder.registerCustomEditor(
                 List.class,
                 "textRanges",
