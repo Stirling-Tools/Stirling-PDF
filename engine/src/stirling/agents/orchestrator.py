@@ -11,13 +11,10 @@ from pydantic_ai.tools import RunContext
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
-from stirling.agents.smart_redaction import SmartRedactionWorkflow
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftWorkflowResponse,
-    EditCannotDoResponse,
     ExtractedTextArtifact,
-    NeedContentResponse,
     OrchestratorRequest,
     OrchestratorResponse,
     PdfEditResponse,
@@ -72,15 +69,6 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
-                    self.smart_redaction_agent,
-                    name="smart_redaction_agent",
-                    description=(
-                        "Delegate requests to redact, remove, or hide content from PDFs. "
-                        "Use for redacting PII, names, phone numbers, bank details, "
-                        "specific text, document sections, or any sensitive content."
-                    ),
-                ),
-                ToolOutput(
                     self.unsupported_capability,
                     name="unsupported_capability",
                     description="Return this when none of the delegate outputs fit the request.",
@@ -90,14 +78,14 @@ class OrchestratorAgent:
             system_prompt=(
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
-                "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
+                "Use delegate_pdf_edit for any requested modification of one or more PDFs,"
+                " including redaction (PII, names, phone numbers, sections, images, sensitive"
+                " content) — all redaction goes through delegate_pdf_edit. "
                 "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
-                "Use smart_redaction_agent for requests to redact, remove, or hide "
-                "content from PDFs (PII, names, phone numbers, sections, etc.). "
                 "Use unsupported_capability when the user asks about the assistant itself "
                 "or when none of the other outputs fit; supply a helpful message."
             ),
@@ -137,8 +125,6 @@ class OrchestratorAgent:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
-            case SupportedCapability.SMART_REDACTION_AGENT:
-                return await SmartRedactionWorkflow(self.runtime).handle(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
@@ -172,11 +158,6 @@ class OrchestratorAgent:
 
     async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse:
         return await PdfReviewAgent(self.runtime).orchestrate(request)
-
-    async def smart_redaction_agent(
-        self, ctx: RunContext[OrchestratorDeps]
-    ) -> EditPlanResponse | NeedContentResponse | EditCannotDoResponse:
-        return await SmartRedactionWorkflow(self.runtime).handle(ctx.deps.request)
 
     async def unsupported_capability(
         self,

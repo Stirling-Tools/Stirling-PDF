@@ -285,8 +285,21 @@ class PdfEditAgent:
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
+    # Endpoints whose capability is fully subsumed by another endpoint when both are available.
+    # Hiding the superseded ones from the agent gives a single deterministic route for that
+    # capability, avoiding non-deterministic LLM choice between equivalents.
+    _SUPERSEDED_WHEN_AVAILABLE: dict[ToolEndpoint, frozenset[ToolEndpoint]] = {
+        ToolEndpoint.REDACT_EXECUTE: frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT}),
+    }
+
     def _get_supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
-        return request.enabled_endpoints
+        enabled = list(request.enabled_endpoints)
+        enabled_set = set(enabled)
+        superseded: set[ToolEndpoint] = set()
+        for superset, hidden in self._SUPERSEDED_WHEN_AVAILABLE.items():
+            if superset in enabled_set:
+                superseded.update(hidden)
+        return [op for op in enabled if op not in superseded]
 
     @staticmethod
     def _get_unavailable_operations(supported_operations: Iterable[ToolEndpoint]) -> Iterable[ToolEndpoint]:
