@@ -34,9 +34,9 @@ logger = logging.getLogger(__name__)
 
 class PdfEditPlanSelection(ApiModel):
     outcome: Literal["plan"] = "plan"
+    rationale: str
     operations: list[ToolEndpoint] = Field(min_length=1)
     summary: str
-    rationale: str | None = None
 
 
 type PdfEditPlanOutput = PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | NeedContentResponse
@@ -254,10 +254,16 @@ class PdfEditAgent:
                 "Plan PDF edit requests. "
                 f"Supported operations are: {self._get_operations_prompt(supported_operations)}."
                 f"{unavailable_clause} "
+                "Each operation in the user-facing prompt is listed with its full set of parameters. "
+                "Treat that list as authoritative: an operation can ONLY do what its listed parameters "
+                "and description allow. "
                 "Return an ordered list of one or more supported operations for the plan. "
+                "Chain multiple operations together whenever the request needs effects that no single "
+                "supported operation provides on its own (for example, splitting then rotating then "
+                "merging, or extracting pages then re-inserting them). "
+                "Only return cannot_do when no sequence of the supported operations could achieve the request. "
                 "Do not produce operation parameters in this stage. "
                 "Return need_clarification when the request is genuinely ambiguous. "
-                "Return cannot_do when the request is outside the supported operations. "
                 "Return plan when a reasonable multi-step plan can be created. "
                 "Never return partial plans."
             ),
