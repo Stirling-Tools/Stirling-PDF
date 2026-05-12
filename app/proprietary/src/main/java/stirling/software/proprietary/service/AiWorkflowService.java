@@ -470,6 +470,15 @@ public class AiWorkflowService {
      *       a flat list of result files.
      * </ul>
      */
+    private static boolean containsStructuredItem(List<?> list) {
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> || item instanceof List<?>) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private ToolResult callEndpoint(
             String endpointPath, Map<String, Object> parameters, List<Resource> files)
             throws IOException {
@@ -479,8 +488,16 @@ public class AiWorkflowService {
         }
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
-                for (Object item : list) {
-                    body.add(entry.getKey(), item);
+                if (containsStructuredItem(list)) {
+                    // Structured lists (e.g. List<TextRange>) can't be bound via repeated form
+                    // fields - Spring's @ModelAttribute won't reconstruct nested objects from
+                    // map values. Encode the whole list as a JSON array so the endpoint can
+                    // parse it via a JsonListPropertyEditor.
+                    body.add(entry.getKey(), objectMapper.writeValueAsString(list));
+                } else {
+                    for (Object item : list) {
+                        body.add(entry.getKey(), item);
+                    }
                 }
             } else {
                 body.add(entry.getKey(), entry.getValue());

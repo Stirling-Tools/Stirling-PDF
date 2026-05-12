@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,9 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
+import stirling.software.SPDF.model.api.security.RedactImageBox;
+import stirling.software.SPDF.model.api.security.RedactTextRange;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 
 @Service
@@ -39,16 +39,21 @@ class RedactExecuteService {
     private final TextRedactionService textRedactionService;
 
     TempFile execute(RedactExecuteRequest request) throws IOException {
-        boolean hasTexts =
-                request.getTextsToRedact() != null && !request.getTextsToRedact().isBlank();
-        boolean hasRegex =
-                request.getRegexPatterns() != null && !request.getRegexPatterns().isBlank();
-        boolean hasPages = request.getPageNumbers() != null && !request.getPageNumbers().isBlank();
-        boolean hasImageBoxes =
-                request.getImageBoxes() != null && !request.getImageBoxes().isBlank();
-        boolean hasTextRanges =
-                request.getTextRanges() != null && !request.getTextRanges().isEmpty();
+        String[] exactTerms = cleanStrings(request.getTextsToRedact());
+        String[] regexTerms = cleanStrings(request.getRegexPatterns());
+        List<Integer> pageIndices = toZeroBasedIndices(request.getPageNumbers());
+        List<Integer> imagePageIndices = toZeroBasedIndices(request.getImagePages());
+        List<RedactTextRange> textRanges =
+                request.getTextRanges() != null ? request.getTextRanges() : List.of();
+        List<RedactImageBox> imageBoxes =
+                request.getImageBoxes() != null ? request.getImageBoxes() : List.of();
         boolean hasRedactAllImages = Boolean.TRUE.equals(request.getRedactAllImages());
+
+        boolean hasTexts = exactTerms.length > 0;
+        boolean hasRegex = regexTerms.length > 0;
+        boolean hasPages = !pageIndices.isEmpty();
+        boolean hasImageBoxes = !imageBoxes.isEmpty();
+        boolean hasTextRanges = !textRanges.isEmpty();
 
         if (!hasTexts
                 && !hasRegex
@@ -59,21 +64,6 @@ class RedactExecuteService {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.redaction.no.targets", "No redaction targets provided");
         }
-
-        String[] exactTerms =
-                hasTexts
-                        ? Arrays.stream(request.getTextsToRedact().split("\n"))
-                                .map(String::trim)
-                                .filter(s -> !s.isEmpty())
-                                .toArray(String[]::new)
-                        : new String[0];
-        String[] regexTerms =
-                hasRegex
-                        ? Arrays.stream(request.getRegexPatterns().split("\n"))
-                                .map(String::trim)
-                                .filter(s -> !s.isEmpty())
-                                .toArray(String[]::new)
-                        : new String[0];
 
         boolean overlayOnly =
                 RedactExecuteRequest.RedactionStrategy.OVERLAY_ONLY.equals(request.getStrategy());
@@ -198,14 +188,11 @@ class RedactExecuteService {
             if (hasPages) {
                 PDPageTree allPages = document.getDocumentCatalog().getPages();
                 Color pageColor = ManualRedactionService.decodeOrDefault(request.getRedactColor());
-                List<Integer> pageIndices =
-                        GeneralUtils.parsePageList(
-                                request.getPageNumbers().split(","), allPages.getCount(), false);
                 Collections.sort(pageIndices);
                 log.info(
                         "[redact/execute] full-page wipe: {} pages ({})",
                         pageIndices.size(),
-                        request.getPageNumbers());
+                        pageIndices);
 
                 Map<Integer, List<float[]>> pageElementBoxes = new HashMap<>();
                 for (Integer idx : pageIndices) {
@@ -253,17 +240,10 @@ class RedactExecuteService {
 
             // --- Text-range redaction (section start → end, inclusive, across pages) ---
             if (hasTextRanges) {
-                List<String> rawRanges = request.getTextRanges();
-                if (rawRanges.size() % 2 != 0) {
-                    log.warn(
-                            "[redact/execute] textRanges has odd element count ({}); expected"
-                                    + " start/end pairs — last element ignored",
-                            rawRanges.size());
-                }
-                log.info("[redact/execute] {} text ranges to redact", rawRanges.size() / 2);
-                for (int ri = 0; ri + 1 < rawRanges.size(); ri += 2) {
-                    String rangeStart = rawRanges.get(ri).trim();
-                    String rangeEnd = rawRanges.get(ri + 1).trim();
+                log.info("[redact/execute] {} text ranges to redact", textRanges.size());
+                for (RedactTextRange range : textRanges) {
+                    String rangeStart = trimOrEmpty(range.getStartString());
+                    String rangeEnd = trimOrEmpty(range.getEndString());
                     try {
                         List<PDFText> blocks = collectRangeBlocks(document, rangeStart, rangeEnd);
                         if (!blocks.isEmpty()) {
@@ -288,7 +268,7 @@ class RedactExecuteService {
 
             // --- Image box overlays (targeted image redaction from AI analysis) ---
             if (hasImageBoxes) {
-                List<float[]> parsedImageBoxes = parseImageBoxes(request.getImageBoxes());
+                List<float[]> parsedImageBoxes = toFloatArrays(imageBoxes);
                 log.info("[redact/execute] {} image box overlays", parsedImageBoxes.size());
                 if (!parsedImageBoxes.isEmpty()) {
                     Color boxColor =
@@ -302,13 +282,8 @@ class RedactExecuteService {
                 PDPageTree allPages = document.getDocumentCatalog().getPages();
                 Color imgColor = ManualRedactionService.decodeOrDefault(request.getRedactColor());
 
-                List<Integer> imagePageIndices = new ArrayList<>();
-                if (request.getImagePages() != null && !request.getImagePages().isBlank()) {
-                    List<Integer> parsed =
-                            GeneralUtils.parsePageList(
-                                    request.getImagePages().split(","), allPages.getCount(), false);
-                    imagePageIndices.addAll(parsed);
-                } else {
+                if (imagePageIndices.isEmpty()) {
+                    imagePageIndices = new ArrayList<>();
                     for (int i = 0; i < allPages.getCount(); i++) {
                         imagePageIndices.add(i);
                     }
@@ -597,41 +572,46 @@ class RedactExecuteService {
         return result.toString().trim();
     }
 
-    /**
-     * Parses the newline-separated image box string from the request. Format per line: {@code
-     * pageIndex,x1,y1,x2,y2} (all floats, 0-based page index, PDF coords).
-     */
-    private List<float[]> parseImageBoxes(String raw) {
-        List<float[]> result = new ArrayList<>();
-        if (raw == null || raw.isBlank()) {
-            return result;
+    private static String[] cleanStrings(List<String> input) {
+        if (input == null || input.isEmpty()) {
+            return new String[0];
         }
-        for (String line : raw.split("\n")) {
-            line = line.trim();
-            if (line.isEmpty()) {
-                continue;
-            }
-            try {
-                String[] parts = line.split(",");
-                if (parts.length == 5) {
-                    result.add(
-                            new float[] {
-                                Float.parseFloat(parts[0].trim()),
-                                Float.parseFloat(parts[1].trim()),
-                                Float.parseFloat(parts[2].trim()),
-                                Float.parseFloat(parts[3].trim()),
-                                Float.parseFloat(parts[4].trim())
-                            });
-                } else {
-                    log.warn("[redact/execute] skipping malformed image box line: '{}'", line);
-                }
-            } catch (NumberFormatException e) {
-                log.warn(
-                        "[redact/execute] invalid number in image box line '{}': {}",
-                        line,
-                        e.getMessage());
+        return input.stream()
+                .filter(s -> s != null)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+    }
+
+    /**
+     * Converts 1-based page numbers from the request to the 0-based indices used internally. Out
+     * of-range and non-positive values are silently dropped.
+     */
+    private static List<Integer> toZeroBasedIndices(List<Integer> oneBasedPageNumbers) {
+        if (oneBasedPageNumbers == null || oneBasedPageNumbers.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Integer> result = new ArrayList<>();
+        for (Integer page : oneBasedPageNumbers) {
+            if (page != null && page > 0) {
+                result.add(page - 1);
             }
         }
         return result;
+    }
+
+    private static List<float[]> toFloatArrays(List<RedactImageBox> boxes) {
+        List<float[]> result = new ArrayList<>(boxes.size());
+        for (RedactImageBox box : boxes) {
+            result.add(
+                    new float[] {
+                        box.getPageIndex(), box.getX1(), box.getY1(), box.getX2(), box.getY2()
+                    });
+        }
+        return result;
+    }
+
+    private static String trimOrEmpty(String s) {
+        return s == null ? "" : s.trim();
     }
 }

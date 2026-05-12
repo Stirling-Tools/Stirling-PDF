@@ -236,8 +236,6 @@ class SmartRedactionWorkflow:
     def build_immediate_plan(self, planner_output: PlannerOutput, user_message: str) -> EditPlanResponse | None:
         """Build an EditPlanResponse for LITERAL/REGEX/IMAGE_REDACT (no document scan needed)."""
         if planner_output.strategy == RedactionStrategy.IMAGE_REDACT:
-            page_nums = planner_output.image_page_numbers or []
-            image_pages_str = ",".join(str(p) for p in page_nums) if page_nums else None
             return EditPlanResponse(
                 summary=user_message,
                 rationale=planner_output.rationale,
@@ -246,7 +244,7 @@ class SmartRedactionWorkflow:
                         tool=ToolEndpoint.REDACT_EXECUTE,
                         parameters=RedactExecuteParams(  # type: ignore[call-arg]
                             redact_all_images=True,
-                            image_pages=image_pages_str,
+                            image_pages=planner_output.image_page_numbers or None,
                             strategy=Strategy.auto,
                             redact_color=planner_output.redact_color,
                         ),
@@ -267,8 +265,8 @@ class SmartRedactionWorkflow:
                 ToolOperationStep(
                     tool=ToolEndpoint.REDACT_EXECUTE,
                     parameters=RedactExecuteParams(  # type: ignore[call-arg]
-                        texts_to_redact="\n".join(texts) if texts else None,
-                        regex_patterns="\n".join(regex_patterns) if regex_patterns else None,
+                        texts_to_redact=texts or None,
+                        regex_patterns=regex_patterns or None,
                         strategy=Strategy.auto,
                         redact_color=planner_output.redact_color,
                     ),
@@ -291,30 +289,16 @@ class SmartRedactionWorkflow:
             reason = analyser_output.summary or f'No content matching "{user_message}" was found in the document.'
             return EditCannotDoResponse(reason=reason)
 
-        page_nums = ",".join(str(p + 1) for p in sorted(pages)) if pages else None
-
-        image_boxes_str = (
-            "\n".join(f"{img.page_index},{img.x1:.1f},{img.y1:.1f},{img.x2:.1f},{img.y2:.1f}" for img in images)
-            if images
-            else None
-        )
-
-        # Flatten sections into interleaved [start, end, start, end, …] pairs.
-        # Java's collectRangeBlocks handles cross-column end boundaries automatically via
-        # column-overlap detection, so the same text_ranges field works for both single-column
-        # and multi-column documents.
-        text_ranges = [v for s in sections for v in (s.start_string, s.end_string)] if sections else None
-
         return EditPlanResponse(
             summary=analyser_output.summary or user_message,
             steps=[
                 ToolOperationStep(
                     tool=ToolEndpoint.REDACT_EXECUTE,
                     parameters=RedactExecuteParams(  # type: ignore[call-arg]
-                        texts_to_redact="\n".join(strings) if strings else None,
-                        text_ranges=text_ranges,
-                        page_numbers=page_nums,
-                        image_boxes=image_boxes_str,
+                        texts_to_redact=strings or None,
+                        text_ranges=sections or None,
+                        page_numbers=[p + 1 for p in sorted(pages)] if pages else None,
+                        image_boxes=images or None,
                         strategy=Strategy.auto,
                         redact_color=analyser_output.redact_color,
                     ),

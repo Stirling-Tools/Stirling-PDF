@@ -19,29 +19,37 @@ public class RedactExecuteRequest extends PDFFile {
         IMAGE_FINALIZE
     }
 
-    @Schema(description = "Newline-separated exact strings to redact")
-    private String textsToRedact;
+    @Schema(description = "Exact strings to redact, each copied verbatim from the document.")
+    private List<String> textsToRedact;
 
-    @Schema(description = "Newline-separated regex patterns to redact")
-    private String regexPatterns;
+    @Schema(description = "Java-compatible regex patterns to find and redact.")
+    private List<String> regexPatterns;
 
-    @Schema(description = "Comma-separated page numbers to fully redact")
-    private String pageNumbers;
+    @Schema(description = "1-based page numbers to fully wipe.")
+    private List<Integer> pageNumbers;
 
     @Schema(
             description =
-                    "Flat list of start/end text pairs for range-based redaction. Must have an even number of elements.")
-    private List<String> textRanges;
-
-    @Schema(description = "Newline-separated image bounding boxes to redact (page,x1,y1,x2,y2)")
-    private String imageBoxes;
+                    "Named sections to redact, each defined by a start heading and an exclusive end"
+                            + " heading. One entry per contiguous block. Non-contiguous blocks must"
+                            + " each have their own entry.")
+    private List<RedactTextRange> textRanges;
 
     @Schema(
-            description = "Comma-separated 1-based page numbers to scan for images",
-            defaultValue = "")
-    private String imagePages;
+            description =
+                    "Images to redact, identified by 0-based page index and PDF user-space bounding"
+                            + " box (origin bottom-left).")
+    private List<RedactImageBox> imageBoxes;
 
-    @Schema(description = "Redact all detected images on the target pages", defaultValue = "false")
+    @Schema(
+            description =
+                    "1-based page numbers to scan for images when redactAllImages is true. Empty"
+                            + " means scan every page.")
+    private List<Integer> imagePages;
+
+    @Schema(
+            description = "Redact every detected image on the target pages.",
+            defaultValue = "false")
     private Boolean redactAllImages;
 
     @Schema(

@@ -776,23 +776,23 @@ class Strategy(StrEnum):
     image_finalize = "IMAGE_FINALIZE"
 
 
-class RedactExecuteParams(ApiModel):
-    convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to a flattened image")
-    custom_padding: float | None = Field(None, description="Extra padding (pts) around each redaction box")
-    image_boxes: str | None = Field(
-        None, description="Newline-separated image bounding boxes to redact (page,x1,y1,x2,y2)"
-    )
-    image_pages: str | None = Field("", description="Comma-separated 1-based page numbers to scan for images")
-    page_numbers: str | None = Field(None, description="Comma-separated page numbers to fully redact")
-    redact_all_images: bool | None = Field(False, description="Redact all detected images on the target pages")
-    redact_color: str | None = Field("#000000", description="Hex colour for the redaction fill")
-    regex_patterns: str | None = Field(None, description="Newline-separated regex patterns to redact")
-    strategy: Strategy | None = Field(None, description="Execution strategy hint for the redaction pipeline")
-    text_ranges: list[str] | None = Field(
+class RedactImageBox(ApiModel):
+    page_index: int | None = Field(None, description="0-based page index.")
+    x1: float | None = Field(None, description="Left edge in PDF user-space (origin bottom-left, Y up).")
+    x2: float | None = Field(None, description="Right edge in PDF user-space.")
+    y1: float | None = Field(None, description="Bottom edge in PDF user-space.")
+    y2: float | None = Field(None, description="Top edge in PDF user-space.")
+
+
+class RedactTextRange(ApiModel):
+    end_string: str | None = Field(
         None,
-        description="Flat list of start/end text pairs for range-based redaction. Must have an even number of elements.",
+        description="Heading or first line of the block that immediately follows the one being redacted, copied verbatim. This line is NOT redacted — it is the exclusive upper boundary. Leave empty only if the redaction genuinely runs to the end of the document.",
     )
-    texts_to_redact: str | None = Field(None, description="Newline-separated exact strings to redact")
+    start_string: str | None = Field(
+        None,
+        description="Heading or first line of the block to redact, copied verbatim from the document. Everything from this line onward is redacted (inclusive).",
+    )
 
 
 class RedactionArea(ApiModel):
@@ -1092,6 +1092,31 @@ class OutputFormat6(StrEnum):
 class VectorToPdfParams(ApiModel):
     output_format: OutputFormat6 | None = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
+
+
+class RedactExecuteParams(ApiModel):
+    convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to a flattened image")
+    custom_padding: float | None = Field(None, description="Extra padding (pts) around each redaction box")
+    image_boxes: list[RedactImageBox] | None = Field(
+        None,
+        description="Images to redact, identified by 0-based page index and PDF user-space bounding box (origin bottom-left).",
+    )
+    image_pages: list[int] | None = Field(
+        None,
+        description="1-based page numbers to scan for images when redactAllImages is true. Empty means scan every page.",
+    )
+    page_numbers: list[int] | None = Field(None, description="1-based page numbers to fully wipe.")
+    redact_all_images: bool | None = Field(False, description="Redact every detected image on the target pages.")
+    redact_color: str | None = Field("#000000", description="Hex colour for the redaction fill")
+    regex_patterns: list[str] | None = Field(None, description="Java-compatible regex patterns to find and redact.")
+    strategy: Strategy | None = Field(None, description="Execution strategy hint for the redaction pipeline")
+    text_ranges: list[RedactTextRange] | None = Field(
+        None,
+        description="Named sections to redact, each defined by a start heading and an exclusive end heading. One entry per contiguous block. Non-contiguous blocks must each have their own entry.",
+    )
+    texts_to_redact: list[str] | None = Field(
+        None, description="Exact strings to redact, each copied verbatim from the document."
+    )
 
 
 class RedactParams(ApiModel):

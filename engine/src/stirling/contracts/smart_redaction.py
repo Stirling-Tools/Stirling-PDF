@@ -5,6 +5,7 @@ from enum import StrEnum
 from pydantic import Field
 
 from stirling.models import ApiModel
+from stirling.models.tool_models import RedactImageBox, RedactTextRange
 
 
 class RedactionStrategy(StrEnum):
@@ -41,36 +42,6 @@ class PlannerOutput(ApiModel):
     rationale: str
 
 
-class ImageBoundingBox(ApiModel):
-    """Identifies a specific image to redact by its PDF user-space bounding box."""
-
-    page_index: int = Field(description="0-based page index.")
-    x1: float = Field(description="Left edge in PDF user-space (origin bottom-left, Y up).")
-    y1: float = Field(description="Bottom edge in PDF user-space.")
-    x2: float = Field(description="Right edge in PDF user-space.")
-    y2: float = Field(description="Top edge in PDF user-space.")
-
-
-class TextRange(ApiModel):
-    """A section to redact, identified by the heading that opens it and the heading that closes it."""
-
-    start_string: str = Field(
-        description=(
-            "The heading or first line that marks the beginning of the section, copied verbatim "
-            "from the document. Everything from this line onward is redacted (inclusive)."
-        )
-    )
-    end_string: str = Field(
-        description=(
-            "The heading or first line of the section that immediately follows the one being "
-            "redacted, copied verbatim. This line marks where redaction stops and is NOT itself "
-            "redacted — it is the exclusive upper boundary. "
-            "Leave empty if the section runs to the end of the document."
-        ),
-        default="",
-    )
-
-
 class AnalyserOutput(ApiModel):
     """Identifies specific content to redact from extracted document text."""
 
@@ -81,19 +52,19 @@ class AnalyserOutput(ApiModel):
             "and any single-line phrases. Copy each exactly as it appears in the document."
         ),
     )
-    sections_to_redact: list[TextRange] = Field(
+    sections_to_redact: list[RedactTextRange] = Field(
         default_factory=list,
         description=(
             "Named sections (exercises, questions, chapters, appendices, clauses) that span "
-            "multiple lines or paragraphs. One entry per section. Provide start_string (the "
-            "section heading) and end_string (the heading of the next section — exclusive boundary)."
+            "multiple lines or paragraphs. One entry per section. Provide startString (the "
+            "section heading) and endString (the heading of the next section — exclusive boundary)."
         ),
     )
     pages_to_redact: list[int] = Field(
         default_factory=list,
         description="0-indexed page numbers for whole-page blackout (structural sections only).",
     )
-    images_to_redact: list[ImageBoundingBox] = Field(
+    images_to_redact: list[RedactImageBox] = Field(
         default_factory=list,
         description=(
             "Images to redact identified by their bounding boxes. "

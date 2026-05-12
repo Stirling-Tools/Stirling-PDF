@@ -25,7 +25,9 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
+import stirling.software.SPDF.model.api.security.RedactImageBox;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
+import stirling.software.SPDF.model.api.security.RedactTextRange;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -34,7 +36,10 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
 import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
+
+import tools.jackson.core.type.TypeReference;
 
 @SecurityApi
 @Slf4j
@@ -55,6 +60,14 @@ public class RedactController {
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
                 List.class, "redactions", new StringToArrayListPropertyEditor());
+        binder.registerCustomEditor(
+                List.class,
+                "textRanges",
+                new JsonListPropertyEditor<>(new TypeReference<List<RedactTextRange>>() {}));
+        binder.registerCustomEditor(
+                List.class,
+                "imageBoxes",
+                new JsonListPropertyEditor<>(new TypeReference<List<RedactImageBox>>() {}));
     }
 
     @AutoJobPostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -85,7 +85,7 @@ from .rag import (
     IngestDocumentResponse,
     IngestedPageText,
 )
-from .smart_redaction import AnalyserOutput, ImageBoundingBox, PlannerOutput, RedactionStrategy, TextRange
+from .smart_redaction import AnalyserOutput, PlannerOutput, RedactionStrategy
 
 __all__ = [
     "AgentDraft",
@@ -123,7 +123,6 @@ __all__ = [
     "format_conversation_history",
     "format_file_names",
     "HealthResponse",
-    "ImageBoundingBox",
     "IngestDocumentRequest",
     "IngestDocumentResponse",
     "IngestedPageText",
@@ -148,10 +147,9 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
+    "PdfTextSelection",
     "PlannerOutput",
     "RedactionStrategy",
-    "TextRange",
-    "PdfTextSelection",
     "Requisition",
     "Severity",
     "StepKind",
