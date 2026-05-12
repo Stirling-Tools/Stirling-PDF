@@ -21,6 +21,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -334,9 +335,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           >
             <MenuIcon className="file-sidebar-menu-icon" />
             {!collapsed && (
-              <span className="file-sidebar-brand-text sidebar-content-fade">
-                Stirling PDF
-              </span>
+              <Wordmark
+                alt="Stirling PDF"
+                className="file-sidebar-brand-text sidebar-content-fade"
+              />
             )}
           </div>
 
