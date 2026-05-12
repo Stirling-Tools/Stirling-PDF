@@ -50,12 +50,9 @@
 }
 
 .file-sidebar-brand-text {
-  font-family: "Alumni Sans", sans-serif;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 0.3px;
-  color: var(--text-secondary);
-  white-space: nowrap;
+  height: 22px;
+  width: auto;
+  flex-shrink: 0;
 }
 
 /* ---- Search row ---- */
