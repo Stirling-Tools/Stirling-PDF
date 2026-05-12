@@ -777,20 +777,20 @@ class Strategy(StrEnum):
 
 
 class RedactImageBox(ApiModel):
-    page_index: int | None = Field(None, description="0-based page index.")
-    x1: float | None = Field(None, description="Left edge in PDF user-space (origin bottom-left, Y up).")
-    x2: float | None = Field(None, description="Right edge in PDF user-space.")
-    y1: float | None = Field(None, description="Bottom edge in PDF user-space.")
-    y2: float | None = Field(None, description="Top edge in PDF user-space.")
+    page_index: int = Field(..., description="0-based page index.")
+    x1: float = Field(..., description="Left edge in PDF user-space (origin bottom-left, Y up).")
+    x2: float = Field(..., description="Right edge in PDF user-space.")
+    y1: float = Field(..., description="Bottom edge in PDF user-space.")
+    y2: float = Field(..., description="Top edge in PDF user-space.")
 
 
 class RedactTextRange(ApiModel):
     end_string: str | None = Field(
-        None,
-        description="Heading or first line of the block that immediately follows the one being redacted, copied verbatim. This line is NOT redacted — it is the exclusive upper boundary. Leave empty only if the redaction genuinely runs to the end of the document.",
+        "",
+        description="Heading or first line of the block that immediately follows the one being redacted, copied verbatim. This line is NOT redacted — it is the exclusive upper boundary. Omit (or leave empty) only if the redaction genuinely runs to the end of the document.",
     )
-    start_string: str | None = Field(
-        None,
+    start_string: str = Field(
+        ...,
         description="Heading or first line of the block to redact, copied verbatim from the document. Everything from this line onward is redacted (inclusive).",
     )
 
