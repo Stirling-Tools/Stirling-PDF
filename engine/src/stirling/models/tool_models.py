@@ -1098,7 +1098,7 @@ class ReplaceInvertPdfParams(ApiModel):
 
 class Angle(IntEnum):
     """
-    The clockwise angle by which to rotate the PDF file. Must be a multiple of 90.
+    The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.
     """
 
     integer_0 = 0
@@ -1109,7 +1109,7 @@ class Angle(IntEnum):
 
 class RotatePdfParams(ApiModel):
     angle: Angle | None = Field(
-        None, description="The clockwise angle by which to rotate the PDF file. Must be a multiple of 90."
+        None, description="The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90."
     )
 
 
