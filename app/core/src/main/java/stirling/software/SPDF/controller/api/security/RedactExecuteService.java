@@ -375,6 +375,9 @@ class RedactExecuteService {
             }
         }
 
+        // An empty/blank end anchor is the caller's explicit way to say "redact to end of
+        // document". A non-empty end anchor that we can't locate is a *failure*,
+        // so skip the range and warn loudly.
         boolean openEnded = (endStr == null || endStr.isBlank());
         List<Integer> endPageList = new ArrayList<>();
         List<PDFText> endTextList = new ArrayList<>();
@@ -382,17 +385,18 @@ class RedactExecuteService {
             Map<Integer, List<PDFText>> endMatchesByPage = findWithFallbacks(document, endStr);
             if (endMatchesByPage.isEmpty()) {
                 log.warn(
-                        "[redact/execute] range end not found: '{}' — redacting to end of document",
-                        endStr);
-                openEnded = true;
-            } else {
-                for (int page : endMatchesByPage.keySet().stream().sorted().toList()) {
-                    List<PDFText> hits = new ArrayList<>(endMatchesByPage.get(page));
-                    hits.sort(Comparator.comparingDouble(PDFText::getY1));
-                    for (PDFText t : hits) {
-                        endPageList.add(page);
-                        endTextList.add(t);
-                    }
+                        "[redact/execute] range end '{}' not found in document - skipping range"
+                                + " (start='{}')",
+                        endStr,
+                        startStr);
+                return Collections.emptyList();
+            }
+            for (int page : endMatchesByPage.keySet().stream().sorted().toList()) {
+                List<PDFText> hits = new ArrayList<>(endMatchesByPage.get(page));
+                hits.sort(Comparator.comparingDouble(PDFText::getY1));
+                for (PDFText t : hits) {
+                    endPageList.add(page);
+                    endTextList.add(t);
                 }
             }
         }
