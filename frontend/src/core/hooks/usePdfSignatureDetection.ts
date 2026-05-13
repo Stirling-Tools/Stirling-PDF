@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { extractSignatureFieldRects } from "@app/services/pdfiumService";
 import { StirlingFile } from "@app/types/fileContext";
 
 export interface PdfSignatureDetectionResult {
@@ -14,9 +14,12 @@ export const usePdfSignatureDetection = (
   const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
+    let isCancelled = false;
+
     const checkForDigitalSignatures = async () => {
       if (files.length === 0) {
         setHasDigitalSignatures(false);
+        setIsChecking(false);
         return;
       }
 
@@ -25,31 +28,13 @@ export const usePdfSignatureDetection = (
 
       try {
         for (const file of files) {
-          const arrayBuffer = await file.arrayBuffer();
-
           try {
-            const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
-
-            for (let i = 1; i <= pdf.numPages; i++) {
-              const page = await pdf.getPage(i);
-              const annotations = await page.getAnnotations({
-                intent: "display",
-              });
-
-              annotations.forEach((annotation: any) => {
-                if (
-                  annotation.subtype === "Widget" &&
-                  annotation.fieldType === "Sig"
-                ) {
-                  foundSignature = true;
-                }
-              });
-
-              if (foundSignature) break;
+            const arrayBuffer = await file.arrayBuffer();
+            const signatureFields =
+              await extractSignatureFieldRects(arrayBuffer);
+            if (signatureFields.length > 0) {
+              foundSignature = true;
             }
-
-            // Clean up PDF document using worker manager
-            pdfWorkerManager.destroyDocument(pdf);
           } catch (error) {
             console.warn("Error analyzing PDF for signatures:", error);
           }
@@ -60,11 +45,17 @@ export const usePdfSignatureDetection = (
         console.warn("Error checking for digital signatures:", error);
       }
 
-      setHasDigitalSignatures(foundSignature);
-      setIsChecking(false);
+      if (!isCancelled) {
+        setHasDigitalSignatures(foundSignature);
+        setIsChecking(false);
+      }
     };
 
     checkForDigitalSignatures();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [files]);
 
   return {
