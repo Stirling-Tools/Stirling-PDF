@@ -796,22 +796,19 @@ class Strategy(StrEnum):
 
 
 class RedactImageBox(ApiModel):
-    page_index: int = Field(..., description="0-based page index.")
-    x1: float = Field(..., description="Left edge in PDF user-space (origin bottom-left, Y up).")
-    x2: float = Field(..., description="Right edge in PDF user-space.")
-    y1: float = Field(..., description="Bottom edge in PDF user-space.")
-    y2: float = Field(..., description="Top edge in PDF user-space.")
+    page_index: int = Field(..., description="0-based page index")
+    x1: float = Field(..., description="Left edge in PDF user-space (origin bottom-left, Y up)")
+    x2: float = Field(..., description="Right edge")
+    y1: float = Field(..., description="Bottom edge")
+    y2: float = Field(..., description="Top edge")
 
 
 class RedactTextRange(ApiModel):
     end_string: str | None = Field(
         "",
-        description="Heading or first line of the block that immediately follows the one being redacted, copied verbatim. This line is NOT redacted — it is the exclusive upper boundary. Omit (or leave empty) only if the redaction genuinely runs to the end of the document.",
+        description="Exclusive end marker - first line after the redacted block, copied verbatim. Omit to redact to the end of the document.",
     )
-    start_string: str = Field(
-        ...,
-        description="Heading or first line of the block to redact, copied verbatim from the document. Everything from this line onward is redacted (inclusive).",
-    )
+    start_string: str = Field(..., description="First line of the block to redact, copied verbatim")
 
 
 class RedactionArea(ApiModel):
@@ -1116,39 +1113,17 @@ class VectorToPdfParams(ApiModel):
 class RedactExecuteParams(ApiModel):
     convert_pdf_to_image: bool | None = Field(False, description="Convert the redacted PDF to a flattened image")
     custom_padding: float | None = Field(None, description="Extra padding (pts) around each redaction box")
-    image_boxes: list[RedactImageBox] | None = Field(
-        None,
-        description="Images to redact identified by bounding box. Read the box coordinates from the '--- Images on this page ---' annotations in the extracted page text — each entry there lists position, size, and exact bounds. Use this for: spatial targeting ('the logo in the top left'), exclusion ('all images except the logo' — list every image EXCEPT the excluded ones), and mathematical content typeset as glyphs (equations and formulas — NEVER redact those via textsToRedact, the result is scattered single-character boxes).",
-    )
+    image_boxes: list[RedactImageBox] | None = Field(None, description="Images to redact by bounding box")
     image_pages: list[int] | None = Field(
-        None,
-        description="1-based page numbers to scan for images when redactAllImages is true. Empty means scan every page.",
+        None, description="1-based page numbers to scan for images when redactAllImages is true"
     )
-    page_numbers: list[int] | None = Field(
-        None,
-        description="1-based page numbers to wipe entirely. Use ONLY for explicit whole-page requests like 'redact page 2' or 'blackout page 5'. Do NOT use for a section that happens to be on a page (use textRanges).",
-    )
-    redact_all_images: bool | None = Field(
-        False,
-        description="Set to true when the user wants every image redacted with no spatial filter or exclusion (e.g. 'redact all images', 'remove all images on page 2'). For specific images by location or with exclusions, use imageBoxes instead.",
-    )
-    redact_color: str | None = Field(
-        "#000000",
-        description="Hex colour for the redaction fill (e.g. '#000000' black, '#ffffff' white, '#ff0000' red). Extract from the user's prompt only if they specify a colour; otherwise leave as default.",
-    )
-    regex_patterns: list[str] | None = Field(
-        None,
-        description="Java-compatible regex patterns for structured data classes the user described without naming specific values (e.g. 'all phone numbers', 'all emails'). Write precise, well-anchored patterns - for example, email: [a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}, UK postcode: [A-Z]{1,2}\\d[A-Z\\d]?\\s?\\d[A-Z]{2}, ISO date: \\b\\d{4}-\\d{2}-\\d{2}\\b. Leave empty when the user named the specific strings (use textsToRedact) or described semantic content requiring a document scan.",
-    )
+    page_numbers: list[int] | None = Field(None, description="1-based page numbers to redact entirely")
+    redact_all_images: bool | None = Field(False, description="Redact every image")
+    redact_color: str | None = Field("#000000", description="Hex colour for the redaction fill")
+    regex_patterns: list[str] | None = Field(None, description="Regex patterns to redact")
     strategy: Strategy | None = Field(None, description="Execution strategy hint for the redaction pipeline")
-    text_ranges: list[RedactTextRange] | None = Field(
-        None,
-        description="Multi-line sections to redact, each defined by a verbatim start heading and an exclusive end heading. Emit ONE entry per contiguous block — for 'sections 10-14', emit five entries, not one. Headings must be copied EXACTLY as they appear in the extracted text, including any letter-spacing (e.g. 'T a b l e o f c o n t e n t s'). Use for exercises, chapters, appendices, clauses, and any range that spans more than one line.",
-    )
-    texts_to_redact: list[str] | None = Field(
-        None,
-        description="Single-line values to redact, copied verbatim from the document. Use this for names, IDs, phone numbers, email addresses, dates, and other values that appear on a single line. Do NOT use for multi-line sections (use textRanges instead) or for mathematical expressions typeset as glyphs (use imageBoxes).",
-    )
+    text_ranges: list[RedactTextRange] | None = Field(None, description="Multi-line sections to redact")
+    texts_to_redact: list[str] | None = Field(None, description="Single-line values to redact")
 
 
 class RedactParams(ApiModel):

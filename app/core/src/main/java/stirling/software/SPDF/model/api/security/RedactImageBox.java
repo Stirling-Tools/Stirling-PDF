@@ -7,26 +7,20 @@ import lombok.Data;
 @Data
 public class RedactImageBox {
 
-    @Schema(description = "0-based page index.", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "0-based page index", requiredMode = Schema.RequiredMode.REQUIRED)
     private int pageIndex;
 
     @Schema(
-            description = "Left edge in PDF user-space (origin bottom-left, Y up).",
+            description = "Left edge in PDF user-space (origin bottom-left, Y up)",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private float x1;
 
-    @Schema(
-            description = "Bottom edge in PDF user-space.",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Bottom edge", requiredMode = Schema.RequiredMode.REQUIRED)
     private float y1;
 
-    @Schema(
-            description = "Right edge in PDF user-space.",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Right edge", requiredMode = Schema.RequiredMode.REQUIRED)
     private float x2;
 
-    @Schema(
-            description = "Top edge in PDF user-space.",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Top edge", requiredMode = Schema.RequiredMode.REQUIRED)
     private float y2;
 }
