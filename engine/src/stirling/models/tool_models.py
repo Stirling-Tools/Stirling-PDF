@@ -777,7 +777,7 @@ class RedactImageBox(ApiModel):
 
 class RedactTextRange(ApiModel):
     end_string: str = Field(
-        ...,
+        "",
         description="Exclusive end marker - first line after the redacted block, copied verbatim. Empty string means redact to the end of the document.",
     )
     start_string: str = Field(..., description="First line of the block to redact, copied verbatim")
@@ -1080,7 +1080,7 @@ class VectorToPdfParams(ApiModel):
 
 class RedactExecuteParams(ApiModel):
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to a flattened image")
-    custom_padding: float | None = Field(None, description="Extra padding (pts) around each redaction box")
+    custom_padding: float = Field(0, description="Extra padding (pts) around each redaction box")
     image_boxes: list[RedactImageBox] = Field([], description="Images to redact by bounding box", validate_default=True)
     image_pages: list[int] = Field(
         [], description="1-based page numbers to scan for images when redactAllImages is true"
@@ -1089,7 +1089,7 @@ class RedactExecuteParams(ApiModel):
     redact_all_images: bool = Field(False, description="Redact every image")
     redact_color: str = Field("#000000", description="Hex colour for the redaction fill")
     regex_patterns: list[str] = Field([], description="Regex patterns to redact")
-    strategy: Strategy | None = Field(None, description="Execution strategy hint for the redaction pipeline")
+    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
     text_ranges: list[RedactTextRange] = Field([], description="Multi-line sections to redact", validate_default=True)
     texts_to_redact: list[str] = Field([], description="Single-line values to redact")
 

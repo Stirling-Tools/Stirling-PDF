@@ -16,7 +16,6 @@ public class RedactTextRange {
             description =
                     "Exclusive end marker - first line after the redacted block, copied verbatim."
                             + " Empty string means redact to the end of the document.",
-            defaultValue = "",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            defaultValue = "")
     private String endString = "";
 }

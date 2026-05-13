@@ -49,12 +49,17 @@ public class RedactExecuteRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String redactColor = "#000000";
 
-    @Schema(description = "Extra padding (pts) around each redaction box", type = "number")
-    private float customPadding;
+    @Schema(
+            description = "Extra padding (pts) around each redaction box",
+            type = "number",
+            defaultValue = "0")
+    private float customPadding = 0f;
 
     @Schema(description = "Convert the redacted PDF to a flattened image", defaultValue = "false")
     private boolean convertPDFToImage = false;
 
-    @Schema(description = "Execution strategy hint for the redaction pipeline")
-    private RedactionStrategy strategy;
+    @Schema(
+            description = "Execution strategy hint for the redaction pipeline",
+            defaultValue = "AUTO")
+    private RedactionStrategy strategy = RedactionStrategy.AUTO;
 }
