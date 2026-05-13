@@ -9,6 +9,7 @@ import {
 } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useToolSections } from "@app/hooks/useToolSections";
+import { openUrl } from "@app/utils/urlExtensions";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -105,7 +106,7 @@ const FullscreenToolList = ({
       if (!tool.component && !tool.link && id !== "read" && id !== "multiTool")
         return;
       if (tool.link) {
-        window.open(tool.link, "_blank", "noopener,noreferrer");
+        openUrl(tool.link, "_blank", "noopener,noreferrer");
         return;
       }
       onSelect(id as ToolId);

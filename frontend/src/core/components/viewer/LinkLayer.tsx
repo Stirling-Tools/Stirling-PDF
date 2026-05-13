@@ -7,6 +7,7 @@ import {
   PdfActionType,
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
+import { openUrl, isSafeUrlProtocol } from "@app/utils/urlExtensions";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -310,18 +311,13 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           });
         } else if (action.type === PdfActionType.URI) {
           const uri = action.uri;
-          try {
-            const url = new URL(uri, window.location.href);
-            if (["http:", "https:", "mailto:"].includes(url.protocol)) {
-              window.open(uri, "_blank", "noopener,noreferrer");
-            } else {
-              console.warn(
-                "[LinkLayer] Blocked unsafe URL protocol:",
-                url.protocol,
-              );
-            }
-          } catch {
-            window.open(uri, "_blank", "noopener,noreferrer");
+          if (isSafeUrlProtocol(uri)) {
+            openUrl(uri, "_blank", "noopener,noreferrer");
+          } else {
+            console.warn(
+              "[LinkLayer] Blocked unsafe URL protocol:",
+              uri,
+            );
           }
         }
       }
@@ -362,8 +358,8 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         return (
           <React.Fragment key={annotationLink.id}>
             {/* Hit-area overlay */}
-            <a
-              href="#"
+            <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -384,6 +380,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               role="link"
               tabIndex={0}
               aria-label={getLinkLabel(annotationLink)}
+              title={getLinkLabel(annotationLink)}
             />
 
             {/* Floating toolbar */}
