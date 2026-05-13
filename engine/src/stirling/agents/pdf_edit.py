@@ -187,8 +187,7 @@ class PdfEditAgent:
             request.enabled_endpoints,
             request.user_message,
         )
-        supported_operations = self._get_supported_operations(request)
-        unavailable_operations = self._get_unavailable_operations(supported_operations)
+        supported_operations, unavailable_operations = self._classify_operations(request)
         if not supported_operations:
             return EditCannotDoResponse(reason="No PDF edit operations are available on this server.")
         selection = await self._select_plan(
@@ -306,19 +305,19 @@ class PdfEditAgent:
         ToolEndpoint.REDACT_EXECUTE: frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT}),
     }
 
-    def _get_supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
-        enabled = list(request.enabled_endpoints)
-        enabled_set = set(enabled)
+    def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
+        """Split the universe of operations into (supported, unavailable) from the agent's
+        point of view. Superseded endpoints are never mentioned to the AI,
+        whether the admin has them enabled or disabled on this server.
+        """
+        enabled_set = set(request.enabled_endpoints)
         superseded: set[ToolEndpoint] = set()
         for superset, hidden in self._SUPERSEDED_WHEN_AVAILABLE.items():
             if superset in enabled_set:
                 superseded.update(hidden)
-        return [op for op in enabled if op not in superseded]
-
-    @staticmethod
-    def _get_unavailable_operations(supported_operations: Iterable[ToolEndpoint]) -> Iterable[ToolEndpoint]:
-        supported_set = set(supported_operations)
-        return [op for op in OPERATIONS if op not in supported_set]
+        supported = [op for op in request.enabled_endpoints if op not in superseded]
+        unavailable = [op for op in OPERATIONS if op not in enabled_set and op not in superseded]
+        return supported, unavailable
 
     @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:

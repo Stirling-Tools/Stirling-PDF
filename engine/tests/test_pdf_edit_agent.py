@@ -82,12 +82,12 @@ class StubPdfEditAgent(PdfEditAgent):
         if parameter_selector is not None:
             self.parameter_selector = parameter_selector
 
-    def _get_supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
+    def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
         # Tests construct requests without `enabled_endpoints`; pretend everything is enabled
         # unless the test explicitly supplies an enabled set.
-        if request.enabled_endpoints:
-            return request.enabled_endpoints
-        return OPERATIONS
+        if not request.enabled_endpoints:
+            return list(OPERATIONS), []
+        return super()._classify_operations(request)
 
     async def _select_plan(
         self,
@@ -330,7 +330,7 @@ async def test_pdf_edit_agent_supported_operations_defaults_to_empty(
     runtime: AppRuntime,
 ) -> None:
     agent = PdfEditAgent(runtime)
-    supported = agent._get_supported_operations(PdfEditRequest(user_message="hi"))
+    supported, _ = agent._classify_operations(PdfEditRequest(user_message="hi"))
 
     assert list(supported) == []
 
@@ -345,7 +345,7 @@ async def test_pdf_edit_agent_supported_operations_uses_provided_list(
         enabled_endpoints=[ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF],
     )
 
-    supported = agent._get_supported_operations(request)
+    supported, _ = agent._classify_operations(request)
 
     assert list(supported) == [ToolEndpoint.FLATTEN, ToolEndpoint.ROTATE_PDF]
 
@@ -366,8 +366,7 @@ def test_pdf_edit_selection_prompt_includes_unavailable_operations(runtime: AppR
         user_message="Run OCR.",
         enabled_endpoints=[ToolEndpoint.FLATTEN],
     )
-    supported = agent._get_supported_operations(request)
-    unavailable = agent._get_unavailable_operations(supported)
+    supported, unavailable = agent._classify_operations(request)
 
     prompt = agent._build_selection_prompt(request, supported, unavailable)
 
