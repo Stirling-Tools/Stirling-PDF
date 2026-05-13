@@ -135,6 +135,8 @@ function scanForUsedIcons() {
 
 // Main async function
 async function main() {
+  const prettier = await import("prettier");
+
   // Auto-detect used icons
   const usedIcons = scanForUsedIcons();
 
@@ -206,7 +208,11 @@ async function main() {
   }
 
   // Write the extracted icon set to a file (outputPath already defined above)
-  fs.writeFileSync(outputPath, JSON.stringify(extractedIcons, null, 2));
+  const extractedIconsJson = JSON.stringify(extractedIcons);
+  const formattedIconsJson = await prettier.format(extractedIconsJson, {
+    filepath: outputPath,
+  });
+  fs.writeFileSync(outputPath, formattedIconsJson);
 
   info(
     `✅ Successfully extracted ${Object.keys(extractedIcons.icons || {}).length} icons`,

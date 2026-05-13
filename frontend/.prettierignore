@@ -1,13 +1,25 @@
 dist/
 # Tauri/Cargo build output (binary assets named *.js etc. confuse Prettier)
 src-tauri/target/
+src-tauri/thumbnail-handler/target/
+src-tauri/provisioner/target/
 node_modules/
 public/vendor/
 public/pdfjs*/
 public/js/thirdParty/
 public/css/cookieconsent.css
-src-tauri/target/
 *.min.*
 *.md
 *.wxs
+/**/*.wxs
+src/assets/material-symbols-icons.d.ts
 src/output.css
+.gradle-home/
+.venv*/
+.venv/
+app/common/build/
+app/core/build/
+app/proprietary/build/
+app/common/bin/
+app/core/bin/
+app/proprietary/bin/

@@ -5,12 +5,12 @@ tasks:
     desc: "Install dependencies"
     run: once
     cmds:
-      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install{{ end }}'
+      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install || npm install{{ end }}'
     sources:
       - package-lock.json
       - package.json
     status:
-      - test -d node_modules
+      - npm ls --depth=0 --silent
     env:
       CI: '{{ .CI | default "false" }}'
 
@@ -172,13 +172,29 @@ tasks:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - |
+        if [ -f .prettierignore ]; then
+          npx prettier --write . --ignore-path .prettierignore
+        elif [ -f frontend/.prettierignore ]; then
+          npx prettier --write frontend --ignore-path frontend/.prettierignore
+        else
+          echo "Unable to find .prettierignore in current or frontend directory" >&2
+          exit 1
+        fi
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - |
+        if [ -f .prettierignore ]; then
+          npx prettier --check . --ignore-path .prettierignore
+        elif [ -f frontend/.prettierignore ]; then
+          npx prettier --check frontend --ignore-path frontend/.prettierignore
+        else
+          echo "Unable to find .prettierignore in current or frontend directory" >&2
+          exit 1
+        fi
 
   fix:
     desc: "Auto-fix lint and format"
