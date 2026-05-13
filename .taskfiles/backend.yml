@@ -1,7 +1,5 @@
 version: '3'
 
-# All gradle invocations go through `bash gradlew` (the sh wrapper) so they work
-# uniformly on Linux/macOS (native bash) and Windows-with-Git-Bash.
 
 vars:
   GRADLEW: '{{if eq OS "windows"}}.\\gradlew.bat{{else}}./gradlew{{end}}'
