@@ -6,9 +6,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,9 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,28 +23,15 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+import stirling.software.SPDF.service.misc.TextColorReplacementService;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ReplaceAndInvertColorControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
-
     @Mock private ReplaceAndInvertColorService replaceAndInvertColorService;
-    @Mock private TempFileManager tempFileManager;
+    @Mock private TextColorReplacementService textColorReplacementService;
 
     @InjectMocks private ReplaceAndInvertColorController controller;
 
@@ -57,18 +40,6 @@ class ReplaceAndInvertColorControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -98,15 +69,12 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
+            ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -133,15 +101,12 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
+            ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -166,15 +131,12 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.replaceAndInvertColor(request);
+            ResponseEntity<byte[]> response = controller.replaceAndInvertColor(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -204,18 +166,14 @@ class ReplaceAndInvertColorControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<Resource> expectedResponse = streamingOk(resultBytes);
+            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(resultBytes);
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()))
                     .thenReturn(expectedResponse);
 
             controller.replaceAndInvertColor(request);
 
-            mockedWebResponse.verify(
-                    () -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()));
+            mockedWebResponse.verify(() -> WebResponseUtils.bytesToWebResponse(any(), anyString()));
         }
     }
 }

@@ -245,4 +245,15 @@ eval "set -- $(
         tr '\n' ' '
     )" '"$@"'
 
+# Serialize concurrent Gradle invocations in the same checkout to avoid
+# overlapping writes/deletes under app/core/build when commands are launched in
+# multiple terminals. Set GRADLE_WRAPPER_DISABLE_LOCK=1 to opt out.
+if [ -z "$GRADLE_WRAPPER_DISABLE_LOCK" ] && command -v flock >/dev/null 2>&1
+then
+    LOCK_DIR="$APP_HOME/.gradle"
+    LOCK_FILE="$LOCK_DIR/.wrapper-build.lock"
+    mkdir -p "$LOCK_DIR" >/dev/null 2>&1 || true
+    exec flock "$LOCK_FILE" "$JAVACMD" "$@"
+fi
+
 exec "$JAVACMD" "$@"
