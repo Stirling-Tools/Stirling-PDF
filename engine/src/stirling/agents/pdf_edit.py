@@ -39,7 +39,21 @@ class PdfEditPlanSelection(ApiModel):
     rationale: str | None = None
 
 
-type PdfEditPlanOutput = PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | NeedContentResponse
+class PdfEditNeedContentSelection(ApiModel):
+    """LLM-facing variant of need_content: the model signals it needs document content and gives
+    a reason; the file list is filled in by Python from the authoritative request.files so the
+    LLM can't fabricate file ids.
+    """
+
+    outcome: Literal["need_content"] = "need_content"
+    reason: str
+    max_pages: int | None = None
+    max_characters: int | None = None
+
+
+type PdfEditPlanOutput = (
+    PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | PdfEditNeedContentSelection
+)
 
 
 class PdfEditSelectionAgent:
@@ -52,7 +66,7 @@ class PdfEditSelectionAgent:
         ]
         system_prompt = base_system_prompt
         if allow_need_content:
-            output_types.append(NeedContentResponse)
+            output_types.append(PdfEditNeedContentSelection)
             system_prompt += (
                 " Return need_content when planning a correct answer requires inspecting the actual PDF "
                 "page text (e.g. 'split after every page that says NEW PAGE', "
@@ -183,9 +197,9 @@ class PdfEditAgent:
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
             logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
             return selection
-        if isinstance(selection, NeedContentResponse):
+        if isinstance(selection, PdfEditNeedContentSelection):
             logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
-            return self._fill_need_content_defaults(selection, request)
+            return self._build_need_content_response(selection, request)
         enabled = set(supported_operations)
         unsupported = [op for op in selection.operations if op not in enabled]
         if unsupported:
@@ -310,18 +324,19 @@ class PdfEditAgent:
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
         return ", ".join(f"{op.name} ({op.value})" for op in operations)
 
-    def _fill_need_content_defaults(
+    def _build_need_content_response(
         self,
-        selection: NeedContentResponse,
+        selection: PdfEditNeedContentSelection,
         request: PdfEditRequest,
     ) -> NeedContentResponse:
-        files = selection.files or [
-            NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
-        ]
+        # The file list is filled in here from request.files so the selection LLM never gets to
+        # invent file ids (it only sees file names in the prompt and would slugify them).
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_EDIT,
             reason=selection.reason,
-            files=files,
+            files=[
+                NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
+            ],
             max_pages=selection.max_pages or self.runtime.settings.max_pages,
             max_characters=selection.max_characters or self.runtime.settings.max_characters,
         )

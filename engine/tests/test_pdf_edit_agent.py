@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import pytest
 
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
-from stirling.agents.pdf_edit import PdfEditPlanOutput
+from stirling.agents.pdf_edit import PdfEditNeedContentSelection, PdfEditPlanOutput
 from stirling.contracts import (
     AiFile,
     EditCannotDoResponse,
@@ -193,12 +193,8 @@ async def test_pdf_edit_agent_returns_need_content_without_building_plan(runtime
     parameter_selector = RecordingParameterSelector()
     agent = StubPdfEditAgent(
         runtime,
-        NeedContentResponse(
-            resume_with=SupportedCapability.PDF_EDIT,
+        PdfEditNeedContentSelection(
             reason="Need page text to locate the NEW PAGE markers.",
-            files=[],
-            max_pages=0,
-            max_characters=0,
         ),
         parameter_selector=parameter_selector,
     )
@@ -273,8 +269,8 @@ async def test_pdf_edit_selection_agent_excludes_need_content_from_schema_when_n
     can_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=True)
     cannot_request = PdfEditSelectionAgent(runtime, "base", allow_need_content=False)
 
-    assert NeedContentResponse in _agent_output_types(can_request)
-    assert NeedContentResponse not in _agent_output_types(cannot_request)
+    assert PdfEditNeedContentSelection in _agent_output_types(can_request)
+    assert PdfEditNeedContentSelection not in _agent_output_types(cannot_request)
 
 
 def _agent_output_types(agent: object) -> list[type]:
