@@ -88,11 +88,21 @@ class ToolDiscovery:
             enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
             class_name = _deduplicate(_path_to_class_name(path), used_class)
 
-            defs[class_name] = {
+            entry: dict[str, Any] = {
                 "type": "object",
                 "properties": clean_props,
                 "description": body_schema.get("description"),
             }
+            # Calculate which fields are actually required (many are marked as required,
+            # but have a default set, so they're not really required)
+            required = [
+                name
+                for name in body_schema.get("required") or []
+                if name in clean_props and "default" not in (clean_props[name] or {})
+            ]
+            if required:
+                entry["required"] = required
+            defs[class_name] = entry
             tools.append(ToolSpec(path, enum_name, class_name))
 
         self._inline_component_refs(defs)
@@ -232,6 +242,7 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         field_constraints=True,
         no_alias=True,
         set_default_enum_member=True,
+        strict_nullable=True,
         use_schema_description=True,
         additional_imports=["enum.StrEnum"],
         enable_version_header=False,
