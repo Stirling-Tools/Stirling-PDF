@@ -4,7 +4,7 @@ version: '3'
 # uniformly on Linux/macOS (native bash) and Windows-with-Git-Bash.
 
 vars:
-  GRADLEW: '{{if eq OS "windows"}}.\\gradlew.bat{{else}}bash ./gradlew{{end}}'
+  GRADLEW: '{{if eq OS "windows"}}.\\gradlew.bat{{else}}./gradlew{{end}}'
 
 tasks:
   dev:
