@@ -20,6 +20,7 @@ import {
   loadShareBundleEntries,
   parseContentDispositionFilename,
 } from "@app/services/shareBundleUtils";
+import { getHeaderValue } from "@app/services/httpHeaderUtils";
 
 interface FilesModalContextType {
   isFilesModalOpen: boolean;
@@ -173,16 +174,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         skipAuthRedirect: true,
       } as any,
     );
-    const contentType =
-      (response.headers &&
-        (response.headers["content-type"] ||
-          response.headers["Content-Type"])) ||
-      "";
-    const disposition =
-      (response.headers &&
-        (response.headers["content-disposition"] ||
-          response.headers["Content-Disposition"])) ||
-      "";
+    const contentType = getHeaderValue(response.headers, "content-type");
+    const disposition = getHeaderValue(response.headers, "content-disposition");
     const filename =
       parseContentDispositionFilename(disposition) || "server-file";
     const blob = response.data as Blob;
@@ -199,16 +192,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         skipAuthRedirect: true,
       } as any,
     );
-    const contentType =
-      (response.headers &&
-        (response.headers["content-type"] ||
-          response.headers["Content-Type"])) ||
-      "";
-    const disposition =
-      (response.headers &&
-        (response.headers["content-disposition"] ||
-          response.headers["Content-Disposition"])) ||
-      "";
+    const contentType = getHeaderValue(response.headers, "content-type");
+    const disposition = getHeaderValue(response.headers, "content-disposition");
     const filename =
       parseContentDispositionFilename(disposition) || "shared-file";
     const blob = response.data as Blob;
@@ -241,6 +226,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         // Use custom handler for special cases (like page insertion)
         customHandler(files, insertAfterPage);
       } else {
+        // Snapshot selection before upload; addFiles may replace the current
+        // selection with only newly uploaded files.
+        const previouslySelected = fileCtx.selectors
+          .getSelectedStirlingFileStubs()
+          .map((s) => s.id);
         // 1) Add via standard flow (auto-selects new files)
         await addFiles(files);
         // 2) Merge all requested file IDs (covers already-present files too)
@@ -252,7 +242,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
             .getSelectedStirlingFileStubs()
             .map((s) => s.id);
           const nextSelection = Array.from(
-            new Set([...currentSelected, ...ids]),
+            new Set([...previouslySelected, ...currentSelected, ...ids]),
           );
           actions.setSelectedFiles(nextSelection);
         }

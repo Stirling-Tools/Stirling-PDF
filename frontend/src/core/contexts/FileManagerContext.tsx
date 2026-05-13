@@ -22,6 +22,7 @@ import {
   extractLatestFilesFromBundle,
   parseContentDispositionFilename,
 } from "@app/services/shareBundleUtils";
+import { getHeaderValue } from "@app/services/httpHeaderUtils";
 import { useTranslation } from "react-i18next";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 export { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
@@ -893,16 +894,11 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             skipAuthRedirect: true,
           } as any,
         );
-        const contentType =
-          (response.headers &&
-            (response.headers["content-type"] ||
-              response.headers["Content-Type"])) ||
-          "";
-        const disposition =
-          (response.headers &&
-            (response.headers["content-disposition"] ||
-              response.headers["Content-Disposition"])) ||
-          "";
+        const contentType = getHeaderValue(response.headers, "content-type");
+        const disposition = getHeaderValue(
+          response.headers,
+          "content-disposition",
+        );
         const filename =
           parseContentDispositionFilename(disposition) ||
           file.name ||
