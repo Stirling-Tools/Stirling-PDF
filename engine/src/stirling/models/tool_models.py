@@ -804,9 +804,9 @@ class RedactImageBox(ApiModel):
 
 
 class RedactTextRange(ApiModel):
-    end_string: str | None = Field(
-        "",
-        description="Exclusive end marker - first line after the redacted block, copied verbatim. Omit to redact to the end of the document.",
+    end_string: str = Field(
+        ...,
+        description="Exclusive end marker - first line after the redacted block, copied verbatim. Empty string means redact to the end of the document.",
     )
     start_string: str = Field(..., description="First line of the block to redact, copied verbatim")
 
