@@ -96,7 +96,13 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npx vite",
+    // In CI, serve a pre-built `dist/` via `vite preview` so the heavy tool
+    // pages don't pay vite's on-demand transform cost on first hit (which
+    // blew the 30s navigationTimeout under --workers=3 — see
+    // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
+    command: process.env.CI
+      ? "npx vite preview --port 5173 --strictPort"
+      : "npx vite",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

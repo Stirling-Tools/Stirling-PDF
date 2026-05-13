@@ -22,11 +22,13 @@ import org.springframework.mock.env.MockEnvironment;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import jakarta.servlet.ServletContext;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -42,8 +44,19 @@ class InternalApiClientTest {
     @BeforeEach
     void setUp() {
         lenient().when(servletContext.getContextPath()).thenReturn("");
+        client = newClient();
+    }
+
+    /**
+     * Build a fresh client. Tests that use {@link org.mockito.Mockito#mockConstruction} to
+     * intercept {@link RestTemplate} must call this from inside their {@code mockConstruction}
+     * block, since the client now caches one RestTemplate per instance at construction time.
+     */
+    private InternalApiClient newClient() {
         MockEnvironment environment = new MockEnvironment().withProperty("server.port", "8080");
-        client = new InternalApiClient(servletContext, userService, tempFileManager, environment);
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        return new InternalApiClient(
+                servletContext, userService, tempFileManager, environment, applicationProperties);
     }
 
     @Test
@@ -75,7 +88,10 @@ class InternalApiClientTest {
                                     .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
                         })) {
 
-            ResponseEntity<Resource> response = client.post("/api/v1/general/merge-pdfs", body);
+            // Reconstruct the client so its cached RestTemplate is the mocked one.
+            InternalApiClient mockedClient = newClient();
+            ResponseEntity<Resource> response =
+                    mockedClient.post("/api/v1/general/merge-pdfs", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -83,6 +99,72 @@ class InternalApiClientTest {
             assertNull(captured[0].getContentType(), "Content-Type should not be forced");
         } finally {
             Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Test
+    void postWrapsSocketTimeoutAsInternalApiTimeoutException() {
+        // Simulates the read-timeout case: RestTemplate wraps SocketTimeoutException in
+        // ResourceAccessException when the underlying socket times out. The client must repackage
+        // that into a typed timeout exception that carries the failing endpoint and the configured
+        // read timeout, so the workflow layer can surface a clean "tool didn't respond" message
+        // to the user.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenAnswer(inv -> (RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenThrow(
+                                            new ResourceAccessException(
+                                                    "I/O error on POST request: Read timed out",
+                                                    new java.net.SocketTimeoutException(
+                                                            "Read timed out")));
+                        })) {
+
+            InternalApiClient mockedClient = newClient();
+            InternalApiTimeoutException thrown =
+                    assertThrows(
+                            InternalApiTimeoutException.class,
+                            () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
+
+            assertEquals("/api/v1/general/merge-pdfs", thrown.getEndpointPath());
+            assertNotNull(thrown.getReadTimeout());
+            assertTrue(thrown.getMessage().contains("/api/v1/general/merge-pdfs"));
+        }
+    }
+
+    @Test
+    void postRethrowsNonTimeoutResourceAccessExceptionAsIs() {
+        // ResourceAccessException covers more than just timeouts (e.g. connection refused, DNS
+        // failure). Only SocketTimeoutException-rooted failures are timeouts; everything else
+        // must propagate so the upstream generic handler can label it correctly instead of lying
+        // about a "tool didn't respond" timeout.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenAnswer(inv -> (RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenThrow(
+                                            new ResourceAccessException(
+                                                    "I/O error on POST request: Connection refused",
+                                                    new java.net.ConnectException(
+                                                            "Connection refused")));
+                        })) {
+
+            InternalApiClient mockedClient = newClient();
+            assertThrows(
+                    ResourceAccessException.class,
+                    () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
         }
     }
 
@@ -125,8 +207,10 @@ class InternalApiClientTest {
                                     .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
                         })) {
 
+            // Reconstruct the client so its cached RestTemplate is the mocked one.
+            InternalApiClient mockedClient = newClient();
             ResponseEntity<Resource> response =
-                    client.post("/api/v1/ai/tools/pdf-comment-agent", body);
+                    mockedClient.post("/api/v1/ai/tools/pdf-comment-agent", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());

@@ -3,17 +3,22 @@ import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { truncateCenter } from "@app/utils/textUtils";
 
 interface FileEditorFileNameProps {
   file: StirlingFileStub;
+  maxLength?: number;
 }
 
-const FileEditorFileName = ({ file }: FileEditorFileNameProps) => {
+const FileEditorFileName = ({
+  file,
+  maxLength = 40,
+}: FileEditorFileNameProps) => {
   const { t } = useTranslation();
 
   return (
     <>
-      <PrivateContent>{file.name}</PrivateContent>
+      <PrivateContent>{truncateCenter(file.name, maxLength)}</PrivateContent>
       {!file.localFilePath && (
         <Tooltip label={t("fileNotSavedToDisk", "Not saved to disk")}>
           <span

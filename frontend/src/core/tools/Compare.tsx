@@ -157,31 +157,37 @@ const Compare = (props: BaseToolProps) => {
     }
   }, []);
 
-  // Track previous file count to detect the transition to exactly 2 files.
-  const prevAllIdsLengthRef = useRef<number | null>(null);
-
-  // Auto-fill slots when the file count first reaches 2; respect manual picker changes after that.
+  // Keep slot params in sync with the current workbench/selection state.
+  //
+  // The effect must be idempotent: it can fire repeatedly during an upload
+  // burst (ADD_FILES, SET_SELECTED_FILES, and downstream dispatches all land
+  // in quick succession), and any "did the count transition?" tracking via
+  // a ref races with React's batched re-renders under load. With workers=3
+  // in CI, that race surfaced as a "Maximum update depth exceeded" crash
+  // when the second slot was filled. So the implementation derives the
+  // target params purely from current state and bails when there's nothing
+  // to change.
   useEffect(() => {
     const selectedIds = fileState.ui.selectedFileIds as FileId[];
     const allIds = fileState.files.ids as FileId[];
-    const prevLength = prevAllIdsLengthRef.current;
-    prevAllIdsLengthRef.current = allIds.length;
-
-    if (allIds.length === 2 && prevLength !== 2) {
-      // Transitioned to exactly 2 files — auto-fill both slots.
-      const [firstId, secondId] = allIds as [FileId, FileId];
-      fileActions.setSelectedFiles([firstId, secondId]);
-      base.params.setParameters((prev) => {
-        if (prev.baseFileId === firstId && prev.comparisonFileId === secondId)
-          return prev;
-        return { ...prev, baseFileId: firstId, comparisonFileId: secondId };
-      });
-      return;
-    }
 
     if (selectedIds.length > 2) {
       fileActions.setSelectedFiles(selectedIds.slice(0, 2) as FileId[]);
       return;
+    }
+
+    // When exactly 2 files are loaded but the selection doesn't cover both,
+    // promote the selection so Compare can run. Skips when the selection is
+    // already correct so we don't dispatch a fresh array reference and
+    // retrigger this effect. Covers the upload window where ADD_FILES has
+    // landed but SET_SELECTED_FILES is still in flight.
+    if (allIds.length === 2) {
+      const selectionMatchesAllIds =
+        selectedIds.length === 2 &&
+        allIds.every((id) => selectedIds.includes(id));
+      if (!selectionMatchesAllIds) {
+        fileActions.setSelectedFiles([...allIds] as FileId[]);
+      }
     }
 
     // Sticky slot mapping: preserve the current slot if its file is still selected,

@@ -96,7 +96,7 @@ tasks:
         jlink
         --add-modules {{.JLINK_MODULES}}
         --strip-debug
-        --compress=2
+        --compress=zip-6
         --no-header-files
         --no-man-pages
         --output src-tauri/runtime/jre
@@ -107,3 +107,18 @@ tasks:
     desc: "Remove JLink runtime and bundled JARs"
     cmds:
       - rm -rf src-tauri/libs src-tauri/runtime
+
+  # macOS-only. Replaces jlink:runtime's single-arch JRE with a universal
+  # (arm64 + x86_64) one for the universal Tauri shell. Runs the x86_64
+  # jlink under Rosetta on Apple Silicon, so it is opt-in and not part of
+  # the default desktop:build flow. Requires AARCH64_JAVA_HOME and
+  # X64_JAVA_HOME to point at matching JDK installations with jmods/.
+  jlink:universal-mac:
+    desc: "Create universal (arm64+x86_64) JRE for the macOS Tauri build"
+    deps: [jlink:jar]
+    platforms: [darwin]
+    env:
+      JLINK_MODULES: "{{.JLINK_MODULES}}"
+      OUTPUT_DIR: src-tauri/runtime/jre
+    cmds:
+      - scripts/build-universal-mac-jre.sh

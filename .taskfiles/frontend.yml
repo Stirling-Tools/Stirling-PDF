@@ -284,18 +284,6 @@ tasks:
     cmds:
       - npx vitest --coverage
 
-  test:e2e:
-    desc: "Run E2E tests"
-    deps: [prepare]
-    cmds:
-      - npx playwright test {{.CLI_ARGS}}
-
-  test:e2e:install:
-    desc: "Install E2E test browsers"
-    deps: [install]
-    cmds:
-      - npx playwright install {{.CLI_ARGS}} --with-deps
-
   # ============================================================
   # Code Generation
   # ============================================================

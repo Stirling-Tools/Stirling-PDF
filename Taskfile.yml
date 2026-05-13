@@ -22,6 +22,9 @@ includes:
   desktop:
     taskfile: .taskfiles/desktop.yml
     dir: frontend
+  e2e:
+    taskfile: .taskfiles/e2e.yml
+    dir: .
 
 tasks:
   # ============================================================

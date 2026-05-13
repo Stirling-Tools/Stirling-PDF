@@ -45,6 +45,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     deleteAutomation,
     refreshAutomations,
     copyFromSuggested,
+    importAutomation,
   } = useSavedAutomations();
 
   // Use ref to store the latest reset function to avoid closure issues
@@ -153,6 +154,8 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 );
               }
             }}
+            onImportAutomation={importAutomation}
+            onImportError={(message) => onError?.(message)}
             toolRegistry={toolRegistry}
           />
         );

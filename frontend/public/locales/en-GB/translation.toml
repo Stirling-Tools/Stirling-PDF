@@ -1791,26 +1791,14 @@ bullet3 = "Keeps the original name if no suitable title is found"
 text = "Automatically finds the title from your PDF content and uses it as the filename."
 title = "Smart Renaming"
 
-[pdfCommentAgent]
-submit = "Generate comments"
-prompt.label = "What should the AI comment on?"
-prompt.placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
-
-[pdfCommentAgent.settings]
-title = "Comment instructions"
-
-[pdfCommentAgent.results]
-title = "Commented PDF"
-
-[pdfCommentAgent.error]
-failed = "Failed to generate comments"
-emptyPrompt = "Please describe what the AI should comment on"
-tooLong = "Prompt is too long (maximum {{max}} characters)"
-
 [automate]
 copyToSaved = "Copy to Saved"
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
+import = "Import"
+importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importSuccess = "Imported automation: {{name}}"
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
 title = "Automate"
@@ -1826,6 +1814,7 @@ title = "Configure {{toolName}}"
 [automate.creation]
 createTitle = "Create Automation"
 editTitle = "Edit Automation"
+export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
 intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
 save = "Save Automation"
@@ -1856,8 +1845,27 @@ confirm = "Go Back"
 message = "You have unsaved changes. Are you sure you want to go back? All changes will be lost."
 title = "Unsaved Changes"
 
+[automate.entryMenu]
+label = "Open menu for {{title}}"
+
 [automate.files]
 placeholder = "Select files to process with this automation"
+
+[automate.importModal]
+cancel = "Cancel"
+confirm = "Import"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Drop JSON here or click to choose a file"
+dropSubhint = "Both Automate and Folder Scanning configs are accepted"
+dropzoneAriaLabel = "Drop an automation JSON file here"
+intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
+opCount = "{{count}} operation(s)"
+parseError = "Could not parse: {{message}}"
+pasteLabel = "Or paste JSON"
+pastePlaceholder = "Paste your automation JSON here…"
+title = "Import automation"
+unresolved = "Unmapped: {{ops}}"
 
 [automate.run]
 title = "Run Automation"
@@ -4068,11 +4076,6 @@ desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
 
-[home.pdfCommentAgent]
-desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
-tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
-title = "Add AI comments"
-
 [home.autoSizeSplitPDF]
 desc = "Automatically split PDFs by file size or page count"
 tags = "auto,split,size"
@@ -4211,6 +4214,11 @@ title = "Overlay PDFs"
 desc = "Merge multiple pages of a PDF document into a single page"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "Multi-Page Layout"
+
+[home.pdfCommentAgent]
+desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
+tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
+title = "Add AI comments"
 
 [home.pdfOrganiser]
 desc = "Remove/Rearrange pages in any order"
@@ -5287,6 +5295,24 @@ selectMonthly = "Select Monthly"
 selectYearly = "Select Yearly"
 title = "Choose Your Billing Period"
 totalForSeats = "Total ({{count}} seats)"
+
+[pdfCommentAgent]
+submit = "Generate comments"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Please describe what the AI should comment on"
+failed = "Failed to generate comments"
+tooLong = "Prompt is too long (maximum {{max}} characters)"
+
+[pdfCommentAgent.prompt]
+label = "What should the AI comment on?"
+placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
+
+[pdfCommentAgent.results]
+title = "Commented PDF"
+
+[pdfCommentAgent.settings]
+title = "Comment instructions"
 
 [pdfOrganiser]
 header = "PDF Page Organiser"

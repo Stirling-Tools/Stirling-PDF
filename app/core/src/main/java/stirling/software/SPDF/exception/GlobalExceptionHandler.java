@@ -682,7 +682,7 @@ public class GlobalExceptionHandler {
      *
      * @param ex the MaxUploadSizeExceededException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 413 PAYLOAD_TOO_LARGE
+     * @return ProblemDetail with HTTP 413 CONTENT_TOO_LARGE
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ProblemDetail> handleMaxUploadSize(
@@ -706,7 +706,7 @@ public class GlobalExceptionHandler {
                 getLocalizedMessage("error.fileTooLarge.title", ErrorTitles.FILE_TOO_LARGE_DEFAULT);
 
         ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.PAYLOAD_TOO_LARGE, message, request);
+                createBaseProblemDetail(HttpStatus.CONTENT_TOO_LARGE, message, request);
         problemDetail.setType(URI.create(ErrorTypes.FILE_TOO_LARGE));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -724,7 +724,7 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty(
                 "actionRequired", "Reduce the file size to be within the upload limit.");
 
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .contentType(PROBLEM_JSON)
                 .body(problemDetail);
     }

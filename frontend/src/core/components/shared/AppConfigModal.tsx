@@ -164,6 +164,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       overlayProps={{ opacity: 0.35, blur: 2 }}
       padding={0}
       fullScreen={isMobile}
+      styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
     >
       <div className="modal-container">
         {/* Left navigation */}

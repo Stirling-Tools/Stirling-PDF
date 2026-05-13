@@ -35,13 +35,8 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
     switch (osType) {
       case "windows":
         return { label: "Windows", url: DOWNLOAD_URLS.WINDOWS };
-      case "mac-apple":
-        return {
-          label: "Mac (Apple Silicon)",
-          url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
-        };
-      case "mac-intel":
-        return { label: "Mac (Intel)", url: DOWNLOAD_URLS.MAC_INTEL };
+      case "mac":
+        return { label: "Mac", url: DOWNLOAD_URLS.MAC };
       case "linux-x64":
       case "linux-arm64":
         return { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS };
@@ -54,16 +49,7 @@ export function useOnboardingDownload(): UseOnboardingDownloadResult {
     () =>
       [
         { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },
-        {
-          label: "Mac (Apple Silicon)",
-          url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
-          value: "mac-apple",
-        },
-        {
-          label: "Mac (Intel)",
-          url: DOWNLOAD_URLS.MAC_INTEL,
-          value: "mac-intel",
-        },
+        { label: "Mac", url: DOWNLOAD_URLS.MAC, value: "mac" },
         { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS, value: "linux" },
       ].filter((opt) => opt.url),
     [],

@@ -1,0 +1,204 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install Playwright browsers"
+    dir: frontend
+    deps: [ ':frontend:install' ]
+    cmds:
+      - npx playwright install {{.CLI_ARGS}} --with-deps
+
+  stubbed:
+    desc: "Run stubbed E2E tests"
+    dir: frontend
+    deps: [ ':frontend:prepare' ]
+    cmds:
+      - npx playwright test --project=stubbed {{.CLI_ARGS}}
+
+  live:
+    desc: "Run live E2E tests"
+    summary: |
+      Auto-spawns a Spring Boot backend with isolated state under
+      .test-state/playwright/ (purged on every run) so the suite doesn't
+      touch your local DB, settings.yml, backups or customFiles. The
+      backend is stopped automatically when the runner exits.
+
+      Pass extra Playwright flags via -- :
+        task e2e:live -- --headed --grep merge
+    deps:
+      - live:backend
+      - live:runner
+
+  live:backend:
+    internal: true
+    ignore_error: true
+    vars:
+      BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
+    env:
+      STIRLING_BASE_PATH: '{{.BASE_DIR}}'
+      # Suppress the analytics opt-in modal that fires on first admin login.
+      # It renders a Mantine overlay that intercepts pointer events and blocks
+      # FirstLoginSlide from rendering, so the bootstrap spec times out waiting
+      # for the password-change prompt.
+      SYSTEM_ENABLEANALYTICS: "false"
+      # NOTE: SECURITY_INITIALLOGIN_USERNAME/PASSWORD are intentionally NOT set.
+      # The live-setup project's bootstrap spec performs the real first-login
+      # flow against the backend's default admin/stirling user, exercising the
+      # forced-password-change UI and leaving the DB at admin/adminadmin for
+      # the rest of the live suite. This is both real coverage of the first-
+      # login flow and a stronger seed than env-var-driven user creation.
+    cmds:
+      # Wrapped in `bash -c` because Task's embedded shell (mvdan/sh) doesn't
+      # support `&` + `$!` + `wait` reliably (gradle was never actually
+      # backgrounded, so `$!` recorded a stale PID and the runner saw an
+      # immediate "backend died"). Real bash backgrounds gradle properly and
+      # gives us a stable PID to clean up.
+      - |
+        bash -c '
+          set -e
+          rm -rf "{{.BASE_DIR}}"
+          mkdir -p "{{.BASE_DIR}}"
+          # Background gradle and record its PID so the runner can clean up
+          # the exact process tree (wrapper + forked Spring Boot JVM) without
+          # resorting to fuzzy `pkill -f` patterns. `wait` keeps this script
+          # alive for the lifetime of gradle so Task'"'"'s parallel deps stay
+          # synchronised.
+          bash gradlew :stirling-pdf:bootRun > "{{.BASE_DIR}}/backend.log" 2>&1 &
+          GRADLE_PID=$!
+          echo $GRADLE_PID > "{{.BASE_DIR}}/backend.pid"
+          wait $GRADLE_PID
+        '
+
+  live:runner:
+    internal: true
+    deps: [ ':frontend:prepare' ]
+    dir: frontend
+    vars:
+      BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
+    cmds:
+      # Wrapped in `bash -c` because Task's embedded shell (mvdan/sh) only
+      # supports `EXIT`/`ERR` in `trap`, not `INT`/`TERM`. CLI_ARGS are
+      # passed positionally so quoted args like --grep "foo bar" survive.
+      - |
+        bash -c '
+          set +e
+          # bootRun forks a separate Spring Boot JVM as a child of the gradle
+          # wrapper; killing only the wrapper leaves that JVM orphaned holding
+          # :8080. Walk the recorded PID'"'"'s process tree via pgrep so we kill
+          # every descendant, then lsof as a last-resort backstop.
+          kill_tree() {
+            local pid=$1
+            for child in $(pgrep -P "$pid" 2>/dev/null); do
+              kill_tree "$child"
+            done
+            kill "$pid" 2>/dev/null || true
+          }
+          cleanup() {
+            if [ -f "{{.BASE_DIR}}/backend.pid" ]; then
+              echo "Stopping backend..."
+              kill_tree "$(cat "{{.BASE_DIR}}/backend.pid")"
+              sleep 1
+              lsof -ti:8080 2>/dev/null | xargs kill 2>/dev/null || true
+              echo "Backend stopped"
+            fi
+          }
+          # Trap so cleanup runs on every exit path: tests pass, tests fail,
+          # backend never starts, user Ctrl-Cs. Without this the gradle JVM
+          # is left orphaned holding :8080 whenever the wait loop times out.
+          trap cleanup EXIT INT TERM
+
+          echo "Waiting for backend on :8080 (up to 10min; first compile can be slow)..."
+          WAITED=0
+          while [ $WAITED -lt 600 ]; do
+            if curl -sf http://localhost:8080/api/v1/info/status 2>/dev/null | grep -q UP; then
+              echo "Backend ready, starting Playwright"
+              break
+            fi
+            # Bail early if the backend already died: no point waiting 10min.
+            if [ -f "{{.BASE_DIR}}/backend.pid" ]; then
+              BACKEND_PID=$(cat "{{.BASE_DIR}}/backend.pid")
+              if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+                echo "Backend process exited before becoming ready; last 100 log lines:"
+                tail -100 "{{.BASE_DIR}}/backend.log" 2>/dev/null || true
+                exit 1
+              fi
+            fi
+            sleep 2
+            WAITED=$((WAITED + 2))
+          done
+          if [ $WAITED -ge 600 ]; then
+            echo "Backend did not become ready within 10min, aborting"
+            exit 1
+          fi
+
+          npx playwright test --project=live "$@"
+        ' bash {{.CLI_ARGS}}
+
+  enterprise:
+    desc: "Run enterprise E2E tests"
+    summary: |
+      Requires an already-running keycloak compose stack on :8080. Bring one
+      up first with:
+        task e2e:oauth:up
+        task e2e:saml:up
+    dir: frontend
+    deps: [ ':frontend:prepare' ]
+    cmds:
+      - npx playwright test --project=enterprise {{.CLI_ARGS}}
+
+  cross-browser:
+    desc: "Run stubbed E2E tests on Chromium, Firefox, and WebKit"
+    dir: frontend
+    deps: [ ':frontend:prepare' ]
+    cmds:
+      - npx playwright test --project=stubbed --project=stubbed-firefox --project=stubbed-webkit {{.CLI_ARGS}}
+
+  check:
+    desc: "Run all E2E tests not requiring Docker"
+    cmds:
+      - task: stubbed
+      - task: live
+
+  check:all:
+    desc: "Run all E2E tests"
+    summary: |
+      Includes the enterprise project, which requires a keycloak compose
+      stack on :8080. Bring one up first with:
+        task e2e:oauth:up
+        task e2e:saml:up
+    cmds:
+      - task: stubbed
+      - task: live
+      - task: enterprise
+
+  oauth:up:
+    desc: "Start the OAuth keycloak test environment"
+    summary: |
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task e2e:oauth:up LICENSE_KEY=abc123
+      Pass extra flags via -- :
+        task e2e:oauth:up -- --auto --nobuild
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-oauth-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  oauth:down:
+    desc: "Stop the OAuth keycloak test environment"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-oauth.yml down -v
+
+  saml:up:
+    desc: "Start the SAML keycloak test environment"
+    summary: |
+      Set LICENSE_KEY=<KEY> to skip the interactive license prompt:
+        task e2e:saml:up LICENSE_KEY=abc123
+      Pass extra flags via -- :
+        task e2e:saml:up -- --auto --with-storage --nobuild --language sv-SE
+    ignore_error: true
+    cmds:
+      - bash testing/compose/start-saml-test.sh {{if .LICENSE_KEY}}--license-key "{{.LICENSE_KEY}}"{{end}} {{.CLI_ARGS}}
+
+  saml:down:
+    desc: "Stop the SAML keycloak test environment"
+    cmds:
+      - docker compose -f testing/compose/docker-compose-keycloak-saml.yml down -v

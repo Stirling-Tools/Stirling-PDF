@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -202,7 +203,15 @@ public class ProcessExecutor {
         boolean useSemaphore = true;
         List<String> commandToRun = command;
         if (shouldUseUnoServerPool(command)) {
-            unoLease = unoServerPool.acquireEndpoint();
+            try {
+                unoLease = unoServerPool.acquireEndpoint(timeoutDuration, TimeUnit.MINUTES);
+            } catch (TimeoutException e) {
+                throw new IOException(
+                        "All unoserver endpoints busy; request timed out after "
+                                + timeoutDuration
+                                + " minutes",
+                        e);
+            }
             commandToRun = applyUnoServerEndpoint(command, unoLease.getEndpoint());
             useSemaphore = false;
         }

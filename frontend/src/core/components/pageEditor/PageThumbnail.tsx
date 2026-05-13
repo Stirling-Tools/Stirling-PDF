@@ -88,7 +88,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   onTogglePage,
   onExecuteCommand,
   onSetStatus,
-  onSetMovingPage,
   onDeletePage,
   createRotateCommand,
   createSplitCommand,
@@ -328,10 +327,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         label: "Move Left",
         onClick: (e) => {
           e.stopPropagation();
-          if (pageIndex > 0 && !movingPage && !isAnimating) {
-            onSetMovingPage(page.pageNumber);
+          if (pageIndex > 0 && !isAnimating) {
             onReorderPages(page.pageNumber, pageIndex - 1);
-            setTimeout(() => onSetMovingPage(null), 650);
             onSetStatus(`Moved page ${page.pageNumber} left`);
           }
         },
@@ -343,13 +340,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         label: "Move Right",
         onClick: (e) => {
           e.stopPropagation();
-          if (pageIndex < totalPages - 1 && !movingPage && !isAnimating) {
-            onSetMovingPage(page.pageNumber);
-            // ReorderPagesCommand expects target index relative to the original array.
-            // When moving toward the right (higher index), provide desiredIndex + 1
-            // so the command's internal adjustment (targetIndex - 1) lands correctly.
+          if (pageIndex < totalPages - 1 && !isAnimating) {
+            // +2 compensates for ReorderPagesCommand's internal targetIndex - 1 adjustment.
             onReorderPages(page.pageNumber, pageIndex + 2);
-            setTimeout(() => onSetMovingPage(null), 650);
             onSetStatus(`Moved page ${page.pageNumber} right`);
           }
         },
@@ -391,7 +384,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     [
       pageIndex,
       totalPages,
-      movingPage,
       isAnimating,
       page.pageNumber,
       handleRotateLeft,
@@ -400,7 +392,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       handleSplit,
       handleInsertFileAfter,
       onReorderPages,
-      onSetMovingPage,
       onSetStatus,
     ],
   );

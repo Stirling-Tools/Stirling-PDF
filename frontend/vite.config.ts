@@ -49,6 +49,21 @@ export default defineConfig(async ({ mode }) => {
     xfwd: true,
   };
 
+  // Shared between `vite` (dev) and `vite preview` (production-build serve, used
+  // in CI/E2E) so the live test suite still resolves /api → :8080.
+  const backendProxyConfig =
+    effectiveMode === "desktop"
+      ? undefined
+      : {
+          "/api": backendProxy,
+          "/oauth2": backendProxy,
+          "/saml2": backendProxy,
+          "/login/oauth2": backendProxy,
+          "/login/saml2": backendProxy,
+          "/swagger-ui": backendProxy,
+          "/v1/api-docs": backendProxy,
+        };
+
   return {
     plugins: [
       react(),
@@ -107,19 +122,25 @@ export default defineConfig(async ({ mode }) => {
         ignored: ["**/src-tauri/**"],
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
-      proxy:
-        effectiveMode === "desktop"
-          ? undefined
-          : {
-              "/api": backendProxy,
-              "/oauth2": backendProxy,
-              "/saml2": backendProxy,
-              "/login/oauth2": backendProxy,
-              "/login/saml2": backendProxy,
-              "/swagger-ui": backendProxy,
-              "/v1/api-docs": backendProxy,
-            },
+      proxy: backendProxyConfig,
     },
-    base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
+    preview: {
+      host: true,
+      port: 5173,
+      strictPort: true,
+      proxy: backendProxyConfig,
+    },
+    // base: "./" produces relative asset URLs which work when dist/ is served
+    // at any path (e.g. Spring Boot bundling the frontend at /). But under
+    // `vite preview` for deep SPA routes (e.g. /workflow/sign/<token>), the
+    // browser resolves ./assets/X.js relative to the current path → 404, then
+    // SPA fallback returns index.html as text/html and React never mounts.
+    // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
+    // an absolute base so deep-route asset paths resolve to /assets/...
+    base: env.RUN_SUBPATH
+      ? `/${env.RUN_SUBPATH}`
+      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
+        ? "/"
+        : "./",
   };
 });

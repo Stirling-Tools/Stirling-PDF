@@ -232,7 +232,7 @@ export class ReorderPagesCommand extends DOMCommand {
     );
     if (sourceIndex === -1) return;
 
-    const newPages = [...currentDoc.pages];
+    let reorderedPages: PDFPage[];
 
     if (
       this.selectedPages &&
@@ -246,19 +246,15 @@ export class ReorderPagesCommand extends DOMCommand {
         )
         .filter((page) => page !== undefined) as PDFPage[];
 
-      const remainingPages = newPages.filter(
+      const remainingPages = currentDoc.pages.filter(
         (page) => !this.selectedPages!.includes(page.pageNumber),
       );
       remainingPages.splice(this.targetIndex, 0, ...selectedPageObjects);
-
-      remainingPages.forEach((page, index) => {
-        page.pageNumber = index + 1;
-      });
-
-      newPages.splice(0, newPages.length, ...remainingPages);
+      reorderedPages = remainingPages;
     } else {
       // Single page reorder
-      const [movedPage] = newPages.splice(sourceIndex, 1);
+      const working = [...currentDoc.pages];
+      const [movedPage] = working.splice(sourceIndex, 1);
 
       // Adjust target index if moving forward (after removal, indices shift)
       const adjustedTargetIndex =
@@ -266,12 +262,14 @@ export class ReorderPagesCommand extends DOMCommand {
           ? this.targetIndex - 1
           : this.targetIndex;
 
-      newPages.splice(adjustedTargetIndex, 0, movedPage);
-
-      newPages.forEach((page, index) => {
-        page.pageNumber = index + 1;
-      });
+      working.splice(adjustedTargetIndex, 0, movedPage);
+      reorderedPages = working;
     }
+
+    const newPages = reorderedPages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+    }));
 
     const reorderedDocument: PDFDocument = {
       ...currentDoc,

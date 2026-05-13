@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -323,10 +324,12 @@ public class AiWorkflowService {
                             result.files(),
                             inputFileNames(filesById),
                             result.report()));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
+            return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue("Tool execution failed: " + e.getMessage()));
+            return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
         }
     }
 
@@ -414,6 +417,10 @@ public class AiWorkflowService {
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
                             summary, currentFiles, inputFileNames(filesById), lastReport));
+        } catch (InternalApiTimeoutException e) {
+            log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
+            return new WorkflowState.Terminal(
+                    cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -423,6 +430,20 @@ public class AiWorkflowService {
 
     private static List<String> inputFileNames(Map<String, MultipartFile> filesById) {
         return filesById.values().stream().map(MultipartFile::getOriginalFilename).toList();
+    }
+
+    private static String toolTimeoutMessage(String endpointPath, InternalApiTimeoutException e) {
+        return String.format(
+                "The %s tool did not respond within %d seconds and was aborted. The underlying"
+                        + " operation may be hung; try again, run on a smaller file, or use a"
+                        + " different approach.",
+                endpointPath, e.getReadTimeout().toSeconds());
+    }
+
+    private static String toolFailureMessage(String endpointPath, Throwable cause) {
+        String reason =
+                cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        return String.format("The %s tool failed: %s", endpointPath, reason);
     }
 
     /**
@@ -477,8 +498,15 @@ public class AiWorkflowService {
         }
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
-                for (Object item : list) {
-                    body.add(entry.getKey(), item);
+                if (containsStructuredElements(list)) {
+                    // Endpoints binding lists of structured objects (e.g. /security/redact's
+                    // redactions, /general/edit-text's edits) parse a single JSON string field via
+                    // a property editor. Pre-serialize the whole list so binding succeeds.
+                    body.add(entry.getKey(), objectMapper.writeValueAsString(list));
+                } else {
+                    for (Object item : list) {
+                        body.add(entry.getKey(), item);
+                    }
                 }
             } else {
                 body.add(entry.getKey(), entry.getValue());
@@ -527,6 +555,15 @@ public class AiWorkflowService {
                     e.getMessage());
             return null;
         }
+    }
+
+    private static boolean containsStructuredElements(List<?> list) {
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> || item instanceof List<?>) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesById) throws IOException {

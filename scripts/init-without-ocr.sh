@@ -255,23 +255,49 @@ get_unoserver_count() {
   read_setting_value "libreOfficeSessionLimit"
 }
 
+# Mirror libreOfficetimeoutMinutes so Java and unoserver agree.
+get_unoserver_conversion_timeout_seconds() {
+  local minutes=""
+  if [ -n "${PROCESS_EXECUTOR_TIMEOUT_MINUTES_LIBRE_OFFICETIMEOUT_MINUTES:-}" ]; then
+    minutes="$PROCESS_EXECUTOR_TIMEOUT_MINUTES_LIBRE_OFFICETIMEOUT_MINUTES"
+  elif [ -n "${UNO_SERVER_CONVERSION_TIMEOUT_MINUTES:-}" ]; then
+    minutes="$UNO_SERVER_CONVERSION_TIMEOUT_MINUTES"
+  else
+    minutes="$(read_setting_value "libreOfficetimeoutMinutes")"
+  fi
+  case "$minutes" in
+    ''|*[!0-9]*) minutes=30 ;;
+  esac
+  if [ "$minutes" -le 0 ]; then
+    minutes=30
+  fi
+  echo $((minutes * 60))
+}
+
 start_unoserver_instance() {
   local port=$1
   local uno_port=$2
-  # Suppress repetitive POST /RPC2 access logs from health checks
+  local conversion_timeout
+  conversion_timeout="$(get_unoserver_conversion_timeout_seconds)"
+  # Per-instance profile dir avoids LibreOffice lock-file contention.
+  local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
+  run_as_runtime_user mkdir -p "$profile_dir"
+  # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
   run_as_runtime_user "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
+    --user-installation "$profile_dir" \
+    --conversion-timeout "$conversion_timeout" \
     2> >(grep --line-buffered -v "POST /RPC2" >&2) \
     &
   LAST_UNOSERVER_PID=$!
 }
 
 start_unoserver_watchdog() {
-  local interval=${UNO_SERVER_HEALTH_INTERVAL:-120}
+  local interval=${UNO_SERVER_HEALTH_INTERVAL:-30}
   case "$interval" in
-    ''|*[!0-9]*) interval=120 ;;
+    ''|*[!0-9]*) interval=30 ;;
   esac
   (
     while true; do

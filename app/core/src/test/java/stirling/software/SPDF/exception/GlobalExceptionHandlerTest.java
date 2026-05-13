@@ -177,14 +177,14 @@ class GlobalExceptionHandlerTest {
     void handleMaxUploadSize_returns_413() {
         MaxUploadSizeExceededException ex = new MaxUploadSizeExceededException(10485760);
         ResponseEntity<ProblemDetail> resp = handler.handleMaxUploadSize(ex, request);
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, resp.getStatusCode());
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, resp.getStatusCode());
     }
 
     @Test
     void handleMaxUploadSize_unknown_limit() {
         MaxUploadSizeExceededException ex = new MaxUploadSizeExceededException(-1);
         ResponseEntity<ProblemDetail> resp = handler.handleMaxUploadSize(ex, request);
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, resp.getStatusCode());
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, resp.getStatusCode());
         assertNull(resp.getBody().getProperties().get("maxSizeBytes"));
     }
 

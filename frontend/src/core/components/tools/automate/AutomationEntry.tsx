@@ -6,6 +6,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
@@ -32,8 +33,12 @@ interface AutomationEntryProps {
   onDelete?: () => void;
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
-  /** Export handler (for folder scanning) */
-  onExport?: () => void;
+  /** Export handler — folder scanning JSON */
+  onExportFolderScan?: () => void;
+  /** Export handler — native Automate JSON (renders as just "Export") */
+  onExportAutomation?: () => void;
+  /** Import handler — opens the import modal (used on "Create New" entry) */
+  onImport?: () => void;
   /** Tool registry to resolve operation names */
   toolRegistry?: Partial<ToolRegistry>;
 }
@@ -49,7 +54,9 @@ export default function AutomationEntry({
   onEdit,
   onDelete,
   onCopy,
-  onExport,
+  onExportFolderScan,
+  onExportAutomation,
+  onImport,
   toolRegistry,
 }: AutomationEntryProps) {
   const { t } = useTranslation();
@@ -211,6 +218,11 @@ export default function AutomationEntry({
               variant="subtle"
               c="dimmed"
               size="md"
+              aria-label={t(
+                "automate.entryMenu.label",
+                "Open menu for {{title}}",
+                { title: title || operations.join(" → ") },
+              )}
               onClick={(e) => e.stopPropagation()}
               style={{
                 position: "absolute",
@@ -228,6 +240,17 @@ export default function AutomationEntry({
           </Menu.Target>
 
           <Menu.Dropdown>
+            {onImport && (
+              <Menu.Item
+                leftSection={<UploadFileIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onImport();
+                }}
+              >
+                {t("automate.import", "Import")}
+              </Menu.Item>
+            )}
             {onCopy && (
               <Menu.Item
                 leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
@@ -250,12 +273,23 @@ export default function AutomationEntry({
                 {t("edit", "Edit")}
               </Menu.Item>
             )}
-            {onExport && (
+            {onExportAutomation && (
               <Menu.Item
                 leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onExport();
+                  onExportAutomation();
+                }}
+              >
+                {t("automate.export", "Export")}
+              </Menu.Item>
+            )}
+            {onExportFolderScan && (
+              <Menu.Item
+                leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExportFolderScan();
                 }}
               >
                 {t(

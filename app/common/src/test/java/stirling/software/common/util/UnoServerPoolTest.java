@@ -9,6 +9,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -171,6 +172,70 @@ public class UnoServerPoolTest {
         }
 
         assertEquals(port1, port2, "Should reuse the same endpoint after release");
+    }
+
+    @Test
+    void testAcquireWithTimeoutFailsFast() throws InterruptedException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                createEndpoints(1);
+        UnoServerPool pool = new UnoServerPool(endpoints);
+
+        UnoServerPool.UnoServerLease held = pool.acquireEndpoint();
+
+        long start = System.nanoTime();
+        assertThrows(
+                TimeoutException.class,
+                () -> pool.acquireEndpoint(100, TimeUnit.MILLISECONDS),
+                "Should time out when no endpoint available");
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue(
+                elapsedMs >= 100 && elapsedMs < 1000,
+                "Should fail-fast after roughly the timeout, got " + elapsedMs + "ms");
+
+        held.close();
+    }
+
+    @Test
+    void testAcquireWithTimeoutSucceedsWhenAvailable()
+            throws InterruptedException, TimeoutException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                createEndpoints(1);
+        UnoServerPool pool = new UnoServerPool(endpoints);
+
+        try (UnoServerPool.UnoServerLease lease = pool.acquireEndpoint(1, TimeUnit.SECONDS)) {
+            assertNotNull(lease);
+            assertEquals(2003, lease.getEndpoint().getPort());
+        }
+    }
+
+    @Test
+    void testAcquireWithZeroTimeoutBlocksUnbounded() throws InterruptedException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
+                createEndpoints(1);
+        UnoServerPool pool = new UnoServerPool(endpoints);
+        UnoServerPool.UnoServerLease held = pool.acquireEndpoint();
+
+        AtomicInteger acquired = new AtomicInteger(0);
+        Thread t =
+                Thread.ofVirtual()
+                        .start(
+                                () -> {
+                                    try {
+                                        UnoServerPool.UnoServerLease lease =
+                                                pool.acquireEndpoint(0, TimeUnit.MILLISECONDS);
+                                        acquired.incrementAndGet();
+                                        lease.close();
+                                    } catch (Exception e) {
+                                        fail("unexpected: " + e);
+                                    }
+                                });
+
+        Thread.sleep(150);
+        assertEquals(0, acquired.get(), "Should still be blocked");
+        held.close();
+        t.join(1000);
+        assertEquals(1, acquired.get(), "Should acquire after release");
     }
 
     @Test
