@@ -1081,17 +1081,17 @@ class VectorToPdfParams(ApiModel):
 class RedactExecuteParams(ApiModel):
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to a flattened image")
     custom_padding: float | None = Field(None, description="Extra padding (pts) around each redaction box")
-    image_boxes: list[RedactImageBox] = Field(..., description="Images to redact by bounding box")
+    image_boxes: list[RedactImageBox] = Field([], description="Images to redact by bounding box", validate_default=True)
     image_pages: list[int] = Field(
-        ..., description="1-based page numbers to scan for images when redactAllImages is true"
+        [], description="1-based page numbers to scan for images when redactAllImages is true"
     )
-    page_numbers: list[int] = Field(..., description="1-based page numbers to redact entirely")
+    page_numbers: list[int] = Field([], description="1-based page numbers to redact entirely")
     redact_all_images: bool = Field(False, description="Redact every image")
     redact_color: str = Field("#000000", description="Hex colour for the redaction fill")
-    regex_patterns: list[str] = Field(..., description="Regex patterns to redact")
+    regex_patterns: list[str] = Field([], description="Regex patterns to redact")
     strategy: Strategy | None = Field(None, description="Execution strategy hint for the redaction pipeline")
-    text_ranges: list[RedactTextRange] = Field(..., description="Multi-line sections to redact")
-    texts_to_redact: list[str] = Field(..., description="Single-line values to redact")
+    text_ranges: list[RedactTextRange] = Field([], description="Multi-line sections to redact", validate_default=True)
+    texts_to_redact: list[str] = Field([], description="Single-line values to redact")
 
 
 class RedactParams(ApiModel):

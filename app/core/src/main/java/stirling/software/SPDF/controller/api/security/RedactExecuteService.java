@@ -47,7 +47,7 @@ class RedactExecuteService {
                 request.getTextRanges() != null ? request.getTextRanges() : List.of();
         List<RedactImageBox> imageBoxes =
                 request.getImageBoxes() != null ? request.getImageBoxes() : List.of();
-        boolean hasRedactAllImages = Boolean.TRUE.equals(request.getRedactAllImages());
+        boolean hasRedactAllImages = request.isRedactAllImages();
 
         boolean hasTexts = exactTerms.length > 0;
         boolean hasRegex = regexTerms.length > 0;
@@ -69,8 +69,7 @@ class RedactExecuteService {
                 RedactExecuteRequest.RedactionStrategy.OVERLAY_ONLY.equals(request.getStrategy());
         boolean imageFinalize =
                 RedactExecuteRequest.RedactionStrategy.IMAGE_FINALIZE.equals(request.getStrategy());
-        boolean convertToImage =
-                imageFinalize || Boolean.TRUE.equals(request.getConvertPDFToImage());
+        boolean convertToImage = imageFinalize || request.isConvertPDFToImage();
 
         log.info(
                 "[redact/execute] strategy={} exactTerms={} regexTerms={} hasPages={} imageFinalize={}",
