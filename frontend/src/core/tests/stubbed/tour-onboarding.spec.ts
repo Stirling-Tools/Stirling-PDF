@@ -181,8 +181,11 @@ test.describe("15.6 Tour selectors — config modal", () => {
 // the sections are not registered.
 // ---------------------------------------------------------------------------
 test.describe("15.7 Tour selectors — admin modal nav items", () => {
+  // enableLogin:true makes Landing require a session — seed a JWT so the
+  // dashboard renders instead of redirecting to /login.
   test.use({
     stubOptions: { enableLogin: true, isAdmin: true },
+    seedJwt: true,
   });
 
   const adminNavSections = [

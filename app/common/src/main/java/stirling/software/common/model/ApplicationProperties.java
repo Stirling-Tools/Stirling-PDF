@@ -76,6 +76,7 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private InternalApi internalApi = new InternalApi();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -244,6 +245,19 @@ public class ApplicationProperties {
          * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
          */
         private int longRunningTimeoutSeconds = 600;
+    }
+
+    /**
+     * HTTP timeouts for loopback calls to internal Stirling API endpoints, used by the AI workflow
+     * executor and the pipeline processor. A bounded read timeout prevents a hung tool (e.g. an
+     * infinite loop in a PDF processing service) from stalling the entire chat workflow forever.
+     * Tools that legitimately need longer than the read timeout should be invoked through the async
+     * job executor instead of synchronously.
+     */
+    @Data
+    public static class InternalApi {
+        private int connectTimeoutSeconds = 10;
+        private int readTimeoutSeconds = 300;
     }
 
     @Data

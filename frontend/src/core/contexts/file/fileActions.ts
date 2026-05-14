@@ -789,16 +789,17 @@ export async function addStirlingFileStubs(
       });
     }
 
-    const existingQuickKeys = buildQuickKeySet(stateRef.current.files.byId);
     const loadedFiles: StirlingFile[] = [];
     let firstFileDispatched = false;
 
     // Process and dispatch files one by one for progressive UI updates
     for (const stub of stirlingFileStubs) {
-      // Check for duplicates using quickKey
-      if (existingQuickKeys.has(stub.quickKey || "")) {
+      // Dedup by stable fileId. Two distinct files in history can share
+      // name|size|lastModified (and therefore quickKey), so quickKey dedup
+      // here would silently drop a legitimately different file.
+      if (stateRef.current.files.byId[stub.id]) {
         if (DEBUG)
-          console.log(`📄 Skipping duplicate StirlingFileStub: ${stub.name}`);
+          console.log(`📄 Skipping already-loaded StirlingFileStub: ${stub.name}`);
         continue;
       }
 
@@ -809,8 +810,6 @@ export async function addStirlingFileStubs(
       if (options.insertAfterPageId !== undefined) {
         record.insertAfterPageId = options.insertAfterPageId;
       }
-
-      existingQuickKeys.add(stub.quickKey || "");
 
       // Dispatch each file immediately as we process it (progressive loading)
       dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [record] } });
