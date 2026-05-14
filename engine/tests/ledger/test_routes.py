@@ -12,6 +12,7 @@ from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
+from conftest import build_app_settings
 from fastapi.testclient import TestClient
 
 from stirling.api import app
@@ -34,8 +35,6 @@ from stirling.contracts.ledger import (
 
 class StubSettingsProvider:
     def __call__(self) -> AppSettings:
-        from conftest import build_app_settings
-
         return build_app_settings()
 
 

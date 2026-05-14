@@ -68,7 +68,7 @@ class StubPdfQuestionAgent(PdfQuestionAgent):
 def runtime_with_stub_rag(runtime: AppRuntime) -> AppRuntime:
     """A runtime whose document service uses a stub embedder + ephemeral store."""
     stub = DocumentService(
-        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        embedder=StubEmbedder(),  # pyrefly: ignore [bad-argument-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )

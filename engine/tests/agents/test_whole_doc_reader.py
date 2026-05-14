@@ -54,7 +54,7 @@ class StubEmbedder:
 @pytest.fixture
 def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
     stub = DocumentService(
-        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        embedder=StubEmbedder(),  # pyrefly: ignore [bad-argument-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
@@ -198,13 +198,25 @@ async def test_read_full_document_budget_hides_tool_when_exhausted(
         sentinel: object = object()
 
         # Budget intact -> prepare returns the tool.
-        assert await capability._prepare_read_full_document(None, sentinel) is sentinel  # type: ignore[arg-type]
+        assert (
+            await capability._prepare_read_full_document(
+                None,  # pyrefly: ignore [bad-argument-type]
+                sentinel,  # pyrefly: ignore [bad-argument-type]
+            )
+            is sentinel
+        )
 
         # Spend the budget.
         await capability._read_full_document("anything")
 
         # Budget spent -> prepare returns None.
-        assert await capability._prepare_read_full_document(None, sentinel) is None  # type: ignore[arg-type]
+        assert (
+            await capability._prepare_read_full_document(
+                None,  # pyrefly: ignore [bad-argument-type]
+                sentinel,  # pyrefly: ignore [bad-argument-type]
+            )
+            is None
+        )
 
 
 @pytest.mark.anyio

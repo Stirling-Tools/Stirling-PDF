@@ -69,7 +69,7 @@ def _transform_output_choices(choices: list[Any]) -> list[Any]:
     for choice in choices:
         if not isinstance(choice, dict) or "parts" not in choice:
             continue
-        tool_calls = []
+        tool_calls: list[dict[str, Any]] = []
         for part in choice.get("parts", []):
             if isinstance(part, dict) and part.get("type") == "tool_call":
                 tool_calls.append(
