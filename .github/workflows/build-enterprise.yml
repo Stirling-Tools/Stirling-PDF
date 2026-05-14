@@ -63,7 +63,15 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install Playwright (chromium only)
-        run: task frontend:test:e2e:install -- chromium
+        run: task e2e:install -- chromium
+      - name: Build frontend (needed for playwright's vite preview webServer)
+        # Enterprise tests target :8080 (Spring Boot's bundled frontend), but
+        # playwright's webServer config still launches `vite preview --port 5173`
+        # before any test run, which needs dist/ to exist. VITE_BUILD_FOR_PREVIEW
+        # forces absolute asset paths so vite preview can serve deep SPA routes.
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
 
       - name: Resolve kubernetes.docker.internal to localhost
         # The compose stacks set KC_HOSTNAME=kubernetes.docker.internal so
@@ -140,7 +148,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "OAuth"
+        run: task e2e:enterprise -- --grep "OAuth"
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
         run: |
@@ -213,7 +221,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "SAML"
+        run: task e2e:enterprise -- --grep "SAML"
       - name: Stop backend + tear down SAML Keycloak
         if: always()
         run: |
@@ -243,7 +251,7 @@ jobs:
           wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
-        run: task frontend:test:e2e -- --project=enterprise --grep "Enterprise license"
+        run: task e2e:enterprise -- --grep "Enterprise license"
       - name: Print backend log on failure
         if: failure()
         run: |

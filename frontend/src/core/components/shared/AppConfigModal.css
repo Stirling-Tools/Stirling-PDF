@@ -3,11 +3,11 @@
   display: flex;
   gap: 0;
   height: 45rem; /* 720px */
+  max-height: 90dvh; /* matches Mantine's default modal max-height so the outer wrapper never has to scroll */
 }
 
 .modal-nav {
   width: 15rem; /* 240px */
-  height: 45rem; /* 720px */
   border-top-left-radius: 0.75rem; /* 12px */
   border-bottom-left-radius: 0.75rem; /* 12px */
   overflow: hidden;
@@ -108,7 +108,6 @@
 
 .modal-content {
   flex: 1;
-  height: 45rem; /* 720px */
   display: flex;
   flex-direction: column;
   overflow: hidden;

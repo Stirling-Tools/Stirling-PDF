@@ -2,6 +2,22 @@ name: Push Docker Image with VersionNumber
 
 on:
   workflow_dispatch:
+    inputs:
+      build_main_app:
+        description: "Build & push the main Stirling-PDF image (latest, fat, ultra-lite)."
+        required: false
+        type: boolean
+        default: true
+      build_unoserver:
+        description: "Build & push the standalone stirling-unoserver image."
+        required: false
+        type: boolean
+        default: true
+      force_unoserver_rebuild:
+        description: "Rebuild stirling-unoserver even if its source hash is unchanged."
+        required: false
+        type: boolean
+        default: false
   push:
     branches:
       - master
@@ -31,6 +47,10 @@ jobs:
     permissions:
       packages: write
       id-token: write
+    # On push events these stay 'true'; on workflow_dispatch they follow the inputs.
+    env:
+      RUN_MAIN_APP: ${{ github.event_name != 'workflow_dispatch' || inputs.build_main_app }}
+      RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
@@ -108,6 +128,7 @@ jobs:
 
       - name: Generate tags for latest
         id: meta
+        if: env.RUN_MAIN_APP == 'true'
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: |
@@ -122,6 +143,8 @@ jobs:
 
       - name: Build and push Unified Dockerfile (latest variant)
         id: build-push-latest
+        # Empty-tag guard: build-push-action errors when asked to push with no tags.
+        if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -140,7 +163,7 @@ jobs:
           sbom: true
 
       - name: Sign regular images
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-latest.outputs.digest != ''
         env:
           DIGEST: ${{ steps.build-push-latest.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
@@ -156,7 +179,7 @@ jobs:
       - name: Generate tags for latest-fat
         id: meta-fat
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -170,7 +193,7 @@ jobs:
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -186,7 +209,7 @@ jobs:
           sbom: true
 
       - name: Sign fat images
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-fat.outputs.digest != ''
         env:
           DIGEST: ${{ steps.build-push-fat.outputs.digest }}
           TAGS: ${{ steps.meta-fat.outputs.tags }}
@@ -200,7 +223,7 @@ jobs:
       - name: Generate tags for ultra-lite
         id: meta-lite
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -214,7 +237,7 @@ jobs:
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain'
+        if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -230,7 +253,7 @@ jobs:
           sbom: true
 
       - name: Sign ultra-lite images
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master'
+        if: env.RUN_MAIN_APP == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master') && steps.build-push-lite.outputs.digest != ''
         env:
           DIGEST: ${{ steps.build-push-lite.outputs.digest }}
           TAGS: ${{ steps.meta-lite.outputs.tags }}
@@ -240,3 +263,136 @@ jobs:
           echo "$TAGS" | tr ',' '\n' | while read -r tag; do
             cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
           done
+
+      # Standalone unoserver image — versioned independently via
+      # docker/unoserver/VERSION. master/V2-master: publish <version>+latest
+      # only when the version is new. main/testMain: republish :alpha only
+      # when the source hash differs from the published image's annotation.
+      - name: Read unoserver image version
+        id: unoserverVersion
+        if: env.RUN_UNOSERVER == 'true'
+        run: |
+          version=$(tr -d '[:space:]' < docker/unoserver/VERSION)
+          if [ -z "$version" ]; then
+            echo "docker/unoserver/VERSION is empty"; exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Unoserver image version (from file): ${version}"
+
+      - name: Compute unoserver image source hash
+        id: unoserverHash
+        if: env.RUN_UNOSERVER == 'true'
+        run: |
+          set -eu
+          hash=$(cat \
+            docker/unoserver/Dockerfile \
+            docker/unoserver/entrypoint.sh \
+            docker/unoserver/healthcheck.sh \
+            docker/unoserver/VERSION \
+            | sha256sum | cut -d' ' -f1)
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+          echo "Unoserver source hash: ${hash}"
+
+      - name: Decide whether to publish unoserver image
+        id: unoserverDecision
+        if: env.RUN_UNOSERVER == 'true'
+        env:
+          UNOSERVER_VERSION: ${{ steps.unoserverVersion.outputs.version }}
+          UNOSERVER_HASH: ${{ steps.unoserverHash.outputs.hash }}
+          UNOSERVER_IMAGE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-unoserver
+          UNOSERVER_HASH_ANNOTATION: org.stirlingpdf.unoserver-source-hash
+          FORCE_REBUILD: ${{ inputs.force_unoserver_rebuild }}
+          GH_REF: ${{ github.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -eu
+          mode="skip"
+          tags=""
+
+          read_published_hash() {
+            local ref="$1"
+            docker buildx imagetools inspect "$ref" --raw 2>/dev/null \
+              | jq -r --arg key "$UNOSERVER_HASH_ANNOTATION" \
+                  '.annotations[$key] // empty' \
+              2>/dev/null || true
+          }
+
+          # Manual dispatch from any branch routes to the :alpha publish path.
+          EFFECTIVE_REF="$GH_REF"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            EFFECTIVE_REF="refs/heads/testMain"
+          fi
+
+          case "$EFFECTIVE_REF" in
+            refs/heads/master|refs/heads/V2-master)
+              if [ "${FORCE_REBUILD}" = "true" ]; then
+                echo "force_unoserver_rebuild=true — building stable regardless"
+                mode="stable"
+                tags="${UNOSERVER_IMAGE}:${UNOSERVER_VERSION},${UNOSERVER_IMAGE}:latest"
+              elif docker manifest inspect "${UNOSERVER_IMAGE}:${UNOSERVER_VERSION}" >/dev/null 2>&1; then
+                echo "stirling-unoserver:${UNOSERVER_VERSION} already on GHCR — skipping"
+              else
+                echo "stirling-unoserver:${UNOSERVER_VERSION} is new — will publish"
+                mode="stable"
+                tags="${UNOSERVER_IMAGE}:${UNOSERVER_VERSION},${UNOSERVER_IMAGE}:latest"
+              fi
+              ;;
+            refs/heads/main|refs/heads/testMain)
+              published_hash=$(read_published_hash "${UNOSERVER_IMAGE}:alpha")
+              if [ "${FORCE_REBUILD}" = "true" ]; then
+                echo "force_unoserver_rebuild=true — rebuilding :alpha regardless"
+                mode="alpha"
+                tags="${UNOSERVER_IMAGE}:alpha"
+              elif [ -n "$published_hash" ] && [ "$published_hash" = "$UNOSERVER_HASH" ]; then
+                echo "Published :alpha source hash matches (${published_hash}) — skipping"
+              else
+                if [ -z "$published_hash" ]; then
+                  echo ":alpha has no source-hash annotation (first publish or pre-tracking image) — will publish"
+                else
+                  echo "Source hash changed (was ${published_hash}, now ${UNOSERVER_HASH}) — will publish"
+                fi
+                mode="alpha"
+                tags="${UNOSERVER_IMAGE}:alpha"
+              fi
+              ;;
+            *)
+              echo "Branch ${GH_REF} does not publish unoserver image"
+              ;;
+          esac
+          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
+          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push unoserver image
+        id: build-push-unoserver
+        if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: true
+          cache-from: type=gha,scope=stirling-unoserver
+          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          tags: ${{ steps.unoserverDecision.outputs.tags }}
+          # Manifest annotation read by the decision step above to detect drift.
+          annotations: |
+            index:org.stirlingpdf.unoserver-source-hash=${{ steps.unoserverHash.outputs.hash }}
+          platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Sign unoserver image
+        if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode == 'stable'
+        env:
+          DIGEST: ${{ steps.build-push-unoserver.outputs.digest }}
+          TAGS: ${{ steps.unoserverDecision.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          if [ -n "$COSIGN_PRIVATE_KEY" ]; then
+            echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+              cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
+            done
+          else
+            echo "Warning: COSIGN_PRIVATE_KEY not set, skipping unoserver image signing"
+          fi

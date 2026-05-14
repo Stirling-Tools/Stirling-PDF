@@ -29,6 +29,14 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .documents import (
+    DeleteDocumentResponse,
+    IngestDocumentRequest,
+    IngestDocumentResponse,
+    Page,
+    PageRange,
+    PageText,
+)
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -91,11 +99,12 @@ from .pdf_to_markdown import (
     PdfToMarkdownRequest,
     PdfToMarkdownResponse,
 )
-from .rag import (
-    DeleteDocumentResponse,
-    IngestDocumentRequest,
-    IngestDocumentResponse,
-    IngestedPageText,
+from .progress import (
+    ProgressEvent,
+    WholeDocCompressionRound,
+    WholeDocReadDone,
+    WholeDocReadStarted,
+    WholeDocSliceDone,
 )
 
 __all__ = [
@@ -140,7 +149,6 @@ __all__ = [
     "HealthResponse",
     "IngestDocumentRequest",
     "IngestDocumentResponse",
-    "IngestedPageText",
     "MathAuditorToolReportArtifact",
     "NeedContentFileRequest",
     "NeedContentResponse",
@@ -150,9 +158,12 @@ __all__ = [
     "OrchestratorResponse",
     "LayoutFragment",
     "LayoutLine",
+    "Page",
     "PageLayout",
     "PageLayoutArtifact",
     "PageLayoutFileEntry",
+    "PageRange",
+    "PageText",
     "PdfCommentInstruction",
     "PdfCommentReport",
     "PdfCommentRequest",
@@ -168,6 +179,7 @@ __all__ = [
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
     "PdfTextSelection",
+    "ProgressEvent",
     "Requisition",
     "Severity",
     "StepKind",
@@ -178,6 +190,10 @@ __all__ = [
     "ToolReportArtifact",
     "UnsupportedCapabilityResponse",
     "Verdict",
+    "WholeDocCompressionRound",
+    "WholeDocReadDone",
+    "WholeDocReadStarted",
+    "WholeDocSliceDone",
     "WorkflowArtifact",
     "WorkflowOutcome",
 ]
