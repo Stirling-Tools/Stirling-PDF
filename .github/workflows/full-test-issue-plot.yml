@@ -4,6 +4,7 @@ on:
   workflow_call:
   workflow_dispatch:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
     paths:
@@ -33,6 +34,7 @@ jobs:
       - name: Setup GitHub App Bot
         id: setup-bot
         uses: ./.github/actions/setup-bot
+        continue-on-error: true
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -118,9 +120,11 @@ jobs:
           mkdir -p ci/hygiene
           overall=0
 
-          bash gradlew compileJava compileTestJava --warning-mode all -PnoSpotless > ci/hygiene/gradle-compile.log 2>&1
+          bash gradlew compileJava compileTestJava --warning-mode all --console=plain -PnoSpotless > ci/hygiene/gradle-compile.log 2>&1
           gradle_status=$?
           [ "$gradle_status" -eq 0 ] || overall=1
+
+          grep -Ei "deprecat|\\[deprecation\\]|uses or overrides a deprecated API|recompile with -Xlint:deprecation" ci/hygiene/gradle-compile.log > ci/hygiene/java-deprecations.log || true
 
           task frontend:lint > ci/hygiene/frontend-lint.log 2>&1
           frontend_status=$?
@@ -167,6 +171,7 @@ jobs:
           out.append("")
           out.append("Logs:")
           out.append("- `ci/hygiene/gradle-compile.log`")
+          out.append("- `ci/hygiene/java-deprecations.log`")
           out.append("- `ci/hygiene/frontend-lint.log`")
           out.append("- `ci/hygiene/engine-lint.log`")
           (root / "hygiene-report.md").write_text("\n".join(out) + "\n", encoding="utf-8")
@@ -238,6 +243,7 @@ jobs:
             ci/test-plot.svg
             ci/hygiene/hygiene-report.md
             ci/hygiene/gradle-compile.log
+            ci/hygiene/java-deprecations.log
             ci/hygiene/frontend-lint.log
             ci/hygiene/engine-lint.log
           retention-days: 14
@@ -251,48 +257,57 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           cat ci/hygiene/hygiene-report.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Detect changes to this workflow file
-        id: detect-self-change
+      - name: Build PR comment body with plot
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
-          set -e
-          base_sha="${{ github.event.pull_request.base.sha }}"
-          head_sha="${{ github.event.pull_request.head.sha }}"
-          changed="$(git diff --name-only "$base_sha" "$head_sha" -- .github/workflows/full-test-issue-plot.yml | wc -l)"
-          if [ "$changed" -gt 0 ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
+          python - <<'PY'
+          import csv
+          import pathlib
 
-      - name: Comment report on PR when this workflow changed
-        if: github.event_name == 'pull_request' && steps.detect-self-change.outputs.changed == 'true'
+          rows = list(csv.DictReader(pathlib.Path("ci/test-results.tsv").open("r", encoding="utf-8"), delimiter="\t"))
+          test_report = pathlib.Path("ci/test-report.md").read_text(encoding="utf-8").strip()
+          hygiene_report = pathlib.Path("ci/hygiene/hygiene-report.md").read_text(encoding="utf-8").strip()
+
+          mermaid_lines = ["```mermaid", "xychart-beta", '  title "Suite Durations (s)"', "  x-axis ["] 
+          mermaid_lines[-1] += ", ".join(f'"{r["suite"]}"' for r in rows) + "]"
+          mermaid_lines.append("  y-axis \"seconds\" 0 --> " + str(max([int(r["duration_seconds"]) for r in rows] + [1])))
+          mermaid_lines.append("  bar [" + ", ".join(r["duration_seconds"] for r in rows) + "]")
+          mermaid_lines.append("```")
+          mermaid = "\n".join(mermaid_lines)
+
+          body = "\n".join([
+              "<!-- full-test-issue-plot-report -->",
+              "## Full Test Issue Plot Evaluation",
+              "",
+              "Workflow-Datei `.github/workflows/full-test-issue-plot.yml` wurde in dieser PR geändert.",
+              "",
+              f"Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "",
+              "### Plot",
+              "",
+              mermaid,
+              "",
+              "### Test-Auswertung",
+              "",
+              test_report,
+              "",
+              "### Hygiene-Auswertung",
+              "",
+              hygiene_report,
+          ])
+          pathlib.Path("ci/pr-comment.md").write_text(body + "\n", encoding="utf-8")
+          PY
+
+      - name: Comment report on PR
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token || github.token }}
           script: |
             const fs = require('fs');
             const marker = '<!-- full-test-issue-plot-report -->';
-            const testReport = fs.readFileSync('ci/test-report.md', 'utf8').trim();
-            const hygieneReport = fs.readFileSync('ci/hygiene/hygiene-report.md', 'utf8').trim();
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = [
-              marker,
-              '## Full Test Issue Plot Evaluation',
-              '',
-              `Workflow-Datei \`.github/workflows/full-test-issue-plot.yml\` wurde in dieser PR geändert.`,
-              '',
-              `Run: ${runUrl}`,
-              '',
-              '### Test-Auswertung',
-              '',
-              testReport,
-              '',
-              '### Hygiene-Auswertung',
-              '',
-              hygieneReport,
-            ].join('\n');
+            const body = fs.readFileSync('ci/pr-comment.md', 'utf8').trim();
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -322,7 +337,7 @@ jobs:
         if: steps.run-tests.outputs.overall_failed == '1' || steps.hygiene.outputs.overall_hygiene_failed == '1'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token || github.token }}
           script: |
             const marker = '<!-- full-test-ci-issue -->';
             const title = '[CI] Full test suite failing';
