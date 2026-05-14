@@ -167,10 +167,10 @@ ToolReportArtifact = MathAuditorToolReportArtifact
 
 
 class NeedIngestResponse(ApiModel):
-    """Signal that the listed files must be ingested into RAG before the agent can continue.
+    """Signal that the listed files must be ingested before the agent can continue.
 
     Java's handling: for each file, extract the requested content types, POST to
-    ``/api/v1/rag/documents`` keyed by ``file.id``, then retry the original request.
+    ``/api/v1/documents`` keyed by ``file.id``, then retry the original request.
     """
 
     outcome: Literal[WorkflowOutcome.NEED_INGEST] = WorkflowOutcome.NEED_INGEST
