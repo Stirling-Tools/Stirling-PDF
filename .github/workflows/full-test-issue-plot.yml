@@ -68,6 +68,9 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
+      - name: Prepare frontend generated assets and env files
+        run: task frontend:prepare
+
       - name: Install E2E browser dependencies
         run: task e2e:install
 
