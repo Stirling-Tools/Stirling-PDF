@@ -101,11 +101,14 @@ tasks.register('syncAppVersion') {
 
         def tauriConfigFile = new File(tauriConfigPath)
         if (tauriConfigFile.exists()) {
-            def parsed = new groovy.json.JsonSlurper().parse(tauriConfigFile)
-            parsed.version = appVersionStr
-            def formatted = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(parsed)) + System.lineSeparator()
-            if (tauriConfigFile.getText('UTF-8') != formatted) {
-                tauriConfigFile.write(formatted, 'UTF-8')
+            def content = tauriConfigFile.getText('UTF-8')
+            def matcher = (content =~ /(?m)^(\s*"version":\s*")([^"]*)(")/)
+            if (!matcher.find()) {
+                throw new GradleException("Could not locate version in ${tauriConfigFile} for synchronization")
+            }
+            def updatedContent = matcher.replaceFirst("${matcher.group(1)}${appVersionStr}${matcher.group(3)}")
+            if (content != updatedContent) {
+                tauriConfigFile.write(updatedContent, 'UTF-8')
             }
         }
 
