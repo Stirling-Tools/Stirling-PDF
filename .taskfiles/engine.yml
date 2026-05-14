@@ -86,8 +86,9 @@ tasks:
   fix:
     desc: "Auto-fix lint + format"
     cmds:
+      - task: format  # Can auto-fix some things that `lint:fix` can't like line length violations
       - task: lint:fix
-      - task: format
+      - task: format  # Ensure that after lint fixing that the code is still formatted correctly
 
   check:
     desc: "Full engine quality gate"
