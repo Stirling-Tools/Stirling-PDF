@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -22,6 +23,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -419,7 +421,7 @@ class AiWorkflowServiceTest {
     }
 
     @Test
-    void needIngestExtractsPageTextAndPostsToRagThenRetries() throws IOException {
+    void needIngestExtractsPageTextAndPostsThenRetries() throws IOException {
         MockMultipartFile input = pdf("report.pdf", "bytes");
         when(fileIdStrategy.idFor(any())).thenReturn("report-id");
 
@@ -431,37 +433,64 @@ class AiWorkflowServiceTest {
                 .thenReturn("page content");
 
         int[] orchestratorCalls = {0};
-        when(aiEngineClient.post(eq("/api/v1/orchestrator"), anyString()))
-                .thenAnswer(
+        doAnswer(
                         inv -> {
                             orchestratorCalls[0]++;
+                            String responseJson;
                             if (orchestratorCalls[0] == 1) {
-                                return """
-                                       {
-                                         "outcome":"need_ingest",
-                                         "resumeWith":"pdf_question",
-                                         "reason":"ingest first",
-                                         "filesToIngest":[{"id":"report-id","name":"report.pdf"}],
-                                         "contentTypes":["page_text"]
-                                       }
-                                       """;
+                                responseJson =
+                                        """
+                                        {
+                                          "outcome":"need_ingest",
+                                          "resumeWith":"pdf_question",
+                                          "reason":"ingest first",
+                                          "filesToIngest":[{"id":"report-id","name":"report.pdf"}],
+                                          "contentTypes":["page_text"]
+                                        }
+                                        """;
+                            } else {
+                                responseJson =
+                                        """
+                                        {"outcome":"answer","answer":"done","evidence":[]}
+                                        """;
                             }
-                            return """
-                                   {"outcome":"answer","answer":"done","evidence":[]}
-                                   """;
-                        });
+                            Consumer<String> consumer = inv.getArgument(2);
+                            consumer.accept(wrapAsResultEvent(responseJson));
+                            return null;
+                        })
+                .when(aiEngineClient)
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/rag/documents"), anyString());
-        verify(aiEngineClient, times(2)).post(eq("/api/v1/orchestrator"), anyString());
+        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString());
+        verify(aiEngineClient, times(2)).streamPost(eq("/api/v1/orchestrator"), anyString(), any());
     }
 
     // --- helpers ---
 
     private void stubOrchestrator(String responseJson) throws IOException {
-        when(aiEngineClient.post(eq("/api/v1/orchestrator"), anyString())).thenReturn(responseJson);
+        doAnswer(
+                        inv -> {
+                            Consumer<String> consumer = inv.getArgument(2);
+                            consumer.accept(wrapAsResultEvent(responseJson));
+                            return null;
+                        })
+                .when(aiEngineClient)
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+    }
+
+    /**
+     * Wrap a unary orchestrator response JSON as the NDJSON "result" event the streaming endpoint
+     * emits, so existing tests can keep their per-outcome JSON literals.
+     */
+    private String wrapAsResultEvent(String responseJson) throws IOException {
+        return objectMapper
+                .createObjectNode()
+                .put("event", "result")
+                .set("response", objectMapper.readTree(responseJson))
+                .toString();
     }
 
     private void stubEndpoint(String endpoint, Resource body) {

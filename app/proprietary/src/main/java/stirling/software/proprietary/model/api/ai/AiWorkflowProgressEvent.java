@@ -26,6 +26,14 @@ public class AiWorkflowProgressEvent {
     private Integer stepCount;
 
     /**
+     * Engine-emitted event payload, for {@link AiWorkflowPhase#ENGINE_PROGRESS} events. The payload
+     * is a typed subtype keyed on its {@code phase} string (e.g. {@code "whole_doc_slice_done"})
+     * carrying phase-specific fields (slice index, page range, durations, etc.) that the frontend
+     * can render as detailed progress.
+     */
+    private AiEngineProgressDetail engineDetail;
+
+    /**
      * The parameters passed to the tool, for {@link AiWorkflowPhase#EXECUTING_TOOL} events.
      * Serialised as-is from the AI engine's plan so the frontend can log exactly what was sent.
      */
@@ -33,7 +41,7 @@ public class AiWorkflowProgressEvent {
 
     public static AiWorkflowProgressEvent of(AiWorkflowPhase phase) {
         return new AiWorkflowProgressEvent(
-                phase, System.currentTimeMillis(), null, null, null, null);
+                phase, System.currentTimeMillis(), null, null, null, null, null);
     }
 
     public static AiWorkflowProgressEvent executingTool(
@@ -44,6 +52,18 @@ public class AiWorkflowProgressEvent {
                 tool,
                 stepIndex,
                 stepCount,
+                null,
                 parameters);
+    }
+
+    public static AiWorkflowProgressEvent engineProgress(AiEngineProgressDetail detail) {
+        return new AiWorkflowProgressEvent(
+                AiWorkflowPhase.ENGINE_PROGRESS,
+                System.currentTimeMillis(),
+                null,
+                null,
+                null,
+                detail,
+                null);
     }
 }
