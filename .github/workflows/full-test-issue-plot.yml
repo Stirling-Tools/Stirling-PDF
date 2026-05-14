@@ -244,7 +244,7 @@ jobs:
         run: |
           cat ci/test-report.md >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Plot artifact: \\`ci/test-plot.svg\\`" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Plot artifact: `ci/test-plot.svg`' >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           cat ci/hygiene/hygiene-report.md >> "$GITHUB_STEP_SUMMARY"
 
