@@ -258,7 +258,7 @@ jobs:
           cat ci/hygiene/hygiene-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build PR comment body with plot
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         shell: bash
         run: |
           python - <<'PY'
@@ -296,11 +296,16 @@ jobs:
               "",
               hygiene_report,
           ])
+          # GitHub rejects oversized comments; keep payload bounded.
+          max_len = 60000
+          if len(body) > max_len:
+              body = body[:max_len] + "\n\n...(truncated, see full-test-report artifact)...\n"
           pathlib.Path("ci/pr-comment.md").write_text(body + "\n", encoding="utf-8")
           PY
 
       - name: Comment report on PR
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token || github.token }}
@@ -308,11 +313,16 @@ jobs:
             const fs = require('fs');
             const marker = '<!-- full-test-issue-plot-report -->';
             const body = fs.readFileSync('ci/pr-comment.md', 'utf8').trim();
+            const issueNumber = context.payload.pull_request?.number || context.issue.number;
+            if (!issueNumber) {
+              core.warning('No pull request number in context; skipping comment.');
+              return;
+            }
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: issueNumber,
               per_page: 100,
             });
 
@@ -328,7 +338,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: issueNumber,
                 body,
               });
             }
