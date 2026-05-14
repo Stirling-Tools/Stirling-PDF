@@ -107,7 +107,7 @@ jobs:
           run_suite "backend:test" "task backend:test" || overall=1
           run_suite "frontend:test" "task frontend:test" || overall=1
           run_suite "engine:test" "task engine:test" || overall=1
-          run_suite "e2e:check" "task e2e:check" || overall=1
+          run_suite "e2e:check" "VITE_BUILD_FOR_PREVIEW=1 task frontend:build && task e2e:check" || overall=1
 
           echo "overall_failed=$overall" >> "$GITHUB_OUTPUT"
           exit 0
