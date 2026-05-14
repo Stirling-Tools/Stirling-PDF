@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pydantic_ai import Embedder
 
-from stirling.rag.chunker import chunk_text
-from stirling.rag.store import Document
+from stirling.documents.chunker import chunk_text
+from stirling.documents.store import Document
 
 # Keep each upstream embed request under every major provider's per-call limit while
 # still batching large enough that a book-sized document ingests in a reasonable number

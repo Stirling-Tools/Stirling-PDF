@@ -6,9 +6,9 @@ from collections.abc import Awaitable, Callable
 from pydantic_ai import FunctionToolset, RunContext, ToolDefinition
 from pydantic_ai.toolsets import AbstractToolset
 
+from stirling.documents.service import DocumentService
+from stirling.documents.store import SearchResult
 from stirling.models import FileId
-from stirling.rag.service import RagService
-from stirling.rag.store import SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +34,12 @@ class RagCapability:
 
     def __init__(
         self,
-        rag_service: RagService,
+        documents: DocumentService,
         collections: list[FileId] | None = None,
         top_k: int = 5,
         max_searches: int = 5,
     ) -> None:
-        self._rag_service = rag_service
+        self._documents = documents
         self._collections = collections
         self._top_k = top_k
         self._max_searches = max_searches
@@ -74,7 +74,7 @@ class RagCapability:
         )
 
     async def _dynamic_instructions(self) -> str:
-        collections = await self._rag_service.list_collections()
+        collections = await self._documents.list_collections()
         if collections:
             names = ", ".join(collections)
             collection_desc = f"the following knowledge base collections: {names}"
@@ -115,12 +115,12 @@ class RagCapability:
         if self._collections:
             all_results = []
             for col in self._collections:
-                col_results = await self._rag_service.search(query, collection=col, top_k=k)
+                col_results = await self._documents.search(query, collection=col, top_k=k)
                 all_results.extend(col_results)
             all_results.sort(key=lambda r: r.score, reverse=True)
             results = all_results[:k]
         else:
-            results = await self._rag_service.search(query, top_k=k)
+            results = await self._documents.search(query, top_k=k)
 
         if not results:
             logger.info("[rag] search_knowledge query=%r -> 0 results", query)
