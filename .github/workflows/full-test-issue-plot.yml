@@ -349,8 +349,34 @@ jobs:
         with:
           github-token: ${{ steps.setup-bot.outputs.token || github.token }}
           script: |
+            const fs = require('fs');
             const marker = '<!-- full-test-ci-issue -->';
             const title = '[CI] Full test suite failing';
+            const tsv = fs.readFileSync('ci/test-results.tsv', 'utf8').trim().split('\n').slice(1);
+            const rows = tsv
+              .map(line => line.split('\t'))
+              .filter(parts => parts.length >= 3)
+              .map(parts => ({ suite: parts[0], status: parts[1], duration: Number(parts[2] || 0) }));
+            const maxDuration = Math.max(1, ...rows.map(r => r.duration));
+            const xAxis = rows.map(r => `"${r.suite}"`).join(', ');
+            const bars = rows.map(r => `${r.duration}`).join(', ');
+
+            const mermaid = [
+              '```mermaid',
+              'xychart-beta',
+              '  title "Suite Durations (s)"',
+              `  x-axis [${xAxis}]`,
+              `  y-axis "seconds" 0 --> ${maxDuration}`,
+              `  bar [${bars}]`,
+              '```',
+            ].join('\n');
+
+            const resultsTable = [
+              '| Suite | Status | Duration (s) |',
+              '|---|---|---:|',
+              ...rows.map(r => `| \`${r.suite}\` | ${r.status === 'pass' ? '✅ pass' : '❌ fail'} | ${r.duration} |`),
+            ].join('\n');
+
             const body = [
               marker,
               'A full CI test run or hygiene check has failed.',
@@ -358,6 +384,14 @@ jobs:
               `- Workflow: ${context.workflow}`,
               `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               `- Commit: ${context.sha}`,
+              '',
+              '### Plot',
+              '',
+              mermaid,
+              '',
+              '### Results',
+              '',
+              resultsTable,
               '',
               'Check the uploaded artifact `full-test-report` for the TSV, markdown report, and SVG plot.',
             ].join('\n');
