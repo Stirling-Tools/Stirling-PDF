@@ -6,9 +6,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from stirling.api import app
-from stirling.api.dependencies import get_rag_service
+from stirling.api.dependencies import get_document_service
+from stirling.documents import Document, DocumentService, SqliteVecStore
 from stirling.models import FileId
-from stirling.rag import Document, RagService, SqliteVecStore
 
 
 class StubEmbedder:
@@ -30,7 +30,7 @@ class StubEmbedder:
         source: str = "",
         base_metadata: dict[str, str] | None = None,
     ) -> list[Document]:
-        from stirling.rag.chunker import chunk_text
+        from stirling.documents.chunker import chunk_text
 
         chunks = chunk_text(text, 100, 10)
         docs = []
@@ -43,8 +43,8 @@ class StubEmbedder:
         return docs
 
 
-def _build_service() -> RagService:
-    return RagService(
+def _build_service() -> DocumentService:
+    return DocumentService(
         embedder=StubEmbedder(),  # type: ignore[arg-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=3,
@@ -52,25 +52,25 @@ def _build_service() -> RagService:
 
 
 @pytest.fixture
-def service() -> RagService:
+def service() -> DocumentService:
     return _build_service()
 
 
 @pytest.fixture
-def client(service: RagService) -> Iterator[TestClient]:
-    app.dependency_overrides[get_rag_service] = lambda: service
+def client(service: DocumentService) -> Iterator[TestClient]:
+    app.dependency_overrides[get_document_service] = lambda: service
     try:
         yield TestClient(app)
     finally:
-        app.dependency_overrides.pop(get_rag_service, None)
+        app.dependency_overrides.pop(get_document_service, None)
 
 
 # ── POST /documents ─────────────────────────────────────────────────────
 
 
-def test_ingest_document_indexes_page_text(client: TestClient, service: RagService) -> None:
+def test_ingest_document_indexes_page_text(client: TestClient, service: DocumentService) -> None:
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={
             "documentId": "doc-123",
             "source": "report.pdf",
@@ -87,9 +87,9 @@ def test_ingest_document_indexes_page_text(client: TestClient, service: RagServi
 
 
 @pytest.mark.anyio
-async def test_ingest_document_replaces_existing_content(client: TestClient, service: RagService) -> None:
+async def test_ingest_document_replaces_existing_content(client: TestClient, service: DocumentService) -> None:
     client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={
             "documentId": "replace-me",
             "source": "replace-me.pdf",
@@ -98,7 +98,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
     )
     # Second ingest with different content should replace the first entirely
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={
             "documentId": "replace-me",
             "source": "replace-me.pdf",
@@ -115,7 +115,7 @@ async def test_ingest_document_replaces_existing_content(client: TestClient, ser
 
 def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={
             "documentId": "mixed",
             "source": "mixed.pdf",
@@ -130,14 +130,14 @@ def test_ingest_document_skips_empty_pages(client: TestClient) -> None:
 
 
 def test_ingest_document_with_no_content_returns_zero(client: TestClient) -> None:
-    response = client.post("/api/v1/rag/documents", json={"documentId": "empty", "source": "empty.pdf"})
+    response = client.post("/api/v1/documents", json={"documentId": "empty", "source": "empty.pdf"})
     assert response.status_code == 200
     assert response.json()["chunksIndexed"] == 0
 
 
 def test_ingest_document_rejects_empty_id(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={"documentId": "", "source": "x.pdf", "pageText": [{"pageNumber": 1, "text": "something"}]},
     )
     assert response.status_code == 422
@@ -145,7 +145,7 @@ def test_ingest_document_rejects_empty_id(client: TestClient) -> None:
 
 def test_ingest_document_rejects_missing_source(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={"documentId": "doc-1", "pageText": [{"pageNumber": 1, "text": "something"}]},
     )
     assert response.status_code == 422
@@ -153,7 +153,7 @@ def test_ingest_document_rejects_missing_source(client: TestClient) -> None:
 
 def test_ingest_document_rejects_empty_source(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={"documentId": "doc-1", "source": "", "pageText": [{"pageNumber": 1, "text": "something"}]},
     )
     assert response.status_code == 422
@@ -161,7 +161,7 @@ def test_ingest_document_rejects_empty_source(client: TestClient) -> None:
 
 def test_ingest_document_rejects_non_positive_page_number(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={
             "documentId": "bad-page",
             "source": "bad-page.pdf",
@@ -176,30 +176,30 @@ def test_ingest_document_rejects_non_positive_page_number(client: TestClient) ->
 
 def test_delete_document_reports_deleted_true_when_existed(client: TestClient) -> None:
     client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={
             "documentId": "to-delete",
             "source": "to-delete.pdf",
             "pageText": [{"pageNumber": 1, "text": "Text."}],
         },
     )
-    response = client.delete("/api/v1/rag/documents/to-delete")
+    response = client.delete("/api/v1/documents/to-delete")
     assert response.status_code == 200
     assert response.json() == {"documentId": "to-delete", "deleted": True}
 
 
 def test_delete_document_is_idempotent(client: TestClient) -> None:
-    response = client.delete("/api/v1/rag/documents/never-existed")
+    response = client.delete("/api/v1/documents/never-existed")
     assert response.status_code == 200
     assert response.json() == {"documentId": "never-existed", "deleted": False}
 
 
 @pytest.mark.anyio
-async def test_delete_document_removes_collection(client: TestClient, service: RagService) -> None:
+async def test_delete_document_removes_collection(client: TestClient, service: DocumentService) -> None:
     client.post(
-        "/api/v1/rag/documents",
+        "/api/v1/documents",
         json={"documentId": "gone", "source": "gone.pdf", "pageText": [{"pageNumber": 1, "text": "Text."}]},
     )
     assert await service.has_collection(FileId("gone"))
-    client.delete("/api/v1/rag/documents/gone")
+    client.delete("/api/v1/documents/gone")
     assert not await service.has_collection(FileId("gone"))
