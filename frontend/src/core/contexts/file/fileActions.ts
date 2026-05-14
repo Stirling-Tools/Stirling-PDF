@@ -799,7 +799,9 @@ export async function addStirlingFileStubs(
       // here would silently drop a legitimately different file.
       if (stateRef.current.files.byId[stub.id]) {
         if (DEBUG)
-          console.log(`📄 Skipping already-loaded StirlingFileStub: ${stub.name}`);
+          console.log(
+            `📄 Skipping already-loaded StirlingFileStub: ${stub.name}`,
+          );
         continue;
       }
 
