@@ -5,6 +5,7 @@ import logging
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 PDF_QUESTION_SYSTEM_PROMPT = (
-    "You answer questions about PDF documents using two retrieval tools:\n"
+    "You answer questions about PDF documents using three retrieval tools:\n"
     "\n"
     "1. search_knowledge(query) - returns the passages most semantically similar "
     "to the query. Use it for targeted lookups: a specific fact, a named section, "
@@ -45,6 +46,12 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "(largest, shortest, count), comparisons across sections. It is more "
     "expensive than search_knowledge, so prefer search_knowledge when one or two "
     "passages would suffice.\n"
+    "\n"
+    "3. find_contradictions(query) - audits the attached documents for textual "
+    "contradictions across pages (opposing claims, conflicting recommendations, "
+    "inconsistent deadlines, etc.) and returns a notes-style report. Use it when "
+    "the question is about logical or textual consistency of the content (NOT "
+    "numerical math). One call audits the entire document set.\n"
     "\n"
     "Pick the right tool, call it, then answer from what you got back. Do not "
     "guess or use outside knowledge.\n"
@@ -58,7 +65,8 @@ PDF_QUESTION_SYSTEM_PROMPT = (
     "- The reason is shown directly to the end user, so write it in plain, friendly "
     "language. One or two short sentences.\n"
     "- NEVER mention 'RAG', 'retrieval', 'chunks', 'search results', 'targeted search', "
-    "'search_knowledge', 'read_full_document', or other implementation details.\n"
+    "'search_knowledge', 'read_full_document', 'find_contradictions', or other "
+    "implementation details.\n"
     "- For questions where the answer just isn't in the document, say so directly: "
     "'I couldn't find that information in the document.'\n"
     "- Do not make it sound like you're choosing not to answer."
@@ -89,6 +97,9 @@ class PdfQuestionAgent:
         # Shared across whole-doc-reader instances so the worker agent and
         # semaphore are constructed once and reused per request.
         self._chunked_reasoner = ChunkedReasoner(runtime)
+        # Long-lived contradiction detector reused across per-request
+        # capability instances (mirrors the chunked-reasoner pattern).
+        self._contradiction_detector = ContradictionDetector(runtime)
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         logger.info(
@@ -174,14 +185,18 @@ class PdfQuestionAgent:
             files=request.files,
             reasoner=self._chunked_reasoner,
         )
+        contradiction = ContradictionCapability(
+            detector=self._contradiction_detector,
+            files=request.files,
+        )
         agent = Agent(
             model=self.runtime.smart_model,
             output_type=NativeOutput([PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse]),
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
             # pydantic-ai accepts a list of (string-or-callable) instruction sources;
             # it resolves each at run time and concatenates them for the model.
-            instructions=[rag.instructions, whole_doc.instructions],
-            toolsets=[rag.toolset, whole_doc.toolset],
+            instructions=[rag.instructions, whole_doc.instructions, contradiction.instructions],
+            toolsets=[rag.toolset, whole_doc.toolset, contradiction.toolset],
             model_settings=self.runtime.smart_model_settings,
         )
         prompt = self._build_prompt(request)

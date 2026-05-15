@@ -1,0 +1,303 @@
+"""ContradictionDetector — end-to-end agent flow with stubbed LLMs.
+
+The detector orchestrates five stages (chunked claim extraction,
+subject canonicalisation, pre-filter, per-bucket pair detection, and
+summary). These tests stub the model-boundary agents and the document
+service so the orchestration shape is exercised without network.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import AsyncMock
+
+import pytest
+from pydantic_ai.exceptions import AgentRunError
+
+from stirling.agents.contradiction.detector import (
+    ContradictionDetector,
+    _BucketContradictions,
+    _DetectedPair,
+    _ExtractedClaim,
+    _ExtractedClaims,
+    _SubjectMapping,
+)
+from stirling.agents.shared.chunked_mapper import ChunkOutput
+from stirling.contracts import AiFile
+from stirling.contracts.contradiction import ContradictionSeverity
+from stirling.contracts.documents import Page
+from stirling.models import FileId
+from stirling.services.runtime import AppRuntime
+
+
+def _page(n: int, text: str) -> Page:
+    return Page(page_number=n, text=text, char_count=len(text))
+
+
+def _stub_result(output: Any) -> Any:
+    """Shape matches what ``agent.run`` returns: an object with ``.output``."""
+
+    class _R:
+        def __init__(self, o: Any) -> None:
+            self.output = o
+
+    return _R(output)
+
+
+@pytest.fixture
+def file_a() -> AiFile:
+    return AiFile(id=FileId("doc-a"), name="a.pdf")
+
+
+@pytest.fixture
+def pages_a() -> list[Page]:
+    return [
+        _page(1, "The deadline is March 5."),
+        _page(2, "The deadline is April 10."),
+    ]
+
+
+def _install_documents_stub(runtime: AppRuntime, pages_by_id: dict[FileId, list[Page]]) -> None:
+    """Patch ``runtime.documents.read_pages`` to return canned pages per file."""
+
+    async def _read(collection: FileId, page_range: Any = None) -> list[Page]:
+        return pages_by_id.get(collection, [])
+
+    # AppRuntime is frozen; monkey-patch the documents service.
+    runtime.documents.read_pages = _read  # type: ignore[method-assign]
+
+
+# Empty / no-pages cases
+
+
+@pytest.mark.anyio
+async def test_no_pages_returns_clean_empty_report(runtime: AppRuntime, file_a: AiFile) -> None:
+    _install_documents_stub(runtime, {file_a.id: []})
+    detector = ContradictionDetector(runtime)
+
+    report = await detector.detect([file_a])
+
+    assert report.contradictions == []
+    assert report.pages_examined == []
+    assert report.clean is True
+
+
+# Happy path
+
+
+@pytest.mark.anyio
+async def test_happy_path_finds_contradiction_across_two_pages(
+    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
+) -> None:
+    _install_documents_stub(runtime, {file_a.id: pages_a})
+    detector = ContradictionDetector(runtime)
+
+    extracted_chunk = _ExtractedClaims(
+        claims=[
+            _ExtractedClaim(
+                page=1,
+                subject="deadline",
+                polarity="assert",
+                text="The deadline is March 5.",
+                quote="The deadline is March 5.",
+            ),
+            _ExtractedClaim(
+                page=2,
+                subject="deadline",
+                polarity="assert",
+                text="The deadline is April 10.",
+                quote="The deadline is April 10.",
+            ),
+        ]
+    )
+    chunk_output = ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")
+    detector._mapper.map_pages = AsyncMock(return_value=[chunk_output])  # type: ignore[method-assign]
+
+    detector._subject_canonicaliser.run = AsyncMock(
+        return_value=_stub_result(_SubjectMapping(mapping={"deadline": "deadline"}))
+    )  # type: ignore[method-assign]
+    detector._pair_detector.run = AsyncMock(
+        return_value=_stub_result(
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")]
+            )
+        )
+    )  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(
+        return_value=_stub_result("Examined 2 pages; found 1 contradiction.")
+    )  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a], query="check the deadline")
+
+    assert len(report.contradictions) == 1
+    c = report.contradictions[0]
+    assert c.subject == "deadline"
+    assert c.severity == ContradictionSeverity.ERROR
+    assert {c.claim1.page, c.claim2.page} == {1, 2}
+    assert c.explanation == "dates conflict"
+    assert report.pages_examined == [1, 2]
+    assert report.clean is False
+    assert report.summary.startswith("Examined")
+
+
+@pytest.mark.anyio
+async def test_zero_claims_returns_clean_report(
+    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
+) -> None:
+    _install_documents_stub(runtime, {file_a.id: pages_a})
+    detector = ContradictionDetector(runtime)
+
+    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+        return_value=[
+            ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")
+        ]
+    )
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("All clean."))  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a])
+
+    assert report.contradictions == []
+    assert report.clean is True
+    assert report.pages_examined == []
+    assert report.summary == "All clean."
+
+
+@pytest.mark.anyio
+async def test_canonicaliser_failure_falls_back_to_lexical_keys(
+    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
+) -> None:
+    _install_documents_stub(runtime, {file_a.id: pages_a})
+    detector = ContradictionDetector(runtime)
+
+    extracted_chunk = _ExtractedClaims(
+        claims=[
+            _ExtractedClaim(
+                page=1, subject="Project Deadline", polarity="assert",
+                text="A1", quote="The deadline is March 5.",
+            ),
+            _ExtractedClaim(
+                page=2, subject="the project deadline", polarity="assert",
+                text="A2", quote="The deadline is April 10.",
+            ),
+        ]
+    )
+    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
+    )
+    detector._subject_canonicaliser.run = AsyncMock(side_effect=AgentRunError("boom"))  # type: ignore[method-assign]
+    detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
+        return_value=_stub_result(
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")]
+            )
+        )
+    )
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a])
+
+    # Lexical key collapses both subjects so the bucket still forms.
+    assert len(report.contradictions) == 1
+    assert report.contradictions[0].severity == ContradictionSeverity.WARNING
+
+
+@pytest.mark.anyio
+async def test_same_page_same_polarity_pair_is_dropped(
+    runtime: AppRuntime, file_a: AiFile
+) -> None:
+    """The result-time pre-filter removes pairs where both claims share a
+    page AND polarity — they are duplicate sightings, not contradictions."""
+    pages = [_page(1, "Claim A. Claim B variant.")]
+    _install_documents_stub(runtime, {file_a.id: pages})
+    detector = ContradictionDetector(runtime)
+
+    extracted_chunk = _ExtractedClaims(
+        claims=[
+            _ExtractedClaim(
+                page=1, subject="deadline", polarity="assert", text="x", quote="Claim A."
+            ),
+            _ExtractedClaim(
+                page=1, subject="deadline", polarity="assert",
+                text="y", quote="Claim B variant.",
+            ),
+        ]
+    )
+    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+        return_value=[ChunkOutput(pages=[1], output=extracted_chunk, label="pages=1")]
+    )
+    detector._subject_canonicaliser.run = AsyncMock(
+        return_value=_stub_result(_SubjectMapping(mapping={"deadline": "deadline"}))
+    )  # type: ignore[method-assign]
+    detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
+        return_value=_stub_result(
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="echo", severity="warning")]
+            )
+        )
+    )
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a])
+
+    assert report.contradictions == []
+
+
+@pytest.mark.anyio
+async def test_summary_fallback_used_when_llm_fails(
+    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
+) -> None:
+    _install_documents_stub(runtime, {file_a.id: pages_a})
+    detector = ContradictionDetector(runtime)
+
+    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+        return_value=[
+            ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")
+        ]
+    )
+    detector._summary_agent.run = AsyncMock(side_effect=AgentRunError("boom"))  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a])
+
+    assert "No contradictions" in report.summary
+    assert report.clean is True
+
+
+@pytest.mark.anyio
+async def test_pages_examined_excludes_pages_without_claims(
+    runtime: AppRuntime, file_a: AiFile
+) -> None:
+    pages = [
+        _page(1, "The deadline is March 5."),
+        _page(2, "Blank-ish."),  # extractor returns no claims for this page
+        _page(3, "The deadline is April 10."),
+    ]
+    _install_documents_stub(runtime, {file_a.id: pages})
+    detector = ContradictionDetector(runtime)
+
+    extracted = _ExtractedClaims(
+        claims=[
+            _ExtractedClaim(
+                page=1, subject="deadline", polarity="assert",
+                text="x", quote="The deadline is March 5.",
+            ),
+            _ExtractedClaim(
+                page=3, subject="deadline", polarity="assert",
+                text="y", quote="The deadline is April 10.",
+            ),
+        ]
+    )
+    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+        return_value=[ChunkOutput(pages=[1, 2, 3], output=extracted, label="pages=1-3")]
+    )
+    detector._subject_canonicaliser.run = AsyncMock(
+        return_value=_stub_result(_SubjectMapping(mapping={}))
+    )  # type: ignore[method-assign]
+    detector._pair_detector.run = AsyncMock(
+        return_value=_stub_result(_BucketContradictions(pairs=[]))
+    )  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a])
+
+    # Page 2 produced no claims, so it's excluded from pages_examined.
+    assert report.pages_examined == [1, 3]

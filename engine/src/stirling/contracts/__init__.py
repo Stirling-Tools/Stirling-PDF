@@ -29,6 +29,12 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .contradiction import (
+    Claim,
+    Contradiction,
+    ContradictionReport,
+    ContradictionSeverity,
+)
 from .documents import (
     DeleteDocumentResponse,
     IngestDocumentRequest,
@@ -122,8 +128,12 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "Claim",
     "CommentSpec",
     "CompletedExecutionAction",
+    "Contradiction",
+    "ContradictionReport",
+    "ContradictionSeverity",
     "ConversationMessage",
     "DeleteDocumentResponse",
     "PdfToMarkdownCannotDoResponse",

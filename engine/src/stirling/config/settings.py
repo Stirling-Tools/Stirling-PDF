@@ -51,6 +51,28 @@ class AppSettings(BaseSettings):
     # response budget.
     chunked_reasoner_notes_char_budget: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_NOTES_CHAR_BUDGET")
 
+    # Contradiction-agent settings.
+    # Concurrency cap for per-bucket pair detection (stage 4). Independent from
+    # the chunked-reasoner pool so claim extraction and pair detection don't
+    # starve each other when both fire in the same request.
+    contradiction_detect_concurrency: int = Field(
+        default=5,
+        validation_alias="STIRLING_CONTRADICTION_DETECT_CONCURRENCY",
+    )
+    # Window size for splitting oversized claim buckets fed to the detector.
+    # Buckets with more than this many claims are sliced into overlapping
+    # windows so no claim is silently dropped from contradiction detection.
+    contradiction_bucket_chunk_size: int = Field(
+        default=12,
+        validation_alias="STIRLING_CONTRADICTION_BUCKET_CHUNK_SIZE",
+    )
+    # Overlap between adjacent bucket-detection windows so claims at the
+    # boundary are still paired with their neighbours.
+    contradiction_bucket_chunk_overlap: int = Field(
+        default=2,
+        validation_alias="STIRLING_CONTRADICTION_BUCKET_CHUNK_OVERLAP",
+    )
+
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
 
