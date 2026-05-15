@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from typing import cast
 from unittest.mock import AsyncMock
 
 import pytest
+from pydantic_ai import RunContext
+from pydantic_ai.tools import ToolDefinition
 
 from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.contracts import AiFile
@@ -77,16 +80,21 @@ async def test_budget_gate_hides_tool_after_first_audit(runtime: AppRuntime) -> 
         files=[_file("doc-a", "a.pdf")],
         max_audits=1,
     )
-    sentinel: object = object()
+    # A real, minimal ToolDefinition — the prepare callback returns this
+    # object identity-equal when the budget is intact and None when spent.
+    # ``RunContext`` is never read inside the prepare body, but the type
+    # signature requires a non-None value; cast a sentinel for clarity.
+    tool_def = ToolDefinition(name="find_contradictions")
+    ctx = cast(RunContext[None], object())
 
     # Budget intact → prepare returns the tool definition.
-    assert await capability._prepare_find_contradictions(None, sentinel) is sentinel  # type: ignore[arg-type]
+    assert await capability._prepare_find_contradictions(ctx, tool_def) is tool_def
 
     # Spend the budget.
     await capability._find_contradictions("anything")
 
     # Budget spent → prepare returns None.
-    assert await capability._prepare_find_contradictions(None, sentinel) is None  # type: ignore[arg-type]
+    assert await capability._prepare_find_contradictions(ctx, tool_def) is None
 
 
 @pytest.mark.anyio

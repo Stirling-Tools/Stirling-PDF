@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from typing import Literal
 from unittest.mock import AsyncMock
 
 import pytest
@@ -36,14 +37,20 @@ def _file(file_id: str, name: str) -> AiFile:
     return AiFile(id=FileId(file_id), name=name)
 
 
-def _claim(page: int, quote: str, *, anchor: str = "verbatim", subject: str = "deadline") -> Claim:
+def _claim(
+    page: int,
+    quote: str,
+    *,
+    anchor: Literal["verbatim", "paraphrased"] = "verbatim",
+    subject: str = "deadline",
+) -> Claim:
     return Claim(
         page=page,
         subject=subject,
         polarity="assert",
         text=f"paraphrase {page}",
         quote=quote,
-        anchor_quality=anchor,  # type: ignore[arg-type]
+        anchor_quality=anchor,
     )
 
 
@@ -122,17 +129,24 @@ def test_which_claim_rejects_non_literal_values() -> None:
     """Regression — ``_PairedLocalisedContradiction.which_claim`` must be a
     pydantic Literal so an LLM that drifts to "Claim1", "first", etc. is
     rejected at validation instead of silently dropping the entry in
-    ``_build_paired_comment_specs``."""
+    ``_build_paired_comment_specs``.
+
+    Uses ``model_validate`` on a raw dict so the invalid value isn't a
+    type error at the call site — pydantic still rejects it at runtime,
+    which is what the test exists to prove.
+    """
     from pydantic import ValidationError
 
     from stirling.agents.pdf_review import _PairedLocalisedContradiction
 
     with pytest.raises(ValidationError):
-        _PairedLocalisedContradiction(
-            contradiction_index=0,
-            which_claim="bogus",  # type: ignore[arg-type]
-            subject="anything",
-            text="anything",
+        _PairedLocalisedContradiction.model_validate(
+            {
+                "contradiction_index": 0,
+                "which_claim": "bogus",
+                "subject": "anything",
+                "text": "anything",
+            }
         )
 
 

@@ -60,10 +60,16 @@ def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
 @pytest.mark.anyio
 async def test_run_answer_agent_builds_agent_with_three_toolsets(
     runtime_with_stub_docs: AppRuntime,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """``_run_answer_agent`` constructs an ``Agent`` with all three retrieval
     toolsets (rag, whole-doc, contradiction). We intercept the Agent
-    constructor and inspect what was wired."""
+    constructor and inspect what was wired.
+
+    Uses pytest's ``monkeypatch`` fixture rather than direct attribute
+    assignment so pyright sees the swap as a typed test-only operation
+    and restoration is automatic if the test raises.
+    """
     file = _file("doc-a", "a.pdf")
     await runtime_with_stub_docs.documents.ingest(
         file.id,
@@ -78,28 +84,31 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
     import pydantic_ai
 
     real_agent_init = pydantic_ai.Agent.__init__
-    real_agent_run = pydantic_ai.Agent.run
 
-    def _capture_init(self: object, *args: object, **kwargs: object) -> None:
+    # The Agent class is generic on deps/output types — its __init__ accepts
+    # arbitrary positional+keyword arguments depending on those parameters.
+    # We're monkey-patching the class itself for one test, so the bound
+    # method's signature is intentionally opaque here. Typing through Any
+    # is honest about that boundary ("we can't statically describe it")
+    # and avoids wallpapering the body with type-ignore directives.
+    from typing import Any
+
+    def _capture_init(self: Any, *args: Any, **kwargs: Any) -> None:
         captured["toolsets"] = kwargs.get("toolsets")
         captured["instructions"] = kwargs.get("instructions")
         # Call the real init for safety.
-        real_agent_init(self, *args, **kwargs)  # type: ignore[arg-type]
+        real_agent_init(self, *args, **kwargs)
 
     # Stub the agent's `.run` so we don't reach a real model.
-    async def _stub_run(self: object, *args: object, **kwargs: object) -> object:
+    async def _stub_run(self: Any, *args: Any, **kwargs: Any) -> object:
         class _Result:
             output = "stubbed"
 
         return _Result()
 
-    pydantic_ai.Agent.__init__ = _capture_init
-    pydantic_ai.Agent.run = _stub_run  # type: ignore[method-assign]
-    try:
-        await agent._run_answer_agent(PdfQuestionRequest(question="any conflicts?", files=[file]))
-    finally:
-        pydantic_ai.Agent.__init__ = real_agent_init
-        pydantic_ai.Agent.run = real_agent_run
+    monkeypatch.setattr(pydantic_ai.Agent, "__init__", _capture_init)
+    monkeypatch.setattr(pydantic_ai.Agent, "run", _stub_run)
+    await agent._run_answer_agent(PdfQuestionRequest(question="any conflicts?", files=[file]))
 
     toolsets = captured.get("toolsets")
     assert isinstance(toolsets, list)
