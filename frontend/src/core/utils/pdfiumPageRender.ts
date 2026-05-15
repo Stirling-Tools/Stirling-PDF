@@ -39,21 +39,25 @@ export async function renderPdfiumPageDataUrl(
   if (!pagePtr) return null;
 
   try {
+    // Effective dims already account for /Rotate; PDFium auto-applies it during render.
     const rawW = m.FPDF_GetPageWidthF(pagePtr);
     const rawH = m.FPDF_GetPageHeightF(pagePtr);
-    // FPDFPage_GetRotation returns 0..3 for 0°/90°/180°/270° CW.
+    // Returns 0–3 for 0°/90°/180°/270° CW.
     const pageRotQuarters = (m as any).FPDFPage_GetRotation(pagePtr) | 0;
 
     const isQuarterTurn = pageRotQuarters === 1 || pageRotQuarters === 3;
-    const outW = applyRotation && isQuarterTurn ? rawH : rawW;
-    const outH = applyRotation && isQuarterTurn ? rawW : rawH;
+
+    // false: swap dims back to raw + counter-rotate to cancel PDFium's auto /Rotate.
+    const outW = applyRotation ? rawW : isQuarterTurn ? rawH : rawW;
+    const outH = applyRotation ? rawH : isQuarterTurn ? rawW : rawH;
+    const renderRotate = applyRotation ? 0 : (4 - pageRotQuarters) % 4;
+
     const w = Math.max(1, Math.round(outW * scale));
     const h = Math.max(1, Math.round(outH * scale));
 
     const bitmapPtr = m.FPDFBitmap_Create(w, h, 1);
     try {
-      // White background — PDF content doesn't encode paper colour, so
-      // unpainted regions would otherwise be transparent.
+      // White background; PDF content doesn't encode paper colour.
       m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, w, h, 0xffffffff);
       m.FPDF_RenderPageBitmap(
         bitmapPtr,
@@ -62,7 +66,7 @@ export async function renderPdfiumPageDataUrl(
         0,
         w,
         h,
-        applyRotation ? pageRotQuarters : 0,
+        renderRotate,
         PDFIUM_RENDER_FLAGS,
       );
 
@@ -71,19 +75,11 @@ export async function renderPdfiumPageDataUrl(
       const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
       const pixels = new Uint8ClampedArray(w * h * 4);
 
-      // BGRA → RGBA. Direct HEAPU8 indexing is ~100× faster than
-      // per-pixel m.pdfium.getValue() calls for large bitmaps.
+      // @embedpdf/pdfium WASM stores pixels in RGBA byte order (not BGRA),
+      // so copy rows directly without channel swapping.
       for (let y = 0; y < h; y++) {
         const srcRow = bufferPtr + y * stride;
-        const dstRow = y * w * 4;
-        for (let x = 0; x < w; x++) {
-          const so = srcRow + x * 4;
-          const dst = dstRow + x * 4;
-          pixels[dst] = heap[so + 2];
-          pixels[dst + 1] = heap[so + 1];
-          pixels[dst + 2] = heap[so];
-          pixels[dst + 3] = heap[so + 3];
-        }
+        pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
       }
 
       const canvas = document.createElement("canvas");

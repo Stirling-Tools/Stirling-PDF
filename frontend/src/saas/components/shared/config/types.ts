@@ -30,6 +30,7 @@ export const VALID_NAV_KEYS = [
   "adminAudit",
   "adminUsage",
   "adminEndpoints",
+  "help",
 ] as const;
 
 // Extend NavKey to include saas-specific keys
@@ -62,6 +63,7 @@ export type NavKey =
   | "adminPlan"
   | "adminAudit"
   | "adminUsage"
-  | "adminEndpoints";
+  | "adminEndpoints"
+  | "help";
 
 // some of these are not used yet, but appear in figma designs

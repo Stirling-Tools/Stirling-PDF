@@ -43,10 +43,13 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
       {/* Toolbar */}
       <Paper
         radius={0}
-        p="xs"
+        px="sm"
         style={{
           borderBottom: "1px solid var(--mantine-color-gray-2)",
           flexShrink: 0,
+          minHeight: 44,
+          display: "flex",
+          alignItems: "center",
         }}
       >
         <Group gap="md" align="center">

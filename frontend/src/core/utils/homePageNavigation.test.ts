@@ -26,7 +26,7 @@ describe("getStartupNavigationAction", () => {
     });
   });
 
-  it("does not force navigation for pdfTextEditor", () => {
+  it("does not force navigation for pdfTextEditor or multiTool", () => {
     expect(
       getStartupNavigationAction(
         0,
@@ -41,6 +41,22 @@ describe("getStartupNavigationAction", () => {
         3,
         "pdfTextEditor",
         "viewer" as WorkbenchType,
+      ),
+    ).toBeNull();
+    expect(
+      getStartupNavigationAction(
+        0,
+        1,
+        "multiTool",
+        "pageEditor" as WorkbenchType,
+      ),
+    ).toBeNull();
+    expect(
+      getStartupNavigationAction(
+        0,
+        3,
+        "multiTool",
+        "pageEditor" as WorkbenchType,
       ),
     ).toBeNull();
   });

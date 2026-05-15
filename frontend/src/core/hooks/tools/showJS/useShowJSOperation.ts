@@ -49,7 +49,7 @@ export const useShowJSOperation = (): ShowJSOperationHook => {
   const executeOperation = useCallback(
     async (_params: ShowJSParameters, selectedFiles: StirlingFile[]) => {
       if (selectedFiles.length === 0) {
-        setErrorMessage(t("noFileSelected", "No files selected"));
+        setErrorMessage(t("noFileSelected", "No file loaded"));
         return;
       }
 
