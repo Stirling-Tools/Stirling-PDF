@@ -177,11 +177,12 @@ export const useToolManagement = (): ToolManagementResult => {
       if (preferences.hideUnavailableTools && (!isAvailable || isComingSoon)) {
         return;
       }
-      availableToolRegistry[toolKey] = {
-        ...baseTool,
-        name: baseTool.name,
-        description: baseTool.description,
-      };
+      // Reuse the baseRegistry reference directly. The previous
+      // `{...baseTool, name, description}` spread produced an identical
+      // object with a new identity on every recompute, which cascaded
+      // through filteredTools / getSelectedTool / handleToolSelect and
+      // defeated `memo()` on every ToolButton.
+      availableToolRegistry[toolKey] = baseTool;
     });
     return availableToolRegistry;
   }, [baseRegistry, preferences.hideUnavailableTools, toolAvailability]);
