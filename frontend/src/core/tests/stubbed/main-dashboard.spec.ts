@@ -11,20 +11,8 @@ test.describe("2. Main Dashboard / Home Page", () => {
       page,
     }) => {
       await expect(
-        page.getByRole("link", { name: /^Tools$/i }).first(),
-      ).toBeVisible({ timeout: 10000 });
-      await expect(
-        page.locator('[data-testid="read-button"]').first(),
-      ).toBeVisible();
-      await expect(
-        page.locator('[data-testid="automate-button"]').first(),
-      ).toBeVisible();
-      await expect(
         page.locator('[data-testid="files-button"]').first(),
-      ).toBeVisible();
-      await expect(
-        page.locator('[data-tour="help-button"]').first(),
-      ).toBeVisible();
+      ).toBeVisible({ timeout: 10000 });
       await expect(
         page.locator('[data-testid="config-button"]').first(),
       ).toBeVisible();

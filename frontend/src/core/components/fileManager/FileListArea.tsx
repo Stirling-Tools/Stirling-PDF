@@ -28,7 +28,6 @@ const FileListArea: React.FC<FileListAreaProps> = ({
     onHistoryFileRemove,
     onFileDoubleClick,
     onDownloadSingle,
-    isFileSupported,
     isLoading,
     activeFileIds,
   } = useFileManagerContext();
@@ -65,7 +64,6 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                   <FileListItem
                     file={file}
                     isSelected={selectedFilesSet.has(file.id)}
-                    isSupported={isFileSupported(file.name)}
                     onSelect={(shiftKey) => onFileSelect(file, index, shiftKey)}
                     onRemove={() => onFileRemove(index)}
                     onDownload={() => onDownloadSingle(file)}
@@ -82,7 +80,6 @@ const FileListArea: React.FC<FileListAreaProps> = ({
                     onDownloadSingle={onDownloadSingle}
                     onFileDoubleClick={onFileDoubleClick}
                     onHistoryFileRemove={onHistoryFileRemove}
-                    isFileSupported={isFileSupported}
                   />
                 </React.Fragment>
               );
