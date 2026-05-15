@@ -87,12 +87,6 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
-    // https://mvnrepository.com/artifact/technology.tabula/tabula
-    implementation ('technology.tabula:tabula:1.0.5')  {
-        exclude group: 'org.slf4j', module: 'slf4j-simple'
-        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
-        exclude group: 'com.google.code.gson', module: 'gson'
-    }
     // CVE-2022-25647: Explicit gson 2.13.2 to prevent unsafe deserialization (tabula would pull 2.8.7)
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
