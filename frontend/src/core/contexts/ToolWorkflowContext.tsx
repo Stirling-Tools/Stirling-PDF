@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
 } from "react";
 import {
   useToolManagement,
@@ -121,6 +122,61 @@ const ToolWorkflowContext =
 if (!existingContext) {
   (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
 }
+
+/**
+ * Slim subset contexts exposed alongside the main ToolWorkflowContext to
+ * prevent rerender storms.
+ *
+ * The main `ToolWorkflowContext` value rebuilds whenever ANY of its 25+
+ * fields change — including `state.searchQuery`, which churns on every
+ * keystroke. Components that consume the full context (e.g. `ToolButton`)
+ * therefore rerender on every keystroke even when none of the fields they
+ * actually use have changed.
+ *
+ * These two narrower contexts let hot consumers subscribe to only what
+ * they need:
+ *  - `useToolWorkflowActions()` — callbacks whose identity is stabilized
+ *    via refs so the value object is referentially constant across the
+ *    provider's lifetime. Safe to depend on without causing rerenders.
+ *  - `useToolWorkflowData()` — rarely-changing data (tool registry, tool
+ *    availability, favorites). Rebuilds only when these specific pieces
+ *    of state actually change — NOT on search keystrokes / sidebar toggles.
+ *
+ * Existing callers of `useToolWorkflow()` continue to work unchanged.
+ */
+export interface ToolWorkflowActionsValue {
+  selectTool: (toolId: ToolId | null) => void;
+  clearToolSelection: () => void;
+  toggleFavorite: (toolId: ToolId) => void;
+  handleToolSelect: (toolId: ToolId) => void;
+  handleToolSelectForced: (toolId: ToolId) => void;
+  handleBackToTools: () => void;
+  handleReaderToggle: () => void;
+  setSidebarsVisible: (visible: boolean) => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent" | "hidden") => void;
+  setReaderMode: (mode: boolean) => void;
+  setToolPanelMode: (mode: ToolPanelMode) => void;
+  setPreviewFile: (file: File | null) => void;
+  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
+  setSearchQuery: (query: string) => void;
+  registerToolReset: (toolId: string, resetFunction: () => void) => void;
+  resetTool: (toolId: string) => void;
+}
+
+export interface ToolWorkflowDataValue {
+  toolAvailability: ToolAvailabilityMap;
+  toolRegistry: Partial<ToolRegistry>;
+  favoriteTools: ToolId[];
+  getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
+  isFavorite: (toolId: ToolId) => boolean;
+}
+
+const ToolWorkflowActionsContext = createContext<
+  ToolWorkflowActionsValue | undefined
+>(undefined);
+const ToolWorkflowDataContext = createContext<
+  ToolWorkflowDataValue | undefined
+>(undefined);
 
 // Provider component
 interface ToolWorkflowProviderProps {
@@ -511,6 +567,135 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     true,
   );
 
+  // ── Stable callbacks for the slim Actions context ──────────────────────
+  // The compound handlers (handleToolSelect, etc.) depend on navigationState
+  // and other moving pieces, so their useCallback identity churns. Hot
+  // consumers like ToolButton don't need fresh identities — they just need
+  // to call the latest version. We wrap each in a ref-backed shell so the
+  // identity is stable for the entire provider lifetime.
+  const handleToolSelectRef = useRef(handleToolSelect);
+  handleToolSelectRef.current = handleToolSelect;
+  const stableHandleToolSelect = useCallback(
+    (id: ToolId) => handleToolSelectRef.current(id),
+    [],
+  );
+
+  const handleToolSelectForcedRef = useRef(handleToolSelectForced);
+  handleToolSelectForcedRef.current = handleToolSelectForced;
+  const stableHandleToolSelectForced = useCallback(
+    (id: ToolId) => handleToolSelectForcedRef.current(id),
+    [],
+  );
+
+  const handleBackToToolsRef = useRef(handleBackToTools);
+  handleBackToToolsRef.current = handleBackToTools;
+  const stableHandleBackToTools = useCallback(
+    () => handleBackToToolsRef.current(),
+    [],
+  );
+
+  const handleReaderToggleRef = useRef(handleReaderToggle);
+  handleReaderToggleRef.current = handleReaderToggle;
+  const stableHandleReaderToggle = useCallback(
+    () => handleReaderToggleRef.current(),
+    [],
+  );
+
+  // setReaderMode / setPreviewFile / setToolPanelMode have non-empty deps
+  // and re-create when those deps change. Stabilize via ref for consumers
+  // that only need to call them, not to depend on their identity.
+  const setReaderModeRef = useRef(setReaderMode);
+  setReaderModeRef.current = setReaderMode;
+  const stableSetReaderMode = useCallback(
+    (mode: boolean) => setReaderModeRef.current(mode),
+    [],
+  );
+
+  const setPreviewFileRef = useRef(setPreviewFile);
+  setPreviewFileRef.current = setPreviewFile;
+  const stableSetPreviewFile = useCallback(
+    (file: File | null) => setPreviewFileRef.current(file),
+    [],
+  );
+
+  const setToolPanelModeRef = useRef(setToolPanelMode);
+  setToolPanelModeRef.current = setToolPanelMode;
+  const stableSetToolPanelMode = useCallback(
+    (mode: ToolPanelMode) => setToolPanelModeRef.current(mode),
+    [],
+  );
+
+  const selectToolRef = useRef(actions.setSelectedTool);
+  selectToolRef.current = actions.setSelectedTool;
+  const stableSelectTool = useCallback(
+    (id: ToolId | null) => selectToolRef.current(id),
+    [],
+  );
+
+  const stableClearToolSelection = useCallback(
+    () => selectToolRef.current(null),
+    [],
+  );
+
+  // Empty-deps memo: the Actions context value is referentially constant
+  // for the entire provider lifetime, so consumers don't rerender on
+  // searchQuery / sidebar / preview file / etc. changes.
+  const actionsValue = useMemo<ToolWorkflowActionsValue>(
+    () => ({
+      selectTool: stableSelectTool,
+      clearToolSelection: stableClearToolSelection,
+      toggleFavorite,
+      handleToolSelect: stableHandleToolSelect,
+      handleToolSelectForced: stableHandleToolSelectForced,
+      handleBackToTools: stableHandleBackToTools,
+      handleReaderToggle: stableHandleReaderToggle,
+      setSidebarsVisible,
+      setLeftPanelView,
+      setReaderMode: stableSetReaderMode,
+      setToolPanelMode: stableSetToolPanelMode,
+      setPreviewFile: stableSetPreviewFile,
+      setPageEditorFunctions,
+      setSearchQuery,
+      registerToolReset,
+      resetTool,
+    }),
+    // toggleFavorite is stable (empty deps in useToolHistory).
+    // setSidebarsVisible / setLeftPanelView / setPageEditorFunctions /
+    // setSearchQuery / registerToolReset / resetTool are all useCallback
+    // with empty deps inside this provider, so their identity is stable.
+    [
+      stableSelectTool,
+      stableClearToolSelection,
+      toggleFavorite,
+      stableHandleToolSelect,
+      stableHandleToolSelectForced,
+      stableHandleBackToTools,
+      stableHandleReaderToggle,
+      setSidebarsVisible,
+      setLeftPanelView,
+      stableSetReaderMode,
+      stableSetToolPanelMode,
+      stableSetPreviewFile,
+      setPageEditorFunctions,
+      setSearchQuery,
+      registerToolReset,
+      resetTool,
+    ],
+  );
+
+  // Data context rebuilds only when these specific pieces of data change.
+  // None of them depend on searchQuery / sidebar state / etc.
+  const dataValue = useMemo<ToolWorkflowDataValue>(
+    () => ({
+      toolAvailability,
+      toolRegistry,
+      favoriteTools,
+      getSelectedTool,
+      isFavorite,
+    }),
+    [toolAvailability, toolRegistry, favoriteTools, getSelectedTool, isFavorite],
+  );
+
   // Properly memoized context value
   const contextValue = useMemo(
     (): ToolWorkflowContextValue => ({
@@ -594,10 +779,46 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   return (
-    <ToolWorkflowContext.Provider value={contextValue}>
-      {children}
-    </ToolWorkflowContext.Provider>
+    <ToolWorkflowActionsContext.Provider value={actionsValue}>
+      <ToolWorkflowDataContext.Provider value={dataValue}>
+        <ToolWorkflowContext.Provider value={contextValue}>
+          {children}
+        </ToolWorkflowContext.Provider>
+      </ToolWorkflowDataContext.Provider>
+    </ToolWorkflowActionsContext.Provider>
   );
+}
+
+/**
+ * Slim hook returning only stable callbacks. Use this in components that
+ * need to dispatch tool-workflow actions but don't need to read state.
+ * The returned object's reference never changes across the provider's
+ * lifetime, so consuming this hook does NOT cause rerenders.
+ */
+export function useToolWorkflowActions(): ToolWorkflowActionsValue {
+  const ctx = useContext(ToolWorkflowActionsContext);
+  if (!ctx) {
+    throw new Error(
+      "useToolWorkflowActions must be used within ToolWorkflowProvider",
+    );
+  }
+  return ctx;
+}
+
+/**
+ * Slim hook returning rarely-changing tool data (registry, availability,
+ * favorites, getters). Rebuilds only when these specific pieces change —
+ * NOT on searchQuery / sidebar state / panel mode changes. Use this in
+ * components like ToolButton that render in long lists.
+ */
+export function useToolWorkflowData(): ToolWorkflowDataValue {
+  const ctx = useContext(ToolWorkflowDataContext);
+  if (!ctx) {
+    throw new Error(
+      "useToolWorkflowData must be used within ToolWorkflowProvider",
+    );
+  }
+  return ctx;
 }
 
 // Custom hook to use the context
