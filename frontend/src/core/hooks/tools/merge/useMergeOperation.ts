@@ -33,6 +33,10 @@ const buildFormData = (
     "generateToc",
     (parameters.generateTableOfContents ?? false).toString(),
   );
+  formData.append(
+    "preserveAccessibility",
+    (parameters.preserveAccessibility ?? false).toString(),
+  );
 
   return formData;
 };

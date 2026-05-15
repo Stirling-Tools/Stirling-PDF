@@ -287,6 +287,7 @@ public class MergeController {
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
+        boolean preserveAccessibility = request.isPreserveAccessibility();
 
         MultipartFile[] files = request.getFileInput();
         if (files == null) {
@@ -312,11 +313,12 @@ public class MergeController {
         try {
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             // OPTIMIZE_RESOURCES_MODE closes source documents progressively and skips
-            // structure-tree copying. Trade-off: PDF/UA tags (used by screen readers) are not
-            // preserved in the merged output. Most users don't have tagged PDFs and this trades
-            // negligibly-different output for measurably lower peak heap during merge.
+            // structure-tree copying — drops PDF/UA tags but uses much less heap.
+            // PDFBOX_LEGACY_MODE preserves tags at the cost of higher peak heap.
             mergerUtility.setDocumentMergeMode(
-                    PDFMergerUtility.DocumentMergeMode.OPTIMIZE_RESOURCES_MODE);
+                    preserveAccessibility
+                            ? PDFMergerUtility.DocumentMergeMode.PDFBOX_LEGACY_MODE
+                            : PDFMergerUtility.DocumentMergeMode.OPTIMIZE_RESOURCES_MODE);
             long totalSize = 0;
             File[] sourceFiles = new File[files.length];
             for (int index = 0; index < files.length; index++) {
@@ -340,6 +342,21 @@ public class MergeController {
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                    // Identify which source file(s) are corrupt for operator diagnostics.
+                    // Only runs on the failure path so the happy path stays fast.
+                    List<String> badFiles = new ArrayList<>();
+                    for (int i = 0; i < sourceFiles.length; i++) {
+                        try (PDDocument ignored =
+                                pdfDocumentFactory.load(sourceFiles[i], true)) {
+                            // OK
+                        } catch (IOException corruptInput) {
+                            String name = files[i].getOriginalFilename();
+                            badFiles.add(name != null ? name : ("index " + i));
+                        }
+                    }
+                    if (!badFiles.isEmpty()) {
+                        log.warn("Corrupted PDFs in merge input: {}", badFiles);
+                    }
                     throw ExceptionUtils.createMultiplePdfCorruptedException(e);
                 }
                 throw e;
@@ -357,10 +374,6 @@ public class MergeController {
                 int[] pageCounts = generateToc ? collectPageCounts(sourceFiles) : null;
 
                 outputTempFile = new TempFile(tempFileManager, ".pdf");
-                // Hint the GC to reclaim merger transients before we open the merged document.
-                // The merger has just dropped its destination COSDocument; reclaiming that heap
-                // before loading the merged file again limits live-set during the modify pass.
-                System.gc();
                 try (PDDocument mergedDocument = pdfDocumentFactory.load(mergeOutput.getFile())) {
                     // Resource cache off for the modify pass — we never call getImage() here,
                     // and disabling it prevents PDFBox from caching XObjects when the page tree

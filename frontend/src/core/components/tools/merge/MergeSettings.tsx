@@ -50,6 +50,21 @@ const MergeSettings: React.FC<MergeSettingsProps> = ({
         }
         disabled={disabled}
       />
+
+      <Checkbox
+        label={t(
+          "merge.preserveAccessibility.label",
+          "Preserve accessibility tags? (uses more memory on large merges)",
+        )}
+        checked={parameters.preserveAccessibility}
+        onChange={(event) =>
+          onParameterChange(
+            "preserveAccessibility",
+            event.currentTarget.checked,
+          )
+        }
+        disabled={disabled}
+      />
     </Stack>
   );
 };

@@ -42,6 +42,16 @@ public class MergePdfsRequest extends MultiplePDFFiles {
 
     @Schema(
             description =
+                    "Flag indicating whether to preserve PDF/UA accessibility tags (structure"
+                            + " tree) in the merged output. When false (default) the merger runs in"
+                            + " resource-optimised mode which drops tags but uses significantly less"
+                            + " heap. Set true when merging tagged PDFs intended for screen readers.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private boolean preserveAccessibility = false;
+
+    @Schema(
+            description =
                     "JSON array of client-provided IDs for each uploaded file (same order as fileInput)",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String clientFileIds;

@@ -19,6 +19,7 @@ describe("MergeSettings", () => {
   const defaultParameters: MergeParameters = {
     removeDigitalSignature: false,
     generateTableOfContents: false,
+    preserveAccessibility: false,
   };
 
   const mockOnParameterChange = vi.fn();
@@ -86,6 +87,13 @@ describe("MergeSettings", () => {
       "generateTableOfContents",
       true,
     );
+
+    // Click the third checkbox (preserveAccessibility - should toggle from false to true)
+    fireEvent.click(checkboxes[2]);
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "preserveAccessibility",
+      true,
+    );
   });
 
   test("should call translation function with correct keys", () => {
@@ -106,6 +114,10 @@ describe("MergeSettings", () => {
     expect(mockT).toHaveBeenCalledWith(
       "merge.generateTableOfContents.label",
       "Generate table of contents in the merged file?",
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "merge.preserveAccessibility.label",
+      "Preserve accessibility tags? (uses more memory on large merges)",
     );
   });
 });
