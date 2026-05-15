@@ -24,6 +24,36 @@ interface ToolPickerProps {
   isSearching?: boolean;
 }
 
+// Stable references hoisted to module scope so they don't churn `useToolSections`
+// memoization and don't defeat downstream `memo()` checks on every render.
+const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
+const HEADER_TEXT_STYLE: React.CSSProperties = {
+  fontSize: "0.75rem",
+  fontWeight: 500,
+  padding: "0.5rem 0 0.25rem 0.5rem",
+  textTransform: "none",
+  color: "var(--text-secondary, rgba(0, 0, 0, 0.6))",
+  opacity: 0.7,
+};
+const SCROLLABLE_STYLE: React.CSSProperties = {
+  flex: 1,
+  overflowY: "auto",
+  overflowX: "hidden",
+  minHeight: 0,
+  height: "100%",
+  marginTop: -2,
+};
+const CONTAINER_STYLE: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  background: "var(--bg-toolbar)",
+};
+const toTitleCase = (s: string) =>
+  s.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
+  );
+
 const ToolPicker = ({
   selectedToolKey,
   onSelect,
@@ -60,43 +90,15 @@ const ToolPicker = ({
   );
 
   // Build flat list by subcategory for search mode
-  const emptyFilteredTools: ToolPickerProps["filteredTools"] = [];
   const effectiveFilteredForSearch: ToolPickerProps["filteredTools"] =
-    isSearching ? filteredTools : emptyFilteredTools;
+    isSearching ? filteredTools : EMPTY_FILTERED_TOOLS;
   const { searchGroups } = useToolSections(effectiveFilteredForSearch);
-  const headerTextStyle: React.CSSProperties = {
-    fontSize: "0.75rem",
-    fontWeight: 500,
-    padding: "0.5rem 0 0.25rem 0.5rem",
-    textTransform: "none",
-    color: "var(--text-secondary, rgba(0, 0, 0, 0.6))",
-    opacity: 0.7,
-  };
-  const toTitleCase = (s: string) =>
-    s.replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
-    );
 
   return (
-    <Box
-      h="100%"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--bg-toolbar)",
-      }}
-    >
+    <Box h="100%" style={CONTAINER_STYLE}>
       <Box
         ref={scrollableRef}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          minHeight: 0,
-          height: "100%",
-          marginTop: -2,
-        }}
+        style={SCROLLABLE_STYLE}
         className="tool-picker-scrollable"
       >
         {isSearching ? (
@@ -124,7 +126,7 @@ const ToolPicker = ({
             <Stack p="sm" gap="xs">
               {favoriteToolItems.length > 0 && (
                 <Box w="100%">
-                  <div style={headerTextStyle}>
+                  <div style={HEADER_TEXT_STYLE}>
                     {t("toolPanel.fullscreen.favorites", "Favourites")}
                   </div>
                   <div>
@@ -143,7 +145,7 @@ const ToolPicker = ({
               )}
               {recommendedItems.length > 0 && (
                 <Box w="100%">
-                  <div style={headerTextStyle}>
+                  <div style={HEADER_TEXT_STYLE}>
                     {t("toolPanel.fullscreen.recommended", "Recommended")}
                   </div>
                   <div>
@@ -163,7 +165,7 @@ const ToolPicker = ({
               {allSection &&
                 allSection.subcategories.map((sc: SubcategoryGroup) => (
                   <Box key={sc.subcategoryId} w="100%">
-                    <div style={headerTextStyle}>
+                    <div style={HEADER_TEXT_STYLE}>
                       {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
                     </div>
                     {renderToolButtons(
