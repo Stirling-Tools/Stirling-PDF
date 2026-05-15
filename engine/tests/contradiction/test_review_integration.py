@@ -43,7 +43,7 @@ def _claim(page: int, quote: str, *, anchor: str = "verbatim", subject: str = "d
         polarity="assert",
         text=f"paraphrase {page}",
         quote=quote,
-        anchor_quality=anchor,
+        anchor_quality=anchor,  # type: ignore[arg-type]
     )
 
 
@@ -60,7 +60,7 @@ def _report(*contradictions: Contradiction) -> ContradictionReport:
 def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
     """Runtime with a non-network DocumentService backed by stub embedder + ephemeral store."""
     stub = DocumentService(
-        embedder=StubEmbedder(),
+        embedder=StubEmbedder(),  # type: ignore[arg-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
@@ -104,7 +104,7 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
 
         return _R()
 
-    agent._contradiction_localiser.run = _capture
+    agent._contradiction_localiser.run = _capture  # type: ignore[method-assign]
     await agent._build_contradiction_comments_payload("the prompt", report)
 
     assert len(captured_prompts) == 1
@@ -130,7 +130,7 @@ def test_which_claim_rejects_non_literal_values() -> None:
     with pytest.raises(ValidationError):
         _PairedLocalisedContradiction(
             contradiction_index=0,
-            which_claim="bogus",
+            which_claim="bogus",  # type: ignore[arg-type]
             subject="anything",
             text="anything",
         )

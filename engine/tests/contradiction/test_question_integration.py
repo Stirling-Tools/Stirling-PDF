@@ -50,7 +50,7 @@ def _claim(page: int, quote: str) -> Claim:
 @pytest.fixture
 def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
     stub = DocumentService(
-        embedder=StubEmbedder(),
+        embedder=StubEmbedder(),  # type: ignore[arg-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
@@ -84,7 +84,7 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
         captured["toolsets"] = kwargs.get("toolsets")
         captured["instructions"] = kwargs.get("instructions")
         # Call the real init for safety.
-        real_agent_init(self, *args, **kwargs)
+        real_agent_init(self, *args, **kwargs)  # type: ignore[arg-type]
 
     # Stub the agent's `.run` so we don't reach a real model.
     async def _stub_run(self: object, *args: object, **kwargs: object) -> object:
@@ -94,7 +94,7 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
         return _Result()
 
     pydantic_ai.Agent.__init__ = _capture_init
-    pydantic_ai.Agent.run = _stub_run
+    pydantic_ai.Agent.run = _stub_run  # type: ignore[method-assign]
     try:
         await agent._run_answer_agent(PdfQuestionRequest(question="any conflicts?", files=[file]))
     finally:
