@@ -4,6 +4,10 @@ import {
   addGlowToElements,
   removeAllGlows,
 } from "@app/components/onboarding/tourGlow";
+import {
+  waitForElement,
+  waitForHighlightable,
+} from "@app/components/onboarding/tourUtils";
 
 export enum AdminTourStep {
   WELCOME,
@@ -57,7 +61,7 @@ export function createAdminStepsConfig({
       selector: '[data-tour="config-button"]',
       content: t(
         "adminOnboarding.configButton",
-        "Click the <strong>Config</strong> button to access all system settings and administrative controls.",
+        "Open <strong>Settings</strong> to access all system configuration and administrative controls.",
       ),
       position: "right",
       padding: 10,
@@ -204,15 +208,18 @@ export function createAdminStepsConfig({
       },
     },
     [AdminTourStep.WRAP_UP]: {
-      selector: '[data-tour="help-button"]',
+      selector: '[data-tour="admin-help-nav"]',
       content: t(
         "adminOnboarding.wrapUp",
-        "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu.",
+        "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
       ),
       position: "right",
       padding: 10,
-      action: () => {
+      action: async () => {
         removeAllGlows();
+        navigateToSection("help");
+        await waitForElement('[data-tour="admin-help-nav"]', 5000);
+        await waitForHighlightable('[data-tour="admin-help-nav"]', 5000);
       },
     },
   };

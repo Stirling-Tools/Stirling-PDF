@@ -411,6 +411,29 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
   ]);
 
+  // When in multi-tool, sync left panel visibility with workbench:
+  // hide the panel on pageEditor, show it when navigating to viewer/fileEditor.
+  const prevMultiToolWorkbenchRef = React.useRef<WorkbenchType | null>(null);
+  useEffect(() => {
+    const prev = prevMultiToolWorkbenchRef.current;
+    prevMultiToolWorkbenchRef.current = navigationState.workbench;
+
+    if (navigationState.selectedTool !== "multiTool") return;
+
+    if (navigationState.workbench === "pageEditor" && prev !== "pageEditor") {
+      setLeftPanelView("hidden");
+    } else if (
+      navigationState.workbench !== "pageEditor" &&
+      prev === "pageEditor"
+    ) {
+      setLeftPanelView("toolPicker");
+    }
+  }, [
+    navigationState.workbench,
+    navigationState.selectedTool,
+    setLeftPanelView,
+  ]);
+
   // Tool reset methods
   const registerToolReset = useCallback(
     (toolId: string, resetFunction: () => void) => {
