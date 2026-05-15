@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import viteCompression from "vite-plugin-compression";
 
 const VALID_MODES = [
   "core",
@@ -109,6 +110,16 @@ export default defineConfig(async ({ mode }) => {
             dest: "pdfjs/standard_fonts",
           },
         ],
+      }),
+      viteCompression({
+        algorithm: "gzip",
+        ext: ".gz",
+        threshold: 1024,
+      }),
+      viteCompression({
+        algorithm: "brotliCompress",
+        ext: ".br",
+        threshold: 1024,
       }),
     ],
     server: {
