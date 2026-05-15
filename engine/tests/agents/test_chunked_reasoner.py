@@ -333,9 +333,7 @@ class TestPromptConstruction:
         reasoner = ChunkedReasoner(runtime)
         # Render chunk content through the mapper's public helper — the
         # first-round chunk shape lives in ChunkedMapper.
-        content = ChunkedMapper.format_chunk_content(
-            [_page(2, "page two body"), _page(3, "page three body")]
-        )
+        content = ChunkedMapper.format_chunk_content([_page(2, "page two body"), _page(3, "page three body")])
         prompt = reasoner._build_extraction_prompt(content, "what is on page two?")
 
         assert "what is on page two?" in prompt
@@ -536,9 +534,7 @@ class TestExtractChunk:
         assert note.relevant_excerpts == ["y"]
 
     @pytest.mark.anyio
-    async def test_compression_rounds_receive_user_question_through_gather_notes(
-        self, runtime: AppRuntime
-    ) -> None:
+    async def test_compression_rounds_receive_user_question_through_gather_notes(self, runtime: AppRuntime) -> None:
         """Regression — every extractor call (first round AND every
         compression round) MUST carry the same user question. The pre-fix
         bug passed ``""`` to the compression-round prompt builder, so the
@@ -552,9 +548,7 @@ class TestExtractChunk:
 
         # Small notes budget forces a compression round; small slice
         # budget produces multiple first-round chunks that overflow it.
-        reasoner = ChunkedReasoner(
-            runtime, chars_per_slice=200, notes_char_budget=200
-        )
+        reasoner = ChunkedReasoner(runtime, chars_per_slice=200, notes_char_budget=200)
         pages = [_page(i, "x" * 150) for i in range(1, 5)]
 
         call_count = 0

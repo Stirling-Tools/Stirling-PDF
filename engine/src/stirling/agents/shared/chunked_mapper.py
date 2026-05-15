@@ -336,9 +336,7 @@ class ChunkedMapper[T: BaseModel]:
         per-page marker shape is owned by :data:`PAGE_MARKER_TEMPLATE` so
         downstream prompts can reference it without hardcoding the format.
         """
-        return "\n\n".join(
-            f"{PAGE_MARKER_TEMPLATE.format(n=p.page_number)}\n{p.text}" for p in pages
-        )
+        return "\n\n".join(f"{PAGE_MARKER_TEMPLATE.format(n=p.page_number)}\n{p.text}" for p in pages)
 
 
 def _zero_counts(_output: BaseModel) -> tuple[int, int]:

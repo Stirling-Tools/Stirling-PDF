@@ -233,15 +233,17 @@ class ContradictionDetector:
             )
 
         # ``pages_examined`` reports every page the extractor ran against
-        # (regardless of whether the model returned a claim for it), so
-        # the user can tell "ran but found nothing" from "skipped". Page
-        # numbers may legitimately repeat across files (page 1 of
-        # report.pdf and page 1 of memo.pdf are distinct pages); we keep
-        # the union for the human-readable count. Per-file detail is
-        # still reachable via each ``Claim.file_name``.
-        pages_examined = sorted({page for _file, page in pages_attempted})
+        # (regardless of whether the model returned a claim for it). Page
+        # numbers legitimately repeat across files — page 1 of report.pdf
+        # and page 1 of memo.pdf are distinct pages and BOTH were examined.
+        # We dedupe on the (file, page) pair, not the page number alone, so
+        # multi-file audits don't undercount; the returned list intentionally
+        # allows duplicate page numbers when those pages came from different
+        # files. Per-file detail is still reachable via each
+        # ``Claim.file_name``. (Aikido finding on PR #6369.)
+        pages_examined = sorted(page for _file, page in pages_attempted)
         logger.info(
-            "[contradiction] stage 1: %d valid claim(s) over %d distinct page(s) attempted",
+            "[contradiction] stage 1: %d valid claim(s) over %d examined page(s)",
             len(claims),
             len(pages_examined),
         )
@@ -315,9 +317,7 @@ class ContradictionDetector:
             # carrying substantial content — a silent zero here usually
             # means the extractor model is misreading the prompt, not that
             # the source page is truly claim-free.
-            chunk_char_count = sum(
-                pages_by_num[p].char_count for p in chunk.pages if p in pages_by_num
-            )
+            chunk_char_count = sum(pages_by_num[p].char_count for p in chunk.pages if p in pages_by_num)
             if not chunk.output.claims and chunk_char_count > 500:
                 logger.warning(
                     "[contradiction] chunk %s produced 0 claims for %d chars of content",
@@ -325,9 +325,7 @@ class ContradictionDetector:
                     chunk_char_count,
                 )
             for raw in chunk.output.claims:
-                claim = self._validate_extracted_claim(
-                    raw, chunk, pages_by_num, file_name=file.name
-                )
+                claim = self._validate_extracted_claim(raw, chunk, pages_by_num, file_name=file.name)
                 if claim is None:
                     continue
                 file_claims.append(claim)
@@ -368,9 +366,7 @@ class ContradictionDetector:
         chunk_pages = set(chunk.pages)
         if page not in chunk_pages:
             # Mechanical fallback: find pages in this chunk whose text contains the quote.
-            matches = [
-                p for p in chunk.pages if p in pages_by_num and raw.quote in pages_by_num[p].text
-            ]
+            matches = [p for p in chunk.pages if p in pages_by_num and raw.quote in pages_by_num[p].text]
             if len(matches) == 1:
                 logger.debug(
                     "[contradiction] reassigning claim page %d -> %d via quote search",
@@ -380,8 +376,7 @@ class ContradictionDetector:
                 page = matches[0]
             else:
                 logger.warning(
-                    "[contradiction] dropping claim with unverifiable page %d (chunk=%s, "
-                    "quote-matches=%d)",
+                    "[contradiction] dropping claim with unverifiable page %d (chunk=%s, quote-matches=%d)",
                     page,
                     chunk.label,
                     len(matches),
@@ -634,10 +629,7 @@ class ContradictionDetector:
             for index, claim in enumerate(chunk)
         ]
         claims_block = _escape_for_tag("\n".join(rendered_claims))
-        prompt = (
-            f"Canonical subject: {canonical_subject!r}\n"
-            f"<claims>\n{claims_block}\n</claims>"
-        )
+        prompt = f"Canonical subject: {canonical_subject!r}\n<claims>\n{claims_block}\n</claims>"
         # Mirror the per-chunk timeout used by ChunkedMapper so a single
         # stalled provider call can't pin the whole detect() to the HTTP
         # default.
@@ -712,10 +704,7 @@ def _build_extraction_prompt(content: str, query: str) -> str:
     extraction; the default is "extract claims" and the extractor's
     system prompt is the load-bearing piece.
     """
-    return (
-        f"Extraction focus: {query}\n"
-        f"<content>\n{content}\n</content>"
-    )
+    return f"Extraction focus: {query}\n<content>\n{content}\n</content>"
 
 
 def _windows(

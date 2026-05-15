@@ -77,7 +77,9 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
     inside the envelope."""
     file = _file("doc-a", "a.pdf")
     await runtime_with_stub_docs.documents.ingest(
-        file.id, [PageText(page_number=1, text="x")], source=file.name,
+        file.id,
+        [PageText(page_number=1, text="x")],
+        source=file.name,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
@@ -233,7 +235,9 @@ async def test_contradiction_takes_precedence_over_math(
     """When both classifiers fire, the contradiction branch wins (see module docstring)."""
     file = _file("doc-a", "a.pdf")
     await runtime_with_stub_docs.documents.ingest(
-        file.id, [PageText(page_number=1, text="x")], source=file.name,
+        file.id,
+        [PageText(page_number=1, text="x")],
+        source=file.name,
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)

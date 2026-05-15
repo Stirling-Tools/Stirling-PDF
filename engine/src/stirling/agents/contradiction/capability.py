@@ -72,9 +72,7 @@ class ContradictionCapability:
     @property
     def instructions(self) -> str:
         if self._files:
-            names = ", ".join(
-                f"<file_name>{_escape_for_xml_tag(f.name)}</file_name>" for f in self._files
-            )
+            names = ", ".join(f"<file_name>{_escape_for_xml_tag(f.name)}</file_name>" for f in self._files)
         else:
             names = "the attached documents"
         return (

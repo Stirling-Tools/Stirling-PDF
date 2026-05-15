@@ -128,9 +128,11 @@ class ContradictionReport(ApiModel):
         default_factory=list,
         description=(
             "1-indexed pages whose extractor pass ran, regardless of whether "
-            "any claims were produced for them. Pages whose extraction failed "
-            "(chunk-level timeout or crash) are excluded — the union of "
-            "successful chunks' page coverage."
+            "any claims were produced. Pages whose extraction failed "
+            "(chunk-level timeout or crash) are excluded. Multi-file audits "
+            "may show duplicate page numbers — page 1 from report.pdf and "
+            "page 1 from memo.pdf are distinct pages and both count. Per-file "
+            "attribution lives on each ``Claim.file_name``."
         ),
     )
     clean: bool = Field(

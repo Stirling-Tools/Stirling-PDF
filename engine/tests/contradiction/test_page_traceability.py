@@ -23,11 +23,7 @@ def _page(n: int, text: str) -> Page:
 
 def _chunk_output(pages: list[Page]) -> ChunkOutput[_ExtractedClaims]:
     page_nums = [p.page_number for p in pages]
-    label = (
-        f"pages={page_nums[0]}"
-        if len(page_nums) == 1
-        else f"pages={page_nums[0]}-{page_nums[-1]}"
-    )
+    label = f"pages={page_nums[0]}" if len(page_nums) == 1 else f"pages={page_nums[0]}-{page_nums[-1]}"
     return ChunkOutput(pages=page_nums, output=_ExtractedClaims(claims=[]), label=label)
 
 
@@ -147,9 +143,7 @@ def test_empty_subject_drops_claim() -> None:
     pages = [_page(1, "anything")]
     chunk = _chunk_output(pages)
     pages_by_num = {p.page_number: p for p in pages}
-    raw = _ExtractedClaim(
-        page=1, subject="   ", polarity="assert", text="real text", quote="real quote"
-    )
+    raw = _ExtractedClaim(page=1, subject="   ", polarity="assert", text="real text", quote="real quote")
 
     claim = ContradictionDetector._validate_extracted_claim(raw, chunk, pages_by_num)
     assert claim is None

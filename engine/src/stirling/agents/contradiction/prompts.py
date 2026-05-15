@@ -182,5 +182,3 @@ Each entry carries:
 Reply in the SAME LANGUAGE as the user's request. Do not invent
 content; only restate what the verdict already says.
 """
-
-

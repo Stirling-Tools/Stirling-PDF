@@ -170,14 +170,10 @@ class OrchestratorAgent:
     async def _run_pdf_to_markdown(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
         return await PdfToMarkdownAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_review(
-        self, ctx: RunContext[OrchestratorDeps]
-    ) -> EditPlanResponse | NeedIngestResponse:
+    async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse | NeedIngestResponse:
         return await self._run_pdf_review(ctx.deps.request)
 
-    async def _run_pdf_review(
-        self, request: OrchestratorRequest
-    ) -> EditPlanResponse | NeedIngestResponse:
+    async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse | NeedIngestResponse:
         return await PdfReviewAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(

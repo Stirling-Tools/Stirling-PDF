@@ -66,7 +66,9 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
     constructor and inspect what was wired."""
     file = _file("doc-a", "a.pdf")
     await runtime_with_stub_docs.documents.ingest(
-        file.id, [PageText(page_number=1, text="content")], source=file.name,
+        file.id,
+        [PageText(page_number=1, text="content")],
+        source=file.name,
     )
 
     agent = PdfQuestionAgent(runtime_with_stub_docs)
@@ -88,6 +90,7 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
     async def _stub_run(self: object, *args: object, **kwargs: object) -> object:
         class _Result:
             output = "stubbed"
+
         return _Result()
 
     pydantic_ai.Agent.__init__ = _capture_init  # type: ignore[method-assign]
@@ -112,7 +115,9 @@ async def test_contradiction_capability_returns_report_text_when_invoked(
     canned report's quotes."""
     file = _file("doc-a", "a.pdf")
     await runtime_with_stub_docs.documents.ingest(
-        file.id, [PageText(page_number=1, text="x")], source=file.name,
+        file.id,
+        [PageText(page_number=1, text="x")],
+        source=file.name,
     )
 
     agent = PdfQuestionAgent(runtime_with_stub_docs)

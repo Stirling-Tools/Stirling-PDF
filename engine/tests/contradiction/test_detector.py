@@ -119,14 +119,10 @@ async def test_happy_path_finds_contradiction_across_two_pages(
     )  # type: ignore[method-assign]
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")]
-            )
+            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")])
         )
     )  # type: ignore[method-assign]
-    detector._summary_agent.run = AsyncMock(
-        return_value=_stub_result("Examined 2 pages; found 1 contradiction.")
-    )  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("Examined 2 pages; found 1 contradiction."))  # type: ignore[method-assign]
 
     report = await detector.detect([file_a], query="check the deadline")
 
@@ -142,16 +138,12 @@ async def test_happy_path_finds_contradiction_across_two_pages(
 
 
 @pytest.mark.anyio
-async def test_zero_claims_returns_clean_report(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
-) -> None:
+async def test_zero_claims_returns_clean_report(runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]) -> None:
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
     detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
-        return_value=[
-            ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")
-        ]
+        return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("All clean."))  # type: ignore[method-assign]
 
@@ -166,9 +158,7 @@ async def test_zero_claims_returns_clean_report(
 
 
 @pytest.mark.anyio
-async def test_canonicaliser_accepts_empty_alias_list(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
-) -> None:
+async def test_canonicaliser_accepts_empty_alias_list(runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]) -> None:
     """A canonicaliser that returns no aliases (e.g. all subjects already
     canonical) is a valid response and must not crash the pipeline."""
     _install_documents_stub(runtime, {file_a.id: pages_a})
@@ -177,26 +167,28 @@ async def test_canonicaliser_accepts_empty_alias_list(
     extracted_chunk = _ExtractedClaims(
         claims=[
             _ExtractedClaim(
-                page=1, subject="deadline", polarity="assert",
-                text="A1", quote="The deadline is March 5.",
+                page=1,
+                subject="deadline",
+                polarity="assert",
+                text="A1",
+                quote="The deadline is March 5.",
             ),
             _ExtractedClaim(
-                page=2, subject="deadline", polarity="assert",
-                text="A2", quote="The deadline is April 10.",
+                page=2,
+                subject="deadline",
+                polarity="assert",
+                text="A2",
+                quote="The deadline is April 10.",
             ),
         ]
     )
     detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
         return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(
-        return_value=_stub_result(_SubjectMapping(aliases=[]))
-    )  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))  # type: ignore[method-assign]
     detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
         return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="error")]
-            )
+            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="error")])
         )
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
@@ -226,11 +218,7 @@ async def test_canonicaliser_batches_oversized_subject_lists(runtime: AppRuntime
         import re
 
         seen: list[str] = re.findall(r"subj-\d+", prompt)
-        return _stub_result(
-            _SubjectMapping(
-                aliases=[_SubjectAlias(raw=s, canonical=s) for s in seen]
-            )
-        )
+        return _stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw=s, canonical=s) for s in seen]))
 
     detector._subject_canonicaliser.run = _stub  # type: ignore[method-assign]
 
@@ -257,12 +245,8 @@ async def test_canonicaliser_batch_conflict_resolved_by_lex_min(runtime: AppRunt
         nonlocal call_index
         call_index += 1
         if call_index == 1:
-            return _stub_result(
-                _SubjectMapping(aliases=[_SubjectAlias(raw="x", canonical="zeta")])
-            )
-        return _stub_result(
-            _SubjectMapping(aliases=[_SubjectAlias(raw="x", canonical="alpha")])
-        )
+            return _stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="x", canonical="zeta")]))
+        return _stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="x", canonical="alpha")]))
 
     # Force two batches by setting a tiny batch size for the call. We do
     # that by monkey-patching the setting on this detector instance only.
@@ -295,12 +279,18 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
     extracted_chunk = _ExtractedClaims(
         claims=[
             _ExtractedClaim(
-                page=1, subject="Project Deadline", polarity="assert",
-                text="A1", quote="The deadline is March 5.",
+                page=1,
+                subject="Project Deadline",
+                polarity="assert",
+                text="A1",
+                quote="The deadline is March 5.",
             ),
             _ExtractedClaim(
-                page=2, subject="the project deadline", polarity="assert",
-                text="A2", quote="The deadline is April 10.",
+                page=2,
+                subject="the project deadline",
+                polarity="assert",
+                text="A2",
+                quote="The deadline is April 10.",
             ),
         ]
     )
@@ -310,9 +300,7 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
     detector._subject_canonicaliser.run = AsyncMock(side_effect=AgentRunError("boom"))  # type: ignore[method-assign]
     detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
         return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")]
-            )
+            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")])
         )
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
@@ -325,9 +313,7 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
 
 
 @pytest.mark.anyio
-async def test_same_page_same_polarity_pair_is_dropped(
-    runtime: AppRuntime, file_a: AiFile
-) -> None:
+async def test_same_page_same_polarity_pair_is_dropped(runtime: AppRuntime, file_a: AiFile) -> None:
     """The result-time pre-filter removes pairs where both claims share a
     page AND polarity — they are duplicate sightings, not contradictions."""
     pages = [_page(1, "Claim A. Claim B variant.")]
@@ -336,12 +322,13 @@ async def test_same_page_same_polarity_pair_is_dropped(
 
     extracted_chunk = _ExtractedClaims(
         claims=[
+            _ExtractedClaim(page=1, subject="deadline", polarity="assert", text="x", quote="Claim A."),
             _ExtractedClaim(
-                page=1, subject="deadline", polarity="assert", text="x", quote="Claim A."
-            ),
-            _ExtractedClaim(
-                page=1, subject="deadline", polarity="assert",
-                text="y", quote="Claim B variant.",
+                page=1,
+                subject="deadline",
+                polarity="assert",
+                text="y",
+                quote="Claim B variant.",
             ),
         ]
     )
@@ -353,9 +340,7 @@ async def test_same_page_same_polarity_pair_is_dropped(
     )  # type: ignore[method-assign]
     detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
         return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="echo", severity="warning")]
-            )
+            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="echo", severity="warning")])
         )
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
@@ -366,16 +351,12 @@ async def test_same_page_same_polarity_pair_is_dropped(
 
 
 @pytest.mark.anyio
-async def test_summary_fallback_used_when_llm_fails(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
-) -> None:
+async def test_summary_fallback_used_when_llm_fails(runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]) -> None:
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
     detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
-        return_value=[
-            ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")
-        ]
+        return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
     detector._summary_agent.run = AsyncMock(side_effect=AgentRunError("boom"))  # type: ignore[method-assign]
 
@@ -386,9 +367,7 @@ async def test_summary_fallback_used_when_llm_fails(
 
 
 @pytest.mark.anyio
-async def test_detector_chunk_timeout_falls_through(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
-) -> None:
+async def test_detector_chunk_timeout_falls_through(runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]) -> None:
     """Regression — the per-bucket pair detector run is bounded by
     ``chunked_reasoner_worker_timeout_seconds``. A TimeoutError must not
     crash the pipeline; the bucket's pairs are dropped and we log a
@@ -401,12 +380,18 @@ async def test_detector_chunk_timeout_falls_through(
     extracted_chunk = _ExtractedClaims(
         claims=[
             _ExtractedClaim(
-                page=1, subject="deadline", polarity="assert",
-                text="A1", quote="The deadline is March 5.",
+                page=1,
+                subject="deadline",
+                polarity="assert",
+                text="A1",
+                quote="The deadline is March 5.",
             ),
             _ExtractedClaim(
-                page=2, subject="deadline", polarity="assert",
-                text="A2", quote="The deadline is April 10.",
+                page=2,
+                subject="deadline",
+                polarity="assert",
+                text="A2",
+                quote="The deadline is April 10.",
             ),
         ]
     )
@@ -440,12 +425,18 @@ async def test_canonicaliser_timeout_falls_back_to_lexical(
     extracted_chunk = _ExtractedClaims(
         claims=[
             _ExtractedClaim(
-                page=1, subject="Project Deadline", polarity="assert",
-                text="A1", quote="The deadline is March 5.",
+                page=1,
+                subject="Project Deadline",
+                polarity="assert",
+                text="A1",
+                quote="The deadline is March 5.",
             ),
             _ExtractedClaim(
-                page=2, subject="the project deadline", polarity="assert",
-                text="A2", quote="The deadline is April 10.",
+                page=2,
+                subject="the project deadline",
+                polarity="assert",
+                text="A2",
+                quote="The deadline is April 10.",
             ),
         ]
     )
@@ -455,9 +446,7 @@ async def test_canonicaliser_timeout_falls_back_to_lexical(
     detector._subject_canonicaliser.run = AsyncMock(side_effect=TimeoutError("simulated"))  # type: ignore[method-assign]
     detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
         return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")]
-            )
+            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")])
         )
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
@@ -481,9 +470,7 @@ async def test_summary_timeout_falls_back_to_deterministic_summary(
     detector = ContradictionDetector(runtime)
 
     detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
-        return_value=[
-            ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")
-        ]
+        return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
     detector._summary_agent.run = AsyncMock(side_effect=TimeoutError("simulated"))  # type: ignore[method-assign]
 
@@ -515,15 +502,12 @@ async def test_empty_chunk_with_substantial_content_logs_warning(
         await detector.detect([file_a])
 
     assert any(
-        "produced 0 claims" in record.getMessage() and "pages=1" in record.getMessage()
-        for record in caplog.records
+        "produced 0 claims" in record.getMessage() and "pages=1" in record.getMessage() for record in caplog.records
     )
 
 
 @pytest.mark.anyio
-async def test_pages_examined_includes_every_attempted_page(
-    runtime: AppRuntime, file_a: AiFile
-) -> None:
+async def test_pages_examined_includes_every_attempted_page(runtime: AppRuntime, file_a: AiFile) -> None:
     """``pages_examined`` reports the union of every page whose extractor
     pass ran successfully, regardless of whether claims were produced
     for it. A page that the extractor read but found nothing on still
@@ -540,24 +524,26 @@ async def test_pages_examined_includes_every_attempted_page(
     extracted = _ExtractedClaims(
         claims=[
             _ExtractedClaim(
-                page=1, subject="deadline", polarity="assert",
-                text="x", quote="The deadline is March 5.",
+                page=1,
+                subject="deadline",
+                polarity="assert",
+                text="x",
+                quote="The deadline is March 5.",
             ),
             _ExtractedClaim(
-                page=3, subject="deadline", polarity="assert",
-                text="y", quote="The deadline is April 10.",
+                page=3,
+                subject="deadline",
+                polarity="assert",
+                text="y",
+                quote="The deadline is April 10.",
             ),
         ]
     )
     detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
         return_value=[ChunkOutput(pages=[1, 2, 3], output=extracted, label="pages=1-3")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(
-        return_value=_stub_result(_SubjectMapping(aliases=[]))
-    )  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(
-        return_value=_stub_result(_BucketContradictions(pairs=[]))
-    )  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))  # type: ignore[method-assign]
+    detector._pair_detector.run = AsyncMock(return_value=_stub_result(_BucketContradictions(pairs=[])))  # type: ignore[method-assign]
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
 
     report = await detector.detect([file_a])
@@ -568,9 +554,7 @@ async def test_pages_examined_includes_every_attempted_page(
 
 
 @pytest.mark.anyio
-async def test_oversized_bucket_windows_translate_indices_globally(
-    runtime: AppRuntime, file_a: AiFile
-) -> None:
+async def test_oversized_bucket_windows_translate_indices_globally(runtime: AppRuntime, file_a: AiFile) -> None:
     """Regression — oversized claim buckets are sliced into overlapping
     windows. Pair indices the model emits are LOCAL to the window; the
     detector must translate them to GLOBAL indices via ``chunk_start``
@@ -589,21 +573,20 @@ async def test_oversized_bucket_windows_translate_indices_globally(
     extracted = _ExtractedClaims(
         claims=[
             _ExtractedClaim(
-                page=i, subject="deadline", polarity="assert",
-                text=f"claim text {i}", quote=f"claim {i}",
+                page=i,
+                subject="deadline",
+                polarity="assert",
+                text=f"claim text {i}",
+                quote=f"claim {i}",
             )
             for i in range(1, 16)
         ]
     )
     detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
-        return_value=[
-            ChunkOutput(pages=list(range(1, 16)), output=extracted, label="pages=1-15")
-        ]
+        return_value=[ChunkOutput(pages=list(range(1, 16)), output=extracted, label="pages=1-15")]
     )
     detector._subject_canonicaliser.run = AsyncMock(
-        return_value=_stub_result(
-            _SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")])
-        )
+        return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
     )  # type: ignore[method-assign]
 
     window_count = 0
@@ -615,9 +598,7 @@ async def test_oversized_bucket_windows_translate_indices_globally(
             # First window covers global indices 0..11 — local (i=8, j=11)
             # maps to global (8, 11).
             return _stub_result(
-                _BucketContradictions(
-                    pairs=[_DetectedPair(i=8, j=11, explanation="window-1 pair", severity="error")]
-                )
+                _BucketContradictions(pairs=[_DetectedPair(i=8, j=11, explanation="window-1 pair", severity="error")])
             )
         if window_count == 2:
             # Second window covers global indices 10..14 — local (i=0, j=4)
@@ -644,9 +625,7 @@ async def test_oversized_bucket_windows_translate_indices_globally(
     # leaves exactly two contradictions.
     assert len(report.contradictions) == 2
 
-    pages_pairs = sorted(
-        tuple(sorted((c.claim1.page, c.claim2.page))) for c in report.contradictions
-    )
+    pages_pairs = sorted(tuple(sorted((c.claim1.page, c.claim2.page))) for c in report.contradictions)
     # Global (8, 11) → pages (9, 12); global (10, 14) → pages (11, 15).
     assert pages_pairs == [(9, 12), (11, 15)]
 
@@ -766,14 +745,10 @@ async def test_multi_file_pages_dont_collide_in_validation(runtime: AppRuntime) 
         return []
 
     detector._mapper.map_pages = _map_pages  # type: ignore[method-assign]
-    detector._subject_canonicaliser.run = AsyncMock(
-        return_value=_stub_result(_SubjectMapping(aliases=[]))
-    )  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))  # type: ignore[method-assign]
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")]
-            )
+            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")])
         )
     )  # type: ignore[method-assign]
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))  # type: ignore[method-assign]
@@ -792,3 +767,8 @@ async def test_multi_file_pages_dont_collide_in_validation(runtime: AppRuntime) 
     # And page numbers are kept unaltered even though they collide.
     assert claims_by_file["a.pdf"].page == 1
     assert claims_by_file["b.pdf"].page == 1
+    # ``pages_examined`` MUST count BOTH page-1s (one per file). A bug
+    # that collapsed (file, page) to page-number-only would report a
+    # single examined page for a 2-file audit. (Aikido finding on
+    # PR #6369.)
+    assert report.pages_examined == [1, 1]

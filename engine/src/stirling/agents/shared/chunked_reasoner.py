@@ -299,9 +299,7 @@ class ChunkedReasoner:
                 return result.notes
             notes = result.notes
 
-    async def _run_compression_round(
-        self, chunks: list[_CompressionChunk], question: str
-    ) -> _RoundResult:
+    async def _run_compression_round(self, chunks: list[_CompressionChunk], question: str) -> _RoundResult:
         """Run a compression round through the extractor in parallel.
 
         Failures fall back to ``chunk.fallback`` so the originals stay in the
@@ -343,9 +341,7 @@ class ChunkedReasoner:
         notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
         return _RoundResult(notes=notes, successes=successes)
 
-    async def _extract_compression_chunk(
-        self, chunk: _CompressionChunk, question: str
-    ) -> tuple[ChunkNotes, float]:
+    async def _extract_compression_chunk(self, chunk: _CompressionChunk, question: str) -> tuple[ChunkNotes, float]:
         """Run the extractor on a compression-round chunk; attach pages deterministically.
 
         ``question`` carries the same user query the first-round extractors
@@ -506,5 +502,3 @@ class ChunkedReasoner:
         prompt = f"User question:\n{question}\n\nNotes from across the document:\n\n{self.format_notes(notes)}"
         result = await agent.run(prompt)
         return result.output
-
-
