@@ -716,7 +716,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       getSelectedTool,
       isFavorite,
     }),
-    [toolAvailability, toolRegistry, favoriteTools, getSelectedTool, isFavorite],
+    [
+      toolAvailability,
+      toolRegistry,
+      favoriteTools,
+      getSelectedTool,
+      isFavorite,
+    ],
   );
 
   // Properly memoized context value
