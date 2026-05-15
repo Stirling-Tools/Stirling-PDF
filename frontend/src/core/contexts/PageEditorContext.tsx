@@ -214,6 +214,8 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
         return [...validOrder, ...newIds];
       });
       clearPersistedDocument();
+      // Select all workbench files so they render as expanded pages
+      fileActions.setSelectedFiles(state.files.ids);
     }
 
     prevWorkbenchRef.current = nextWorkbench;
@@ -223,6 +225,7 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     state.files.ids,
     setFileOrder,
     setReorderedPages,
+    fileActions,
   ]);
 
   const fileContextSignature = useMemo(() => {

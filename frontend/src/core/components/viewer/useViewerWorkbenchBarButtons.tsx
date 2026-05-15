@@ -4,15 +4,15 @@ import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
-  useRightRailButtons,
-  RightRailButtonWithAction,
-} from "@app/hooks/useRightRailButtons";
+  useWorkbenchBarButtons,
+  WorkbenchBarButtonWithAction,
+} from "@app/hooks/useWorkbenchBarButtons";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SearchInterface } from "@app/components/viewer/SearchInterface";
-import ViewerAnnotationControls from "@app/components/shared/rightRail/ViewerAnnotationControls";
+import ViewerAnnotationControls from "@app/components/viewer/ViewerAnnotationControls";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
-import { useRightRailTooltipSide } from "@app/hooks/useRightRailTooltipSide";
+import { useWorkbenchBarTooltipSide } from "@app/hooks/useWorkbenchBarTooltipSide";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   useNavigationState,
@@ -27,7 +27,7 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 
-export function useViewerRightRailButtons(
+export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
 ) {
@@ -46,7 +46,7 @@ export function useViewerRightRailButtons(
   } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const { sidebarRefs } = useSidebarContext();
-  const { position: tooltipPosition } = useRightRailTooltipSide(
+  const { position: tooltipPosition } = useWorkbenchBarTooltipSide(
     sidebarRefs,
     12,
   );
@@ -105,28 +105,27 @@ export function useViewerRightRailButtons(
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isAnnotationsPath]);
 
-  const searchLabel = t("rightRail.search", "Search PDF");
-  const panLabel = t("rightRail.panMode", "Pan Mode");
+  const searchLabel = t("workbenchBar.search", "Search PDF");
+  const panLabel = t("workbenchBar.panMode", "Pan Mode");
   const applyRedactionsLabel = t(
-    "rightRail.applyRedactionsFirst",
+    "workbenchBar.applyRedactionsFirst",
     "Apply redactions first",
   );
-  const rotateLeftLabel = t("rightRail.rotateLeft", "Rotate Left");
-  const rotateRightLabel = t("rightRail.rotateRight", "Rotate Right");
-  const sidebarLabel = t("rightRail.toggleSidebar", "Toggle Sidebar");
-  const bookmarkLabel = t("rightRail.toggleBookmarks", "Toggle Bookmarks");
+  const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
+  const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
+  const sidebarLabel = t("workbenchBar.toggleSidebar", "Toggle Sidebar");
+  const bookmarkLabel = t("workbenchBar.toggleBookmarks", "Toggle Bookmarks");
   const attachmentLabel = t(
-    "rightRail.toggleAttachments",
+    "workbenchBar.toggleAttachments",
     "Toggle Attachments",
   );
-  const layersLabel = t("rightRail.toggleLayers", "Toggle Layers");
-  const commentsLabel = t("rightRail.toggleComments", "Comments");
-  const printLabel = t("rightRail.print", "Print PDF");
-  const annotationsLabel = t("rightRail.annotations", "Annotations");
-  const formFillLabel = t("rightRail.formFill", "Fill Form");
-  const rulerLabel = t("rightRail.ruler", "Ruler / Measure");
-  const readAloudLabel = t("rightRail.readAloud", "Read Aloud");
-  const readAloudSpeedLabel = t("rightRail.readAloudSpeed", "Speed");
+  const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
+  const commentsLabel = t("workbenchBar.toggleComments", "Comments");
+  const annotationsLabel = t("workbenchBar.annotations", "Annotations");
+  const formFillLabel = t("workbenchBar.formFill", "Fill Form");
+  const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
+  const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
+  const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
 
@@ -150,8 +149,8 @@ export function useViewerRightRailButtons(
   const shouldShowLanguageSelector =
     supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
-  const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
-    const buttons: RightRailButtonWithAction[] = [
+  const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
+    const buttons: WorkbenchBarButtonWithAction[] = [
       {
         id: "viewer-search",
         tooltip: searchLabel,
@@ -179,12 +178,12 @@ export function useViewerRightRailButtons(
                   <ActionIcon
                     variant="subtle"
                     radius="md"
-                    className="right-rail-icon"
+                    className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <LocalIcon icon="search" width="1.5rem" height="1.5rem" />
+                    <LocalIcon icon="search" width="1.25rem" height="1.25rem" />
                   </ActionIcon>
                 </div>
               </Popover.Target>
@@ -203,7 +202,7 @@ export function useViewerRightRailButtons(
       {
         id: "viewer-pan-mode",
         icon: (
-          <LocalIcon icon="pan-tool-rounded" width="1.5rem" height="1.5rem" />
+          <LocalIcon icon="pan-tool-rounded" width="1.25rem" height="1.25rem" />
         ),
         tooltip:
           !isPanning && pendingCount > 0 && redactionActiveType !== null
@@ -220,12 +219,16 @@ export function useViewerRightRailButtons(
           !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
-          setIsPanning((prev) => !prev);
+          setIsPanning((prev) => {
+            const next = !prev;
+            if (next && isRulerActive) setIsRulerActive?.(false);
+            return next;
+          });
         },
       },
       {
         id: "viewer-ruler",
-        icon: <StraightenIcon sx={{ fontSize: "1.5rem" }} />,
+        icon: <StraightenIcon sx={{ fontSize: "1.25rem" }} />,
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
         section: "top" as const,
@@ -236,12 +239,13 @@ export function useViewerRightRailButtons(
           setIsRulerActive?.(next);
           if (next && isPanning) {
             viewer.panActions.disablePan();
+            setIsPanning(false);
           }
         },
       },
       {
         id: "viewer-rotate-left",
-        icon: <LocalIcon icon="rotate-left" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="rotate-left" width="1.25rem" height="1.25rem" />,
         tooltip: rotateLeftLabel,
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
@@ -252,7 +256,9 @@ export function useViewerRightRailButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: <LocalIcon icon="rotate-right" width="1.5rem" height="1.5rem" />,
+        icon: (
+          <LocalIcon icon="rotate-right" width="1.25rem" height="1.25rem" />
+        ),
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -263,7 +269,7 @@ export function useViewerRightRailButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <LocalIcon icon="view-list" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="view-list" width="1.25rem" height="1.25rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
@@ -278,8 +284,8 @@ export function useViewerRightRailButtons(
         icon: (
           <LocalIcon
             icon="bookmark-add-rounded"
-            width="1.5rem"
-            height="1.5rem"
+            width="1.25rem"
+            height="1.25rem"
           />
         ),
         tooltip: bookmarkLabel,
@@ -294,7 +300,11 @@ export function useViewerRightRailButtons(
       {
         id: "viewer-toggle-attachments",
         icon: (
-          <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />
+          <LocalIcon
+            icon="attachment-rounded"
+            width="1.25rem"
+            height="1.25rem"
+          />
         ),
         tooltip: attachmentLabel,
         ariaLabel: attachmentLabel,
@@ -309,7 +319,7 @@ export function useViewerRightRailButtons(
         ? [
             {
               id: "viewer-toggle-layers",
-              icon: <LayersIcon sx={{ fontSize: "1.5rem" }} />,
+              icon: <LayersIcon sx={{ fontSize: "1.25rem" }} />,
               tooltip: layersLabel,
               ariaLabel: layersLabel,
               section: "top" as const,
@@ -323,7 +333,7 @@ export function useViewerRightRailButtons(
         : []),
       {
         id: "viewer-toggle-comments",
-        icon: <LocalIcon icon="comment" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="comment" width="1.25rem" height="1.25rem" />,
         tooltip: commentsLabel,
         ariaLabel: commentsLabel,
         section: "top" as const,
@@ -331,17 +341,6 @@ export function useViewerRightRailButtons(
         active: isCommentsSidebarVisible,
         onClick: () => {
           toggleCommentsSidebar();
-        },
-      },
-      {
-        id: "viewer-print",
-        icon: <LocalIcon icon="print" width="1.5rem" height="1.5rem" />,
-        tooltip: printLabel,
-        ariaLabel: printLabel,
-        section: "top" as const,
-        order: 57,
-        onClick: () => {
-          viewer.printActions.print();
         },
       },
       {
@@ -373,7 +372,7 @@ export function useViewerRightRailButtons(
                   <ActionIcon
                     variant={isReadingAloud ? "filled" : "subtle"}
                     radius="md"
-                    className="right-rail-icon"
+                    className="workbench-bar-action-icon"
                     disabled={
                       disabled ||
                       typeof window === "undefined" ||
@@ -384,9 +383,9 @@ export function useViewerRightRailButtons(
                     color={isReadingAloud ? "blue" : undefined}
                   >
                     {isReadingAloud ? (
-                      <StopIcon sx={{ fontSize: "1.5rem" }} />
+                      <StopIcon sx={{ fontSize: "1.25rem" }} />
                     ) : (
-                      <VolumeUpIcon sx={{ fontSize: "1.5rem" }} />
+                      <VolumeUpIcon sx={{ fontSize: "1.25rem" }} />
                     )}
                   </ActionIcon>
                 </Tooltip>
@@ -421,9 +420,9 @@ export function useViewerRightRailButtons(
                 />
                 {shouldShowLanguageSelector && (
                   <Select
-                    label={t("rightRail.readAloudLanguage", "Language")}
+                    label={t("workbenchBar.readAloudLanguage", "Language")}
                     placeholder={t(
-                      "rightRail.selectLanguage",
+                      "workbenchBar.selectLanguage",
                       "Select language",
                     )}
                     value={speechLanguage}
@@ -461,7 +460,7 @@ export function useViewerRightRailButtons(
             <ActionIcon
               variant={isAnnotationsActive ? "filled" : "subtle"}
               radius="md"
-              className="right-rail-icon"
+              className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
 
@@ -489,7 +488,7 @@ export function useViewerRightRailButtons(
               aria-pressed={isAnnotationsActive}
               color={isAnnotationsActive ? "blue" : undefined}
             >
-              <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
+              <LocalIcon icon="edit" width="1.25rem" height="1.25rem" />
             </ActionIcon>
           </Tooltip>
         ),
@@ -519,7 +518,7 @@ export function useViewerRightRailButtons(
             <ActionIcon
               variant={isFormFillActive ? "filled" : "subtle"}
               radius="md"
-              className="right-rail-icon"
+              className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled) return;
                 if (isFormFillActive) {
@@ -532,7 +531,7 @@ export function useViewerRightRailButtons(
               aria-pressed={isFormFillActive}
               color={isFormFillActive ? "blue" : undefined}
             >
-              <TextFieldsIcon sx={{ fontSize: "1.5rem" }} />
+              <TextFieldsIcon sx={{ fontSize: "1.25rem" }} />
             </ActionIcon>
           </Tooltip>
         ),
@@ -560,7 +559,6 @@ export function useViewerRightRailButtons(
     bookmarkLabel,
     attachmentLabel,
     layersLabel,
-    printLabel,
     tooltipPosition,
     annotationsLabel,
     isAnnotationsActive,
@@ -586,5 +584,5 @@ export function useViewerRightRailButtons(
     handleSpeechLanguageChange,
   ]);
 
-  useRightRailButtons(viewerButtons);
+  useWorkbenchBarButtons(viewerButtons);
 }
