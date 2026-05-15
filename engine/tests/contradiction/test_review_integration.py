@@ -27,6 +27,7 @@ from stirling.contracts import (
 from stirling.contracts.contradiction import Claim
 from stirling.documents import DocumentService, SqliteVecStore
 from stirling.models import FileId, ToolEndpoint
+from stirling.models.tool_models import AddCommentsParams
 from stirling.services.runtime import AppRuntime
 from tests.test_pdf_question_agent import StubEmbedder
 
@@ -42,7 +43,7 @@ def _claim(page: int, quote: str, *, anchor: str = "verbatim", subject: str = "d
         polarity="assert",
         text=f"paraphrase {page}",
         quote=quote,
-        anchor_quality=anchor,  # type: ignore[arg-type]
+        anchor_quality=anchor,
     )
 
 
@@ -59,7 +60,7 @@ def _report(*contradictions: Contradiction) -> ContradictionReport:
 def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
     """Runtime with a non-network DocumentService backed by stub embedder + ephemeral store."""
     stub = DocumentService(
-        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        embedder=StubEmbedder(),
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
@@ -103,7 +104,7 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
 
         return _R()
 
-    agent._contradiction_localiser.run = _capture  # type: ignore[method-assign]
+    agent._contradiction_localiser.run = _capture
     await agent._build_contradiction_comments_payload("the prompt", report)
 
     assert len(captured_prompts) == 1
@@ -129,7 +130,7 @@ def test_which_claim_rejects_non_literal_values() -> None:
     with pytest.raises(ValidationError):
         _PairedLocalisedContradiction(
             contradiction_index=0,
-            which_claim="bogus",  # type: ignore[arg-type]
+            which_claim="bogus",
             subject="anything",
             text="anything",
         )
@@ -147,8 +148,8 @@ async def test_contradiction_intent_emits_add_comments_plan(
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
-    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)  # type: ignore[method-assign]
-    agent._math_intent_classifier.classify = AsyncMock(return_value=False)  # type: ignore[method-assign]
+    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)
+    agent._math_intent_classifier.classify = AsyncMock(return_value=False)
 
     canned_report = _report(
         Contradiction(
@@ -159,7 +160,7 @@ async def test_contradiction_intent_emits_add_comments_plan(
             severity=ContradictionSeverity.ERROR,
         )
     )
-    agent._contradiction_detector.detect = AsyncMock(return_value=canned_report)  # type: ignore[method-assign]
+    agent._contradiction_detector.detect = AsyncMock(return_value=canned_report)
 
     # Stub the localiser to emit two paired entries.
     from stirling.agents.pdf_review import _LocalisedContradictionReport, _PairedLocalisedContradiction
@@ -182,7 +183,7 @@ async def test_contradiction_intent_emits_add_comments_plan(
             ]
         )
 
-    agent._contradiction_localiser.run = AsyncMock(return_value=_LocResult())  # type: ignore[method-assign]
+    agent._contradiction_localiser.run = AsyncMock(return_value=_LocResult())
 
     request = OrchestratorRequest(
         user_message="Are there contradictions in this document?",
@@ -194,6 +195,11 @@ async def test_contradiction_intent_emits_add_comments_plan(
     assert len(response.steps) == 1
     step = response.steps[0]
     assert step.tool == ToolEndpoint.ADD_COMMENTS
+    # The orchestrator step's ``parameters`` field is a discriminated
+    # union of every tool's params; narrow to the concrete shape we
+    # know we just produced so pyright doesn't see ``.comments`` as
+    # an attribute lookup against an unrelated CbrToPdfParams (etc.).
+    assert isinstance(step.parameters, AddCommentsParams)
     serialised = step.parameters.comments
     assert isinstance(serialised, str)
     payload = json.loads(serialised)
@@ -213,9 +219,9 @@ async def test_contradiction_intent_with_missing_ingest_returns_need_ingest(
 ) -> None:
     """The precheck mirrors the question agent's NeedIngestResponse branch."""
     agent = PdfReviewAgent(runtime_with_stub_docs)
-    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)  # type: ignore[method-assign]
-    agent._math_intent_classifier.classify = AsyncMock(return_value=False)  # type: ignore[method-assign]
-    agent._contradiction_detector.detect = AsyncMock()  # type: ignore[method-assign]
+    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)
+    agent._math_intent_classifier.classify = AsyncMock(return_value=False)
+    agent._contradiction_detector.detect = AsyncMock()
 
     request = OrchestratorRequest(
         user_message="any contradictions?",
@@ -241,16 +247,16 @@ async def test_contradiction_takes_precedence_over_math(
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
-    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)  # type: ignore[method-assign]
-    agent._math_intent_classifier.classify = AsyncMock(return_value=True)  # type: ignore[method-assign]
-    agent._contradiction_detector.detect = AsyncMock(return_value=_report())  # type: ignore[method-assign]
+    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)
+    agent._math_intent_classifier.classify = AsyncMock(return_value=True)
+    agent._contradiction_detector.detect = AsyncMock(return_value=_report())
 
     from stirling.agents.pdf_review import _LocalisedContradictionReport
 
     class _LocResult:
         output = _LocalisedContradictionReport(comments=[])
 
-    agent._contradiction_localiser.run = AsyncMock(return_value=_LocResult())  # type: ignore[method-assign]
+    agent._contradiction_localiser.run = AsyncMock(return_value=_LocResult())
 
     request = OrchestratorRequest(user_message="check this", files=[file])
     response = await agent.orchestrate(request)

@@ -179,7 +179,9 @@ class TestMapPages:
 
         async def _stub(*_args: object, **_kwargs: object) -> _StubAgentResult[_Extracted]:
             # Page 2 hangs forever; pages 1 and 3 return immediately.
-            if "[Page 2]" in _args[0]:
+            prompt = _args[0]
+            assert isinstance(prompt, str)
+            if "[Page 2]" in prompt:
                 await asyncio.sleep(10)
             return _StubAgentResult(output=_Extracted(label="ok"))
 

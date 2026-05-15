@@ -53,7 +53,7 @@ def _canned_report() -> ContradictionReport:
 async def test_find_contradictions_returns_formatted_text(runtime: AppRuntime) -> None:
     detector = ContradictionDetector(runtime)
     canned = _canned_report()
-    detector.detect = AsyncMock(return_value=canned)  # type: ignore[method-assign]
+    detector.detect = AsyncMock(return_value=canned)
 
     capability = ContradictionCapability(detector=detector, files=[_file("doc-a", "a.pdf")])
     result = await capability._find_contradictions("are there inconsistent deadlines?")
@@ -70,7 +70,7 @@ async def test_find_contradictions_returns_formatted_text(runtime: AppRuntime) -
 async def test_budget_gate_hides_tool_after_first_audit(runtime: AppRuntime) -> None:
     """The prepare callback returns None once ``max_audits`` is reached."""
     detector = ContradictionDetector(runtime)
-    detector.detect = AsyncMock(return_value=_canned_report())  # type: ignore[method-assign]
+    detector.detect = AsyncMock(return_value=_canned_report())
 
     capability = ContradictionCapability(
         detector=detector,
@@ -80,19 +80,19 @@ async def test_budget_gate_hides_tool_after_first_audit(runtime: AppRuntime) -> 
     sentinel: object = object()
 
     # Budget intact → prepare returns the tool definition.
-    assert await capability._prepare_find_contradictions(None, sentinel) is sentinel  # type: ignore[arg-type]
+    assert await capability._prepare_find_contradictions(None, sentinel) is sentinel
 
     # Spend the budget.
     await capability._find_contradictions("anything")
 
     # Budget spent → prepare returns None.
-    assert await capability._prepare_find_contradictions(None, sentinel) is None  # type: ignore[arg-type]
+    assert await capability._prepare_find_contradictions(None, sentinel) is None
 
 
 @pytest.mark.anyio
 async def test_find_contradictions_with_no_files_returns_message(runtime: AppRuntime) -> None:
     detector = ContradictionDetector(runtime)
-    detector.detect = AsyncMock(return_value=_canned_report())  # type: ignore[method-assign]
+    detector.detect = AsyncMock(return_value=_canned_report())
     capability = ContradictionCapability(detector=detector, files=[])
 
     result = await capability._find_contradictions("anything")

@@ -65,7 +65,7 @@ def _install_documents_stub(runtime: AppRuntime, pages_by_id: dict[FileId, list[
         return pages_by_id.get(collection, [])
 
     # AppRuntime is frozen; monkey-patch the documents service.
-    runtime.documents.read_pages = _read  # type: ignore[method-assign]
+    runtime.documents.read_pages = _read
 
 
 # Empty / no-pages cases
@@ -112,17 +112,19 @@ async def test_happy_path_finds_contradiction_across_two_pages(
         ]
     )
     chunk_output = ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")
-    detector._mapper.map_pages = AsyncMock(return_value=[chunk_output])  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(return_value=[chunk_output])
 
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
-    )  # type: ignore[method-assign]
+    )
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity=ContradictionSeverity.ERROR)]
+            )
         )
-    )  # type: ignore[method-assign]
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("Examined 2 pages; found 1 contradiction."))  # type: ignore[method-assign]
+    )
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("Examined 2 pages; found 1 contradiction."))
 
     report = await detector.detect([file_a], query="check the deadline")
 
@@ -142,10 +144,10 @@ async def test_zero_claims_returns_clean_report(runtime: AppRuntime, file_a: AiF
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("All clean."))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("All clean."))
 
     report = await detector.detect([file_a])
 
@@ -182,16 +184,18 @@ async def test_canonicaliser_accepts_empty_alias_list(runtime: AppRuntime, file_
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))
+    detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="error")])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity=ContradictionSeverity.ERROR)]
+            )
         )
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
     assert len(report.contradictions) == 1
@@ -220,7 +224,7 @@ async def test_canonicaliser_batches_oversized_subject_lists(runtime: AppRuntime
         seen: list[str] = re.findall(r"subj-\d+", prompt)
         return _stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw=s, canonical=s) for s in seen]))
 
-    detector._subject_canonicaliser.run = _stub  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = _stub
 
     mapping = await detector._canonicalise_subjects(subjects)
 
@@ -251,7 +255,7 @@ async def test_canonicaliser_batch_conflict_resolved_by_lex_min(runtime: AppRunt
     # Force two batches by setting a tiny batch size for the call. We do
     # that by monkey-patching the setting on this detector instance only.
     object.__setattr__(detector._settings, "contradiction_canonicaliser_batch_size", 1)
-    detector._subject_canonicaliser.run = _stub  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = _stub
 
     mapping = await detector._canonicalise_subjects(["x", "y"])
     # Smaller canonical (lexicographically) wins.
@@ -294,16 +298,18 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(side_effect=AgentRunError("boom"))  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(side_effect=AgentRunError("boom"))
+    detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity=ContradictionSeverity.WARNING)]
+            )
         )
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
 
@@ -332,18 +338,20 @@ async def test_same_page_same_polarity_pair_is_dropped(runtime: AppRuntime, file
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1], output=extracted_chunk, label="pages=1")]
     )
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
-    )  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
+    )
+    detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="echo", severity="warning")])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="echo", severity=ContradictionSeverity.WARNING)]
+            )
         )
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
 
@@ -355,10 +363,10 @@ async def test_summary_fallback_used_when_llm_fails(runtime: AppRuntime, file_a:
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
-    detector._summary_agent.run = AsyncMock(side_effect=AgentRunError("boom"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(side_effect=AgentRunError("boom"))
 
     report = await detector.detect([file_a])
 
@@ -395,14 +403,14 @@ async def test_detector_chunk_timeout_falls_through(runtime: AppRuntime, file_a:
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
     )
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
-    )  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(side_effect=TimeoutError("simulated"))  # type: ignore[method-assign]
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    )
+    detector._pair_detector.run = AsyncMock(side_effect=TimeoutError("simulated"))
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
 
@@ -440,16 +448,18 @@ async def test_canonicaliser_timeout_falls_back_to_lexical(
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(side_effect=TimeoutError("simulated"))  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(side_effect=TimeoutError("simulated"))
+    detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity="warning")])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity=ContradictionSeverity.WARNING)]
+            )
         )
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
 
@@ -469,10 +479,10 @@ async def test_summary_timeout_falls_back_to_deterministic_summary(
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
-    detector._summary_agent.run = AsyncMock(side_effect=TimeoutError("simulated"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(side_effect=TimeoutError("simulated"))
 
     report = await detector.detect([file_a])
     assert "No contradictions" in report.summary
@@ -493,10 +503,10 @@ async def test_empty_chunk_with_substantial_content_logs_warning(
     _install_documents_stub(runtime, {file_a.id: pages})
     detector = ContradictionDetector(runtime)
 
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1], output=_ExtractedClaims(claims=[]), label="pages=1")]
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))
 
     with caplog.at_level(logging.WARNING, logger="stirling.agents.contradiction.detector"):
         await detector.detect([file_a])
@@ -539,12 +549,12 @@ async def test_pages_examined_includes_every_attempted_page(runtime: AppRuntime,
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2, 3], output=extracted, label="pages=1-3")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))  # type: ignore[method-assign]
-    detector._pair_detector.run = AsyncMock(return_value=_stub_result(_BucketContradictions(pairs=[])))  # type: ignore[method-assign]
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))
+    detector._pair_detector.run = AsyncMock(return_value=_stub_result(_BucketContradictions(pairs=[])))
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
 
@@ -582,12 +592,12 @@ async def test_oversized_bucket_windows_translate_indices_globally(runtime: AppR
             for i in range(1, 16)
         ]
     )
-    detector._mapper.map_pages = AsyncMock(  # type: ignore[method-assign]
+    detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=list(range(1, 16)), output=extracted, label="pages=1-15")]
     )
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
-    )  # type: ignore[method-assign]
+    )
 
     window_count = 0
 
@@ -598,7 +608,9 @@ async def test_oversized_bucket_windows_translate_indices_globally(runtime: AppR
             # First window covers global indices 0..11 — local (i=8, j=11)
             # maps to global (8, 11).
             return _stub_result(
-                _BucketContradictions(pairs=[_DetectedPair(i=8, j=11, explanation="window-1 pair", severity="error")])
+                _BucketContradictions(
+                    pairs=[_DetectedPair(i=8, j=11, explanation="window-1 pair", severity=ContradictionSeverity.ERROR)]
+                )
             )
         if window_count == 2:
             # Second window covers global indices 10..14 — local (i=0, j=4)
@@ -610,14 +622,14 @@ async def test_oversized_bucket_windows_translate_indices_globally(runtime: AppR
                         # window's pair so the dedup-by-global-index path
                         # is exercised — same global (8, 11) appears as
                         # local (-2, 1) which is out-of-range and dropped.
-                        _DetectedPair(i=0, j=4, explanation="window-2 pair", severity="warning"),
+                        _DetectedPair(i=0, j=4, explanation="window-2 pair", severity=ContradictionSeverity.WARNING),
                     ]
                 )
             )
         raise AssertionError(f"unexpected detector window #{window_count}")
 
-    detector._pair_detector.run = _stub_detector  # type: ignore[method-assign]
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))  # type: ignore[method-assign]
+    detector._pair_detector.run = _stub_detector
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a])
 
@@ -744,14 +756,16 @@ async def test_multi_file_pages_dont_collide_in_validation(runtime: AppRuntime) 
             return [chunk_b]
         return []
 
-    detector._mapper.map_pages = _map_pages  # type: ignore[method-assign]
-    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))  # type: ignore[method-assign]
+    detector._mapper.map_pages = _map_pages
+    detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity=ContradictionSeverity.ERROR)]
+            )
         )
-    )  # type: ignore[method-assign]
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))  # type: ignore[method-assign]
+    )
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))
 
     report = await detector.detect([file_a, file_b])
 
