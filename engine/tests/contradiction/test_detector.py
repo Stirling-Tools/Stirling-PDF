@@ -26,7 +26,7 @@ from stirling.agents.contradiction.detector import (
 from stirling.agents.shared.chunked_mapper import ChunkOutput
 from stirling.contracts import AiFile
 from stirling.contracts.contradiction import ContradictionSeverity
-from stirling.contracts.documents import Page
+from stirling.contracts.documents import Page, PageRange
 from stirling.models import FileId
 from stirling.services.runtime import AppRuntime
 
@@ -61,7 +61,7 @@ def pages_a() -> list[Page]:
 def _install_documents_stub(runtime: AppRuntime, pages_by_id: dict[FileId, list[Page]]) -> None:
     """Patch ``runtime.documents.read_pages`` to return canned pages per file."""
 
-    async def _read(collection: FileId, page_range: Any = None) -> list[Page]:
+    async def _read(collection: FileId, page_range: PageRange | None = None) -> list[Page]:
         return pages_by_id.get(collection, [])
 
     # AppRuntime is frozen; monkey-patch the documents service.

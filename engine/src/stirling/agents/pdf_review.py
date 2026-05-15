@@ -219,6 +219,15 @@ class PdfReviewAgent:
         page) that cross-reference each other. Anchor placement is driven
         by ``Claim.anchor_quality``: ``verbatim`` quotes locate by text
         search, ``paraphrased`` quotes fall back to margin geometry.
+
+        Returns the JSON payload as a *string* because ``AddCommentsParams``
+        types its ``comments`` field as ``str`` — that field is auto-
+        generated from the Java OpenAPI spec at ``models/tool_models.py``
+        and matches the Java DTO it crosses the wire to. The string IS
+        the contract; we can't return a ``list[CommentSpec]`` without
+        coordinated changes on the Java side. The math localiser
+        (``_build_localised_comments_payload`` above) returns the same
+        shape for the same reason.
         """
         prompt = (
             f"<user_message>{_escape_for_tag(user_message)}</user_message>\n"

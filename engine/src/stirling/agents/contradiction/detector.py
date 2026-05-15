@@ -104,6 +104,17 @@ class _SubjectMapping(BaseModel):
     aliases: list[_SubjectAlias] = Field(default_factory=list)
 
 
+class _SummaryStats(BaseModel):
+    """Stats handed to the summary LLM. Typed (rather than a raw dict
+    JSON-dumped at the call site) so the prompt payload's shape lives
+    in one place and pyright can catch field-name typos.
+    """
+
+    pages_examined: int = Field(ge=0)
+    errors: int = Field(ge=0)
+    warnings: int = Field(ge=0)
+
+
 class _DetectedPair(BaseModel):
     """One contradicting pair within a bucket of claims."""
 
@@ -615,17 +626,13 @@ class ContradictionDetector:
         is also passed through :func:`_escape_for_tag` so a literal
         ``"</claims>"`` inside a quote can't close the envelope.
         """
+        # Use ``Claim.model_dump_json`` (with the same field subset the
+        # detector cares about) rather than a hand-rolled dict + json.dumps.
+        # The model is the source of truth for these field names so a future
+        # rename can't desynchronise the prompt schema from the rest of the
+        # pipeline.
         rendered_claims = [
-            f"[{index}] "
-            + json.dumps(
-                {
-                    "page": claim.page,
-                    "polarity": claim.polarity,
-                    "text": claim.text,
-                    "quote": claim.quote,
-                },
-                ensure_ascii=False,
-            )
+            f"[{index}] " + claim.model_dump_json(include={"page", "polarity", "text", "quote"})
             for index, claim in enumerate(chunk)
         ]
         claims_block = _escape_for_tag("\n".join(rendered_claims))
@@ -649,12 +656,17 @@ class ContradictionDetector:
         warning_count: int,
         pages_examined: list[int],
     ) -> str:
-        verdict_payload = {
-            "pagesExamined": len(pages_examined),
-            "errors": error_count,
-            "warnings": warning_count,
-        }
-        prompt = f"<verdict>{_escape_for_tag(json.dumps(verdict_payload))}</verdict>"
+        stats = _SummaryStats(
+            pages_examined=len(pages_examined),
+            errors=error_count,
+            warnings=warning_count,
+        )
+        # ``ApiModel.model_dump_json`` would emit camelCase via the
+        # configured serialiser; ``_SummaryStats`` is an internal
+        # ``BaseModel`` (LLM prompt payload only — not on the wire)
+        # so plain ``model_dump_json`` keeps the keys snake_case,
+        # which is exactly what the summary system prompt expects.
+        prompt = f"<verdict>{_escape_for_tag(stats.model_dump_json())}</verdict>"
         try:
             result = await asyncio.wait_for(
                 self._summary_agent.run(prompt),

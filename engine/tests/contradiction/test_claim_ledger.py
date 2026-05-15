@@ -12,21 +12,21 @@ from __future__ import annotations
 import pytest
 
 from stirling.agents.contradiction.validators import ClaimLedger
-from stirling.contracts.contradiction import Claim
+from stirling.contracts.contradiction import Claim, ClaimPolarity
 
 
 def _claim(
     subject: str,
     *,
     page: int = 1,
-    polarity: str = "assert",
+    polarity: ClaimPolarity = "assert",
     text: str | None = None,
     quote: str | None = None,
 ) -> Claim:
     return Claim(
         page=page,
         subject=subject,
-        polarity=polarity,  # type: ignore[arg-type]
+        polarity=polarity,
         text=text or f"Paraphrase of {subject}",
         quote=quote or f'"{subject}" was found here.',
     )

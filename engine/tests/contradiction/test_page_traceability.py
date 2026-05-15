@@ -14,6 +14,7 @@ from stirling.agents.contradiction.detector import (
     _ExtractedClaims,
 )
 from stirling.agents.shared.chunked_mapper import ChunkOutput
+from stirling.contracts.contradiction import ClaimPolarity
 from stirling.contracts.documents import Page
 
 
@@ -32,13 +33,13 @@ def _raw(
     page: int,
     quote: str,
     subject: str = "deadline",
-    polarity: str = "assert",
+    polarity: ClaimPolarity = "assert",
     text: str = "Claim about the deadline.",
 ) -> _ExtractedClaim:
     return _ExtractedClaim(
         page=page,
         subject=subject,
-        polarity=polarity,  # type: ignore[arg-type]
+        polarity=polarity,
         text=text,
         quote=quote,
     )
