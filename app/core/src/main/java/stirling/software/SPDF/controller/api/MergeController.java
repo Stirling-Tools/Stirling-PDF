@@ -185,40 +185,39 @@ public class MergeController {
         return new String[0];
     }
 
-    // Adds a table of contents to the merged document using filenames as chapter titles
-    private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
-        // Create the document outline
+    // Reads page counts from on-disk source files in read-only mode. A failed read falls back to
+    // 1 so TOC generation still produces a usable (if slightly misaligned) outline.
+    private int[] collectPageCounts(File[] sourceFiles) {
+        int[] counts = new int[sourceFiles.length];
+        for (int i = 0; i < sourceFiles.length; i++) {
+            try (PDDocument doc = pdfDocumentFactory.load(sourceFiles[i], true)) {
+                counts[i] = doc.getNumberOfPages();
+            } catch (IOException e) {
+                ExceptionUtils.logException("page count for TOC", e);
+                counts[i] = 1;
+            }
+        }
+        return counts;
+    }
+
+    // Adds a table of contents to the merged document using filenames as chapter titles.
+    // Page counts are passed in so we don't re-open every source PDF just to count pages.
+    private void addTableOfContents(
+            PDDocument mergedDocument, MultipartFile[] files, int[] pageCounts) {
         PDDocumentOutline outline = new PDDocumentOutline();
         mergedDocument.getDocumentCatalog().setDocumentOutline(outline);
 
-        int pageIndex = 0; // Current page index in the merged document
-
-        // Iterate through the original files
-        for (MultipartFile file : files) {
-            // Get the filename without extension to use as bookmark title
-            String filename = file.getOriginalFilename();
-            String title = GeneralUtils.removeExtension(filename);
-
-            // Create an outline item for this file
+        int pageIndex = 0;
+        for (int i = 0; i < files.length; i++) {
+            String title = GeneralUtils.removeExtension(files[i].getOriginalFilename());
             PDOutlineItem item = new PDOutlineItem();
             item.setTitle(title);
-
-            // Set the destination to the first page of this file in the merged document
             if (pageIndex < mergedDocument.getNumberOfPages()) {
-                PDPage page = mergedDocument.getPage(pageIndex);
-                item.setDestination(page);
+                item.setDestination(mergedDocument.getPage(pageIndex));
             }
-
-            // Add the item to the outline
             outline.addLast(item);
-
-            // Increment page index for the next file
-            try (PDDocument doc = pdfDocumentFactory.load(file)) {
-                pageIndex += doc.getNumberOfPages();
-            } catch (IOException e) {
-                ExceptionUtils.logException("document loading for TOC generation", e);
-                pageIndex++; // Increment by at least one if we can't determine page count
-            }
+            int count = pageCounts[i];
+            pageIndex += count > 0 ? count : 1;
         }
     }
 
@@ -306,31 +305,33 @@ public class MergeController {
                             request.getSortType())); // Sort files based on requested sort type
         }
 
-        try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
-
+        // Hold the merge output until response streaming completes. We only close it on failure;
+        // on success ownership transfers to the response (deleted when Spring closes the stream).
+        TempFile mergeOutput = new TempFile(tempFileManager, ".pdf");
+        boolean keepMergeOutput = false;
+        try {
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
+            // OPTIMIZE_RESOURCES_MODE closes source documents progressively and skips
+            // structure-tree copying. Trade-off: PDF/UA tags (used by screen readers) are not
+            // preserved in the merged output. Most users don't have tagged PDFs and this trades
+            // negligibly-different output for measurably lower peak heap during merge.
+            mergerUtility.setDocumentMergeMode(
+                    PDFMergerUtility.DocumentMergeMode.OPTIMIZE_RESOURCES_MODE);
             long totalSize = 0;
-            List<Integer> invalidIndexes = new ArrayList<>();
+            File[] sourceFiles = new File[files.length];
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
                 totalSize += multipartFile.getSize();
-                File tempFile =
-                        tempFileManager.convertMultipartFileToFile(
-                                multipartFile); // Convert MultipartFile to File
-                filesToDelete.add(tempFile); // Add temp file to the list for later deletion
-
-                // Pre-validate each PDF so we can report which one(s) are broken
-                // Use the original MultipartFile to avoid deleting the tempFile during validation
-                try (PDDocument ignored = pdfDocumentFactory.load(multipartFile)) {
-                    // OK
-                } catch (IOException e) {
-                    ExceptionUtils.logException("PDF pre-validate", e);
-                    invalidIndexes.add(index);
-                }
-                mergerUtility.addSource(tempFile); // Add source file to the merger utility
+                File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                filesToDelete.add(tempFile);
+                sourceFiles[index] = tempFile;
+                mergerUtility.addSource(tempFile);
             }
+            // Pre-validation is intentionally omitted: PDFMergerUtility surfaces corrupted inputs
+            // via PdfErrorUtils.isCorruptedPdfError below, and a separate validation pass would
+            // double-allocate PDDocument graphs and re-spool every source >10 MB to disk.
 
-            mergerUtility.setDestinationFileName(mt.getFile().getAbsolutePath());
+            mergerUtility.setDestinationFileName(mergeOutput.getFile().getAbsolutePath());
 
             try {
                 mergerUtility.mergeDocuments(
@@ -344,34 +345,43 @@ public class MergeController {
                 throw e;
             }
 
-            // Load the merged PDF document and operate on it inside try-with-resources
-            try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
-                // Remove signatures if removeCertSign is true
-                if (removeCertSign) {
-                    PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
-                    PDAcroForm acroForm = catalog.getAcroForm();
-                    if (acroForm != null) {
-                        List<PDField> fieldsToRemove =
-                                acroForm.getFields().stream()
-                                        .filter(PDSignatureField.class::isInstance)
-                                        .toList();
+            // Common case: caller wants neither cert-sign removal nor a TOC. Skip the
+            // load-and-resave round-trip entirely — the merged file on disk is the response.
+            // For 4000+ page jobs this avoids materialising the merged PDDocument in heap.
+            if (!removeCertSign && !generateToc) {
+                outputTempFile = mergeOutput;
+                keepMergeOutput = true;
+            } else {
+                // Page counts are needed only when generating a TOC. Read them from the already-
+                // on-disk source files in read-only mode (no metadata mutation, no extra spool).
+                int[] pageCounts = generateToc ? collectPageCounts(sourceFiles) : null;
 
-                        if (!fieldsToRemove.isEmpty()) {
-                            acroForm.flatten(
-                                    fieldsToRemove,
-                                    false); // Flatten the fields, effectively removing them
+                outputTempFile = new TempFile(tempFileManager, ".pdf");
+                // Hint the GC to reclaim merger transients before we open the merged document.
+                // The merger has just dropped its destination COSDocument; reclaiming that heap
+                // before loading the merged file again limits live-set during the modify pass.
+                System.gc();
+                try (PDDocument mergedDocument = pdfDocumentFactory.load(mergeOutput.getFile())) {
+                    // Resource cache off for the modify pass — we never call getImage() here,
+                    // and disabling it prevents PDFBox from caching XObjects when the page tree
+                    // is iterated during outline insertion or AcroForm flattening.
+                    mergedDocument.setResourceCache(null);
+                    if (removeCertSign) {
+                        PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
+                        PDAcroForm acroForm = catalog.getAcroForm();
+                        if (acroForm != null) {
+                            List<PDField> fieldsToRemove =
+                                    acroForm.getFields().stream()
+                                            .filter(PDSignatureField.class::isInstance)
+                                            .toList();
+                            if (!fieldsToRemove.isEmpty()) {
+                                acroForm.flatten(fieldsToRemove, false);
+                            }
                         }
                     }
-                }
-
-                // Add table of contents if generateToc is true
-                if (generateToc && files.length > 0) {
-                    addTableOfContents(mergedDocument, files);
-                }
-
-                // Save the modified document to a temporary file
-                outputTempFile = new TempFile(tempFileManager, ".pdf");
-                try {
+                    if (generateToc && files.length > 0) {
+                        addTableOfContents(mergedDocument, files, pageCounts);
+                    }
                     mergedDocument.save(outputTempFile.getFile());
                 } catch (Exception e) {
                     outputTempFile.close();
@@ -380,7 +390,7 @@ public class MergeController {
                 }
             }
         } catch (Exception ex) {
-            if (outputTempFile != null) {
+            if (outputTempFile != null && outputTempFile != mergeOutput) {
                 outputTempFile.close();
             }
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
@@ -390,6 +400,9 @@ public class MergeController {
             }
             throw ex;
         } finally {
+            if (!keepMergeOutput && outputTempFile != mergeOutput) {
+                mergeOutput.close();
+            }
             for (File file : filesToDelete) {
                 tempFileManager.deleteTempFile(file); // Delete temporary files
             }
