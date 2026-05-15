@@ -29,6 +29,16 @@ export const useMergeTips = (): TooltipContent => {
           "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers.",
         ),
       },
+      {
+        title: t(
+          "merge.preserveAccessibility.tooltip.title",
+          "Preserve Accessibility Tags",
+        ),
+        description: t(
+          "merge.preserveAccessibility.tooltip.description",
+          "Keeps PDF/UA structure tags (used by screen readers) in the merged output. Increases peak memory usage; leave off for large merges if accessibility is not required.",
+        ),
+      },
     ],
   };
 };

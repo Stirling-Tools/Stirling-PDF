@@ -4600,6 +4600,13 @@ label = "Generate table of contents in the merged file?"
 description = "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers."
 title = "Generate Table of Contents"
 
+[merge.preserveAccessibility]
+label = "Preserve accessibility tags? (uses more memory on large merges)"
+
+[merge.preserveAccessibility.tooltip]
+description = "Keeps PDF/UA structure tags (used by screen readers) in the merged output. Increases peak memory usage; leave off for large merges if accessibility is not required."
+title = "Preserve Accessibility Tags"
+
 [merge.removeDigitalSignature]
 label = "Remove digital signature in the merged file?"
 
