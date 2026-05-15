@@ -252,7 +252,13 @@ async def test_contradiction_intent_with_missing_ingest_returns_need_ingest(
 async def test_contradiction_takes_precedence_over_math(
     runtime_with_stub_docs: AppRuntime,
 ) -> None:
-    """When both classifiers fire, the contradiction branch wins (see module docstring)."""
+    """When both classifiers would fire, the contradiction branch wins
+    AND the math classifier must NEVER be consulted. Short-circuit
+    semantics are the load-bearing assertion — without it, a future
+    change that ran both classifiers in parallel and picked the
+    contradiction result would still pass an "ADD_COMMENTS-tool"
+    check but would burn an unnecessary LLM call on every dual-intent
+    prompt."""
     file = _file("doc-a", "a.pdf")
     await runtime_with_stub_docs.documents.ingest(
         file.id,
@@ -261,8 +267,10 @@ async def test_contradiction_takes_precedence_over_math(
     )
 
     agent = PdfReviewAgent(runtime_with_stub_docs)
-    agent._contradiction_intent_classifier.classify = AsyncMock(return_value=True)
-    agent._math_intent_classifier.classify = AsyncMock(return_value=True)
+    contradiction_classify = AsyncMock(return_value=True)
+    math_classify = AsyncMock(return_value=True)
+    agent._contradiction_intent_classifier.classify = contradiction_classify
+    agent._math_intent_classifier.classify = math_classify
     agent._contradiction_detector.detect = AsyncMock(return_value=_report())
 
     from stirling.agents.pdf_review import _LocalisedContradictionReport
@@ -275,8 +283,14 @@ async def test_contradiction_takes_precedence_over_math(
     request = OrchestratorRequest(user_message="check this", files=[file])
     response = await agent.orchestrate(request)
 
-    # ADD_COMMENTS plan (contradiction path) instead of MATH_AUDITOR_AGENT plan.
+    # ADD_COMMENTS plan (contradiction path) — not a MATH_AUDITOR_AGENT plan
+    # and not a multi-step plan.
     assert isinstance(response, EditPlanResponse)
+    assert len(response.steps) == 1
     assert response.steps[0].tool == ToolEndpoint.ADD_COMMENTS
-    assert response.resume_with is None  # not a resume-emitting plan
+    assert response.resume_with is None
+    # Contradiction classifier was consulted; the contradiction branch
+    # then short-circuits so math classifier MUST NOT have been called.
+    contradiction_classify.assert_awaited_once()
+    math_classify.assert_not_awaited()
     agent._contradiction_detector.detect.assert_awaited_once()

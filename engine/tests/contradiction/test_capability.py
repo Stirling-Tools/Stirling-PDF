@@ -62,8 +62,14 @@ async def test_find_contradictions_returns_formatted_text(runtime: AppRuntime) -
     result = await capability._find_contradictions("are there inconsistent deadlines?")
 
     detector.detect.assert_awaited_once()
-    # Page numbers and verbatim quotes should be present in the rendered output.
-    assert "1" in result and "5" in result
+    # Verbatim quotes pin per-claim content; page labels pin that the
+    # formatter walks the report rather than echoing a fixed string.
+    # (The earlier ``"1" in result and "5" in result`` substring check
+    # was trivially satisfied because the digit "1" appears in counts,
+    # summary, etc. — replaced with the labels the formatter actually
+    # renders.)
+    assert "page 1" in result
+    assert "page 5" in result
     assert "The deadline is March 5." in result
     assert "The deadline is April 10." in result
     assert canned.summary in result

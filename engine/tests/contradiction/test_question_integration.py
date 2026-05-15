@@ -10,23 +10,17 @@ detector when invoked.
 from __future__ import annotations
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
 
 import pytest
+from pydantic_ai.toolsets import FunctionToolset
 
-from stirling.agents.contradiction import ContradictionCapability
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.contracts import (
     AiFile,
-    ContradictionReport,
     PageText,
     PdfQuestionRequest,
 )
-from stirling.contracts.contradiction import (
-    Claim,
-    Contradiction,
-    ContradictionSeverity,
-)
+from stirling.contracts.contradiction import Claim
 from stirling.documents import DocumentService, SqliteVecStore
 from stirling.models import FileId
 from stirling.services.runtime import AppRuntime
@@ -112,43 +106,17 @@ async def test_run_answer_agent_builds_agent_with_three_toolsets(
 
     toolsets = captured.get("toolsets")
     assert isinstance(toolsets, list)
-    assert len(toolsets) == 3  # rag + whole-doc + contradiction
+    assert len(toolsets) == 3
 
+    # Inspect the registered tool names. A regression that double-wired
+    # one capability (e.g. two ``rag.toolset`` and dropping
+    # ``contradiction.toolset``) would still satisfy ``len == 3`` but
+    # the union of tool names would not include ``find_contradictions``.
+    tool_names: set[str] = set()
+    for ts in toolsets:
+        assert isinstance(ts, FunctionToolset), f"expected FunctionToolset, got {type(ts).__name__}"
+        tool_names.update(ts.tools.keys())
 
-@pytest.mark.anyio
-async def test_contradiction_capability_returns_report_text_when_invoked(
-    runtime_with_stub_docs: AppRuntime,
-) -> None:
-    """When the smart model calls ``find_contradictions``, the capability
-    invokes the detector and returns notes-style text containing the
-    canned report's quotes."""
-    file = _file("doc-a", "a.pdf")
-    await runtime_with_stub_docs.documents.ingest(
-        file.id,
-        [PageText(page_number=1, text="x")],
-        source=file.name,
+    assert tool_names == {"search_knowledge", "read_full_document", "find_contradictions"}, (
+        f"unexpected toolset wiring; tool names = {sorted(tool_names)}"
     )
-
-    agent = PdfQuestionAgent(runtime_with_stub_docs)
-    canned = ContradictionReport(
-        contradictions=[
-            Contradiction(
-                subject="deadline",
-                claim1=_claim(1, "Deadline March 5."),
-                claim2=_claim(7, "Deadline April 10."),
-                explanation="dates conflict",
-                severity=ContradictionSeverity.ERROR,
-            )
-        ],
-        pages_examined=[1, 7],
-        clean=False,
-        summary="examined 2 pages; 1 contradiction",
-    )
-    agent._contradiction_detector.detect = AsyncMock(return_value=canned)
-
-    capability = ContradictionCapability(detector=agent._contradiction_detector, files=[file])
-    result = await capability._find_contradictions("are there conflicts?")
-
-    assert "Deadline March 5." in result
-    assert "Deadline April 10." in result
-    assert "examined 2 pages" in result.lower()

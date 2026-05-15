@@ -141,22 +141,29 @@ async def test_happy_path_finds_contradiction_across_two_pages(
 
 @pytest.mark.anyio
 async def test_zero_claims_returns_clean_report(runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]) -> None:
+    """Empty-extractor branch: zero claims → clean report whose
+    ``pages_examined`` is still populated from chunk coverage."""
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
     detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("All clean."))
+    # Stubbing the summary agent is unavoidable (the production code calls
+    # it on every detect()); we just don't assert on what it returns —
+    # asserting on the canned value here would only re-prove that AsyncMock
+    # works.
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("any text"))
 
     report = await detector.detect([file_a])
 
     assert report.contradictions == []
     assert report.clean is True
     # The extractor pass ran against both pages even though it produced
-    # no claims — they count as examined.
+    # no claims — they count as examined. This is the load-bearing
+    # assertion: pages_examined must come from chunk coverage, not from
+    # pages-that-produced-claims.
     assert report.pages_examined == [1, 2]
-    assert report.summary == "All clean."
 
 
 @pytest.mark.anyio
@@ -273,10 +280,24 @@ def test_subject_alias_rejects_empty_canonical() -> None:
         _SubjectAlias(raw="", canonical="deadline")
 
 
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(AgentRunError("boom"), id="provider-error"),
+        # M6 regression: TimeoutError must also be caught alongside
+        # AgentRunError so the canonicaliser falling over does not crash
+        # the whole pipeline.
+        pytest.param(TimeoutError("simulated"), id="timeout"),
+    ],
+)
 @pytest.mark.anyio
 async def test_canonicaliser_failure_falls_back_to_lexical_keys(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
+    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page], failure: BaseException
 ) -> None:
+    """When the canonicaliser raises, the ledger keeps its lexical keys
+    and the rest of the pipeline still runs. Lexical normalisation
+    collapses "Project Deadline" and "the project deadline" into a
+    single bucket so a contradiction is still detectable."""
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
@@ -301,7 +322,7 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
     detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
     )
-    detector._subject_canonicaliser.run = AsyncMock(side_effect=AgentRunError("boom"))
+    detector._subject_canonicaliser.run = AsyncMock(side_effect=failure)
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
             _BucketContradictions(
@@ -358,15 +379,29 @@ async def test_same_page_same_polarity_pair_is_dropped(runtime: AppRuntime, file
     assert report.contradictions == []
 
 
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(AgentRunError("boom"), id="provider-error"),
+        # M6 regression: a TimeoutError from asyncio.wait_for must also fall
+        # through to the deterministic summary instead of crashing the pipeline.
+        pytest.param(TimeoutError("simulated"), id="timeout"),
+    ],
+)
 @pytest.mark.anyio
-async def test_summary_fallback_used_when_llm_fails(runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]) -> None:
+async def test_summary_falls_back_to_deterministic_when_llm_unavailable(
+    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page], failure: BaseException
+) -> None:
+    """Both ``AgentRunError`` and ``TimeoutError`` go through the same
+    ``except (AgentRunError, TimeoutError)`` handler in ``_generate_summary``
+    and produce the deterministic fallback summary."""
     _install_documents_stub(runtime, {file_a.id: pages_a})
     detector = ContradictionDetector(runtime)
 
     detector._mapper.map_pages = AsyncMock(
         return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
     )
-    detector._summary_agent.run = AsyncMock(side_effect=AgentRunError("boom"))
+    detector._summary_agent.run = AsyncMock(side_effect=failure)
 
     report = await detector.detect([file_a])
 
@@ -414,78 +449,15 @@ async def test_detector_chunk_timeout_falls_through(runtime: AppRuntime, file_a:
 
     report = await detector.detect([file_a])
 
-    # Detector timed out so no pairs come back, but the pipeline
-    # produced a clean report instead of crashing.
+    # Detector timed out so no pairs come back. Crucially: the pipeline
+    # reached the summary stage rather than crashing earlier, so
+    # ``pages_examined`` is populated from the (successful) extraction
+    # stage. A regression where the TimeoutError escapes earlier and a
+    # bare except clause builds an empty report would also satisfy
+    # ``contradictions == []`` — pinning ``pages_examined`` rules that
+    # case out.
     assert report.contradictions == []
-
-
-@pytest.mark.anyio
-async def test_canonicaliser_timeout_falls_back_to_lexical(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
-) -> None:
-    """Regression — a TimeoutError from the canonicaliser is treated like
-    AgentRunError: lexical normalisation takes over. (M6)
-    """
-
-    _install_documents_stub(runtime, {file_a.id: pages_a})
-    detector = ContradictionDetector(runtime)
-
-    extracted_chunk = _ExtractedClaims(
-        claims=[
-            _ExtractedClaim(
-                page=1,
-                subject="Project Deadline",
-                polarity="assert",
-                text="A1",
-                quote="The deadline is March 5.",
-            ),
-            _ExtractedClaim(
-                page=2,
-                subject="the project deadline",
-                polarity="assert",
-                text="A2",
-                quote="The deadline is April 10.",
-            ),
-        ]
-    )
-    detector._mapper.map_pages = AsyncMock(
-        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
-    )
-    detector._subject_canonicaliser.run = AsyncMock(side_effect=TimeoutError("simulated"))
-    detector._pair_detector.run = AsyncMock(
-        return_value=_stub_result(
-            _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="conflict", severity=ContradictionSeverity.WARNING)]
-            )
-        )
-    )
-    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
-
-    report = await detector.detect([file_a])
-
-    # Lexical fallback collapsed the two subjects into one bucket; the
-    # detector still ran on it.
-    assert len(report.contradictions) == 1
-
-
-@pytest.mark.anyio
-async def test_summary_timeout_falls_back_to_deterministic_summary(
-    runtime: AppRuntime, file_a: AiFile, pages_a: list[Page]
-) -> None:
-    """Regression — a summary-stage timeout produces the deterministic
-    fallback summary instead of crashing. (M6)
-    """
-
-    _install_documents_stub(runtime, {file_a.id: pages_a})
-    detector = ContradictionDetector(runtime)
-
-    detector._mapper.map_pages = AsyncMock(
-        return_value=[ChunkOutput(pages=[1, 2], output=_ExtractedClaims(claims=[]), label="pages=1-2")]
-    )
-    detector._summary_agent.run = AsyncMock(side_effect=TimeoutError("simulated"))
-
-    report = await detector.detect([file_a])
-    assert "No contradictions" in report.summary
+    assert report.pages_examined == [1, 2]
 
 
 @pytest.mark.anyio

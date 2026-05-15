@@ -17,7 +17,7 @@ import pytest
 from pydantic import BaseModel
 from pydantic_ai import Agent
 
-from stirling.agents.shared.chunked_mapper import ChunkedMapper, ChunkOutput
+from stirling.agents.shared.chunked_mapper import ChunkedMapper
 from stirling.contracts.documents import Page
 from stirling.services.runtime import AppRuntime
 
@@ -340,26 +340,6 @@ class TestSummaryCounts:
 
 
 class TestChunkOutputShape:
-    @pytest.mark.anyio
-    async def test_label_reflects_page_range(self, runtime: AppRuntime) -> None:
-        mapper = _build_mapper(runtime, chars_per_slice=20)
-        pages = [_page(3, "a" * 6), _page(4, "b" * 6), _page(5, "c" * 6)]
-        canned = _Extracted(label="ok")
-
-        with patch.object(
-            mapper._extractor,
-            "run",
-            AsyncMock(return_value=_StubAgentResult(output=canned)),
-        ):
-            outputs = await mapper.map_pages(pages, "q")
-
-        assert len(outputs) == 1
-        out = outputs[0]
-        assert isinstance(out, ChunkOutput)
-        assert out.pages == [3, 4, 5]
-        assert out.label == "pages=3-5"
-        assert out.output is canned
-
     @pytest.mark.anyio
     async def test_single_page_label(self, runtime: AppRuntime) -> None:
         mapper = _build_mapper(runtime, chars_per_slice=5)

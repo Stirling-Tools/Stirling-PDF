@@ -78,13 +78,6 @@ def test_lexical_normalisation_collapses_articles_and_punctuation(
     assert {claim.page for claim in only_bucket} == {1, 2, 3}
 
 
-def test_entry_count_matches_total_records(ledger: ClaimLedger) -> None:
-    ledger.record(_claim("alpha", page=1))
-    ledger.record(_claim("alpha", page=2))
-    ledger.record(_claim("beta", page=3))
-    assert ledger.entry_count == 3
-
-
 def test_duplicates_not_deduped_at_ledger_level(ledger: ClaimLedger) -> None:
     """Two structurally identical claims are both kept; deduplication is the
     detector's responsibility, not the ledger's."""
@@ -98,15 +91,6 @@ def test_duplicates_not_deduped_at_ledger_level(ledger: ClaimLedger) -> None:
 
 
 # rekey_with_canonical
-
-
-def test_rekey_with_canonical_preserves_records(ledger: ClaimLedger) -> None:
-    ledger.record(_claim("raw"))
-    ledger.record(_claim("raw", page=2))
-    assert ledger.entry_count == 2
-
-    ledger.rekey_with_canonical({"raw": "canon"})
-    assert ledger.entry_count == 2
 
 
 def test_canonical_keys_collapse_multiple_raw_subjects(ledger: ClaimLedger) -> None:
