@@ -83,14 +83,20 @@ class TestReason:
     async def test_runs_one_chunk_per_slice_and_synthesises(self, runtime: AppRuntime) -> None:
         """Three small pages with a generous budget produce one chunk and one extractor call;
         the synthesis stage receives notes from all chunks and returns the final answer."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
         reasoner = ChunkedReasoner(runtime, chars_per_slice=1000)
         pages = [_page(1, "alpha"), _page(2, "beta"), _page(3, "gamma")]
 
-        canned_notes = ChunkNotes(pages=[1, 2, 3], summary="all three pages", facts=["fact-1"])
+        canned_extracted = _ExtractedNotes(summary="all three pages", facts=["fact-1"])
         canned_answer = _Answer(answer="final answer")
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(return_value=(canned_notes, 0.0))) as chunk_mock,
+            patch.object(
+                reasoner._mapper,
+                "_extract_chunk",
+                AsyncMock(return_value=(canned_extracted, 0.0)),
+            ) as chunk_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -107,20 +113,29 @@ class TestReason:
         assert synth_args is not None
         # _synthesise(question, notes, answer_prompt, answer_type)
         _, notes_arg, _, type_arg = synth_args.args
-        assert notes_arg == [canned_notes]
+        assert len(notes_arg) == 1
+        assert notes_arg[0].pages == [1, 2, 3]
+        assert notes_arg[0].summary == "all three pages"
+        assert notes_arg[0].facts == ["fact-1"]
         assert type_arg is _Answer
 
     @pytest.mark.anyio
     async def test_fans_out_when_pages_exceed_slice_budget(self, runtime: AppRuntime) -> None:
         """Pages that don't fit into a single slice produce one extractor call per slice."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10)
         pages = [_page(i, "x" * 8) for i in range(1, 6)]
 
-        canned_notes = ChunkNotes(pages=[0], summary="placeholder")
+        canned_extracted = _ExtractedNotes(summary="placeholder")
         canned_answer = _Answer(answer="ok")
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(return_value=(canned_notes, 0.0))) as chunk_mock,
+            patch.object(
+                reasoner._mapper,
+                "_extract_chunk",
+                AsyncMock(return_value=(canned_extracted, 0.0)),
+            ) as chunk_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)),
         ):
             await reasoner.reason(
@@ -138,13 +153,15 @@ class TestReason:
         """First-round chunks have no fallback notes, so a failure is dropped
         rather than preserving anything; the surviving notes still flow into
         synthesis."""
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
         reasoner = ChunkedReasoner(runtime, chars_per_slice=10)
         pages = [_page(i, "x" * 8) for i in range(1, 4)]
 
-        good = ChunkNotes(pages=[1], summary="ok")
-        async_results = [good, RuntimeError("chunk boom"), good]
+        good = _ExtractedNotes(summary="ok")
+        async_results: list[_ExtractedNotes | BaseException] = [good, RuntimeError("chunk boom"), good]
 
-        async def _chunk(*_args: object, **_kwargs: object) -> tuple[ChunkNotes, float]:
+        async def _chunk(*_args: object, **_kwargs: object) -> tuple[_ExtractedNotes, float]:
             value = async_results.pop(0)
             if isinstance(value, BaseException):
                 raise value
@@ -153,7 +170,7 @@ class TestReason:
         canned_answer = _Answer(answer="resilient")
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(side_effect=_chunk)),
+            patch.object(reasoner._mapper, "_extract_chunk", AsyncMock(side_effect=_chunk)),
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
             result = await reasoner.reason(
@@ -175,7 +192,7 @@ class TestReason:
         pages = [_page(i, "x" * 8) for i in range(1, 3)]
 
         with (
-            patch.object(reasoner, "_extract_chunk", AsyncMock(side_effect=RuntimeError("boom"))),
+            patch.object(reasoner._mapper, "_extract_chunk", AsyncMock(side_effect=RuntimeError("boom"))),
             patch.object(reasoner, "_synthesise", AsyncMock()) as synth_mock,
             pytest.raises(RuntimeError, match="no notes"),
         ):
@@ -503,7 +520,7 @@ class TestExtractChunk:
             "run",
             AsyncMock(return_value=_StubAgentResult(output=canned)),
         ):
-            note, _ = await reasoner._extract_chunk(chunk, "anything")
+            note, _ = await reasoner._extract_compression_chunk(chunk)
 
         assert note.pages == [1, 2, 3, 4, 5]
         assert note.summary == "merged"

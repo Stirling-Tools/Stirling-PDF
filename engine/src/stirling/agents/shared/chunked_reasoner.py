@@ -12,6 +12,13 @@ output schema small and the page list authoritative.
 
 Used wherever pure RAG retrieval is the wrong tool: aggregations ("largest
 number"), comparisons ("shortest chapter"), and full summaries.
+
+Implementation note: the first-round per-chunk extraction (slice, schedule,
+timeout, cancel-drain) is delegated to :class:`ChunkedMapper`. The
+compression loop and the synthesis stage are reasoning-specific and live
+here: compression-round chunks carry a ``fallback`` so a failed group
+preserves its input notes instead of dropping page coverage, which is a
+different shape from the generic mapper.
 """
 
 from __future__ import annotations
@@ -25,12 +32,8 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.contracts import (
-    WholeDocCompressionRound,
-    WholeDocReadDone,
-    WholeDocReadStarted,
-    WholeDocSliceDone,
-)
+from stirling.agents.shared.chunked_mapper import ChunkedMapper
+from stirling.contracts import WholeDocCompressionRound
 from stirling.contracts.documents import Page
 from stirling.models import ApiModel
 from stirling.services import AppRuntime, emit_progress
@@ -89,18 +92,14 @@ class _ExtractedNotes(BaseModel):
 
 
 @dataclass(frozen=True)
-class _Chunk:
-    """A unit of work for the extractor: content + the pages it covers + a fallback.
+class _CompressionChunk:
+    """A compression-round unit of work: formatted notes + their pages + a fallback.
 
-    ``content`` is the formatted text fed to the model: raw page text with
-    ``[Page N]`` markers in the first round, formatted prior-pass notes with
-    ``[Notes from pages A-B]`` markers in subsequent rounds. ``pages`` is
-    attached to the resulting :class:`ChunkNotes` deterministically.
-
-    ``fallback`` is the list of notes to keep if the extractor call fails. For
-    raw page chunks it's empty (a failed slice has no pre-extracted notes to
-    preserve). For chunks built from existing notes it's the input notes
-    themselves, so a failure doesn't lose page coverage.
+    Built from a group of prior-pass :class:`ChunkNotes`. ``fallback`` is the
+    input group itself: if the extractor call fails the originals stay in the
+    working set so page coverage isn't lost. This is the part of the
+    scheduling shape the generic :class:`ChunkedMapper` deliberately does NOT
+    cover — it's reasoning-specific.
     """
 
     content: str
@@ -114,23 +113,11 @@ class _RoundResult:
     """Outcome of one extraction round.
 
     ``successes`` lets the loop detect rounds that made no forward progress
-    (every chunk failed) and bail rather than spinning. ``slowest`` is the
-    chunk with the longest successful extractor call this round, used for
-    diagnostic log lines on the first round.
+    (every chunk failed) and bail rather than spinning.
     """
 
     notes: list[ChunkNotes]
     successes: int
-    slowest: tuple[str, float] | None
-
-
-def _page_range_label(pages: list[Page]) -> str:
-    if not pages:
-        return "pages=?"
-    elif len(pages) == 1:
-        return f"pages={pages[0].page_number}"
-    else:
-        return f"pages={pages[0].page_number}-{pages[-1].page_number}"
 
 
 def _note_range_label(notes: list[ChunkNotes]) -> str:
@@ -181,8 +168,9 @@ class ChunkedReasoner:
 
     Lifetime:
         Construct once per agent that uses it. The extractor agent is built
-        at construction time and reused; the synthesis agent in :meth:`reason`
-        is built per call because its output type is generic.
+        at construction time (and reused via an internal :class:`ChunkedMapper`);
+        the synthesis agent in :meth:`reason` is built per call because its
+        output type is generic.
     """
 
     def __init__(
@@ -194,35 +182,34 @@ class ChunkedReasoner:
         worker_timeout_seconds: float | None = None,
         notes_char_budget: int | None = None,
     ) -> None:
-        chars = chars_per_slice if chars_per_slice is not None else runtime.settings.chunked_reasoner_chars_per_slice
-        conc = concurrency if concurrency is not None else runtime.settings.chunked_reasoner_concurrency
-        timeout = (
-            worker_timeout_seconds
-            if worker_timeout_seconds is not None
-            else runtime.settings.chunked_reasoner_worker_timeout_seconds
-        )
         budget = (
             notes_char_budget if notes_char_budget is not None else runtime.settings.chunked_reasoner_notes_char_budget
         )
-        if chars <= 0:
-            raise ValueError("chars_per_slice must be positive")
-        if conc <= 0:
-            raise ValueError("concurrency must be positive")
-        if timeout <= 0:
-            raise ValueError("worker_timeout_seconds must be positive")
         if budget <= 0:
             raise ValueError("notes_char_budget must be positive")
         self._runtime = runtime
-        self._chars_per_slice = chars
-        self._worker_timeout_seconds = timeout
         self._notes_char_budget = budget
-        self._semaphore = asyncio.Semaphore(conc)
         self._extractor: Agent[None, _ExtractedNotes] = Agent(
             model=runtime.fast_model,
             output_type=NativeOutput(_ExtractedNotes),
             system_prompt=_EXTRACTOR_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )
+        # The generic mapper owns slicing, concurrency, timeout and
+        # cancellation drain. Compression rounds reuse the same extractor +
+        # scheduling shape via an internal scheduler below.
+        self._mapper: ChunkedMapper[_ExtractedNotes] = ChunkedMapper(
+            runtime,
+            extractor=self._extractor,
+            chars_per_slice=chars_per_slice,
+            concurrency=concurrency,
+            worker_timeout_seconds=worker_timeout_seconds,
+            build_prompt=self._build_extraction_prompt,
+        )
+        # Shadow scheduling knobs for the compression-round scheduler.
+        self._semaphore = self._mapper._semaphore
+        self._chars_per_slice = self._mapper.chars_per_slice
+        self._worker_timeout_seconds = self._mapper.worker_timeout_seconds
 
     async def gather_notes(self, pages: list[Page], question: str) -> list[ChunkNotes]:
         """Return notes covering every page that fit the synthesis budget.
@@ -240,126 +227,86 @@ class ChunkedReasoner:
         if not pages:
             raise ValueError("ChunkedReasoner.gather_notes requires at least one page")
 
-        chunks = [self._chunk_from_pages(slice_pages) for slice_pages in self._slice_pages(pages)]
-        slice_total = len(chunks)
-        logger.info(
-            "[chunked-reasoner] question=%r pages=%d slices=%d",
-            question,
-            len(pages),
-            slice_total,
-        )
-        await emit_progress(WholeDocReadStarted(question=question, pages=len(pages), slices=slice_total))
+        # First round: delegate to the generic mapper. Each ChunkOutput
+        # carries the chunk's _ExtractedNotes plus the pages the mapper
+        # assigned it.
+        outputs = await self._mapper.map_pages(pages, question)
+        first_round_notes = [self._build_chunk_notes(o.output, o.pages) for o in outputs]
+        first_round_notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
 
-        gather_start = time.perf_counter()
-        notes = await self._run_chunks(chunks, question)
+        return await self._compress_until_fits(first_round_notes)
 
-        await emit_progress(
-            WholeDocReadDone(
-                completed=len(notes),
-                slices=slice_total,
-                duration_seconds=round(time.perf_counter() - gather_start, 2),
-            )
-        )
-        return notes
+    async def _compress_until_fits(self, notes: list[ChunkNotes]) -> list[ChunkNotes]:
+        """Regroup and re-extract until the rendered notes fit ``notes_char_budget``.
 
-    async def _run_chunks(self, chunks: list[_Chunk], question: str) -> list[ChunkNotes]:
-        """Run chunks through the extractor, regrouping and looping until under budget.
-
-        The first round emits per-chunk progress events for streaming UIs;
-        later rounds emit a single round-start event. Each round may produce
+        First-round notes come in; compression-round chunks carry a
+        ``fallback`` so failures preserve page coverage. Each round may produce
         fewer notes than chunks (every chunk maps to at most one consolidated
         note); when the rendered notes still exceed the budget, the survivors
         are regrouped into fresh chunks and the loop runs again.
         """
         round_number = 0
         while True:
-            chunks_in = len(chunks)
-            result = await self._extract_chunks(chunks, question, round_number)
-
-            if result.slowest is not None:
-                slow_label, slow_duration = result.slowest
-                logger.info(
-                    "[chunked-reasoner] round %d: %d/%d chunks succeeded; slowest %s (%.1fs)",
-                    round_number,
-                    result.successes,
-                    chunks_in,
-                    slow_label,
-                    slow_duration,
-                )
-            else:
-                logger.info(
-                    "[chunked-reasoner] round %d: 0/%d chunks succeeded",
-                    round_number,
-                    chunks_in,
-                )
-
-            rendered_size = self._rendered_notes_size(result.notes)
-            if rendered_size <= self._notes_char_budget or len(result.notes) <= 1:
+            rendered_size = self._rendered_notes_size(notes)
+            if rendered_size <= self._notes_char_budget or len(notes) <= 1:
                 if round_number > 0:
                     logger.info(
                         "[chunked-reasoner] compression done after %d round(s): %d notes, %d chars",
                         round_number,
-                        len(result.notes),
+                        len(notes),
                         rendered_size,
                     )
-                return result.notes
-
-            if result.successes == 0:
-                # No forward progress this round; further rounds would
-                # reproduce the same shape. Return what we have.
-                logger.warning(
-                    "[chunked-reasoner] round %d produced no successful extractions; bailing with %d notes",
-                    round_number,
-                    len(result.notes),
-                )
-                return result.notes
+                return notes
 
             round_number += 1
-            groups = self._group_notes_for_compression(result.notes)
+            groups = self._group_notes_for_compression(notes)
             chunks = [self._chunk_from_notes(group) for group in groups]
             logger.info(
                 "[chunked-reasoner] compression round %d: %d notes (%d chars) -> %d groups",
                 round_number,
-                len(result.notes),
+                len(notes),
                 rendered_size,
                 len(groups),
             )
             await emit_progress(
                 WholeDocCompressionRound(
                     round_number=round_number,
-                    notes_in=len(result.notes),
+                    notes_in=len(notes),
                     groups=len(groups),
                 )
             )
 
-    async def _extract_chunks(
-        self,
-        chunks: list[_Chunk],
-        question: str,
-        round_number: int,
-    ) -> _RoundResult:
-        """Run all chunks through the extractor in parallel; collect surviving notes.
+            result = await self._run_compression_round(chunks)
+            logger.info(
+                "[chunked-reasoner] round %d: %d/%d chunks succeeded",
+                round_number,
+                result.successes,
+                len(chunks),
+            )
+            if result.successes == 0:
+                # No forward progress this round; further rounds would
+                # reproduce the same shape. Return what we have (including the
+                # fallback-preserved input notes for each failed chunk).
+                logger.warning(
+                    "[chunked-reasoner] round %d produced no successful extractions; bailing with %d notes",
+                    round_number,
+                    len(result.notes),
+                )
+                return result.notes
+            notes = result.notes
 
-        Failures fall back to ``chunk.fallback`` (empty in the first round, so
-        failures drop; populated in compression rounds, so failures preserve
-        their input notes). The first round emits a
-        :class:`WholeDocSliceDone` per successful completion in completion
-        order, with a monotonic ``completed`` counter.
+    async def _run_compression_round(self, chunks: list[_CompressionChunk]) -> _RoundResult:
+        """Run a compression round through the extractor in parallel.
 
-        Returned notes are sorted by first page so downstream grouping packs
-        document-adjacent content together regardless of which task happened
-        to finish first.
+        Failures fall back to ``chunk.fallback`` so the originals stay in the
+        working set; that's the bit the generic mapper can't do. Reuses the
+        mapper's semaphore + timeout + cancel-drain shape.
         """
-        total = len(chunks)
-        pending: dict[asyncio.Task[tuple[ChunkNotes, float]], _Chunk] = {
-            asyncio.create_task(self._extract_chunk(chunk, question)): chunk for chunk in chunks
+        pending: dict[asyncio.Task[tuple[ChunkNotes, float]], _CompressionChunk] = {
+            asyncio.create_task(self._extract_compression_chunk(chunk)): chunk for chunk in chunks
         }
-
         notes: list[ChunkNotes] = []
         successes = 0
-        slowest: tuple[str, float] | None = None
-        completed = 0
-
         try:
             while pending:
                 done, _ = await asyncio.wait(pending.keys(), return_when=asyncio.FIRST_COMPLETED)
@@ -367,112 +314,90 @@ class ChunkedReasoner:
                     chunk = pending.pop(task)
                     exc = task.exception()
                     if exc is not None:
-                        if chunk.fallback:
-                            logger.warning(
-                                "[chunked-reasoner] chunk %s failed: %s; preserving %d input note(s)",
-                                chunk.label,
-                                exc,
-                                len(chunk.fallback),
-                            )
-                            notes.extend(chunk.fallback)
-                        else:
-                            logger.warning("[chunked-reasoner] chunk %s failed: %s", chunk.label, exc)
-                        continue
-                    extracted, duration = task.result()
-                    notes.append(extracted)
-                    successes += 1
-                    completed += 1
-                    if slowest is None or duration > slowest[1]:
-                        slowest = (chunk.label, duration)
-                    if round_number == 0:
-                        await emit_progress(
-                            WholeDocSliceDone(
-                                completed=completed,
-                                total=total,
-                                pages=chunk.label,
-                                duration_ms=int(duration * 1000),
-                                excerpts=len(extracted.relevant_excerpts),
-                                facts=len(extracted.facts),
-                            )
+                        logger.warning(
+                            "[chunked-reasoner] chunk %s failed: %s; preserving %d input note(s)",
+                            chunk.label,
+                            exc,
+                            len(chunk.fallback),
                         )
+                        notes.extend(chunk.fallback)
+                        continue
+                    extracted_note, _duration = task.result()
+                    notes.append(extracted_note)
+                    successes += 1
         finally:
-            # On cancellation (typically a frontend disconnect propagating up
-            # through the streaming orchestrator) the per-chunk model calls
-            # would otherwise keep running to completion, billing tokens whose
-            # results nobody is reading. Cancel and drain so the upstream
-            # cancellation is the cancellation that matters.
             if pending:
                 for task in pending:
                     task.cancel()
                 await asyncio.gather(*pending.keys(), return_exceptions=True)
 
         notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
-        return _RoundResult(notes=notes, successes=successes, slowest=slowest)
+        return _RoundResult(notes=notes, successes=successes)
 
-    async def _extract_chunk(self, chunk: _Chunk, question: str) -> tuple[ChunkNotes, float]:
-        """Run the extractor on one chunk and attach the chunk's pages to the output."""
-        try:
-            extracted, duration = await self._run_extractor(chunk.content, question, chunk.label)
-        except TimeoutError:
-            logger.warning(
-                "[chunked-reasoner] chunk %s timed out (limit %.1fs)",
-                chunk.label,
-                self._worker_timeout_seconds,
-            )
-            raise
-        logger.debug(
-            "[chunked-reasoner] chunk %s: %d excerpt(s), %d fact(s) in %dms",
-            chunk.label,
-            len(extracted.relevant_excerpts),
-            len(extracted.facts),
-            int(duration * 1000),
-        )
-        return self._build_chunk_notes(extracted, chunk.pages), duration
-
-    async def _run_extractor(
-        self,
-        content: str,
-        question: str,
-        page_label: str,
-    ) -> tuple[_ExtractedNotes, float]:
-        """Inner primitive: run the extractor agent under semaphore + timeout."""
-        prompt = self._build_extraction_prompt(content, question)
+    async def _extract_compression_chunk(self, chunk: _CompressionChunk) -> tuple[ChunkNotes, float]:
+        """Run the extractor on a compression-round chunk; attach pages deterministically."""
+        prompt = self._build_extraction_prompt(chunk.content, "")
         async with self._semaphore:
             start = time.perf_counter()
             try:
                 result = await asyncio.wait_for(self._extractor.run(prompt), timeout=self._worker_timeout_seconds)
             except TimeoutError:
-                duration = time.perf_counter() - start
-                logger.debug(
-                    "[chunked-reasoner] extractor %s timed out after %dms",
-                    page_label,
-                    int(duration * 1000),
+                logger.warning(
+                    "[chunked-reasoner] compression chunk %s timed out (limit %.1fs)",
+                    chunk.label,
+                    self._worker_timeout_seconds,
                 )
                 raise
             duration = time.perf_counter() - start
-        return result.output, duration
+        return self._build_chunk_notes(result.output, chunk.pages), duration
 
-    def _chunk_from_pages(self, pages: list[Page]) -> _Chunk:
-        """Build a first-round chunk from a slice of raw pages."""
-        return _Chunk(
-            content="\n\n".join(f"[Page {p.page_number}]\n{p.text}" for p in pages),
+    @dataclass(frozen=True)
+    class _Chunk:
+        """First-round chunk shape kept as a thin record for prompt/page-marker tests.
+
+        The reasoner no longer schedules these directly — first-round
+        scheduling lives in :class:`ChunkedMapper`. The shape stays around so
+        :meth:`_chunk_from_pages` callers can introspect ``content`` / ``pages``
+        for prompt-construction assertions.
+        """
+
+        content: str
+        pages: list[int]
+        label: str
+
+    def _chunk_from_pages(self, pages: list[Page]) -> ChunkedReasoner._Chunk:
+        """Build a first-round chunk record from a slice of raw pages.
+
+        Thin wrapper around the mapper's static formatter so tests and helpers
+        that want to inspect the rendered chunk content (page markers, etc.)
+        keep working without reaching into the mapper internals.
+        """
+        return ChunkedReasoner._Chunk(
+            content=ChunkedMapper.format_chunk_content(pages),
             pages=[p.page_number for p in pages],
-            fallback=[],
-            label=_page_range_label(pages),
+            label=_page_range_label_from_pages(pages),
         )
 
-    def _chunk_from_notes(self, group: list[ChunkNotes]) -> _Chunk:
+    def _chunk_from_notes(self, group: list[ChunkNotes]) -> _CompressionChunk:
         """Build a compression-round chunk from a group of prior-pass notes.
 
         ``fallback`` is the input group itself: if the extractor call fails,
         the originals stay in the working set so page coverage isn't lost.
         """
-        return _Chunk(
+        return _CompressionChunk(
             content=self.format_notes(group),
             pages=sorted({p for note in group for p in note.pages}),
             fallback=group,
             label=_note_range_label(group),
         )
+
+    def _slice_pages(self, pages: list[Page]) -> list[list[Page]]:
+        """Group consecutive pages into character-budgeted slices.
+
+        Thin pass-through to :meth:`ChunkedMapper.slice_pages` so existing
+        tests that drive slicing through the reasoner instance keep working.
+        """
+        return ChunkedMapper.slice_pages(pages, self._chars_per_slice)
 
     def _group_notes_for_compression(self, notes: list[ChunkNotes]) -> list[list[ChunkNotes]]:
         """Pack consecutive notes into groups whose rendered size fits ``chars_per_slice``.
@@ -577,27 +502,6 @@ class ChunkedReasoner:
             sections.append("\n".join(block))
         return "\n\n".join(sections)
 
-    def _slice_pages(self, pages: list[Page]) -> list[list[Page]]:
-        """Group consecutive pages into character-budgeted slices.
-
-        Page boundaries are preserved: a single page is never split across
-        slices. If one page exceeds the budget on its own, it becomes its
-        own slice.
-        """
-        slices: list[list[Page]] = []
-        current: list[Page] = []
-        current_chars = 0
-        for page in pages:
-            if current and current_chars + page.char_count > self._chars_per_slice:
-                slices.append(current)
-                current = []
-                current_chars = 0
-            current.append(page)
-            current_chars += page.char_count
-        if current:
-            slices.append(current)
-        return slices
-
     async def _synthesise[T: BaseModel](
         self,
         question: str,
@@ -614,3 +518,16 @@ class ChunkedReasoner:
         prompt = f"User question:\n{question}\n\nNotes from across the document:\n\n{self.format_notes(notes)}"
         result = await agent.run(prompt)
         return result.output
+
+
+def _page_range_label_from_pages(pages: list[Page]) -> str:
+    """Internal helper mirroring :func:`chunked_mapper._page_range_label`.
+
+    Defined here so the legacy ``_chunk_from_pages`` keeps the same label
+    shape without pulling a private helper across modules.
+    """
+    if not pages:
+        return "pages=?"
+    if len(pages) == 1:
+        return f"pages={pages[0].page_number}"
+    return f"pages={pages[0].page_number}-{pages[-1].page_number}"
