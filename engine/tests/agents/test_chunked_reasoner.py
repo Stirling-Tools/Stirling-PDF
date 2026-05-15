@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -520,9 +521,35 @@ class TestExtractChunk:
             "run",
             AsyncMock(return_value=_StubAgentResult(output=canned)),
         ):
-            note, _ = await reasoner._extract_compression_chunk(chunk)
+            note, _ = await reasoner._extract_compression_chunk(chunk, "compress these")
 
         assert note.pages == [1, 2, 3, 4, 5]
         assert note.summary == "merged"
         assert note.facts == ["x"]
         assert note.relevant_excerpts == ["y"]
+
+    @pytest.mark.anyio
+    async def test_compression_rounds_receive_user_question(self, runtime: AppRuntime) -> None:
+        """Regression — compression-round extractor calls MUST carry the same
+        user question as first-round calls. The pre-fix bug passed `""` to the
+        prompt builder, so the model consolidated notes against different
+        relevance criteria than it extracted them under. Flagged by Aikido on
+        PR #6369; pinned here.
+        """
+        from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
+
+        reasoner = ChunkedReasoner(runtime)
+        group = [ChunkNotes(pages=[1], summary="a"), ChunkNotes(pages=[2], summary="b")]
+        chunk = reasoner._chunk_from_notes(group)
+        canned = _ExtractedNotes(summary="merged", facts=[], relevant_excerpts=[])
+        seen_prompt: list[str] = []
+
+        async def _capture_run(prompt: str, *_a: Any, **_kw: Any):
+            seen_prompt.append(prompt)
+            return _StubAgentResult(output=canned)
+
+        with patch.object(reasoner._extractor, "run", side_effect=_capture_run):
+            await reasoner._extract_compression_chunk(chunk, "what is the deadline?")
+
+        assert len(seen_prompt) == 1
+        assert "what is the deadline?" in seen_prompt[0]

@@ -73,6 +73,15 @@ class Claim(ApiModel):
             "``paraphrased`` claims fall back to margin-geometry placement."
         ),
     )
+    file_name: str | None = Field(
+        default=None,
+        description=(
+            "Name of the source file this claim was extracted from. Required for "
+            "disambiguating claims when the detector audits multiple PDFs that "
+            "share page numbers; ``None`` is acceptable for single-file audits "
+            "where the answer is unambiguous."
+        ),
+    )
 
 
 class Contradiction(ApiModel):

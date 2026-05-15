@@ -234,9 +234,9 @@ class ChunkedReasoner:
         first_round_notes = [self._build_chunk_notes(o.output, o.pages) for o in outputs]
         first_round_notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
 
-        return await self._compress_until_fits(first_round_notes)
+        return await self._compress_until_fits(first_round_notes, question)
 
-    async def _compress_until_fits(self, notes: list[ChunkNotes]) -> list[ChunkNotes]:
+    async def _compress_until_fits(self, notes: list[ChunkNotes], question: str) -> list[ChunkNotes]:
         """Regroup and re-extract until the rendered notes fit ``notes_char_budget``.
 
         First-round notes come in; compression-round chunks carry a
@@ -276,7 +276,7 @@ class ChunkedReasoner:
                 )
             )
 
-            result = await self._run_compression_round(chunks)
+            result = await self._run_compression_round(chunks, question)
             logger.info(
                 "[chunked-reasoner] round %d: %d/%d chunks succeeded",
                 round_number,
@@ -295,15 +295,20 @@ class ChunkedReasoner:
                 return result.notes
             notes = result.notes
 
-    async def _run_compression_round(self, chunks: list[_CompressionChunk]) -> _RoundResult:
+    async def _run_compression_round(
+        self, chunks: list[_CompressionChunk], question: str
+    ) -> _RoundResult:
         """Run a compression round through the extractor in parallel.
 
         Failures fall back to ``chunk.fallback`` so the originals stay in the
         working set; that's the bit the generic mapper can't do. Reuses the
-        mapper's semaphore + timeout + cancel-drain shape.
+        mapper's semaphore + timeout + cancel-drain shape. ``question`` is
+        threaded through so compression rounds consolidate notes against the
+        same relevance criteria as the first round — see Aikido finding on
+        PR #6369.
         """
         pending: dict[asyncio.Task[tuple[ChunkNotes, float]], _CompressionChunk] = {
-            asyncio.create_task(self._extract_compression_chunk(chunk)): chunk for chunk in chunks
+            asyncio.create_task(self._extract_compression_chunk(chunk, question)): chunk for chunk in chunks
         }
         notes: list[ChunkNotes] = []
         successes = 0
@@ -334,9 +339,15 @@ class ChunkedReasoner:
         notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
         return _RoundResult(notes=notes, successes=successes)
 
-    async def _extract_compression_chunk(self, chunk: _CompressionChunk) -> tuple[ChunkNotes, float]:
-        """Run the extractor on a compression-round chunk; attach pages deterministically."""
-        prompt = self._build_extraction_prompt(chunk.content, "")
+    async def _extract_compression_chunk(
+        self, chunk: _CompressionChunk, question: str
+    ) -> tuple[ChunkNotes, float]:
+        """Run the extractor on a compression-round chunk; attach pages deterministically.
+
+        ``question`` carries the same user query the first-round extractors
+        saw, so consolidation uses identical relevance criteria across rounds.
+        """
+        prompt = self._build_extraction_prompt(chunk.content, question)
         async with self._semaphore:
             start = time.perf_counter()
             try:

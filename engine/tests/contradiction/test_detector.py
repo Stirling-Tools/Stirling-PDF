@@ -301,3 +301,98 @@ async def test_pages_examined_excludes_pages_without_claims(
 
     # Page 2 produced no claims, so it's excluded from pages_examined.
     assert report.pages_examined == [1, 3]
+
+
+@pytest.mark.anyio
+async def test_multi_file_pages_dont_collide_in_validation(runtime: AppRuntime) -> None:
+    """Regression — Aikido finding on PR #6369.
+
+    When two files both have a page 1 and the detector aggregates pages
+    across files, a flat ``{page_number: Page}`` dict would let one file
+    overwrite the other and validation would use the wrong page text.
+    Per-file iteration MUST keep each file's pages_by_num isolated.
+
+    This test gives both files a page-1 claim whose ``quote`` only matches
+    the OWN file's page-1 text. If the bug ever returns, one of the claims
+    will validate against the wrong file's text and produce the wrong
+    ``anchor_quality`` (or be dropped entirely on substring miss).
+    """
+    file_a = AiFile(id=FileId("a"), name="a.pdf")
+    file_b = AiFile(id=FileId("b"), name="b.pdf")
+    _install_documents_stub(
+        runtime,
+        {
+            file_a.id: [_page(1, "alpha file says the deadline is March 5.")],
+            file_b.id: [_page(1, "beta file says the deadline is April 1.")],
+        },
+    )
+    detector = ContradictionDetector(runtime)
+
+    chunk_a = ChunkOutput(
+        pages=[1],
+        output=_ExtractedClaims(
+            claims=[
+                _ExtractedClaim(
+                    page=1,
+                    subject="deadline",
+                    polarity="assert",
+                    text="March 5 deadline",
+                    quote="the deadline is March 5",
+                )
+            ]
+        ),
+        label="a:p1",
+    )
+    chunk_b = ChunkOutput(
+        pages=[1],
+        output=_ExtractedClaims(
+            claims=[
+                _ExtractedClaim(
+                    page=1,
+                    subject="deadline",
+                    polarity="assert",
+                    text="April 1 deadline",
+                    quote="the deadline is April 1",
+                )
+            ]
+        ),
+        label="b:p1",
+    )
+
+    # ``map_pages`` is called once per file (per-file iteration); return
+    # the file-specific chunk by inspecting which page list was passed.
+    async def _map_pages(pages: list[Page], _query: str) -> list[ChunkOutput[Any]]:
+        text = pages[0].text
+        if "alpha" in text:
+            return [chunk_a]
+        if "beta" in text:
+            return [chunk_b]
+        return []
+
+    detector._mapper.map_pages = _map_pages  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = AsyncMock(
+        return_value=_stub_result(_SubjectMapping(mapping={}))
+    )  # type: ignore[method-assign]
+    detector._pair_detector.run = AsyncMock(
+        return_value=_stub_result(
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="dates conflict", severity="error")]
+            )
+        )
+    )  # type: ignore[method-assign]
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("ok"))  # type: ignore[method-assign]
+
+    report = await detector.detect([file_a, file_b])
+
+    # Both claims validated as verbatim — each against the right file's
+    # page text. A collision bug would have produced "paraphrased" for at
+    # least one (the quote wouldn't be found in the other file's page).
+    assert len(report.contradictions) == 1
+    pair = report.contradictions[0]
+    claims_by_file = {c.file_name: c for c in (pair.claim1, pair.claim2)}
+    assert set(claims_by_file) == {"a.pdf", "b.pdf"}
+    assert claims_by_file["a.pdf"].anchor_quality == "verbatim"
+    assert claims_by_file["b.pdf"].anchor_quality == "verbatim"
+    # And page numbers are kept unaltered even though they collide.
+    assert claims_by_file["a.pdf"].page == 1
+    assert claims_by_file["b.pdf"].page == 1

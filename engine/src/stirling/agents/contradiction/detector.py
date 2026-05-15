@@ -162,8 +162,19 @@ class ContradictionDetector:
             query,
         )
 
-        # Stage 0 — load all pages.
-        all_pages: list[Page] = []
+        # Stages 0+1 — per-file page load + chunked claim extraction.
+        # We MUST keep extraction per-file because concatenating pages
+        # across files would create a single ``pages_by_num`` dict where
+        # files that share page numbers (typically every PDF) overwrite
+        # each other; subsequent quote-substring validation would then
+        # check claims against the wrong file's text. Per-file iteration
+        # also means each Claim is unambiguously tagged with its source
+        # file_name. (Aikido finding on PR #6369.)
+        effective_query = query or "extract claims"
+        claims: list[Claim] = []
+        pages_with_claims: set[tuple[str | None, int]] = set()
+        any_pages_seen = False
+
         for file in files:
             file_pages = await self._runtime.documents.read_pages(file.id)
             if not file_pages:
@@ -173,33 +184,34 @@ class ContradictionDetector:
                     file.id,
                 )
                 continue
-            all_pages.extend(file_pages)
+            any_pages_seen = True
 
-        if not all_pages:
+            pages_by_num: dict[int, Page] = {p.page_number: p for p in file_pages}
+            chunk_outputs = await self._mapper.map_pages(file_pages, effective_query)
+            for chunk in chunk_outputs:
+                for raw in chunk.output.claims:
+                    claim = self._validate_extracted_claim(
+                        raw, chunk, pages_by_num, file_name=file.name
+                    )
+                    if claim is None:
+                        continue
+                    claims.append(claim)
+                    pages_with_claims.add((file.name, claim.page))
+
+        if not any_pages_seen:
             return self._empty_report(
                 summary="No document content was available to audit.",
                 clean=True,
                 pages_examined=[],
             )
 
-        # Stage 1 — per-chunk claim extraction.
-        effective_query = query or "extract claims"
-        chunk_outputs = await self._mapper.map_pages(all_pages, effective_query)
-
-        pages_by_num: dict[int, Page] = {p.page_number: p for p in all_pages}
-        claims: list[Claim] = []
-        pages_with_claims: set[int] = set()
-        for chunk in chunk_outputs:
-            for raw in chunk.output.claims:
-                claim = self._validate_extracted_claim(raw, chunk, pages_by_num)
-                if claim is None:
-                    continue
-                claims.append(claim)
-                pages_with_claims.add(claim.page)
-
-        pages_examined = sorted(pages_with_claims)
+        # Page numbers may legitimately repeat across files (page 1 of report.pdf
+        # and page 1 of memo.pdf are distinct pages); keep them as the union for
+        # the human-readable count. Audit consumers needing per-file detail can
+        # read ``Claim.file_name`` directly off each contradiction's claims.
+        pages_examined = sorted({page for _file, page in pages_with_claims})
         logger.info(
-            "[contradiction] stage 1: %d valid claim(s) over %d page(s)",
+            "[contradiction] stage 1: %d valid claim(s) over %d distinct page(s)",
             len(claims),
             len(pages_examined),
         )
@@ -245,8 +257,14 @@ class ContradictionDetector:
         raw: _ExtractedClaim,
         chunk: ChunkOutput[_ExtractedClaims],
         pages_by_num: dict[int, Page],
+        file_name: str | None = None,
     ) -> Claim | None:
         """Convert an LLM-emitted claim into a public :class:`Claim` after page sanity checks.
+
+        ``pages_by_num`` MUST be the page lookup for a single file; passing a
+        cross-file aggregate produces wrong substring matches when files share
+        page numbers. ``file_name`` is recorded on the returned ``Claim`` so
+        downstream consumers can keep claims from different files distinct.
 
         Page traceability rules:
 
@@ -299,6 +317,7 @@ class ContradictionDetector:
             text=raw.text,
             quote=raw.quote,
             anchor_quality=anchor_quality,
+            file_name=file_name,
         )
 
     # ------------------------------------------------------------------
@@ -405,10 +424,17 @@ class ContradictionDetector:
 
                 claim_lo = deduped[lo]
                 claim_hi = deduped[hi]
-                # Result-time pre-filter (defence in depth).
+                # Result-time pre-filter (defence in depth). Same-page
+                # same-polarity is a paraphrase ONLY when both claims come
+                # from the same source file — page 1 of report.pdf and
+                # page 1 of memo.pdf are distinct pages, not duplicates.
                 if claim_lo.quote.strip() == claim_hi.quote.strip():
                     continue
-                if claim_lo.page == claim_hi.page and claim_lo.polarity == claim_hi.polarity:
+                if (
+                    claim_lo.page == claim_hi.page
+                    and claim_lo.polarity == claim_hi.polarity
+                    and claim_lo.file_name == claim_hi.file_name
+                ):
                     continue
 
                 severity = (
@@ -434,10 +460,13 @@ class ContradictionDetector:
         well. The ledger keeps everything; the detector sees the deduped
         view.
         """
-        seen: set[tuple[int, str]] = set()
+        # Key includes ``file_name`` so multi-file audits don't collapse
+        # claims that happen to share a page number across different
+        # source files.
+        seen: set[tuple[str | None, int, str]] = set()
         out: list[Claim] = []
         for claim in claims:
-            key = (claim.page, claim.quote.strip())
+            key = (claim.file_name, claim.page, claim.quote.strip())
             if key in seen:
                 continue
             seen.add(key)

@@ -20,7 +20,7 @@ from pydantic_ai.toolsets import AbstractToolset
 
 from stirling.agents.contradiction.detector import ContradictionDetector
 from stirling.contracts import AiFile
-from stirling.contracts.contradiction import ContradictionReport
+from stirling.contracts.contradiction import Claim, ContradictionReport
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +115,10 @@ class ContradictionCapability:
         Notes-style format that mirrors :meth:`ChunkedReasoner.format_notes`
         in spirit — readable text, no JSON. The smart model writes the
         user-facing answer from this.
+
+        Each claim's source ``file_name`` is included when present so the
+        smart model can disambiguate page references across multi-file
+        audits (page 1 of report.pdf vs page 1 of memo.pdf).
         """
         lines: list[str] = [report.summary]
         lines.append(f"Pages examined: {len(report.pages_examined)}.")
@@ -124,9 +128,16 @@ class ContradictionCapability:
         for i, c in enumerate(report.contradictions, 1):
             lines.append(
                 f"\n[{i}] subject={c.subject!r} severity={c.severity.value}"
-                f" pages={c.page1} vs {c.page2}"
+                f" pages={_page_label(c.claim1)} vs {_page_label(c.claim2)}"
             )
-            lines.append(f"    page {c.claim1.page}: {c.claim1.quote!r}")
-            lines.append(f"    page {c.claim2.page}: {c.claim2.quote!r}")
+            lines.append(f"    {_page_label(c.claim1)}: {c.claim1.quote!r}")
+            lines.append(f"    {_page_label(c.claim2)}: {c.claim2.quote!r}")
             lines.append(f"    why: {c.explanation}")
         return "\n".join(lines)
+
+
+def _page_label(claim: Claim) -> str:
+    """Render a claim's page label, qualified with its source file when known."""
+    if claim.file_name:
+        return f"page {claim.page} of {claim.file_name}"
+    return f"page {claim.page}"
