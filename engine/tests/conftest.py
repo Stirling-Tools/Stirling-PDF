@@ -38,6 +38,7 @@ def build_app_settings() -> AppSettings:
         contradiction_detect_concurrency=5,
         contradiction_bucket_chunk_size=12,
         contradiction_bucket_chunk_overlap=2,
+        contradiction_canonicaliser_batch_size=500,
         max_pages=200,
         max_characters=200_000,
         posthog_enabled=False,

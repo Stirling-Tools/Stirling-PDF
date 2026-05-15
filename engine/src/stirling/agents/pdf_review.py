@@ -26,18 +26,18 @@ paraphrased claims fall back to margin geometry.
 from __future__ import annotations
 
 import json
-import logging
+from typing import Literal
 
 from pydantic import Field
 from pydantic_ai import Agent
 
 from stirling.agents.contradiction import ContradictionDetector, ContradictionIntentClassifier
+from stirling.agents.contradiction.detector import _escape_for_tag
 from stirling.agents.contradiction.prompts import REVIEW_LOCALISER_PROMPT
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
 from stirling.contracts import (
     AiFile,
     CommentSpec,
-    Contradiction,
     ContradictionReport,
     EditPlanResponse,
     NeedIngestResponse,
@@ -56,8 +56,6 @@ from stirling.models.agent_tool_models import (
 )
 from stirling.models.tool_models import AddCommentsParams
 from stirling.services import AppRuntime
-
-logger = logging.getLogger(__name__)
 
 # Fallback right-margin placement used when a finding has no usable
 # anchor text. A4/Letter portrait assumed.
@@ -94,7 +92,9 @@ class _LocalisedVerdict(ApiModel):
 
 class _PairedLocalisedContradiction(ApiModel):
     contradiction_index: int = Field(ge=0)
-    which_claim: str = Field(description="'claim1' or 'claim2'.")
+    which_claim: Literal["claim1", "claim2"] = Field(
+        description="Which claim of the pair this sticky note describes; exactly 'claim1' or 'claim2'.",
+    )
     subject: str = Field(min_length=1, max_length=256)
     text: str = Field(min_length=1, max_length=2_000)
 
@@ -120,9 +120,11 @@ class PdfReviewAgent:
         )
         self._math_intent_classifier = MathIntentClassifier(runtime)
         self._contradiction_intent_classifier = ContradictionIntentClassifier(runtime)
-        # Long-lived detector (one per agent instance); the underlying
-        # extractor / canonicaliser / detector / summary Agents and the
-        # ChunkedMapper it owns are constructed once and reused.
+        # Per consuming-agent instance (which is per-request in the
+        # orchestrator); the underlying extractor / canonicaliser /
+        # detector / summary Agents and the ChunkedMapper it owns are
+        # constructed once for that instance and reused across the
+        # request's stages.
         self._contradiction_detector = ContradictionDetector(runtime)
 
     async def orchestrate(self, request: OrchestratorRequest) -> EditPlanResponse | NeedIngestResponse:
@@ -219,8 +221,8 @@ class PdfReviewAgent:
         search, ``paraphrased`` quotes fall back to margin geometry.
         """
         prompt = (
-            f"<user_message>{user_message}</user_message>\n"
-            f"<verdict>{report.model_dump_json()}</verdict>"
+            f"<user_message>{_escape_for_tag(user_message)}</user_message>\n"
+            f"<verdict>{_escape_for_tag(report.model_dump_json())}</verdict>"
         )
         result = await self._contradiction_localiser.run(prompt)
         specs = self._build_paired_comment_specs(report, result.output.comments)
@@ -275,16 +277,9 @@ class PdfReviewAgent:
             if entry.contradiction_index >= len(report.contradictions):
                 continue
             contradiction = report.contradictions[entry.contradiction_index]
-            if entry.which_claim == "claim1":
-                claim = contradiction.claim1
-            elif entry.which_claim == "claim2":
-                claim = contradiction.claim2
-            else:
-                logger.debug(
-                    "[pdf-review] dropping localised entry with unknown which_claim=%r",
-                    entry.which_claim,
-                )
-                continue
+            # ``which_claim`` is a Literal["claim1", "claim2"] on the schema,
+            # so pydantic has already rejected anything else.
+            claim = contradiction.claim1 if entry.which_claim == "claim1" else contradiction.claim2
 
             # Convert 1-indexed page (contracts use 1-indexed) to the
             # 0-indexed page_index that the ADD_COMMENTS tool expects.
@@ -316,6 +311,4 @@ def _anchor_text_for(d: Discrepancy) -> str | None:
     return d.context.strip() or None
 
 
-# Re-exported helper used in tests that want to construct a Contradiction
-# without importing the contracts module separately.
-__all__ = ["Contradiction", "PdfReviewAgent"]
+__all__ = ["PdfReviewAgent"]

@@ -97,8 +97,9 @@ class PdfQuestionAgent:
         # Shared across whole-doc-reader instances so the worker agent and
         # semaphore are constructed once and reused per request.
         self._chunked_reasoner = ChunkedReasoner(runtime)
-        # Long-lived contradiction detector reused across per-request
-        # capability instances (mirrors the chunked-reasoner pattern).
+        # Per consuming-agent instance (which is per-request in the
+        # orchestrator) — reused across the request's capability instances
+        # (mirrors the chunked-reasoner pattern).
         self._contradiction_detector = ContradictionDetector(runtime)
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:

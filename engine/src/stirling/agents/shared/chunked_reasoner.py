@@ -205,9 +205,13 @@ class ChunkedReasoner:
             concurrency=concurrency,
             worker_timeout_seconds=worker_timeout_seconds,
             build_prompt=self._build_extraction_prompt,
+            # Fill in the WholeDocSliceDone event's excerpt/fact counters
+            # from our notes shape — the mapper itself is generic on the
+            # extractor output and stays ignorant of this schema.
+            summary_counts=lambda notes: (len(notes.relevant_excerpts), len(notes.facts)),
         )
         # Shadow scheduling knobs for the compression-round scheduler.
-        self._semaphore = self._mapper._semaphore
+        self._semaphore = self._mapper.semaphore
         self._chars_per_slice = self._mapper.chars_per_slice
         self._worker_timeout_seconds = self._mapper.worker_timeout_seconds
 
@@ -362,33 +366,6 @@ class ChunkedReasoner:
             duration = time.perf_counter() - start
         return self._build_chunk_notes(result.output, chunk.pages), duration
 
-    @dataclass(frozen=True)
-    class _Chunk:
-        """First-round chunk shape kept as a thin record for prompt/page-marker tests.
-
-        The reasoner no longer schedules these directly — first-round
-        scheduling lives in :class:`ChunkedMapper`. The shape stays around so
-        :meth:`_chunk_from_pages` callers can introspect ``content`` / ``pages``
-        for prompt-construction assertions.
-        """
-
-        content: str
-        pages: list[int]
-        label: str
-
-    def _chunk_from_pages(self, pages: list[Page]) -> ChunkedReasoner._Chunk:
-        """Build a first-round chunk record from a slice of raw pages.
-
-        Thin wrapper around the mapper's static formatter so tests and helpers
-        that want to inspect the rendered chunk content (page markers, etc.)
-        keep working without reaching into the mapper internals.
-        """
-        return ChunkedReasoner._Chunk(
-            content=ChunkedMapper.format_chunk_content(pages),
-            pages=[p.page_number for p in pages],
-            label=_page_range_label_from_pages(pages),
-        )
-
     def _chunk_from_notes(self, group: list[ChunkNotes]) -> _CompressionChunk:
         """Build a compression-round chunk from a group of prior-pass notes.
 
@@ -531,14 +508,3 @@ class ChunkedReasoner:
         return result.output
 
 
-def _page_range_label_from_pages(pages: list[Page]) -> str:
-    """Internal helper mirroring :func:`chunked_mapper._page_range_label`.
-
-    Defined here so the legacy ``_chunk_from_pages`` keeps the same label
-    shape without pulling a private helper across modules.
-    """
-    if not pages:
-        return "pages=?"
-    if len(pages) == 1:
-        return f"pages={pages[0].page_number}"
-    return f"pages={pages[0].page_number}-{pages[-1].page_number}"

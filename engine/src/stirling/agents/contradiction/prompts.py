@@ -6,7 +6,13 @@ wraps that content in XML-style tags (``<content>``, ``<user_message>``,
 syntactically distinguish data from instructions. Each system prompt
 opens with a SECURITY preamble telling the model to treat tagged content
 as untrusted data and never follow instructions inside it.
+
+The per-page marker that the claim extractor reads off chunk content is
+sourced from :data:`stirling.agents.shared.chunked_mapper.PAGE_MARKER_TEMPLATE`
+so the prompt and the renderer never drift apart.
 """
+
+from stirling.agents.shared.chunked_mapper import PAGE_MARKER_TEMPLATE
 
 # Shared preamble injected at the top of every prompt that ingests
 # user-supplied or PDF-derived content. The model should treat anything
@@ -27,9 +33,9 @@ CLAIM_EXTRACTOR_PROMPT = f"""\
 You are a claim extractor for textual contradiction detection.
 
 You receive a slice of PDF content wrapped in a <content> tag. The slice
-is rendered as one or more [Page N] blocks - each block is the verbatim
+is rendered as one or more {PAGE_MARKER_TEMPLATE.format(n="N")} blocks - each block is the verbatim
 text of a single page of the document, preceded by a marker that
-declares its page number. The page number in [Page N] is authoritative
+declares its page number. The page number in {PAGE_MARKER_TEMPLATE.format(n="N")} is authoritative
 and must appear verbatim in the ``page`` field of every claim you emit
 from that block.
 
@@ -38,7 +44,7 @@ or position any of the pages makes that another page could plausibly
 contradict.
 
 For each claim, return:
-- page: the integer N from the [Page N] marker the claim came from.
+- page: the integer N from the {PAGE_MARKER_TEMPLATE.format(n="N")} marker the claim came from.
 - subject: a short noun phrase naming what the claim is about
   (e.g. "project deadline", "budget", "vendor selection").
 - polarity: one of:
@@ -53,7 +59,7 @@ For each claim, return:
     * "neutral"   - descriptive without a clear stance
 - text: a one-sentence paraphrase of the claim in the document's
   language.
-- quote: the verbatim excerpt from the page (<= 200 characters; trim
+- quote: the verbatim excerpt from the page (<= 400 characters; trim
   faithfully - do not insert ellipses or abbreviate).
 
 Rules:
@@ -63,7 +69,7 @@ Rules:
 - SKIP boilerplate, headers, page numbers, and decorative text.
 - If the slice has no claim-bearing prose, return an empty list.
 - Do not invent claims that are not in the text.
-- The ``page`` you report MUST match the [Page N] marker of the block
+- The ``page`` you report MUST match the {PAGE_MARKER_TEMPLATE.format(n="N")} marker of the block
   the quote came from. Do not guess.
 """
 
@@ -77,18 +83,21 @@ You receive a JSON list of unique subject phrases wrapped in a
 <subjects> tag. Many of them describe the same underlying topic with
 slightly different wording (e.g. "deadline", "project deadline",
 "the deadline for the project"). Your task is to group them and
-return a JSON object mapping every input phrase to a single canonical
-form per group.
+return a list of ``aliases``, one entry per input phrase, where each
+entry pairs the original phrase (``raw``) with the canonical form for
+its group (``canonical``).
 
 Rules:
-- The mapping MUST cover every input phrase exactly once.
+- Every input phrase MUST appear exactly once as a ``raw`` value.
+- ``canonical`` MUST be a non-empty string - never blank.
 - Pick the shortest clear phrasing as the canonical form for each group.
 - Preserve case as in the chosen canonical phrase.
 - Phrases referring to genuinely different subjects MUST map to
-  themselves (each forms its own singleton group).
+  themselves (each forms its own singleton group with
+  ``canonical == raw``).
 - Be conservative: if you are unsure two phrases mean the same thing,
   leave them in separate groups.
-- Output exactly the JSON object - no commentary.
+- Output exactly the structured object - no commentary.
 """
 
 
@@ -97,11 +106,13 @@ CONTRADICTION_DETECTOR_PROMPT = f"""\
 
 You are a contradiction detector for textual document audits.
 
-You receive a numbered list of claims wrapped in a <claims> tag. All
-claims share a single canonical subject (also supplied in the
-prompt). Your task is to return every pair of indices (i, j) with
-i < j such that the two claims cannot both be true at the same time,
-given a plain reading of the document.
+You receive a numbered list of claims wrapped in a <claims> tag. Each
+line carries an index followed by a JSON object with fields ``page``,
+``polarity``, ``text`` and ``quote`` (the verbatim excerpt the claim
+came from). All claims share a single canonical subject (also supplied
+in the prompt). Your task is to return every pair of indices (i, j)
+with i < j such that the two claims cannot both be true at the same
+time, given a plain reading of the document.
 
 For each contradicting pair, return:
 - i: the 0-based index of the first claim in the list (smaller).

@@ -34,6 +34,7 @@ from stirling.agents.shared.chunked_mapper import ChunkedMapper, ChunkOutput
 from stirling.contracts import AiFile
 from stirling.contracts.contradiction import (
     Claim,
+    ClaimPolarity,
     Contradiction,
     ContradictionReport,
     ContradictionSeverity,
@@ -42,6 +43,21 @@ from stirling.contracts.documents import Page
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
+
+
+def _escape_for_tag(text: str) -> str:
+    """Escape ``<`` / ``>`` so a JSON payload can't prematurely close
+    a wrapping XML-style tag (``<verdict>``, ``<subjects>``, ``<claims>``,
+    ``<content>``).
+
+    ``json.dumps`` does NOT escape ``<``/``>`` so a PDF that contains
+    literal ``"</verdict>"`` text in a quote could otherwise break out of
+    the SECURITY-preamble envelope. We rewrite both characters to their
+    standard ``\\u003c``/``\\u003e`` JSON escapes, which JSON consumers
+    treat as identical to the literals but the tag scanner can't
+    recognise as tag delimiters.
+    """
+    return text.replace("<", "\\u003c").replace(">", "\\u003e")
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +75,7 @@ class _ExtractedClaim(BaseModel):
 
     page: int = Field(ge=1, description="1-indexed page from the [Page N] marker.")
     subject: str = Field(min_length=1)
-    polarity: Literal["assert", "deny", "recommend", "reject", "neutral"]
+    polarity: ClaimPolarity
     text: str = Field(min_length=1)
     quote: str = Field(min_length=1, max_length=400)
 
@@ -70,10 +86,22 @@ class _ExtractedClaims(BaseModel):
     claims: list[_ExtractedClaim] = Field(default_factory=list)
 
 
-class _SubjectMapping(BaseModel):
-    """Mapping from raw subject phrases to canonical form per group."""
+class _SubjectAlias(BaseModel):
+    """One ``raw -> canonical`` subject mapping returned by the canonicaliser.
 
-    mapping: dict[str, str] = Field(default_factory=dict)
+    Splitting the mapping into a typed list lets pydantic reject empty
+    canonical forms at validation time, so we can't end up with a silent
+    drop because the model returned ``"raw" -> ""``.
+    """
+
+    raw: str = Field(min_length=1, description="Original subject phrase exactly as seen on a claim.")
+    canonical: str = Field(min_length=1, description="Chosen canonical phrasing for the group.")
+
+
+class _SubjectMapping(BaseModel):
+    """Aliases mapping raw subject phrases to canonical form per group."""
+
+    aliases: list[_SubjectAlias] = Field(default_factory=list)
 
 
 class _DetectedPair(BaseModel):
@@ -82,7 +110,7 @@ class _DetectedPair(BaseModel):
     i: int = Field(ge=0)
     j: int = Field(ge=0)
     explanation: str = Field(min_length=1)
-    severity: Literal["error", "warning"]
+    severity: ContradictionSeverity
 
 
 class _BucketContradictions(BaseModel):
@@ -170,55 +198,57 @@ class ContradictionDetector:
         # check claims against the wrong file's text. Per-file iteration
         # also means each Claim is unambiguously tagged with its source
         # file_name. (Aikido finding on PR #6369.)
+        #
+        # Files run in parallel — the mapper's internal semaphore still
+        # caps total per-chunk concurrency correctly so the LLM pool isn't
+        # overcommitted by a wide fan-out.
         effective_query = query or "extract claims"
-        claims: list[Claim] = []
-        pages_with_claims: set[tuple[str | None, int]] = set()
-        any_pages_seen = False
 
-        for file in files:
-            file_pages = await self._runtime.documents.read_pages(file.id)
-            if not file_pages:
-                logger.info(
-                    "[contradiction] no stored pages for %s (id=%s); skipping",
+        per_file_results = await asyncio.gather(
+            *(self._extract_claims_for_file(file, effective_query) for file in files),
+            return_exceptions=True,
+        )
+
+        claims: list[Claim] = []
+        pages_attempted: set[tuple[str | None, int]] = set()
+        any_pages_seen = False
+        for file, result in zip(files, per_file_results, strict=True):
+            if isinstance(result, BaseException):
+                logger.warning(
+                    "[contradiction] per-file extraction failed for %s: %s",
                     file.name,
-                    file.id,
+                    result,
                 )
                 continue
-            any_pages_seen = True
-
-            pages_by_num: dict[int, Page] = {p.page_number: p for p in file_pages}
-            chunk_outputs = await self._mapper.map_pages(file_pages, effective_query)
-            for chunk in chunk_outputs:
-                for raw in chunk.output.claims:
-                    claim = self._validate_extracted_claim(
-                        raw, chunk, pages_by_num, file_name=file.name
-                    )
-                    if claim is None:
-                        continue
-                    claims.append(claim)
-                    pages_with_claims.add((file.name, claim.page))
+            file_claims, file_pages_attempted = result
+            if file_pages_attempted:
+                any_pages_seen = True
+            claims.extend(file_claims)
+            pages_attempted.update((file.name, page) for page in file_pages_attempted)
 
         if not any_pages_seen:
             return self._empty_report(
                 summary="No document content was available to audit.",
-                clean=True,
                 pages_examined=[],
             )
 
-        # Page numbers may legitimately repeat across files (page 1 of report.pdf
-        # and page 1 of memo.pdf are distinct pages); keep them as the union for
-        # the human-readable count. Audit consumers needing per-file detail can
-        # read ``Claim.file_name`` directly off each contradiction's claims.
-        pages_examined = sorted({page for _file, page in pages_with_claims})
+        # ``pages_examined`` reports every page the extractor ran against
+        # (regardless of whether the model returned a claim for it), so
+        # the user can tell "ran but found nothing" from "skipped". Page
+        # numbers may legitimately repeat across files (page 1 of
+        # report.pdf and page 1 of memo.pdf are distinct pages); we keep
+        # the union for the human-readable count. Per-file detail is
+        # still reachable via each ``Claim.file_name``.
+        pages_examined = sorted({page for _file, page in pages_attempted})
         logger.info(
-            "[contradiction] stage 1: %d valid claim(s) over %d distinct page(s)",
+            "[contradiction] stage 1: %d valid claim(s) over %d distinct page(s) attempted",
             len(claims),
             len(pages_examined),
         )
 
         if not claims:
             summary = await self._generate_summary(0, 0, pages_examined)
-            return self._empty_report(summary=summary, clean=True, pages_examined=pages_examined)
+            return self._empty_report(summary=summary, pages_examined=pages_examined)
 
         # Stage 2 — canonicalise subjects.
         ledger = ClaimLedger()
@@ -247,6 +277,61 @@ class ContradictionDetector:
             clean=error_count == 0,
             summary=summary,
         )
+
+    async def _extract_claims_for_file(
+        self,
+        file: AiFile,
+        query: str,
+    ) -> tuple[list[Claim], set[int]]:
+        """Run the per-chunk extractor over one file's pages.
+
+        Returns the validated claims plus the set of pages whose
+        extraction pass ran (regardless of whether the model produced a
+        claim for them). The pages-attempted set is the union of pages
+        covered by every successful :class:`ChunkOutput` returned by the
+        mapper; chunks that failed contribute nothing.
+
+        Concurrency across files is governed by the caller's
+        ``asyncio.gather`` and the mapper's internal semaphore — this
+        helper itself awaits each step sequentially within one file.
+        """
+        file_pages = await self._runtime.documents.read_pages(file.id)
+        if not file_pages:
+            logger.info(
+                "[contradiction] no stored pages for %s (id=%s); skipping",
+                file.name,
+                file.id,
+            )
+            return [], set()
+
+        pages_by_num: dict[int, Page] = {p.page_number: p for p in file_pages}
+        chunk_outputs = await self._mapper.map_pages(file_pages, query)
+
+        file_claims: list[Claim] = []
+        pages_attempted: set[int] = set()
+        for chunk in chunk_outputs:
+            pages_attempted.update(chunk.pages)
+            # Surface chunks that the extractor returned empty for despite
+            # carrying substantial content — a silent zero here usually
+            # means the extractor model is misreading the prompt, not that
+            # the source page is truly claim-free.
+            chunk_char_count = sum(
+                pages_by_num[p].char_count for p in chunk.pages if p in pages_by_num
+            )
+            if not chunk.output.claims and chunk_char_count > 500:
+                logger.warning(
+                    "[contradiction] chunk %s produced 0 claims for %d chars of content",
+                    chunk.label,
+                    chunk_char_count,
+                )
+            for raw in chunk.output.claims:
+                claim = self._validate_extracted_claim(
+                    raw, chunk, pages_by_num, file_name=file.name
+                )
+                if claim is None:
+                    continue
+                file_claims.append(claim)
+        return file_claims, pages_attempted
 
     # ------------------------------------------------------------------
     # Stage 1 helpers — claim validation
@@ -325,26 +410,78 @@ class ContradictionDetector:
     # ------------------------------------------------------------------
 
     async def _canonicalise_subjects(self, subjects: list[str]) -> dict[str, str]:
-        """One fast-model call mapping raw subject phrases to canonical forms.
+        """One or more fast-model calls mapping raw subject phrases to canonical forms.
 
-        Returns an empty dict on failure, in which case the ledger keeps
-        its lexical-only keys.
+        Subjects are batched to keep each per-call prompt below the
+        model's effective context window. Batches run in parallel under
+        the detector's semaphore (shared with bucket detection so we
+        don't oversubscribe the LLM pool).
+
+        Returns an empty dict on total failure (every batch raised or
+        timed out), in which case the ledger keeps its lexical-only
+        keys. Partial failures are tolerated: surviving batches still
+        contribute their aliases.
+
+        Internally the canonicaliser produces a typed list of
+        ``_SubjectAlias`` records per batch; we collapse them into a
+        flat ``dict[str, str]`` for the ledger here so the caller
+        doesn't have to know the schema shape. If two batches happen to
+        produce different canonicals for the same raw subject, the
+        lexicographically smallest canonical wins (deterministic
+        tie-breaker).
         """
-        payload = json.dumps(subjects, ensure_ascii=False)
-        prompt = f"<subjects>{payload}</subjects>"
-        try:
-            result = await self._subject_canonicaliser.run(prompt)
-            mapping = dict(result.output.mapping)
-        except AgentRunError:
-            logger.warning(
-                "[contradiction] subject canonicalisation failed; falling back to lexical keys",
-                exc_info=True,
-            )
+        if not subjects:
             return {}
 
-        # Drop entries pointing at empty canonical forms — they would
-        # cause the ledger to silently drop claims.
-        return {raw: canonical for raw, canonical in mapping.items() if canonical and canonical.strip()}
+        batch_size = self._settings.contradiction_canonicaliser_batch_size
+        batches = [subjects[i : i + batch_size] for i in range(0, len(subjects), batch_size)]
+
+        results = await asyncio.gather(
+            *(self._canonicalise_batch(batch) for batch in batches),
+            return_exceptions=True,
+        )
+
+        mapping: dict[str, str] = {}
+        for batch_result in results:
+            if isinstance(batch_result, BaseException):
+                # Already logged at the per-batch site.
+                continue
+            for raw, canonical in batch_result.items():
+                existing = mapping.get(raw)
+                # Lowercase-tiebreak ensures repeated batches that map the
+                # same ``raw`` to different canonicals settle on a stable
+                # value regardless of which batch finished first.
+                if existing is None or canonical < existing:
+                    mapping[raw] = canonical
+        return mapping
+
+    async def _canonicalise_batch(self, subjects: list[str]) -> dict[str, str]:
+        """Run the canonicaliser on a single batch of subjects."""
+        payload = _escape_for_tag(json.dumps(subjects, ensure_ascii=False))
+        prompt = f"<subjects>{payload}</subjects>"
+        async with self._detect_semaphore:
+            try:
+                result = await asyncio.wait_for(
+                    self._subject_canonicaliser.run(prompt),
+                    timeout=self._settings.chunked_reasoner_worker_timeout_seconds,
+                )
+            except (AgentRunError, TimeoutError):
+                logger.warning(
+                    "[contradiction] subject canonicalisation batch failed; subjects fall back to lexical keys",
+                    exc_info=True,
+                )
+                return {}
+
+        # Pydantic already guarantees ``raw`` and ``canonical`` are
+        # ``min_length=1`` non-empty strings, but be defensive in case
+        # the model returned a whitespace-only canonical form: an empty
+        # canonical would cause the ledger to silently drop claims.
+        batch_mapping: dict[str, str] = {}
+        for alias in result.output.aliases:
+            if not alias.canonical.strip():
+                continue
+            batch_mapping[alias.raw] = alias.canonical
+        return batch_mapping
 
     # ------------------------------------------------------------------
     # Stage 3+4 helpers — bucket detection
@@ -401,7 +538,7 @@ class ContradictionDetector:
         for chunk_start, window in _windows(deduped, size, overlap):
             try:
                 pairs = await self._run_detector_chunk(canonical_subject, window)
-            except AgentRunError:
+            except (AgentRunError, TimeoutError):
                 logger.warning(
                     "[contradiction] detector failed for subject %r at chunk_start=%d",
                     canonical_subject,
@@ -437,16 +574,13 @@ class ContradictionDetector:
                 ):
                     continue
 
-                severity = (
-                    ContradictionSeverity.ERROR if pair.severity == "error" else ContradictionSeverity.WARNING
-                )
                 out.append(
                     Contradiction(
                         subject=canonical_subject,
                         claim1=claim_lo,
                         claim2=claim_hi,
                         explanation=pair.explanation,
-                        severity=severity,
+                        severity=pair.severity,
                     )
                 )
         return out
@@ -478,19 +612,39 @@ class ContradictionDetector:
         canonical_subject: str,
         chunk: list[Claim],
     ) -> list[_DetectedPair]:
-        """Run the pair detector on a single chunk of claims."""
-        rendered_claims = []
-        for index, claim in enumerate(chunk):
-            rendered_claims.append(
-                f"[{index}] page={claim.page} polarity={claim.polarity} "
-                f"text={claim.text!r} quote={claim.quote!r}"
+        """Run the pair detector on a single chunk of claims.
+
+        Each claim is rendered as a one-line JSON object inside the
+        ``<claims>`` envelope so newlines and quotes inside the
+        user-supplied text are unambiguously delimited. The whole block
+        is also passed through :func:`_escape_for_tag` so a literal
+        ``"</claims>"`` inside a quote can't close the envelope.
+        """
+        rendered_claims = [
+            f"[{index}] "
+            + json.dumps(
+                {
+                    "page": claim.page,
+                    "polarity": claim.polarity,
+                    "text": claim.text,
+                    "quote": claim.quote,
+                },
+                ensure_ascii=False,
             )
-        claims_block = "\n".join(rendered_claims)
+            for index, claim in enumerate(chunk)
+        ]
+        claims_block = _escape_for_tag("\n".join(rendered_claims))
         prompt = (
             f"Canonical subject: {canonical_subject!r}\n"
             f"<claims>\n{claims_block}\n</claims>"
         )
-        result = await self._pair_detector.run(prompt)
+        # Mirror the per-chunk timeout used by ChunkedMapper so a single
+        # stalled provider call can't pin the whole detect() to the HTTP
+        # default.
+        result = await asyncio.wait_for(
+            self._pair_detector.run(prompt),
+            timeout=self._settings.chunked_reasoner_worker_timeout_seconds,
+        )
         return list(result.output.pairs)
 
     # ------------------------------------------------------------------
@@ -508,12 +662,18 @@ class ContradictionDetector:
             "errors": error_count,
             "warnings": warning_count,
         }
-        prompt = f"<verdict>{json.dumps(verdict_payload)}</verdict>"
+        prompt = f"<verdict>{_escape_for_tag(json.dumps(verdict_payload))}</verdict>"
         try:
-            result = await self._summary_agent.run(prompt)
+            result = await asyncio.wait_for(
+                self._summary_agent.run(prompt),
+                timeout=self._settings.chunked_reasoner_worker_timeout_seconds,
+            )
             return result.output
-        except AgentRunError:
-            logger.warning("[contradiction] summary generation failed; using fallback", exc_info=True)
+        except (AgentRunError, TimeoutError):
+            logger.warning(
+                "[contradiction] summary generation failed (provider error or timeout); using fallback",
+                exc_info=True,
+            )
             return _fallback_summary(error_count, warning_count, pages_examined)
 
     # ------------------------------------------------------------------
@@ -521,11 +681,18 @@ class ContradictionDetector:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _empty_report(*, summary: str, clean: bool, pages_examined: list[int]) -> ContradictionReport:
+    def _empty_report(*, summary: str, pages_examined: list[int]) -> ContradictionReport:
+        """Build a contradictions-free report.
+
+        Always ``clean=True`` — every existing caller of this helper enters
+        through a "no claims" / "no pages" branch and never produced any
+        contradictions to begin with, so the result cannot contain an
+        ERROR-severity finding.
+        """
         return ContradictionReport(
             contradictions=[],
             pages_examined=pages_examined,
-            clean=clean,
+            clean=True,
             summary=summary,
         )
 
@@ -561,6 +728,15 @@ def _windows(
     Guarantees every claim appears in at least one window. Buckets with
     ``len <= size`` produce a single full-bucket window. Raises if
     ``overlap`` is not in ``[0, size)``.
+
+    Cross-window reach: pairs whose global indices are more than
+    ``size`` apart are never offered to the detector together. With
+    the default ``chunk_size=12, overlap=2`` the effective
+    contradiction reach within a single subject bucket is roughly 10
+    claims (``size - overlap``). Oversized buckets where the model
+    might want to relate claim 1 with claim 50 should be considered an
+    approximation; the windowing trades that recall for bounded prompt
+    size.
     """
     if size <= 0:
         raise ValueError("size must be positive")

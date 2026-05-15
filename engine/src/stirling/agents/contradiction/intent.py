@@ -53,7 +53,7 @@ class ContradictionIntentClassifier:
         )
 
     async def classify(self, user_message: str) -> bool:
-        if not user_message:
+        if not user_message.strip():
             return False
         prompt = f"<user_message>{user_message}</user_message>"
         result = await self._agent.run(prompt)

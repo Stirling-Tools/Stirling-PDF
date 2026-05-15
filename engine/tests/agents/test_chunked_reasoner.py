@@ -328,9 +328,15 @@ class TestPromptConstruction:
     def test_extraction_prompt_includes_question_and_page_markers(self, runtime: AppRuntime) -> None:
         """A first-round chunk's content carries ``[Page N]`` markers; the
         extraction prompt prepends the user question."""
+        from stirling.agents.shared.chunked_mapper import ChunkedMapper
+
         reasoner = ChunkedReasoner(runtime)
-        chunk = reasoner._chunk_from_pages([_page(2, "page two body"), _page(3, "page three body")])
-        prompt = reasoner._build_extraction_prompt(chunk.content, "what is on page two?")
+        # Render chunk content through the mapper's public helper — the
+        # first-round chunk shape lives in ChunkedMapper.
+        content = ChunkedMapper.format_chunk_content(
+            [_page(2, "page two body"), _page(3, "page three body")]
+        )
+        prompt = reasoner._build_extraction_prompt(content, "what is on page two?")
 
         assert "what is on page two?" in prompt
         assert "[Page 2]" in prompt
@@ -352,10 +358,11 @@ class TestPromptConstruction:
 
 # Hierarchical compression
 #
-# The compression loop is part of ``_run_chunks`` and isn't exposed
-# directly, so these tests drive it end-to-end via ``gather_notes`` with a
-# stubbed extractor that controls per-call output (and per-call failure
-# patterns) by counting calls.
+# The compression loop is part of ``_compress_until_fits`` /
+# ``_run_compression_round`` and isn't exposed directly, so these tests
+# drive it end-to-end via ``gather_notes`` with a stubbed extractor that
+# controls per-call output (and per-call failure patterns) by counting
+# calls.
 
 
 class TestCompression:
@@ -529,27 +536,50 @@ class TestExtractChunk:
         assert note.relevant_excerpts == ["y"]
 
     @pytest.mark.anyio
-    async def test_compression_rounds_receive_user_question(self, runtime: AppRuntime) -> None:
-        """Regression — compression-round extractor calls MUST carry the same
-        user question as first-round calls. The pre-fix bug passed `""` to the
-        prompt builder, so the model consolidated notes against different
-        relevance criteria than it extracted them under. Flagged by Aikido on
-        PR #6369; pinned here.
+    async def test_compression_rounds_receive_user_question_through_gather_notes(
+        self, runtime: AppRuntime
+    ) -> None:
+        """Regression — every extractor call (first round AND every
+        compression round) MUST carry the same user question. The pre-fix
+        bug passed ``""`` to the compression-round prompt builder, so the
+        model consolidated notes against different relevance criteria
+        than it extracted them under. Flagged by Aikido on PR #6369;
+        pinned end-to-end here by capturing every prompt the extractor
+        sees while ``gather_notes`` forces a compression round through a
+        tight notes budget.
         """
         from stirling.agents.shared.chunked_reasoner import _ExtractedNotes
 
-        reasoner = ChunkedReasoner(runtime)
-        group = [ChunkNotes(pages=[1], summary="a"), ChunkNotes(pages=[2], summary="b")]
-        chunk = reasoner._chunk_from_notes(group)
-        canned = _ExtractedNotes(summary="merged", facts=[], relevant_excerpts=[])
-        seen_prompt: list[str] = []
+        # Small notes budget forces a compression round; small slice
+        # budget produces multiple first-round chunks that overflow it.
+        reasoner = ChunkedReasoner(
+            runtime, chars_per_slice=200, notes_char_budget=200
+        )
+        pages = [_page(i, "x" * 150) for i in range(1, 5)]
 
-        async def _capture_run(prompt: str, *_a: Any, **_kw: Any):
-            seen_prompt.append(prompt)
-            return _StubAgentResult(output=canned)
+        call_count = 0
 
-        with patch.object(reasoner._extractor, "run", side_effect=_capture_run):
-            await reasoner._extract_compression_chunk(chunk, "what is the deadline?")
+        async def _stub(*_args: object, **_kwargs: object) -> _StubAgentResult[object]:
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 4:
+                # Round 1: each note ~60 chars rendered. 4 * 80 = 320 chars,
+                # over the 200 budget so a compression round must fire.
+                return _StubAgentResult(output=_ExtractedNotes(summary="x" * 60))
+            # Round 2: smaller note so the post-round set fits the budget.
+            return _StubAgentResult(output=_ExtractedNotes(summary="ok"))
 
-        assert len(seen_prompt) == 1
-        assert "what is the deadline?" in seen_prompt[0]
+        seen_prompts: list[str] = []
+
+        async def _capture(prompt: str, *_a: Any, **_kw: Any) -> Any:
+            seen_prompts.append(prompt)
+            return await _stub()
+
+        with patch.object(reasoner._extractor, "run", side_effect=_capture):
+            await reasoner.gather_notes(pages, "what is the deadline?")
+
+        # At least four first-round calls plus the compression-round
+        # calls — every single one must carry the user question.
+        assert len(seen_prompts) >= 5
+        for prompt in seen_prompts:
+            assert "what is the deadline?" in prompt

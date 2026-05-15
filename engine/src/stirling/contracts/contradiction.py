@@ -20,10 +20,17 @@ from stirling.models import ApiModel
 
 __all__ = [
     "Claim",
+    "ClaimPolarity",
     "Contradiction",
     "ContradictionReport",
     "ContradictionSeverity",
 ]
+
+
+# Shared type alias for the polarity field. Spelled out once here so the
+# detector's internal LLM-output schema and the public Claim contract stay
+# in sync — adding a new polarity requires touching one place.
+ClaimPolarity = Literal["assert", "deny", "recommend", "reject", "neutral"]
 
 
 class ContradictionSeverity(StrEnum):
@@ -53,7 +60,7 @@ class Claim(ApiModel):
         min_length=1,
         description="Short noun phrase naming what the claim is about (e.g. 'project deadline').",
     )
-    polarity: Literal["assert", "deny", "recommend", "reject", "neutral"] = Field(
+    polarity: ClaimPolarity = Field(
         description="Stance the claim takes toward the subject.",
     )
     text: str = Field(
@@ -63,7 +70,7 @@ class Claim(ApiModel):
     quote: str = Field(
         min_length=1,
         max_length=400,
-        description="Verbatim excerpt from the page (typically <= 200 chars).",
+        description="Verbatim excerpt from the page (typically <= 400 chars).",
     )
     anchor_quality: Literal["verbatim", "paraphrased"] = Field(
         default="verbatim",
@@ -120,8 +127,10 @@ class ContradictionReport(ApiModel):
     pages_examined: list[int] = Field(
         default_factory=list,
         description=(
-            "1-indexed pages whose claims were actually checked. Pages whose "
-            "claim extraction failed, or that arrived blank, are excluded."
+            "1-indexed pages whose extractor pass ran, regardless of whether "
+            "any claims were produced for them. Pages whose extraction failed "
+            "(chunk-level timeout or crash) are excluded — the union of "
+            "successful chunks' page coverage."
         ),
     )
     clean: bool = Field(

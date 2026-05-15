@@ -72,6 +72,14 @@ class AppSettings(BaseSettings):
         default=2,
         validation_alias="STIRLING_CONTRADICTION_BUCKET_CHUNK_OVERLAP",
     )
+    # Maximum number of unique subjects passed to a single canonicaliser
+    # LLM call. Audits over very long documents can surface thousands of
+    # unique subject phrases; batching keeps the per-call prompt size
+    # below the model's effective context window.
+    contradiction_canonicaliser_batch_size: int = Field(
+        default=500,
+        validation_alias="STIRLING_CONTRADICTION_CANONICALISER_BATCH_SIZE",
+    )
 
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")

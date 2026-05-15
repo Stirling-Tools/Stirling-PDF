@@ -252,6 +252,91 @@ class TestMapPages:
             await mapper.map_pages([], "anything")
 
 
+class TestSummaryCounts:
+    """``summary_counts`` callback feeds the WholeDocSliceDone event's
+    excerpts/facts counters from the consumer's extractor output shape
+    without the mapper itself duck-typing fields on ``T``."""
+
+    @pytest.mark.anyio
+    async def test_default_callback_emits_zero_counts(self, runtime: AppRuntime) -> None:
+        """No callback supplied → events emit ``excerpts=0 facts=0``."""
+        from stirling.contracts import WholeDocSliceDone
+        from stirling.services import reset_progress_emitter, set_progress_emitter
+
+        mapper = _build_mapper(runtime, chars_per_slice=1000)
+        pages = [_page(1, "small")]
+        canned = _Extracted(label="ok")
+
+        emitted: list[WholeDocSliceDone] = []
+
+        async def _emit(event: object) -> None:
+            if isinstance(event, WholeDocSliceDone):
+                emitted.append(event)
+
+        token = set_progress_emitter(_emit)
+        try:
+            with patch.object(
+                mapper._extractor,
+                "run",
+                AsyncMock(return_value=_StubAgentResult(output=canned)),
+            ):
+                await mapper.map_pages(pages, "q")
+        finally:
+            reset_progress_emitter(token)
+
+        assert len(emitted) == 1
+        assert emitted[0].excerpts == 0
+        assert emitted[0].facts == 0
+
+    @pytest.mark.anyio
+    async def test_user_callback_drives_counts(self, runtime: AppRuntime) -> None:
+        """A supplied callback receives each chunk's typed output and its
+        returned tuple is what the event carries."""
+        from stirling.contracts import WholeDocSliceDone
+        from stirling.services import reset_progress_emitter, set_progress_emitter
+
+        captured: list[_Extracted] = []
+
+        def _counts(output: _Extracted) -> tuple[int, int]:
+            captured.append(output)
+            return (3, 7)
+
+        extractor: Agent[None, _Extracted] = Agent(
+            model=runtime.fast_model,
+            output_type=_Extracted,
+            model_settings=runtime.fast_model_settings,
+        )
+        mapper: ChunkedMapper[_Extracted] = ChunkedMapper(
+            runtime,
+            extractor=extractor,
+            chars_per_slice=1000,
+            summary_counts=_counts,
+        )
+        canned = _Extracted(label="ok")
+
+        emitted: list[WholeDocSliceDone] = []
+
+        async def _emit(event: object) -> None:
+            if isinstance(event, WholeDocSliceDone):
+                emitted.append(event)
+
+        token = set_progress_emitter(_emit)
+        try:
+            with patch.object(
+                mapper._extractor,
+                "run",
+                AsyncMock(return_value=_StubAgentResult(output=canned)),
+            ):
+                await mapper.map_pages([_page(1, "small")], "q")
+        finally:
+            reset_progress_emitter(token)
+
+        assert len(captured) == 1
+        assert captured[0].label == "ok"
+        assert emitted[0].excerpts == 3
+        assert emitted[0].facts == 7
+
+
 class TestChunkOutputShape:
     @pytest.mark.anyio
     async def test_label_reflects_page_range(self, runtime: AppRuntime) -> None:

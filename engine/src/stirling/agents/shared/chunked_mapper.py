@@ -35,6 +35,13 @@ from stirling.services import AppRuntime, emit_progress
 logger = logging.getLogger(__name__)
 
 
+# Per-page marker rendered by :meth:`ChunkedMapper.format_chunk_content`.
+# Consumed by downstream extractor prompts (e.g. the contradiction agent's
+# claim-extractor prompt) so the shape can be changed in one place if the
+# format ever needs to evolve.
+PAGE_MARKER_TEMPLATE = "[Page {n}]"
+
+
 @dataclass(frozen=True)
 class ChunkOutput[T: BaseModel]:
     """One chunk's worth of typed extractor output, plus the pages it covered.
@@ -117,6 +124,7 @@ class ChunkedMapper[T: BaseModel]:
         concurrency: int | None = None,
         worker_timeout_seconds: float | None = None,
         build_prompt: Callable[[str, str], str] | None = None,
+        summary_counts: Callable[[T], tuple[int, int]] | None = None,
     ) -> None:
         chars = chars_per_slice if chars_per_slice is not None else runtime.settings.chunked_reasoner_chars_per_slice
         conc = concurrency if concurrency is not None else runtime.settings.chunked_reasoner_concurrency
@@ -131,12 +139,17 @@ class ChunkedMapper[T: BaseModel]:
             raise ValueError("concurrency must be positive")
         if timeout <= 0:
             raise ValueError("worker_timeout_seconds must be positive")
-        self._runtime = runtime
         self._extractor = extractor
         self._chars_per_slice = chars
         self._worker_timeout_seconds = timeout
         self._semaphore = asyncio.Semaphore(conc)
         self._build_prompt = build_prompt if build_prompt is not None else _default_build_prompt
+        # Callback so consumers can fill in the per-slice progress event's
+        # ``excerpts`` / ``facts`` counters from their extractor output
+        # shape without the mapper duck-typing those fields off ``T``.
+        # Defaults to ``(0, 0)`` so non-notes extractors don't crash the
+        # progress emission.
+        self._summary_counts = summary_counts if summary_counts is not None else _zero_counts
 
     @property
     def chars_per_slice(self) -> int:
@@ -145,6 +158,17 @@ class ChunkedMapper[T: BaseModel]:
     @property
     def worker_timeout_seconds(self) -> float:
         return self._worker_timeout_seconds
+
+    @property
+    def semaphore(self) -> asyncio.Semaphore:
+        """The semaphore enforcing the mapper's concurrency cap.
+
+        Exposed so secondary scheduling loops on the same mapper (e.g.
+        :class:`ChunkedReasoner`'s compression rounds) can share the cap
+        with the first-round map calls without reaching into private
+        attributes.
+        """
+        return self._semaphore
 
     async def map_pages(self, pages: list[Page], query: str) -> list[ChunkOutput[T]]:
         """Slice ``pages``, run the extractor per slice in parallel, return outputs.
@@ -214,7 +238,7 @@ class ChunkedMapper[T: BaseModel]:
                     completed += 1
                     if slowest is None or duration > slowest[1]:
                         slowest = (chunk.label, duration)
-                    excerpts, facts = _summary_counts(extracted)
+                    excerpts, facts = self._summary_counts(extracted)
                     await emit_progress(
                         WholeDocSliceDone(
                             completed=completed,
@@ -308,23 +332,20 @@ class ChunkedMapper[T: BaseModel]:
         """Render pages as ``[Page N]\\n<text>`` joined by blank lines.
 
         The standard format used by chunk content fed to extractors so every
-        per-page reference is anchored by an explicit page marker.
+        per-page reference is anchored by an explicit page marker. The
+        per-page marker shape is owned by :data:`PAGE_MARKER_TEMPLATE` so
+        downstream prompts can reference it without hardcoding the format.
         """
-        return "\n\n".join(f"[Page {p.page_number}]\n{p.text}" for p in pages)
+        return "\n\n".join(
+            f"{PAGE_MARKER_TEMPLATE.format(n=p.page_number)}\n{p.text}" for p in pages
+        )
 
 
-def _summary_counts(output: BaseModel) -> tuple[int, int]:
-    """Best-effort excerpt/fact counts for the WholeDocSliceDone payload.
+def _zero_counts(_output: BaseModel) -> tuple[int, int]:
+    """Default ``summary_counts`` callback.
 
-    Reads ``relevant_excerpts`` and ``facts`` from the extractor output if
-    present (which they are for ChunkedReasoner's _ExtractedNotes); returns
-    ``(0, 0)`` otherwise so non-notes extractors don't crash the progress
-    emission. Will be unnecessary once the progress event family is
-    generalised (see class-level TODO).
+    The progress event family is still notes-shaped (see class-level TODO
+    in :class:`ChunkedMapper`); extractors whose output is not notes
+    simply report ``(0, 0)`` so the event still emits.
     """
-    excerpts = getattr(output, "relevant_excerpts", None)
-    facts = getattr(output, "facts", None)
-    return (
-        len(excerpts) if isinstance(excerpts, list) else 0,
-        len(facts) if isinstance(facts, list) else 0,
-    )
+    return (0, 0)
