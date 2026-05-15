@@ -1,6 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import {
+  useToolWorkflow,
+  useToolWorkflowActions,
+} from "@app/contexts/ToolWorkflowContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import ToolPicker from "@app/components/tools/ToolPicker";
 import SearchResults from "@app/components/tools/SearchResults";
@@ -36,13 +39,19 @@ export default function ToolPanel() {
     toolRegistry,
     setSearchQuery,
     selectedToolKey,
-    handleToolSelect,
-    setPreviewFile,
     toolPanelMode,
-    setToolPanelMode,
-    setLeftPanelView,
     readerMode,
   } = useToolWorkflow();
+  // Pull handlers from the stable Actions context — their identities are
+  // ref-backed and never change across the provider lifetime, so memoized
+  // children (ToolPicker, SearchResults, ToolButton) can actually skip
+  // rerenders when only searchQuery changes.
+  const {
+    handleToolSelect,
+    setPreviewFile,
+    setToolPanelMode,
+    setLeftPanelView,
+  } = useToolWorkflowActions();
 
   const { setAllRightRailButtonsDisabled } = useRightRail();
   const { preferences, updatePreference } = usePreferences();
@@ -93,6 +102,13 @@ export default function ToolPanel() {
 
     return "18.5rem";
   };
+
+  // Stable onSelect for the children so memoized children (ToolPicker,
+  // SearchResults) can actually skip rerenders.
+  const handleSelect = useCallback(
+    (id: string) => handleToolSelect(id as ToolId),
+    [handleToolSelect],
+  );
 
   const matchedTextMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -168,7 +184,7 @@ export default function ToolPanel() {
             <div className="flex-1 flex flex-col overflow-y-auto">
               <SearchResults
                 filteredTools={filteredTools}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
+                onSelect={handleSelect}
                 searchQuery={searchQuery}
               />
             </div>
@@ -176,7 +192,7 @@ export default function ToolPanel() {
             <div className="flex-1 flex flex-col overflow-auto">
               <ToolPicker
                 selectedToolKey={selectedToolKey}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
+                onSelect={handleSelect}
                 filteredTools={filteredTools}
                 isSearching={Boolean(
                   searchQuery && searchQuery.trim().length > 0,

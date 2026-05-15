@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { memo, useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
@@ -9,7 +9,7 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -65,7 +65,9 @@ const ToolPicker = ({
   const scrollableRef = useRef<HTMLDivElement>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, toolRegistry } = useToolWorkflow();
+  // Use the slim Data context so this component does not rerender on
+  // searchQuery / sidebar / panel-state changes.
+  const { favoriteTools, toolRegistry } = useToolWorkflowData();
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
@@ -194,4 +196,4 @@ const ToolPicker = ({
   );
 };
 
-export default ToolPicker;
+export default memo(ToolPicker);
