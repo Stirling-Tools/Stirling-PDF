@@ -35,6 +35,10 @@ class AddImageParams(ApiModel):
 
 
 class CustomMargin(StrEnum):
+    """
+    Custom margin: small/medium/large/x-large
+    """
+
     small = "small"
     medium = "medium"
     large = "large"
@@ -42,12 +46,20 @@ class CustomMargin(StrEnum):
 
 
 class FontType(StrEnum):
+    """
+    Font type for page numbers
+    """
+
     helvetica = "helvetica"
     courier = "courier"
     times = "times"
 
 
 class Position(IntEnum):
+    """
+    Position: 1-9 representing positions on the page (1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right)
+    """
+
     integer_1 = 1
     integer_2 = 2
     integer_3 = 3
@@ -85,6 +97,10 @@ class AddPageNumbersParams(ApiModel):
 
 
 class KeyLength(IntEnum):
+    """
+    The length of the encryption key
+    """
+
     integer_40 = 40
     integer_128 = 128
     integer_256 = 256
@@ -112,6 +128,10 @@ class AddPasswordParams(ApiModel):
 
 
 class Alphabet(StrEnum):
+    """
+    The selected alphabet of the stamp text
+    """
+
     roman = "roman"
     arabic = "arabic"
     japanese = "japanese"
@@ -120,7 +140,38 @@ class Alphabet(StrEnum):
     thai = "thai"
 
 
+class CustomMargin1(StrEnum):
+    """
+    Specifies the margin size for the stamp.
+    """
+
+    small = "small"
+    medium = "medium"
+    large = "large"
+    x_large = "x-large"
+
+
+class Position1(IntEnum):
+    """
+    Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)
+    """
+
+    integer_1 = 1
+    integer_2 = 2
+    integer_3 = 3
+    integer_4 = 4
+    integer_5 = 5
+    integer_6 = 6
+    integer_7 = 7
+    integer_8 = 8
+    integer_9 = 9
+
+
 class StampType(StrEnum):
+    """
+    The stamp type (text or image)
+    """
+
     text = "text"
     image = "image"
 
@@ -128,7 +179,7 @@ class StampType(StrEnum):
 class AddStampParams(ApiModel):
     alphabet: Alphabet = Field(Alphabet.roman, description="The selected alphabet of the stamp text")
     custom_color: str = Field("#d3d3d3", description="The color of the stamp text")
-    custom_margin: CustomMargin = Field(CustomMargin.medium, description="Specifies the margin size for the stamp.")
+    custom_margin: CustomMargin1 = Field(CustomMargin1.medium, description="Specifies the margin size for the stamp.")
     font_size: float = Field(40, description="The font size of the stamp text and image in points.")
     opacity: float = Field(0.5, description="The opacity of the stamp (0.0 - 1.0)")
     override_x: float = Field(
@@ -143,8 +194,8 @@ class AddStampParams(ApiModel):
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-    position: Position = Field(
-        Position.integer_8,
+    position: Position1 = Field(
+        Position1.integer_8,
         description="Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)",
     )
     rotation: float = Field(0, description="The rotation of the stamp in degrees")
@@ -152,13 +203,30 @@ class AddStampParams(ApiModel):
     stamp_type: StampType = Field(..., description="The stamp type (text or image)")
 
 
+class Alphabet1(StrEnum):
+    """
+    The selected alphabet
+    """
+
+    roman = "roman"
+    arabic = "arabic"
+    japanese = "japanese"
+    korean = "korean"
+    chinese = "chinese"
+    thai = "thai"
+
+
 class WatermarkType(StrEnum):
+    """
+    The watermark type (text or image)
+    """
+
     text = "text"
     image = "image"
 
 
 class AddWatermarkParams(ApiModel):
-    alphabet: Alphabet = Field(Alphabet.roman, description="The selected alphabet")
+    alphabet: Alphabet1 = Field(Alphabet1.roman, description="The selected alphabet")
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
     custom_color: str = Field("#d3d3d3", description="The color for watermark")
     font_size: float = Field(30, description="The font size of the watermark text", ge=1.0)
@@ -194,16 +262,28 @@ class AutoSplitPdfParams(ApiModel):
 
 
 class DuplexPass(StrEnum):
+    """
+    For manual duplex: which pass to generate
+    """
+
     both = "BOTH"
     first = "FIRST"
     second = "SECOND"
 
 
 class PagesPerSheet(Enum):
+    """
+    The number of pages per side for booklet printing (always 2 for proper booklet).
+    """
+
     number_2 = 2
 
 
 class SpineLocation(StrEnum):
+    """
+    The spine location for the booklet.
+    """
+
     left = "LEFT"
     right = "RIGHT"
 
@@ -233,6 +313,10 @@ class CbzToPdfParams(ApiModel):
 
 
 class CertType(StrEnum):
+    """
+    The type of the digital certificate
+    """
+
     pem = "PEM"
     pkcs12 = "PKCS12"
     pfx = "PFX"
@@ -255,12 +339,20 @@ class CertSignParams(ApiModel):
 
 
 class LineArtEdgeLevel(IntEnum):
+    """
+    Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+    """
+
     integer_1 = 1
     integer_2 = 2
     integer_3 = 3
 
 
 class OptimizeLevel(IntEnum):
+    """
+    The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.
+    """
+
     integer_1 = 1
     integer_2 = 2
     integer_3 = 3
@@ -309,21 +401,37 @@ class DeleteAttachmentParams(ApiModel):
 
 
 class EmbedAllFonts(Enum):
+    """
+    Embed all fonts from the eBook into the generated PDF
+    """
+
     boolean_true = True
     boolean_false = False
 
 
 class IncludePageNumbers(Enum):
+    """
+    Add page numbers to the generated PDF
+    """
+
     boolean_true = True
     boolean_false = False
 
 
 class IncludeTableOfContents(Enum):
+    """
+    Add a generated table of contents to the resulting PDF
+    """
+
     boolean_true = True
     boolean_false = False
 
 
 class OptimizeForEbook(Enum):
+    """
+    Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
+    """
+
     boolean_true = True
     boolean_false = False
 
@@ -358,6 +466,10 @@ class EditTableOfContentsParams(ApiModel):
 
 
 class EditTextOperation(ApiModel):
+    """
+    Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
+    """
+
     find: str = Field(..., description="The literal text to find.")
     replace: str = Field(..., description="The replacement text. May be empty to delete the matched text.")
 
@@ -404,6 +516,10 @@ class ExtractImageScansParams(ApiModel):
 
 
 class Format(StrEnum):
+    """
+    The output image format e.g., 'png', 'jpeg', or 'gif'
+    """
+
     png = "png"
     jpeg = "jpeg"
     gif = "gif"
@@ -427,12 +543,20 @@ class HtmlToPdfParams(ApiModel):
 
 
 class ColorType(StrEnum):
+    """
+    The color type of the output image(s)
+    """
+
     color = "color"
     greyscale = "greyscale"
     blackwhite = "blackwhite"
 
 
 class FitOption(StrEnum):
+    """
+    Option to determine how the image will fit onto the page
+    """
+
     fill_page = "fillPage"
     fit_document_to_image = "fitDocumentToImage"
     maintain_aspect_ratio = "maintainAspectRatio"
@@ -449,6 +573,10 @@ class ImgToPdfParams(ApiModel):
 
 
 class SortType(StrEnum):
+    """
+    The type of sorting to be applied on the input files before merging.
+    """
+
     order_provided = "orderProvided"
     by_file_name = "byFileName"
     by_date_modified = "byDateModified"
@@ -475,21 +603,37 @@ class MergePdfsParams(ApiModel):
 
 
 class Arrangement(StrEnum):
+    """
+    The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while BY_COLUMNS fills pages column by column.
+    """
+
     by_rows = "BY_ROWS"
     by_columns = "BY_COLUMNS"
 
 
 class Mode(StrEnum):
+    """
+    Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.
+    """
+
     default = "DEFAULT"
     custom = "CUSTOM"
 
 
 class Orientation(StrEnum):
+    """
+    The orientation of the output PDF pages
+    """
+
     portrait = "PORTRAIT"
     landscape = "LANDSCAPE"
 
 
 class PagesPerSheet1(IntEnum):
+    """
+    The number of pages to fit onto a single sheet in the output PDF.
+    """
+
     integer_2 = 2
     integer_4 = 4
     integer_9 = 9
@@ -497,6 +641,10 @@ class PagesPerSheet1(IntEnum):
 
 
 class ReadingDirection(StrEnum):
+    """
+    The direction in which pages are arranged on the sheet: LTR (left-to-right) or RTL (right-to-left).
+    """
+
     ltr = "LTR"
     rtl = "RTL"
 
@@ -541,11 +689,19 @@ class MultiPageLayoutParams(ApiModel):
 
 
 class OcrRenderType(StrEnum):
+    """
+    Specify the OCR render type, either 'hocr' or 'sandwich'
+    """
+
     hocr = "hocr"
     sandwich = "sandwich"
 
 
 class OcrType(StrEnum):
+    """
+    Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
+    """
+
     skip_text = "skip-text"
     force_ocr = "force-ocr"
     normal = "Normal"
@@ -565,12 +721,20 @@ class OcrPdfParams(ApiModel):
 
 
 class OverlayMode(StrEnum):
+    """
+    The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
+    """
+
     sequential_overlay = "SequentialOverlay"
     interleaved_overlay = "InterleavedOverlay"
     fixed_repeat_overlay = "FixedRepeatOverlay"
 
 
 class OverlayPosition(Enum):
+    """
+    Overlay position 0 is Foregound, 1 is Background
+    """
+
     number_0 = 0
     number_1 = 1
 
@@ -607,11 +771,19 @@ class PdfToCsvParams(ApiModel):
 
 
 class DetectChapters(Enum):
+    """
+    Detect headings that look like chapters and insert EPUB page breaks.
+    """
+
     boolean_true = True
     boolean_false = False
 
 
 class OutputFormat(StrEnum):
+    """
+    Choose the output format for the ebook.
+    """
+
     epub = "EPUB"
     azw3 = "AZW3"
     epub_1 = "EPUB"
@@ -619,6 +791,10 @@ class OutputFormat(StrEnum):
 
 
 class TargetDevice(StrEnum):
+    """
+    Choose an output profile optimized for the reader device.
+    """
+
     tablet_phone_images = "TABLET_PHONE_IMAGES"
     kindle_eink_text = "KINDLE_EINK_TEXT"
     tablet_phone_images_1 = "TABLET_PHONE_IMAGES"
@@ -636,6 +812,10 @@ class PdfToEpubParams(ApiModel):
 
 
 class ImageFormat(StrEnum):
+    """
+    The output image format
+    """
+
     png = "png"
     jpeg = "jpeg"
     jpg = "jpg"
@@ -644,6 +824,10 @@ class ImageFormat(StrEnum):
 
 
 class SingleOrMultiple(StrEnum):
+    """
+    Choose between a single image containing all pages or separate images for each page
+    """
+
     single = "single"
     multiple = "multiple"
 
@@ -664,6 +848,10 @@ class PdfToImgParams(ApiModel):
 
 
 class OutputFormat1(StrEnum):
+    """
+    The output format type (PDF/A or PDF/X)
+    """
+
     pdfa = "pdfa"
     pdfa_1 = "pdfa-1"
     pdfa_2 = "pdfa-2"
@@ -681,6 +869,10 @@ class PdfToPdfaParams(ApiModel):
 
 
 class OutputFormat2(StrEnum):
+    """
+    The output Presentation format
+    """
+
     ppt = "ppt"
     pptx = "pptx"
     odp = "odp"
@@ -691,10 +883,18 @@ class PdfToPresentationParams(ApiModel):
 
 
 class PdfToTextEditorParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
+
     lightweight: bool = False
 
 
 class OutputFormat3(StrEnum):
+    """
+    The output Text or RTF format
+    """
+
     rtf = "rtf"
     txt = "txt"
 
@@ -704,6 +904,10 @@ class PdfToTextParams(ApiModel):
 
 
 class OutputFormat4(StrEnum):
+    """
+    Target vector format extension
+    """
+
     eps = "eps"
     ps = "ps"
     pcl = "pcl"
@@ -711,6 +915,10 @@ class OutputFormat4(StrEnum):
 
 
 class Prepress(Enum):
+    """
+    Apply Ghostscript prepress settings
+    """
+
     boolean_true = True
     boolean_false = False
 
@@ -721,6 +929,10 @@ class PdfToVectorParams(ApiModel):
 
 
 class OutputFormat5(StrEnum):
+    """
+    The output Word document format
+    """
+
     doc = "doc"
     docx = "docx"
     odt = "odt"
@@ -738,6 +950,17 @@ class PdfToXlsxParams(ApiModel):
 
 
 class CustomMode(StrEnum):
+    """
+    The custom mode for page rearrangement. Valid values are:
+    CUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.
+    DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).
+    ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.
+    REMOVE_FIRST: Removes the first page.
+    REMOVE_LAST: Removes the last page.
+    REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.
+
+    """
+
     custom = "CUSTOM"
     reverse_order = "REVERSE_ORDER"
     duplex_sort = "DUPLEX_SORT"
@@ -784,6 +1007,10 @@ class RedactTextRange(ApiModel):
 
 
 class RedactionArea(ApiModel):
+    """
+    A list of areas that should be redacted
+    """
+
     color: str | None = Field(None, description="The color used to redact the specified area.")
     height: float | None = Field(None, description="The height of the area to be redacted.")
     page: int | None = Field(None, description="The page on which the area should be redacted.")
@@ -816,6 +1043,10 @@ class RenameAttachmentParams(ApiModel):
 
 
 class HighContrastColorCombination(StrEnum):
+    """
+    If HIGH_CONTRAST_COLOR option selected, then pick the default color option for text and background.
+    """
+
     white_text_on_black = "WHITE_TEXT_ON_BLACK"
     black_text_on_white = "BLACK_TEXT_ON_WHITE"
     yellow_text_on_black = "YELLOW_TEXT_ON_BLACK"
@@ -827,6 +1058,10 @@ class HighContrastColorCombination(StrEnum):
 
 
 class ReplaceAndInvertOption(StrEnum):
+    """
+    Replace and Invert color options of a pdf.
+    """
+
     high_contrast_color = "HIGH_CONTRAST_COLOR"
     custom_color = "CUSTOM_COLOR"
     full_inversion = "FULL_INVERSION"
@@ -856,6 +1091,10 @@ class ReplaceInvertPdfParams(ApiModel):
 
 
 class Angle(IntEnum):
+    """
+    The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.
+    """
+
     integer_0 = 0
     integer_90 = 90
     integer_180 = 180
@@ -864,7 +1103,7 @@ class Angle(IntEnum):
 
 class RotatePdfParams(ApiModel):
     angle: Angle = Field(
-        ..., description="The clockwise angle by which to rotate the PDF file. Must be a multiple of 90."
+        ..., description="The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90."
     )
 
 
@@ -878,6 +1117,10 @@ class SanitizePdfParams(ApiModel):
 
 
 class PageSize(StrEnum):
+    """
+    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+    """
+
     a0 = "A0"
     a1 = "A1"
     a2 = "A2"
@@ -900,17 +1143,29 @@ class ScalePagesParams(ApiModel):
 
 
 class Colorspace(StrEnum):
+    """
+    Colorspace for output image
+    """
+
     grayscale = "grayscale"
     color = "color"
 
 
 class Quality(StrEnum):
+    """
+    Scan quality preset
+    """
+
     low = "low"
     medium = "medium"
     high = "high"
 
 
 class Rotation(StrEnum):
+    """
+    Rotation preset
+    """
+
     none = "none"
     slight = "slight"
     moderate = "moderate"
@@ -965,6 +1220,10 @@ class SplitBySizeOrCountParams(ApiModel):
 
 
 class PageSize1(StrEnum):
+    """
+    Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')
+    """
+
     a4 = "A4"
     letter = "Letter"
     a3 = "A3"
@@ -994,6 +1253,16 @@ class SplitPdfByChaptersParams(ApiModel):
 
 
 class SplitMode(StrEnum):
+    """
+    Modes for page split. Valid values are:
+    SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.
+    SPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.
+    SPLIT_ALL_EXCEPT_LAST: Splits all except the last page.
+    SPLIT_ALL: Splits all pages.
+    CUSTOM: Custom split.
+
+    """
+
     custom = "CUSTOM"
     split_all_except_first_and_last = "SPLIT_ALL_EXCEPT_FIRST_AND_LAST"
     split_all_except_first = "SPLIT_ALL_EXCEPT_FIRST"
@@ -1027,6 +1296,10 @@ class TimestampPdfParams(ApiModel):
 
 
 class Trapped(StrEnum):
+    """
+    The trapped status of the document
+    """
+
     true = "True"
     false = "False"
     unknown = "Unknown"
@@ -1067,6 +1340,10 @@ class ValidateCertificateParams(ApiModel):
 
 
 class OutputFormat6(StrEnum):
+    """
+    Target vector format extension
+    """
+
     eps = "eps"
     ps = "ps"
     pcl = "pcl"

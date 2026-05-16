@@ -21,7 +21,7 @@ from datamodel_code_generator.format import Formatter
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
-# Fields inherited from PDFFile base class — not tool parameters.
+# Fields inherited from PDFFile base class - not tool parameters.
 BASE_CLASS_FIELDS = frozenset({"fileInput", "fileId"})
 
 _ENGINE_ROOT = Path(__file__).resolve().parents[1]
@@ -74,8 +74,8 @@ class ToolDiscovery:
             if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
                 continue
             body_schema = self._get_request_body_schema(path_item) or {}
-            body_props = body_schema.get("properties") or {}
             query_props = self._get_query_parameters(path_item)
+            body_props = body_schema.get("properties") or {}
             # Body properties win on name collision — body is the canonical param source
             # for the existing tools; query params are additive.
             properties = {**query_props, **body_props}
@@ -88,7 +88,11 @@ class ToolDiscovery:
             enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
             class_name = _deduplicate(_path_to_class_name(path), used_class)
 
-            entry: dict[str, Any] = {"type": "object", "properties": clean_props}
+            entry: dict[str, Any] = {
+                "type": "object",
+                "properties": clean_props,
+                "description": body_schema.get("description"),
+            }
             # Calculate which fields are actually required (many are marked as required,
             # but have a default set, so they're not really required)
             required = [
@@ -239,6 +243,7 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         no_alias=True,
         set_default_enum_member=True,
         strict_nullable=True,
+        use_schema_description=True,
         additional_imports=["enum.StrEnum"],
         enable_version_header=False,
         custom_file_header=_FILE_HEADER,

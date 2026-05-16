@@ -4,6 +4,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
 import { useFileState } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   detectFileExtension,
@@ -12,7 +13,6 @@ import {
 import { CONVERSION_MATRIX } from "@app/constants/convertConstants";
 
 import { NonPdfBanner } from "@app/components/viewer/nonpdf/NonPdfBanner";
-import { getFileTypeMeta } from "@app/components/viewer/nonpdf/types";
 import { ImageViewer } from "@app/components/viewer/nonpdf/ImageViewer";
 import { CsvViewer } from "@app/components/viewer/nonpdf/CsvViewer";
 import { JsonViewer } from "@app/components/viewer/nonpdf/JsonViewer";
@@ -24,8 +24,6 @@ export interface ViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
-  activeFileIndex?: number;
-  setActiveFileIndex?: (index: number) => void;
 }
 
 export interface NonPdfViewerProps extends ViewerProps {
@@ -34,10 +32,6 @@ export interface NonPdfViewerProps extends ViewerProps {
 
 export function NonPdfViewer({ file }: NonPdfViewerProps) {
   const fileType = useMemo(() => detectNonPdfFileType(file), [file]);
-  const meta = useMemo(
-    () => getFileTypeMeta(fileType, file.name),
-    [fileType, file.name],
-  );
 
   const { handleToolSelect, toolAvailability } = useToolWorkflow();
 
@@ -112,7 +106,6 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
       }}
     >
       <NonPdfBanner
-        meta={meta}
         onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined}
       />
       <Box
@@ -134,7 +127,7 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
 export function NonPdfViewerWrapper(props: ViewerProps) {
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
-  const activeFileIndex = props.activeFileIndex ?? 0;
+  const { activeFileIndex } = useViewer();
 
   const file =
     props.previewFile ?? activeFiles[activeFileIndex] ?? activeFiles[0] ?? null;
@@ -143,7 +136,7 @@ export function NonPdfViewerWrapper(props: ViewerProps) {
     return (
       <Center style={{ flex: 1 }}>
         <Text c="dimmed" size="sm">
-          No file selected
+          No file loaded
         </Text>
       </Center>
     );
