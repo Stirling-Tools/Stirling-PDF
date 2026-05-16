@@ -5425,8 +5425,10 @@ applyChanges = "Apply Changes"
 downloadCopy = "Download Copy"
 downloadJson = "Download JSON"
 generatePdf = "Generate PDF"
+redo = "Redo"
 reset = "Reset Changes"
 saveChanges = "Save Changes"
+undo = "Undo"
 
 [pdfTextEditor.badges]
 earlyAccess = "Early Access"

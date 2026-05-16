@@ -19,6 +19,8 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import FileDownloadIcon from "@mui/icons-material/FileDownloadOutlined";
+import UndoIcon from "@mui/icons-material/UndoOutlined";
+import RedoIcon from "@mui/icons-material/RedoOutlined";
 
 import {
   PdfTextEditorViewData,
@@ -88,6 +90,10 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
     onReset,
     onGeneratePdf,
     onSaveToWorkbench,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
     onForceSingleTextElementChange,
     onGroupingModeChange,
     onAutoScaleTextChange,
@@ -356,6 +362,34 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
         </ScrollArea>
 
         <Group gap="xs" wrap="nowrap" p="md">
+          <Tooltip
+            sidebarTooltip={false}
+            content={t("pdfTextEditor.actions.undo", "Undo the last edit")}
+            position="top"
+          >
+            <ActionIcon
+              variant="default"
+              size="lg"
+              onClick={() => onUndo()}
+              disabled={!hasDocument || !canUndo || isConverting}
+            >
+              <UndoIcon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip
+            sidebarTooltip={false}
+            content={t("pdfTextEditor.actions.redo", "Redo the last undo")}
+            position="top"
+          >
+            <ActionIcon
+              variant="default"
+              size="lg"
+              onClick={() => onRedo()}
+              disabled={!hasDocument || !canRedo || isConverting}
+            >
+              <RedoIcon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
           <Button
             variant="filled"
             onClick={onSaveToWorkbench}
