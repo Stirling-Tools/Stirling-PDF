@@ -1,5 +1,5 @@
 /**
- * Folder Storage Service — passive read-cache of the server's folder hierarchy.
+ * Folder Storage Service - passive read-cache of the server's folder hierarchy.
  *
  * Folders are server-owned. This module just persists the most recent server
  * response so the UI can paint instantly on next mount (and remain readable
@@ -7,7 +7,7 @@
  * on success the caller invokes {@link FolderStorageService.replaceAll} or
  * one of the targeted updaters to keep the cache in step.
  *
- * No id generation here, no cycle detection, no idempotency tricks — those
+ * No id generation here, no cycle detection, no idempotency tricks - those
  * are all the server's job now.
  */
 
@@ -27,7 +27,7 @@ class FolderStorageService {
 
   /**
    * Atomically replace the entire cached folder set with the supplied list.
-   * Used after a successful {@code pullFromServer} — the server is the
+   * Used after a successful {@code pullFromServer} - the server is the
    * source of truth, so any folder absent from the response is dropped
    * locally too (no orphan rows surviving a server-side delete).
    */

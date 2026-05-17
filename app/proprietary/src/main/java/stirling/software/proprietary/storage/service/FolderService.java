@@ -28,7 +28,7 @@ import stirling.software.proprietary.storage.model.api.UpdateFolderRequest;
 import stirling.software.proprietary.storage.repository.FolderRepository;
 
 /**
- * Phase A folder operations. Each call is scoped to the authenticated user — folders are private to
+ * Phase A folder operations. Each call is scoped to the authenticated user - folders are private to
  * their owner. Folder-level sharing is a Phase 3 feature.
  */
 @Service
@@ -37,7 +37,7 @@ import stirling.software.proprietary.storage.repository.FolderRepository;
 public class FolderService {
 
     /**
-     * Hard cap on folders per user. Beyond this {@link #createFolder} rejects with 409 — guards
+     * Hard cap on folders per user. Beyond this {@link #createFolder} rejects with 409 - guards
      * against per-account folder-explosion DoS and bounds the in-memory subtree walk in {@link
      * #deleteFolder}.
      */
@@ -142,7 +142,7 @@ public class FolderService {
 
     /**
      * Recursive delete. Returns the ids of every folder that was removed so the caller can purge
-     * them from its local cache. Files inside those folders are detached (folder_id set to null) —
+     * them from its local cache. Files inside those folders are detached (folder_id set to null) -
      * never deleted.
      */
     @Transactional
@@ -151,7 +151,7 @@ public class FolderService {
         Folder folder = requireOwnedFolder(id, user);
 
         // Build the parent → children map once. Project to id-only via the
-        // existing entity list (Hibernate already has the column loaded —
+        // existing entity list (Hibernate already has the column loaded -
         // we only access f.getParent().getId() on a managed proxy, which
         // does NOT initialize the proxy because Hibernate has the FK
         // value cached at the join column).
@@ -161,7 +161,7 @@ public class FolderService {
             childIdsByParent.computeIfAbsent(parentId, k -> new ArrayList<>()).add(f.getId());
         }
 
-        // Iterative subtree collection — prior recursive form blew the JVM
+        // Iterative subtree collection - prior recursive form blew the JVM
         // stack on deeply nested chains a malicious caller could create.
         List<UUID> removed = new ArrayList<>();
         Set<UUID> seen = new HashSet<>();

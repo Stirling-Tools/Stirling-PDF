@@ -128,7 +128,7 @@
   color: var(--text-muted);
 }
 
-/* Tree node styles moved to FolderTreePanel.css — that's where the
+/* Tree node styles moved to FolderTreePanel.css - that's where the
    .files-page-tree-* elements actually render (the slide-out panel from
    HomePage), so the styles need to load whether or not the standalone
    /files route is mounted. */
@@ -501,7 +501,7 @@
   pointer-events: none;
 }
 
-/* "Open" badge — file is currently loaded in the active workspace.
+/* "Open" badge - file is currently loaded in the active workspace.
    Solid pill with white text so it reads against any thumbnail
    (white PDFs, dark covers, photos). */
 .files-page-card-open-badge {
@@ -864,7 +864,7 @@
    Tighten the chrome so the file manager fits inside the mobile
    workspace slide. The slide-rail's bottom tab bar already provides
    navigation, so the in-header Home/Apps/Close trio is duplicated
-   and the first to go. Same for "Upload" — the user can use the
+   and the first to go. Same for "Upload" - the user can use the
    centre drop overlay. */
 @media (max-width: 640px) {
   .files-page-header {
@@ -911,7 +911,7 @@
 }
 
 @media (max-width: 420px) {
-  /* Don't force 1fr — auto-fill with the 9rem floor already keeps two cards
+  /* Don't force 1fr - auto-fill with the 9rem floor already keeps two cards
      per row on a 360px phone, which feels right for one-handed taps. The
      real fix at this width is the list view, which had 6 columns that wouldn't
      fit at all. */
@@ -919,7 +919,7 @@
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
-  /* List view at tiny widths becomes cramped — drop the size + type + modified
+  /* List view at tiny widths becomes cramped - drop the size + type + modified
      columns and let name + actions take the room. */
   .files-page-list-row {
     grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
@@ -932,7 +932,7 @@
 }
 
 /* Honour user preference for reduced motion (WCAG 2.3.3). Disables the
-   open-badge pulse, drop-overlay pulse + scale, and the card hover lift —
+   open-badge pulse, drop-overlay pulse + scale, and the card hover lift -
    keeps focus rings and selection borders so state is still visible. */
 @media (prefers-reduced-motion: reduce) {
   .files-page-card-open-dot,

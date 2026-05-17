@@ -1,5 +1,5 @@
 /**
- * FilesPageContext — shared state for the My Files view.
+ * FilesPageContext - shared state for the My Files view.
  *
  * The tree navigator (rendered next to the FileSidebar) and the main file
  * grid (rendered inside the Workbench area) both need access to:
@@ -142,7 +142,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Narrow the dep — only setError is read, and useState setters are
+  // Narrow the dep - only setError is read, and useState setters are
   // identity-stable across renders, so refresh ends up effectively dep-less.
   // Earlier [folders] dep caused refresh to be recreated whenever any
   // FolderContext field changed → IDB re-read on every folder navigation.
@@ -152,7 +152,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     try {
       const stubs = await fileStorage.getAllStirlingFileStubs();
       setAllFiles(stubs.filter((s) => s.isLeaf !== false));
-      // Don't setError(null) on success — refresh fires after every file
+      // Don't setError(null) on success - refresh fires after every file
       // mutation and from a useEffect; clearing here wiped folder-sync
       // errors a heartbeat after they appeared. Errors live until either
       // the user dismisses them or pullFromServer itself succeeds.
@@ -266,7 +266,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
    * Move files. Cloud files go through the server first (so cross-PC sync
    * sees the move); local-only files moving to ROOT are a no-op (they have
    * no folder concept); local-only files moving INTO a cloud folder are
-   * rejected with an actionable error — they need to be uploaded first.
+   * rejected with an actionable error - they need to be uploaded first.
    */
   const moveFilesTo = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null) => {
@@ -332,7 +332,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const moveFolderTo = useCallback(
     async (folderId: FolderId, newParentId: FolderId | null) => {
-      // Optimistic cycle guard — server enforces too, but blocking here
+      // Optimistic cycle guard - server enforces too, but blocking here
       // avoids the round-trip and surfaces a clear, immediate message.
       if (newParentId !== null && folders.isDescendant(newParentId, folderId)) {
         folders.setError(
@@ -382,7 +382,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const deleteFolder = useCallback(
     async (folder: FolderRecord) => {
-      // Walk the full subtree, not just direct children — recursive delete
+      // Walk the full subtree, not just direct children - recursive delete
       // affects every nested file, so showing only the direct-count was
       // misleading users into approving destructive operations blind.
       const subtreeIds = new Set<FolderId>([folder.id]);

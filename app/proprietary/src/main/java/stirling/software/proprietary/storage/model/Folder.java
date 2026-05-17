@@ -26,7 +26,7 @@ import lombok.Setter;
 import stirling.software.proprietary.security.model.User;
 
 /**
- * A user-owned folder used by the file manager UI to organise stored files. Phase A entity — no
+ * A user-owned folder used by the file manager UI to organise stored files. Phase A entity - no
  * folder-level sharing yet (Phase 3).
  *
  * <p>The id is a UUID rather than a numeric auto-increment so it round-trips with the
@@ -57,7 +57,7 @@ public class Folder implements Serializable {
 
     /**
      * {@code OnDeleteAction.CASCADE} so deleting the owning {@code User} cascades to this row at
-     * the DB level — UserService.deleteUserRelatedData doesn't enumerate folders today, and leaving
+     * the DB level - UserService.deleteUserRelatedData doesn't enumerate folders today, and leaving
      * the FK without an action throws a constraint violation on user delete.
      */
     @ManyToOne(fetch = FetchType.LAZY)

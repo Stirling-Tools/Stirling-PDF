@@ -4,7 +4,7 @@
  * affordance and return to the exact folder they were browsing.
  *
  * Persisted in sessionStorage so a hard reload keeps the return path
- * (matches user mental model — Cmd+R shouldn't lose the breadcrumb).
+ * (matches user mental model - Cmd+R shouldn't lose the breadcrumb).
  */
 
 const SESSION_KEY = "stirling.filesPage.returnRoute";

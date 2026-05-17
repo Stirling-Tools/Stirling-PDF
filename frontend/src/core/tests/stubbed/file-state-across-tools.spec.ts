@@ -26,7 +26,7 @@ test.describe("File state persists across tool navigation", () => {
     await page.goto("/split");
     await page.waitForLoadState("domcontentloaded");
 
-    // Re-open My Files — sample.pdf must still be there (persisted across tools)
+    // Re-open My Files - sample.pdf must still be there (persisted across tools)
     await page.getByTestId("my-files-button").click();
     await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
       timeout: 5_000,

@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * PATCH-style update — every field is optional. Send only the fields you want to change.
+ * PATCH-style update - every field is optional. Send only the fields you want to change.
  *
  * <p>The {@code reparent} flag distinguishes "do not change parent" from "move to root" since
  * {@code parentFolderId == null} alone is ambiguous in a sparse body. We use a boxed {@link
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
  * parent" footguns.
  *
  * <p>When the trimmed name is empty (e.g. {@code " "}) the service rejects the request with HTTP
- * 400 — silent drops are too easy to mistake for a successful rename.
+ * 400 - silent drops are too easy to mistake for a successful rename.
  */
 @Data
 @NoArgsConstructor
@@ -47,7 +47,7 @@ public class UpdateFolderRequest {
     private String icon;
 
     /**
-     * Convenience accessor — treats null as "do not reparent". Named differently from the
+     * Convenience accessor - treats null as "do not reparent". Named differently from the
      * Lombok-generated {@code getReparent()} so callers don't accidentally use one for the other
      * (the getter is nullable {@code Boolean}; this method collapses to primitive).
      */

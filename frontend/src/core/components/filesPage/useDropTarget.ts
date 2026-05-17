@@ -1,5 +1,5 @@
 /**
- * useDropTarget — stable hover-state tracking for drop targets.
+ * useDropTarget - stable hover-state tracking for drop targets.
  *
  * The default HTML5 drag-and-drop API fires `dragenter`/`dragleave` for every
  * child element the pointer crosses, which makes naive `setHover(true/false)`
@@ -25,7 +25,7 @@ interface UseDropTargetOptions {
   dragType: string;
   /** Fired when the user releases over the target. */
   onDrop: (event: React.DragEvent<HTMLElement>) => void;
-  /** Optional CSS effect — defaults to "move". */
+  /** Optional CSS effect - defaults to "move". */
   dropEffect?: DataTransfer["dropEffect"];
   /** Disable the target without unmounting. */
   disabled?: boolean;

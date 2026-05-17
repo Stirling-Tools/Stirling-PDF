@@ -27,7 +27,7 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   fileId: FileId; // Matches runtime StirlingFile.fileId exactly
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
-  thumbnailStoredAt?: number; // Epoch ms — sliding 30-day TTL
+  thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
 }
 
@@ -67,7 +67,7 @@ class FileStorageService {
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () => reject(transaction.error);
 
-      // Issue all gets up front — each onsuccess creates a put before the
+      // Issue all gets up front - each onsuccess creates a put before the
       // transaction can auto-commit, keeping it alive until all puts settle.
       ids.forEach((id) => {
         const req = store.get(id);
@@ -219,7 +219,7 @@ class FileStorageService {
           return;
         }
 
-        // No per-id thumbnail TTL bump here — the bulk getAll/leaf paths
+        // No per-id thumbnail TTL bump here - the bulk getAll/leaf paths
         // already keep TTL fresh, and bumping on every single-id read
         // generated a writable transaction per call (write amplification).
         // We still gate thumbnailUrl on freshness so stale thumbnails
@@ -309,7 +309,7 @@ class FileStorageService {
           }
           cursor.continue();
         } else {
-          // Only open the writeback transaction when there's something to do —
+          // Only open the writeback transaction when there's something to do -
           // previously fired two empty transactions per refresh.
           if (tobump.length > 0) {
             void this.bumpThumbnailTTL(tobump).catch((e) =>

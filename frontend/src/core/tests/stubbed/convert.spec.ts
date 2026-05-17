@@ -1,7 +1,7 @@
 /**
  * End-to-End Tests for Convert Tool
  *
- * All backend API calls are mocked via page.route() — no real backend required.
+ * All backend API calls are mocked via page.route() - no real backend required.
  * The Vite dev server must be running (handled by playwright.config.ts webServer).
  */
 
@@ -24,7 +24,7 @@ async function dismissTourTooltip(page: Page) {
 
 // ---------------------------------------------------------------------------
 // Helper: upload a file via the FileSidebar's "Open from computer" action.
-// The button now triggers the native OS picker directly — no modal — and
+// The button now triggers the native OS picker directly - no modal - and
 // the hidden `data-testid="file-input"` accepts `setInputFiles` in either
 // sidebar state.
 // ---------------------------------------------------------------------------
@@ -142,12 +142,12 @@ test.describe("Convert Tool", () => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
 
-    // Before selecting TO format — button visible but disabled
+    // Before selecting TO format - button visible but disabled
     const convertBtn = page.getByTestId("convert-button");
     await expect(convertBtn).toBeVisible({ timeout: 3000 });
     await expect(convertBtn).toBeDisabled();
 
-    // After selecting PNG as TO format — button enabled
+    // After selecting PNG as TO format - button enabled
     await selectToFormat(page, "png");
     await expect(convertBtn).toBeEnabled({ timeout: 3000 });
   });

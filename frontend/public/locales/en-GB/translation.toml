@@ -1467,7 +1467,7 @@ settingsOverview = "This is the <strong>Settings Panel</strong>. Admin settings 
 systemCustomization = "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users."
 teamsAndUsers = "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself."
 welcome = "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators."
-wrapUp = "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
+wrapUp = "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
 
 [adminUserSettings]
 actions = "Actions"
@@ -1525,7 +1525,7 @@ comment = "Comment"
 comments = "Comments"
 contents = "Text"
 delete = "Delete"
-desc = "Use highlight, pen, text, and notes. Changes stay live—no flattening required."
+desc = "Use highlight, pen, text, and notes. Changes stay live-no flattening required."
 drawing = "Drawing"
 duplicate = "Duplicate"
 editCircle = "Edit Circle"
@@ -2089,9 +2089,9 @@ placeholder = "Number of pages"
 title = "Last N Pages"
 
 [bulkSelection.operators]
-and = "AND: & or \"and\" — require both conditions (e.g., 1-50 & even)"
-comma = "Comma: , or | — combine selections (e.g., 1-10, 20)"
-not = "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
 text = "AND has higher precedence than comma. NOT applies within the document range."
 title = "Operators"
 
@@ -3191,7 +3191,7 @@ showPreferencesBtn = "Manage preferences"
 title = "How we use Cookies"
 
 [cookieBanner.popUp.description]
-1 = "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love."
+1 = "We use cookies and other technologies to make Stirling PDF work better for you-helping us improve our tools and keep building features you'll love."
 2 = "If you'd rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
 
 [cookieBanner.preferencesModal]
@@ -3204,16 +3204,16 @@ subtitle = "Cookie Usage"
 title = "Consent Preferences Center"
 
 [cookieBanner.preferencesModal.analytics]
-description = "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with."
+description = "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured-Stirling PDF cannot and will never track the content of the documents you work with."
 title = "Analytics"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF uses cookies and similar technologies to enhance your experience and understand how our tools are used. This helps us improve performance, develop the features you care about, and provide ongoing support to our users."
-2 = "Stirling PDF cannot—and will never—track or access the content of the documents you use."
+2 = "Stirling PDF cannot-and will never-track or access the content of the documents you use."
 3 = "Your privacy and trust are at the core of what we do."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can't be turned off."
+description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms-which is why they can't be turned off."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Strictly Necessary Cookies"
@@ -3810,7 +3810,7 @@ inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
 loading = "Loading…"
-localFoldersUnavailable = "Folders are cloud-only — save a file to the cloud to organise it."
+localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organise it."
 moveLocalToCloudBlocked = "Local-only files can't be moved into cloud folders. Save them to the cloud first."
 moveSkippedRemote = "{{count}} file(s) couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Move to…"
@@ -3818,8 +3818,7 @@ myFiles = "My Files"
 newFolder = "New folder"
 newFolderTabUnavailable = "Switch to All or Cloud to create folders."
 newRootFolder = "New folder at root"
-offlineBanner = "Working offline — folder changes are disabled until reconnected."
-offlineNoFolderEdits = "Offline — folder changes are disabled."
+offlineNoFolderEdits = "Offline - folder changes are disabled."
 open = "Open"
 openInWorkbench = "Open in workbench"
 originFilter = "Filter by source"
@@ -5054,7 +5053,7 @@ toolInterface = "This is the <strong>Crop</strong> tool interface. As you can se
 viewer = "The <strong>Viewer</strong> lets you read and annotate your PDFs."
 viewSwitcher = "Use these controls to select how you want to view your PDFs."
 workbench = "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs."
-wrapUp = "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
+wrapUp = "You're all set! You can replay this tour anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
 
 [onboarding.buttons]
 back = "Back"
@@ -5394,9 +5393,9 @@ description = "Use n in formulas for patterns."
 title = "Mathematical Functions"
 
 [pageSelection.tooltip.operators]
-and = "AND: & or \"and\" — require both conditions (e.g., 1-50 & even)"
-comma = "Comma: , or | — combine selections (e.g., 1-10, 20)"
-not = "NOT: ! or \"not\" — exclude pages (e.g., 3n & not 30)"
+and = "AND: & or \"and\" - require both conditions (e.g., 1-50 & even)"
+comma = "Comma: , or | - combine selections (e.g., 1-10, 20)"
+not = "NOT: ! or \"not\" - exclude pages (e.g., 3n & not 30)"
 text = "AND has higher precedence than comma. NOT applies within the document range."
 title = "Operators"
 
@@ -5584,7 +5583,7 @@ modified = "Edited"
 unsaved = "Edited"
 
 [pdfTextEditor.disclaimer]
-alpha = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+alpha = "This alpha viewer is still evolving-certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 heading = "Preview Limitations"
 previewVariance = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
 textFocus = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
@@ -5662,7 +5661,7 @@ paragraph = "Paragraph page"
 sparse = "Sparse text"
 
 [pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
+text = "This alpha viewer is still evolving-certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 title = "Alpha Viewer"
 
 [pdfTextEditor.tooltip.header]
@@ -6857,7 +6856,7 @@ useCase2 = "Split flatbed batches into separate files"
 useCase3 = "Break collages into individual photos"
 useCase4 = "Pull photos from documents"
 whatThisDoes = "What this does"
-whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping."
+whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
 whenToUse = "When to use"
 
 [search]
@@ -8354,8 +8353,8 @@ csvStats = "{{rows}} rows · {{columns}} columns · {{size}}"
 emptyFile = "Empty file"
 fileTypeBadge = "{{type}} File"
 htmlPreview = "HTML preview"
-htmlPreviewWarning = "HTML preview — external resources may not load · {{size}}"
-invalidJson = "Invalid JSON — showing raw content"
+htmlPreviewWarning = "HTML preview - external resources may not load · {{size}}"
+invalidJson = "Invalid JSON - showing raw content"
 lineNumbers = "Line numbers"
 loading = "Loading..."
 renderMarkdown = "Render markdown"

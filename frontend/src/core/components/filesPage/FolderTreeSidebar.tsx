@@ -37,7 +37,7 @@ interface FolderTreeSidebarProps {
   /**
    * Move the *dragged* files (from the drop payload) into the target folder.
    * Earlier signature took only the folder id and the parent then used the
-   * current selection — which silently moved the wrong files whenever the
+   * current selection - which silently moved the wrong files whenever the
    * user dragged something that wasn't in the selection.
    */
   onMoveFilesIntoFolder: (
@@ -45,7 +45,7 @@ interface FolderTreeSidebarProps {
     fileIds: FileId[],
   ) => Promise<void> | void;
   /**
-   * When true, render only the tree list — skip the wrapping <aside>
+   * When true, render only the tree list - skip the wrapping <aside>
    * chrome and the inline header. Useful when the consumer already
    * provides those (e.g. FolderTreePanel).
    */
@@ -77,7 +77,7 @@ export function FolderTreeSidebar({
           (currentTab === "all" || currentTab === "cloud")
         }
         onSelect={() => {
-          // Picking the root re-enters the cloud bucket — also switch out
+          // Picking the root re-enters the cloud bucket - also switch out
           // of any virtual tab so the user lands somewhere consistent.
           if (currentTab !== "all" && currentTab !== "cloud") {
             setCurrentTab("all");
@@ -211,7 +211,7 @@ interface LocalRowProps {
 /**
  * Pinned pseudo-folder row that selects the Local tab. Local files don't
  * belong to a folder (folders are a cloud concept) so this row is not a
- * drop target and has no count badge — the Local view scopes by predicate
+ * drop target and has no count badge - the Local view scopes by predicate
  * (`remoteStorageId == null`), not by folderId.
  */
 function LocalRow({ isActive, onSelect }: LocalRowProps) {
@@ -275,7 +275,7 @@ function TreeNodeRow({
   const { currentTab } = useFilesPage();
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
-    "Offline — folder changes are disabled.",
+    "Offline - folder changes are disabled.",
   );
   const [open, setOpen] = useState(true);
 
@@ -297,7 +297,7 @@ function TreeNodeRow({
       const payload = parseFilesPageDragPayload(e.dataTransfer);
       if (!payload) return;
       if (payload.kind === "files") {
-        // Use payload.fileIds — not the current selection — so dragging a
+        // Use payload.fileIds - not the current selection - so dragging a
         // non-selected file moves *that* file. Surface failures via the
         // shared error banner rather than letting them become unhandled
         // rejections that only the dev console sees.

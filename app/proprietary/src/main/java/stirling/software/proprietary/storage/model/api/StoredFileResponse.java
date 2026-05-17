@@ -26,7 +26,7 @@ public class StoredFileResponse {
 
     /**
      * Optional folder placement (Phase A). Null when the file lives at the root or when the server
-     * build doesn't have the folders feature enabled — existing clients should treat null as root.
+     * build doesn't have the folders feature enabled - existing clients should treat null as root.
      */
     private final UUID folderId;
 }

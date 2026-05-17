@@ -20,14 +20,14 @@ interface ServerFolder {
   color: string | null;
   icon: string | null;
   version: number | null;
-  // ISO timestamps — older server builds occasionally send `null` when
+  // ISO timestamps - older server builds occasionally send `null` when
   // the entity hasn't been flushed; we defend against that in parseTimestamp.
   createdAt: string | null;
   updatedAt: string | null;
 }
 
 function parseTimestamp(value: string | null | undefined, field: string): number {
-  // Tolerate null/missing — older server builds may serialise pre-flush
+  // Tolerate null/missing - older server builds may serialise pre-flush
   // timestamps as null. Log a warning so a real schema drift still gets
   // attention, but fall back to "now" rather than failing the whole pull.
   if (value == null || value === "") {
@@ -44,7 +44,7 @@ function parseTimestamp(value: string | null | undefined, field: string): number
 }
 
 function toFolderRecord(dto: ServerFolder): FolderRecord {
-  // Validate at the trust boundary — server may have a bug or contract drift.
+  // Validate at the trust boundary - server may have a bug or contract drift.
   // parseFolderId throws if `dto.id` isn't a UUID; better a loud failure than
   // a corrupt local cache.
   const id = parseFolderId(dto.id);
@@ -118,7 +118,7 @@ export const folderSyncService = {
     const response = await apiClient.delete<{ removedFolderIds: string[] }>(
       `/api/v1/storage/folders/${id}`,
     );
-    // Validate at the trust boundary — same posture as toFolderRecord.
+    // Validate at the trust boundary - same posture as toFolderRecord.
     return (response.data?.removedFolderIds ?? []).map(parseFolderId);
   },
 

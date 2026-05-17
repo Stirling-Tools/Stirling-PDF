@@ -426,7 +426,7 @@ export default function WorkbenchBar({
           ))}
       </div>
 
-      {/* Tool buttons — second row, only rendered when buttons exist */}
+      {/* Tool buttons - second row, only rendered when buttons exist */}
       {sectionsWithButtons.length > 0 && (
         <div className="workbench-bar-center">
           {sectionsWithButtons.map(
@@ -448,7 +448,7 @@ export default function WorkbenchBar({
         </div>
       )}
 
-      {/* Right: Global buttons — export group left, close anchored right */}
+      {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
         {/* Print */}
         {currentView === "viewer" &&

@@ -115,7 +115,7 @@
   margin-left: auto;
 }
 
-/* Shared action icon style — applies to both center and global buttons */
+/* Shared action icon style - applies to both center and global buttons */
 .workbench-bar-action-icon {
   color: var(--text-secondary) !important;
   width: 28px !important;

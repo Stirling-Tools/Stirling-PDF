@@ -35,7 +35,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 /**
  * Folder placement endpoints for existing stored files. Sits alongside {@code
- * FileStorageController} so the original controller stays untouched — this controller exists only
+ * FileStorageController} so the original controller stays untouched - this controller exists only
  * to add Phase A folder support without risking the cert-signing or default file upload flows.
  */
 @RestController
@@ -45,7 +45,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 public class FileFolderPlacementController {
 
     /**
-     * Hard cap on bulk-move payload size. Beyond this we reject with 400 — guards against DoS via
+     * Hard cap on bulk-move payload size. Beyond this we reject with 400 - guards against DoS via
      * unbounded ID lists and bounds the single bulk-update query.
      */
     private static final int BULK_MOVE_MAX_FILES = 1000;
@@ -73,7 +73,7 @@ public class FileFolderPlacementController {
     }
 
     /**
-     * Bulk move — fewer round-trips than calling the single endpoint N times. Returns 200 on full
+     * Bulk move - fewer round-trips than calling the single endpoint N times. Returns 200 on full
      * success, 207 (Multi-Status) when some files were skipped (typically because they don't belong
      * to the caller).
      */

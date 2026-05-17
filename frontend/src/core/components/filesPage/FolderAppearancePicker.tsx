@@ -167,7 +167,7 @@ function IconButton({
           color: "var(--text-primary)",
         }}
       >
-        {icon.glyph || "—"}
+        {icon.glyph || "-"}
       </button>
     </Tooltip>
   );

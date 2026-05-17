@@ -1,5 +1,5 @@
 /**
- * FolderTreePanel — folder tree navigator rendered as a secondary panel
+ * FolderTreePanel - folder tree navigator rendered as a secondary panel
  * attached to the main FileSidebar. Slides in/out when My Files is active.
  *
  * Shares state with the main file grid via FilesPageContext.

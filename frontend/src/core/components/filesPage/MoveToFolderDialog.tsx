@@ -65,7 +65,7 @@ export function MoveToFolderDialog({
       );
     }
 
-    // Pre-order DFS — children appear directly under their parent.
+    // Pre-order DFS - children appear directly under their parent.
     const order: FolderRecord[] = [];
     const depths = new Map<FolderId, number>();
     const visit = (parent: FolderId | null, depth: number) => {

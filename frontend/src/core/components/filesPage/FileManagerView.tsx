@@ -154,7 +154,7 @@ export default function FileManagerView() {
   // ─── visible items (current folder + sort + search) ─────────────────────
 
   /**
-   * Set of folder IDs in the subtree rooted at currentFolderId — that is,
+   * Set of folder IDs in the subtree rooted at currentFolderId - that is,
    * currentFolderId itself plus every descendant. Used to widen search
    * results to include subfolder hits without changing the no-search
    * navigation behaviour (where only direct children appear).
@@ -171,7 +171,7 @@ export default function FileManagerView() {
       list.push(f.id);
       childMap.set(f.parentFolderId, list);
     }
-    // Iterative DFS — recursive form risked a stack overflow on a deeply
+    // Iterative DFS - recursive form risked a stack overflow on a deeply
     // nested chain a user could create.
     const stack: (FolderId | null)[] = [currentFolderId];
     while (stack.length > 0) {
@@ -188,7 +188,7 @@ export default function FileManagerView() {
   const visibleFolders = useMemo(
     () => {
       // Folders only appear in cloud-rooted tabs. Local / Recent / Shared
-      // tabs are flat file views — showing cloud folders there would be
+      // tabs are flat file views - showing cloud folders there would be
       // confusing (the user clicked Local to escape folders).
       if (
         currentTab === "local" ||
@@ -220,11 +220,11 @@ export default function FileManagerView() {
   );
 
   // Files in the current folder (before search/origin/type filtering). Used
-  // to compute the *available* file-type list for the dropdown — that way
+  // to compute the *available* file-type list for the dropdown - that way
   // the dropdown shows what's actually here rather than every type we've
   // ever seen.
   const filesInCurrentFolder = useMemo(() => {
-    // Tab takes precedence — folders are a cloud-only concept; the tabs
+    // Tab takes precedence - folders are a cloud-only concept; the tabs
     // override navigation when the user is in Local/Recent/Shared.
     switch (currentTab) {
       case "local":
@@ -402,7 +402,7 @@ export default function FileManagerView() {
           else next.add(fileId);
         } else {
           // Plain click toggles when the file is already the *only*
-          // selected one — matches Finder/Explorer behaviour. Otherwise
+          // selected one - matches Finder/Explorer behaviour. Otherwise
           // it collapses the selection to just this file.
           const isSoleSelection = prev.size === 1 && prev.has(fileId);
           next.clear();
@@ -440,7 +440,7 @@ export default function FileManagerView() {
       const target = currentFolderId;
       // Newly-uploaded files are local-only (no remoteStorageId yet). The
       // BaseFileMetadata invariant requires folderId == null for local files,
-      // so we MUST NOT set folderId to a cloud folder here — that would put
+      // so we MUST NOT set folderId to a cloud folder here - that would put
       // the file in two tabs at once (Local view by remoteStorageId predicate
       // AND the cloud folder by folderId match). Drop them at root; the
       // (future) save-to-cloud action is the right place to choose a folder.
@@ -476,10 +476,10 @@ export default function FileManagerView() {
   // ─── add to workspace vs quick view ─────────────────────────────────────
   //
   // The two actions look similar but have different intent:
-  //   addToWorkspace — user is committing these files to the workspace so
-  //     they can run tools on them. No back-to-files affordance — they
+  //   addToWorkspace - user is committing these files to the workspace so
+  //     they can run tools on them. No back-to-files affordance - they
   //     came here to work, not to peek.
-  //   quickView — user is taking a quick look at one file. A "Back to My
+  //   quickView - user is taking a quick look at one file. A "Back to My
   //     Files" pill appears in the WorkbenchBar so they can return without
   //     navigating manually.
   const openFilesInWorkbench = useCallback(
@@ -545,7 +545,7 @@ export default function FileManagerView() {
 
   const handleOpenFile = useCallback(
     (file: StirlingFileStub) => {
-      // Double-clicking a file is the "commit" action — drop the file
+      // Double-clicking a file is the "commit" action - drop the file
       // straight into the workspace, same as the Add-to-workspace button.
       void handleAddToWorkspace([file.id]);
     },
@@ -616,7 +616,7 @@ export default function FileManagerView() {
 
   // ─── close / exit ───────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
-    // User explicitly left My Files without opening a file — drop the
+    // User explicitly left My Files without opening a file - drop the
     // return-route hint so the workbench doesn't show a stale back button.
     clearFilesPageReturnRoute();
     navigate("/");
@@ -633,14 +633,14 @@ export default function FileManagerView() {
           active.tagName === "TEXTAREA" ||
           active.isContentEditable);
 
-      // Cmd/Ctrl + A — select every visible file in the current folder.
+      // Cmd/Ctrl + A - select every visible file in the current folder.
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a" && !inInput) {
         e.preventDefault();
         setSelectedFileIds(new Set(visibleFiles.map((f) => f.id)));
         return;
       }
 
-      // Delete / Backspace — remove selected files.
+      // Delete / Backspace - remove selected files.
       if (
         (e.key === "Delete" || e.key === "Backspace") &&
         !inInput &&
@@ -685,7 +685,7 @@ export default function FileManagerView() {
         if ((overlay as HTMLElement).offsetWidth > 0) return;
       }
       // Esc-once cancels the selection rather than closing the
-      // workbench — keeps users from accidentally losing their place.
+      // workbench - keeps users from accidentally losing their place.
       if (selectedFileIds.size > 0) {
         clearSelection();
         return;
@@ -717,7 +717,7 @@ export default function FileManagerView() {
   return (
     <div className="files-page" ref={dropZoneRef}>
       <header className="files-page-header">
-        {/* Single Back affordance — was previously a Home + Tools + Close
+        {/* Single Back affordance - was previously a Home + Tools + Close
             trio that all did the same handleClose action. Mobile gets the
             same button (no data-mobile-hide) since the bottom bar nav is
             the only other way out. */}
@@ -730,7 +730,7 @@ export default function FileManagerView() {
           {t("filesPage.back", "Back")}
         </Button>
         {/* Breadcrumb only makes sense when the view is folder-rooted.
-            Local / Recent / Shared are flat virtual buckets — showing
+            Local / Recent / Shared are flat virtual buckets - showing
             a stale folder path here would mislead the user about where
             they actually are. */}
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
@@ -773,7 +773,7 @@ export default function FileManagerView() {
                 try {
                   // pullFromServer bumps the folder revision, which the
                   // FolderProvider's effect reacts to by re-running
-                  // refresh() — no need to await folders.refresh() manually.
+                  // refresh() - no need to await folders.refresh() manually.
                   const result = await folders.pullFromServer();
                   if (!result.ok && result.reason !== "endpoint-missing") {
                     folders.setError(
@@ -808,7 +808,7 @@ export default function FileManagerView() {
               currentTab === "local"
                 ? t(
                     "filesPage.localFoldersUnavailable",
-                    "Folders are cloud-only — save a file to the cloud to organise it.",
+                    "Folders are cloud-only - save a file to the cloud to organise it.",
                   )
                 : currentTab === "recent" || currentTab === "shared"
                   ? t(
@@ -818,7 +818,7 @@ export default function FileManagerView() {
                   : !folders.serverReachable
                     ? t(
                         "filesPage.offlineNoFolderEdits",
-                        "Offline — folder changes are disabled.",
+                        "Offline - folder changes are disabled.",
                       )
                     : null;
             const button = (
@@ -841,7 +841,7 @@ export default function FileManagerView() {
                 withinPortal
               >
                 {/* Mantine disables tooltip pointer events on disabled
-                    children — wrap so the tooltip still fires on hover. */}
+                    children - wrap so the tooltip still fires on hover. */}
                 {newFolderDisabledReason ? (
                   <span style={{ display: "inline-flex" }}>{button}</span>
                 ) : (
@@ -896,30 +896,10 @@ export default function FileManagerView() {
         </div>
       )}
 
-      {!folders.serverReachable && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            padding: "0.45rem 1.25rem",
-            background:
-              "color-mix(in srgb, var(--mantine-color-yellow-6, #fab005) 14%, transparent)",
-            color: "var(--text-primary)",
-            borderBottom: "1px solid var(--border-subtle)",
-            fontSize: "0.8rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          <span>
-            {t(
-              "filesPage.offlineBanner",
-              "Working offline — folder changes are disabled until reconnected.",
-            )}
-          </span>
-        </div>
-      )}
+      {/* No offline banner: when the folder API is unreachable the user
+          still sees their cached local files (the IDB read survives), and
+          folder-mutation controls are individually disabled with their own
+          tooltips. Banner removed per UX feedback. */}
 
       <div className="files-page-body">
         <main className="files-page-main">
@@ -929,11 +909,11 @@ export default function FileManagerView() {
               Keyboard model follows WAI-ARIA Tabs: roving tabindex + arrow
               keys to move + Home/End to jump. */}
           {(() => {
-            // Compact tab strip — used as a quick view filter. The tree on
+            // Compact tab strip - used as a quick view filter. The tree on
             // the left has the same Local pinned row, so this is intentional
             // redundancy for users who reach for the toolbar instead of the
             // tree. Kept low-key so it doesn't compete with primary actions.
-            // Local and Cloud removed — the pinned "Local" row in the tree
+            // Local and Cloud removed - the pinned "Local" row in the tree
             // sidebar covers Local, and the default "All" view already shows
             // cloud folders. Recent + Shared remain as virtual-bucket filters.
             const TAB_DEFS = [
@@ -1440,7 +1420,7 @@ function Breadcrumbs() {
                 if (payload.kind === "files") {
                   // Route through moveFilesTo (→ IndexedDBContext.moveFilesToFolder)
                   // so the revision bumps and the grid refreshes. Surface
-                  // rejection via the banner — console-only was invisible
+                  // rejection via the banner - console-only was invisible
                   // to non-dev users.
                   void filesPage
                     .moveFilesTo(payload.fileIds, entry.id)

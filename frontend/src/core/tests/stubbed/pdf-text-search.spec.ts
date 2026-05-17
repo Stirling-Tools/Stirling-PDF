@@ -9,7 +9,7 @@ const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
  * and accepts a query catches the most damaging regression (search bar
  * disappears when reader refactors).
  */
-test.describe("Reader — in-document text search", () => {
+test.describe("Reader - in-document text search", () => {
   test("search input is reachable from the reader and accepts a query", async ({
     page,
   }) => {
@@ -17,7 +17,7 @@ test.describe("Reader — in-document text search", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Upload a PDF first so the reader has content. `files-button` now
-    // triggers the native picker directly — no modal flow involved.
+    // triggers the native picker directly - no modal flow involved.
     await page.getByTestId("files-button").click();
     await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
 

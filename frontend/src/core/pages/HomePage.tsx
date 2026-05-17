@@ -85,7 +85,7 @@ export default function HomePage() {
         actions.setWorkbench("myFiles");
       }
     } else if (navigationState.workbench === "myFiles") {
-      // Leaving the file manager — drop back to a sensible default.
+      // Leaving the file manager - drop back to a sensible default.
       actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
     }
   }, [location.pathname, navigationState.workbench, actions, activeFiles.length]);
@@ -118,7 +118,7 @@ export default function HomePage() {
     }
     prevWorkbenchRef.current = curr;
     // `fileSidebarCollapsed` is intentionally read as a snapshot at the
-    // moment of the entry transition only — re-running on every sidebar
+    // moment of the entry transition only - re-running on every sidebar
     // toggle would clobber the snapshot we just captured.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigationState.workbench]);
@@ -434,7 +434,7 @@ export default function HomePage() {
                 // While in My Files the FolderTreePanel already occupies
                 // the left rail. Expanding the FileSidebar on top would
                 // stack two panels, so the burger here acts as "leave
-                // My Files" — navigate back home. The FileSidebar's
+                // My Files" - navigate back home. The FileSidebar's
                 // auto-collapse effect will then restore its previous
                 // expanded state.
                 if (navigationState.workbench === "myFiles") {

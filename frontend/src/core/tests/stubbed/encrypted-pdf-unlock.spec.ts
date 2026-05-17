@@ -2,7 +2,7 @@
  * End-to-End Tests for Encrypted PDF Password Prompting
  *
  * Tests the EncryptedPdfUnlockModal flow when uploading password-protected PDFs.
- * All backend API calls are mocked via page.route() — no real backend required.
+ * All backend API calls are mocked via page.route() - no real backend required.
  *
  * Coverage trimmed to 5 high-value cases:
  *   1. Modal renders with the expected title/inputs/buttons.
@@ -14,7 +14,7 @@
  *
  * Removed previously: input-disabled-when-empty, input-enabled-after-fill,
  * skip-button-closes, normal-PDF-doesn't-prompt, single-file-hides-use-for-all,
- * unlock-all-wrong-password — all transitively covered or low-value.
+ * unlock-all-wrong-password - all transitively covered or low-value.
  */
 
 import { test, expect, type Page } from "@playwright/test";
@@ -64,7 +64,7 @@ function mockRemovePasswordWrongPassword(page: Page) {
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
-  // No modal flow — `files-button` triggers the native picker directly.
+  // No modal flow - `files-button` triggers the native picker directly.
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -154,7 +154,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await mockRemovePasswordSuccess(page);
 
     await page.getByTestId("files-button").click();
-    // No modal flow — `files-button` triggers the native picker directly.
+    // No modal flow - `files-button` triggers the native picker directly.
     await page.locator('[data-testid="file-input"]').setInputFiles([
       {
         name: "encrypted-a.pdf",
@@ -173,7 +173,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     // detected as encrypted. PDF.js encryption probing runs per-file and
     // can lag the modal opening (which fires as soon as the first file
     // surfaces a password prompt). A 10s timeout was occasionally too tight
-    // on heavily-loaded CI runners — bump to 20s.
+    // on heavily-loaded CI runners - bump to 20s.
     const unlockAllBtn = page.getByRole("button", { name: /Use for all/ });
     await expect(unlockAllBtn).toBeVisible({ timeout: 20000 });
 

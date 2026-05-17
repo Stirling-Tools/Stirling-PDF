@@ -8,8 +8,8 @@
      edge rather than the content shrinking.
    - Inner content separately fades + nudges in for an attentive feel.
 
-   Styled to mirror the main FileSidebar — same toolbar background, same
-   section-header treatment, same icon weight — so the two read as one
+   Styled to mirror the main FileSidebar - same toolbar background, same
+   section-header treatment, same icon weight - so the two read as one
    unified surface. */
 
 .folder-tree-panel {
@@ -47,7 +47,7 @@
   transition-delay: 0.04s;
 }
 
-/* Section header — matches .file-sidebar-section-header in FileSidebar.css */
+/* Section header - matches .file-sidebar-section-header in FileSidebar.css */
 .folder-tree-panel-header {
   display: flex;
   align-items: center;
@@ -65,7 +65,7 @@
   text-transform: uppercase;
 }
 
-/* Tree rows — mirror .file-sidebar-action-row from FileSidebar.css so the
+/* Tree rows - mirror .file-sidebar-action-row from FileSidebar.css so the
    slide-out folder navigator reads as a continuation of the main sidebar's
    design language. Same row height, padding, font weight, muted icon
    treatment. The hover/active state uses the same --hover-bg pill that

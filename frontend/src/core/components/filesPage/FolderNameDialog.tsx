@@ -44,7 +44,7 @@ export function FolderNameDialog({
     } catch (err) {
       // Keep dialog open so the user can retry. Closing on error was a
       // silent failure (the dialog vanished, but the folder was never
-      // created — user thinks success, sees no folder).
+      // created - user thinks success, sees no folder).
       setError(
         err instanceof Error
           ? err.message

@@ -39,7 +39,7 @@ export interface FilesPageEntry {
   file?: StirlingFileStub;
   /**
    * Pretty path of the parent folder relative to the current view. Set only
-   * for search results that live outside the current folder — gives the user
+   * for search results that live outside the current folder - gives the user
    * "where does this hit actually live?" without a navigation. Empty/undefined
    * for items that ARE in the current folder.
    */
@@ -49,7 +49,7 @@ export interface FilesPageEntry {
 interface FileGridProps {
   entries: FilesPageEntry[];
   selectedFileIds: Set<FileId>;
-  /** Ids of files already loaded in the active workspace — shown with
+  /** Ids of files already loaded in the active workspace - shown with
    *  an "Open" indicator so the user can tell at a glance which files
    *  they're already using. Passed as a Set<string> because FileIds
    *  are branded strings and Set lookup needs a stable hash. */
@@ -62,9 +62,9 @@ interface FileGridProps {
    */
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
-  /** "Add to workspace" — committed open, no back affordance. */
+  /** "Add to workspace" - committed open, no back affordance. */
   onOpenFile: (file: StirlingFileStub) => void;
-  /** "Quick view" — peek with a back-to-folder affordance. */
+  /** "Quick view" - peek with a back-to-folder affordance. */
   onQuickView: (file: StirlingFileStub) => void;
   onMoveFiles: (
     fileIds: FileId[],
@@ -82,13 +82,13 @@ interface FileGridProps {
   ) => void;
   onRemoveFiles: (fileIds: FileId[]) => void;
   onPromptMoveFiles: (fileIds: FileId[]) => void;
-  /** Optional — when supplied the list-view column headers become
+  /** Optional - when supplied the list-view column headers become
    *  sortable. */
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
   currentTab?: "all" | "local" | "cloud" | "recent" | "shared";
-  /** Cloud reachability — switches the cloud empty state between
+  /** Cloud reachability - switches the cloud empty state between
    *  "no files yet" and "no cached cloud files". */
   serverReachable?: boolean;
 }
@@ -113,7 +113,7 @@ export function FileGrid(
 }
 
 function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
-  // Six rectangular placeholders that mirror the card layout — gives a
+  // Six rectangular placeholders that mirror the card layout - gives a
   // sense of "loading rhythm" rather than a blank panel while IndexedDB
   // resolves.
   const placeholders = Array.from({ length: 6 });
@@ -329,7 +329,7 @@ function FolderCard({
   const { serverReachable, setError } = useFolders();
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
-    "Offline — folder changes are disabled.",
+    "Offline - folder changes are disabled.",
   );
   const surfaceDrop = (err: unknown, label: string) => {
     console.error(`[FolderCard] ${label}`, err);
@@ -559,7 +559,7 @@ function FileCard({
           checked={isSelected}
           onClick={(e) => {
             // The checkbox always means "toggle this file in/out of the
-            // selection" — even without a modifier. Synthesise a click
+            // selection" - even without a modifier. Synthesise a click
             // event with ctrl held so the parent handler takes the
             // toggle branch instead of replacing the selection.
             e.stopPropagation();
@@ -694,7 +694,7 @@ function ListView({
 }) {
   const { t } = useTranslation();
 
-  // Tri-state header checkbox state — computed from current entries.
+  // Tri-state header checkbox state - computed from current entries.
   const visibleFileIds = useMemo(
     () =>
       entries
@@ -859,7 +859,7 @@ function FolderRow({
   const { serverReachable, setError } = useFolders();
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
-    "Offline — folder changes are disabled.",
+    "Offline - folder changes are disabled.",
   );
   const surfaceDrop = (err: unknown, label: string) => {
     console.error(`[FolderRow] ${label}`, err);
@@ -944,7 +944,7 @@ function FolderRow({
       <span>{t("filesPage.folder", "Folder")}</span>
       <span>
         {fileCount === 0
-          ? "—"
+          ? "-"
           : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
       </span>
       <span>{getFileDate({ lastModified: folder.updatedAt })}</span>

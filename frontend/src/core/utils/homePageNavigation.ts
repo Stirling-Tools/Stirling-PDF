@@ -19,7 +19,7 @@ export function getStartupNavigationAction(
     return null;
   }
 
-  // The user is browsing their file library — don't auto-switch them out of
+  // The user is browsing their file library - don't auto-switch them out of
   // the file manager just because a new upload landed.
   if (currentWorkbench === "myFiles") {
     return null;

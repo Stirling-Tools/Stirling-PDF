@@ -197,12 +197,12 @@ public class GlobalExceptionHandler {
     /**
      * Checks whether the given IOException indicates that the client disconnected before the
      * response could be written (broken pipe, connection reset, etc.). When this happens there is
-     * no point in serialising a {@link ProblemDetail} body because the socket is already closed —
+     * no point in serialising a {@link ProblemDetail} body because the socket is already closed -
      * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
      * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
      */
     private static boolean isClientDisconnectException(IOException ex) {
-        // Walk the causal chain — Jetty/Tomcat may wrap the low-level SocketException
+        // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
         Throwable current = ex;
         while (current != null) {
             String msg = current.getMessage();
@@ -1060,7 +1060,7 @@ public class GlobalExceptionHandler {
         problemDetail.setType(URI.create("/errors/" + status.value()));
         problemDetail.setTitle(status.getReasonPhrase());
         problemDetail.setProperty("title", status.getReasonPhrase());
-        // 5xx is operator-relevant; 4xx is a normal client-rejection — log at the right level.
+        // 5xx is operator-relevant; 4xx is a normal client-rejection - log at the right level.
         if (status.is5xxServerError()) {
             log.error(
                     "ResponseStatusException {} at {}: {}",

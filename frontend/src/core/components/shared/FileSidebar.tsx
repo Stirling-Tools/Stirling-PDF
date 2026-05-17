@@ -60,7 +60,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
-    // State (not ref) so setting it triggers a re-render — avoids racing addFiles state updates.
+    // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
     );
@@ -100,7 +100,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [stubsLoaded, setStubsLoaded] = useState(false);
 
     const refreshStubs = useCallback(async () => {
-      // Leaf files from IDB — same source as the file selection modal.
+      // Leaf files from IDB - same source as the file selection modal.
       const stubs = await indexedDB.loadLeafMetadata();
       const idbIds = new Set(stubs.map((s) => s.id as string));
 
@@ -202,7 +202,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           }
           await fileActions.removeFiles([workbenchFileId], false);
         } else {
-          // Re-add by stub to preserve its ID — addFiles() would create a new UUID + IDB entry.
+          // Re-add by stub to preserve its ID - addFiles() would create a new UUID + IDB entry.
           const workbenchCount = state.files.ids.length;
 
           if (workbenchCount > 0 && currentWorkbench === "viewer") {
@@ -238,7 +238,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       ],
     );
 
-    // Which file is currently open in the viewer — stable ID, never index-derived.
+    // Which file is currently open in the viewer - stable ID, never index-derived.
     const viewedWorkbenchId =
       currentWorkbench === "viewer" ? activeFileId : null;
 
@@ -253,12 +253,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         );
 
         if (isCurrentlyViewed) {
-          // Closing the currently-viewed file — guard against unsaved changes.
+          // Closing the currently-viewed file - guard against unsaved changes.
           navActions.setWorkbench("fileEditor");
           return;
         }
 
-        // Switching to a different file while viewer is open — guard against unsaved changes.
+        // Switching to a different file while viewer is open - guard against unsaved changes.
         const performSwitch = async () => {
           const alreadyInWorkbench = state.files.ids.some(
             (id) => (id as string) === (stub.id as string),
@@ -304,7 +304,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // the attribute). Filter at the boundary so non-PDF files don't end
         // up in IndexedDB / sent to PDF-only tools that would silently fail
         // downstream. Allow files whose MIME starts with `application/pdf`
-        // OR whose extension is .pdf — some browsers omit the MIME for
+        // OR whose extension is .pdf - some browsers omit the MIME for
         // local files.
         const isPdf = (f: File) =>
           f.type.toLowerCase().startsWith("application/pdf") ||
@@ -422,7 +422,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           {/* Scrollable content */}
           <div className="file-sidebar-scroll">
-            {/* Hidden native file input — kept outside the !collapsed gate so
+            {/* Hidden native file input - kept outside the !collapsed gate so
                 the "Open from computer" row below (always rendered) can fire
                 it in either sidebar state without a silent no-op. */}
             <input
@@ -439,7 +439,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               className="file-sidebar-action-row"
               // `files-button` is the long-standing upload entry-point
               // testid: click + setInputFiles on `file-input` above. Tour
-              // anchor lives here too — the tour now spotlights the native
+              // anchor lives here too - the tour now spotlights the native
               // picker shortcut rather than the old modal.
               data-testid="files-button"
               data-tour="files-button"
@@ -571,14 +571,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         (id) => (id as string) === (stub.id as string),
                       );
                       const isInWorkbench = !!workbenchFileId;
-                      // Both active and viewed-in-viewer are ID-based — never index-based.
+                      // Both active and viewed-in-viewer are ID-based - never index-based.
                       const isViewedInViewer = !!(
                         viewedWorkbenchId &&
                         viewedWorkbenchId === (stub.id as string)
                       );
                       const isActive = isViewedInViewer;
                       // In-memory thumbnail may be fresher than the IndexedDB stub.
-                      // Encrypted files never get a raster thumbnail — use undefined
+                      // Encrypted files never get a raster thumbnail - use undefined
                       // so the sidebar icon is shown instead of a stale canvas thumbnail.
                       const isEncryptedFile =
                         stub.processedFile?.isEncrypted === true;

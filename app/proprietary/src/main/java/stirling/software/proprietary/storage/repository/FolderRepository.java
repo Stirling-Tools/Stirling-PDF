@@ -22,7 +22,7 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
 
     /**
      * Clear the folder reference on every file currently inside any of the given folders. Used when
-     * a folder subtree is deleted — files fall back to the root rather than dangling.
+     * a folder subtree is deleted - files fall back to the root rather than dangling.
      *
      * <p>{@code flushAutomatically + clearAutomatically} forces Hibernate to flush any cached dirty
      * {@code StoredFile} entities before the bulk UPDATE runs, and clears the persistence context

@@ -25,7 +25,7 @@ import stirling.software.proprietary.storage.model.api.UpdateFolderRequest;
 import stirling.software.proprietary.storage.service.FolderService;
 
 /**
- * REST endpoints for user-owned folders. Phase A — no folder-level sharing yet (Phase 3).
+ * REST endpoints for user-owned folders. Phase A - no folder-level sharing yet (Phase 3).
  *
  * <p>All operations are scoped to the authenticated user; existing single-file storage endpoints in
  * {@link FileStorageController} are left alone so the cert-signing and standard upload flows are
@@ -47,7 +47,7 @@ public class FolderController {
     public ResponseEntity<FolderResponse> createFolder(
             @Valid @RequestBody CreateFolderRequest request) {
         FolderResponse response = folderService.createFolder(request);
-        // 201 Created with Location header — conventional REST. The idempotent re-return path
+        // 201 Created with Location header - conventional REST. The idempotent re-return path
         // (same id resubmitted) also lands here; treating it as 201 keeps wire semantics simple.
         return ResponseEntity.status(HttpStatus.CREATED)
                 .location(URI.create("/api/v1/storage/folders/" + response.id()))

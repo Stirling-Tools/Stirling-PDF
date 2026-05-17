@@ -39,7 +39,7 @@ export async function waitForModalClose(
 /**
  * Upload one or more files through the FileSidebar's "Open from computer"
  * action. The button is always rendered (collapsed or expanded sidebar) and
- * triggers the hidden `data-testid="file-input"` native picker directly —
+ * triggers the hidden `data-testid="file-input"` native picker directly -
  * there is no modal to wait for under the post-refactor design.
  *
  * `setInputFiles` doesn't await the input's async onChange (which writes to

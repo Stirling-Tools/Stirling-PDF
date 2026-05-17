@@ -43,7 +43,7 @@ test.describe("Encrypted PDF: unlock then merge", () => {
     ) {
       test.skip(
         true,
-        "Encrypted unlock modal not surfaced — fixture may not match this build",
+        "Encrypted unlock modal not surfaced - fixture may not match this build",
       );
       return;
     }

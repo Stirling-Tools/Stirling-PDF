@@ -104,7 +104,7 @@
 }
 
 /* ---- Scrollable content ---- */
-/* This is a flex column — action rows are fixed, only the file list scrolls */
+/* This is a flex column - action rows are fixed, only the file list scrolls */
 .file-sidebar-scroll {
   flex: 1;
   min-height: 0;

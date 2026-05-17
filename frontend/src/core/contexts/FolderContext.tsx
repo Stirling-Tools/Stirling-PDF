@@ -1,5 +1,5 @@
 /**
- * FolderContext — state management for the cloud folder hierarchy.
+ * FolderContext - state management for the cloud folder hierarchy.
  *
  * The server is the source of truth. This context maintains an in-memory copy
  * (sourced from a small IDB read-cache for instant first paint), and every
@@ -49,7 +49,7 @@ interface FolderContextValue {
 
   /**
    * Whether the most recent server round-trip succeeded. Used to gate folder
-   * mutation controls — when false, "New folder", rename, move, delete, and
+   * mutation controls - when false, "New folder", rename, move, delete, and
    * appearance picker should be disabled with an offline tooltip.
    */
   serverReachable: boolean;
@@ -205,7 +205,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
     void refresh();
   }, [refresh, folderRevision]);
 
-  // Single-flight guard — concurrent pullFromServer calls would race and the
+  // Single-flight guard - concurrent pullFromServer calls would race and the
   // last-resolving (often older) response would clobber the newer state.
   type PullResult = {
     ok: boolean;
@@ -223,7 +223,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         const status = (err as { response?: { status?: number } })?.response
           ?.status;
         if (status === 404) {
-          // Storage backend not deployed in this build — expected for
+          // Storage backend not deployed in this build - expected for
           // core-only.
           if (mountedRef.current) setServerReachable(false);
           return { ok: false, reason: "endpoint-missing" };
@@ -247,7 +247,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         await folderStorage.replaceAll(remote);
       } catch (cacheErr) {
         // The server response was good; only the local cache write failed.
-        // We still consider this an ok pull — render from in-memory state.
+        // We still consider this an ok pull - render from in-memory state.
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
@@ -266,7 +266,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
     }
   }, [bumpFolderRevision]);
 
-  // Pull from server on mount — the IDB cache is for instant paint only;
+  // Pull from server on mount - the IDB cache is for instant paint only;
   // we always reconcile with the server before letting the user mutate.
   useEffect(() => {
     void pullFromServer();
@@ -281,7 +281,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const tree = useMemo(() => buildTree(folders), [folders]);
 
   const breadcrumbs = useMemo<FolderBreadcrumbEntry[]>(() => {
-    // Root name is a placeholder — consumers should detect
+    // Root name is a placeholder - consumers should detect
     // `entry.id === ROOT_FOLDER_ID` and substitute their own translated label.
     const path: FolderBreadcrumbEntry[] = [
       { id: ROOT_FOLDER_ID, name: "All files" },
@@ -361,7 +361,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       try {
         await onSuccess(result);
       } catch (cacheErr) {
-        // The server is authoritative — a cache write failure must not be
+        // The server is authoritative - a cache write failure must not be
         // surfaced as if the operation failed. Log + leave the in-memory
         // state authoritative; next pullFromServer will re-seed the cache.
         console.warn(
@@ -572,7 +572,7 @@ export function useFolders(): FolderContextValue {
   return ctx;
 }
 
-/** Optional version — returns null when used outside the provider. */
+/** Optional version - returns null when used outside the provider. */
 export function useOptionalFolders(): FolderContextValue | null {
   return useContext(FolderContext);
 }

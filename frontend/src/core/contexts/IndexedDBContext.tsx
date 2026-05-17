@@ -59,7 +59,7 @@ interface IndexedDBContextValue {
   ) => Promise<FileId[]>;
   clearFolderForFiles: (folderIds: FolderId[]) => Promise<number>;
 
-  // Incremented after any write or delete — subscribe to trigger re-reads
+  // Incremented after any write or delete - subscribe to trigger re-reads
   revision: number;
   bumpRevision: () => void;
 }

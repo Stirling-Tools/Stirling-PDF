@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class CreateFolderRequest {
 
     /**
-     * Client-generated UUID — lets the caller round-trip the same id it stored locally. Optional;
+     * Client-generated UUID - lets the caller round-trip the same id it stored locally. Optional;
      * the server generates one when missing.
      */
     private UUID id;
@@ -27,14 +27,14 @@ public class CreateFolderRequest {
 
     private UUID parentFolderId;
 
-    /** Hex colour string (#rrggbb or #rrggbbaa) — matches the frontend palette format. */
+    /** Hex colour string (#rrggbb or #rrggbbaa) - matches the frontend palette format. */
     @Size(max = 32)
     @Pattern(
             regexp = "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$",
             message = "color must be a #RRGGBB or #RRGGBBAA hex value")
     private String color;
 
-    /** Icon identifier — lowercase alphanumerics, hyphens, underscores only. */
+    /** Icon identifier - lowercase alphanumerics, hyphens, underscores only. */
     @Size(max = 64)
     @Pattern(
             regexp = "^[a-z0-9_-]+$",

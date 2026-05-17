@@ -13,7 +13,7 @@ export const ROOT_FOLDER_ID: null = null;
 
 /**
  * UI sentinel for the pinned "Local" pseudo-folder. Never sent to the server,
- * never persisted to IndexedDB — only used as a `currentFolderId` value
+ * never persisted to IndexedDB - only used as a `currentFolderId` value
  * to scope the file grid to local-only files. The underlying data predicate
  * is `remoteStorageId == null`.
  */
@@ -40,7 +40,7 @@ export interface FolderRecord {
   id: FolderId;
   name: string;
   parentFolderId: FolderId | null;
-  /** Hex colour — either a palette member or any custom hex from a future picker. */
+  /** Hex colour - either a palette member or any custom hex from a future picker. */
   color?: string;
   icon?: string;
   createdAt: number;
@@ -48,7 +48,7 @@ export interface FolderRecord {
 }
 
 /**
- * Folder tree node — derived from FolderRecord[] for rendering the tree
+ * Folder tree node - derived from FolderRecord[] for rendering the tree
  * navigator. Children are ordered by name (case-insensitive).
  */
 export interface FolderTreeNode {
@@ -64,7 +64,7 @@ export interface FolderBreadcrumbEntry {
 }
 
 /**
- * Generic RFC-4122 UUID regex (case-insensitive). Accepts any valid UUID variant — server-side
+ * Generic RFC-4122 UUID regex (case-insensitive). Accepts any valid UUID variant - server-side
  * {@code UUID.randomUUID()} is v4 in practice, but other tools and tests may produce v1/v3/v5.
  * Being strict-v4-only here turned the {@code pullFromServer} merge into a silent skip whenever
  * a non-v4 id arrived.
@@ -84,7 +84,7 @@ export function createFolderId(): FolderId {
   if (typeof window !== "undefined" && window.crypto?.randomUUID) {
     return window.crypto.randomUUID() as FolderId;
   }
-  // Math.random fallback is non-cryptographic but acceptable here — these ids are
+  // Math.random fallback is non-cryptographic but acceptable here - these ids are
   // not used as security tokens, only as opaque local handles. The brand is the
   // contract; the entropy is best-effort.
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {

@@ -49,7 +49,7 @@ export function FileDetailsPanel({
     [selectedFileIds, fileMap],
   );
 
-  // Hooks must run unconditionally — declare state before the early return.
+  // Hooks must run unconditionally - declare state before the early return.
   const [downloading, setDownloading] = useState(false);
 
   if (files.length === 0) {
@@ -124,7 +124,7 @@ export function FileDetailsPanel({
               />
               <DetailField
                 label={t("filesPage.field.type", "Type")}
-                value={single.type || "—"}
+                value={single.type || "-"}
               />
               <DetailField
                 label={t("filesPage.field.modified", "Modified")}
@@ -135,7 +135,7 @@ export function FileDetailsPanel({
                 value={
                   single.createdAt
                     ? getFileDate({ lastModified: single.createdAt })
-                    : "—"
+                    : "-"
                 }
               />
               <DetailField

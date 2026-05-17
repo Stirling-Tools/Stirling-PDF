@@ -12,7 +12,7 @@ import React, { useId } from "react";
 interface FolderThumbnailProps {
   color?: string;
   fileCount?: number;
-  /** Visual scale — "thumb" for cards, "row" for list rows, "tree" for nav. */
+  /** Visual scale - "thumb" for cards, "row" for list rows, "tree" for nav. */
   size?: "thumb" | "row" | "tree";
   /** Optional glyph (emoji) overlaid in the centre of the front pocket. */
   iconGlyph?: string;
@@ -33,7 +33,7 @@ export function FolderThumbnail({
   const accent = color ?? "var(--accent-interactive, #6366f1)";
   const px = SIZE_PX[size];
   const showBadge = size === "thumb" && (fileCount ?? 0) > 0;
-  // Per-instance unique ids — `${color}` previously embedded `#` and CSS
+  // Per-instance unique ids - `${color}` previously embedded `#` and CSS
   // function syntax in the id, which broke `url(#...)` references (Safari
   // would parse the inner `#` as a new fragment start and the lookup
   // would miss entirely, leaving the folder shape unfilled).
@@ -67,7 +67,7 @@ export function FolderThumbnail({
           </linearGradient>
         </defs>
 
-        {/* Back panel — symmetric viewBox so the folder is visually
+        {/* Back panel - symmetric viewBox so the folder is visually
             centred (6px breathing room on every side). */}
         <path
           d="M4 12 Q4 6 10 6 H38 L46 14 H90 Q96 14 96 20 V68 Q96 74 90 74 H10 Q4 74 4 68 Z"
