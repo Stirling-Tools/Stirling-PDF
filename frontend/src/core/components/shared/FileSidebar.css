@@ -8,10 +8,9 @@
   height: 100%;
   position: relative;
   z-index: 10;
-  transition:
-    width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Animating width + min-width + max-width together can leave the flex layout
+     stuck on the pre-animation size in some browsers. Snap instead and rely
+     on the inner content fade for visual smoothness. */
   flex-shrink: 0;
 }
 
@@ -40,7 +39,7 @@
 /* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
 
 .file-sidebar-header:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-menu-icon {
@@ -70,7 +69,7 @@
 }
 
 .file-sidebar-search-row:not(.active):hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-search-icon {
@@ -140,7 +139,7 @@
 }
 
 .file-sidebar-action-row:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-action-icon {
@@ -171,7 +170,7 @@
 }
 
 .file-sidebar-cloud-row:not(.disabled):hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-cloud-row.disabled {
@@ -296,7 +295,7 @@
 }
 
 .file-sidebar-section-btn:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
   color: var(--text-primary);
 }
 
@@ -376,7 +375,7 @@
 }
 
 .file-sidebar-bottom-bar[role="button"]:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--hover-bg);
 }
 
 .file-sidebar-bottom-bar[role="button"]:focus-visible {

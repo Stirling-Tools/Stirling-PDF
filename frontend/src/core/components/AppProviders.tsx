@@ -32,6 +32,7 @@ import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import AppConfigLoader from "@app/components/shared/AppConfigLoader";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
+import { FolderProvider } from "@app/contexts/FolderContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -125,9 +126,10 @@ export function AppProviders({
                 enableUrlSync={true}
                 enablePersistence={true}
               >
-                <AppInitializer />
-                <BrandingAssetManager />
-                <ToolRegistryProvider>
+                <FolderProvider>
+                  <AppInitializer />
+                  <BrandingAssetManager />
+                  <ToolRegistryProvider>
                   <NavigationProvider>
                     <FilesModalProvider>
                       <ToolWorkflowProvider>
@@ -157,7 +159,8 @@ export function AppProviders({
                       </ToolWorkflowProvider>
                     </FilesModalProvider>
                   </NavigationProvider>
-                </ToolRegistryProvider>
+                  </ToolRegistryProvider>
+                </FolderProvider>
               </FileContextProvider>
             </AppConfigProvider>
           </BannerProvider>

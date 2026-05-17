@@ -7,11 +7,13 @@ import React, {
   createContext,
   useContext,
   useCallback,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId } from "@app/types/file";
+import { FolderId } from "@app/types/folder";
 import {
   StirlingFileStub,
   createStirlingFile,
@@ -20,6 +22,9 @@ import {
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 
 const DEBUG = process.env.NODE_ENV === "development";
+
+/** LRU cap for the in-memory file blob cache. Module-scoped so it isn't recreated each render. */
+const MAX_CACHE_SIZE = 50;
 
 interface IndexedDBContextValue {
   // Core CRUD operations
@@ -47,6 +52,13 @@ interface IndexedDBContextValue {
   updateThumbnail: (fileId: FileId, thumbnail: string) => Promise<boolean>;
   markFileAsProcessed: (fileId: FileId) => Promise<boolean>;
 
+  // Folder operations
+  moveFilesToFolder: (
+    fileIds: FileId[],
+    folderId: FolderId | null,
+  ) => Promise<FileId[]>;
+  clearFolderForFiles: (folderIds: FolderId[]) => Promise<number>;
+
   // Incremented after any write or delete — subscribe to trigger re-reads
   revision: number;
   bumpRevision: () => void;
@@ -66,7 +78,6 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   const fileCache = useRef(
     new Map<FileId, { file: File; lastAccessed: number }>(),
   );
-  const MAX_CACHE_SIZE = 50; // Maximum number of files to cache
 
   // LRU cache management
   const evictLRUEntries = useCallback(() => {
@@ -242,21 +253,65 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     [bumpRevision],
   );
 
-  const value: IndexedDBContextValue = {
-    saveFile,
-    loadFile,
-    loadMetadata,
-    deleteFile,
-    loadAllMetadata,
-    loadLeafMetadata,
-    deleteMultiple,
-    clearAll,
-    getStorageStats,
-    updateThumbnail,
-    markFileAsProcessed,
-    revision,
-    bumpRevision,
-  };
+  const moveFilesToFolder = useCallback(
+    async (
+      fileIds: FileId[],
+      folderId: FolderId | null,
+    ): Promise<FileId[]> => {
+      const updated = await fileStorage.moveFilesToFolder(fileIds, folderId);
+      if (updated.length > 0) bumpRevision();
+      return updated;
+    },
+    [bumpRevision],
+  );
+
+  const clearFolderForFiles = useCallback(
+    async (folderIds: FolderId[]): Promise<number> => {
+      const cleared = await fileStorage.clearFolderForFiles(folderIds);
+      if (cleared > 0) bumpRevision();
+      return cleared;
+    },
+    [bumpRevision],
+  );
+
+  // Memoise so identity-based context propagation doesn't re-render every
+  // downstream consumer on each parent render.
+  const value = useMemo<IndexedDBContextValue>(
+    () => ({
+      saveFile,
+      loadFile,
+      loadMetadata,
+      deleteFile,
+      loadAllMetadata,
+      loadLeafMetadata,
+      deleteMultiple,
+      clearAll,
+      getStorageStats,
+      updateThumbnail,
+      markFileAsProcessed,
+      moveFilesToFolder,
+      clearFolderForFiles,
+      revision,
+      bumpRevision,
+    }),
+    [
+      saveFile,
+      loadFile,
+      loadMetadata,
+      deleteFile,
+      loadAllMetadata,
+      loadLeafMetadata,
+      deleteMultiple,
+      clearAll,
+      getStorageStats,
+      updateThumbnail,
+      markFileAsProcessed,
+      moveFilesToFolder,
+      clearFolderForFiles,
+      revision,
+      bumpRevision,
+    ],
+  );
 
   return (
     <IndexedDBContext.Provider value={value}>

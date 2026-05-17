@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -1040,6 +1041,43 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with appropriate HTTP status
      */
+    /**
+     * Handle ResponseStatusException explicitly so its embedded HTTP status reaches the client
+     * instead of being swallowed by the {@code RuntimeException} catch-all (which would downgrade
+     * every controller-thrown 400/404/409 to a generic 500). Folder/file storage controllers and
+     * any other code that throws {@code ResponseStatusException} relies on this handler taking
+     * precedence.
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ProblemDetail> handleResponseStatusException(
+            ResponseStatusException ex, HttpServletRequest request) {
+        HttpStatus status =
+                HttpStatus.resolve(ex.getStatusCode().value()) != null
+                        ? HttpStatus.valueOf(ex.getStatusCode().value())
+                        : HttpStatus.INTERNAL_SERVER_ERROR;
+        String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        ProblemDetail problemDetail = createBaseProblemDetail(status, reason, request);
+        problemDetail.setType(URI.create("/errors/" + status.value()));
+        problemDetail.setTitle(status.getReasonPhrase());
+        problemDetail.setProperty("title", status.getReasonPhrase());
+        // 5xx is operator-relevant; 4xx is a normal client-rejection — log at the right level.
+        if (status.is5xxServerError()) {
+            log.error(
+                    "ResponseStatusException {} at {}: {}",
+                    status.value(),
+                    request.getRequestURI(),
+                    reason,
+                    ex);
+        } else {
+            log.debug(
+                    "ResponseStatusException {} at {}: {}",
+                    status.value(),
+                    request.getRequestURI(),
+                    reason);
+        }
+        return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ProblemDetail> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {

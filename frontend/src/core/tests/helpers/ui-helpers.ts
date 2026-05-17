@@ -37,28 +37,19 @@ export async function waitForModalClose(
 }
 
 /**
- * Upload one or more files through the workbench's "Files" modal. The modal
- * auto-closes once a file is selected; we wait for the overlay to vanish so
- * the caller can interact with the page immediately afterwards.
- *
- * Pass `awaitClose: false` when the spec is testing a flow that keeps the
- * modal open after upload (e.g. encrypted-PDF unlock — the unlock modal
- * appears on top before the files modal closes).
+ * Upload one or more files through the FileSidebar's "Open from computer"
+ * action. The button is always rendered (collapsed or expanded sidebar) and
+ * triggers the hidden `data-testid="file-input"` native picker directly —
+ * there is no modal to wait for under the post-refactor design.
  */
 export async function uploadFiles(
   page: Page,
   filePaths: string | string[],
-  opts: { awaitClose?: boolean } = {},
 ): Promise<void> {
-  const { awaitClose = true } = opts;
   await page.getByTestId("files-button").click();
-  await waitForModalOpen(page);
   await page
     .locator('[data-testid="file-input"]')
     .setInputFiles(filePaths as string | string[]);
-  if (awaitClose) {
-    await waitForModalClose(page);
-  }
 }
 
 /**

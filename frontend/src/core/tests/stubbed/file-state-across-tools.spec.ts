@@ -16,19 +16,18 @@ test.describe("File state persists across tool navigation", () => {
   }) => {
     await uploadFiles(page, SAMPLE_PDF);
 
-    // Sanity: the file picker now lists the upload
-    await page.getByTestId("files-button").click();
+    // Sanity: My Files page lists the upload
+    await page.getByTestId("my-files-button").click();
     await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
       timeout: 5_000,
     });
-    await page.keyboard.press("Escape");
 
     // Navigate to /split
     await page.goto("/split");
     await page.waitForLoadState("domcontentloaded");
 
-    // Re-open the files modal — sample.pdf must still be there
-    await page.getByTestId("files-button").click();
+    // Re-open My Files — sample.pdf must still be there (persisted across tools)
+    await page.getByTestId("my-files-button").click();
     await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
       timeout: 5_000,
     });

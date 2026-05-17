@@ -63,7 +63,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isRainbowMode } = useRainbowThemeContext();
-  const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
+  const { isFilesModalOpen } = useFilesModalContext();
   const {
     handleReaderToggle,
     handleToolSelect,
@@ -592,7 +592,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   }, [leftPanelView, selectedToolKey, toolRegistry, readerMode]);
 
   const handleFilesButtonClick = () => {
-    openFilesModal();
+    navigate("/files");
   };
 
   // Helper function to render navigation buttons with URL support

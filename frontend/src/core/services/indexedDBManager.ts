@@ -148,6 +148,7 @@ class IndexedDBManager {
             store
           ) {
             this.migrateFileHistoryFields(store, oldVersion);
+            this.migrateFolderField(store, oldVersion);
           }
         });
       };
@@ -231,6 +232,48 @@ class IndexedDBManager {
   }
 
   /**
+   * Add folderId=null to every existing file record on upgrade to v4.
+   * The folderId index requires the field to exist on every row.
+   */
+  private migrateFolderField(
+    store: IDBObjectStore,
+    oldVersion: number,
+  ): void {
+    if (oldVersion >= 4) {
+      return;
+    }
+
+    const cursor = store.openCursor();
+    let migrated = 0;
+
+    cursor.onsuccess = (event) => {
+      const result = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+      if (result) {
+        const record = result.value;
+        if (record && record.folderId === undefined) {
+          record.folderId = null;
+          try {
+            result.update(record);
+            migrated += 1;
+          } catch (error) {
+            console.error("Failed to migrate folderId:", record.id, error);
+          }
+        }
+        result.continue();
+      } else {
+        console.log(`folderId migration complete (${migrated} records).`);
+      }
+    };
+
+    cursor.onerror = (event) => {
+      console.error(
+        "folderId migration failed:",
+        (event.target as IDBRequest).error,
+      );
+    };
+  }
+
+  /**
    * Get database connection (must be already opened)
    */
   getDatabase(name: string): IDBDatabase | null {
@@ -305,7 +348,7 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: "stirling-pdf-files",
-    version: 3,
+    version: 4,
     stores: [
       {
         name: "files",
@@ -316,6 +359,20 @@ export const DATABASE_CONFIGS = {
           { name: "originalFileId", keyPath: "originalFileId", unique: false },
           { name: "parentFileId", keyPath: "parentFileId", unique: false },
           { name: "versionNumber", keyPath: "versionNumber", unique: false },
+          { name: "folderId", keyPath: "folderId", unique: false },
+        ],
+      },
+      {
+        name: "folders",
+        keyPath: "id",
+        indexes: [
+          {
+            name: "parentFolderId",
+            keyPath: "parentFolderId",
+            unique: false,
+          },
+          { name: "name", keyPath: "name", unique: false },
+          { name: "createdAt", keyPath: "createdAt", unique: false },
         ],
       },
     ],

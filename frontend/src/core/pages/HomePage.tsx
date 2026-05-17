@@ -15,7 +15,7 @@ import {
   useNavigationActions,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
@@ -23,10 +23,11 @@ import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { FilesPageProvider } from "@app/contexts/FilesPageContext";
+import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 
 import "@app/pages/HomePage.css";
 
@@ -49,15 +50,20 @@ export default function HomePage() {
     customWorkbenchViews,
   } = useToolWorkflow();
 
-  const { openFilesModal } = useFilesModalContext();
+  const navigate = useNavigate();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(false);
   const location = useLocation();
+  // Start the sidebar collapsed if we mount directly on /files, so the
+  // expand→collapse CSS transition doesn't leave the browser with a stale
+  // 260px layout box.
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
+    () => location.pathname.startsWith("/files"),
+  );
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
@@ -69,6 +75,46 @@ export default function HomePage() {
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
   const { actions } = useNavigationActions();
+
+  // Sync the /files* URL into the workbench state so the file manager view
+  // takes over the workbench area when the user lands on it. This is the
+  // only state-of-truth for the active workbench, so keep the URL pinned.
+  useEffect(() => {
+    if (location.pathname.startsWith("/files")) {
+      if (navigationState.workbench !== "myFiles") {
+        actions.setWorkbench("myFiles");
+      }
+    } else if (navigationState.workbench === "myFiles") {
+      // Leaving the file manager — drop back to a sensible default.
+      actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
+    }
+  }, [location.pathname, navigationState.workbench, actions, activeFiles.length]);
+
+  // Auto-collapse the FileSidebar in My Files (the workbench already shows
+  // the folder tree and file grid, so the sidebar's recent-files list is
+  // redundant). Remember the user's pre-collapse state so we can restore it
+  // when they leave the view. If the user direct-navigated to /files,
+  // default the restore-state to expanded so leaving feels normal.
+  const previousSidebarCollapsedRef = useRef<boolean | null>(
+    location.pathname.startsWith("/files") ? false : null,
+  );
+  useEffect(() => {
+    if (navigationState.workbench === "myFiles") {
+      if (previousSidebarCollapsedRef.current === null) {
+        previousSidebarCollapsedRef.current = fileSidebarCollapsed;
+      }
+      if (!fileSidebarCollapsed) {
+        setFileSidebarCollapsed(true);
+      }
+    } else if (previousSidebarCollapsedRef.current !== null) {
+      setFileSidebarCollapsed(previousSidebarCollapsedRef.current);
+      previousSidebarCollapsedRef.current = null;
+    }
+    // Intentionally only reacts to workbench changes. Reading
+    // `fileSidebarCollapsed` here is a snapshot for the restore-ref capture;
+    // re-running on every sidebar toggle would clobber user intent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigationState.workbench]);
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
 
@@ -115,9 +161,10 @@ export default function HomePage() {
   ]);
 
   const hideToolPanel =
-    customWorkbenchViews.find(
+    navigationState.workbench === "myFiles" ||
+    (customWorkbenchViews.find(
       (v) => v.workbenchId === navigationState.workbench,
-    )?.hideToolPanel ?? false;
+    )?.hideToolPanel ?? false);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
@@ -241,6 +288,7 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      <FilesPageProvider>
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -344,7 +392,7 @@ export default function HomePage() {
             <button
               className="mobile-bottom-button"
               aria-label={t("home.mobile.openFiles", "Open files")}
-              onClick={() => openFilesModal()}
+              onClick={() => navigate("/files")}
             >
               <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
               <span className="mobile-bottom-button-label">
@@ -373,22 +421,46 @@ export default function HomePage() {
           />
         </div>
       ) : (
-        <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
-          <FileSidebar
-            ref={quickAccessRef}
-            collapsed={fileSidebarCollapsed}
-            onToggleCollapse={() => setFileSidebarCollapsed((c) => !c)}
-            onOpenSettings={() => setConfigModalOpen(true)}
-          />
-          <Workbench />
-          {!hideToolPanel && <ToolPanel />}
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-          <AppConfigModal
-            opened={configModalOpen}
-            onClose={() => setConfigModalOpen(false)}
-          />
-        </Group>
+          <Group
+            align="flex-start"
+            gap={0}
+            h="100%"
+            className="flex-nowrap flex"
+          >
+            <FileSidebar
+              ref={quickAccessRef}
+              collapsed={fileSidebarCollapsed}
+              toggleAriaLabel={
+                navigationState.workbench === "myFiles"
+                  ? t("fileSidebar.leaveMyFiles", "Leave My Files")
+                  : undefined
+              }
+              onToggleCollapse={() => {
+                // While in My Files the FolderTreePanel already occupies
+                // the left rail. Expanding the FileSidebar on top would
+                // stack two panels, so the burger here acts as "leave
+                // My Files" — navigate back home. The FileSidebar's
+                // auto-collapse effect will then restore its previous
+                // expanded state.
+                if (navigationState.workbench === "myFiles") {
+                  navigate("/");
+                  return;
+                }
+                setFileSidebarCollapsed((c) => !c);
+              }}
+              onOpenSettings={() => setConfigModalOpen(true)}
+            />
+            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
+            <Workbench />
+            {!hideToolPanel && <ToolPanel />}
+            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+            <AppConfigModal
+              opened={configModalOpen}
+              onClose={() => setConfigModalOpen(false)}
+            />
+          </Group>
       )}
+      </FilesPageProvider>
     </div>
   );
 }

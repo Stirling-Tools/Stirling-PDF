@@ -4,6 +4,7 @@
  */
 
 import { ToolId } from "@app/types/toolId";
+import { FolderId } from "@app/types/folder";
 
 declare const tag: unique symbol;
 export type FileId = string & { readonly [tag]: "FileId" };
@@ -35,6 +36,17 @@ export interface BaseFileMetadata {
   versionNumber: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
   toolHistory?: ToolOperation[]; // Tool chain for history tracking
+
+  /**
+   * The cloud folder this file lives in. Semantics:
+   * - `remoteStorageId == null` → file is local-only; folderId MUST be null.
+   * - `remoteStorageId != null && folderId == null` → file is at the cloud root.
+   * - `remoteStorageId != null && folderId == X` → file lives in cloud folder X.
+   *
+   * The "Local" pseudo-folder in the UI is the predicate `remoteStorageId == null`;
+   * it has no corresponding {@code folderId} value. Folders are a server-only concept.
+   */
+  folderId?: FolderId | null;
 
   // Remote storage tracking
   remoteStorageId?: number; // Server-side storage ID for this file chain

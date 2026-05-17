@@ -7,8 +7,8 @@ import React, {
 } from "react";
 import { Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
 import {
@@ -41,11 +41,18 @@ export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
+  /**
+   * Override for the toggle/burger button's accessible name. When the parent
+   * routes the burger to something other than collapse/expand (e.g. "leave
+   * My Files"), it should pass an explicit label so screen readers don't
+   * announce a stale action.
+   */
+  toggleAriaLabel?: string;
 }
 
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
-    { collapsed = false, onToggleCollapse, onOpenSettings },
+    { collapsed = false, onToggleCollapse, onOpenSettings, toggleAriaLabel },
     ref,
   ) {
     const { t } = useTranslation();
@@ -58,7 +65,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       null,
     );
 
-    const { openFilesModal } = useFilesModalContext();
+    const navigate = useNavigate();
     const { config } = useAppConfig();
     const {
       isEnabled: isGoogleDriveEnabled,
@@ -291,7 +298,27 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const handleNativeFilePick = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files ?? []);
+        const picked = Array.from(e.target.files ?? []);
+        // The `<input accept=".pdf">` hint is bypassable (DevTools, drag-drop
+        // into the same handler from another surface, browsers that ignore
+        // the attribute). Filter at the boundary so non-PDF files don't end
+        // up in IndexedDB / sent to PDF-only tools that would silently fail
+        // downstream. Allow files whose MIME starts with `application/pdf`
+        // OR whose extension is .pdf — some browsers omit the MIME for
+        // local files.
+        const isPdf = (f: File) =>
+          f.type.toLowerCase().startsWith("application/pdf") ||
+          f.name.toLowerCase().endsWith(".pdf");
+        const files = picked.filter(isPdf);
+        const rejected = picked.length - files.length;
+        if (rejected > 0) {
+          // Surface the rejection so the user knows why nothing happened.
+          // Console-only is acceptable for a power-user bypass; a toast
+          // would be louder but require pulling in NotificationContext here.
+          console.warn(
+            `[FileSidebar] Rejected ${rejected} non-PDF file(s) from native picker.`,
+          );
+        }
         if (files.length > 0) {
           await addFiles(files);
           if (!isMultiTool) {
@@ -326,11 +353,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             onClick={() => onToggleCollapse?.()}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && onToggleCollapse?.()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggleCollapse?.();
+              }
+            }}
             aria-label={
-              collapsed
+              toggleAriaLabel ??
+              (collapsed
                 ? t("fileSidebar.expand", "Expand sidebar")
-                : t("fileSidebar.collapse", "Collapse sidebar")
+                : t("fileSidebar.collapse", "Collapse sidebar"))
             }
           >
             <MenuIcon className="file-sidebar-menu-icon" />
@@ -389,66 +422,114 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           {/* Scrollable content */}
           <div className="file-sidebar-scroll">
-            {/* Open from Computer + Google Drive */}
-            {
-              <>
-                <div
-                  className="file-sidebar-action-row"
-                  data-testid="files-button"
-                  data-tour="files-button"
-                  onClick={() => {
-                    if (collapsed && onToggleCollapse) onToggleCollapse();
-                    openFilesModal();
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && openFilesModal()}
-                >
-                  <FolderOpenIcon className="file-sidebar-action-icon" />
-                  {!collapsed && (
-                    <span className="file-sidebar-action-label sidebar-content-fade">
-                      {t("fileSidebar.openFromComputer", "Open from computer")}
-                    </span>
+            {/* Hidden native file input — kept outside the !collapsed gate so
+                the "Open from computer" row below (always rendered) can fire
+                it in either sidebar state without a silent no-op. */}
+            <input
+              ref={nativeFileInputRef}
+              type="file"
+              multiple
+              accept=".pdf"
+              style={{ display: "none" }}
+              onChange={handleNativeFilePick}
+              data-testid="file-input"
+            />
+            {/* Open from Computer + My Files + Google Drive */}
+            <div
+              className="file-sidebar-action-row"
+              // `files-button` is the long-standing upload entry-point
+              // testid: click + setInputFiles on `file-input` above. Tour
+              // anchor lives here too — the tour now spotlights the native
+              // picker shortcut rather than the old modal.
+              data-testid="files-button"
+              data-tour="files-button"
+              onClick={() => {
+                // "Open from computer" goes straight to the native OS file
+                // picker. The full file manager (recent + drives + folders)
+                // is reachable via "My Files" below.
+                nativeFileInputRef.current?.click();
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={t(
+                "fileSidebar.openFromComputer",
+                "Open from computer",
+              )}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  nativeFileInputRef.current?.click();
+                }
+              }}
+            >
+              <FolderOpenIcon className="file-sidebar-action-icon" />
+              {!collapsed && (
+                <span className="file-sidebar-action-label sidebar-content-fade">
+                  {t("fileSidebar.openFromComputer", "Open from computer")}
+                </span>
+              )}
+            </div>
+
+            <div
+              className="file-sidebar-action-row"
+              data-testid="my-files-button"
+              onClick={() => {
+                if (collapsed && onToggleCollapse) onToggleCollapse();
+                navigate("/files");
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={t("fileSidebar.myFiles", "My Files")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate("/files");
+                }
+              }}
+            >
+              <FolderOpenIcon className="file-sidebar-action-icon" />
+              {!collapsed && (
+                <span className="file-sidebar-action-label sidebar-content-fade">
+                  {t("fileSidebar.myFiles", "My Files")}
+                </span>
+              )}
+            </div>
+
+            {!shouldHideGoogleDrive && (
+              <div
+                className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
+                onClick={handleGoogleDriveClick}
+                role="button"
+                tabIndex={isGoogleDriveEnabled ? 0 : -1}
+                aria-disabled={!isGoogleDriveEnabled}
+                title={
+                  !isGoogleDriveEnabled
+                    ? t(
+                        "fileSidebar.googleDriveDisabled",
+                        "Google Drive is not configured",
+                      )
+                    : t("fileSidebar.googleDrive", "Open from Google Drive")
+                }
+              >
+                <div className="file-sidebar-cloud-icon-wrapper">
+                  <GoogleDriveIcon
+                    className="file-sidebar-cloud-icon-gray"
+                    style={{ color: "var(--text-secondary)" }}
+                  />
+                  {isGoogleDriveEnabled && (
+                    <GoogleDriveIcon
+                      colored
+                      className="file-sidebar-cloud-icon-color"
+                    />
                   )}
                 </div>
-
-                {!shouldHideGoogleDrive && (
-                  <div
-                    className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
-                    onClick={handleGoogleDriveClick}
-                    role="button"
-                    tabIndex={isGoogleDriveEnabled ? 0 : -1}
-                    aria-disabled={!isGoogleDriveEnabled}
-                    title={
-                      !isGoogleDriveEnabled
-                        ? t(
-                            "fileSidebar.googleDriveDisabled",
-                            "Google Drive is not configured",
-                          )
-                        : t("fileSidebar.googleDrive", "Open from Google Drive")
-                    }
-                  >
-                    <div className="file-sidebar-cloud-icon-wrapper">
-                      <GoogleDriveIcon
-                        className="file-sidebar-cloud-icon-gray"
-                        style={{ color: "var(--text-secondary)" }}
-                      />
-                      {isGoogleDriveEnabled && (
-                        <GoogleDriveIcon
-                          colored
-                          className="file-sidebar-cloud-icon-color"
-                        />
-                      )}
-                    </div>
-                    {!collapsed && (
-                      <span className="file-sidebar-action-label sidebar-content-fade">
-                        {t("fileSidebar.googleDrive", "Google Drive")}
-                      </span>
-                    )}
-                  </div>
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.googleDrive", "Google Drive")}
+                  </span>
                 )}
-              </>
-            }
+              </div>
+            )}
 
             {/* Files section - always visible when expanded */}
             {!collapsed && (
@@ -459,12 +540,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </span>
                   <button
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
-                    onClick={() => openFilesModal()}
+                    onClick={() => navigate("/files")}
                     title={t(
                       "fileSidebar.openFileManager",
-                      "Open file manager",
+                      "Browse all files & folders",
                     )}
                     type="button"
+                    data-testid="open-files-page"
                   >
                     <OpenInNewIcon sx={{ fontSize: "1rem" }} />
                   </button>
@@ -476,14 +558,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   >
                     <AddIcon sx={{ fontSize: "1rem" }} />
                   </button>
-                  <input
-                    ref={nativeFileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf"
-                    style={{ display: "none" }}
-                    onChange={handleNativeFilePick}
-                  />
                 </div>
 
                 {!stubsLoaded ? (

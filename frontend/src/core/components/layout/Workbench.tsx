@@ -27,6 +27,9 @@ const PageEditorControls = lazy(
   () => import("@app/components/pageEditor/PageEditorControls"),
 );
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+const FileManagerView = lazy(
+  () => import("@app/components/filesPage/FileManagerView"),
+);
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -97,6 +100,12 @@ export default function Workbench() {
         const CustomComponent = customView.component;
         return <CustomComponent data={customView.data} />;
       }
+    }
+
+    // The "My Files" workbench is available regardless of whether files are
+    // currently loaded into the workbench — it lives on top of the IDB store.
+    if (currentView === "myFiles") {
+      return <FileManagerView />;
     }
 
     if (activeFiles.length === 0) {
@@ -188,8 +197,9 @@ export default function Workbench() {
       }
     >
       {/* Workbench Bar - animates in/out based on file presence */}
-      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)
-        ?.hideTopControls && (
+      {currentView !== "myFiles" &&
+        !customWorkbenchViews.find((v) => v.workbenchId === currentView)
+          ?.hideTopControls && (
         <div
           className={styles.workbenchBarWrapper}
           data-hidden={String(!hasFiles)}

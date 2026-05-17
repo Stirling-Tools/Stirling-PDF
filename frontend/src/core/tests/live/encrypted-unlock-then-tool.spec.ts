@@ -3,7 +3,6 @@ import { loginAndSetup } from "@app/tests/helpers/login";
 import {
   switchToEditorIfViewerMode,
   runToolAndWaitForReview,
-  waitForModalOpen,
   waitForModalClose,
 } from "@app/tests/helpers/ui-helpers";
 import path from "path";
@@ -33,12 +32,11 @@ test.describe("Encrypted PDF: unlock then merge", () => {
     await page.waitForLoadState("domcontentloaded");
 
     await page.getByTestId("files-button").click();
-    await waitForModalOpen(page);
     await page
       .locator('[data-testid="file-input"]')
       .setInputFiles([ENCRYPTED_PDF, SAMPLE_PDF]);
 
-    // Encrypted unlock modal appears (the files modal may still be closing)
+    // Encrypted unlock modal appears once decryption is attempted.
     const passwordInput = page.getByPlaceholder(/password/i).first();
     if (
       !(await passwordInput.isVisible({ timeout: 10_000 }).catch(() => false))
