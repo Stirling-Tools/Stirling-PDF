@@ -30,6 +30,7 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
@@ -120,7 +121,8 @@ public class SplitPdfByChaptersController {
 
     @AutoJobPostMapping(
             value = "/split-pdf-by-chapters",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
             summary = "Split PDFs by Chapters",
