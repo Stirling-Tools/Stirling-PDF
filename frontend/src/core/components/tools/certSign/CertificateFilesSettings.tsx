@@ -105,6 +105,20 @@ const CertificateFilesSettings = ({
             disabled={disabled}
           />
         )}
+
+      <TextInput
+        label={t("certSign.pdfPassword", "PDF Password")}
+        placeholder={t(
+          "certSign.pdfPasswordOptional",
+          "Leave empty if PDF is not encrypted",
+        )}
+        type="password"
+        value={parameters.pdfPassword}
+        onChange={(event) =>
+          onParameterChange("pdfPassword", event.currentTarget.value)
+        }
+        disabled={disabled}
+      />
     </Stack>
   );
 };

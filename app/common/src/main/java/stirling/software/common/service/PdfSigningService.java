@@ -12,6 +12,7 @@ public interface PdfSigningService {
      * Signs a PDF document using the provided KeyStore.
      *
      * @param pdfBytes raw PDF bytes to sign
+     * @param pdfPassword password for the PDF document if it's encrypted
      * @param keystore the KeyStore containing the signing key and certificate chain
      * @param password keystore password
      * @param showSignature whether to render a visible signature block
@@ -25,6 +26,7 @@ public interface PdfSigningService {
      */
     byte[] signWithKeystore(
             byte[] pdfBytes,
+            String pdfPassword,
             KeyStore keystore,
             char[] password,
             boolean showSignature,

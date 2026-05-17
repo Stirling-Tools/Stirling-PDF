@@ -109,11 +109,12 @@ class CertificateSubmissionValidatorTest {
                         any(),
                         any(),
                         any(),
+                        any(),
                         anyBoolean(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
+                        isNull(),
+                        anyString(),
+                        isNull(),
+                        isNull(),
                         anyBoolean());
     }
 
@@ -127,11 +128,12 @@ class CertificateSubmissionValidatorTest {
                         any(),
                         any(),
                         any(),
+                        any(),
                         anyBoolean(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
+                        isNull(),
+                        anyString(),
+                        isNull(),
+                        isNull(),
                         anyBoolean());
     }
 
@@ -141,6 +143,7 @@ class CertificateSubmissionValidatorTest {
     void validP12Certificate_returnsInfo() throws Exception {
         byte[] p12 = validP12("password");
         when(pdfSigningService.signWithKeystore(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -167,6 +170,7 @@ class CertificateSubmissionValidatorTest {
                         any(),
                         any(),
                         any(),
+                        any(),
                         anyBoolean(),
                         isNull(),
                         anyString(),
@@ -184,6 +188,7 @@ class CertificateSubmissionValidatorTest {
     void validPfxAlias_acceptedAsCertType() throws Exception {
         byte[] p12 = validP12("password");
         when(pdfSigningService.signWithKeystore(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -286,6 +291,7 @@ class CertificateSubmissionValidatorTest {
                         any(),
                         any(),
                         any(),
+                        any(),
                         anyBoolean(),
                         isNull(),
                         anyString(),
@@ -338,6 +344,7 @@ class CertificateSubmissionValidatorTest {
         byte[] jksBytes = bos.toByteArray();
 
         when(pdfSigningService.signWithKeystore(
+                        any(),
                         any(),
                         any(),
                         any(),

@@ -58,6 +58,10 @@ export const buildCertSignFormData = (
     formData.append("showLogo", parameters.showLogo.toString());
   }
 
+  if (parameters.pdfPassword) {
+    formData.append("pdfPassword", parameters.pdfPassword);
+  }
+
   return formData;
 };
 

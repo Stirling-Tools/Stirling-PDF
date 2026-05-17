@@ -42,6 +42,9 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(description = "The password for the keystore or the private key", format = "password")
     private String password;
 
+    @Schema(description = "The password for the PDF file (if encrypted)", format = "password")
+    private String pdfPassword;
+
     @Schema(
             description = "Whether to visually show the signature in the PDF file",
             defaultValue = "false",
