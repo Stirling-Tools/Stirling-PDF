@@ -207,61 +207,56 @@ export function FolderProvider({ children }: FolderProviderProps) {
 
   // Single-flight guard — concurrent pullFromServer calls would race and the
   // last-resolving (often older) response would clobber the newer state.
-  const pullInFlight = useRef<Promise<{
+  type PullResult = {
     ok: boolean;
     reason?: "endpoint-missing" | "network" | "server" | "client";
-  }> | null>(null);
+  };
+  const pullInFlight = useRef<Promise<PullResult> | null>(null);
 
-  const pullFromServer = useCallback(async (): Promise<{
-    ok: boolean;
-    reason?: "endpoint-missing" | "network" | "server" | "client";
-  }> => {
+  const pullFromServer = useCallback(async (): Promise<PullResult> => {
     if (pullInFlight.current) return pullInFlight.current;
-    const promise = (async () => {
-    let remote: FolderRecord[];
-    try {
-      remote = await folderSyncService.list();
-    } catch (err) {
-      const status = (err as { response?: { status?: number } })?.response
-        ?.status;
-      if (status === 404) {
-        // Storage backend not deployed in this build — expected for core-only.
-        if (mountedRef.current) setServerReachable(false);
-        return { ok: false, reason: "endpoint-missing" };
+    const promise: Promise<PullResult> = (async () => {
+      let remote: FolderRecord[];
+      try {
+        remote = await folderSyncService.list();
+      } catch (err) {
+        const status = (err as { response?: { status?: number } })?.response
+          ?.status;
+        if (status === 404) {
+          // Storage backend not deployed in this build — expected for
+          // core-only.
+          if (mountedRef.current) setServerReachable(false);
+          return { ok: false, reason: "endpoint-missing" };
+        }
+        console.warn("[FolderContext] pullFromServer failed", err);
+        if (mountedRef.current) {
+          setServerReachable(false);
+          setError(`Folder sync failed: ${formatServerError(err)}`);
+        }
+        // Narrowing the ternary into a typed variable so TS keeps the literal
+        // union rather than widening to `string`.
+        const reason: PullResult["reason"] =
+          status && status >= 500 ? "server" : status ? "client" : "network";
+        return { ok: false, reason };
       }
-      console.warn("[FolderContext] pullFromServer failed", err);
-      if (mountedRef.current) {
-        setServerReachable(false);
-        setError(`Folder sync failed: ${formatServerError(err)}`);
-      }
-      return {
-        ok: false,
-        reason:
-          status && status >= 500
-            ? "server"
-            : status
-              ? "client"
-              : "network",
-      };
-    }
 
-    // Server-wins: cache becomes a verbatim copy of what the server returned.
-    // A folder absent from the response was deleted server-side; replaceAll
-    // drops it from the cache too.
-    try {
-      await folderStorage.replaceAll(remote);
-    } catch (cacheErr) {
-      // The server response was good; only the local cache write failed.
-      // We still consider this an ok pull — render from in-memory state.
-      console.warn("[FolderContext] cache replace failed", cacheErr);
-    }
-    if (mountedRef.current) {
-      setFolders(remote);
-      setServerReachable(true);
-      setError(null);
-    }
-    bumpFolderRevision();
-    return { ok: true };
+      // Server-wins: cache becomes a verbatim copy of what the server
+      // returned. A folder absent from the response was deleted server-side;
+      // replaceAll drops it from the cache too.
+      try {
+        await folderStorage.replaceAll(remote);
+      } catch (cacheErr) {
+        // The server response was good; only the local cache write failed.
+        // We still consider this an ok pull — render from in-memory state.
+        console.warn("[FolderContext] cache replace failed", cacheErr);
+      }
+      if (mountedRef.current) {
+        setFolders(remote);
+        setServerReachable(true);
+        setError(null);
+      }
+      bumpFolderRevision();
+      return { ok: true };
     })();
     pullInFlight.current = promise;
     try {

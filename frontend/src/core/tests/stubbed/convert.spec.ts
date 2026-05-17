@@ -23,22 +23,14 @@ async function dismissTourTooltip(page: Page) {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: upload a file through the Files modal
-// Uses the HiddenFileInput (data-testid="file-input") which has the correct
-// onChange handler. Waits for the modal to auto-close after upload.
+// Helper: upload a file via the FileSidebar's "Open from computer" action.
+// The button now triggers the native OS picker directly — no modal — and
+// the hidden `data-testid="file-input"` accepts `setInputFiles` in either
+// sidebar state.
 // ---------------------------------------------------------------------------
 async function uploadFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "visible",
-    timeout: 5000,
-  });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
-  // Modal auto-closes after file is selected
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "hidden",
-    timeout: 10000,
-  });
 }
 
 // ---------------------------------------------------------------------------

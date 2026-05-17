@@ -11,7 +11,6 @@ import {
   ActionIcon,
   Button,
   Group,
-  Menu,
   MultiSelect,
   SegmentedControl,
   Select,
@@ -68,11 +67,6 @@ import {
   clearFilesPageReturnRoute,
   setFilesPageReturnRoute,
 } from "@app/components/filesPage/filesPageReturnRoute";
-import {
-  clearAllSampleData,
-  seedSampleData,
-} from "@app/components/filesPage/seedSampleData";
-
 import "@app/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
@@ -870,54 +864,6 @@ export default function FileManagerView() {
             style={{ display: "none" }}
             onChange={onFileInputChange}
           />
-          {import.meta.env.DEV && (
-            // Dev fixtures bundled into a single muted menu so they don't
-            // dominate the toolbar alongside the real Upload / New folder
-            // actions during everyday use. Hidden on mobile entirely.
-            <Menu shadow="md" position="bottom-end" withinPortal>
-              <Menu.Target>
-                <Button
-                  size="sm"
-                  variant="default"
-                  color="gray"
-                  data-mobile-hide="true"
-                >
-                  DEV
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>Dev fixtures</Menu.Label>
-                <Menu.Item
-                  onClick={async () => {
-                    try {
-                      await seedSampleData();
-                      await folders.refresh();
-                      await refresh();
-                    } catch (err) {
-                      console.error("[dev] seed failed", err);
-                    }
-                  }}
-                >
-                  Seed sample folders &amp; files
-                </Menu.Item>
-                <Menu.Item
-                  color="red"
-                  onClick={async () => {
-                    if (!window.confirm("Wipe ALL files and folders?")) return;
-                    try {
-                      await clearAllSampleData();
-                      await folders.refresh();
-                      await refresh();
-                    } catch (err) {
-                      console.error("[dev] clear failed", err);
-                    }
-                  }}
-                >
-                  Clear all files &amp; folders
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          )}
         </div>
       </header>
 

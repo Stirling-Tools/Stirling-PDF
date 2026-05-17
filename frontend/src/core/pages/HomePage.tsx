@@ -92,27 +92,34 @@ export default function HomePage() {
 
   // Auto-collapse the FileSidebar in My Files (the workbench already shows
   // the folder tree and file grid, so the sidebar's recent-files list is
-  // redundant). Remember the user's pre-collapse state so we can restore it
-  // when they leave the view. If the user direct-navigated to /files,
-  // default the restore-state to expanded so leaving feels normal.
-  const previousSidebarCollapsedRef = useRef<boolean | null>(
-    location.pathname.startsWith("/files") ? false : null,
-  );
+  // redundant). Snapshot the user's pre-collapse state on entry so we can
+  // restore it on exit.
+  //
+  // Edge-only transitions: snapshot on `?? → myFiles` and restore on
+  // `myFiles → ??`. The naive "react to workbench any time" version is
+  // brittle because the URL-sync effect runs in the *next* tick after
+  // mount, which means a direct-mount on /files sees one fake "leave"
+  // before its first "enter" and would clobber the ref.
+  const previousSidebarCollapsedRef = useRef<boolean | null>(null);
+  const prevWorkbenchRef = useRef(navigationState.workbench);
   useEffect(() => {
-    if (navigationState.workbench === "myFiles") {
-      if (previousSidebarCollapsedRef.current === null) {
-        previousSidebarCollapsedRef.current = fileSidebarCollapsed;
-      }
-      if (!fileSidebarCollapsed) {
-        setFileSidebarCollapsed(true);
-      }
-    } else if (previousSidebarCollapsedRef.current !== null) {
+    const prev = prevWorkbenchRef.current;
+    const curr = navigationState.workbench;
+    if (curr === "myFiles" && prev !== "myFiles") {
+      previousSidebarCollapsedRef.current = fileSidebarCollapsed;
+      if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
+    } else if (
+      curr !== "myFiles" &&
+      prev === "myFiles" &&
+      previousSidebarCollapsedRef.current !== null
+    ) {
       setFileSidebarCollapsed(previousSidebarCollapsedRef.current);
       previousSidebarCollapsedRef.current = null;
     }
-    // Intentionally only reacts to workbench changes. Reading
-    // `fileSidebarCollapsed` here is a snapshot for the restore-ref capture;
-    // re-running on every sidebar toggle would clobber user intent.
+    prevWorkbenchRef.current = curr;
+    // `fileSidebarCollapsed` is intentionally read as a snapshot at the
+    // moment of the entry transition only — re-running on every sidebar
+    // toggle would clobber the snapshot we just captured.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigationState.workbench]);
   const { setActiveFileIndex } = useViewer();
@@ -125,13 +132,6 @@ export default function HomePage() {
     const prevCount = prevFileCountRef.current;
     const currentCount = activeFiles.length;
 
-    console.log("[HomePage] Navigation effect triggered:", {
-      prevCount,
-      currentCount,
-      currentWorkbench: navigationState.workbench,
-      selectedToolKey,
-    });
-
     const action = getStartupNavigationAction(
       prevCount,
       currentCount,
@@ -139,16 +139,11 @@ export default function HomePage() {
       navigationState.workbench,
     );
 
-    console.log("[HomePage] Navigation action returned:", action);
-
     if (action) {
-      console.log("[HomePage] Applying navigation:", action);
       actions.setWorkbench(action.workbench);
       if (typeof action.activeFileIndex === "number") {
         setActiveFileIndex(action.activeFileIndex);
       }
-    } else {
-      console.log("[HomePage] No navigation - staying in current workbench");
     }
 
     prevFileCountRef.current = currentCount;
@@ -414,7 +409,7 @@ export default function HomePage() {
               </span>
             </button>
           </div>
-          <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <FileManager selectedTool={selectedTool} />
           <AppConfigModal
             opened={configModalOpen}
             onClose={() => setConfigModalOpen(false)}
@@ -453,7 +448,7 @@ export default function HomePage() {
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <ToolPanel />}
-            <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+            <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
               onClose={() => setConfigModalOpen(false)}

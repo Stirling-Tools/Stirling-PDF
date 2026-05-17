@@ -16,17 +16,10 @@ test.describe("Reader — in-document text search", () => {
     await page.goto("/read");
     await page.waitForLoadState("domcontentloaded");
 
-    // Upload a PDF first so the reader has content
+    // Upload a PDF first so the reader has content. `files-button` now
+    // triggers the native picker directly — no modal flow involved.
     await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5_000,
-    });
     await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "hidden",
-      timeout: 10_000,
-    });
 
     // The WorkbenchBar exposes a "Search PDF" button (aria-label="Search PDF")
     // that opens a Popover with the in-document search input.

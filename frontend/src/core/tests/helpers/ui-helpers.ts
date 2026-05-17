@@ -41,15 +41,28 @@ export async function waitForModalClose(
  * action. The button is always rendered (collapsed or expanded sidebar) and
  * triggers the hidden `data-testid="file-input"` native picker directly —
  * there is no modal to wait for under the post-refactor design.
+ *
+ * `setInputFiles` doesn't await the input's async onChange (which writes to
+ * IndexedDB via `addFiles`), so without a sync point a caller that follows
+ * with `page.goto()` can race the IDB flush. Wait for the workbench to
+ * pick up the upload (the FileSidebar renders the added file in its scroll
+ * list once `addFiles` resolves and IDB has been written).
  */
 export async function uploadFiles(
   page: Page,
   filePaths: string | string[],
 ): Promise<void> {
+  const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
   await page.getByTestId("files-button").click();
   await page
     .locator('[data-testid="file-input"]')
-    .setInputFiles(filePaths as string | string[]);
+    .setInputFiles(paths);
+  // Sync point: wait until at least one file lands in the sidebar's file
+  // list. The list only renders once `addFiles` has resolved (which awaits
+  // the IDB write). Use first() so multi-file uploads pass too.
+  await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
+    timeout: 10_000,
+  });
 }
 
 /**

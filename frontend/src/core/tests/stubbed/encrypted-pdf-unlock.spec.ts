@@ -64,10 +64,7 @@ function mockRemovePasswordWrongPassword(page: Page) {
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
-  await page.waitForSelector(".mantine-Modal-overlay", {
-    state: "visible",
-    timeout: 5000,
-  });
+  // No modal flow — `files-button` triggers the native picker directly.
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -157,10 +154,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await mockRemovePasswordSuccess(page);
 
     await page.getByTestId("files-button").click();
-    await page.waitForSelector(".mantine-Modal-overlay", {
-      state: "visible",
-      timeout: 5000,
-    });
+    // No modal flow — `files-button` triggers the native picker directly.
     await page.locator('[data-testid="file-input"]').setInputFiles([
       {
         name: "encrypted-a.pdf",
