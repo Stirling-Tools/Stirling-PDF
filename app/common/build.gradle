@@ -59,4 +59,7 @@ dependencies {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         exclude group: 'com.google.code.gson', module: 'gson'
     }
+
+    // ArchUnit: enforces module dependency direction (see ArchitectureTest)
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }

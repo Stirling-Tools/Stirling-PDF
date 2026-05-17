@@ -45,6 +45,10 @@ dependencies {
         implementation project(':proprietary')
     }
 
+    if (gradle.ext.enableSaas) {
+        implementation project(':saas')
+    }
+
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
@@ -173,6 +177,23 @@ springBoot {
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
 def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
+
+// Vite mode: -PprototypesMode > -PfrontendMode > enableSaas > disableAdditional > proprietary.
+def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
+def frontendMode
+if (buildPrototypes) {
+    frontendMode = 'prototypes'
+} else if (frontendModeOverride) {
+    frontendMode = frontendModeOverride
+} else if (gradle.ext.enableSaas) {
+    frontendMode = 'saas'
+} else if (gradle.ext.disableAdditional) {
+    frontendMode = 'core'
+} else {
+    frontendMode = 'proprietary'
+}
+def frontendBuildTask = "frontend:build:${frontendMode}"
+
 def frontendDir = file('../../frontend')
 def frontendDistDir = file('../../frontend/dist')
 def resourcesStaticDir = file('src/main/resources/static')
@@ -241,7 +262,7 @@ tasks.register('npmBuild', Exec) {
     group = 'frontend'
     description = 'Build frontend application'
     workingDir file('../..')
-    commandLine = buildPrototypes ? ['task', 'frontend:build:prototypes'] : ['task', 'frontend:build']
+    commandLine = ['task', frontendBuildTask]
     inputs.dir(new File(frontendDir, 'src'))
     inputs.dir(new File(frontendDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
@@ -256,7 +277,7 @@ tasks.register('npmBuild', Exec) {
     environment 'VITE_API_BASE_URL', '/'
 
     doFirst {
-        println "Building frontend application for production (VITE_API_BASE_URL=/)"
+        println "Building frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/)"
     }
 }
 
@@ -265,6 +286,7 @@ tasks.register('copyFrontendAssets', Copy) {
     group = 'frontend'
     description = 'Copy frontend build to static resources'
     dependsOn npmBuild
+    dependsOn cleanFrontendAssets
     from(frontendDistDir) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
@@ -305,7 +327,7 @@ tasks.named('copyFrontendAssets').configure {
 }
 
 if (buildWithFrontend) {
-    println "Frontend build enabled - JAR will include React frontend"
+    println "Frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
     processResources.dependsOn copyFrontendAssets
 } else {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
