@@ -94,6 +94,7 @@ from .pdf_questions import (
     PdfQuestionResponse,
     PdfQuestionTerminalResponse,
 )
+from .pdf_review import PdfReviewOrchestrateResponse
 from .pdf_to_markdown import (
     LayoutFragment,
     LayoutLine,
@@ -188,6 +189,7 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfQuestionTerminalResponse",
+    "PdfReviewOrchestrateResponse",
     "PdfTextSelection",
     "ProgressEvent",
     "Requisition",

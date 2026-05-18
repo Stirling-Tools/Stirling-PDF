@@ -43,6 +43,7 @@ from stirling.contracts import (
     NeedIngestResponse,
     OrchestratorRequest,
     PdfContentType,
+    PdfReviewOrchestrateResponse,
     SupportedCapability,
     ToolOperationStep,
     Verdict,
@@ -127,7 +128,7 @@ class PdfReviewAgent:
         # request's stages.
         self._contradiction_detector = ContradictionDetector(runtime)
 
-    async def orchestrate(self, request: OrchestratorRequest) -> EditPlanResponse | NeedIngestResponse:
+    async def orchestrate(self, request: OrchestratorRequest) -> PdfReviewOrchestrateResponse:
         """Entry point for the orchestrator delegate.
 
         Resume turn comes first: if a math verdict was attached, project it
