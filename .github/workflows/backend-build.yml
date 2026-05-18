@@ -1,7 +1,7 @@
 name: Backend build, format check, and coverage
 
-# Reusable workflow called from build.yml. Runs the full backend build matrix
-# (JDK 21/25 × spring-security on/off), Spotless formatting check, JUnit, and
+# Reusable workflow called from build.yml. Runs the backend build matrix
+# (JDK 25 × spring-security on/off), Spotless formatting check, JUnit, and
 # posts Jacoco coverage to PRs.
 on:
   workflow_call:
