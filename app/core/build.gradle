@@ -160,7 +160,15 @@ bootJar {
     manifest {
         attributes(
             'Implementation-Title': 'Stirling-PDF',
-            'Implementation-Version': project.version
+            'Implementation-Version': project.version,
+            // JDK 22+ honors this manifest attribute on the executable jar:
+            // grant native-access (FFM restricted methods) without needing
+            // --enable-native-access on the CLI / JAVA_TOOL_OPTIONS at launch.
+            // ALL-UNNAMED matches the unnamed module that Spring Boot's fat
+            // jar runs as (everything on the classpath), which includes
+            // JPDFium and its FFM-using internals.
+            // Ref: https://openjdk.org/jeps/472 ('Enable-Native-Access' attr)
+            'Enable-Native-Access': 'ALL-UNNAMED'
         )
     }
 }

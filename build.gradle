@@ -452,8 +452,10 @@ subprojects {
                 "-XX:+ExplicitGCInvokesConcurrent",
                 "-XX:+UseStringDeduplication",
                 "-XX:+UseCompactObjectHeaders",
-                // JPDFium uses FFM; JDK 26 will reject native access without
-                // this flag. Required at JDK 25 to silence the warning chain.
+                // bootRun launches from classfiles (not the bootJar), so the
+                // 'Enable-Native-Access' manifest attribute baked into the
+                // jar (see app/core/build.gradle) doesn't apply here.
+                // Keep the CLI form for the dev loop.
                 "--enable-native-access=ALL-UNNAMED"
             ]
         }
