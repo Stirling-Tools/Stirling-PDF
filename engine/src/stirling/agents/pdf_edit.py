@@ -6,7 +6,7 @@ from typing import Literal, overload
 
 from pydantic import Field
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
+from pydantic_ai.output import NativeOutput, ToolOutput
 
 from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
 from stirling.contracts import (
@@ -57,7 +57,13 @@ type PdfEditPlanOutput = (
 
 
 class PdfEditSelectionAgent:
-    def __init__(self, runtime: AppRuntime, base_system_prompt: str, *, allow_need_content: bool) -> None:
+    def __init__(
+        self,
+        runtime: AppRuntime,
+        base_system_prompt: str,
+        *,
+        allow_need_content: bool,
+    ) -> None:
         self.runtime = runtime
         output_types: list[type[PdfEditPlanOutput]] = [
             PdfEditPlanSelection,
@@ -112,9 +118,10 @@ class PdfEditParameterSelector:
         parameter_model = OPERATIONS[operation_id]
         prompt = self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps)
         logger.debug("[pdf-edit params %s] prompt:\n%s", operation_id.name, prompt)
+        # ToolOutput bypasses Anthropic's grammar compiler, which times out on complex schemas.
         parameter_result = await self.agent.run(
             prompt,
-            output_type=NativeOutput(parameter_model),
+            output_type=ToolOutput(parameter_model),
             instructions=(
                 f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
                 "Do not include fields from any other operation."
@@ -241,7 +248,9 @@ class PdfEditAgent:
     ) -> PdfEditPlanOutput:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
         agent = self._build_selection_agent(
-            supported_operations, unavailable_operations, allow_need_content=can_request_content
+            supported_operations,
+            unavailable_operations,
+            allow_need_content=can_request_content,
         )
         return await agent.select(self._build_selection_prompt(request, supported_operations, unavailable_operations))
 
@@ -276,7 +285,6 @@ class PdfEditAgent:
                 "merging, or extracting pages then re-inserting them). "
                 "Only return cannot_do when no sequence of the supported operations could achieve the request. "
                 "Do not produce operation parameters in this stage. "
-                "Return need_clarification when the request is genuinely ambiguous. "
                 "Return plan when a reasonable multi-step plan can be created. "
                 "Never return partial plans."
             ),
@@ -352,7 +360,7 @@ class PdfEditAgent:
                     lines.append(f"    {name}")
         return "\n".join(lines)
 
-    def _fill_need_content_defaults(
+    def _build_need_content_response(
         self,
         selection: PdfEditNeedContentSelection,
         request: PdfEditRequest,

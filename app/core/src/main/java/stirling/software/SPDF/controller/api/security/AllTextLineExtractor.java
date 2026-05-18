@@ -10,16 +10,41 @@ import org.apache.pdfbox.text.TextPosition;
 
 /**
  * PDFTextStripper subclass that collects all text positions and groups them into line-level
- * bounding boxes in PDF user-space (origin bottom-left, Y up).
+ * bounding boxes.
+ *
+ * <p>Two outputs are maintained in parallel:
+ *
+ * <ul>
+ *   <li>{@link #getLineBoxes()} returns {@code [x1, pdfYbottom, x2, pdfYtop]} in PDF user-space
+ *       (origin bottom-left, Y up). This is what existing callers expect.
+ *   <li>{@link #getScreenLineBoxes()} returns {@code [x1, screenYtop, x2, screenYbottom]} computed
+ *       directly from glyph positions without a PDF↔screen round-trip — used by column-aware
+ *       redaction where ulp-level drift in the round-trip caused false rejects against anchors.
+ * </ul>
+ *
+ * <p>Lines are flushed not only on Y jumps but also on large X gaps within the same Y row. That way
+ * left-column glyphs and right-column glyphs that happen to share a baseline (common in IEEE
+ * conference templates) get emitted as two distinct line boxes instead of one wide merged box.
  */
 final class AllTextLineExtractor extends PDFTextStripper {
 
+    /** Min vertical jump (screen Y) before the next glyph is treated as a new line. */
+    private static final float LINE_Y_TOLERANCE = 3.0f;
+
+    /**
+     * Min horizontal gap (screen X) between consecutive glyphs on the same Y that indicates a
+     * column boundary. Chosen large enough to not split normal inter-word spacing (~6–10pt for 11pt
+     * text) but small enough to catch standard column gutters (typically ≥15pt).
+     */
+    private static final float COLUMN_GAP_X = 14f;
+
     private final float pageHeight;
     private final List<float[]> lineBoxes = new ArrayList<>();
+    private final List<float[]> screenLineBoxes = new ArrayList<>();
 
     private final List<TextPosition> currentLine = new ArrayList<>();
     private float lastScreenY = Float.NaN;
-    private static final float LINE_Y_TOLERANCE = 3.0f;
+    private float lastGlyphRight = Float.NaN;
 
     AllTextLineExtractor(int pageNumber, float pageHeight) throws IOException {
         this.pageHeight = pageHeight;
@@ -30,6 +55,17 @@ final class AllTextLineExtractor extends PDFTextStripper {
 
     List<float[]> getLineBoxes() {
         return lineBoxes;
+    }
+
+    /**
+     * Returns line boxes as {@code [x1, screenYtop, x2, screenYbottom]}. {@code screenYtop} is the
+     * minimum {@code TextPosition.getY() - getHeight()} on the line and {@code screenYbottom} is
+     * the maximum {@code getY()} (the line's baseline). These values come straight from PDFBox
+     * without going through {@code pageHeight - …}, so they're stable for ulp-sensitive comparisons
+     * against anchor screen Ys.
+     */
+    List<float[]> getScreenLineBoxes() {
+        return screenLineBoxes;
     }
 
     @Override
@@ -44,10 +80,16 @@ final class AllTextLineExtractor extends PDFTextStripper {
                 continue;
             }
             float screenY = tp.getY();
-            if (!Float.isNaN(lastScreenY) && Math.abs(screenY - lastScreenY) > LINE_Y_TOLERANCE) {
+            float screenX = tp.getX();
+            boolean yJump =
+                    !Float.isNaN(lastScreenY) && Math.abs(screenY - lastScreenY) > LINE_Y_TOLERANCE;
+            boolean xJump =
+                    !Float.isNaN(lastGlyphRight) && (screenX - lastGlyphRight) > COLUMN_GAP_X;
+            if (yJump || xJump) {
                 flushLine();
             }
             lastScreenY = screenY;
+            lastGlyphRight = screenX + tp.getWidth();
             currentLine.add(tp);
         }
     }
@@ -73,11 +115,13 @@ final class AllTextLineExtractor extends PDFTextStripper {
         emitSegment(minX, maxX, minScreenY, maxScreenY);
         currentLine.clear();
         lastScreenY = Float.NaN;
+        lastGlyphRight = Float.NaN;
     }
 
     private void emitSegment(float minX, float maxX, float minScreenY, float maxScreenY) {
         float pdfY1 = pageHeight - maxScreenY; // bottom in PDF coords
         float pdfY2 = pageHeight - minScreenY; // top in PDF coords
         lineBoxes.add(new float[] {minX, pdfY1, maxX, pdfY2});
+        screenLineBoxes.add(new float[] {minX, minScreenY, maxX, maxScreenY});
     }
 }
