@@ -51,4 +51,12 @@ dependencies {
     api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
+
+    // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
+    // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
+    api ('technology.tabula:tabula:1.0.5') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
 }

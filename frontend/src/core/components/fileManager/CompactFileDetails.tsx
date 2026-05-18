@@ -18,6 +18,7 @@ interface CompactFileDetailsProps {
   onPrevious: () => void;
   onNext: () => void;
   onOpenFiles: () => void;
+  canCloseAll?: boolean;
 }
 
 const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
@@ -30,6 +31,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
   onPrevious,
   onNext,
   onOpenFiles,
+  canCloseAll = false,
 }) => {
   const { t } = useTranslation();
   const hasSelection = selectedFiles.length > 0;
@@ -94,7 +96,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text size="sm" fw={500} truncate>
             <PrivateContent>
-              {currentFile ? currentFile.name : "No file selected"}
+              {currentFile ? currentFile.name : "No file loaded"}
             </PrivateContent>
           </Text>
           <Text size="xs" c="dimmed">
@@ -149,18 +151,21 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
       <Button
         size="sm"
         onClick={onOpenFiles}
-        disabled={!hasSelection}
+        disabled={!hasSelection && !canCloseAll}
         fullWidth
         style={{
-          backgroundColor: hasSelection
-            ? "var(--btn-open-file)"
-            : "var(--mantine-color-gray-4)",
+          backgroundColor:
+            hasSelection || canCloseAll
+              ? "var(--btn-open-file)"
+              : "var(--mantine-color-gray-4)",
           color: "white",
         }}
       >
-        {selectedFiles.length > 1
-          ? t("fileManager.openFiles", `Open ${selectedFiles.length} Files`)
-          : t("fileManager.openFile", "Open File")}
+        {canCloseAll
+          ? t("fileManager.closeAllFiles", "Close all files")
+          : selectedFiles.length > 1
+            ? t("fileManager.openFiles", `Open ${selectedFiles.length} Files`)
+            : t("fileManager.openFile", "Open File")}
       </Button>
     </Stack>
   );

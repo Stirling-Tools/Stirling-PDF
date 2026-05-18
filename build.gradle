@@ -20,10 +20,10 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
-    springBootVersion = "4.0.5"
+    springBootVersion = "4.0.6"
     pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
-    lombokVersion = "1.18.44"
+    lombokVersion = "1.18.46"
     bouncycastleVersion = "1.83"
     springSecuritySamlVersion = "7.0.5"
     openSamlVersion = "5.2.1"
@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.10.1'
+    version = '2.11.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -101,11 +101,14 @@ tasks.register('syncAppVersion') {
 
         def tauriConfigFile = new File(tauriConfigPath)
         if (tauriConfigFile.exists()) {
-            def parsed = new groovy.json.JsonSlurper().parse(tauriConfigFile)
-            parsed.version = appVersionStr
-            def formatted = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(parsed)) + System.lineSeparator()
-            if (tauriConfigFile.getText('UTF-8') != formatted) {
-                tauriConfigFile.write(formatted, 'UTF-8')
+            def content = tauriConfigFile.getText('UTF-8')
+            def matcher = (content =~ /(?m)^(\s*"version":\s*")([^"]*)(")/)
+            if (!matcher.find()) {
+                throw new GradleException("Could not locate version in ${tauriConfigFile} for synchronization")
+            }
+            def updatedContent = matcher.replaceFirst("${matcher.group(1)}${appVersionStr}${matcher.group(3)}")
+            if (content != updatedContent) {
+                tauriConfigFile.write(updatedContent, 'UTF-8')
             }
         }
 
