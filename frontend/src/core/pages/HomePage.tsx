@@ -119,8 +119,9 @@ export default function HomePage() {
     prevWorkbenchRef.current = curr;
     // `fileSidebarCollapsed` is intentionally read as a snapshot at the
     // moment of the entry transition only - re-running on every sidebar
-    // toggle would clobber the snapshot we just captured.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // toggle would clobber the snapshot we just captured. (This project's
+    // ESLint config doesn't ship the react-hooks/exhaustive-deps rule, so
+    // no eslint-disable comment is needed here.)
   }, [navigationState.workbench]);
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);

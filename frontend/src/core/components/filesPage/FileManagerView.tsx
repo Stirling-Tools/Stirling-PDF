@@ -33,7 +33,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { useFolders } from "@app/contexts/FolderContext";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -43,9 +42,9 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
+  FILES_PAGE_VIEW_MODES,
   FilesPageOriginFilter,
   FilesPageSortMode,
-  FilesPageViewMode,
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
@@ -76,7 +75,6 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const indexedDB = useIndexedDB();
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -983,7 +981,11 @@ export default function FileManagerView() {
                 onKeyDown={(e) => {
                   const idx = TAB_DEFS.findIndex((t2) => t2.id === currentTab);
                   if (idx < 0) return;
-                  let next = idx;
+                  // No initializer: every branch below either assigns or
+                  // returns, so seeding `next = idx` was a no-useless-assignment
+                  // lint hit. TS's definite-assignment analysis picks up the
+                  // assignments through the if/else chain.
+                  let next: number;
                   if (e.key === "ArrowRight") next = (idx + 1) % TAB_DEFS.length;
                   else if (e.key === "ArrowLeft")
                     next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
@@ -1244,9 +1246,12 @@ export default function FileManagerView() {
                 onChange={(v) => {
                   // Mantine only emits values declared in `data[].value`, but
                   // narrow defensively so a future third option can't silently
-                  // bypass the FilesPageViewMode contract.
-                  if (v !== "grid" && v !== "list") return;
-                  setViewMode(v);
+                  // bypass the FilesPageViewMode contract. Derived from the
+                  // `as const` tuple so adding a mode anywhere in the code
+                  // base automatically widens the guard here.
+                  if (!(FILES_PAGE_VIEW_MODES as readonly string[]).includes(v))
+                    return;
+                  setViewMode(v as (typeof FILES_PAGE_VIEW_MODES)[number]);
                 }}
                 aria-label={t("filesPage.viewMode.label", "View mode")}
                 data={[

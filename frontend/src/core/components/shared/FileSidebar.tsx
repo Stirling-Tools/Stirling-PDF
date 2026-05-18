@@ -298,27 +298,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const handleNativeFilePick = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const picked = Array.from(e.target.files ?? []);
-        // The `<input accept=".pdf">` hint is bypassable (DevTools, drag-drop
-        // into the same handler from another surface, browsers that ignore
-        // the attribute). Filter at the boundary so non-PDF files don't end
-        // up in IndexedDB / sent to PDF-only tools that would silently fail
-        // downstream. Allow files whose MIME starts with `application/pdf`
-        // OR whose extension is .pdf - some browsers omit the MIME for
-        // local files.
-        const isPdf = (f: File) =>
-          f.type.toLowerCase().startsWith("application/pdf") ||
-          f.name.toLowerCase().endsWith(".pdf");
-        const files = picked.filter(isPdf);
-        const rejected = picked.length - files.length;
-        if (rejected > 0) {
-          // Surface the rejection so the user knows why nothing happened.
-          // Console-only is acceptable for a power-user bypass; a toast
-          // would be louder but require pulling in NotificationContext here.
-          console.warn(
-            `[FileSidebar] Rejected ${rejected} non-PDF file(s) from native picker.`,
-          );
-        }
+        // Accept whatever the user picked - per-tool validation (e.g. the
+        // convert tool's PNG -> PDF flow) happens downstream against each
+        // tool's `supportedFormats`. The earlier PDF-only filter here was
+        // too aggressive and silently dropped legitimate non-PDF inputs.
+        const files = Array.from(e.target.files ?? []);
         if (files.length > 0) {
           await addFiles(files);
           if (!isMultiTool) {
@@ -429,7 +413,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               ref={nativeFileInputRef}
               type="file"
               multiple
-              accept=".pdf"
+              // No `accept` filter - this picker feeds the global workspace,
+              // not a specific tool, so users may legitimately upload PNGs,
+              // ZIPs, etc. for the convert/merge/extract tools to handle.
               style={{ display: "none" }}
               onChange={handleNativeFilePick}
               data-testid="file-input"
