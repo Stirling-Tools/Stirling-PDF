@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Menu, Tooltip } from "@mantine/core";
+import { ActionIcon, Menu } from "@mantine/core";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import HomeIcon from "@mui/icons-material/Home";
@@ -51,27 +51,28 @@ interface FolderTreeSidebarProps {
     folderId: FolderId | null,
     fileIds: FileId[],
   ) => Promise<void> | void;
-  /**
-   * When true, render only the tree list - skip the wrapping <aside>
-   * chrome and the inline header. Useful when the consumer already
-   * provides those (e.g. FolderTreePanel).
-   */
-  embed?: boolean;
 }
 
+// This component is always rendered inside FolderTreePanel, which supplies
+// its own <aside> chrome and "New folder at root" toolbar control. An
+// earlier `embed` prop selected between an embedded list and a standalone
+// aside+header layout; the standalone layout was unused and its "New
+// folder at root" ActionIcon was not gated by `serverReachable`, so if
+// anyone re-wired the component into a non-embed surface they'd ship an
+// always-enabled mutation button against a possibly-offline server.
+// Deleted to remove the trap.
 export function FolderTreeSidebar({
   fileCounts,
   onRequestNewFolder,
   onRenameFolder,
   onDeleteFolder,
   onMoveFilesIntoFolder,
-  embed = false,
 }: FolderTreeSidebarProps) {
   const { t } = useTranslation();
   const { tree, currentFolderId, setCurrentFolderId } = useFolders();
   const { currentTab, setCurrentTab, moveFolderTo } = useFilesPage();
 
-  const list = (
+  return (
     <div
       className="files-page-tree-list"
       role="tree"
@@ -126,33 +127,6 @@ export function FolderTreeSidebar({
         />
       ))}
     </div>
-  );
-
-  if (embed) return list;
-
-  return (
-    <aside
-      className="files-page-tree"
-      aria-label={t("filesPage.tree", "Folders")}
-    >
-      <div className="files-page-tree-header">
-        <span>{t("filesPage.tree", "Folders")}</span>
-        <Tooltip
-          label={t("filesPage.newRootFolder", "New folder at root")}
-          withinPortal
-        >
-          <ActionIcon
-            size="sm"
-            variant="subtle"
-            onClick={() => onRequestNewFolder(ROOT_FOLDER_ID)}
-            aria-label={t("filesPage.newRootFolder", "New folder at root")}
-          >
-            <CreateNewFolderIcon fontSize="small" />
-          </ActionIcon>
-        </Tooltip>
-      </div>
-      {list}
-    </aside>
   );
 }
 

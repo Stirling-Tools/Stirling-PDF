@@ -48,7 +48,6 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
         </div>
 
         <FolderTreeSidebar
-          embed
           fileCounts={fileCountsByFolder}
           onRequestNewFolder={openNewFolderDialog}
           onRenameFolder={(folder: FolderRecord) =>

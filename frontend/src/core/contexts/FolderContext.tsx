@@ -37,6 +37,7 @@ import {
   pickFolderColor,
 } from "@app/types/folder";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface FolderContextValue {
   folders: FolderRecord[];
@@ -51,6 +52,12 @@ interface FolderContextValue {
    * Whether the most recent folder-API round-trip succeeded. Used to gate
    * folder mutation controls - when false, "New folder", rename, move,
    * delete, and appearance picker should be disabled.
+   *
+   * Initial value is `false` (fail-closed). Consumers will see a brief
+   * window of disabled controls during the first pullFromServer call;
+   * starting `true` would cause the inverse flash (enabled controls that
+   * the user can click before the first response arrives, then a banner
+   * after they submit the dialog), which is the worse failure mode.
    *
    * Naming caveat: the flag flips false for ANY failure mode, not just
    * literal network unreachability. A 401 (not signed in) or 403 (storage
@@ -290,9 +297,17 @@ export function FolderProvider({ children }: FolderProviderProps) {
 
   // Pull from server on mount - the IDB cache is for instant paint only;
   // we always reconcile with the server before letting the user mutate.
+  // Short-circuit when AppConfig already tells us storage is off (desktop,
+  // login disabled, or `storage.enabled=false`). The server-side
+  // ConfigController computes `storageEnabled = enableLogin && storage.isEnabled`
+  // so this single check covers all three failure modes - saves one
+  // guaranteed-to-403 round-trip per session.
+  const { config: appConfig } = useAppConfig();
+  const storageBackedByServer = appConfig?.storageEnabled === true;
   useEffect(() => {
+    if (!storageBackedByServer) return;
     void pullFromServer();
-  }, [pullFromServer]);
+  }, [pullFromServer, storageBackedByServer]);
 
   const foldersById = useMemo(() => {
     const map = new Map<FolderId, FolderRecord>();

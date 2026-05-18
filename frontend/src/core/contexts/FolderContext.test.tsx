@@ -49,6 +49,15 @@ vi.mock("@app/contexts/IndexedDBContext", () => ({
   }),
 }));
 
+// FolderProvider short-circuits pullFromServer when AppConfig says storage
+// is off. These tests are specifically about what happens when the pull
+// DOES fire and rejects, so we mock `storageEnabled = true`.
+vi.mock("@app/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({
+    config: { storageEnabled: true, storageSharingEnabled: false },
+  }),
+}));
+
 /**
  * Probe consumer that surfaces the bits of `useFolders()` this test cares
  * about. Rendered as text nodes so RTL queries can wait on them.
