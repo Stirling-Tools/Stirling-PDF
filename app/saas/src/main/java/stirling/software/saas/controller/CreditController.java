@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
@@ -33,7 +32,6 @@ import stirling.software.saas.util.LogRedactionUtils;
 public class CreditController {
 
     private final CreditService creditService;
-    private final UserRepository userRepository;
 
     @GetMapping
     @Operation(
@@ -288,15 +286,15 @@ public class CreditController {
         if (authentication instanceof EnhancedJwtAuthenticationToken enhancedJwt) {
             return creditService.getCreditSummaryBySupabaseId(enhancedJwt.getSupabaseId());
         }
-        if (authentication instanceof ApiKeyAuthenticationToken) {
-            String apiKey = authentication.getName();
-            // Resolve API key -> User -> supabaseId (if linked), else fall back to API-key lookup.
-            return userRepository
-                    .findByApiKey(apiKey)
-                    .map(User::getSupabaseId)
-                    .map(java.util.UUID::toString)
-                    .map(creditService::getCreditSummaryBySupabaseId)
-                    .orElseGet(() -> creditService.getCreditSummaryByApiKey(apiKey));
+        if (authentication instanceof ApiKeyAuthenticationToken apiKeyToken) {
+            String apiKey = (String) apiKeyToken.getCredentials();
+            // Principal is the resolved User entity (per SupabaseAuthenticationFilter). Prefer the
+            // linked Supabase ID; fall back to API-key-keyed credits if there's no supabase link
+            // or no User row (e.g. legacy API-key-only deployments).
+            if (apiKeyToken.getPrincipal() instanceof User user && user.getSupabaseId() != null) {
+                return creditService.getCreditSummaryBySupabaseId(user.getSupabaseId().toString());
+            }
+            return creditService.getCreditSummaryByApiKey(apiKey);
         }
         return creditService.getCreditSummaryBySupabaseId(authentication.getName());
     }

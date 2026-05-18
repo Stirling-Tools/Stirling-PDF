@@ -177,6 +177,93 @@ class SupabaseAuthenticationFilterTest {
     }
 
     @Test
+    void appleProviderClassifiedAsOauth2NotWeb() throws Exception {
+        UUID supabaseId = UUID.randomUUID();
+        Jwt jwt = jwtFor(supabaseId, "carol@example.com", false, "apple");
+        when(jwtDecoder.decode("token")).thenReturn(jwt);
+
+        when(supabaseUserService.getUser(supabaseId))
+                .thenReturn(supabaseUserMatching(supabaseId, "carol@example.com", false));
+        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
+        when(userService.saveUser(any(User.class)))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            assertThat(u.getAuthenticationType())
+                                    .as("Apple sign-in must be classified as OAUTH2, not WEB")
+                                    .isEqualToIgnoringCase(AuthenticationType.OAUTH2.name());
+                            return u;
+                        });
+
+        request.setRequestURI("/api/v1/something");
+        request.setMethod("POST");
+        request.addHeader("Authorization", "Bearer token");
+
+        filter.doFilter(request, response, chain);
+
+        verify(userService, times(1)).saveUser(any(User.class));
+    }
+
+    @Test
+    void azureProviderClassifiedAsOauth2NotWeb() throws Exception {
+        UUID supabaseId = UUID.randomUUID();
+        Jwt jwt = jwtFor(supabaseId, "dave@example.com", false, "azure");
+        when(jwtDecoder.decode("token")).thenReturn(jwt);
+
+        when(supabaseUserService.getUser(supabaseId))
+                .thenReturn(supabaseUserMatching(supabaseId, "dave@example.com", false));
+        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
+        when(userService.saveUser(any(User.class)))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            assertThat(u.getAuthenticationType())
+                                    .as("Azure sign-in must be classified as OAUTH2, not WEB")
+                                    .isEqualToIgnoringCase(AuthenticationType.OAUTH2.name());
+                            return u;
+                        });
+
+        request.setRequestURI("/api/v1/something");
+        request.setMethod("POST");
+        request.addHeader("Authorization", "Bearer token");
+
+        filter.doFilter(request, response, chain);
+
+        verify(userService, times(1)).saveUser(any(User.class));
+    }
+
+    @Test
+    void emailProviderClassifiedAsWeb() throws Exception {
+        UUID supabaseId = UUID.randomUUID();
+        Jwt jwt = jwtFor(supabaseId, "eve@example.com", false, "email");
+        when(jwtDecoder.decode("token")).thenReturn(jwt);
+
+        when(supabaseUserService.getUser(supabaseId))
+                .thenReturn(supabaseUserMatching(supabaseId, "eve@example.com", false));
+        when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
+        when(userService.saveUser(any(User.class)))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            assertThat(u.getAuthenticationType())
+                                    .as("password/magic-link must be classified as WEB")
+                                    .isEqualToIgnoringCase(AuthenticationType.WEB.name());
+                            return u;
+                        });
+
+        request.setRequestURI("/api/v1/something");
+        request.setMethod("POST");
+        request.addHeader("Authorization", "Bearer token");
+
+        filter.doFilter(request, response, chain);
+
+        verify(userService, times(1)).saveUser(any(User.class));
+    }
+
+    @Test
     void jwtMissingRequiredClaimsTriggers401() throws Exception {
         UUID supabaseId = UUID.randomUUID();
         // Build a JWT with no email and no required claims set; should fail validation
