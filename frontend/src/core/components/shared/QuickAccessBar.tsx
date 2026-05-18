@@ -30,7 +30,7 @@ import "@app/components/shared/quickAccessBar/QuickAccessBar.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import AllToolsNavButton from "@app/components/shared/AllToolsNavButton";
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
-import AppConfigModal from "@app/components/shared/AppConfigModal";
+import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";

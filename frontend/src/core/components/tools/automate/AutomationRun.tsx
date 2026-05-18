@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckIcon from "@mui/icons-material/Check";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { AutomationConfig, ExecutionStep } from "@app/types/automation";
 import { EXECUTION_STATUS } from "@app/constants/automation";
@@ -29,7 +29,7 @@ export default function AutomationRun({
   automateOperation,
 }: AutomationRunProps) {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
   const { regularTools } = useToolRegistry();
   const toolRegistry = regularTools;
   const cleanup = useResourceCleanup();

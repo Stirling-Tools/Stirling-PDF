@@ -28,20 +28,24 @@ tasks:
     deps: [prepare]
     ignore_error: true
     dir: src
+    vars:
+      PORT: '{{.PORT | default "5001"}}'
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
-      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}}
 
   dev:
     desc: "Start engine dev server with hot reload"
     deps: [prepare]
     ignore_error: true
     dir: src
+    vars:
+      PORT: '{{.PORT | default "5001"}}'
     env:
       PYTHONUNBUFFERED: "1"
     cmds:
-      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001 --reload
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port {{.PORT}} --reload
 
   lint:
     desc: "Run linting"
@@ -82,8 +86,9 @@ tasks:
   fix:
     desc: "Auto-fix lint + format"
     cmds:
+      - task: format  # Can auto-fix some things that `lint:fix` can't like line length violations
       - task: lint:fix
-      - task: format
+      - task: format  # Ensure that after lint fixing that the code is still formatted correctly
 
   check:
     desc: "Full engine quality gate"

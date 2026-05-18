@@ -68,6 +68,36 @@ public class EndpointConfiguration {
         return endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
     }
 
+    /**
+     * Translate a full request URI like {@code /api/v1/general/remove-pages} into the endpoint key
+     * used by this configuration ({@code remove-pages}). Convert endpoints are a special case -
+     * {@code /api/v1/convert/pdf/img} is registered as {@code pdf-to-img}. Returns {@code null} if
+     * the URI is not an {@code /api/v1/<group>/<endpoint>} path.
+     */
+    public static String endpointKeyForUri(String uri) {
+        if (uri == null || !uri.contains("/api/v1")) {
+            return null;
+        }
+        String[] parts = uri.split("/");
+        if (parts.length <= 4) {
+            return null;
+        }
+        if ("convert".equals(parts[3]) && parts.length > 5) {
+            return parts[4] + "-to-" + parts[5];
+        }
+        return parts[4];
+    }
+
+    /**
+     * Convenience wrapper around {@link #isEndpointEnabled(String)} that accepts a full request URI
+     * and translates it to the endpoint key. Falls back to treating the URI itself as a key for
+     * non-{@code /api/v1/...} paths so callers can pass arbitrary URIs.
+     */
+    public boolean isEndpointEnabledForUri(String uri) {
+        String key = endpointKeyForUri(uri);
+        return isEndpointEnabled(key != null ? key : uri);
+    }
+
     public void enableEndpoint(String endpoint) {
         String normalized = normalizeEndpoint(endpoint);
         endpointStatuses.put(normalized, true);

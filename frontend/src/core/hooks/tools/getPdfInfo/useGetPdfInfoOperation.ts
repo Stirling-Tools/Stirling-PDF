@@ -51,7 +51,7 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
   const executeOperation = useCallback(
     async (_params: GetPdfInfoParameters, selectedFiles: StirlingFile[]) => {
       if (selectedFiles.length === 0) {
-        setErrorMessage(t("noFileSelected", "No files selected"));
+        setErrorMessage(t("noFileSelected", "No file loaded"));
         return;
       }
 
@@ -79,9 +79,6 @@ export const useGetPdfInfoOperation = (): GetPdfInfoOperationHook => {
             const response = await apiClient.post(
               "/api/v1/security/get-info-on-pdf",
               formData,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-              },
             );
 
             const stub = selectors.getStirlingFileStub(file.fileId);
