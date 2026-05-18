@@ -456,33 +456,42 @@ class FileStorageService {
    */
   async clearFolderForFiles(folderIds: FolderId[]): Promise<number> {
     if (folderIds.length === 0) return 0;
-    const folderSet = new Set<string>(folderIds);
     const db = await this.getDatabase();
     let cleared = 0;
 
+    // Use the `folderId` index (declared on the files store in
+    // indexedDBManager DATABASE_CONFIGS) with one keyRange-bounded cursor
+    // per folderId. The previous full-store openCursor() was O(total files);
+    // this is O(files-in-affected-folders + folderIds.length). On users
+    // with thousands of files and a single deleted folder this is a 100x+
+    // win and keeps the UI responsive while the transaction runs.
     await new Promise<void>((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
-      const cursorRequest = store.openCursor();
+      const index = store.index("folderId");
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () =>
         reject(
           transaction.error ?? new Error("Clear folder transaction aborted"),
         );
-      cursorRequest.onerror = () => reject(cursorRequest.error);
-      cursorRequest.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest)
-          .result as IDBCursorWithValue | null;
-        if (!cursor) return;
-        const record = cursor.value as StoredStirlingFileRecord;
-        if (record.folderId && folderSet.has(record.folderId as string)) {
+
+      for (const folderId of folderIds) {
+        const cursorRequest = index.openCursor(
+          IDBKeyRange.only(folderId as string),
+        );
+        cursorRequest.onerror = () => reject(cursorRequest.error);
+        cursorRequest.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest)
+            .result as IDBCursorWithValue | null;
+          if (!cursor) return;
+          const record = cursor.value as StoredStirlingFileRecord;
           record.folderId = null;
           cursor.update(record);
           cleared += 1;
-        }
-        cursor.continue();
-      };
+          cursor.continue();
+        };
+      }
     });
 
     return cleared;
