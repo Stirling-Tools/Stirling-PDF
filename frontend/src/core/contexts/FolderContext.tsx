@@ -107,10 +107,17 @@ function buildTree(folders: FolderRecord[]): FolderTreeNode[] {
       a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
     );
   }
+  // Cap recursion. Backend cycle detection + per-user folder cap already
+  // prevent legitimately-deep chains, so any chain past this limit means
+  // either a corrupted local cache or a malicious server response. Bail
+  // out at the depth boundary so the JS call stack stays finite either
+  // way; the user just sees the tree truncated at the bad node.
+  const MAX_BUILD_DEPTH = 50;
   const build = (
     parentId: FolderId | null,
     depth: number,
   ): FolderTreeNode[] => {
+    if (depth >= MAX_BUILD_DEPTH) return [];
     const direct = byParent.get(parentId) ?? [];
     return direct.map((folder) => ({
       folder,
