@@ -48,9 +48,17 @@ interface FolderContextValue {
   setError: (msg: string | null) => void;
 
   /**
-   * Whether the most recent server round-trip succeeded. Used to gate folder
-   * mutation controls - when false, "New folder", rename, move, delete, and
-   * appearance picker should be disabled with an offline tooltip.
+   * Whether the most recent folder-API round-trip succeeded. Used to gate
+   * folder mutation controls - when false, "New folder", rename, move,
+   * delete, and appearance picker should be disabled.
+   *
+   * Naming caveat: the flag flips false for ANY failure mode, not just
+   * literal network unreachability. A 401 (not signed in) or 403 (storage
+   * disabled on the server) also flips it false - in both cases the user
+   * cannot mutate server-side folders, so the disabled UX is correct, but
+   * the tooltip wording should avoid claiming the user is "offline"
+   * (they may not be). The shared i18n key `filesPage.offlineNoFolderEdits`
+   * has been worded to cover all three cases.
    */
   serverReachable: boolean;
 
