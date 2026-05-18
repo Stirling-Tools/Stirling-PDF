@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -327,9 +328,14 @@ public class CreditService {
                         }
                     }
 
-                    // Report overage to Stripe
+                    // Stable idempotency key per (user, amount, operation) so retries dedupe.
+                    String operationId = MDC.get("requestId");
+                    if (operationId == null || operationId.isBlank()) {
+                        operationId = UUID.randomUUID().toString();
+                    }
                     String idempotencyKey =
-                            stripeUsageReportingService.generateIdempotencyKey(supabaseId);
+                            stripeUsageReportingService.generateIdempotencyKey(
+                                    supabaseId, overageCredits, operationId);
 
                     log.info(
                             "[CREDIT-CONSUME] Calling Stripe reporting service - User: {}, Overage credits: {}, Idempotency key: {}",
@@ -633,6 +639,25 @@ public class CreditService {
     public void resetCycleCreditsForAllTeams() {
         LocalDateTime now = LocalDateTime.now();
         resetCycleCreditsForAllTeams(now);
+    }
+
+    /** Credit summary keyed by API key; for API-key-only users without a linked Supabase ID. */
+    public CreditSummary getCreditSummaryByApiKey(String apiKey) {
+        Optional<UserCredit> creditsOpt = getUserCreditsByApiKey(apiKey);
+        if (creditsOpt.isEmpty()) {
+            return new CreditSummary();
+        }
+        UserCredit credits = creditsOpt.get();
+        boolean isUnlimited = credits.getCycleCreditsAllocated() == Integer.MAX_VALUE;
+        return new CreditSummary(
+                credits.getCycleCreditsRemaining(),
+                credits.getCycleCreditsAllocated(),
+                credits.getBoughtCreditsRemaining(),
+                credits.getTotalBoughtCredits(),
+                credits.getTotalAvailableCredits(),
+                credits.getLastCycleResetAt(),
+                credits.getLastApiUsage(),
+                isUnlimited);
     }
 
     public CreditSummary getCreditSummary(String username) {
@@ -1034,9 +1059,13 @@ public class CreditService {
                     creditAmount);
 
             try {
-                // Report to Stripe meter via edge function
+                String operationId = MDC.get("requestId");
+                if (operationId == null || operationId.isBlank()) {
+                    operationId = UUID.randomUUID().toString();
+                }
                 String idempotencyKey =
-                        stripeUsageReportingService.generateIdempotencyKey(supabaseId.toString());
+                        stripeUsageReportingService.generateIdempotencyKey(
+                                supabaseId.toString(), creditAmount, operationId);
 
                 boolean reported =
                         stripeUsageReportingService.reportUsageToStripe(

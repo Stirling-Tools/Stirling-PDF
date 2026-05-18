@@ -115,10 +115,15 @@ class StripeUsageReportingServiceTest {
     }
 
     @Test
-    void idempotencyKeyHasExpectedShape() throws Exception {
+    void idempotencyKeyIsStableForSameInputs() throws Exception {
         StripeUsageReportingService svc = newService("http://127.0.0.1:" + port, "secret");
-        String key = svc.generateIdempotencyKey("user-123");
+        String a = svc.generateIdempotencyKey("user-123", 5, "op-abc");
+        String b = svc.generateIdempotencyKey("user-123", 5, "op-abc");
+        assertThat(a).isEqualTo(b);
+        assertThat(a).isEqualTo("usage_user-123_5_op-abc");
 
-        assertThat(key).startsWith("usage_user-123_").matches("usage_user-123_\\d+_[0-9a-f]{8}");
+        // Different operation -> different key.
+        String c = svc.generateIdempotencyKey("user-123", 5, "op-def");
+        assertThat(c).isNotEqualTo(a);
     }
 }

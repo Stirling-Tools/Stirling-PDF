@@ -212,8 +212,13 @@ public class TeamCreditService {
         }
 
         try {
+            String operationId = org.slf4j.MDC.get("requestId");
+            if (operationId == null || operationId.isBlank()) {
+                operationId = java.util.UUID.randomUUID().toString();
+            }
             String idempotencyKey =
-                    stripeUsageReportingService.generateIdempotencyKey(leaderSupabaseId);
+                    stripeUsageReportingService.generateIdempotencyKey(
+                            leaderSupabaseId, amount, operationId);
 
             log.info(
                     "[TEAM-CREDIT] Reporting {} overage credits to Stripe for team {} leader {}",

@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.CreditConsumptionResult;
@@ -34,10 +35,14 @@ import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
 import stirling.software.saas.util.CreditHeaderUtils;
 
-@RestControllerAdvice
+/**
+ * Scoped to controllers annotated with {@link AutoJobPostMapping} so it doesn't hijack the global
+ * exception flow.
+ */
+@RestControllerAdvice(annotations = AutoJobPostMapping.class)
 @Profile("saas")
 @Slf4j
-@Order(1) // High priority to catch exceptions before other advice
+@Order(1)
 public class CreditErrorAdvice {
 
     private static final String ATTR_ELIGIBLE = "CREDIT_ELIGIBLE";

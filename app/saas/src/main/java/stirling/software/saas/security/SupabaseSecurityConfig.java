@@ -6,13 +6,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
@@ -56,7 +56,6 @@ import stirling.software.saas.service.SupabaseUserService;
 @EnableWebSecurity
 @EnableMethodSecurity
 @Profile("saas")
-@Primary
 @Order(1)
 @RequiredArgsConstructor
 public class SupabaseSecurityConfig {
@@ -262,16 +261,13 @@ public class SupabaseSecurityConfig {
                                 "http://localhost:8080",
                                 "https://stirling.com",
                                 "https://app.stirling.com",
-                                "https://api.stirling.com",
-                                "https://*.ssl.stirlingpdf.cloud");
-        // Only WARN for operator-supplied wildcards; the default tenant pattern is expected.
-        if (operatorOverride && origins.stream().anyMatch(o -> o.contains("*"))) {
+                                "https://api.stirling.com");
+        if (origins.stream().anyMatch(o -> o.contains("*"))) {
             log.warn(
-                    "system.cors-allowed-origins contains a wildcard paired with"
-                            + " allowCredentials=true: {}. Wildcard subdomains can be taken over by"
-                            + " an attacker (lapsed DNS, abandoned vhost) and would receive"
-                            + " credentialed CORS responses. Pin to specific hostnames where"
-                            + " possible.",
+                    "CORS origins contain a wildcard paired with allowCredentials=true: {}."
+                            + " Wildcard subdomains can be taken over by an attacker (lapsed DNS,"
+                            + " abandoned vhost) and would receive credentialed responses. Pin to"
+                            + " specific hostnames.",
                     origins);
         }
         cfg.setAllowedOriginPatterns(origins);
@@ -308,7 +304,7 @@ public class SupabaseSecurityConfig {
         }
         String appRole = jwt.getClaimAsString("app_role");
         if (appRole != null && !appRole.isBlank()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + appRole.toUpperCase()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + appRole.toUpperCase(Locale.ROOT)));
         }
         authorities.add(
                 new SimpleGrantedAuthority(isAnonymous ? "ROLE_LIMITED_API_USER" : "ROLE_USER"));

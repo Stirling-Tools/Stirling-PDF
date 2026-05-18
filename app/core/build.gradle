@@ -39,9 +39,7 @@ spotless {
 }
 
 dependencies {
-    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
-        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
+    if (!gradle.ext.disableAdditional) {
         implementation project(':proprietary')
     }
 
@@ -336,4 +334,9 @@ if (buildWithFrontend) {
 }
 
 bootJar.dependsOn ':common:jar'
-bootJar.dependsOn ':proprietary:jar'
+if (!gradle.ext.disableAdditional) {
+    bootJar.dependsOn ':proprietary:jar'
+}
+if (gradle.ext.enableSaas) {
+    bootJar.dependsOn ':saas:jar'
+}

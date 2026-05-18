@@ -16,7 +16,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
 import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.CreditService.CreditSummary;
@@ -31,6 +33,7 @@ import stirling.software.saas.util.LogRedactionUtils;
 public class CreditController {
 
     private final CreditService creditService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @Operation(
@@ -42,12 +45,7 @@ public class CreditController {
             description = "Credit information retrieved successfully",
             content = @Content(schema = @Schema(implementation = CreditSummary.class)))
     public ResponseEntity<CreditSummary> getUserCredits(Authentication authentication) {
-        String supabaseId = extractSupabaseId(authentication);
-
-        log.debug("[CREDIT-DEBUG] Getting credits for Supabase ID: {}", supabaseId);
-
-        CreditSummary summary = creditService.getCreditSummaryBySupabaseId(supabaseId);
-        return ResponseEntity.ok(summary);
+        return ResponseEntity.ok(getCreditSummaryForAuthentication(authentication));
     }
 
     @PostMapping("/purchase")
@@ -267,11 +265,7 @@ public class CreditController {
             summary = "Get credit usage summary",
             description = "Get overview of credit usage (for authenticated user or admin view)")
     public ResponseEntity<UsageSummary> getCreditUsage(Authentication authentication) {
-        String supabaseId = extractSupabaseId(authentication);
-
-        log.debug("[CREDIT-DEBUG] Getting credit usage for Supabase ID: {}", supabaseId);
-
-        CreditSummary summary = creditService.getCreditSummaryBySupabaseId(supabaseId);
+        CreditSummary summary = getCreditSummaryForAuthentication(authentication);
 
         // For unlimited users, don't show meaningless huge usage numbers
         int cycleCreditsUsed =
@@ -289,16 +283,22 @@ public class CreditController {
         return ResponseEntity.ok(usage);
     }
 
-    /** Returns the Supabase ID for JWT users, or the API key for API-key users. */
-    private static String extractSupabaseId(Authentication authentication) {
+    /** Resolves the current authentication to a credit summary, handling JWT and API-key auth. */
+    private CreditSummary getCreditSummaryForAuthentication(Authentication authentication) {
         if (authentication instanceof EnhancedJwtAuthenticationToken enhancedJwt) {
-            return enhancedJwt.getSupabaseId();
-        } else if (authentication instanceof ApiKeyAuthenticationToken) {
-            // For API key authentication, the name is the API key
-            return authentication.getName();
+            return creditService.getCreditSummaryBySupabaseId(enhancedJwt.getSupabaseId());
         }
-        // Fallback for other authentication types
-        return authentication.getName();
+        if (authentication instanceof ApiKeyAuthenticationToken) {
+            String apiKey = authentication.getName();
+            // Resolve API key -> User -> supabaseId (if linked), else fall back to API-key lookup.
+            return userRepository
+                    .findByApiKey(apiKey)
+                    .map(User::getSupabaseId)
+                    .map(java.util.UUID::toString)
+                    .map(creditService::getCreditSummaryBySupabaseId)
+                    .orElseGet(() -> creditService.getCreditSummaryByApiKey(apiKey));
+        }
+        return creditService.getCreditSummaryBySupabaseId(authentication.getName());
     }
 
     public static class UsageSummary {

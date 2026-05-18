@@ -7,7 +7,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -128,12 +127,13 @@ public class StripeUsageReportingService {
         }
     }
 
-    /** Idempotency key format: {@code usage_<supabaseId>_<epochMs>_<random8>}. */
-    public String generateIdempotencyKey(String supabaseId) {
-        return String.format(
-                "usage_%s_%d_%s",
-                supabaseId,
-                System.currentTimeMillis(),
-                UUID.randomUUID().toString().substring(0, 8));
+    /**
+     * Idempotency key derived from the user + amount + operation. Stable across retries of the same
+     * logical operation. Caller supplies a stable {@code operationId} (e.g. the request UUID
+     * captured at the start of the credit-consume path) so a retry produces the same key.
+     */
+    public String generateIdempotencyKey(
+            String supabaseId, int overageCredits, String operationId) {
+        return String.format("usage_%s_%d_%s", supabaseId, overageCredits, operationId);
     }
 }

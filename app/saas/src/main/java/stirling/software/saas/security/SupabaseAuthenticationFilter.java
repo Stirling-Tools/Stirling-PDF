@@ -258,7 +258,17 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             user.setEmail(supabaseUser.getEmail());
             user.setUsername(supabaseUser.getEmail());
         }
-        return userService.saveUser(user);
+        try {
+            return userService.saveUser(user);
+        } catch (DataIntegrityViolationException e) {
+            log.warn(
+                    "Email collision upgrading anonymous user {} to {}: {}",
+                    user.getId(),
+                    LogRedactionUtils.redactEmail(supabaseUser.getEmail()),
+                    e.getMessage());
+            throw new AuthenticationFailureException(
+                    "Cannot upgrade anonymous account: email already in use", e);
+        }
     }
 
     /** Maps Supabase's {@code amr} claim to an {@link AuthenticationType}; defaults to WEB. */
@@ -311,11 +321,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             }
 
             String provider = String.valueOf(appMetadata.get("provider"));
-            switch (provider) {
-                case "google", "github", "facebook", "linkedin_oidc" -> authenticationType = OAUTH2;
-                default -> {
-                    // Leave as WEB
-                }
+            // "email" is the password / magic-link flow; everything else Supabase exposes is an
+            // external IdP (OAuth or SAML). Treat unknown non-email providers as OAUTH2 rather
+            // than silently downgrading to WEB.
+            if (provider != null && !provider.isBlank() && !"email".equalsIgnoreCase(provider)) {
+                authenticationType = OAUTH2;
             }
 
             if (isNotBlank(email)) {
