@@ -567,7 +567,7 @@ public class SaasTeamController {
      * <p>Requires ADMIN_API_KEY authentication
      */
     @PostMapping("/{teamId}/seats")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateTeamSeats(
             @PathVariable Long teamId, @RequestBody UpdateSeatsRequest request) {
         try {
@@ -606,7 +606,7 @@ public class SaasTeamController {
      * <p>Accepts Supabase auth user ID (UUID) and returns the user's primary team information.
      */
     @GetMapping("/user/supabase/{supabaseUserId}/primary")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getUserPrimaryTeamBySupabaseId(@PathVariable String supabaseUserId) {
         try {
             java.util.UUID uuid = java.util.UUID.fromString(supabaseUserId);
@@ -644,7 +644,7 @@ public class SaasTeamController {
      * <p>Requires team membership or admin role
      */
     @GetMapping("/{teamId}")
-    @PreAuthorize("@teamSecurity.isTeamMember(#teamId) or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@teamSecurity.isTeamMember(#teamId) or hasRole('ADMIN')")
     public ResponseEntity<?> getTeamInfo(@PathVariable Long teamId) {
         try {
             Team team =

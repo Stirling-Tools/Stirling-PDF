@@ -52,7 +52,7 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID to upgrade
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/upgrade")
     public ResponseEntity<String> handleUpgrade(@RequestParam("supabaseId") String supabaseId) {
 
@@ -84,7 +84,7 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID to downgrade
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/downgrade")
     public ResponseEntity<String> handleDowngrade(@RequestParam("supabaseId") String supabaseId) {
 
@@ -117,7 +117,7 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/enable-metered-billing")
     public ResponseEntity<String> enableMeteredBilling(
             @RequestParam("supabaseId") String supabaseId) {
@@ -150,7 +150,7 @@ public class UserRoleWebhookController {
      * @param supabaseId The Supabase user ID
      * @return ResponseEntity with appropriate status
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/disable-metered-billing")
     public ResponseEntity<String> disableMeteredBilling(
             @RequestParam("supabaseId") String supabaseId) {

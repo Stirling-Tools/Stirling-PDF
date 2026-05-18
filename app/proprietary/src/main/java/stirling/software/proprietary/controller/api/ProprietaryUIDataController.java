@@ -251,7 +251,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/admin-settings")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get admin settings data")
     public ResponseEntity<AdminSettingsData> getAdminSettingsData(Authentication authentication) {
         List<User> allUsers = userRepository.findAllWithTeam();
@@ -450,7 +450,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/teams")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get teams list data")
     public ResponseEntity<TeamsData> getTeamsData() {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
@@ -476,7 +476,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/teams/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get team details data")
     public ResponseEntity<TeamDetailsData> getTeamDetailsData(@PathVariable("id") Long id) {
         Team team =
@@ -520,7 +520,7 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/database")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get database management data")
     public ResponseEntity<DatabaseData> getDatabaseData() {
         List<FileInfo> backupList = databaseService.getBackupList();
