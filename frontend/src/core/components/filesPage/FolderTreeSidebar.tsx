@@ -27,6 +27,15 @@ import {
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 
+/**
+ * Hard cap on folder-tree render depth. The backend already enforces an
+ * application-level depth limit via cycle detection + folder-count cap,
+ * and React's render stack handles ~50 nested components comfortably,
+ * so this is purely defensive against a corrupted IDB cache producing
+ * a chain deeper than the server would allow.
+ */
+const MAX_TREE_DEPTH = 50;
+
 interface FolderTreeSidebarProps {
   fileCounts: Map<FolderId | null, number>;
   onRequestNewFolder: (parentId: FolderId | null) => void;
@@ -470,6 +479,12 @@ function TreeNodeRow({
         </Menu>
       </div>
       {open &&
+        // Cap render recursion at MAX_TREE_DEPTH to guarantee a finite
+        // call stack even if a future bug (or a hand-edited IDB cache)
+        // produces a folder chain deeper than the server enforces. Any
+        // realistic user tree stays well under this; the cap exists so
+        // the renderer fails closed rather than blowing the JS stack.
+        node.depth < MAX_TREE_DEPTH &&
         node.children.map((child) => (
           <TreeNodeRow
             key={child.folder.id}
