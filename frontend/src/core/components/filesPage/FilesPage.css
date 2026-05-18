@@ -826,6 +826,64 @@
   color: var(--text-muted);
 }
 
+/* Previous-versions list — shares chrome with tool-history but each row
+   is its own line so users can click into older versions. */
+.files-page-details-version-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+}
+.files-page-details-version-history-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.files-page-details-version-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.files-page-details-version-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.3rem;
+  border-radius: 0.35rem;
+}
+.files-page-details-version-history-row.is-active {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
+}
+.files-page-details-version-history-meta {
+  min-width: 0;
+  flex: 1;
+}
+.files-page-details-version-history-name {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.files-page-details-version-history-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 .files-page-drop-overlay {
   position: absolute;
   inset: 1rem;

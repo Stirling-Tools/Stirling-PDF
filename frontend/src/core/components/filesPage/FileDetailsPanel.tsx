@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionIcon, Badge, Button, Tooltip } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
@@ -8,6 +8,7 @@ import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import HistoryIcon from "@mui/icons-material/History";
 
 import { FileId } from "@app/types/file";
 import { FolderRecord } from "@app/types/folder";
@@ -18,6 +19,7 @@ import {
   downloadMultipleFiles,
 } from "@app/utils/downloadUtils";
 import ToolChain from "@app/components/shared/ToolChain";
+import { fileStorage } from "@app/services/fileStorage";
 
 interface FileDetailsPanelProps {
   selectedFileIds: FileId[];
@@ -51,6 +53,33 @@ export function FileDetailsPanel({
 
   // Hooks must run unconditionally - declare state before the early return.
   const [downloading, setDownloading] = useState(false);
+  // Previous versions of the selected file (same originalFileId). Empty
+  // when only the single first version exists OR when multi-select is
+  // active (history is per-file). Loaded lazily off IDB so the panel
+  // mounts immediately and the version list slides in once it resolves.
+  const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
+  const singleFileForChain = files.length === 1 ? files[0] : null;
+  useEffect(() => {
+    if (!singleFileForChain) {
+      setVersionChain([]);
+      return;
+    }
+    let cancelled = false;
+    const rootId = (singleFileForChain.originalFileId ??
+      singleFileForChain.id) as FileId;
+    fileStorage
+      .getHistoryChainStubs(rootId)
+      .then((chain) => {
+        if (!cancelled) setVersionChain(chain);
+      })
+      .catch((err) => {
+        console.error("Failed to load version history", err);
+        if (!cancelled) setVersionChain([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [singleFileForChain]);
 
   if (files.length === 0) {
     return null;
@@ -172,6 +201,74 @@ export function FileDetailsPanel({
                   displayStyle="badges"
                   size="xs"
                 />
+              </div>
+            )}
+            {/* Version history. Each tool run writes a new StirlingFile with
+                the same `originalFileId` and an incremented `versionNumber`,
+                so the chain reconstructs the edit timeline. The reviewer
+                flagged that the previous file manager exposed this and the
+                new one had silently dropped it. */}
+            {versionChain.length > 1 && (
+              <div className="files-page-details-version-history">
+                <div className="files-page-details-version-history-label">
+                  <HistoryIcon fontSize="small" />
+                  <span>
+                    {t("filesPage.field.versionHistory", "Previous versions")}
+                  </span>
+                </div>
+                <ul className="files-page-details-version-history-list">
+                  {versionChain.map((version) => {
+                    const isActive = version.id === single.id;
+                    return (
+                      <li
+                        key={version.id}
+                        className={`files-page-details-version-history-row${
+                          isActive ? " is-active" : ""
+                        }`}
+                      >
+                        <Badge
+                          size="xs"
+                          variant={isActive ? "filled" : "light"}
+                          color={isActive ? "blue" : "gray"}
+                        >
+                          v{version.versionNumber ?? 1}
+                        </Badge>
+                        <div className="files-page-details-version-history-meta">
+                          <div className="files-page-details-version-history-name">
+                            {version.name}
+                          </div>
+                          <div className="files-page-details-version-history-sub">
+                            {formatFileSize(version.size)}
+                            {version.lastModified
+                              ? ` · ${getFileDate({ lastModified: version.lastModified })}`
+                              : ""}
+                          </div>
+                        </div>
+                        {!isActive && (
+                          <Tooltip
+                            label={t(
+                              "filesPage.viewVersion",
+                              "View this version",
+                            )}
+                            withinPortal
+                          >
+                            <ActionIcon
+                              variant="subtle"
+                              size="sm"
+                              onClick={() => onQuickView(version.id)}
+                              aria-label={t(
+                                "filesPage.viewVersion",
+                                "View this version",
+                              )}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </ActionIcon>
+                          </Tooltip>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
           </>
