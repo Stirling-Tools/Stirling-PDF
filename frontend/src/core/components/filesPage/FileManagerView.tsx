@@ -32,6 +32,7 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -72,6 +73,11 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { config: appConfig } = useAppConfig();
+  // Sharing is gated server-side. Hide the "Shared with me" tab entirely
+  // when the deployment didn't enable it - the tab was always empty in
+  // that case and just confused users into thinking sharing was broken.
+  const sharingEnabled = appConfig?.storageSharingEnabled ?? false;
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -136,6 +142,16 @@ export default function FileManagerView() {
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
   }, [location.pathname, foldersById, setCurrentFolderId]);
+
+  // If the deployment turned sharing off after the user last visited
+  // (e.g. cached state had currentTab === "shared"), the Shared tab is
+  // no longer rendered above - bounce back to All so the user doesn't
+  // sit on an inert tab with no content.
+  useEffect(() => {
+    if (!sharingEnabled && currentTab === "shared") {
+      setCurrentTab("all");
+    }
+  }, [sharingEnabled, currentTab, setCurrentTab]);
 
   // Push URL when the user picks a folder. Only sync while we're still on
   // /files so an explicit close doesn't bounce us back.
@@ -950,10 +966,16 @@ export default function FileManagerView() {
             const TAB_DEFS = [
               { id: "all", label: t("filesPage.tabs.all", "All") },
               { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              {
-                id: "shared",
-                label: t("filesPage.tabs.shared", "Shared with me"),
-              },
+              // Shared only when the server actually has sharing enabled —
+              // see appConfig.storageSharingEnabled gate above.
+              ...(sharingEnabled
+                ? [
+                    {
+                      id: "shared" as const,
+                      label: t("filesPage.tabs.shared", "Shared with me"),
+                    },
+                  ]
+                : []),
             ] as const;
             const focusTab = (id: string) => {
               const el = document.getElementById(`filesPage-tab-${id}`);
