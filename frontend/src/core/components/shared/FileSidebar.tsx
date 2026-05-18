@@ -514,13 +514,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             </Tooltip>
 
             {!shouldHideGoogleDrive && (
-              <div
-                className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
-                onClick={handleGoogleDriveClick}
-                role="button"
-                tabIndex={isGoogleDriveEnabled ? 0 : -1}
-                aria-disabled={!isGoogleDriveEnabled}
-                title={
+              <Tooltip
+                label={
                   !isGoogleDriveEnabled
                     ? t(
                         "fileSidebar.googleDriveDisabled",
@@ -528,25 +523,44 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )
                     : t("fileSidebar.googleDrive", "Open from Google Drive")
                 }
+                position="right"
+                withinPortal
+                disabled={!collapsed}
               >
-                <div className="file-sidebar-cloud-icon-wrapper">
-                  <GoogleDriveIcon
-                    className="file-sidebar-cloud-icon-gray"
-                    style={{ color: "var(--text-secondary)" }}
-                  />
-                  {isGoogleDriveEnabled && (
+                <div
+                  className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
+                  onClick={handleGoogleDriveClick}
+                  role="button"
+                  tabIndex={isGoogleDriveEnabled ? 0 : -1}
+                  aria-disabled={!isGoogleDriveEnabled}
+                  aria-label={
+                    !isGoogleDriveEnabled
+                      ? t(
+                          "fileSidebar.googleDriveDisabled",
+                          "Google Drive is not configured",
+                        )
+                      : t("fileSidebar.googleDrive", "Open from Google Drive")
+                  }
+                >
+                  <div className="file-sidebar-cloud-icon-wrapper">
                     <GoogleDriveIcon
-                      colored
-                      className="file-sidebar-cloud-icon-color"
+                      className="file-sidebar-cloud-icon-gray"
+                      style={{ color: "var(--text-secondary)" }}
                     />
+                    {isGoogleDriveEnabled && (
+                      <GoogleDriveIcon
+                        colored
+                        className="file-sidebar-cloud-icon-color"
+                      />
+                    )}
+                  </div>
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.googleDrive", "Google Drive")}
+                    </span>
                   )}
                 </div>
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.googleDrive", "Google Drive")}
-                  </span>
-                )}
-              </div>
+              </Tooltip>
             )}
 
             {/* Files section - always visible when expanded */}
@@ -640,44 +654,53 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         </div>
 
         {/* Bottom bar: user name + settings */}
-        <div
-          className="file-sidebar-bottom-bar"
-          onClick={onOpenSettings}
-          role={onOpenSettings ? "button" : undefined}
-          tabIndex={onOpenSettings ? 0 : undefined}
-          onKeyDown={
+        <Tooltip
+          label={
             onOpenSettings
-              ? (e) => e.key === "Enter" && onOpenSettings()
-              : undefined
+              ? `${displayName} - ${t("fileSidebar.openSettings", "Open settings")}`
+              : displayName
           }
-          data-testid={onOpenSettings ? "config-button" : undefined}
-          data-tour={onOpenSettings ? "config-button" : undefined}
-          aria-label={
-            onOpenSettings
-              ? t("fileSidebar.openSettings", "Open settings")
-              : undefined
-          }
-          title={
-            onOpenSettings
-              ? t("fileSidebar.openSettings", "Open settings")
-              : undefined
-          }
-          style={onOpenSettings ? { cursor: "pointer" } : undefined}
+          position="right"
+          withinPortal
+          disabled={!collapsed}
         >
-          <div className="file-sidebar-bottom-avatar" title={displayName}>
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-          {!collapsed && (
-            <span className="file-sidebar-bottom-name sidebar-content-fade">
-              {displayName}
-            </span>
-          )}
-          {onOpenSettings && !collapsed && (
-            <div className="file-sidebar-bottom-settings">
-              <SettingsIcon sx={{ fontSize: "1.1rem" }} />
+          <div
+            className="file-sidebar-bottom-bar"
+            onClick={onOpenSettings}
+            role={onOpenSettings ? "button" : undefined}
+            tabIndex={onOpenSettings ? 0 : undefined}
+            onKeyDown={
+              onOpenSettings
+                ? (e) => e.key === "Enter" && onOpenSettings()
+                : undefined
+            }
+            data-testid={onOpenSettings ? "config-button" : undefined}
+            data-tour={onOpenSettings ? "config-button" : undefined}
+            aria-label={
+              onOpenSettings
+                ? t("fileSidebar.openSettings", "Open settings")
+                : displayName
+            }
+            style={onOpenSettings ? { cursor: "pointer" } : undefined}
+          >
+            <div
+              className="file-sidebar-bottom-avatar"
+              aria-label={displayName}
+            >
+              {displayName.charAt(0).toUpperCase()}
             </div>
-          )}
-        </div>
+            {!collapsed && (
+              <span className="file-sidebar-bottom-name sidebar-content-fade">
+                {displayName}
+              </span>
+            )}
+            {onOpenSettings && !collapsed && (
+              <div className="file-sidebar-bottom-settings">
+                <SettingsIcon sx={{ fontSize: "1.1rem" }} />
+              </div>
+            )}
+          </div>
+        </Tooltip>
       </div>
     );
   },
