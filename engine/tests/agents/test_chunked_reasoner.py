@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pydantic import BaseModel
 
+from stirling.agents.shared.chunked_mapper import _ChunkExtraction
 from stirling.agents.shared.chunked_reasoner import ChunkedReasoner, ChunkNotes
 from stirling.contracts import WholeDocSliceDone
 from stirling.contracts.documents import Page
@@ -96,7 +97,7 @@ class TestReason:
             patch.object(
                 reasoner._mapper,
                 "_extract_chunk",
-                AsyncMock(return_value=(canned_extracted, 0.0)),
+                AsyncMock(return_value=_ChunkExtraction(output=canned_extracted, duration_seconds=0.0)),
             ) as chunk_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)) as synth_mock,
         ):
@@ -135,7 +136,7 @@ class TestReason:
             patch.object(
                 reasoner._mapper,
                 "_extract_chunk",
-                AsyncMock(return_value=(canned_extracted, 0.0)),
+                AsyncMock(return_value=_ChunkExtraction(output=canned_extracted, duration_seconds=0.0)),
             ) as chunk_mock,
             patch.object(reasoner, "_synthesise", AsyncMock(return_value=canned_answer)),
         ):
@@ -162,11 +163,11 @@ class TestReason:
         good = _ExtractedNotes(summary="ok")
         async_results: list[_ExtractedNotes | BaseException] = [good, RuntimeError("chunk boom"), good]
 
-        async def _chunk(*_args: object, **_kwargs: object) -> tuple[_ExtractedNotes, float]:
+        async def _chunk(*_args: object, **_kwargs: object) -> _ChunkExtraction[_ExtractedNotes]:
             value = async_results.pop(0)
             if isinstance(value, BaseException):
                 raise value
-            return value, 0.0
+            return _ChunkExtraction(output=value, duration_seconds=0.0)
 
         canned_answer = _Answer(answer="resilient")
 
@@ -526,12 +527,14 @@ class TestExtractChunk:
             "run",
             AsyncMock(return_value=_StubAgentResult(output=canned)),
         ):
-            note, _ = await reasoner._extract_compression_chunk(chunk, "compress these")
+            extraction = await reasoner._extract_compression_chunk(chunk, "compress these")
 
+        note = extraction.output
         assert note.pages == [1, 2, 3, 4, 5]
         assert note.summary == "merged"
         assert note.facts == ["x"]
         assert note.relevant_excerpts == ["y"]
+        assert extraction.duration_seconds >= 0
 
     @pytest.mark.anyio
     async def test_compression_rounds_receive_user_question_through_gather_notes(self, runtime: AppRuntime) -> None:

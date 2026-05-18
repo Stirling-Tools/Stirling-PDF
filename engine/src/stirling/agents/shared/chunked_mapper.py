@@ -75,6 +75,24 @@ class _MapperChunk:
     label: str
 
 
+@dataclass(frozen=True)
+class _ChunkExtraction[T: BaseModel]:
+    """Result of a single chunk extractor call.
+
+    Carries the typed extractor output and the wall-clock duration so the
+    scheduler can populate progress events and the "slowest chunk" log line.
+    Duration is in seconds (matches :func:`time.perf_counter` semantics);
+    the unit is in the field name so callers can't misread it as
+    milliseconds.
+
+    Internal helper — exported privately to ``chunked_reasoner.py`` so its
+    own compression-round scheduler can use the same shape.
+    """
+
+    output: T
+    duration_seconds: float
+
+
 def _page_range_label(pages: list[Page]) -> str:
     if not pages:
         return "pages=?"
@@ -216,7 +234,7 @@ class ChunkedMapper[T: BaseModel]:
         first.
         """
         total = len(chunks)
-        pending: dict[asyncio.Task[tuple[T, float]], _MapperChunk] = {
+        pending: dict[asyncio.Task[_ChunkExtraction[T]], _MapperChunk] = {
             asyncio.create_task(self._extract_chunk(chunk, query)): chunk for chunk in chunks
         }
 
@@ -233,18 +251,18 @@ class ChunkedMapper[T: BaseModel]:
                     if exc is not None:
                         logger.warning("[chunked-mapper] chunk %s failed: %s", chunk.label, exc)
                         continue
-                    extracted, duration = task.result()
-                    outputs.append(ChunkOutput(pages=chunk.pages, output=extracted, label=chunk.label))
+                    extraction = task.result()
+                    outputs.append(ChunkOutput(pages=chunk.pages, output=extraction.output, label=chunk.label))
                     completed += 1
-                    if slowest is None or duration > slowest[1]:
-                        slowest = (chunk.label, duration)
-                    excerpts, facts = self._summary_counts(extracted)
+                    if slowest is None or extraction.duration_seconds > slowest[1]:
+                        slowest = (chunk.label, extraction.duration_seconds)
+                    excerpts, facts = self._summary_counts(extraction.output)
                     await emit_progress(
                         WholeDocSliceDone(
                             completed=completed,
                             total=total,
                             pages=chunk.label,
-                            duration_ms=int(duration * 1000),
+                            duration_ms=int(extraction.duration_seconds * 1000),
                             excerpts=excerpts,
                             facts=facts,
                         )
@@ -274,7 +292,7 @@ class ChunkedMapper[T: BaseModel]:
         outputs.sort(key=lambda o: o.pages[0] if o.pages else 0)
         return outputs
 
-    async def _extract_chunk(self, chunk: _MapperChunk, query: str) -> tuple[T, float]:
+    async def _extract_chunk(self, chunk: _MapperChunk, query: str) -> _ChunkExtraction[T]:
         """Run the extractor on one chunk under the semaphore + timeout."""
         prompt = self._build_prompt(chunk.content, query)
         async with self._semaphore:
@@ -292,7 +310,7 @@ class ChunkedMapper[T: BaseModel]:
                 raise
             duration = time.perf_counter() - start
         logger.debug("[chunked-mapper] chunk %s extracted in %dms", chunk.label, int(duration * 1000))
-        return result.output, duration
+        return _ChunkExtraction(output=result.output, duration_seconds=duration)
 
     def _chunk_from_pages(self, pages: list[Page]) -> _MapperChunk:
         """Build a chunk from a slice of raw pages."""

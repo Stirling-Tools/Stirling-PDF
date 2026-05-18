@@ -17,6 +17,7 @@ import asyncio
 import json
 import logging
 from collections.abc import Iterator
+from dataclasses import dataclass, field
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -130,6 +131,23 @@ class _BucketContradictions(BaseModel):
     pairs: list[_DetectedPair] = Field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class _FileExtractionResult:
+    """Per-file output of stage 1.
+
+    ``claims`` are the validated public :class:`Claim` records, already
+    tagged with ``file_name``. ``pages_attempted`` is the set of page
+    numbers covered by every successful :class:`ChunkOutput` returned by
+    the mapper for this file — those are the pages the extractor pass
+    ran against, regardless of whether the model produced a claim for
+    them. (Chunks that failed contribute nothing here, so the set is a
+    coverage record, not an "all pages of the file" assertion.)
+    """
+
+    claims: list[Claim] = field(default_factory=list)
+    pages_attempted: set[int] = field(default_factory=set)
+
+
 # ---------------------------------------------------------------------------
 # Detector
 # ---------------------------------------------------------------------------
@@ -231,11 +249,10 @@ class ContradictionDetector:
                     result,
                 )
                 continue
-            file_claims, file_pages_attempted = result
-            if file_pages_attempted:
+            if result.pages_attempted:
                 any_pages_seen = True
-            claims.extend(file_claims)
-            pages_attempted.update((file.name, page) for page in file_pages_attempted)
+            claims.extend(result.claims)
+            pages_attempted.update((file.name, page) for page in result.pages_attempted)
 
         if not any_pages_seen:
             return self._empty_report(
@@ -295,14 +312,13 @@ class ContradictionDetector:
         self,
         file: AiFile,
         query: str,
-    ) -> tuple[list[Claim], set[int]]:
+    ) -> _FileExtractionResult:
         """Run the per-chunk extractor over one file's pages.
 
-        Returns the validated claims plus the set of pages whose
-        extraction pass ran (regardless of whether the model produced a
-        claim for them). The pages-attempted set is the union of pages
-        covered by every successful :class:`ChunkOutput` returned by the
-        mapper; chunks that failed contribute nothing.
+        Returns a :class:`_FileExtractionResult` with the validated claims
+        and the set of pages whose extraction pass ran. The pages-attempted
+        set is the union of pages covered by every successful
+        :class:`ChunkOutput`; failed chunks contribute nothing.
 
         Concurrency across files is governed by the caller's
         ``asyncio.gather`` and the mapper's internal semaphore — this
@@ -315,7 +331,7 @@ class ContradictionDetector:
                 file.name,
                 file.id,
             )
-            return [], set()
+            return _FileExtractionResult()
 
         pages_by_num: dict[int, Page] = {p.page_number: p for p in file_pages}
         chunk_outputs = await self._mapper.map_pages(file_pages, query)
@@ -340,7 +356,7 @@ class ContradictionDetector:
                 if claim is None:
                     continue
                 file_claims.append(claim)
-        return file_claims, pages_attempted
+        return _FileExtractionResult(claims=file_claims, pages_attempted=pages_attempted)
 
     # ------------------------------------------------------------------
     # Stage 1 helpers — claim validation

@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
-from stirling.agents.shared.chunked_mapper import ChunkedMapper
+from stirling.agents.shared.chunked_mapper import ChunkedMapper, _ChunkExtraction
 from stirling.contracts import WholeDocCompressionRound
 from stirling.contracts.documents import Page
 from stirling.models import ApiModel
@@ -309,7 +309,7 @@ class ChunkedReasoner:
         same relevance criteria as the first round — see Aikido finding on
         PR #6369.
         """
-        pending: dict[asyncio.Task[tuple[ChunkNotes, float]], _CompressionChunk] = {
+        pending: dict[asyncio.Task[_ChunkExtraction[ChunkNotes]], _CompressionChunk] = {
             asyncio.create_task(self._extract_compression_chunk(chunk, question)): chunk for chunk in chunks
         }
         notes: list[ChunkNotes] = []
@@ -329,8 +329,10 @@ class ChunkedReasoner:
                         )
                         notes.extend(chunk.fallback)
                         continue
-                    extracted_note, _duration = task.result()
-                    notes.append(extracted_note)
+                    # ``duration_seconds`` is recorded on the extraction but
+                    # compression rounds don't surface per-chunk timings the
+                    # way the first round does, so we only read ``.output``.
+                    notes.append(task.result().output)
                     successes += 1
         finally:
             if pending:
@@ -341,7 +343,7 @@ class ChunkedReasoner:
         notes.sort(key=lambda n: n.pages[0] if n.pages else 0)
         return _RoundResult(notes=notes, successes=successes)
 
-    async def _extract_compression_chunk(self, chunk: _CompressionChunk, question: str) -> tuple[ChunkNotes, float]:
+    async def _extract_compression_chunk(self, chunk: _CompressionChunk, question: str) -> _ChunkExtraction[ChunkNotes]:
         """Run the extractor on a compression-round chunk; attach pages deterministically.
 
         ``question`` carries the same user query the first-round extractors
@@ -360,7 +362,10 @@ class ChunkedReasoner:
                 )
                 raise
             duration = time.perf_counter() - start
-        return self._build_chunk_notes(result.output, chunk.pages), duration
+        return _ChunkExtraction(
+            output=self._build_chunk_notes(result.output, chunk.pages),
+            duration_seconds=duration,
+        )
 
     def _chunk_from_notes(self, group: list[ChunkNotes]) -> _CompressionChunk:
         """Build a compression-round chunk from a group of prior-pass notes.
