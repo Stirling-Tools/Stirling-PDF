@@ -49,6 +49,18 @@ fn dispatch_deep_link(app: &AppHandle, url: &str) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  #[cfg(target_os = "linux")]
+  {
+    use std::env;
+    // WebKitGTK >= 2.46 DMA-BUF renderer SIGABRTs on KDE 6 + Mesa/NVIDIA; disable unless user opted in.
+    if env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+      env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+    if env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_none() {
+      env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+    }
+  }
+
   tauri::Builder::default()
     .plugin(
       tauri_plugin_log::Builder::new()
