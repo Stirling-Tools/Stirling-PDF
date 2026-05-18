@@ -83,7 +83,16 @@ public class RequestUriUtils {
             return false;
         }
 
-        // Blocklist of backend/non-frontend paths that should still go through filters
+        // Blocklist of backend/non-frontend paths that should still go through filters.
+        //
+        // `/files` was historically a backend route; it is now a frontend route
+        // owned by HomePage / FileManagerView. Direct-nav or refresh on /files
+        // (or /files/<folder-uuid>) was returning the Spring auth filter's 401
+        // JSON instead of serving index.html, so the SPA never got a chance to
+        // mount and the user saw a raw error response. There are no `/files`
+        // backend mappings at the servlet root - the real storage endpoints
+        // live under `/api/v1/storage/files`, which is filtered out a few lines
+        // up by the `startsWith("/api/")` guard.
         String[] backendOnlyPrefixes = {
             "/register",
             "/pipeline",
@@ -91,7 +100,6 @@ public class RequestUriUtils {
             "/pdfjs-legacy",
             "/fonts",
             "/images",
-            "/files",
             "/css",
             "/js",
             "/swagger",

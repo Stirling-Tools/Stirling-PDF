@@ -99,6 +99,17 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsFrontendRoute_filesRouteOwnedByFrontend() {
+        // /files and /files/<folder-uuid> are FileManagerView routes - they
+        // must fall through to the SPA index.html, not get blocked by the
+        // backend auth filter. Regression test for direct-nav/refresh on
+        // the file manager returning a 401 JSON.
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/files"));
+        assertTrue(
+                RequestUriUtils.isFrontendRoute("", "/files/3331910a-4155-4f71-8111-e38c896bc458"));
+    }
+
+    @Test
     void testIsFrontendRoute_pathWithExtension() {
         assertFalse(RequestUriUtils.isFrontendRoute("", "/some/file.pdf"));
     }
