@@ -1320,22 +1320,19 @@ export default function FileManagerView() {
                   <UploadFileIcon />
                 </span>
                 <span>
-                  {t(
-                    "filesPage.dropOverlay",
-                    "Drop files to upload into this folder",
-                  )}
+                  {t("filesPage.dropOverlay", "Drop files to upload")}
                 </span>
                 <span className="files-page-drop-overlay-sub">
-                  {currentFolderRecord
-                    ? t(
-                        "filesPage.dropOverlayInFolder",
-                        "Files will land in {{folder}}",
-                        { folder: currentFolderRecord.name },
-                      )
-                    : t(
-                        "filesPage.dropOverlayInRoot",
-                        "Files will land in All files",
-                      )}
+                  {/* Behavior contract: per handleNativeUpload above, all
+                      newly-uploaded files start in Local (folderId stays
+                      null) regardless of the current folder view. Saying
+                      "will land in {folder}" was a lie; tell the truth
+                      so the user reaches for Save-to-cloud / Move-to when
+                      they actually want a folder placement. */}
+                  {t(
+                    "filesPage.dropOverlaySub",
+                    "Files start in Local. Use 'Move to' or 'Save to cloud' to organise them into a folder.",
+                  )}
                 </span>
               </div>
             )}
