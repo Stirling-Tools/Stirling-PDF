@@ -147,8 +147,7 @@ class IndexedDBManager {
             storeConfig.name === "files" &&
             store
           ) {
-            this.migrateFileHistoryFields(store, oldVersion);
-            this.migrateFolderField(store, oldVersion);
+            this.migrateFilesStore(store, oldVersion);
           }
         });
       };
@@ -156,89 +155,25 @@ class IndexedDBManager {
   }
 
   /**
-   * Migrate existing file records to include new file history fields
+   * Single-pass migration for the `files` store on stirling-pdf-files.
+   *
+   * Runs ONE openCursor() walk and applies every applicable per-version
+   * delta to each record before `cursor.update()` writes it back. The
+   * previous design called migrateFileHistoryFields and migrateFolderField
+   * as two separate cursor walks inside the same onupgradeneeded
+   * transaction; their requests interleaved in the IDB request queue so
+   * the second walk's `cursor.value` was a stale snapshot taken before
+   * the first walk's `update()` had been processed - the second
+   * `update()` then wrote that stale object back, silently erasing
+   * isLeaf / versionNumber / originalFileId / parentFileId / toolHistory
+   * on every row both cursors touched. Folding into one cursor + one
+   * write per record removes the race entirely.
+   *
+   * New per-version blocks should be added as additional
+   * `if (oldVersion < N) { ... }` sections below.
    */
-  private migrateFileHistoryFields(
-    store: IDBObjectStore,
-    oldVersion: number,
-  ): void {
-    // Only migrate if upgrading from a version before file history was added (version < 3)
-    if (oldVersion >= 3) {
-      return;
-    }
-
-    console.log("Starting file history migration for existing records...");
-
-    const cursor = store.openCursor();
-    let migratedCount = 0;
-
-    cursor.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest).result;
-      if (cursor) {
-        const record = cursor.value;
-        let needsUpdate = false;
-
-        // Add missing file history fields with sensible defaults
-        if (record.isLeaf === undefined) {
-          record.isLeaf = true; // Existing files are unprocessed, should appear in recent files
-          needsUpdate = true;
-        }
-
-        if (record.versionNumber === undefined) {
-          record.versionNumber = 1; // Existing files are first version
-          needsUpdate = true;
-        }
-
-        if (record.originalFileId === undefined) {
-          record.originalFileId = record.id; // Existing files are their own root
-          needsUpdate = true;
-        }
-
-        if (record.parentFileId === undefined) {
-          record.parentFileId = undefined; // No parent for existing files
-          needsUpdate = true;
-        }
-
-        if (record.toolHistory === undefined) {
-          record.toolHistory = []; // No history for existing files
-          needsUpdate = true;
-        }
-
-        // Update the record if any fields were missing
-        if (needsUpdate) {
-          try {
-            cursor.update(record);
-            migratedCount++;
-          } catch (error) {
-            console.error("Failed to migrate record:", record.id, error);
-          }
-        }
-
-        cursor.continue();
-      } else {
-        // Migration complete
-        console.log(
-          `File history migration completed. Migrated ${migratedCount} records.`,
-        );
-      }
-    };
-
-    cursor.onerror = (event) => {
-      console.error(
-        "File history migration failed:",
-        (event.target as IDBRequest).error,
-      );
-    };
-  }
-
-  /**
-   * Add folderId=null to every existing file record on upgrade to v4.
-   * The folderId index requires the field to exist on every row.
-   */
-  private migrateFolderField(store: IDBObjectStore, oldVersion: number): void {
-    if (oldVersion >= 4) {
-      return;
-    }
+  private migrateFilesStore(store: IDBObjectStore, oldVersion: number): void {
+    if (oldVersion >= 4) return; // nothing to migrate at the current schema
 
     const cursor = store.openCursor();
     let migrated = 0;
@@ -246,26 +181,59 @@ class IndexedDBManager {
     cursor.onsuccess = (event) => {
       const result = (event.target as IDBRequest)
         .result as IDBCursorWithValue | null;
-      if (result) {
-        const record = result.value;
-        if (record && record.folderId === undefined) {
-          record.folderId = null;
-          try {
-            result.update(record);
-            migrated += 1;
-          } catch (error) {
-            console.error("Failed to migrate folderId:", record.id, error);
-          }
-        }
-        result.continue();
-      } else {
-        console.log(`folderId migration complete (${migrated} records).`);
+      if (!result) {
+        console.log(`Files-store migration complete (${migrated} records).`);
+        return;
       }
+      const record = result.value;
+      let needsUpdate = false;
+
+      // v3: file history fields. Sensible defaults so existing files keep
+      // showing up in the recent view and act as their own version root.
+      if (oldVersion < 3) {
+        if (record.isLeaf === undefined) {
+          record.isLeaf = true;
+          needsUpdate = true;
+        }
+        if (record.versionNumber === undefined) {
+          record.versionNumber = 1;
+          needsUpdate = true;
+        }
+        if (record.originalFileId === undefined) {
+          record.originalFileId = record.id;
+          needsUpdate = true;
+        }
+        if (record.parentFileId === undefined) {
+          record.parentFileId = undefined;
+          needsUpdate = true;
+        }
+        if (record.toolHistory === undefined) {
+          record.toolHistory = [];
+          needsUpdate = true;
+        }
+      }
+
+      // v4: folderId. Required to exist on every row so the folderId
+      // index doesn't drop the record out of bounded-key cursor scans.
+      if (oldVersion < 4 && record.folderId === undefined) {
+        record.folderId = null;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        try {
+          result.update(record);
+          migrated += 1;
+        } catch (error) {
+          console.error("Failed to migrate record:", record.id, error);
+        }
+      }
+      result.continue();
     };
 
     cursor.onerror = (event) => {
       console.error(
-        "folderId migration failed:",
+        "Files-store migration failed:",
         (event.target as IDBRequest).error,
       );
     };
