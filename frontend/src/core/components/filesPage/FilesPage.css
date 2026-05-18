@@ -900,10 +900,20 @@
   }
   .files-page-search {
     /* Shrink hard so the search bar doesn't eat the whole action row.
-       Users still see the icon + first ~8 chars of the placeholder. */
+       Users still see the icon + a few chars of the placeholder.
+       `overflow: hidden` clips the input's natural intrinsic width so
+       placeholder text never leaks outside the rounded pill. */
     min-width: 0;
-    flex: 0 1 6rem;
-    max-width: 7rem;
+    flex: 0 1 5.5rem;
+    max-width: 6.5rem;
+    overflow: hidden;
+  }
+  .files-page-search input {
+    /* `min-width: 0` lets flex actually shrink the input below its
+       default ~20-char intrinsic size — without this, the placeholder
+       extends beyond the parent's clip box and bleeds onto neighbours. */
+    min-width: 0;
+    text-overflow: ellipsis;
   }
   /* Upload becomes an icon-only square button on mobile so the action
      row stops getting clipped. Scoped to `.files-page-header-actions`
@@ -920,13 +930,35 @@
     display: none;
   }
   .files-page-toolbar {
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    padding: 0.4rem 0.75rem;
+    /* nowrap so "7 items" + "Select all" sit on the same row as the
+       filter dropdowns and view-toggle instead of stacking on three
+       separate lines. Per-child min-width:0 lets them shrink as
+       needed. */
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
     min-height: auto;
+    overflow-x: hidden;
   }
   .files-page-toolbar-info {
-    flex-basis: 100%;
+    /* Was `flex-basis: 100%` which forced a row break. Let it share
+       the row, shrink hard if needed. */
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .files-page-toolbar-actions {
+    /* Tighten the action group too so dropdowns + view toggle don't
+       overflow. */
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+  .files-page-toolbar-actions .mantine-Select-root,
+  .files-page-toolbar-actions .mantine-Select-input {
+    /* Mantine Select defaults to ~12rem which is huge for mobile. */
+    min-width: 0;
+    max-width: 7.5rem;
   }
   /* Grid: single column on very narrow phones; two columns from ~440px */
   .files-page-grid {

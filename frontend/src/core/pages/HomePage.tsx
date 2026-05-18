@@ -286,8 +286,16 @@ export default function HomePage() {
       <HomePageExtensions />
       <FilesPageProvider>
       {isMobile ? (
-        <div className="mobile-layout">
-          <div className="mobile-toggle">
+        <div
+          className="mobile-layout"
+          data-files-mode={navigationState.workbench === "myFiles"}
+        >
+          {/* On /files the FileManagerView already has its own Back +
+              breadcrumb + tabs chrome - the tools/workspace toggle would
+              just duplicate vertical space. Keep the toggle on every
+              other route. */}
+          {navigationState.workbench !== "myFiles" && (
+            <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
                 <LogoIcon className="mobile-brand-icon" />
@@ -328,26 +336,42 @@ export default function HomePage() {
               )}
             </span>
           </div>
-          <div ref={sliderRef} className="mobile-slider">
-            <div
-              className="mobile-slide"
-              aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
-            >
-              <div className="mobile-slide-content">
-                <ToolPanel />
+          )}
+          {navigationState.workbench === "myFiles" ? (
+            /* /files takes the whole viewport. Skipping the slider keeps
+                the FileManagerView from being trapped inside a 100vw
+                horizontal-scroll container (which truncated buttons and
+                created a stray side-scroll surface on touch). */
+            <div className="mobile-files-full">
+              <div className="flex-1 min-h-0 flex">
+                <Workbench />
               </div>
             </div>
-            <div
-              className="mobile-slide"
-              aria-label={t("home.mobile.workbenchSlide", "Workspace panel")}
-            >
-              <div className="mobile-slide-content">
-                <div className="flex-1 min-h-0 flex">
-                  <Workbench />
+          ) : (
+            <div ref={sliderRef} className="mobile-slider">
+              <div
+                className="mobile-slide"
+                aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
+              >
+                <div className="mobile-slide-content">
+                  <ToolPanel />
+                </div>
+              </div>
+              <div
+                className="mobile-slide"
+                aria-label={t(
+                  "home.mobile.workbenchSlide",
+                  "Workspace panel",
+                )}
+              >
+                <div className="mobile-slide-content">
+                  <div className="flex-1 min-h-0 flex">
+                    <Workbench />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
           <div className="mobile-bottom-bar">
             <button
               className="mobile-bottom-button"
