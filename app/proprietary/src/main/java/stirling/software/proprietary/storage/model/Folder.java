@@ -49,10 +49,12 @@ public class Folder implements Serializable {
 
     /**
      * Dialect-portable UUID column. The previous {@code columnDefinition = "uuid"} was
-     * Postgres-specific and broke on H2/MariaDB.
+     * Postgres-specific and broke on H2/MariaDB. Hibernate's {@code UUID} mapping picks the right
+     * native type per dialect (BINARY(16) on H2/MariaDB, uuid on Postgres) when no explicit
+     * columnDefinition is set.
      */
     @Id
-    @Column(name = "folder_id", nullable = false, columnDefinition = "uuid")
+    @Column(name = "folder_id", nullable = false)
     private UUID id;
 
     /**
