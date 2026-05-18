@@ -235,7 +235,17 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] pullFromServer failed", err);
         if (mountedRef.current) {
           setServerReachable(false);
-          setError(`Folder sync failed: ${formatServerError(err)}`);
+          // Only surface a banner when this is a server-side outage or
+          // network glitch the user can act on. 4xx responses are
+          // configuration / auth signals - the deployment chose to disable
+          // storage (403 "Storage is disabled") or the user simply isn't
+          // logged in yet (401) - in both cases the "Folder sync failed"
+          // banner is noise the user can't fix from inside the file
+          // manager. Folder-mutation buttons get individual disabled
+          // tooltips via `serverReachable`, which is enough signal.
+          if (status === undefined || status >= 500) {
+            setError(`Folder sync failed: ${formatServerError(err)}`);
+          }
         }
         // Narrowing the ternary into a typed variable so TS keeps the literal
         // union rather than widening to `string`.
