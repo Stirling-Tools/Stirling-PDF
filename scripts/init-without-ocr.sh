@@ -816,6 +816,16 @@ if [ "$AOT_ENABLED" = "true" ]; then
   fi
 fi
 
+# ---------- FFM Native Access ----------
+# JPDFium uses the Foreign Function & Memory API to call into PDFium.
+# JDK 25 warns when libraries call restricted methods without explicit
+# permission; JDK 26+ will refuse outright. ALL-UNNAMED because Stirling-PDF
+# runs as a Spring Boot fat jar on the classpath (not the module path).
+case "${JAVA_BASE_OPTS}" in
+  *enable-native-access*) ;;
+  *) JAVA_BASE_OPTS="${JAVA_BASE_OPTS} --enable-native-access=ALL-UNNAMED" ;;
+esac
+
 # Collapse duplicate whitespace
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | tr -s ' ')
 

@@ -59,4 +59,16 @@ dependencies {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         exclude group: 'com.google.code.gson', module: 'gson'
     }
+
+    // Stirling-Tools JPDFium — Java 25 FFM bindings for the EmbedPDF PDFium fork.
+    // Provides PDF rendering, text extraction, content-stripping redaction, etc.
+    // Resolves anonymously from Maven Central snapshots; per-platform natives jars
+    // ship the .so/.dylib/.dll bundles, NativeLoader picks the right one at runtime.
+    api 'com.stirling:jpdfium:1.0.0-SNAPSHOT'
+    runtimeOnly 'com.stirling:jpdfium-natives-linux-x64:1.0.0-SNAPSHOT'
+    runtimeOnly 'com.stirling:jpdfium-natives-linux-arm64:1.0.0-SNAPSHOT'
+    runtimeOnly 'com.stirling:jpdfium-natives-darwin-arm64:1.0.0-SNAPSHOT'
+    runtimeOnly 'com.stirling:jpdfium-natives-windows-x64:1.0.0-SNAPSHOT'
+    // TODO: jpdfium-natives-darwin-x64 (Intel Mac) — restore once JPDFium's
+    // upstream publish pipeline gets dual-arch Homebrew set up.
 }

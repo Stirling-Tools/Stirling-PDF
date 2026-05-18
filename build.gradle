@@ -35,8 +35,8 @@ ext {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     toolchain {
         languageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
     }
@@ -158,8 +158,8 @@ subprojects {
     apply plugin: 'jacoco'
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
         toolchain {
             languageVersion = JavaLanguageVersion.of(25)
         }
@@ -187,6 +187,8 @@ subprojects {
         }
         maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
+        // Stirling-Tools JPDFium snapshots — anonymous read, no auth.
+        maven { url = "https://central.sonatype.com/repository/maven-snapshots/" }
         mavenCentral()
     }
 
@@ -444,7 +446,10 @@ subprojects {
                 "-XX:G1HeapRegionSize=4m",
                 "-XX:+ExplicitGCInvokesConcurrent",
                 "-XX:+UseStringDeduplication",
-                "-XX:+UseCompactObjectHeaders"
+                "-XX:+UseCompactObjectHeaders",
+                // JPDFium uses FFM; JDK 26 will reject native access without
+                // this flag. Required at JDK 25 to silence the warning chain.
+                "--enable-native-access=ALL-UNNAMED"
             ]
         }
     }

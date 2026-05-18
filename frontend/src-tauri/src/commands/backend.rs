@@ -205,6 +205,11 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     let java_options = vec![
         "-Xmx2g",
+        // JPDFium uses Foreign Function & Memory (FFM). JDK 25 warns without
+        // this flag; JDK 26+ will refuse native access entirely. ALL-UNNAMED
+        // because the Spring Boot fat jar runs from the classpath, not the
+        // module path.
+        "--enable-native-access=ALL-UNNAMED",
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
