@@ -269,27 +269,45 @@ export function PdfViewerToolbar({
       <Tooltip
         content={
           pdfRenderMode === "normal"
-            ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+            ? t(
+                "viewer.darkFilterOff",
+                "Dark filter: OFF (click to enable dark mode)",
+              )
             : pdfRenderMode === "dark"
-              ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-              : t("viewer.disableColorFilter", "Disable Color Filter")
+              ? t(
+                  "viewer.darkFilterDark",
+                  "Dark filter: DARK (click for sepia)",
+                )
+              : t(
+                  "viewer.darkFilterSepia",
+                  "Dark filter: SEPIA (click to turn off)",
+                )
         }
         position="top"
         arrow
       >
         <Button
           variant={pdfRenderMode !== "normal" ? "filled" : "light"}
-          color="blue"
+          color={pdfRenderMode !== "normal" ? "orange" : "blue"}
           size="md"
           radius="xl"
           onClick={cyclePdfRenderMode}
           style={{ minWidth: "2.5rem" }}
           aria-label={
             pdfRenderMode === "normal"
-              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+              ? t(
+                  "viewer.darkFilterOff",
+                  "Dark filter: OFF (click to enable dark mode)",
+                )
               : pdfRenderMode === "dark"
-                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                : t("viewer.disableColorFilter", "Disable Color Filter")
+                ? t(
+                    "viewer.darkFilterDark",
+                    "Dark filter: DARK (click for sepia)",
+                  )
+                : t(
+                    "viewer.darkFilterSepia",
+                    "Dark filter: SEPIA (click to turn off)",
+                  )
           }
         >
           {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}

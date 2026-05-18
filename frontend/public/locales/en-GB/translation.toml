@@ -2780,8 +2780,8 @@ title = "These PDFs look highly different"
 
 [compare.edited]
 label = "Edited PDF"
-selectBaseFirst = "Select original PDF first"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Select original PDF first"
 
 [compare.error]
 filesMissing = "Unable to locate the selected files. Please re-select them."
@@ -2862,9 +2862,9 @@ pageLabel = "Page"
 
 [compare.swap]
 confirm = "Swap and Re-run"
-label = "Swap"
 confirmBody = "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?"
 confirmTitle = "Re-run comparison?"
+label = "Swap"
 
 [compare.toasts]
 unlinkedBody = "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
@@ -6569,51 +6569,6 @@ title = "High Contrast"
 text = "Completely invert all colours in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
 title = "Invert All Colours"
 
-[workbenchBar]
-annotations = "Annotations"
-applyRedactionsFirst = "Apply redactions first"
-closeAll = "Close All Files"
-closePdf = "Close PDF"
-closeSelected = "Close Selected Files"
-deleteSelected = "Delete Selected Pages"
-deselectAll = "Deselect All"
-downloadAll = "Download All"
-downloadSelected = "Download Selected Files"
-draw = "Draw"
-exitRedaction = "Exit Redaction Mode"
-exportAll = "Export PDF"
-exportSelected = "Export Selected Pages"
-formFill = "Fill Form"
-language = "Language"
-panMode = "Pan Mode"
-print = "Print PDF"
-readAloud = "Read Aloud"
-readAloudLanguage = "Language"
-readAloudSpeed = "Speed"
-redact = "Redact"
-rotateLeft = "Rotate Left"
-rotateRight = "Rotate Right"
-ruler = "Ruler / Measure"
-save = "Save"
-saveAll = "Save All"
-saveAs = "Save As"
-saveChanges = "Save Changes"
-search = "Search PDF"
-selectAll = "Select All"
-selectByNumber = "Select by Page Numbers"
-selectLanguage = "Select language"
-share = "Share"
-toggleAnnotations = "Toggle Annotations Visibility"
-toggleAttachments = "Toggle Attachments"
-toggleBookmarks = "Toggle Bookmarks"
-toggleComments = "Comments"
-toggleLayers = "Toggle Layers"
-toggleSidebar = "Toggle Sidebar"
-toggleTheme = "Toggle Theme"
-activeFiles = "Active Files"
-multiTool = "Multi-Tool"
-viewer = "Viewer"
-
 [rotate]
 rotateLeft = "Rotate Anticlockwise"
 rotateRight = "Rotate Clockwise"
@@ -6907,6 +6862,20 @@ auto = "Auto"
 fitPage = "Fit page"
 fitWidth = "Fit width"
 
+[settings.help]
+label = "Tours"
+title = "Help"
+
+[settings.help.adminTour]
+description = "Explore team management, system settings, and enterprise features."
+start = "Start"
+title = "Admin Tour"
+
+[settings.help.toolsTour]
+description = "Walk through uploading files, picking a tool, and reviewing results."
+start = "Start"
+title = "Tools Tour"
+
 [settings.hotkeys]
 capturing = "Press keys… (Esc to cancel)"
 change = "Change shortcut"
@@ -7037,20 +7006,6 @@ title = "Team"
 [settings.tooltips]
 enableLoginFirst = "Enable login mode first"
 requiresEnterprise = "Requires Enterprise license"
-
-[settings.help]
-label = "Tours"
-title = "Help"
-
-[settings.help.adminTour]
-description = "Explore team management, system settings, and enterprise features."
-start = "Start"
-title = "Admin Tour"
-
-[settings.help.toolsTour]
-description = "Walk through uploading files, picking a tool, and reviewing results."
-start = "Start"
-title = "Tools Tour"
 
 [settings.workspace]
 people = "People"
@@ -8184,6 +8139,9 @@ viewer = "Viewer"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
+darkFilterDark = "Dark filter: DARK (click for sepia)"
+darkFilterOff = "Dark filter: OFF (click to enable dark mode)"
+darkFilterSepia = "Dark filter: SEPIA (click to turn off)"
 disableColorFilter = "Disable Colour Filter"
 dualPageView = "Dual Page View"
 enableDarkFilter = "Enable Dark Filter"
@@ -8460,6 +8418,50 @@ bullet3 = "Image will be resized to fit signature area"
 description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
 title = "Upload Signature Image"
 
+[workbenchBar]
+activeFiles = "Active Files"
+annotations = "Annotations"
+applyRedactionsFirst = "Apply redactions first"
+closeAll = "Close All Files"
+closePdf = "Close PDF"
+closeSelected = "Close Selected Files"
+deleteSelected = "Delete Selected Pages"
+deselectAll = "Deselect All"
+downloadAll = "Download All"
+downloadSelected = "Download Selected Files"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+exportAll = "Export PDF"
+exportSelected = "Export Selected Pages"
+formFill = "Fill Form"
+language = "Language"
+multiTool = "Multi-Tool"
+panMode = "Pan Mode"
+print = "Print PDF"
+readAloud = "Read Aloud"
+readAloudLanguage = "Language"
+readAloudSpeed = "Speed"
+redact = "Redact"
+rotateLeft = "Rotate Left"
+rotateRight = "Rotate Right"
+ruler = "Ruler / Measure"
+save = "Save"
+saveAll = "Save All"
+saveAs = "Save As"
+saveChanges = "Save Changes"
+search = "Search PDF"
+selectAll = "Select All"
+selectByNumber = "Select by Page Numbers"
+selectLanguage = "Select language"
+share = "Share"
+toggleAnnotations = "Toggle Annotations Visibility"
+toggleAttachments = "Toggle Attachments"
+toggleBookmarks = "Toggle Bookmarks"
+toggleComments = "Comments"
+toggleLayers = "Toggle Layers"
+toggleSidebar = "Toggle Sidebar"
+toggleTheme = "Toggle Theme"
+viewer = "Viewer"
 
 [workspace]
 title = "Workspace"
