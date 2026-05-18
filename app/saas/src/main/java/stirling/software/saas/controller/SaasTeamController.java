@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.transaction.Transactional;
@@ -86,36 +87,18 @@ public class SaasTeamController {
     public ResponseEntity<?> acceptInvitation(@PathVariable String token) {
         try {
             User currentUser = getCurrentUser();
-            saasTeamService.acceptInvitation(token, currentUser);
-
-            // Grant PRO role if user joined a paid team with active subscription
-            Team userTeam = currentUser.getTeam();
-            if (userTeam != null && saasTeamService.hasActivePaidSubscription(userTeam)) {
-                String currentRole = currentUser.getRolesAsString();
-                if (!stirling.software.common.model.enumeration.Role.PRO_USER
-                        .getRoleId()
-                        .equals(currentRole)) {
-                    log.info(
-                            "Granting ROLE_PRO_USER to user {} joining team {} with active subscription",
-                            currentUser.getUsername(),
-                            userTeam.getName());
-                    userService.changeRole(
-                            currentUser,
-                            stirling.software.common.model.enumeration.Role.PRO_USER.getRoleId());
-                }
-            } else {
-                log.warn(
-                        "User {} joined team {} but team has no active subscription - not granting PRO role",
-                        currentUser.getUsername(),
-                        userTeam != null ? userTeam.getName() : "null");
-            }
-
+            saasTeamService.acceptInvitationAndGrantRole(token, currentUser);
             return ResponseEntity.ok(Map.of("message", "Invitation accepted", "success", true));
         } catch (SecurityException | IllegalArgumentException | IllegalStateException e) {
+            // Caller-fixable failures (already-accepted, expired, email mismatch, etc.).
+            // Mark the transaction for rollback so anything the service did is reversed even
+            // though we don't propagate the exception out of the @Transactional method.
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Error accepting invitation", e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to accept invitation"));
         }
@@ -375,10 +358,12 @@ public class SaasTeamController {
 
             return ResponseEntity.ok(Map.of("message", "Member removed successfully"));
         } catch (SecurityException | IllegalArgumentException | IllegalStateException e) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Error removing team member", e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to remove member"));
         }
@@ -414,10 +399,12 @@ public class SaasTeamController {
 
             return ResponseEntity.ok(Map.of("message", "Left team successfully"));
         } catch (IllegalArgumentException | IllegalStateException e) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Error leaving team", e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to leave team"));
         }

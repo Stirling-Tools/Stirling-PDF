@@ -54,6 +54,7 @@ public class SaasTeamService {
     private final UserRoleService userRoleService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final SaasTeamExtensionsRepository saasTeamExtensionsRepository;
+    private final stirling.software.proprietary.security.service.UserService userService;
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -213,6 +214,41 @@ public class SaasTeamService {
                 inviteeEmail,
                 team.getName());
         return savedInvitation;
+    }
+
+    /**
+     * Accept an invitation and grant PRO role in the same transaction. If the role grant fails the
+     * membership write is rolled back so we never end up with a member sitting on a paid team
+     * without the matching role (regression #18).
+     */
+    @Transactional
+    public void acceptInvitationAndGrantRole(String invitationToken, User acceptingUser)
+            throws java.sql.SQLException,
+                    stirling.software.common.model.exception.UnsupportedProviderException {
+        acceptInvitation(invitationToken, acceptingUser);
+
+        // Re-read the user post-accept; acceptInvitation refetches+saves them.
+        User user = userRepository.findById(acceptingUser.getId()).orElse(acceptingUser);
+        Team userTeam = user.getTeam();
+        if (userTeam == null || !hasActivePaidSubscription(userTeam)) {
+            log.warn(
+                    "User {} joined team {} but team has no active subscription - not granting PRO role",
+                    user.getUsername(),
+                    userTeam != null ? userTeam.getName() : "null");
+            return;
+        }
+        String currentRole = user.getRolesAsString();
+        if (stirling.software.common.model.enumeration.Role.PRO_USER
+                .getRoleId()
+                .equals(currentRole)) {
+            return;
+        }
+        log.info(
+                "Granting ROLE_PRO_USER to user {} joining team {} with active subscription",
+                user.getUsername(),
+                userTeam.getName());
+        userService.changeRole(
+                user, stirling.software.common.model.enumeration.Role.PRO_USER.getRoleId());
     }
 
     /**
