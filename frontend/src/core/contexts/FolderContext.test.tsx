@@ -2,7 +2,7 @@ import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
-import { FolderProvider, useFolders } from "./FolderContext";
+import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
 
 /**
  * Regression test for the sync-banner 4xx gating fix in commit c38b646c5.

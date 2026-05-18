@@ -1,7 +1,10 @@
 import { describe, expect, test, beforeEach } from "vitest";
 import "fake-indexeddb/auto";
 
-import { DATABASE_CONFIGS, indexedDBManager } from "./indexedDBManager";
+import {
+  DATABASE_CONFIGS,
+  indexedDBManager,
+} from "@app/services/indexedDBManager";
 
 /**
  * Regression test for the IDB v2->v4 migration silent-clobber bug fixed in
@@ -185,9 +188,9 @@ describe("IndexedDB migration (FILES store)", () => {
 
   test("fresh install at latest version requires no migration", async () => {
     await indexedDBManager.openDatabase(DATABASE_CONFIGS.FILES);
-    expect(
-      await indexedDBManager.getDatabaseVersion(DB_NAME),
-    ).toBe(TARGET_VERSION);
+    expect(await indexedDBManager.getDatabaseVersion(DB_NAME)).toBe(
+      TARGET_VERSION,
+    );
     indexedDBManager.closeDatabase(DB_NAME);
   });
 });
