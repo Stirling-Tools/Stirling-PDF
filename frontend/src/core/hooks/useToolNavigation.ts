@@ -21,9 +21,6 @@ export function useToolNavigation(): {
     tool: ToolRegistryEntry,
   ) => ToolNavigationProps;
 } {
-  // Use the stable Actions context — subscribing to the full ToolWorkflow
-  // context here transitively forces every ToolButton (which calls this
-  // hook) to rerender on every search keystroke.
   const { handleToolSelect } = useToolWorkflowActions();
 
   const getToolNavigation = useCallback(

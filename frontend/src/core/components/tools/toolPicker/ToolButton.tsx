@@ -49,8 +49,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
-  // Subscribe only to the slim Data + Actions contexts so this component
-  // does NOT rerender on searchQuery/sidebar/panel-state changes.
   const { isFavorite, toolAvailability } = useToolWorkflowData();
   const { toggleFavorite } = useToolWorkflowActions();
   const disabledReason = getToolDisabledReason(

@@ -24,8 +24,6 @@ interface ToolPickerProps {
   isSearching?: boolean;
 }
 
-// Stable references hoisted to module scope so they don't churn `useToolSections`
-// memoization and don't defeat downstream `memo()` checks on every render.
 const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
 const HEADER_TEXT_STYLE: React.CSSProperties = {
   fontSize: "0.68rem",
@@ -65,8 +63,6 @@ const ToolPicker = ({
   const scrollableRef = useRef<HTMLDivElement>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  // Use the slim Data context so this component does not rerender on
-  // searchQuery / sidebar / panel-state changes.
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);

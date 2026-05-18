@@ -124,25 +124,10 @@ if (!existingContext) {
 }
 
 /**
- * Slim subset contexts exposed alongside the main ToolWorkflowContext to
- * prevent rerender storms.
+ * Slim subset contexts for hot consumers that don't need the full state.
  *
- * The main `ToolWorkflowContext` value rebuilds whenever ANY of its 25+
- * fields change — including `state.searchQuery`, which churns on every
- * keystroke. Components that consume the full context (e.g. `ToolButton`)
- * therefore rerender on every keystroke even when none of the fields they
- * actually use have changed.
- *
- * These two narrower contexts let hot consumers subscribe to only what
- * they need:
- *  - `useToolWorkflowActions()` — callbacks whose identity is stabilized
- *    via refs so the value object is referentially constant across the
- *    provider's lifetime. Safe to depend on without causing rerenders.
- *  - `useToolWorkflowData()` — rarely-changing data (tool registry, tool
- *    availability, favorites). Rebuilds only when these specific pieces
- *    of state actually change — NOT on search keystrokes / sidebar toggles.
- *
- * Existing callers of `useToolWorkflow()` continue to work unchanged.
+ *  - `useToolWorkflowActions()` — referentially-stable callbacks.
+ *  - `useToolWorkflowData()` — tool registry, availability, favorites.
  */
 export interface ToolWorkflowActionsValue {
   selectTool: (toolId: ToolId | null) => void;
@@ -590,12 +575,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     true,
   );
 
-  // ── Stable callbacks for the slim Actions context ──────────────────────
-  // The compound handlers (handleToolSelect, etc.) depend on navigationState
-  // and other moving pieces, so their useCallback identity churns. Hot
-  // consumers like ToolButton don't need fresh identities — they just need
-  // to call the latest version. We wrap each in a ref-backed shell so the
-  // identity is stable for the entire provider lifetime.
+  // Ref-backed wrappers so callback identities stay stable across renders.
   const handleToolSelectRef = useRef(handleToolSelect);
   handleToolSelectRef.current = handleToolSelect;
   const stableHandleToolSelect = useCallback(
@@ -624,9 +604,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     [],
   );
 
-  // setReaderMode / setPreviewFile / setToolPanelMode have non-empty deps
-  // and re-create when those deps change. Stabilize via ref for consumers
-  // that only need to call them, not to depend on their identity.
   const setReaderModeRef = useRef(setReaderMode);
   setReaderModeRef.current = setReaderMode;
   const stableSetReaderMode = useCallback(
@@ -660,9 +637,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     [],
   );
 
-  // Empty-deps memo: the Actions context value is referentially constant
-  // for the entire provider lifetime, so consumers don't rerender on
-  // searchQuery / sidebar / preview file / etc. changes.
   const actionsValue = useMemo<ToolWorkflowActionsValue>(
     () => ({
       selectTool: stableSelectTool,
@@ -682,10 +656,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       registerToolReset,
       resetTool,
     }),
-    // toggleFavorite is stable (empty deps in useToolHistory).
-    // setSidebarsVisible / setLeftPanelView / setPageEditorFunctions /
-    // setSearchQuery / registerToolReset / resetTool are all useCallback
-    // with empty deps inside this provider, so their identity is stable.
     [
       stableSelectTool,
       stableClearToolSelection,
@@ -706,8 +676,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     ],
   );
 
-  // Data context rebuilds only when these specific pieces of data change.
-  // None of them depend on searchQuery / sidebar state / etc.
   const dataValue = useMemo<ToolWorkflowDataValue>(
     () => ({
       toolAvailability,
@@ -818,12 +786,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 }
 
-/**
- * Slim hook returning only stable callbacks. Use this in components that
- * need to dispatch tool-workflow actions but don't need to read state.
- * The returned object's reference never changes across the provider's
- * lifetime, so consuming this hook does NOT cause rerenders.
- */
+/** Tool-workflow callbacks with referentially-stable identities. */
 export function useToolWorkflowActions(): ToolWorkflowActionsValue {
   const ctx = useContext(ToolWorkflowActionsContext);
   if (!ctx) {
@@ -834,12 +797,7 @@ export function useToolWorkflowActions(): ToolWorkflowActionsValue {
   return ctx;
 }
 
-/**
- * Slim hook returning rarely-changing tool data (registry, availability,
- * favorites, getters). Rebuilds only when these specific pieces change —
- * NOT on searchQuery / sidebar state / panel mode changes. Use this in
- * components like ToolButton that render in long lists.
- */
+/** Tool registry, availability, and favorites — stable while unchanged. */
 export function useToolWorkflowData(): ToolWorkflowDataValue {
   const ctx = useContext(ToolWorkflowDataContext);
   if (!ctx) {

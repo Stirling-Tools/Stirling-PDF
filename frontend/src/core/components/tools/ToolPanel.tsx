@@ -46,10 +46,6 @@ export default function ToolPanel() {
     sidebarsVisible,
     readerMode,
   } = useToolWorkflow();
-  // Pull handlers from the stable Actions context — their identities are
-  // ref-backed and never change across the provider lifetime, so memoized
-  // children (ToolPicker, SearchResults, ToolButton) can actually skip
-  // rerenders when only searchQuery changes.
   const {
     handleToolSelect,
     handleBackToTools,
@@ -123,8 +119,6 @@ export default function ToolPanel() {
     return "18.5rem";
   };
 
-  // Stable onSelect for the children so memoized children (ToolPicker,
-  // SearchResults) can actually skip rerenders.
   const handleSelect = useCallback(
     (id: string) => handleToolSelect(id as ToolId),
     [handleToolSelect],
