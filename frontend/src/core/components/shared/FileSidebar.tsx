@@ -5,7 +5,7 @@ import React, {
   useEffect,
   forwardRef,
 } from "react";
-import { Loader } from "@mantine/core";
+import { Loader, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -26,6 +26,7 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -332,35 +333,47 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       >
         <div className="file-sidebar-inner">
           {/* Header: hamburger + branding */}
-          <div
-            className="file-sidebar-header"
-            onClick={() => onToggleCollapse?.()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onToggleCollapse?.();
-              }
-            }}
-            aria-label={
-              toggleAriaLabel ??
-              (collapsed
-                ? t("fileSidebar.expand", "Expand sidebar")
-                : t("fileSidebar.collapse", "Collapse sidebar"))
-            }
+          <Tooltip
+            label={toggleAriaLabel ?? t("fileSidebar.expand", "Expand sidebar")}
+            position="right"
+            withinPortal
+            disabled={!collapsed}
           >
-            <MenuIcon className="file-sidebar-menu-icon" />
-            {!collapsed && (
-              <Wordmark
-                alt="Stirling PDF"
-                className="file-sidebar-brand-text sidebar-content-fade"
-              />
-            )}
-          </div>
+            <div
+              className="file-sidebar-header"
+              onClick={() => onToggleCollapse?.()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onToggleCollapse?.();
+                }
+              }}
+              aria-label={
+                toggleAriaLabel ??
+                (collapsed
+                  ? t("fileSidebar.expand", "Expand sidebar")
+                  : t("fileSidebar.collapse", "Collapse sidebar"))
+              }
+            >
+              <MenuIcon className="file-sidebar-menu-icon" />
+              {!collapsed && (
+                <Wordmark
+                  alt="Stirling PDF"
+                  className="file-sidebar-brand-text sidebar-content-fade"
+                />
+              )}
+            </div>
+          </Tooltip>
 
           {/* Search row */}
-          {
+          <Tooltip
+            label={t("fileSidebar.search", "Search")}
+            position="right"
+            withinPortal
+            disabled={!collapsed}
+          >
             <div
               className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
               onClick={!searchActive ? handleSearchClick : undefined}
@@ -402,7 +415,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </span>
                 ))}
             </div>
-          }
+          </Tooltip>
 
           {/* Scrollable content */}
           <div className="file-sidebar-scroll">
@@ -421,65 +434,84 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               data-testid="file-input"
             />
             {/* Open from Computer + My Files + Google Drive */}
-            <div
-              className="file-sidebar-action-row"
-              // `files-button` is the long-standing upload entry-point
-              // testid: click + setInputFiles on `file-input` above. Tour
-              // anchor lives here too - the tour now spotlights the native
-              // picker shortcut rather than the old modal.
-              data-testid="files-button"
-              data-tour="files-button"
-              onClick={() => {
-                // "Open from computer" goes straight to the native OS file
-                // picker. The full file manager (recent + drives + folders)
-                // is reachable via "My Files" below.
-                nativeFileInputRef.current?.click();
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label={t(
-                "fileSidebar.openFromComputer",
-                "Open from computer",
-              )}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
+            {/* Tooltips only fire when collapsed — when expanded the visible
+                text label below already identifies each row, so a tooltip
+                would just flash a duplicate. Distinct icons (UploadFile for
+                "Open from computer" vs FolderOpen for "My Files") so the
+                collapsed rail isn't two identical folder icons either. */}
+            <Tooltip
+              label={t("fileSidebar.openFromComputer", "Open from computer")}
+              position="right"
+              withinPortal
+              disabled={!collapsed}
+            >
+              <div
+                className="file-sidebar-action-row"
+                // `files-button` is the long-standing upload entry-point
+                // testid: click + setInputFiles on `file-input` above. Tour
+                // anchor lives here too - the tour now spotlights the native
+                // picker shortcut rather than the old modal.
+                data-testid="files-button"
+                data-tour="files-button"
+                onClick={() => {
+                  // "Open from computer" goes straight to the native OS file
+                  // picker. The full file manager (recent + drives + folders)
+                  // is reachable via "My Files" below.
                   nativeFileInputRef.current?.click();
-                }
-              }}
-            >
-              <FolderOpenIcon className="file-sidebar-action-icon" />
-              {!collapsed && (
-                <span className="file-sidebar-action-label sidebar-content-fade">
-                  {t("fileSidebar.openFromComputer", "Open from computer")}
-                </span>
-              )}
-            </div>
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t(
+                  "fileSidebar.openFromComputer",
+                  "Open from computer",
+                )}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    nativeFileInputRef.current?.click();
+                  }
+                }}
+              >
+                <UploadFileIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.openFromComputer", "Open from computer")}
+                  </span>
+                )}
+              </div>
+            </Tooltip>
 
-            <div
-              className="file-sidebar-action-row"
-              data-testid="my-files-button"
-              onClick={() => {
-                if (collapsed && onToggleCollapse) onToggleCollapse();
-                navigate("/files");
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label={t("fileSidebar.myFiles", "My Files")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate("/files");
-                }
-              }}
+            <Tooltip
+              label={t("fileSidebar.myFiles", "My Files")}
+              position="right"
+              withinPortal
+              disabled={!collapsed}
             >
-              <FolderOpenIcon className="file-sidebar-action-icon" />
-              {!collapsed && (
-                <span className="file-sidebar-action-label sidebar-content-fade">
-                  {t("fileSidebar.myFiles", "My Files")}
-                </span>
-              )}
-            </div>
+              <div
+                className="file-sidebar-action-row"
+                data-testid="my-files-button"
+                onClick={() => {
+                  if (collapsed && onToggleCollapse) onToggleCollapse();
+                  navigate("/files");
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t("fileSidebar.myFiles", "My Files")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/files");
+                  }
+                }}
+              >
+                <FolderOpenIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.myFiles", "My Files")}
+                  </span>
+                )}
+              </div>
+            </Tooltip>
 
             {!shouldHideGoogleDrive && (
               <div
