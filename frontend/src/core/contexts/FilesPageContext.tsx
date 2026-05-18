@@ -46,7 +46,11 @@ export type FilesPageSortMode =
   | "modified-asc"
   | "size-desc"
   | "size-asc";
-export type FilesPageOriginFilter = "all" | "local" | "cloud" | "shared-with-me";
+export type FilesPageOriginFilter =
+  | "all"
+  | "local"
+  | "cloud"
+  | "shared-with-me";
 
 /**
  * Tab views are presets that filter+navigate the file manager at once.
@@ -115,10 +119,7 @@ interface FilesPageContextValue {
   closeMoveDialog: () => void;
 
   // Action helpers
-  moveFilesTo: (
-    fileIds: FileId[],
-    folderId: FolderId | null,
-  ) => Promise<void>;
+  moveFilesTo: (fileIds: FileId[], folderId: FolderId | null) => Promise<void>;
   moveFolderTo: (
     folderId: FolderId,
     newParentId: FolderId | null,
@@ -202,14 +203,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const [viewMode, setViewMode] = useState<FilesPageViewMode>("grid");
   const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
   const [search, setSearch] = useState("");
-  const [originFilter, setOriginFilter] = useState<FilesPageOriginFilter>("all");
+  const [originFilter, setOriginFilter] =
+    useState<FilesPageOriginFilter>("all");
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [currentTab, setCurrentTab] = useState<FilesPageTab>("all");
 
   // Dialog: folder name -----------------------------------------------------
-  const [folderNameDialog, setFolderNameDialog] = useState<FolderNameDialogState>(
-    { mode: null },
-  );
+  const [folderNameDialog, setFolderNameDialog] =
+    useState<FolderNameDialogState>({ mode: null });
 
   const openNewFolderDialog = useCallback(
     (parentId: FolderId | null = folders.currentFolderId) => {

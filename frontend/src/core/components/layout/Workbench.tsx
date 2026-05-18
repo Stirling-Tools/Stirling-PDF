@@ -200,20 +200,20 @@ export default function Workbench() {
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
-        <div
-          className={styles.workbenchBarWrapper}
-          data-hidden={String(!hasFiles)}
-          data-no-transition={String(!barTransitionEnabled)}
-        >
-          <div className={styles.workbenchBarInner}>
-            <WorkbenchBar
-              currentView={currentView}
-              setCurrentView={setCurrentView}
-              hasFiles={hasFiles}
-            />
+          <div
+            className={styles.workbenchBarWrapper}
+            data-hidden={String(!hasFiles)}
+            data-no-transition={String(!barTransitionEnabled)}
+          >
+            <div className={styles.workbenchBarInner}>
+              <WorkbenchBar
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                hasFiles={hasFiles}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />

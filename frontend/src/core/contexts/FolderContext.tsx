@@ -86,10 +86,7 @@ interface FolderContextValue {
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
 
   getChildFolderIds: (parentId: FolderId | null) => FolderId[];
-  isDescendant: (
-    candidateId: FolderId,
-    ancestorId: FolderId | null,
-  ) => boolean;
+  isDescendant: (candidateId: FolderId, ancestorId: FolderId | null) => boolean;
 }
 
 const FolderContext = createContext<FolderContextValue | null>(null);
@@ -306,9 +303,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
 
   const getChildFolderIds = useCallback(
     (parentId: FolderId | null): FolderId[] =>
-      folders
-        .filter((f) => f.parentFolderId === parentId)
-        .map((f) => f.id),
+      folders.filter((f) => f.parentFolderId === parentId).map((f) => f.id),
     [folders],
   );
 

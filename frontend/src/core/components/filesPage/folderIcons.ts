@@ -33,7 +33,9 @@ export const FOLDER_ICONS: FolderIconOption[] = [
   { id: "archive", glyph: "📦", label: "Archive" },
 ];
 
-export function findFolderIcon(id: string | undefined): FolderIconOption | null {
+export function findFolderIcon(
+  id: string | undefined,
+): FolderIconOption | null {
   if (!id) return null;
   return FOLDER_ICONS.find((i) => i.id === id) ?? null;
 }

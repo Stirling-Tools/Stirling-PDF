@@ -59,7 +59,11 @@
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn:hover {
-  background-color: color-mix(in srgb, var(--accent-interactive, #4a90e2) 12%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--accent-interactive, #4a90e2) 12%,
+    transparent
+  );
   color: var(--accent-interactive, #4a90e2);
 }
 

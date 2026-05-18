@@ -61,7 +61,8 @@ export function useDropTarget({
   );
 
   const accepts = useCallback(
-    (e: React.DragEvent<HTMLElement>) => e.dataTransfer.types.includes(dragType),
+    (e: React.DragEvent<HTMLElement>) =>
+      e.dataTransfer.types.includes(dragType),
     [dragType],
   );
 

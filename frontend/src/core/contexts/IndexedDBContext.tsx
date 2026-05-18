@@ -254,10 +254,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
   );
 
   const moveFilesToFolder = useCallback(
-    async (
-      fileIds: FileId[],
-      folderId: FolderId | null,
-    ): Promise<FileId[]> => {
+    async (fileIds: FileId[], folderId: FolderId | null): Promise<FileId[]> => {
       const updated = await fileStorage.moveFilesToFolder(fileIds, folderId);
       if (updated.length > 0) bumpRevision();
       return updated;

@@ -6,11 +6,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
-import {
-  FolderId,
-  FolderRecord,
-  ROOT_FOLDER_ID,
-} from "@app/types/folder";
+import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 
 interface MoveToFolderDialogProps {
   opened: boolean;
@@ -165,8 +161,8 @@ export function MoveToFolderDialog({
                   err instanceof Error
                     ? err.message
                     : t(
-                          "filesPage.moveDialog.error",
-                          "Could not move. Try again.",
+                        "filesPage.moveDialog.error",
+                        "Could not move. Try again.",
                       ),
                 );
               } finally {
@@ -228,7 +224,9 @@ function FolderPick({
       ) : (
         <FolderIcon fontSize="small" style={{ color }} />
       )}
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+        {label}
+      </span>
     </button>
   );
 }

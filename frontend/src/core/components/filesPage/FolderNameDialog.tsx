@@ -48,7 +48,10 @@ export function FolderNameDialog({
       setError(
         err instanceof Error
           ? err.message
-          : t("filesPage.folderName.error", "Could not save folder. Try again."),
+          : t(
+              "filesPage.folderName.error",
+              "Could not save folder. Try again.",
+            ),
       );
     } finally {
       setSubmitting(false);

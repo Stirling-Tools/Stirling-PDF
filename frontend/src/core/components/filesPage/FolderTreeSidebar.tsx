@@ -19,9 +19,7 @@ import {
   FolderTreeNode,
   ROOT_FOLDER_ID,
 } from "@app/types/folder";
-import {
-  useFilesPage,
-} from "@app/contexts/FilesPageContext";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
@@ -124,7 +122,10 @@ export function FolderTreeSidebar({
   if (embed) return list;
 
   return (
-    <aside className="files-page-tree" aria-label={t("filesPage.tree", "Folders")}>
+    <aside
+      className="files-page-tree"
+      aria-label={t("filesPage.tree", "Folders")}
+    >
       <div className="files-page-tree-header">
         <span>{t("filesPage.tree", "Folders")}</span>
         <Tooltip

@@ -66,10 +66,7 @@ export function FileOriginBadge({
           label: t("filesPage.origin.shared", "Shared"),
           icon: <GroupIcon style={{ fontSize: "0.85rem" }} />,
           style: styles.shared,
-          tooltip: t(
-            "filesPage.origin.sharedHint",
-            "Shared with you via link",
-          ),
+          tooltip: t("filesPage.origin.sharedHint", "Shared with you via link"),
         };
       case "local":
       default:

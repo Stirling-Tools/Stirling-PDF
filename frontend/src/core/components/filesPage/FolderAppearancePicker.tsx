@@ -54,7 +54,11 @@ export function FolderAppearancePicker({
               key={c}
               type="button"
               disabled={disabled}
-              aria-label={t("filesPage.appearance.useColour", "Use colour {{c}}", { c })}
+              aria-label={t(
+                "filesPage.appearance.useColour",
+                "Use colour {{c}}",
+                { c },
+              )}
               onClick={(e) => {
                 e.stopPropagation();
                 onChange({ color: c });

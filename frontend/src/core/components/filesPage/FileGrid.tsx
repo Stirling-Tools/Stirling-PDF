@@ -93,9 +93,7 @@ interface FileGridProps {
   serverReachable?: boolean;
 }
 
-export function FileGrid(
-  props: FileGridProps & { loading?: boolean },
-) {
+export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   const { viewMode, entries, loading, currentTab, serverReachable } = props;
 
   if (loading && entries.length === 0) {
@@ -123,10 +121,22 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
         {placeholders.map((_, i) => (
           <div key={i} className="files-page-list-row files-page-skeleton-row">
             <span />
-            <span className="files-page-skeleton-bar" style={{ width: "60%" }} />
-            <span className="files-page-skeleton-bar" style={{ width: "40%" }} />
-            <span className="files-page-skeleton-bar" style={{ width: "50%" }} />
-            <span className="files-page-skeleton-bar" style={{ width: "55%" }} />
+            <span
+              className="files-page-skeleton-bar"
+              style={{ width: "60%" }}
+            />
+            <span
+              className="files-page-skeleton-bar"
+              style={{ width: "40%" }}
+            />
+            <span
+              className="files-page-skeleton-bar"
+              style={{ width: "50%" }}
+            />
+            <span
+              className="files-page-skeleton-bar"
+              style={{ width: "55%" }}
+            />
             <span />
           </div>
         ))}
@@ -201,8 +211,7 @@ function EmptyState({ tab = "all", serverReachable = true }: EmptyStateProps) {
           titleKey: "filesPage.empty.shared.title",
           titleFallback: "Nothing shared with you",
           hintKey: "filesPage.empty.shared.hint",
-          hintFallback:
-            "When someone shares a file via link, it appears here.",
+          hintFallback: "When someone shares a file via link, it appears here.",
         };
       case "all":
       default:
@@ -307,9 +316,10 @@ interface FolderCardProps {
   onOpen: () => void;
   onRename: () => void;
   onDelete: () => void;
-  onChangeAppearance: (
-    appearance: { color?: string; icon?: string | null },
-  ) => void;
+  onChangeAppearance: (appearance: {
+    color?: string;
+    icon?: string | null;
+  }) => void;
   onMoveFiles: (fileIds: FileId[]) => void | Promise<void>;
   onMoveFolder: (folderId: FolderId) => void | Promise<void>;
 }
@@ -367,7 +377,10 @@ function FolderCard({
       onDragStart={(e) => {
         e.dataTransfer.setData(
           FILES_PAGE_DRAG_TYPE,
-          serialiseFilesPageDragPayload({ kind: "folder", folderId: folder.id }),
+          serialiseFilesPageDragPayload({
+            kind: "folder",
+            folderId: folder.id,
+          }),
         );
         e.dataTransfer.effectAllowed = "move";
       }}
@@ -428,7 +441,10 @@ function FolderCard({
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            <Menu.Item leftSection={<OpenInNewIcon fontSize="small" />} onClick={onOpen}>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={onOpen}
+            >
               {t("filesPage.open", "Open")}
             </Menu.Item>
             <Menu.Item
@@ -501,9 +517,7 @@ function FileCard({
 
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
-      const fileIds = isSelected
-        ? Array.from(selectedFileIds)
-        : [file.id];
+      const fileIds = isSelected ? Array.from(selectedFileIds) : [file.id];
       e.dataTransfer.setData(
         FILES_PAGE_DRAG_TYPE,
         serialiseFilesPageDragPayload({ kind: "files", fileIds }),
@@ -698,8 +712,9 @@ function ListView({
   const visibleFileIds = useMemo(
     () =>
       entries
-        .filter((e): e is FilesPageEntry & { file: StirlingFileStub } =>
-          e.kind === "file" && !!e.file,
+        .filter(
+          (e): e is FilesPageEntry & { file: StirlingFileStub } =>
+            e.kind === "file" && !!e.file,
         )
         .map((e) => e.file.id),
     [entries],
@@ -710,19 +725,13 @@ function ListView({
   const someSelected =
     !allSelected && visibleFileIds.some((id) => selectedFileIds.has(id));
 
-  const sortIndicator = (
-    asc: FilesPageSortMode,
-    desc: FilesPageSortMode,
-  ) => {
+  const sortIndicator = (asc: FilesPageSortMode, desc: FilesPageSortMode) => {
     if (sortMode === asc) return " ↑";
     if (sortMode === desc) return " ↓";
     return "";
   };
 
-  const headerProps = (
-    asc: FilesPageSortMode,
-    desc: FilesPageSortMode,
-  ) => ({
+  const headerProps = (asc: FilesPageSortMode, desc: FilesPageSortMode) => ({
     role: "button",
     tabIndex: onChangeSortMode ? 0 : undefined,
     "data-sortable": onChangeSortMode ? "true" : undefined,
@@ -747,9 +756,7 @@ function ListView({
             checked={allSelected}
             indeterminate={someSelected}
             onChange={() => {
-              onSetSelection(
-                allSelected ? new Set() : new Set(visibleFileIds),
-              );
+              onSetSelection(allSelected ? new Set() : new Set(visibleFileIds));
             }}
             aria-label={
               allSelected
@@ -789,9 +796,7 @@ function ListView({
               onChangeAppearance={(appearance) =>
                 onChangeFolderAppearance(entry.folder!.id, appearance)
               }
-              onDropFiles={(fileIds) =>
-                onMoveFiles(fileIds, entry.folder!.id)
-              }
+              onDropFiles={(fileIds) => onMoveFiles(fileIds, entry.folder!.id)}
               onDropFolder={(folderId) =>
                 onMoveFolder(folderId, entry.folder!.id)
               }
@@ -837,9 +842,10 @@ interface FolderRowProps {
   onOpen: () => void;
   onRename: () => void;
   onDelete: () => void;
-  onChangeAppearance: (
-    appearance: { color?: string; icon?: string | null },
-  ) => void;
+  onChangeAppearance: (appearance: {
+    color?: string;
+    icon?: string | null;
+  }) => void;
   onDropFiles: (fileIds: FileId[]) => void | Promise<void>;
   onDropFolder: (folderId: FolderId) => void | Promise<void>;
 }
@@ -961,7 +967,10 @@ function FolderRow({
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item leftSection={<OpenInNewIcon fontSize="small" />} onClick={onOpen}>
+          <Menu.Item
+            leftSection={<OpenInNewIcon fontSize="small" />}
+            onClick={onOpen}
+          >
             {t("filesPage.open", "Open")}
           </Menu.Item>
           <Menu.Item
@@ -1037,9 +1046,7 @@ function FileRow({
       tabIndex={0}
       draggable
       onDragStart={(e) => {
-        const fileIds = isSelected
-          ? Array.from(selectedFileIds)
-          : [file.id];
+        const fileIds = isSelected ? Array.from(selectedFileIds) : [file.id];
         e.dataTransfer.setData(
           FILES_PAGE_DRAG_TYPE,
           serialiseFilesPageDragPayload({ kind: "files", fileIds }),

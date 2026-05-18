@@ -467,10 +467,13 @@ class FileStorageService {
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () =>
-        reject(transaction.error ?? new Error("Clear folder transaction aborted"));
+        reject(
+          transaction.error ?? new Error("Clear folder transaction aborted"),
+        );
       cursorRequest.onerror = () => reject(cursorRequest.error);
       cursorRequest.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+        const cursor = (event.target as IDBRequest)
+          .result as IDBCursorWithValue | null;
         if (!cursor) return;
         const record = cursor.value as StoredStirlingFileRecord;
         if (record.folderId && folderSet.has(record.folderId as string)) {

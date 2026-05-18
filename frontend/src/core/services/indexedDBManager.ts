@@ -235,10 +235,7 @@ class IndexedDBManager {
    * Add folderId=null to every existing file record on upgrade to v4.
    * The folderId index requires the field to exist on every row.
    */
-  private migrateFolderField(
-    store: IDBObjectStore,
-    oldVersion: number,
-  ): void {
+  private migrateFolderField(store: IDBObjectStore, oldVersion: number): void {
     if (oldVersion >= 4) {
       return;
     }
@@ -247,7 +244,8 @@ class IndexedDBManager {
     let migrated = 0;
 
     cursor.onsuccess = (event) => {
-      const result = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+      const result = (event.target as IDBRequest)
+        .result as IDBCursorWithValue | null;
       if (result) {
         const record = result.value;
         if (record && record.folderId === undefined) {

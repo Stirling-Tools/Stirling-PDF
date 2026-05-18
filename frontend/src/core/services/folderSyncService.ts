@@ -7,11 +7,7 @@
  */
 
 import apiClient from "@app/services/apiClient";
-import {
-  FolderId,
-  FolderRecord,
-  parseFolderId,
-} from "@app/types/folder";
+import { FolderId, FolderRecord, parseFolderId } from "@app/types/folder";
 
 interface ServerFolder {
   id: string;
@@ -26,7 +22,10 @@ interface ServerFolder {
   updatedAt: string | null;
 }
 
-function parseTimestamp(value: string | null | undefined, field: string): number {
+function parseTimestamp(
+  value: string | null | undefined,
+  field: string,
+): number {
   // Tolerate null/missing - older server builds may serialise pre-flush
   // timestamps as null. Log a warning so a real schema drift still gets
   // attention, but fall back to "now" rather than failing the whole pull.

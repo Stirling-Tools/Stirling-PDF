@@ -104,7 +104,11 @@
 }
 
 .files-page-tree-node.is-drop-target {
-  background: color-mix(in srgb, var(--accent-interactive, #6366f1) 12%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
   box-shadow: inset 0 0 0 1px var(--accent-interactive, #6366f1);
   color: var(--text-primary);
 }

@@ -76,7 +76,10 @@ export function FileDetailsPanel({
   };
 
   return (
-    <aside className="files-page-details" aria-label={t("filesPage.details", "Details")}>
+    <aside
+      className="files-page-details"
+      aria-label={t("filesPage.details", "Details")}
+    >
       <div className="files-page-details-header">
         <strong>
           {single
@@ -85,7 +88,10 @@ export function FileDetailsPanel({
                 count: files.length,
               })}
         </strong>
-        <Tooltip label={t("filesPage.closeDetails", "Close details")} withinPortal>
+        <Tooltip
+          label={t("filesPage.closeDetails", "Close details")}
+          withinPortal
+        >
           <ActionIcon variant="subtle" size="sm" onClick={onClose}>
             <CloseIcon fontSize="small" />
           </ActionIcon>
@@ -99,10 +105,19 @@ export function FileDetailsPanel({
               {single.thumbnailUrl ? (
                 <img src={single.thumbnailUrl} alt="" />
               ) : (
-                <PictureAsPdfIcon style={{ fontSize: "3rem", color: "var(--text-muted)" }} />
+                <PictureAsPdfIcon
+                  style={{ fontSize: "3rem", color: "var(--text-muted)" }}
+                />
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+              }}
+            >
               <h3 style={{ margin: 0, wordBreak: "break-word", flex: 1 }}>
                 {single.name}
               </h3>
@@ -140,7 +155,11 @@ export function FileDetailsPanel({
               />
               <DetailField
                 label={t("filesPage.field.folder", "Folder")}
-                value={currentFolder ? currentFolder.name : t("filesPage.allFiles", "All files")}
+                value={
+                  currentFolder
+                    ? currentFolder.name
+                    : t("filesPage.allFiles", "All files")
+                }
               />
             </div>
             {single.toolHistory && single.toolHistory.length > 0 && (
@@ -169,7 +188,9 @@ export function FileDetailsPanel({
           </div>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}
+        >
           <Button
             leftSection={<OpenInNewIcon fontSize="small" />}
             variant="filled"
