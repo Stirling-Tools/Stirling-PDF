@@ -62,9 +62,17 @@ export function MoveToFolderDialog({
     }
 
     // Pre-order DFS - children appear directly under their parent.
+    // Capped at MAX_TREE_DEPTH for the same reason as FolderTreeSidebar
+    // and FolderContext.build (kept in lockstep at 50): a corrupted IDB
+    // cache or hand-edited folder chain deeper than the server enforces
+    // would otherwise blow the JS stack here. Silent truncate - any
+    // descendant beyond depth 50 just won't appear as a move target,
+    // which is a strict improvement over a crash.
+    const MAX_TREE_DEPTH = 50;
     const order: FolderRecord[] = [];
     const depths = new Map<FolderId, number>();
     const visit = (parent: FolderId | null, depth: number) => {
+      if (depth >= MAX_TREE_DEPTH) return;
       for (const child of byParent.get(parent) ?? []) {
         order.push(child);
         depths.set(child.id, depth);
