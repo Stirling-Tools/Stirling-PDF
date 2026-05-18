@@ -118,14 +118,22 @@ class PdfEditParameterSelector:
         parameter_model = OPERATIONS[operation_id]
         prompt = self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps)
         logger.debug("[pdf-edit params %s] prompt:\n%s", operation_id.name, prompt)
+        instructions = (
+            f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
+            "Do not include fields from any other operation."
+        )
+        if operation_id == ToolEndpoint.REDACT_EXECUTE:
+            instructions += (
+                " For regexPatterns, account for the common format variants of whatever pattern "
+                "the user asked to redact — different separators, optional prefixes/suffixes, "
+                "grouped vs unbroken digits, locale spellings, etc. — so partial matches don't "
+                "leak. Cover the realistic shapes the data appears in, not every conceivable form."
+            )
         # ToolOutput bypasses Anthropic's grammar compiler, which times out on complex schemas.
         parameter_result = await self.agent.run(
             prompt,
             output_type=ToolOutput(parameter_model),
-            instructions=(
-                f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
-                "Do not include fields from any other operation."
-            ),
+            instructions=instructions,
         )
         logger.debug("[pdf-edit params %s] output: %s", operation_id.name, Pretty(parameter_result.output))
         return parameter_result.output
@@ -312,25 +320,19 @@ class PdfEditAgent:
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
-    # Endpoints whose capability is fully subsumed by another endpoint when both are available.
-    # Hiding the superseded ones from the agent gives a single deterministic route for that
-    # capability, avoiding non-deterministic LLM choice between equivalents.
-    _SUPERSEDED_WHEN_AVAILABLE: dict[ToolEndpoint, frozenset[ToolEndpoint]] = {
-        ToolEndpoint.REDACT_EXECUTE: frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT}),
-    }
+    # Endpoints reserved for direct API / manual UI use; never exposed to the AI agent.
+    # The agent's only AI-driven redaction route is REDACT_EXECUTE.
+    _AGENT_HIDDEN_ENDPOINTS: frozenset[ToolEndpoint] = frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT})
 
     def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
         """Split the universe of operations into (supported, unavailable) from the agent's
-        point of view. Superseded endpoints are never mentioned to the AI,
-        whether the admin has them enabled or disabled on this server.
+        point of view. Endpoints in `_AGENT_HIDDEN_ENDPOINTS` are filtered out regardless
+        of enabled state — they exist on the server but only callers outside the AI
+        pipeline (the manual redact UI, direct API consumers) can invoke them.
         """
         enabled_set = set(request.enabled_endpoints)
-        superseded: set[ToolEndpoint] = set()
-        for superset, hidden in self._SUPERSEDED_WHEN_AVAILABLE.items():
-            if superset in enabled_set:
-                superseded.update(hidden)
-        supported = [op for op in request.enabled_endpoints if op not in superseded]
-        unavailable = [op for op in OPERATIONS if op not in enabled_set and op not in superseded]
+        supported = [op for op in request.enabled_endpoints if op not in self._AGENT_HIDDEN_ENDPOINTS]
+        unavailable = [op for op in OPERATIONS if op not in enabled_set and op not in self._AGENT_HIDDEN_ENDPOINTS]
         return supported, unavailable
 
     @staticmethod
