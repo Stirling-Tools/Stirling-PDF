@@ -48,7 +48,9 @@
   cursor: pointer;
   font-size: inherit;
   font-weight: 500;
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
   white-space: nowrap;
   max-width: 18rem;
   overflow: hidden;
@@ -297,7 +299,9 @@
   padding: 0.2rem 0.4rem;
   margin: -0.2rem -0.4rem;
   border-radius: 0.3rem;
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
 }
 
 .files-page-list-row.is-header [data-sortable="true"]:hover {
@@ -314,7 +318,11 @@
 }
 
 .files-page-list-row.is-drop-target {
-  background: color-mix(in srgb, var(--accent-interactive, #6366f1) 12%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
   box-shadow: inset 0 0 0 1px var(--accent-interactive, #6366f1);
 }
 
@@ -336,7 +344,11 @@
 
 .files-page-card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent-interactive, #6366f1) 35%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 35%,
+    var(--border-subtle)
+  );
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.08),
     0 8px 24px -8px rgba(0, 0, 0, 0.18);
@@ -351,7 +363,8 @@
   border-color: var(--accent-interactive, #6366f1);
   box-shadow:
     0 0 0 2px var(--accent-interactive, #6366f1),
-    0 6px 18px -6px color-mix(in srgb, var(--accent-interactive, #6366f1) 35%, transparent);
+    0 6px 18px -6px
+      color-mix(in srgb, var(--accent-interactive, #6366f1) 35%, transparent);
 }
 
 .files-page-card.is-folder {
@@ -536,12 +549,23 @@
 }
 
 @keyframes files-page-open-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.6; transform: scale(0.85); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.85);
+  }
 }
 
 .files-page-card.is-in-workspace {
-  border-color: color-mix(in srgb, var(--mantine-color-teal-6, #10b981) 35%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-teal-6, #10b981) 35%,
+    var(--border-subtle)
+  );
 }
 
 .files-page-card.is-in-workspace::before {
@@ -576,7 +600,11 @@
 }
 
 .files-page-list-row.is-in-workspace {
-  background: color-mix(in srgb, var(--mantine-color-teal-6, #10b981) 4%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-teal-6, #10b981) 4%,
+    transparent
+  );
 }
 
 .files-page-card:hover .files-page-card-actions,
@@ -587,7 +615,9 @@
 
 .files-page-card.is-folder .files-page-card-thumb {
   aspect-ratio: 1.6 / 1;
-  transition: filter 0.16s ease, transform 0.18s cubic-bezier(0.32, 0.72, 0.32, 1);
+  transition:
+    filter 0.16s ease,
+    transform 0.18s cubic-bezier(0.32, 0.72, 0.32, 1);
 }
 
 .files-page-card.is-folder:hover .files-page-card-thumb {
@@ -604,14 +634,22 @@
 }
 
 .files-page-card.is-drop-target {
-  background: color-mix(in srgb, var(--accent-interactive, #6366f1) 10%, var(--bg-surface));
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 10%,
+    var(--bg-surface)
+  );
   box-shadow: 0 0 0 2px var(--accent-interactive, #6366f1);
   border-color: var(--accent-interactive, #6366f1);
 }
 
 @keyframes files-page-skeleton-pulse {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .files-page-skeleton-bar {
@@ -666,7 +704,11 @@
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent-interactive, #6366f1) 12%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
   color: var(--accent-interactive, #6366f1);
   margin-bottom: 0.25rem;
 }
@@ -815,7 +857,11 @@
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent-interactive, #6366f1) 30%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 30%,
+    transparent
+  );
 }
 
 .files-page-drop-overlay-icon svg {
@@ -826,7 +872,11 @@
 .files-page-drop-overlay-sub {
   font-size: 0.85rem;
   font-weight: 500;
-  color: color-mix(in srgb, var(--accent-interactive, #6366f1) 80%, var(--text-secondary));
+  color: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 80%,
+    var(--text-secondary)
+  );
 }
 
 @keyframes files-page-drop-overlay-pulse {
@@ -836,7 +886,11 @@
     transform: scale(1);
   }
   50% {
-    border-color: color-mix(in srgb, var(--accent-interactive, #6366f1) 60%, transparent);
+    border-color: color-mix(
+      in srgb,
+      var(--accent-interactive, #6366f1) 60%,
+      transparent
+    );
     transform: scale(1.005);
   }
 }

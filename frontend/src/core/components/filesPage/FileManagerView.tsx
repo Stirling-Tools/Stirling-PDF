@@ -53,10 +53,7 @@ import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
-import {
-  FileGrid,
-  FilesPageEntry,
-} from "@app/components/filesPage/FileGrid";
+import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
@@ -185,39 +182,36 @@ export default function FileManagerView() {
     return set;
   }, [folders.folders, currentFolderId]);
 
-  const visibleFolders = useMemo(
-    () => {
-      // Folders only appear in cloud-rooted tabs. Local / Recent / Shared
-      // tabs are flat file views - showing cloud folders there would be
-      // confusing (the user clicked Local to escape folders).
-      if (
-        currentTab === "local" ||
-        currentTab === "recent" ||
-        currentTab === "shared"
-      ) {
-        return [];
+  const visibleFolders = useMemo(() => {
+    // Folders only appear in cloud-rooted tabs. Local / Recent / Shared
+    // tabs are flat file views - showing cloud folders there would be
+    // confusing (the user clicked Local to escape folders).
+    if (
+      currentTab === "local" ||
+      currentTab === "recent" ||
+      currentTab === "shared"
+    ) {
+      return [];
+    }
+    const lc = search.toLowerCase();
+    const matched = folders.folders.filter((f) => {
+      if (search) {
+        // Recursive search: show any folder anywhere in the current
+        // subtree whose name matches. Hide the current folder itself
+        // (its "match" would be circular and useless).
+        return (
+          f.id !== currentFolderId &&
+          subtreeFolderIds.has(f.parentFolderId) &&
+          f.name.toLowerCase().includes(lc)
+        );
       }
-      const lc = search.toLowerCase();
-      const matched = folders.folders.filter((f) => {
-        if (search) {
-          // Recursive search: show any folder anywhere in the current
-          // subtree whose name matches. Hide the current folder itself
-          // (its "match" would be circular and useless).
-          return (
-            f.id !== currentFolderId &&
-            subtreeFolderIds.has(f.parentFolderId) &&
-            f.name.toLowerCase().includes(lc)
-          );
-        }
-        // No search: classic direct-children-only view.
-        return f.parentFolderId === currentFolderId;
-      });
-      return matched.sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-      );
-    },
-    [folders.folders, currentFolderId, search, currentTab, subtreeFolderIds],
-  );
+      // No search: classic direct-children-only view.
+      return f.parentFolderId === currentFolderId;
+    });
+    return matched.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
+  }, [folders.folders, currentFolderId, search, currentTab, subtreeFolderIds]);
 
   // Files in the current folder (before search/origin/type filtering). Used
   // to compute the *available* file-type list for the dropdown - that way
@@ -312,13 +306,7 @@ export default function FileManagerView() {
       }
     });
     return sorted;
-  }, [
-    filesInCurrentFolder,
-    search,
-    sortMode,
-    originFilter,
-    typeFilter,
-  ]);
+  }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
 
   /**
    * Resolve a folder id to its breadcrumb path (e.g. "Receipts / 2024 / Q1").
@@ -494,7 +482,7 @@ export default function FileManagerView() {
           const returnRoute =
             currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
           const folderRecord = currentFolderId
-            ? foldersById.get(currentFolderId) ?? null
+            ? (foldersById.get(currentFolderId) ?? null)
             : null;
           const returnLabel = folderRecord
             ? folderRecord.name
@@ -534,7 +522,8 @@ export default function FileManagerView() {
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) => openFilesInWorkbench(fileIds, { trackReturn: false }),
+    (fileIds: FileId[]) =>
+      openFilesInWorkbench(fileIds, { trackReturn: false }),
     [openFilesInWorkbench],
   );
 
@@ -706,7 +695,7 @@ export default function FileManagerView() {
 
   // ─── derived UI bits ────────────────────────────────────────────────────
   const currentFolderRecord = currentFolderId
-    ? foldersById.get(currentFolderId) ?? null
+    ? (foldersById.get(currentFolderId) ?? null)
     : null;
   const totalCount = entries.length;
   const selectedFiles = useMemo(
@@ -774,10 +763,7 @@ export default function FileManagerView() {
                           "filesPage.syncError.server",
                           "Server error during folder sync.",
                         )
-                      : t(
-                          "filesPage.syncError.client",
-                          "Folder sync failed.",
-                        ),
+                      : t("filesPage.syncError.client", "Folder sync failed."),
                 );
               }
               await refresh();
@@ -986,7 +972,8 @@ export default function FileManagerView() {
                   // lint hit. TS's definite-assignment analysis picks up the
                   // assignments through the if/else chain.
                   let next: number;
-                  if (e.key === "ArrowRight") next = (idx + 1) % TAB_DEFS.length;
+                  if (e.key === "ArrowRight")
+                    next = (idx + 1) % TAB_DEFS.length;
                   else if (e.key === "ArrowLeft")
                     next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
                   else if (e.key === "Home") next = 0;
@@ -1047,7 +1034,8 @@ export default function FileManagerView() {
               {selectedFiles.length > 0 && (
                 <span>
                   {" "}
-                  · {t("filesPage.selectedCount", "{{count}} selected", {
+                  ·{" "}
+                  {t("filesPage.selectedCount", "{{count}} selected", {
                     count: selectedFiles.length,
                   })}
                 </span>
@@ -1105,9 +1093,7 @@ export default function FileManagerView() {
                     <Button
                       size="sm"
                       variant="subtle"
-                      leftSection={
-                        <VisibilityIcon fontSize="small" />
-                      }
+                      leftSection={<VisibilityIcon fontSize="small" />}
                       onClick={() => handleQuickView(selectedFiles[0]!)}
                     >
                       {t("filesPage.quickView", "Quick view")}
@@ -1236,10 +1222,7 @@ export default function FileManagerView() {
                 ]}
                 style={{ width: 160 }}
               />
-              <span
-                className="files-page-toolbar-divider"
-                aria-hidden="true"
-              />
+              <span className="files-page-toolbar-divider" aria-hidden="true" />
               <SegmentedControl
                 size="xs"
                 value={viewMode}

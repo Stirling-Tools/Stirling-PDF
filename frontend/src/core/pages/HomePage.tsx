@@ -61,8 +61,8 @@ export default function HomePage() {
   // Start the sidebar collapsed if we mount directly on /files, so the
   // expand→collapse CSS transition doesn't leave the browser with a stale
   // 260px layout box.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    () => location.pathname.startsWith("/files"),
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(() =>
+    location.pathname.startsWith("/files"),
   );
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
@@ -88,7 +88,12 @@ export default function HomePage() {
       // Leaving the file manager - drop back to a sensible default.
       actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
     }
-  }, [location.pathname, navigationState.workbench, actions, activeFiles.length]);
+  }, [
+    location.pathname,
+    navigationState.workbench,
+    actions,
+    activeFiles.length,
+  ]);
 
   // Auto-collapse the FileSidebar in My Files (the workbench already shows
   // the folder tree and file grid, so the sidebar's recent-files list is
@@ -160,7 +165,8 @@ export default function HomePage() {
     navigationState.workbench === "myFiles" ||
     (customWorkbenchViews.find(
       (v) => v.workbenchId === navigationState.workbench,
-    )?.hideToolPanel ?? false);
+    )?.hideToolPanel ??
+      false);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
@@ -285,162 +291,172 @@ export default function HomePage() {
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
       <FilesPageProvider>
-      {isMobile ? (
-        <div
-          className="mobile-layout"
-          data-files-mode={navigationState.workbench === "myFiles"}
-        >
-          {/* On /files the FileManagerView already has its own Back +
+        {isMobile ? (
+          <div
+            className="mobile-layout"
+            data-files-mode={navigationState.workbench === "myFiles"}
+          >
+            {/* On /files the FileManagerView already has its own Back +
               breadcrumb + tabs chrome - the tools/workspace toggle would
               just duplicate vertical space. Keep the toggle on every
               other route. */}
-          {navigationState.workbench !== "myFiles" && (
-            <div className="mobile-toggle">
-            <div className="mobile-header">
-              <div className="mobile-brand">
-                <LogoIcon className="mobile-brand-icon" />
-                <Wordmark alt={brandAltText} className="mobile-brand-text" />
+            {navigationState.workbench !== "myFiles" && (
+              <div className="mobile-toggle">
+                <div className="mobile-header">
+                  <div className="mobile-brand">
+                    <LogoIcon className="mobile-brand-icon" />
+                    <Wordmark
+                      alt={brandAltText}
+                      className="mobile-brand-text"
+                    />
+                  </div>
+                </div>
+                <div
+                  className="mobile-toggle-buttons"
+                  role="tablist"
+                  aria-label={t(
+                    "home.mobile.viewSwitcher",
+                    "Switch workspace view",
+                  )}
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeMobileView === "tools"}
+                    className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
+                    onClick={() => handleSelectMobileView("tools")}
+                  >
+                    {t("home.mobile.tools", "Tools")}
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeMobileView === "workbench"}
+                    className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
+                    onClick={() => handleSelectMobileView("workbench")}
+                  >
+                    {t("home.mobile.workspace", "Workspace")}
+                  </button>
+                </div>
+                <span className="mobile-toggle-hint">
+                  {t(
+                    "home.mobile.swipeHint",
+                    "Swipe left or right to switch views",
+                  )}
+                </span>
               </div>
-            </div>
-            <div
-              className="mobile-toggle-buttons"
-              role="tablist"
-              aria-label={t(
-                "home.mobile.viewSwitcher",
-                "Switch workspace view",
-              )}
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeMobileView === "tools"}
-                className={`mobile-toggle-button ${activeMobileView === "tools" ? "active" : ""}`}
-                onClick={() => handleSelectMobileView("tools")}
-              >
-                {t("home.mobile.tools", "Tools")}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeMobileView === "workbench"}
-                className={`mobile-toggle-button ${activeMobileView === "workbench" ? "active" : ""}`}
-                onClick={() => handleSelectMobileView("workbench")}
-              >
-                {t("home.mobile.workspace", "Workspace")}
-              </button>
-            </div>
-            <span className="mobile-toggle-hint">
-              {t(
-                "home.mobile.swipeHint",
-                "Swipe left or right to switch views",
-              )}
-            </span>
-          </div>
-          )}
-          {navigationState.workbench === "myFiles" ? (
-            /* /files takes the whole viewport. Skipping the slider keeps
+            )}
+            {navigationState.workbench === "myFiles" ? (
+              /* /files takes the whole viewport. Skipping the slider keeps
                 the FileManagerView from being trapped inside a 100vw
                 horizontal-scroll container (which truncated buttons and
                 created a stray side-scroll surface on touch). */
-            <div className="mobile-files-full">
-              <div className="flex-1 min-h-0 flex">
-                <Workbench />
-              </div>
-            </div>
-          ) : (
-            <div ref={sliderRef} className="mobile-slider">
-              <div
-                className="mobile-slide"
-                aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
-              >
-                <div className="mobile-slide-content">
-                  <ToolPanel />
+              <div className="mobile-files-full">
+                <div className="flex-1 min-h-0 flex">
+                  <Workbench />
                 </div>
               </div>
-              <div
-                className="mobile-slide"
-                aria-label={t(
-                  "home.mobile.workbenchSlide",
-                  "Workspace panel",
-                )}
-              >
-                <div className="mobile-slide-content">
-                  <div className="flex-1 min-h-0 flex">
-                    <Workbench />
+            ) : (
+              <div ref={sliderRef} className="mobile-slider">
+                <div
+                  className="mobile-slide"
+                  aria-label={t(
+                    "home.mobile.toolsSlide",
+                    "Tool selection panel",
+                  )}
+                >
+                  <div className="mobile-slide-content">
+                    <ToolPanel />
+                  </div>
+                </div>
+                <div
+                  className="mobile-slide"
+                  aria-label={t(
+                    "home.mobile.workbenchSlide",
+                    "Workspace panel",
+                  )}
+                >
+                  <div className="mobile-slide-content">
+                    <div className="flex-1 min-h-0 flex">
+                      <Workbench />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-          <div className="mobile-bottom-bar">
-            <button
-              className="mobile-bottom-button"
-              aria-label={t("quickAccess.allTools", "Tools")}
-              onClick={() => {
-                handleBackToTools();
-                if (isMobile) {
-                  setActiveMobileView("tools");
-                }
-              }}
-            >
-              <AppsIcon sx={{ fontSize: "1.5rem" }} />
-              <span className="mobile-bottom-button-label">
-                {t("quickAccess.allTools", "Tools")}
-              </span>
-            </button>
-            {toolAvailability["automate"]?.available !== false && (
+            )}
+            <div className="mobile-bottom-bar">
               <button
                 className="mobile-bottom-button"
-                aria-label={t("quickAccess.automate", "Automate")}
+                aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
-                  handleToolSelect("automate");
+                  handleBackToTools();
                   if (isMobile) {
                     setActiveMobileView("tools");
                   }
                 }}
               >
+                <AppsIcon sx={{ fontSize: "1.5rem" }} />
+                <span className="mobile-bottom-button-label">
+                  {t("quickAccess.allTools", "Tools")}
+                </span>
+              </button>
+              {toolAvailability["automate"]?.available !== false && (
+                <button
+                  className="mobile-bottom-button"
+                  aria-label={t("quickAccess.automate", "Automate")}
+                  onClick={() => {
+                    handleToolSelect("automate");
+                    if (isMobile) {
+                      setActiveMobileView("tools");
+                    }
+                  }}
+                >
+                  <LocalIcon
+                    icon="automation-outline"
+                    width="1.5rem"
+                    height="1.5rem"
+                  />
+                  <span className="mobile-bottom-button-label">
+                    {t("quickAccess.automate", "Automate")}
+                  </span>
+                </button>
+              )}
+              <button
+                className="mobile-bottom-button"
+                aria-label={t("home.mobile.openFiles", "Open files")}
+                onClick={() => navigate("/files")}
+              >
                 <LocalIcon
-                  icon="automation-outline"
+                  icon="folder-rounded"
                   width="1.5rem"
                   height="1.5rem"
                 />
                 <span className="mobile-bottom-button-label">
-                  {t("quickAccess.automate", "Automate")}
+                  {t("quickAccess.files", "Files")}
                 </span>
               </button>
-            )}
-            <button
-              className="mobile-bottom-button"
-              aria-label={t("home.mobile.openFiles", "Open files")}
-              onClick={() => navigate("/files")}
-            >
-              <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">
-                {t("quickAccess.files", "Files")}
-              </span>
-            </button>
-            <button
-              className="mobile-bottom-button"
-              aria-label={t("quickAccess.config", "Config")}
-              onClick={() => setConfigModalOpen(true)}
-            >
-              <LocalIcon
-                icon="settings-rounded"
-                width="1.5rem"
-                height="1.5rem"
-              />
-              <span className="mobile-bottom-button-label">
-                {t("quickAccess.config", "Config")}
-              </span>
-            </button>
+              <button
+                className="mobile-bottom-button"
+                aria-label={t("quickAccess.config", "Config")}
+                onClick={() => setConfigModalOpen(true)}
+              >
+                <LocalIcon
+                  icon="settings-rounded"
+                  width="1.5rem"
+                  height="1.5rem"
+                />
+                <span className="mobile-bottom-button-label">
+                  {t("quickAccess.config", "Config")}
+                </span>
+              </button>
+            </div>
+            <FileManager selectedTool={selectedTool} />
+            <AppConfigModal
+              opened={configModalOpen}
+              onClose={() => setConfigModalOpen(false)}
+            />
           </div>
-          <FileManager selectedTool={selectedTool} />
-          <AppConfigModal
-            opened={configModalOpen}
-            onClose={() => setConfigModalOpen(false)}
-          />
-        </div>
-      ) : (
+        ) : (
           <Group
             align="flex-start"
             gap={0}
@@ -479,7 +495,7 @@ export default function HomePage() {
               onClose={() => setConfigModalOpen(false)}
             />
           </Group>
-      )}
+        )}
       </FilesPageProvider>
     </div>
   );
