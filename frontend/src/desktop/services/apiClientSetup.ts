@@ -5,7 +5,10 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";
 import { authService } from "@app/services/authService";
-import { connectionModeService } from "@app/services/connectionModeService";
+import {
+  connectionModeService,
+  JWT_EXPIRED_PROMPTED_KEY,
+} from "@app/services/connectionModeService";
 import {
   STIRLING_SAAS_URL,
   STIRLING_SAAS_BACKEND_API_URL,
@@ -227,10 +230,16 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           return client.request(originalRequest);
         }
 
-        // Refresh failed - prompt for re-authentication via the sign-in modal.
-        window.dispatchEvent(
-          new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
-        );
+        // Refresh failed - one-shot guard prevents background 401s from re-opening the modal.
+        if (
+          typeof localStorage !== "undefined" &&
+          localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY) !== "true"
+        ) {
+          localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
+          window.dispatchEvent(
+            new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
+          );
+        }
       }
 
       // Handle 403 Forbidden - unauthorized access
