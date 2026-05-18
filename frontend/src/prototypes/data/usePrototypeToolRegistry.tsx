@@ -25,7 +25,7 @@ export function usePrototypeToolRegistry(): PrototypeToolRegistry {
     () =>
       ({
         pdfCommentAgent: {
-          icon: <LocalIcon icon="add-comment" width="1.5rem" height="1.5rem" />,
+          icon: <LocalIcon icon="add-comment-outline-rounded" width="1.5rem" height="1.5rem" />,
           name: t("home.pdfCommentAgent.title", "Add AI comments"),
           component: PdfCommentAgent,
           description: t(
