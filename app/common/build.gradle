@@ -45,10 +45,18 @@ dependencies {
     api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:8.12.6'
     api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
+
+    // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
+    // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
+    api ('technology.tabula:tabula:1.0.5') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
 }

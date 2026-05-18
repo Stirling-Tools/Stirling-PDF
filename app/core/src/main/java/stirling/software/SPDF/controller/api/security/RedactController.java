@@ -96,7 +96,9 @@ public class RedactController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
-                List.class, "redactions", new StringToArrayListPropertyEditor());
+                List.class,
+                "redactions",
+                new StringToArrayListPropertyEditor<>(RedactionArea.class));
     }
 
     @AutoJobPostMapping(value = "/redact", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

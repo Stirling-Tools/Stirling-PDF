@@ -10,24 +10,24 @@ from pydantic_ai.tools import RunContext
 
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
+from stirling.agents.pdf_review import PdfReviewAgent
+from stirling.agents.pdf_to_markdown import PdfToMarkdownAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
-    AgentDraftRequest,
     AgentDraftWorkflowResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
-    PdfEditRequest,
+    PageLayoutArtifact,
     PdfEditResponse,
-    PdfQuestionRequest,
-    PdfQuestionResponse,
+    PdfQuestionOrchestrateResponse,
     SupportedCapability,
-    ToolOperationStep,
     UnsupportedCapabilityResponse,
     format_conversation_history,
+    format_file_names,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
+from stirling.contracts.pdf_to_markdown import PdfToMarkdownOrchestrateResponse
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -61,12 +61,20 @@ class OrchestratorAgent:
                     description="Delegate requests to create or revise a user agent spec and return the draft result.",
                 ),
                 ToolOutput(
-                    self.math_auditor_agent,
-                    name="math_auditor_agent",
+                    self.delegate_pdf_review,
+                    name="delegate_pdf_review",
                     description=(
-                        "Delegate requests to check arithmetic, validate table totals, "
-                        "audit financial calculations, or verify mathematical accuracy in PDFs."
+                        "Delegate requests to review a PDF and leave review comments, notes, or"
+                        " sticky-note annotations on the document itself. Use this when the user"
+                        " wants the PDF returned with comments attached (e.g. 'review this',"
+                        " 'add review comments', 'flag unclear sentences', 'annotate with"
+                        " feedback')."
                     ),
+                ),
+                ToolOutput(
+                    self.delegate_pdf_to_markdown,
+                    name="delegate_pdf_to_markdown",
+                    description=("Delegate requests to reconstruct a PDF as a Markdown document."),
                 ),
                 ToolOutput(
                     self.unsupported_capability,
@@ -79,11 +87,15 @@ class OrchestratorAgent:
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
-                "Use delegate_pdf_question for questions about PDF contents. "
+                "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
-                "Use math_auditor_agent for requests to check arithmetic, validate "
-                "table totals, audit financial calculations, or verify math in PDFs. "
-                "Use unsupported_capability only when none of the other outputs fit."
+                "Use delegate_pdf_review when the user wants the PDF returned with review"
+                " comments attached — anything like 'review this', 'annotate with comments',"
+                " 'leave feedback on the PDF'. "
+                "Use delegate_pdf_to_markdown for any request to convert a PDF to Markdown "
+                "or reconstruct its content as readable text. "
+                "Use unsupported_capability when the user asks about the assistant itself "
+                "or when none of the other outputs fit; supply a helpful message."
             ),
             model_settings=runtime.fast_model_settings,
         )
@@ -91,7 +103,7 @@ class OrchestratorAgent:
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
         logger.info(
             "[orchestrator] handle: files=%s resume_with=%s artifacts=%s msg=%r",
-            request.file_names,
+            [file.name for file in request.files],
             request.resume_with,
             [type(a).__name__ for a in request.artifacts],
             request.user_message,
@@ -106,14 +118,23 @@ class OrchestratorAgent:
         return result.output
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
-        """Fast-path to get back to the correct endpoint without having to call AI."""
+        """Fast-path to get back to the correct endpoint without having to call AI.
+
+        Also the entry point for the *multi-turn* flow where a delegate emits a plan with
+        ``resume_with`` set — Java runs the plan, captures any tool reports as artifacts, and
+        re-enters via this method so the delegate can digest the reports.
+        """
         match capability:
             case SupportedCapability.PDF_QUESTION:
                 return await self._run_pdf_question(request)
+            case SupportedCapability.PDF_REVIEW:
+                return await self._run_pdf_review(request)
             case SupportedCapability.PDF_EDIT:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
+            case SupportedCapability.PDF_TO_MARKDOWN:
+                return await self._run_pdf_to_markdown(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
@@ -128,51 +149,31 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        extracted_text = self._get_extracted_text_artifact(request)
-        return await PdfEditAgent(self.runtime).handle(
-            PdfEditRequest(
-                user_message=request.user_message,
-                file_names=request.file_names,
-                conversation_history=request.conversation_history,
-                page_text=extracted_text.files if extracted_text is not None else [],
-            )
-        )
+        return await PdfEditAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
+    async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionOrchestrateResponse:
         return await self._run_pdf_question(ctx.deps.request)
 
-    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse:
-        extracted_text = self._get_extracted_text_artifact(request)
-        return await PdfQuestionAgent(self.runtime).handle(
-            PdfQuestionRequest(
-                question=request.user_message,
-                file_names=request.file_names,
-                page_text=extracted_text.files if extracted_text is not None else [],
-                conversation_history=request.conversation_history,
-            )
-        )
+    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionOrchestrateResponse:
+        return await PdfQuestionAgent(self.runtime).orchestrate(request)
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
         return await self._run_agent_draft(ctx.deps.request)
 
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
-        return await UserSpecAgent(self.runtime).draft(
-            AgentDraftRequest(
-                user_message=request.user_message,
-                conversation_history=request.conversation_history,
-            )
-        )
+        return await UserSpecAgent(self.runtime).orchestrate(request)
 
-    async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
-        return EditPlanResponse(
-            summary="Validate mathematical calculations in the document.",
-            steps=[
-                ToolOperationStep(
-                    tool=AgentToolId.MATH_AUDITOR_AGENT,
-                    parameters=MathAuditorAgentParams(),
-                )
-            ],
-        )
+    async def delegate_pdf_to_markdown(self, ctx: RunContext[OrchestratorDeps]) -> PdfToMarkdownOrchestrateResponse:
+        return await self._run_pdf_to_markdown(ctx.deps.request)
+
+    async def _run_pdf_to_markdown(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
+        return await PdfToMarkdownAgent(self.runtime).orchestrate(request)
+
+    async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
+        return await self._run_pdf_review(ctx.deps.request)
+
+    async def _run_pdf_review(self, request: OrchestratorRequest) -> EditPlanResponse:
+        return await PdfReviewAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(
         self,
@@ -182,20 +183,13 @@ class OrchestratorAgent:
     ) -> UnsupportedCapabilityResponse:
         return UnsupportedCapabilityResponse(capability=capability, message=message)
 
-    def _get_extracted_text_artifact(self, request: OrchestratorRequest) -> ExtractedTextArtifact | None:
-        for artifact in request.artifacts:
-            if isinstance(artifact, ExtractedTextArtifact):
-                return artifact
-        return None
-
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
-        file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
         history = format_conversation_history(request.conversation_history)
         return (
             f"Conversation history:\n{history}\n"
             f"User message: {request.user_message}\n"
-            f"Files: {file_names}\n"
+            f"Files: {format_file_names(request.files)}\n"
             f"Available artifacts:\n{artifact_summary}"
         )
 
@@ -209,6 +203,11 @@ class OrchestratorAgent:
                 total_pages = sum(len(f.pages) for f in artifact.files)
                 file_names = [f.file_name for f in artifact.files]
                 descriptions.append(f"- extracted_text: {total_pages} pages from {file_names}")
+                continue
+            if isinstance(artifact, PageLayoutArtifact):
+                total_pages = sum(len(f.pages) for f in artifact.files)
+                file_names = [f.file_name for f in artifact.files]
+                descriptions.append(f"- page_layout: {total_pages} pages from {file_names}")
                 continue
             descriptions.append("- unknown artifact")
         return "\n".join(descriptions)

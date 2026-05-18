@@ -4,6 +4,11 @@ import { SuggestedAutomation } from "@app/types/automation";
 
 export interface SavedAutomation extends AutomationConfig {}
 
+export type ImportableAutomation = Omit<
+  AutomationConfig,
+  "id" | "createdAt" | "updatedAt"
+>;
+
 export function useSavedAutomations() {
   const [savedAutomations, setSavedAutomations] = useState<SavedAutomation[]>(
     [],
@@ -89,6 +94,22 @@ export function useSavedAutomations() {
     [refreshAutomations],
   );
 
+  const importAutomation = useCallback(
+    async (automation: ImportableAutomation): Promise<SavedAutomation> => {
+      try {
+        const { automationStorage } =
+          await import("@app/services/automationStorage");
+        const saved = await automationStorage.saveAutomation(automation);
+        refreshAutomations();
+        return saved;
+      } catch (err) {
+        console.error("Error importing automation:", err);
+        throw err;
+      }
+    },
+    [refreshAutomations],
+  );
+
   // Load automations on mount
   useEffect(() => {
     loadSavedAutomations();
@@ -101,5 +122,6 @@ export function useSavedAutomations() {
     refreshAutomations,
     deleteAutomation,
     copyFromSuggested,
+    importAutomation,
   };
 }

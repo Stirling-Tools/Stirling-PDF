@@ -48,7 +48,7 @@ jobs:
             cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
         with:
           egress-policy: audit
 
@@ -80,7 +80,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ~/.gradle/wrapper
@@ -89,7 +89,7 @@ jobs:
           key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
           gradle-version: 9.3.1
           cache-disabled: true
@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload Reports
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: reports-docker-${{ matrix.artifact-suffix }}
           path: |
@@ -160,3 +160,58 @@ jobs:
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
+
+  test-build-unoserver-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build docker/unoserver/Dockerfile
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          cache-from: type=gha,scope=stirling-unoserver
+          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Smoke test the built image
+        run: |
+          set -eu
+          docker run -d --name unoserver-smoke \
+            -e UNOSERVER_RECYCLE_INTERVAL_SECONDS=0 \
+            stirling-unoserver:pr-test
+          deadline=$((SECONDS + 60))
+          while [ $SECONDS -lt $deadline ]; do
+            status=$(docker inspect -f '{{.State.Health.Status}}' unoserver-smoke 2>/dev/null || echo "starting")
+            if [ "$status" = "healthy" ]; then
+              echo "unoserver became healthy"
+              docker logs unoserver-smoke | tail -30
+              docker rm -f unoserver-smoke
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "unoserver did not become healthy in time"
+          docker logs unoserver-smoke || true
+          docker rm -f unoserver-smoke || true
+          exit 1

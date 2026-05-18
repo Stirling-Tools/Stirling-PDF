@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -20,7 +20,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the
   // `VITE_` prefix.
@@ -49,12 +49,40 @@ export default defineConfig(({ mode }) => {
     xfwd: true,
   };
 
+  // Shared between `vite` (dev) and `vite preview` (production-build serve, used
+  // in CI/E2E) so the live test suite still resolves /api → :8080.
+  const backendProxyConfig =
+    effectiveMode === "desktop"
+      ? undefined
+      : {
+          "/api": backendProxy,
+          "/oauth2": backendProxy,
+          "/saml2": backendProxy,
+          "/login/oauth2": backendProxy,
+          "/login/saml2": backendProxy,
+          "/swagger-ui": backendProxy,
+          "/v1/api-docs": backendProxy,
+        };
+
   return {
     plugins: [
       react(),
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
+      // Set ANALYZE=true to emit dist/stats.html (treemap) alongside the
+      // build; rollup-plugin-visualizer is ESM-only so we import dynamically.
+      ...(process.env.ANALYZE === "true"
+        ? [
+            (await import("rollup-plugin-visualizer")).visualizer({
+              filename: "dist/stats.html",
+              template: "treemap",
+              gzipSize: true,
+              brotliSize: true,
+              emitFile: false,
+            }) as PluginOption,
+          ]
+        : []),
       viteStaticCopy({
         targets: [
           {
@@ -94,19 +122,25 @@ export default defineConfig(({ mode }) => {
         ignored: ["**/src-tauri/**"],
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
-      proxy:
-        effectiveMode === "desktop"
-          ? undefined
-          : {
-              "/api": backendProxy,
-              "/oauth2": backendProxy,
-              "/saml2": backendProxy,
-              "/login/oauth2": backendProxy,
-              "/login/saml2": backendProxy,
-              "/swagger-ui": backendProxy,
-              "/v1/api-docs": backendProxy,
-            },
+      proxy: backendProxyConfig,
     },
-    base: env.RUN_SUBPATH ? `/${env.RUN_SUBPATH}` : "./",
+    preview: {
+      host: true,
+      port: 5173,
+      strictPort: true,
+      proxy: backendProxyConfig,
+    },
+    // base: "./" produces relative asset URLs which work when dist/ is served
+    // at any path (e.g. Spring Boot bundling the frontend at /). But under
+    // `vite preview` for deep SPA routes (e.g. /workflow/sign/<token>), the
+    // browser resolves ./assets/X.js relative to the current path → 404, then
+    // SPA fallback returns index.html as text/html and React never mounts.
+    // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
+    // an absolute base so deep-route asset paths resolve to /assets/...
+    base: env.RUN_SUBPATH
+      ? `/${env.RUN_SUBPATH}`
+      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
+        ? "/"
+        : "./",
   };
 });
