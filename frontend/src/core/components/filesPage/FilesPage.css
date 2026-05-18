@@ -866,15 +866,27 @@
    navigation, so the in-header Home/Apps/Close trio is duplicated
    and the first to go. Same for "Upload" - the user can use the
    centre drop overlay. */
+.files-page-header [data-desktop-hide="true"] {
+  /* The mobile-only overflow menu trigger. Hidden by default; shown
+     inside the mobile breakpoint below. Live as inline-flex so it
+     sits next to the Upload button without breaking the action row. */
+  display: none;
+}
 @media (max-width: 640px) {
   .files-page-header {
     flex-wrap: nowrap;
     gap: 0.4rem;
     padding: 0 0.4rem;
-    overflow-x: auto;
+    /* No horizontal scroll: the previous `overflow-x: auto` let buttons
+       run off-screen invisibly. Action collapsing into the kebab keeps
+       everything visible. */
+    overflow-x: hidden;
   }
   .files-page-header [data-mobile-hide="true"] {
     display: none !important;
+  }
+  .files-page-header [data-desktop-hide="true"] {
+    display: inline-flex !important;
   }
   .files-page-header-actions {
     gap: 0.3rem;
@@ -887,9 +899,25 @@
     min-width: 0;
   }
   .files-page-search {
+    /* Shrink hard so the search bar doesn't eat the whole action row.
+       Users still see the icon + first ~8 chars of the placeholder. */
     min-width: 0;
-    flex: 1 1 8rem;
-    max-width: none;
+    flex: 0 1 6rem;
+    max-width: 7rem;
+  }
+  /* Upload becomes an icon-only square button on mobile so the action
+     row stops getting clipped. Scoped to `.files-page-header-actions`
+     so the Back button at the header level keeps its visible "Back"
+     label (Back has no other on-screen indicator that it's about leaving). */
+  .files-page-header-actions .mantine-Button-root {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+  .files-page-header-actions .mantine-Button-section[data-position="left"] {
+    margin-right: 0;
+  }
+  .files-page-header-actions .mantine-Button-label {
+    display: none;
   }
   .files-page-toolbar {
     flex-wrap: wrap;

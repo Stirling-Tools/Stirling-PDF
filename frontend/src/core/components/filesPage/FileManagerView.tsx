@@ -11,6 +11,7 @@ import {
   ActionIcon,
   Button,
   Group,
+  Menu,
   MultiSelect,
   SegmentedControl,
   Select,
@@ -29,6 +30,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { useFolders } from "@app/contexts/FolderContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
@@ -752,119 +754,164 @@ export default function FileManagerView() {
                 : t("filesPage.tabName.shared", "Shared with me")}
           </div>
         )}
-        <div className="files-page-header-actions">
-          <SearchField
-            ref={searchInputRef}
-            value={search}
-            onChange={setSearch}
-          />
-          <Tooltip
-            label={t("filesPage.refresh", "Refresh from server")}
-            withinPortal
-          >
-            <ActionIcon
-              variant="default"
-              size="md"
-              loading={refreshing}
-              disabled={refreshing}
-              aria-busy={refreshing}
-              onClick={async () => {
-                setRefreshing(true);
-                try {
-                  // pullFromServer bumps the folder revision, which the
-                  // FolderProvider's effect reacts to by re-running
-                  // refresh() - no need to await folders.refresh() manually.
-                  const result = await folders.pullFromServer();
-                  if (!result.ok && result.reason !== "endpoint-missing") {
-                    folders.setError(
-                      result.reason === "network"
-                        ? t(
-                            "filesPage.syncError.network",
-                            "Could not reach the server.",
-                          )
-                        : result.reason === "server"
-                          ? t(
-                              "filesPage.syncError.server",
-                              "Server error during folder sync.",
-                            )
-                          : t(
-                              "filesPage.syncError.client",
-                              "Folder sync failed.",
-                            ),
-                    );
-                  }
-                  await refresh();
-                } finally {
-                  setRefreshing(false);
-                }
-              }}
-              aria-label={t("filesPage.refresh", "Refresh from server")}
-            >
-              <RefreshIcon />
-            </ActionIcon>
-          </Tooltip>
-          {(() => {
-            const newFolderDisabledReason =
-              currentTab === "local"
-                ? t(
-                    "filesPage.localFoldersUnavailable",
-                    "Folders are cloud-only - save a file to the cloud to organise it.",
-                  )
-                : currentTab === "recent" || currentTab === "shared"
-                  ? t(
-                      "filesPage.newFolderTabUnavailable",
-                      "Switch to All or Cloud to create folders.",
-                    )
-                  : !folders.serverReachable
+        {(() => {
+          // Both the inline desktop buttons and the mobile kebab menu need
+          // these handlers — extract once so we don't drift two copies.
+          const handleRefresh = async () => {
+            setRefreshing(true);
+            try {
+              // pullFromServer bumps the folder revision, which the
+              // FolderProvider's effect reacts to by re-running refresh() —
+              // no need to await folders.refresh() manually.
+              const result = await folders.pullFromServer();
+              if (!result.ok && result.reason !== "endpoint-missing") {
+                folders.setError(
+                  result.reason === "network"
                     ? t(
-                        "filesPage.offlineNoFolderEdits",
-                        "Offline - folder changes are disabled.",
+                        "filesPage.syncError.network",
+                        "Could not reach the server.",
                       )
-                    : null;
-            const button = (
-              <Button
-                leftSection={<CreateNewFolderIcon fontSize="small" />}
-                variant="default"
-                size="sm"
-                disabled={newFolderDisabledReason !== null}
-                onClick={() => openNewFolderDialog()}
-              >
-                {t("filesPage.newFolder", "New folder")}
-              </Button>
-            );
-            return (
+                    : result.reason === "server"
+                      ? t(
+                          "filesPage.syncError.server",
+                          "Server error during folder sync.",
+                        )
+                      : t(
+                          "filesPage.syncError.client",
+                          "Folder sync failed.",
+                        ),
+                );
+              }
+              await refresh();
+            } finally {
+              setRefreshing(false);
+            }
+          };
+          const newFolderDisabledReason =
+            currentTab === "local"
+              ? t(
+                  "filesPage.localFoldersUnavailable",
+                  "Folders are cloud-only - save a file to the cloud to organise it.",
+                )
+              : currentTab === "recent" || currentTab === "shared"
+                ? t(
+                    "filesPage.newFolderTabUnavailable",
+                    "Switch to All or Cloud to create folders.",
+                  )
+                : !folders.serverReachable
+                  ? t(
+                      "filesPage.offlineNoFolderEdits",
+                      "Offline - folder changes are disabled.",
+                    )
+                  : null;
+          const newFolderButton = (
+            <Button
+              leftSection={<CreateNewFolderIcon fontSize="small" />}
+              variant="default"
+              size="sm"
+              disabled={newFolderDisabledReason !== null}
+              onClick={() => openNewFolderDialog()}
+            >
+              {t("filesPage.newFolder", "New folder")}
+            </Button>
+          );
+          return (
+            <div className="files-page-header-actions">
+              <SearchField
+                ref={searchInputRef}
+                value={search}
+                onChange={setSearch}
+              />
+              {/* Refresh — inline on desktop, folded into the kebab on mobile. */}
               <Tooltip
-                label={
-                  newFolderDisabledReason ??
-                  t("filesPage.newFolder", "New folder")
-                }
+                label={t("filesPage.refresh", "Refresh from server")}
                 withinPortal
               >
-                {/* Mantine disables tooltip pointer events on disabled
-                    children - wrap so the tooltip still fires on hover. */}
-                {newFolderDisabledReason ? (
-                  <span style={{ display: "inline-flex" }}>{button}</span>
-                ) : (
-                  button
-                )}
+                <ActionIcon
+                  variant="default"
+                  size="md"
+                  data-mobile-hide="true"
+                  loading={refreshing}
+                  disabled={refreshing}
+                  aria-busy={refreshing}
+                  onClick={handleRefresh}
+                  aria-label={t("filesPage.refresh", "Refresh from server")}
+                >
+                  <RefreshIcon />
+                </ActionIcon>
               </Tooltip>
-            );
-          })()}
-          <Button
-            leftSection={<UploadFileIcon fontSize="small" />}
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {t("filesPage.upload", "Upload")}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            style={{ display: "none" }}
-            onChange={onFileInputChange}
-          />
-        </div>
+              {/* New folder — inline on desktop, folded into the kebab on mobile. */}
+              <span data-mobile-hide="true" style={{ display: "inline-flex" }}>
+                <Tooltip
+                  label={
+                    newFolderDisabledReason ??
+                    t("filesPage.newFolder", "New folder")
+                  }
+                  withinPortal
+                >
+                  {/* Mantine disables tooltip pointer events on disabled
+                      children — wrap so the tooltip still fires on hover. */}
+                  {newFolderDisabledReason ? (
+                    <span style={{ display: "inline-flex" }}>
+                      {newFolderButton}
+                    </span>
+                  ) : (
+                    newFolderButton
+                  )}
+                </Tooltip>
+              </span>
+              <Button
+                leftSection={<UploadFileIcon fontSize="small" />}
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {t("filesPage.upload", "Upload")}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                style={{ display: "none" }}
+                onChange={onFileInputChange}
+              />
+              {/* Mobile overflow: collapses Refresh + New folder so the
+                  toolbar isn't clipped on narrow viewports. CSS hides this
+                  on >640px via `data-desktop-hide`. */}
+              <Menu shadow="md" position="bottom-end" withinPortal>
+                <Menu.Target>
+                  <ActionIcon
+                    variant="default"
+                    size="md"
+                    data-desktop-hide="true"
+                    aria-label={t(
+                      "filesPage.moreActions",
+                      "More folder actions",
+                    )}
+                  >
+                    <MoreVertIcon />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<RefreshIcon fontSize="small" />}
+                    disabled={refreshing}
+                    onClick={handleRefresh}
+                  >
+                    {t("filesPage.refresh", "Refresh from server")}
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<CreateNewFolderIcon fontSize="small" />}
+                    disabled={newFolderDisabledReason !== null}
+                    onClick={() => openNewFolderDialog()}
+                  >
+                    {newFolderDisabledReason ??
+                      t("filesPage.newFolder", "New folder")}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </div>
+          );
+        })()}
       </header>
 
       {folders.error && (
