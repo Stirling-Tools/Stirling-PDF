@@ -32,7 +32,7 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -73,11 +73,13 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { config: appConfig } = useAppConfig();
   // Sharing is gated server-side. Hide the "Shared with me" tab entirely
   // when the deployment didn't enable it - the tab was always empty in
   // that case and just confused users into thinking sharing was broken.
-  const sharingEnabled = appConfig?.storageSharingEnabled ?? false;
+  // Use the shared hook so this gate stays in lockstep with the other
+  // sharing-feature gates (FileActions, FileInfoCard, ShareManagementModal,
+  // etc.) - all read the same `config.storageSharingEnabled` flag.
+  const { sharingEnabled } = useSharingEnabled();
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -967,7 +969,7 @@ export default function FileManagerView() {
               { id: "all", label: t("filesPage.tabs.all", "All") },
               { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
               // Shared only when the server actually has sharing enabled —
-              // see appConfig.storageSharingEnabled gate above.
+              // see useSharingEnabled gate at the top of the component.
               ...(sharingEnabled
                 ? [
                     {
