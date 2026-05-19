@@ -37,7 +37,7 @@ jobs:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) && inputs.docker-base-changed != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
       fail-fast: false
@@ -194,7 +194,7 @@ jobs:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) && inputs.docker-base-changed != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
