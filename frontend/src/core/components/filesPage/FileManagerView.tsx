@@ -30,6 +30,7 @@ import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -59,6 +60,7 @@ import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
+import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import {
@@ -96,6 +98,11 @@ export default function FileManagerView() {
   // viewports (641-800) a smaller drawer keeps some grid context visible.
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
+  // "Save to server" confirmation modal - opens when the user invokes the
+  // bulk-action button for selected local-only files. Targets root (no
+  // folder assignment); folder-assignment requires the explicit drop-on-
+  // folder flow.
+  const [saveToServerOpen, setSaveToServerOpen] = useState(false);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -761,6 +768,21 @@ export default function FileManagerView() {
     [selectedFileIds],
   );
 
+  // Selected files that haven't been uploaded to the server yet. Drives
+  // visibility of the "Save to server" bulk-action button - when ALL
+  // selected files are already on the server, that button has nothing
+  // to do and should hide itself.
+  const localOnlySelectedStubs = useMemo(
+    () =>
+      selectedFiles
+        .map((id) => fileMap.get(id))
+        .filter(
+          (s): s is StirlingFileStub =>
+            Boolean(s) && s!.remoteStorageId == null,
+        ),
+    [selectedFiles, fileMap],
+  );
+
   return (
     <div className="files-page" ref={dropZoneRef}>
       <header className="files-page-header">
@@ -1229,6 +1251,32 @@ export default function FileManagerView() {
                           </Button>
                         </Tooltip>
                       )}
+                      {/* "Save to server" - only when at least one
+                          selected file is still local-only. The button
+                          opens a confirmation modal (the user has to
+                          explicitly opt-in to a server upload, never
+                          silent). Server-only files don't need this
+                          action so the button hides when everything
+                          selected is already on the server. */}
+                      {localOnlySelectedStubs.length > 0 && (
+                        <Tooltip
+                          label={t("filesPage.saveToServer", "Save to server")}
+                          withinPortal
+                        >
+                          <Button
+                            size="sm"
+                            variant="default"
+                            leftSection={<CloudUploadIcon fontSize="small" />}
+                            onClick={() => setSaveToServerOpen(true)}
+                            aria-label={t(
+                              "filesPage.saveToServer",
+                              "Save to server",
+                            )}
+                          >
+                            {t("filesPage.saveToServer", "Save to server")}
+                          </Button>
+                        </Tooltip>
+                      )}
                       {/* "Show details" button - only on compact viewports
                           where the inline details aside is gone. The
                           replacement Drawer is BUTTON-TRIGGERED (not
@@ -1592,6 +1640,17 @@ export default function FileManagerView() {
         }
         onClose={closeFolderNameDialog}
         onSubmit={submitFolderName}
+      />
+
+      {/* Save-to-server confirmation modal. Snapshots the local-only
+          subset at open time via key={...} so a selection change while
+          the modal is open doesn't quietly retarget the upload. */}
+      <BulkUploadToServerModal
+        key={`save-${localOnlySelectedStubs.map((s) => s.id).join(",")}`}
+        opened={saveToServerOpen && localOnlySelectedStubs.length > 0}
+        onClose={() => setSaveToServerOpen(false)}
+        files={localOnlySelectedStubs}
+        onUploaded={refresh}
       />
     </div>
   );
