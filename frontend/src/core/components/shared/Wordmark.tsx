@@ -16,5 +16,5 @@ export function Wordmark({ alt = "", muted = false, ...props }: WordmarkProps) {
   // dark:  white text for both variants
   const src = isDark ? wordmark.white : muted ? wordmark.grey : wordmark.black;
 
-  return <img src={src} alt={alt} {...props} />;
+  return <img src={src} alt={alt} {...props} draggable={false} />;
 }
