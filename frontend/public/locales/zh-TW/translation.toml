@@ -1806,7 +1806,11 @@ title = "智慧重新命名"
 [automate]
 copyToSaved = "複製到已儲存"
 desc = "透過串接多個 PDF 操作來建立多步驟工作流程。非常適合重複性工作。"
+export = "匯出"
 exportForFolderScanning = "匯出供資料夾掃描"
+import = "匯入"
+importPartialSuccess = "已匯入，但有 {{count}} 個未對應的操作：{{ops}}"
+importSuccess = "已匯入自動化：{{name}}"
 invalidStep = "無效的步驟"
 reviewTitle = "自動化結果"
 title = "自動化"
@@ -1822,6 +1826,7 @@ title = "設定 {{toolName}}"
 [automate.creation]
 createTitle = "建立自動化"
 editTitle = "編輯自動化"
+export = "匯出"
 exportForFolderScanning = "匯出供資料夾掃描"
 intro = "自動化會依序執行工具。開始之前，請按您希望的順序加入工具。"
 save = "儲存自動化"
@@ -1852,8 +1857,27 @@ confirm = "返回"
 message = "您有未儲存的變更。確定要返回嗎？所有變更都將遺失。"
 title = "未儲存的變更"
 
+[automate.entryMenu]
+label = "開啟 {{title}} 的選單"
+
 [automate.files]
 placeholder = "選取要由此自動化流程處理的檔案"
+
+[automate.importModal]
+cancel = "取消"
+confirm = "匯入"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "將 JSON 拖放到此處或點擊以選擇檔案"
+dropSubhint = "接受 Automate 與 Folder Scanning 設定"
+dropzoneAriaLabel = "在此拖放自動化 JSON 檔案"
+intro = "將 JSON 檔案拖放於此，或在下方貼上其內容。系統會自動偵測格式（Automate 或 Folder Scanning）。"
+opCount = "{{count}} 個操作"
+parseError = "無法解析：{{message}}"
+pasteLabel = "或貼上 JSON"
+pastePlaceholder = "在此貼上您的自動化 JSON…"
+title = "匯入自動化"
+unresolved = "未對應：{{ops}}"
 
 [automate.run]
 title = "執行自動化"
@@ -2670,6 +2694,10 @@ executing_tool_step = "正在執行 {{tool}}（第 {{step}} 步，共 {{total}} 
 extracting_content = "正在從您的文件擷取內容..."
 processing = "正在處理擷取的內容..."
 thinking = "正在思考..."
+whole_doc_compression_round = "正在整合筆記…"
+whole_doc_read_done = "已完成讀取文件…"
+whole_doc_read_started = "正在讀取文件…"
+whole_doc_slice_done = "正在讀取文件…（已完成 {{percent}}%）"
 
 [chat.toolsUsed]
 summary = "已執行 {{count}} 個工具"
@@ -2712,6 +2740,7 @@ used = "已使用"
 [compare]
 addFilesHint = "請在「檔案」步驟新增 PDF 以啟用選取。"
 clearSelected = "清除所選"
+clearSlot = "移除檔案"
 cta = "比較"
 header = "比較 PDF"
 loading = "正在比較…"
@@ -2764,6 +2793,7 @@ title = "這些 PDF 差異很大"
 [compare.edited]
 label = "已編輯的 PDF"
 placeholder = "選擇已編輯的 PDF"
+selectBaseFirst = "請先選取原始 PDF"
 
 [compare.error]
 filesMissing = "找不到所選檔案。請重新選取。"
@@ -2846,6 +2876,7 @@ pageLabel = "頁"
 confirm = "交換並重新執行"
 confirmBody = "這會重新執行工具。確定要交換「原始」與「已編輯」的順序嗎？"
 confirmTitle = "要重新執行比較嗎？"
+label = "交換"
 
 [compare.toasts]
 unlinkedBody = "提示：方向鍵上下可同時捲動兩個窗格；平移僅移動作用中的窗格。"
@@ -3476,6 +3507,8 @@ unlockAll = "用於所有（{{count}}）"
 unlockAllPartialFail = "密碼錯誤：{{names}}"
 unlockAllSuccess = "已解鎖 {{count}} 個檔案。"
 unlockPrompt = "解鎖 PDF 以繼續"
+viewerLocked = "此 PDF 已受密碼保護"
+viewerUnlock = "解鎖"
 
 [encryptedPdfUnlock.password]
 label = "PDF 密碼"
@@ -3583,6 +3616,9 @@ or = "或"
 
 [fileEditor]
 addFiles = "新增檔案"
+pageCount = "{{count}} 頁"
+pageCount_one = "{{count}} 頁"
+pageCount_other = "{{count}} 頁"
 
 [fileManager]
 active = "啟用"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "變更尚未上傳"
 clearAll = "全部清除"
 clearSelection = "清除選取"
 clickToUpload = "點選以上傳檔案"
+closeAllFiles = "關閉所有檔案"
 closeFile = "關閉檔案"
 cloudFile = "雲端檔案"
 copyCreated = "副本已儲存到此裝置。"
@@ -3665,6 +3702,7 @@ selectAll = "全選"
 selectedCount = "{{count}} 個已選"
 selectedFiles = "已選檔案"
 share = "共用"
+shared = "已共用"
 sharedByYou = "由您共用"
 sharedEditNoticeBody = "您沒有此檔案伺服器版本的編輯權限。所做的編輯將儲存為本機副本。"
 sharedEditNoticeConfirm = "了解"
@@ -3704,6 +3742,41 @@ size = "檔案大小"
 title = "檔案"
 upload = "上傳"
 uploadFiles = "上傳檔案"
+
+[fileSelectorPicker]
+empty = "沒有可用的檔案"
+placeholder = "選取檔案"
+search = "篩選檔案…"
+tabListLabel = "已儲存檔案、工作台、上傳"
+upload = "從電腦上傳"
+
+[fileSelectorPicker.sort]
+dateAsc = "最舊優先"
+dateDesc = "最新優先"
+dateLabel = "最新"
+nameAsc = "A 到 Z"
+nameDesc = "Z 到 A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "已儲存檔案"
+upload = "上傳"
+workbench = "工作台"
+
+[fileSidebar]
+addFiles = "新增檔案"
+collapse = "收合側邊欄"
+dropHint = "開啟檔案以開始使用"
+expand = "展開側邊欄"
+files = "檔案"
+googleDrive = "Google Drive"
+googleDriveDisabled = "尚未設定 Google Drive"
+noFiles = "尚無檔案"
+openFileManager = "開啟檔案管理器"
+openFromComputer = "從電腦開啟"
+openSettings = "開啟設定"
+search = "搜尋"
+searchPlaceholder = "搜尋檔案…"
 
 [fileToPDF]
 credit = "此服務使用 LibreOffice 和 Unoconv 進行檔案轉換。"
@@ -4202,6 +4275,11 @@ title = "覆蓋 PDF"
 desc = "將 PDF 檔案的多個頁面合併到單一頁面"
 tags = "版面,排列,組合,layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "多頁版面配置"
+
+[home.pdfCommentAgent]
+desc = "請 AI 根據您的提示，為 PDF 加上便條式註解"
+tags = "AI,代理,評論,註解,便條紙,審閱,回饋,筆記"
+title = "新增 AI 評論"
 
 [home.pdfOrganiser]
 desc = "以任何順序移除/重新排列頁面"
@@ -4903,7 +4981,6 @@ fileUpload = "使用<strong>檔案</strong>按鈕上傳或選擇最近的 PDF。
 leftPanel = "左側的<strong>工具</strong>面板列出您可以做的所有事。瀏覽分類或搜尋以快速找到工具。"
 pageEditorView = "切換到頁面編輯器以重新排序、旋轉或刪除頁面。"
 quickAccess = "從<strong>快速存取</strong>側欄開始，可在閱讀器、Automate、您的檔案與所有導覽間快速切換。"
-rightRail = "<strong>右側欄</strong>提供快速操作，可選擇檔案、變更主題或語言，以及下載結果。"
 topBar = "頂端列可在<strong>檢視器</strong>、<strong>頁面編輯器</strong>與<strong>使用中檔案</strong>間切換。"
 wrapUp = "以上是 V2 的新內容。隨時開啟<strong>導覽</strong>選單以重播本導覽、工具導覽或管理員導覽。"
 
@@ -5278,6 +5355,24 @@ selectMonthly = "選擇月繳"
 selectYearly = "選擇年繳"
 title = "選擇您的計費週期"
 totalForSeats = "總計（{{count}} 席）"
+
+[pdfCommentAgent]
+submit = "產生評論"
+
+[pdfCommentAgent.error]
+emptyPrompt = "請描述 AI 應該評論的內容"
+failed = "產生評論失敗"
+tooLong = "提示過長（最多 {{max}} 個字元）"
+
+[pdfCommentAgent.prompt]
+label = "AI 應該評論什麼？"
+placeholder = "例如：標示任何不明確的日期並提出釐清建議"
+
+[pdfCommentAgent.results]
+title = "已加上評論的 PDF"
+
+[pdfCommentAgent.settings]
+title = "評論指示"
 
 [pdfOrganiser]
 header = "PDF 頁面整理"
@@ -6486,46 +6581,6 @@ title = "高對比"
 text = "完全反轉 PDF 中的所有顏色，形成類似負片的效果。可用於建立文件的深色模式版本，或在低光環境下減輕眼睛疲勞。"
 title = "反轉所有顏色"
 
-[rightRail]
-annotations = "註解"
-applyRedactionsFirst = "請先套用塗黑"
-closePdf = "關閉 PDF"
-closeSelected = "關閉已選檔案"
-deleteSelected = "刪除所選頁面"
-deselectAll = "取消全選"
-downloadAll = "全部下載"
-downloadSelected = "下載選取的檔案"
-draw = "繪圖"
-exitRedaction = "退出塗黑模式"
-exportAll = "匯出 PDF"
-exportSelected = "匯出選取的頁面"
-formFill = "填寫表單"
-language = "語言"
-panMode = "平移模式"
-print = "列印 PDF"
-readAloud = "朗讀"
-readAloudLanguage = "語言"
-readAloudSpeed = "速度"
-redact = "塗黑"
-rotateLeft = "向左旋轉"
-rotateRight = "向右旋轉"
-ruler = "尺規 / 量測"
-save = "儲存"
-saveAll = "全部儲存"
-saveAs = "另存為"
-saveChanges = "儲存變更"
-search = "搜尋 PDF"
-selectAll = "全選"
-selectByNumber = "依頁碼選取"
-selectLanguage = "選擇語言"
-toggleAnnotations = "切換註解可見度"
-toggleAttachments = "切換附件"
-toggleBookmarks = "切換書籤"
-toggleComments = "評論"
-toggleLayers = "切換圖層"
-toggleSidebar = "切換側邊欄"
-toggleTheme = "切換主題"
-
 [rotate]
 rotateLeft = "逆時針旋轉"
 rotateRight = "順時針旋轉"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "隱藏無法使用的轉換"
 hideUnavailableConversionsDescription = "在「轉換」工具中移除已停用的轉換選項，而非以灰色顯示。"
 hideUnavailableTools = "隱藏無法使用的工具"
 hideUnavailableToolsDescription = "移除伺服器已停用的工具，而非以灰色顯示。"
+language = "語言"
+languageDescription = "選擇顯示語言"
 logout = "登出"
 setAsDefault = "設為預設"
+theme = "主題"
+themeDark = "深色"
+themeDescription = "在淺色與深色模式間切換"
+themeLight = "淺色"
 title = "一般"
 user = "使用者"
 
@@ -6810,6 +6871,20 @@ title = "版本資訊"
 auto = "自動"
 fitPage = "適合頁面"
 fitWidth = "適合寬度"
+
+[settings.help]
+label = "導覽"
+title = "說明"
+
+[settings.help.adminTour]
+description = "探索團隊管理、系統設定與企業功能。"
+start = "開始"
+title = "管理員導覽"
+
+[settings.help.toolsTour]
+description = "逐步體驗上傳檔案、選擇工具與檢視結果。"
+start = "開始"
+title = "工具導覽"
 
 [settings.hotkeys]
 capturing = "請按按鍵…（Esc 取消）"
@@ -7780,6 +7855,8 @@ settings = "設定"
 [tool]
 endpointUnavailable = "此工具在您的伺服器上不可用。"
 endpointUnavailableClickable = "此模式不支援。點按以登入。"
+filesLoading = "檔案仍在載入中，請稍候。"
+filesLoadingProgress = "{{loaded}} / {{total}} 個檔案載入中…"
 invalidParams = "請填寫必要的設定。"
 noFiles = "新增檔案以開始。"
 scopeFiles = "檔案"
@@ -7789,10 +7866,15 @@ singleFileScope = "僅套用至：{{fileName}}"
 viewerMode = "切換到檔案編輯器以選取多個檔案。"
 
 [toolPanel]
+allTools = "所有工具"
 alpha = "Alpha"
+backToTools = "返回工具"
+collapse = "收合面板"
 comingSoon = "即將推出："
+expand = "展開面板"
 placeholder = "選擇一個工具以開始"
 premiumFeature = "進階功能："
+search = "搜尋工具"
 
 [toolPanel.fullscreen]
 comingSoon = "即將推出："
@@ -8342,6 +8424,51 @@ bullet2 = "建議使用透明背景以獲得最佳效果"
 bullet3 = "圖片將調整大小以符合簽名區域"
 description = "上傳預先製作的簽名圖片。適合已有掃描簽名或公司 Logo 的情況。"
 title = "上傳簽名圖片"
+
+[workbenchBar]
+activeFiles = "使用中的檔案"
+annotations = "註解"
+applyRedactionsFirst = "請先套用遮蔽"
+closeAll = "關閉所有檔案"
+closePdf = "關閉 PDF"
+closeSelected = "關閉已選檔案"
+deleteSelected = "刪除已選頁面"
+deselectAll = "取消全選"
+downloadAll = "下載全部"
+downloadSelected = "下載所選檔案"
+draw = "繪圖"
+exitRedaction = "離開遮蔽模式"
+exportAll = "匯出 PDF"
+exportSelected = "匯出所選頁面"
+formFill = "填寫表單"
+language = "語言"
+multiTool = "多功能工具"
+panMode = "平移模式"
+print = "列印 PDF"
+readAloud = "朗讀"
+readAloudLanguage = "語言"
+readAloudSpeed = "速度"
+redact = "遮蔽"
+rotateLeft = "向左旋轉"
+rotateRight = "向右旋轉"
+ruler = "尺規 / 測量"
+save = "儲存"
+saveAll = "全部儲存"
+saveAs = "另存新檔"
+saveChanges = "儲存變更"
+search = "搜尋 PDF"
+selectAll = "全選"
+selectByNumber = "依頁碼選取"
+selectLanguage = "選擇語言"
+share = "分享"
+toggleAnnotations = "切換註解顯示"
+toggleAttachments = "切換附件"
+toggleBookmarks = "切換書籤"
+toggleComments = "評論"
+toggleLayers = "切換圖層"
+toggleSidebar = "切換側邊欄"
+toggleTheme = "切換主題"
+viewer = "檢視器"
 
 [workspace]
 title = "工作空間"
