@@ -67,8 +67,7 @@ dependencies {
     api 'com.stirling:jpdfium:1.0.0-SNAPSHOT'
     runtimeOnly 'com.stirling:jpdfium-natives-linux-x64:1.0.0-SNAPSHOT'
     runtimeOnly 'com.stirling:jpdfium-natives-linux-arm64:1.0.0-SNAPSHOT'
+    runtimeOnly 'com.stirling:jpdfium-natives-darwin-x64:1.0.0-SNAPSHOT'
     runtimeOnly 'com.stirling:jpdfium-natives-darwin-arm64:1.0.0-SNAPSHOT'
     runtimeOnly 'com.stirling:jpdfium-natives-windows-x64:1.0.0-SNAPSHOT'
-    // TODO: jpdfium-natives-darwin-x64 (Intel Mac) — restore once JPDFium's
-    // upstream publish pipeline gets dual-arch Homebrew set up.
 }
