@@ -27,6 +27,7 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
+import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
@@ -265,9 +266,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Move files. Cloud files go through the server first (so cross-PC sync
-   * sees the move); local-only files moving to ROOT are a no-op (they have
-   * no folder concept); local-only files moving INTO a cloud folder are
-   * rejected with an actionable error - they need to be uploaded first.
+   * sees the move); local-only files moving INTO a folder trigger an
+   * auto-upload to the server (the user's intent in dropping onto a folder
+   * is "put it there", which on a server-folder implies uploading first);
+   * local-only files moving to ROOT are a no-op (they have no folder
+   * concept locally).
    */
   const moveFilesTo = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null) => {
@@ -276,17 +279,57 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         .map((id) => fileMap.get(id))
         .filter((s): s is StirlingFileStub => Boolean(s));
       const localOnly = stubs.filter((s) => s.remoteStorageId == null);
+      // Cloud files are gathered AFTER the auto-upload step below so that
+      // any local file we just promoted to cloud counts as a cloud file
+      // for the bulk-move call. (Array reference is const; .push mutates.)
       const cloudFiles = stubs.filter((s) => s.remoteStorageId != null);
 
       if (folderId !== null && localOnly.length > 0) {
-        // Throw so dialog callers (MoveToFolderDialog) stay open with the
-        // error visible inline. The banner still appears as a fallback.
-        const message = t(
-          "filesPage.moveLocalToCloudBlocked",
-          "Local-only files can't be moved into cloud folders. Save them to the cloud first.",
-        );
-        folders.setError(message);
-        throw new Error(message);
+        // Auto-upload local files to the server before assigning them to
+        // the folder. The user's intent in dropping a file onto a cloud
+        // folder is "put it in this folder", which on a server-folder
+        // implies the server upload. Per file we call uploadHistoryChain
+        // (NOT the bundling uploadHistoryChains - that shares N files as
+        // ONE remote item, which would collapse the selection into a
+        // single folder entry). Each file gets its own remoteStorageId
+        // and shows up as its own folder member.
+        try {
+          for (const stub of localOnly) {
+            const rootId = (stub.originalFileId || stub.id) as FileId;
+            const { remoteId, updatedAt, chain } =
+              await uploadHistoryChain(rootId);
+            for (const chainStub of chain) {
+              fileActions.updateStirlingFileStub(chainStub.id, {
+                remoteStorageId: remoteId,
+                remoteStorageUpdatedAt: updatedAt,
+                remoteOwnedByCurrentUser: true,
+                remoteSharedViaLink: false,
+              });
+              await fileStorage.updateFileMetadata(chainStub.id, {
+                remoteStorageId: remoteId,
+                remoteStorageUpdatedAt: updatedAt,
+                remoteOwnedByCurrentUser: true,
+                remoteSharedViaLink: false,
+              });
+            }
+            // Append the just-promoted file to the cloud-files list so the
+            // bulk-move call below assigns its folder in the same round.
+            cloudFiles.push({
+              ...stub,
+              remoteStorageId: remoteId,
+              remoteStorageUpdatedAt: updatedAt,
+              remoteOwnedByCurrentUser: true,
+              remoteSharedViaLink: false,
+            });
+          }
+        } catch (err) {
+          folders.setError(
+            err instanceof Error
+              ? `Could not save files to server: ${err.message}`
+              : "Could not save files to server.",
+          );
+          throw err;
+        }
       }
 
       if (cloudFiles.length > 0) {
@@ -328,7 +371,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // of cloud state; nothing to write either. Falls through.
       await refresh();
     },
-    [indexedDB, refresh, fileMap, folders, t],
+    [indexedDB, refresh, fileMap, folders, t, fileActions],
   );
 
   const moveFolderTo = useCallback(
