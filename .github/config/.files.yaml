@@ -8,7 +8,6 @@ openapi: &openapi
 
 docker-base: &docker-base
   - docker/base/Dockerfile
-  - ".github/workflows/push-docker-base.yml"
 
 docker: &docker
   - docker/embedded/Dockerfile
