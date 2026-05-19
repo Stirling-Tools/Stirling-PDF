@@ -826,62 +826,222 @@
   color: var(--text-muted);
 }
 
-/* Previous-versions list — shares chrome with tool-history but each row
-   is its own line so users can click into older versions. */
-.files-page-details-version-history {
+/* Filename chip next to the title - "PDF", "DOCX", etc.
+   Mantine's <Badge variant="default"> rendered effectively invisible
+   in dark mode; project CSS vars track the active color scheme. */
+.files-page-details-ext-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.5rem;
+  border-radius: 0.4rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary, var(--text-primary));
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* Vertical timeline of version history.
+   Each row has a left rail (dot + connector) and a body (summary + meta
+   + expandable detail). The rail visually threads versions together
+   like a commit graph; clicking a row's summary toggles its expanded
+   detail (cumulative tool chain, full meta). Long chains (> 6) collapse
+   the middle behind a "Show N earlier versions" button. */
+.files-page-details-version-timeline {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.5rem 0.6rem;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem 0.7rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 0.5rem;
 }
-.files-page-details-version-history-label {
+.files-page-details-version-timeline-label {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
 }
-.files-page-details-version-history-list {
+.files-page-details-version-timeline-count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text-secondary, var(--text-muted));
+  text-transform: none;
+  letter-spacing: 0;
+}
+.files-page-details-version-timeline-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
 }
-.files-page-details-version-history-row {
+.files-page-details-version-timeline-row,
+.files-page-details-version-timeline-ellipsis {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.3rem;
-  border-radius: 0.35rem;
+  gap: 0.6rem;
+  padding: 0.15rem 0;
+  position: relative;
 }
-.files-page-details-version-history-row.is-active {
+.files-page-details-version-timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 0.8rem;
+  padding-top: 0.45rem;
+}
+.files-page-details-version-timeline-rail-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--bg-toolbar);
+  border: 2px solid var(--border-strong, var(--border-subtle));
+  z-index: 1;
+  flex-shrink: 0;
+}
+.files-page-details-version-timeline-rail-dot.is-active {
+  background: var(--accent-interactive, #6366f1);
+  border-color: var(--accent-interactive, #6366f1);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--accent-interactive, #6366f1) 25%, transparent);
+}
+.files-page-details-version-timeline-rail-dot.is-ellipsis {
+  width: 0.35rem;
+  height: 0.35rem;
+  background: var(--text-muted);
+  border-color: transparent;
+}
+.files-page-details-version-timeline-rail-line {
+  width: 2px;
+  flex: 1;
+  background: var(--border-subtle);
+  min-height: 0.6rem;
+  margin-top: 2px;
+}
+.files-page-details-version-timeline-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.25rem 0.3rem 0.4rem;
+  border-radius: 0.35rem;
+  transition: background-color 0.12s ease;
+}
+.files-page-details-version-timeline-row.is-active
+  .files-page-details-version-timeline-body {
   background: color-mix(
     in srgb,
-    var(--accent-interactive, #6366f1) 12%,
+    var(--accent-interactive, #6366f1) 10%,
     transparent
   );
 }
-.files-page-details-version-history-meta {
-  min-width: 0;
-  flex: 1;
+.files-page-details-version-timeline-summary {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
 }
-.files-page-details-version-history-name {
-  font-size: 0.85rem;
+.files-page-details-version-timeline-summary:hover
+  .files-page-details-version-timeline-chevron {
   color: var(--text-primary);
+}
+.files-page-details-version-timeline-delta {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
 }
-.files-page-details-version-history-sub {
+.files-page-details-version-timeline-delta.is-origin {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.files-page-details-version-timeline-delta-plus {
+  color: var(--accent-interactive, #6366f1);
+  font-weight: 700;
+}
+.files-page-details-version-timeline-spacer {
+  flex: 1;
+}
+.files-page-details-version-timeline-chevron {
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+.files-page-details-version-timeline-chevron.is-expanded {
+  transform: rotate(180deg);
+  color: var(--text-primary);
+}
+.files-page-details-version-timeline-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.files-page-details-version-timeline-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-subtle);
+}
+.files-page-details-version-timeline-toolchain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.files-page-details-version-timeline-toolchain-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.files-page-details-version-timeline-ellipsis-btn,
+.files-page-details-version-timeline-collapse-btn {
+  appearance: none;
+  background: none;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0.1rem 0;
   font-size: 0.72rem;
   color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.files-page-details-version-timeline-ellipsis-btn:hover,
+.files-page-details-version-timeline-collapse-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong, var(--text-muted));
+}
+.files-page-details-version-timeline-collapse-btn {
+  align-self: flex-start;
+  margin-top: 0.2rem;
 }
 
 .files-page-drop-overlay {
