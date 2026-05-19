@@ -606,17 +606,18 @@ function VersionTimeline({
                   )}
                 </div>
                 {isExpanded && (
+                  // Expanded body only shows things the compact row above
+                  // hasn't already exposed: the per-version filename (the
+                  // compact summary just shows the v-badge + tool delta)
+                  // and the cumulative tool chain (compact shows only the
+                  // delta tool, not the full journey to this version).
+                  // The version's created/modified date and size are
+                  // already in the meta line, so we don't repeat them.
                   <div className="files-page-details-version-timeline-expanded">
                     <DetailField
                       label={t("filesPage.field.name", "Name")}
                       value={v.name}
                     />
-                    {v.createdAt && (
-                      <DetailField
-                        label={t("filesPage.field.added", "Added")}
-                        value={getFileDate({ lastModified: v.createdAt })}
-                      />
-                    )}
                     {v.toolHistory && v.toolHistory.length > 0 && (
                       <div className="files-page-details-version-timeline-toolchain">
                         <span className="files-page-details-version-timeline-toolchain-label">
