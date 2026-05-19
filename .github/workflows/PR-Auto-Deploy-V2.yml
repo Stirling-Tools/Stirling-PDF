@@ -108,6 +108,9 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
+      id-token: write
+    env:
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
 
     steps:
       - name: Harden Runner
@@ -179,7 +182,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # Fetch full history for commit hash detection
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@v1
+
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Get version number
@@ -224,8 +232,20 @@ jobs:
             echo "Image needs to be built"
           fi
 
-      - name: Build and push V2 image
-        if: steps.check-image.outputs.exists == 'false'
+      - name: Build and push V2 image (Depot)
+        if: env.USE_DEPOT == 'true' && steps.check-image.outputs.exists == 'false'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/embedded/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Build and push V2 image (Docker fork fallback)
+        if: env.USE_DEPOT != 'true' && steps.check-image.outputs.exists == 'false'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .

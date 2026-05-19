@@ -33,6 +33,11 @@ jobs:
   # `task backend:build:ci` produce equivalent JARs (verify before wiring).
   test-build-docker-images:
     runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
     strategy:
       fail-fast: false
       matrix:
@@ -105,10 +110,16 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@v1
+
       - name: Set up QEMU
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         id: buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -134,7 +145,22 @@ jobs:
             echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build ${{ matrix.docker-rev }}
+      - name: Build ${{ matrix.docker-rev }} (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./${{ matrix.docker-rev }}
+          push: false
+          platforms: ${{ steps.build-params.outputs.platforms }}
+          build-args: |
+            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
+          provenance: true
+          sbom: true
+
+      - name: Build ${{ matrix.docker-rev }} (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -163,6 +189,11 @@ jobs:
 
   test-build-unoserver-image:
     runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -172,14 +203,35 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@v1
+
       - name: Set up QEMU
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         id: buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
-      - name: Build docker/unoserver/Dockerfile
+      - name: Build docker/unoserver/Dockerfile (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Build docker/unoserver/Dockerfile (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}

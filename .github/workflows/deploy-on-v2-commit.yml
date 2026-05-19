@@ -15,6 +15,11 @@ jobs:
     concurrency:
       group: deploy-v2-push-V2
       cancel-in-progress: true
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
 
     steps:
       - name: Harden Runner
@@ -25,7 +30,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@v1
+
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Get commit hashes for frontend and backend
@@ -90,8 +100,22 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Build and push frontend image
-        if: steps.check-frontend.outputs.exists == 'false'
+      - name: Build and push frontend image (Depot)
+        if: env.USE_DEPOT == 'true' && steps.check-frontend.outputs.exists == 'false'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Build and push frontend image (Docker fork fallback)
+        if: env.USE_DEPOT != 'true' && steps.check-frontend.outputs.exists == 'false'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
@@ -105,8 +129,22 @@ jobs:
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
 
-      - name: Build and push backend image
-        if: steps.check-backend.outputs.exists == 'false'
+      - name: Build and push backend image (Depot)
+        if: env.USE_DEPOT == 'true' && steps.check-backend.outputs.exists == 'false'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Build and push backend image (Docker fork fallback)
+        if: env.USE_DEPOT != 'true' && steps.check-backend.outputs.exists == 'false'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .

@@ -180,6 +180,9 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
+      id-token: write
+    env:
+      USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
 
     steps:
       - name: Harden Runner
@@ -232,7 +235,12 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_PDF_DESKTOP_UI: false
 
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@v1
+
       - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Login to Docker Hub
@@ -241,7 +249,22 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Build and push PR-specific image
+      - name: Build and push PR-specific image (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/embedded/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+          build-args: |
+            VERSION_TAG=alpha
+            PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
+          platforms: linux/amd64
+
+      - name: Build and push PR-specific image (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
@@ -255,8 +278,19 @@ jobs:
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
           platforms: linux/amd64
 
-      - name: Build and push engine image
-        if: needs.check-comment.outputs.enable_prototypes == 'true'
+      - name: Build and push engine image (Depot)
+        if: env.USE_DEPOT == 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: ./engine
+          file: ./engine/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
+          platforms: linux/amd64
+
+      - name: Build and push engine image (Docker fork fallback)
+        if: env.USE_DEPOT != 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: ./engine
