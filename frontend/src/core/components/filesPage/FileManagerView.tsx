@@ -802,20 +802,46 @@ export default function FileManagerView() {
                   )
                 : !folders.serverReachable
                   ? t(
-                      "filesPage.offlineNoFolderEdits",
-                      "Offline - folder changes are disabled.",
+                      "filesPage.newFolderStorageDisabled",
+                      "Server folder storage isn't available. Ask your admin to enable storage in settings (security.enableLogin + storage.enabled) - the feature exists but is opt-in.",
                     )
                   : null;
+          // Wrap the button in a Tooltip so the disabled state EXPLAINS
+          // itself - users were left wondering why "New folder" was greyed
+          // out. The label tells them the feature exists and points at how
+          // to turn it on. `disabled={!disabled-state}` on the tooltip
+          // suppresses it when the button is actionable.
           const newFolderButton = (
-            <Button
-              leftSection={<CreateNewFolderIcon fontSize="small" />}
-              variant="default"
-              size="sm"
-              disabled={newFolderDisabledReason !== null}
-              onClick={() => openNewFolderDialog()}
+            <Tooltip
+              label={newFolderDisabledReason ?? ""}
+              disabled={newFolderDisabledReason === null}
+              withinPortal
+              multiline
+              w={260}
+              position="bottom-end"
             >
-              {t("filesPage.newFolder", "New folder")}
-            </Button>
+              <Button
+                leftSection={<CreateNewFolderIcon fontSize="small" />}
+                variant="default"
+                size="sm"
+                disabled={newFolderDisabledReason !== null}
+                onClick={() => openNewFolderDialog()}
+                data-disabled={newFolderDisabledReason !== null || undefined}
+                styles={{
+                  root: {
+                    // Mantine's disabled style ignores pointer events, which
+                    // also kills the Tooltip hover. `pointer-events: auto`
+                    // restores hover on the disabled button without making
+                    // it clickable (the click handler itself is suppressed
+                    // by Mantine while disabled is true).
+                    pointerEvents:
+                      newFolderDisabledReason !== null ? "auto" : undefined,
+                  },
+                }}
+              >
+                {t("filesPage.newFolder", "New folder")}
+              </Button>
+            </Tooltip>
           );
           return (
             <div className="files-page-header-actions">

@@ -281,17 +281,39 @@ export function FileDetailsPanel({
               ? t("filesPage.download", "Download")
               : t("filesPage.downloadAll", "Download all")}
           </Button>
-          {/* Share is single-file only AND server-gated. Hidden on
-              multi-select (the modal manages one file's links) and on
-              deployments where sharing is disabled in storage config. */}
-          {single && sharingEnabled && (
-            <Button
-              leftSection={<LinkIcon fontSize="small" />}
-              variant="default"
-              onClick={() => setShareModalOpen(true)}
+          {/* Share is single-file only. When sharing is disabled in
+              server config (storage.sharing.enabled=false) we still
+              render the button - disabled with an explanatory tooltip -
+              so users discover the feature exists and know how to
+              enable it, rather than wondering why "share" is missing
+              from the action stack on their build. */}
+          {single && (
+            <Tooltip
+              label={t(
+                "filesPage.shareDisabledHint",
+                "File sharing isn't enabled on this server. Ask your admin to set storage.sharing.enabled=true to turn on share links and per-user access.",
+              )}
+              disabled={sharingEnabled}
+              withinPortal
+              multiline
+              w={260}
             >
-              {t("filesPage.shareManage", "Manage sharing")}
-            </Button>
+              <Button
+                leftSection={<LinkIcon fontSize="small" />}
+                variant="default"
+                disabled={!sharingEnabled}
+                onClick={() => setShareModalOpen(true)}
+                styles={{
+                  root: {
+                    // Restore pointer events so the Tooltip still hovers
+                    // when the button is disabled (Mantine strips them).
+                    pointerEvents: sharingEnabled ? undefined : "auto",
+                  },
+                }}
+              >
+                {t("filesPage.shareManage", "Manage sharing")}
+              </Button>
+            </Tooltip>
           )}
           <Button
             leftSection={<DriveFileMoveIcon fontSize="small" />}
@@ -311,7 +333,10 @@ export function FileDetailsPanel({
         </div>
       </div>
       {/* Mount the share modal once at the panel level so it survives
-          across version-row interactions and dismisses cleanly. */}
+          across version-row interactions and dismisses cleanly. Still
+          gated on sharingEnabled because the modal itself only makes
+          sense when sharing is server-enabled - the always-rendered
+          Share button is disabled in that case so the modal never opens. */}
       {single && sharingEnabled && (
         <ShareManagementModal
           opened={shareModalOpen}

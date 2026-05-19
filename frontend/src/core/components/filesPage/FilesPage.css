@@ -739,7 +739,6 @@
 
 .files-page-details-header {
   padding: 0.95rem 1.1rem;
-  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
