@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { memo, useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
@@ -9,7 +9,7 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -24,6 +24,34 @@ interface ToolPickerProps {
   isSearching?: boolean;
 }
 
+const EMPTY_FILTERED_TOOLS: ToolPickerProps["filteredTools"] = [];
+const HEADER_TEXT_STYLE: React.CSSProperties = {
+  fontSize: "0.68rem",
+  fontWeight: 600,
+  padding: "1rem 0 0.35rem 0.5rem",
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  color: "var(--text-muted)",
+};
+const SCROLLABLE_STYLE: React.CSSProperties = {
+  flex: 1,
+  overflowY: "auto",
+  overflowX: "hidden",
+  minHeight: 0,
+  height: "100%",
+  marginTop: -2,
+};
+const CONTAINER_STYLE: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  background: "var(--bg-toolbar)",
+};
+const toTitleCase = (s: string) =>
+  s.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
+  );
+
 const ToolPicker = ({
   selectedToolKey,
   onSelect,
@@ -35,7 +63,7 @@ const ToolPicker = ({
   const scrollableRef = useRef<HTMLDivElement>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
-  const { favoriteTools, toolRegistry } = useToolWorkflow();
+  const { favoriteTools, toolRegistry } = useToolWorkflowData();
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
@@ -60,43 +88,15 @@ const ToolPicker = ({
   );
 
   // Build flat list by subcategory for search mode
-  const emptyFilteredTools: ToolPickerProps["filteredTools"] = [];
   const effectiveFilteredForSearch: ToolPickerProps["filteredTools"] =
-    isSearching ? filteredTools : emptyFilteredTools;
+    isSearching ? filteredTools : EMPTY_FILTERED_TOOLS;
   const { searchGroups } = useToolSections(effectiveFilteredForSearch);
-  const headerTextStyle: React.CSSProperties = {
-    fontSize: "0.68rem",
-    fontWeight: 600,
-    padding: "1rem 0 0.35rem 0.5rem",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    color: "var(--text-muted)",
-  };
-  const toTitleCase = (s: string) =>
-    s.replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase(),
-    );
 
   return (
-    <Box
-      h="100%"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--bg-toolbar)",
-      }}
-    >
+    <Box h="100%" style={CONTAINER_STYLE}>
       <Box
         ref={scrollableRef}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          minHeight: 0,
-          height: "100%",
-          marginTop: -2,
-        }}
+        style={SCROLLABLE_STYLE}
         className="tool-picker-scrollable"
       >
         {isSearching ? (
@@ -124,7 +124,7 @@ const ToolPicker = ({
             <Stack p="sm" gap="xs">
               {favoriteToolItems.length > 0 && (
                 <Box w="100%">
-                  <div style={headerTextStyle}>
+                  <div style={HEADER_TEXT_STYLE}>
                     {t("toolPanel.fullscreen.favorites", "Favourites")}
                   </div>
                   <div>
@@ -143,7 +143,7 @@ const ToolPicker = ({
               )}
               {recommendedItems.length > 0 && (
                 <Box w="100%">
-                  <div style={headerTextStyle}>
+                  <div style={HEADER_TEXT_STYLE}>
                     {t("toolPanel.fullscreen.recommended", "Recommended")}
                   </div>
                   <div>
@@ -163,7 +163,7 @@ const ToolPicker = ({
               {allSection &&
                 allSection.subcategories.map((sc: SubcategoryGroup) => (
                   <Box key={sc.subcategoryId} w="100%">
-                    <div style={headerTextStyle}>
+                    <div style={HEADER_TEXT_STYLE}>
                       {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
                     </div>
                     {renderToolButtons(
@@ -192,4 +192,4 @@ const ToolPicker = ({
   );
 };
 
-export default ToolPicker;
+export default memo(ToolPicker);
