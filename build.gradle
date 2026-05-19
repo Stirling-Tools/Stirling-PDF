@@ -219,6 +219,11 @@ subprojects {
         // Bouncycastle 1.83 (from bouncycastleVersion variable)
         resolutionStrategy.force 'org.bouncycastle:bcprov-jdk18on:1.83'
         resolutionStrategy.force 'org.bouncycastle:bcpkix-jdk18on:1.83'
+        // JPDFium ships as Maven Central SNAPSHOT during bring-up. Gradle
+        // caches snapshots for 24h by default, which means CI reruns + jlink
+        // can pick up stale natives jars. Force re-resolution every build.
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+        resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
     }
 
     dependencyManagement {
