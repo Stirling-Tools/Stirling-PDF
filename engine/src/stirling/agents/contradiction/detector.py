@@ -2,7 +2,7 @@
 
 Stage 1 — per-chunk claim extraction via :class:`ChunkedMapper`.
 Stage 2 — subject canonicalisation (one fast-model call; lexical fallback).
-Stage 3 — pre-filter heuristics (identical-quote, same-page same-polarity).
+Stage 3 — pre-filter heuristics (identical-quote post-filter).
 Stage 4 — per-bucket pair detection (parallel, oversize-aware windowing).
 Stage 5 — summary (one fast-model call; deterministic fallback).
 
@@ -583,17 +583,10 @@ class ContradictionDetector:
 
                 claim_lo = deduped[lo]
                 claim_hi = deduped[hi]
-                # Result-time pre-filter (defence in depth). Same-page
-                # same-polarity is a paraphrase ONLY when both claims come
-                # from the same source file — page 1 of report.pdf and
-                # page 1 of memo.pdf are distinct pages, not duplicates.
+                # Identical-quote pairs are detector self-pairings, not
+                # contradictions. Paraphrase detection (different quotes,
+                # same fact) is the detector prompt's job.
                 if claim_lo.quote.strip() == claim_hi.quote.strip():
-                    continue
-                if (
-                    claim_lo.page == claim_hi.page
-                    and claim_lo.polarity == claim_hi.polarity
-                    and claim_lo.file_name == claim_hi.file_name
-                ):
                     continue
 
                 out.append(
@@ -609,16 +602,12 @@ class ContradictionDetector:
 
     @staticmethod
     def _dedupe_claims_for_detection(claims: list[Claim]) -> list[Claim]:
-        """Drop trivial duplicates before sending to the detector.
+        """Collapse claims with the same ``(file_name, page, quote)`` to one.
 
-        Identical (page, normalised quote) pairs collapse to one claim, and
-        same-page same-polarity duplicates that say nothing new collapse as
-        well. The ledger keeps everything; the detector sees the deduped
-        view.
+        The ledger keeps everything; the detector sees the deduped view.
+        ``file_name`` is in the key so multi-file audits don't collapse
+        claims that share a page number across different source files.
         """
-        # Key includes ``file_name`` so multi-file audits don't collapse
-        # claims that happen to share a page number across different
-        # source files.
         seen: set[tuple[str | None, int, str]] = set()
         out: list[Claim] = []
         for claim in claims:

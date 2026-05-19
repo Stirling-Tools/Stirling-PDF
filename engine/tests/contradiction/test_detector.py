@@ -340,22 +340,30 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
 
 
 @pytest.mark.anyio
-async def test_same_page_same_polarity_pair_is_dropped(runtime: AppRuntime, file_a: AiFile) -> None:
-    """The result-time pre-filter removes pairs where both claims share a
-    page AND polarity — they are duplicate sightings, not contradictions."""
-    pages = [_page(1, "Claim A. Claim B variant.")]
+async def test_same_page_contradiction_is_surfaced(runtime: AppRuntime, file_a: AiFile) -> None:
+    """Two assertions about the same subject on one page can contradict
+    each other (e.g. ``deadline March 5`` vs ``deadline April 1``). The
+    pipeline must surface them — polarity alone is too coarse a signal
+    to drop them silently."""
+    pages = [_page(1, "The deadline is March 5. The deadline is April 1.")]
     _install_documents_stub(runtime, {file_a.id: pages})
     detector = ContradictionDetector(runtime)
 
     extracted_chunk = _ExtractedClaims(
         claims=[
-            _ExtractedClaim(page=1, subject="deadline", polarity="assert", text="x", quote="Claim A."),
             _ExtractedClaim(
                 page=1,
                 subject="deadline",
                 polarity="assert",
-                text="y",
-                quote="Claim B variant.",
+                text="deadline March 5",
+                quote="The deadline is March 5.",
+            ),
+            _ExtractedClaim(
+                page=1,
+                subject="deadline",
+                polarity="assert",
+                text="deadline April 1",
+                quote="The deadline is April 1.",
             ),
         ]
     )
@@ -368,7 +376,51 @@ async def test_same_page_same_polarity_pair_is_dropped(runtime: AppRuntime, file
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
             _BucketContradictions(
-                pairs=[_DetectedPair(i=0, j=1, explanation="echo", severity=ContradictionSeverity.WARNING)]
+                pairs=[
+                    _DetectedPair(
+                        i=0,
+                        j=1,
+                        explanation="Two incompatible deadlines on the same page.",
+                        severity=ContradictionSeverity.ERROR,
+                    )
+                ]
+            )
+        )
+    )
+    detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
+
+    report = await detector.detect([file_a])
+
+    assert len(report.contradictions) == 1
+    assert report.contradictions[0].severity == ContradictionSeverity.ERROR
+    assert report.contradictions[0].claim1.page == 1
+    assert report.contradictions[0].claim2.page == 1
+
+
+@pytest.mark.anyio
+async def test_identical_quote_pair_is_still_dropped(runtime: AppRuntime, file_a: AiFile) -> None:
+    """The surviving post-filter drops pairs whose quotes are byte-identical
+    after stripping — those are detector self-pairings, not contradictions."""
+    pages = [_page(1, "Shared quote."), _page(2, "Shared quote.")]
+    _install_documents_stub(runtime, {file_a.id: pages})
+    detector = ContradictionDetector(runtime)
+
+    extracted_chunk = _ExtractedClaims(
+        claims=[
+            _ExtractedClaim(page=1, subject="topic", polarity="assert", text="x", quote="Shared quote."),
+            _ExtractedClaim(page=2, subject="topic", polarity="deny", text="y", quote="Shared quote."),
+        ]
+    )
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1,2")]
+    )
+    detector._subject_canonicaliser.run = AsyncMock(
+        return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="topic", canonical="topic")]))
+    )
+    detector._pair_detector.run = AsyncMock(
+        return_value=_stub_result(
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="self", severity=ContradictionSeverity.WARNING)]
             )
         )
     )
