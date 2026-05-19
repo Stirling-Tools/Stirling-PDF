@@ -352,7 +352,7 @@ export default function HomePage() {
                 horizontal-scroll container (which truncated buttons and
                 created a stray side-scroll surface on touch). */
               <div className="mobile-files-full">
-                <div className="flex-1 min-h-0 flex">
+                <div className="flex-1 min-h-0 flex" style={{ minWidth: 0 }}>
                   <Workbench />
                 </div>
               </div>
@@ -377,7 +377,10 @@ export default function HomePage() {
                   )}
                 >
                   <div className="mobile-slide-content">
-                    <div className="flex-1 min-h-0 flex">
+                    <div
+                      className="flex-1 min-h-0 flex"
+                      style={{ minWidth: 0 }}
+                    >
                       <Workbench />
                     </div>
                   </div>

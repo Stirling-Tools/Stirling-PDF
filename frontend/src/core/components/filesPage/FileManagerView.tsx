@@ -1123,67 +1123,98 @@ export default function FileManagerView() {
               );
             })()}
             <div className="files-page-toolbar-actions">
-              {selectedFiles.length > 0 && (
-                <Group gap="xs">
-                  <Button
-                    size="sm"
-                    leftSection={<OpenInNewIcon fontSize="small" />}
-                    onClick={() => handleAddToWorkspace(selectedFiles)}
-                    data-testid="add-to-workspace"
-                  >
-                    {selectedFiles.length === 1
+              {selectedFiles.length > 0 &&
+                (() => {
+                  // Labels for the bulk-action buttons. CSS hides the
+                  // visible label text at ≤900px (collapsing the buttons
+                  // to icon-only so the toolbar fits without wrapping)
+                  // - so each button gets a Tooltip + aria-label here
+                  // for both pointer-hover and screen-reader access.
+                  const addLabel =
+                    selectedFiles.length === 1
                       ? t("filesPage.addToWorkspace", "Add to workspace")
                       : t(
                           "filesPage.addToWorkspaceCount",
                           "Add {{count}} to workspace",
                           { count: selectedFiles.length },
-                        )}
-                  </Button>
-                  {selectedFiles.length === 1 && (
-                    <Button
-                      size="sm"
-                      variant="subtle"
-                      leftSection={<VisibilityIcon fontSize="small" />}
-                      onClick={() => handleQuickView(selectedFiles[0]!)}
-                    >
-                      {t("filesPage.quickView", "Quick view")}
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="default"
-                    leftSection={<DriveFileMoveIcon fontSize="small" />}
-                    onClick={() => promptMoveFiles(selectedFiles)}
-                  >
-                    {t("filesPage.moveTo", "Move to…")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    color="red"
-                    variant="light"
-                    leftSection={<DeleteIcon fontSize="small" />}
-                    onClick={() => handleRemoveFiles(selectedFiles)}
-                  >
-                    {t("filesPage.remove", "Remove")}
-                  </Button>
-                  <Tooltip
-                    label={t("filesPage.clearSelection", "Clear selection")}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      variant="subtle"
-                      size="md"
-                      onClick={() => clearSelection()}
-                      aria-label={t(
-                        "filesPage.clearSelection",
-                        "Clear selection",
+                        );
+                  const moveLabel = t("filesPage.moveTo", "Move to…");
+                  const removeLabel = t("filesPage.remove", "Remove");
+                  const quickViewLabel = t("filesPage.quickView", "Quick view");
+                  return (
+                    // wrap="nowrap" so the bulk-action row stays single-
+                    // line - default Mantine Group wraps when narrow,
+                    // which was pushing the "X" clear button onto a
+                    // second row. The CSS on .files-page-toolbar-actions
+                    // already clips overflow, and each Button has
+                    // flex-shrink:0, so nowrap is safe.
+                    <Group gap="xs" wrap="nowrap">
+                      <Tooltip label={addLabel} withinPortal>
+                        <Button
+                          size="sm"
+                          leftSection={<OpenInNewIcon fontSize="small" />}
+                          onClick={() => handleAddToWorkspace(selectedFiles)}
+                          aria-label={addLabel}
+                          data-testid="add-to-workspace"
+                        >
+                          {addLabel}
+                        </Button>
+                      </Tooltip>
+                      {selectedFiles.length === 1 && (
+                        <Tooltip label={quickViewLabel} withinPortal>
+                          <Button
+                            size="sm"
+                            variant="subtle"
+                            leftSection={<VisibilityIcon fontSize="small" />}
+                            onClick={() => handleQuickView(selectedFiles[0]!)}
+                            aria-label={quickViewLabel}
+                          >
+                            {quickViewLabel}
+                          </Button>
+                        </Tooltip>
                       )}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              )}
+                      <Tooltip label={moveLabel} withinPortal>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          leftSection={<DriveFileMoveIcon fontSize="small" />}
+                          onClick={() => promptMoveFiles(selectedFiles)}
+                          aria-label={moveLabel}
+                        >
+                          {moveLabel}
+                        </Button>
+                      </Tooltip>
+                      <Tooltip label={removeLabel} withinPortal>
+                        <Button
+                          size="sm"
+                          color="red"
+                          variant="light"
+                          leftSection={<DeleteIcon fontSize="small" />}
+                          onClick={() => handleRemoveFiles(selectedFiles)}
+                          aria-label={removeLabel}
+                        >
+                          {removeLabel}
+                        </Button>
+                      </Tooltip>
+                      <Tooltip
+                        label={t("filesPage.clearSelection", "Clear selection")}
+                        withinPortal
+                      >
+                        <ActionIcon
+                          variant="subtle"
+                          size="md"
+                          onClick={() => clearSelection()}
+                          aria-label={t(
+                            "filesPage.clearSelection",
+                            "Clear selection",
+                          )}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  );
+                })()}
               {selectedFiles.length > 0 && (
                 <span
                   className="files-page-toolbar-divider"

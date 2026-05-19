@@ -1131,18 +1131,98 @@
   }
 }
 
-/* ── Mobile (≤640px) ────────────────────────────────────────────────
-   Tighten the chrome so the file manager fits inside the mobile
-   workspace slide. The slide-rail's bottom tab bar already provides
-   navigation, so the in-header Home/Apps/Close trio is duplicated
-   and the first to go. Same for "Upload" - the user can use the
-   centre drop overlay. */
+/* ── Tablet / narrow desktop (≤900px) ────────────────────────────────
+   As soon as the right-hand details panel disappears (at 800px) and
+   even slightly before, the toolbar gets crowded - the bulk-action
+   strip ("Add to workspace", "Quick view", "Move to…", "Remove") +
+   filter selects + grid/list toggle is too wide to fit. This block
+   collapses bulk-action button labels to icon-only, shrinks the
+   filter selects, and pins the view toggle so it never clips off the
+   right edge. The header stays in desktop layout here (it has fewer
+   items and the side panels disappearing actually GIVES it room). */
 .files-page-header [data-desktop-hide="true"] {
   /* The mobile-only overflow menu trigger. Hidden by default; shown
      inside the mobile breakpoint below. Live as inline-flex so it
      sits next to the Upload button without breaking the action row. */
   display: none;
 }
+@media (max-width: 900px) {
+  .files-page-toolbar {
+    /* nowrap so "7 items" + "Select all" sit on the same row as the
+       filter dropdowns and view-toggle instead of stacking on three
+       separate lines. Per-child min-width:0 lets them shrink as needed.
+       Used to only kick in at ≤640px which left a broken zone where
+       both side panels were hidden but the toolbar was still wrapping
+       to multiple rows. */
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    min-height: auto;
+    overflow-x: hidden;
+  }
+  .files-page-toolbar-info {
+    /* Was `flex-basis: 100%` which forced a row break. Let it share
+       the row, shrink hard if needed, and ellipsize so the count line
+       collapses gracefully (was overlapping the bulk-action buttons
+       at ~400px because no truncation rule existed). */
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .files-page-toolbar-actions {
+    /* Tighten the action group too so dropdowns + view toggle don't
+       overflow. */
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+  .files-page-toolbar-actions .mantine-Select-root,
+  .files-page-toolbar-actions .mantine-Select-input {
+    /* Mantine Select defaults to ~12rem which is huge for mid-narrow
+       widths. The inline `style={{ width: 140|160 }}` on the Selects
+       gets overridden here so they actually shrink. */
+    min-width: 0;
+    max-width: 7.5rem;
+    width: auto !important;
+  }
+  /* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
+     collapse to icon-only here. The icon alone is enough signal once
+     the user has files selected - they're in active-action mode and
+     each button has a tooltip via its aria-label. */
+  .files-page-toolbar-actions .mantine-Button-root {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+    flex-shrink: 0;
+  }
+  .files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
+    margin-right: 0;
+  }
+  .files-page-toolbar-actions .mantine-Button-label {
+    display: none;
+  }
+  /* Pin the view toggle: never let it clip off the right. flex-shrink:0
+     keeps its width fixed; the rest of the row shrinks around it. */
+  .files-page-toolbar-actions .mantine-SegmentedControl-root {
+    flex-shrink: 0;
+  }
+  /* The "Select all" / "Clear selection" toggle is a Mantine Button
+     directly inside .files-page-toolbar (NOT inside the actions group),
+     so the icon-only collapse above doesn't apply to it. Pin it to
+     full text + nowrap so it never truncates to "Select al" mid-word. */
+  .files-page-toolbar > .mantine-Button-root {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+/* ── Mobile (≤640px) ────────────────────────────────────────────────
+   Tighten the chrome so the file manager fits inside the mobile
+   workspace slide. The slide-rail's bottom tab bar already provides
+   navigation, so the in-header Home/Apps/Close trio is duplicated
+   and the first to go. Same for "Upload" - the user can use the
+   centre drop overlay. */
 @media (max-width: 640px) {
   .files-page-header {
     flex-wrap: nowrap;
@@ -1199,37 +1279,6 @@
   }
   .files-page-header-actions .mantine-Button-label {
     display: none;
-  }
-  .files-page-toolbar {
-    /* nowrap so "7 items" + "Select all" sit on the same row as the
-       filter dropdowns and view-toggle instead of stacking on three
-       separate lines. Per-child min-width:0 lets them shrink as
-       needed. */
-    flex-wrap: nowrap;
-    gap: 0.35rem;
-    padding: 0.35rem 0.5rem;
-    min-height: auto;
-    overflow-x: hidden;
-  }
-  .files-page-toolbar-info {
-    /* Was `flex-basis: 100%` which forced a row break. Let it share
-       the row, shrink hard if needed. */
-    flex: 0 1 auto;
-    min-width: 0;
-    white-space: nowrap;
-  }
-  .files-page-toolbar-actions {
-    /* Tighten the action group too so dropdowns + view toggle don't
-       overflow. */
-    flex-wrap: nowrap;
-    gap: 0.3rem;
-    min-width: 0;
-  }
-  .files-page-toolbar-actions .mantine-Select-root,
-  .files-page-toolbar-actions .mantine-Select-input {
-    /* Mantine Select defaults to ~12rem which is huge for mobile. */
-    min-width: 0;
-    max-width: 7.5rem;
   }
   /* Grid: single column on very narrow phones; two columns from ~440px */
   .files-page-grid {
