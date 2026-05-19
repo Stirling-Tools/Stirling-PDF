@@ -18,7 +18,7 @@ permissions:
 jobs:
   push-base:
     if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
-    runs-on: ubuntu-24.04-8core
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-24.04-8core'' || ''depot-ubuntu-24.04-8'' }}'
     permissions:
       packages: write
       id-token: write

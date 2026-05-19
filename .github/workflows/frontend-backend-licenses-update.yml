@@ -21,7 +21,7 @@ permissions:
 jobs:
   files-changed:
     name: detect what files changed
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     timeout-minutes: 3
     outputs:
       licenses-frontend: ${{ steps.changes.outputs.licenses-frontend }}
@@ -45,7 +45,7 @@ jobs:
     if: needs.files-changed.outputs.licenses-frontend == 'true'
     name: Generate Frontend License Report
     needs: files-changed
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     permissions:
       contents: write
       pull-requests: write
@@ -309,7 +309,7 @@ jobs:
     if: needs.files-changed.outputs.licenses-backend == 'true'
     needs: files-changed
     name: Generate Backend License Report
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     permissions:
       contents: write
       pull-requests: write

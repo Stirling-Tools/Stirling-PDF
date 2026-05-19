@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   docker-compose-tests:
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
     permissions:
       actions: write
       contents: read

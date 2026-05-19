@@ -32,7 +32,7 @@ permissions:
 jobs:
   determine-matrix:
     if: ${{ vars.CI_PROFILE != 'lite' }}
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -551,7 +551,7 @@ jobs:
 
   pr-comment:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     if: github.event_name == 'pull_request' && needs.build.result == 'success'
     permissions:
       pull-requests: write
@@ -644,7 +644,7 @@ jobs:
 
   report:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)

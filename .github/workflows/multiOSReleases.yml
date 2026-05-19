@@ -38,7 +38,7 @@ permissions:
 jobs:
   determine-matrix:
     if: ${{ vars.CI_PROFILE != 'lite' }}
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       version: ${{ steps.versionNumber.outputs.versionNumber }}
@@ -109,7 +109,7 @@ jobs:
 
   build-jars:
     needs: determine-matrix
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     strategy:
       matrix:
         variant:
@@ -601,7 +601,7 @@ jobs:
   create-release:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
     needs: [determine-matrix, build, build-jars]
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     permissions:
       contents: write
     steps:

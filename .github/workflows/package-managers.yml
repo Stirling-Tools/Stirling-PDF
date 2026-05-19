@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   get-release-info:
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     outputs:
       version: ${{ steps.info.outputs.version }}
       dmg_sha256: ${{ steps.hashes.outputs.dmg_sha256 }}
@@ -74,7 +74,7 @@ jobs:
 
   update-homebrew-and-scoop:
     needs: get-release-info
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     permissions:
       contents: write
     steps:

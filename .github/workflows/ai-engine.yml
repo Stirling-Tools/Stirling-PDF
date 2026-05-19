@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   engine:
-    runs-on: ubuntu-latest
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
     permissions:
       contents: read
       pull-requests: write
