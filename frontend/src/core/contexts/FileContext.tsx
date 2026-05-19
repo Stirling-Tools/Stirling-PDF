@@ -241,6 +241,11 @@ function FileContextInner({
         insertAfterPageId?: string;
         selectFiles?: boolean;
         skipAutoUnzip?: boolean;
+        // Persist to IDB but do NOT add to workspace state. Set by the
+        // file manager so uploads from /files don't silently surface
+        // later in /viewer or /tools - the user was managing files,
+        // not opening them.
+        skipWorkspaceDispatch?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(

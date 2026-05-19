@@ -240,6 +240,14 @@ interface AddFileOptions {
   // Auto-selection after adding
   selectFiles?: boolean;
 
+  // Persist to IDB but skip the workspace dispatch. Used by the file
+  // manager when the user uploads while browsing files - we want the
+  // file in storage (and visible in the grid via FilesPageContext's
+  // independent IDB read) but NOT activated in workspace state, which
+  // would otherwise make it pop up the next time the user navigated
+  // to /viewer or /tools. Default false = today's behaviour.
+  skipWorkspaceDispatch?: boolean;
+
   // Auto-unzip control
   autoUnzip?: boolean;
   autoUnzipFileLimit?: number;
@@ -498,8 +506,12 @@ export async function addFiles(
       });
     }
 
-    // Batch dispatch all files at once — one render instead of N sequential renders
-    if (stirlingFileStubs.length > 0) {
+    // Batch dispatch all files at once - one render instead of N sequential
+    // renders. Suppressed when skipWorkspaceDispatch is set (e.g. uploads
+    // initiated from inside /files - the file goes to IDB, the grid picks
+    // it up via FilesPageContext's own IDB read, and the workspace state
+    // stays clean so nothing pops up when the user later opens /viewer).
+    if (stirlingFileStubs.length > 0 && !options.skipWorkspaceDispatch) {
       dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs } });
     }
 

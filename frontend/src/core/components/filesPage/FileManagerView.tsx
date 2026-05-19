@@ -465,7 +465,16 @@ export default function FileManagerView() {
   const handleNativeUpload = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return;
-      const added = await addFiles(files, { selectFiles: false });
+      // skipWorkspaceDispatch: the user is in the file manager, not opening
+      // files for work. Persist to IDB so the file appears in the grid (via
+      // FilesPageContext's independent IDB scan) but DON'T pollute workspace
+      // state - otherwise the file pops up the next time the user navigates
+      // to /viewer or /tools, which reads as "auto-opened" and surprised
+      // people every time. The grid will repaint via refresh() below.
+      const added = await addFiles(files, {
+        selectFiles: false,
+        skipWorkspaceDispatch: true,
+      });
       const fileIds = added.map((f) => f.fileId);
       const target = currentFolderId;
       // Newly-uploaded files are local-only (no remoteStorageId yet). The
