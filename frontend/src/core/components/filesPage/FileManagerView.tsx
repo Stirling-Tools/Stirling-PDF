@@ -29,6 +29,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -84,12 +85,17 @@ export default function FileManagerView() {
   const { sharingEnabled } = useSharingEnabled();
 
   // At ≤800px the inline details aside no longer fits next to the grid
-  // (and the rest of the chrome is in mobile-compaction mode). Switch
-  // the details panel to a right-side Drawer so file info isn't lost
-  // when the user selects a file on a narrow viewport. Matches the
-  // CSS breakpoint where .files-page-tree / .files-page-details
-  // historically display:none'd themselves.
+  // (and the rest of the chrome is in mobile-compaction mode). On these
+  // viewports a Mantine Drawer hosts the details panel content. The
+  // Drawer is BUTTON-TRIGGERED (not auto-opened on selection) - opening
+  // it on every selection blocked multi-select because the backdrop
+  // intercepted taps on other file cards.
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
+  // Full-screen drawer on phones (≤640) so there's no awkward empty strip
+  // showing the grid peeking through behind the backdrop; on tablet-sized
+  // viewports (641-800) a smaller drawer keeps some grid context visible.
+  const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
+  const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -1183,6 +1189,34 @@ export default function FileManagerView() {
                           </Button>
                         </Tooltip>
                       )}
+                      {/* "Show details" button - only on compact viewports
+                          where the inline details aside is gone. The
+                          replacement Drawer is BUTTON-TRIGGERED (not
+                          auto-opened on selection) so multi-select still
+                          works - tapping more file checkboxes adds to the
+                          selection without a backdrop blocking the row. */}
+                      {selectedFiles.length === 1 &&
+                        isCompactDetailsViewport && (
+                          <Tooltip
+                            label={t("filesPage.showDetails", "Show details")}
+                            withinPortal
+                          >
+                            <Button
+                              size="sm"
+                              variant="default"
+                              leftSection={
+                                <InfoOutlinedIcon fontSize="small" />
+                              }
+                              onClick={() => setMobileDetailsOpen(true)}
+                              aria-label={t(
+                                "filesPage.showDetails",
+                                "Show details",
+                              )}
+                            >
+                              {t("filesPage.showDetails", "Show details")}
+                            </Button>
+                          </Tooltip>
+                        )}
                       <Tooltip label={moveLabel} withinPortal>
                         <Button
                           size="sm"
@@ -1447,16 +1481,24 @@ export default function FileManagerView() {
       </div>
 
       {/* Compact viewports (≤800px): inline aside is gone (no room next
-          to the grid) so render the same details panel inside a Drawer
-          that slides in from the right. Without this, selecting a file
-          on mobile/tablet sized viewports silently swallowed all file
-          info - no thumbnail, no version journey, no actions. */}
+          to the grid) so the same details panel lives inside a Drawer.
+          The Drawer is button-triggered (via the "Show details" button
+          in the bulk-action row), NOT auto-opened on selection - that
+          earlier auto-open behaviour blocked multi-select because the
+          backdrop intercepted taps on other file cards.
+
+          On very narrow phones (≤480px) the Drawer is full-width so
+          there's no awkward empty strip showing the grid peeking through
+          on the left; on tablet-sized compact viewports a smaller width
+          keeps some context. The Drawer's own close handler clears
+          `mobileDetailsOpen` only - selection stays so the bulk-action
+          row keeps showing. */}
       {isCompactDetailsViewport && (
         <Drawer
-          opened={selectedFiles.length > 0}
-          onClose={() => clearSelection()}
+          opened={mobileDetailsOpen && selectedFiles.length === 1}
+          onClose={() => setMobileDetailsOpen(false)}
           position="right"
-          size="sm"
+          size={useFullScreenDrawer ? "100%" : "sm"}
           padding={0}
           withCloseButton={false}
           // The panel renders its own close button + header. Keep the
@@ -1465,12 +1507,12 @@ export default function FileManagerView() {
           // pushing the action stack off the bottom.
           overlayProps={{ opacity: 0.45 }}
         >
-          {selectedFiles.length > 0 && (
+          {mobileDetailsOpen && selectedFiles.length === 1 && (
             <FileDetailsPanel
               selectedFileIds={selectedFiles}
               fileMap={fileMap}
               currentFolder={currentFolderRecord}
-              onClose={() => clearSelection()}
+              onClose={() => setMobileDetailsOpen(false)}
               onAddToWorkspace={handleAddToWorkspace}
               onQuickView={handleQuickView}
               onMove={promptMoveFiles}
