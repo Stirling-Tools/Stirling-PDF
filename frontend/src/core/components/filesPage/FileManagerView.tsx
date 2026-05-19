@@ -419,13 +419,21 @@ export default function FileManagerView() {
             return next;
           }
         }
-        if (ctrl) {
+        // Once the user has 2+ files selected they're explicitly in
+        // multi-select mode (they checked a box, or shift-range'd, or
+        // ctrl-clicked) - in that mode plain clicks toggle add/remove
+        // instead of collapsing the whole selection back to one file.
+        // This is the Google Drive pattern: the "selection mode" sticks
+        // until the user explicitly exits via the X clear button or by
+        // clicking the empty background of the grid.
+        const inMultiSelectMode = prev.size >= 2;
+        if (ctrl || inMultiSelectMode) {
           if (next.has(fileId)) next.delete(fileId);
           else next.add(fileId);
         } else {
-          // Plain click toggles when the file is already the *only*
-          // selected one - matches Finder/Explorer behaviour. Otherwise
-          // it collapses the selection to just this file.
+          // 0 or 1 selected: plain click replaces (Finder/Explorer
+          // behaviour). Clicking the already-only-selected file
+          // deselects it, so single-file selection still toggles.
           const isSoleSelection = prev.size === 1 && prev.has(fileId);
           next.clear();
           if (!isSoleSelection) next.add(fileId);
