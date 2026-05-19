@@ -1806,7 +1806,11 @@ title = "Redenumire inteligentă"
 [automate]
 copyToSaved = "Copiați în Salvate"
 desc = "Construiți fluxuri de lucru în mai mulți pași, înlănțuind acțiuni PDF. Ideal pentru sarcini recurente."
+export = "Exportă"
 exportForFolderScanning = "Exportă pentru scanarea folderelor"
+import = "Importă"
+importPartialSuccess = "Importat cu {{count}} operațiune(i) neasociată(e): {{ops}}"
+importSuccess = "Automatizare importată: {{name}}"
 invalidStep = "Pas nevalid"
 reviewTitle = "Rezultatele automatizării"
 title = "Automatizare"
@@ -1822,6 +1826,7 @@ title = "Configurați {{toolName}}"
 [automate.creation]
 createTitle = "Creați automatizare"
 editTitle = "Editați automatizarea"
+export = "Exportă"
 exportForFolderScanning = "Exportă pentru scanarea folderelor"
 intro = "Automatizările rulează instrumentele secvențial. Pentru a începe, adăugați instrumente în ordinea în care doriți să ruleze."
 save = "Salvați automatizarea"
@@ -1852,8 +1857,27 @@ confirm = "Înapoi"
 message = "Aveți modificări nesalvate. Sigur doriți să vă întoarceți? Toate modificările vor fi pierdute."
 title = "Modificări nesalvate"
 
+[automate.entryMenu]
+label = "Deschide meniul pentru {{title}}"
+
 [automate.files]
 placeholder = "Selectați fișiere de procesat cu această automatizare"
+
+[automate.importModal]
+cancel = "Anulează"
+confirm = "Importă"
+detectedAutomation = "JSON de automatizare"
+detectedFolderScan = "JSON de scanare a folderului"
+dropHint = "Plasează JSON aici sau fă clic pentru a alege un fișier"
+dropSubhint = "Sunt acceptate atât configurațiile de Automatizare, cât și de Scanare folder"
+dropzoneAriaLabel = "Plasează aici un fișier JSON de automatizare"
+intro = "Plasează un fișier JSON sau lipește conținutul mai jos. Formatul (Automatizare sau Scanare folder) este detectat automat."
+opCount = "{{count}} operațiune(i)"
+parseError = "Nu s-a putut analiza: {{message}}"
+pasteLabel = "Sau lipește JSON"
+pastePlaceholder = "Lipește aici JSON-ul de automatizare…"
+title = "Importă automatizare"
+unresolved = "Neasociate: {{ops}}"
 
 [automate.run]
 title = "Rulați automatizarea"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Se rulează {{tool}} (pasul {{step}} din {{total}})..."
 extracting_content = "Se extrage conținutul din documentele dvs...."
 processing = "Se procesează conținutul extras..."
 thinking = "Se gândește..."
+whole_doc_compression_round = "Se consolidează notele..."
+whole_doc_read_done = "S-a terminat citirea documentului..."
+whole_doc_read_started = "Se citește documentul..."
+whole_doc_slice_done = "Se citește documentul... ({{percent}}% complet)"
 
 [chat.toolsUsed]
 summary = "S-au rulat {{count}} instrumente"
@@ -2712,6 +2740,7 @@ used = "utilizat"
 [compare]
 addFilesHint = "Adăugați PDF-uri în pasul Fișiere pentru a activa selecția."
 clearSelected = "Șterge selecția"
+clearSlot = "Elimină fișierul"
 cta = "Compară"
 header = "Compară PDF-uri"
 loading = "Se compară..."
@@ -2764,6 +2793,7 @@ title = "Aceste PDF-uri par foarte diferite"
 [compare.edited]
 label = "PDF editat"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Selectează mai întâi PDF-ul original"
 
 [compare.error]
 filesMissing = "Nu s-au putut găsi fișierele selectate. Vă rugăm să le selectați din nou."
@@ -2846,6 +2876,7 @@ pageLabel = "Pagina"
 confirm = "Inversează și rulează din nou"
 confirmBody = "Aceasta va rula din nou instrumentul. Sigur doriți să inversați ordinea de Original și Editat?"
 confirmTitle = "Rulați din nou comparația?"
+label = "Inversează"
 
 [compare.toasts]
 unlinkedBody = "Sfat: Săgeată sus/jos derulează ambele panouri; deplasarea afectează doar panoul activ."
@@ -3476,6 +3507,8 @@ unlockAll = "Utilizați pentru toate ({{count}})"
 unlockAllPartialFail = "Parolă greșită pentru: {{names}}"
 unlockAllSuccess = "S-au deblocat {{count}} fișiere."
 unlockPrompt = "Deblochează PDF-ul pentru a continua"
+viewerLocked = "Acest PDF este protejat cu parolă"
+viewerUnlock = "Deblochează"
 
 [encryptedPdfUnlock.password]
 label = "Parola PDF"
@@ -3583,6 +3616,9 @@ or = "sau"
 
 [fileEditor]
 addFiles = "Adăugați fișiere"
+pageCount = "{{count}} pagini"
+pageCount_one = "{{count}} pagină"
+pageCount_other = "{{count}} pagini"
 
 [fileManager]
 active = "Activ"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Modificări neîncărcate"
 clearAll = "Ștergeți tot"
 clearSelection = "Ștergeți selecția"
 clickToUpload = "Faceți clic pentru a încărca fișiere"
+closeAllFiles = "Închide toate fișierele"
 closeFile = "Închide fișierul"
 cloudFile = "Fișier în cloud"
 copyCreated = "Copia a fost salvată pe acest dispozitiv."
@@ -3665,6 +3702,7 @@ selectAll = "Selectați tot"
 selectedCount = "{{count}} selectate"
 selectedFiles = "Fișiere selectate"
 share = "Partajați"
+shared = "Partajat"
 sharedByYou = "Partajat de dvs."
 sharedEditNoticeBody = "Nu aveți drepturi de editare asupra versiunii de pe server a acestui fișier. Orice modificări pe care le faceți vor fi salvate ca o copie locală."
 sharedEditNoticeConfirm = "Am înțeles"
@@ -3704,6 +3742,41 @@ size = "Dimensiune fișier"
 title = "Fișiere"
 upload = "Încărcați"
 uploadFiles = "Încărcați fișiere"
+
+[fileSelectorPicker]
+empty = "Nu sunt fișiere disponibile"
+placeholder = "Selectează fișier"
+search = "Filtrează fișierele…"
+tabListLabel = "Fișiere salvate, spațiu de lucru, încărcare"
+upload = "Încarcă de pe calculator"
+
+[fileSelectorPicker.sort]
+dateAsc = "Cele mai vechi primele"
+dateDesc = "Cele mai noi primele"
+dateLabel = "Cele mai recente"
+nameAsc = "De la A la Z"
+nameDesc = "De la Z la A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Fișiere salvate"
+upload = "Încărcare"
+workbench = "Spațiu de lucru"
+
+[fileSidebar]
+addFiles = "Adaugă fișiere"
+collapse = "Restrânge bara laterală"
+dropHint = "Deschide fișiere pentru a începe"
+expand = "Extinde bara laterală"
+files = "Fișiere"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive nu este configurat"
+noFiles = "Încă nu există fișiere"
+openFileManager = "Deschide managerul de fișiere"
+openFromComputer = "Deschide de pe calculator"
+openSettings = "Deschide setările"
+search = "Căutare"
+searchPlaceholder = "Caută fișiere..."
 
 [fileToPDF]
 credit = "Acest serviciu utilizează LibreOffice și Unoconv pentru conversia fișierelor."
@@ -4202,6 +4275,11 @@ title = "Suprapune PDF-uri"
 desc = "Îmbină mai multe pagini ale unui document PDF într-o singură pagină"
 tags = "aspect,aranjează,combină"
 title = "Aspect Multi-Pagină"
+
+[home.pdfCommentAgent]
+desc = "Cere AI să adnoteze un PDF cu comentarii tip notițe adezive pe baza solicitării tale"
+tags = "AI,agent,comentariu,adnotare,notiță adezivă,revizuire,feedback,note"
+title = "Adaugă comentarii AI"
 
 [home.pdfOrganiser]
 desc = "Elimină/rearanjează pagini în orice ordine"
@@ -4903,7 +4981,6 @@ fileUpload = "Folosiți butonul <strong>Fișiere</strong> pentru a încărca sau
 leftPanel = "Panoul din stânga <strong>Instrumente</strong> listează tot ce puteți face. Navigați prin categorii sau căutați pentru a găsi rapid un instrument."
 pageEditorView = "Comutați la Editorul de pagini pentru a reordona, roti sau șterge pagini."
 quickAccess = "Începeți din bara <strong>Acces rapid</strong> pentru a comuta între Reader, Automate, fișierele dvs. și toate tururile."
-rightRail = "Bara <strong>din dreapta</strong> conține acțiuni rapide pentru a selecta fișiere, a schimba tema sau limba și a descărca rezultatele."
 topBar = "Bara de sus vă permite să comutați între <strong>Vizualizator</strong>, <strong>Editor de pagini</strong> și <strong>Fișiere active</strong>."
 wrapUp = "Acestea sunt noutățile din V2. Deschideți oricând meniul <strong>Tururi</strong> pentru a relua acesta, turul Instrumente sau turul Admin."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Selectează lunar"
 selectYearly = "Selectează anual"
 title = "Alege perioada de facturare"
 totalForSeats = "Total ({{count}} locuri)"
+
+[pdfCommentAgent]
+submit = "Generează comentarii"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Te rugăm să descrii ce ar trebui să comenteze AI"
+failed = "Generarea comentariilor a eșuat"
+tooLong = "Promptul este prea lung (maximum {{max}} caractere)"
+
+[pdfCommentAgent.prompt]
+label = "Asupra a ce ar trebui să comenteze AI?"
+placeholder = "ex.: Marchează orice date ambigue și sugerează clarificări"
+
+[pdfCommentAgent.results]
+title = "PDF comentat"
+
+[pdfCommentAgent.settings]
+title = "Instrucțiuni pentru comentarii"
 
 [pdfOrganiser]
 header = "Organizator de pagini PDF"
@@ -6486,46 +6581,6 @@ title = "Contrast ridicat"
 text = "Inversează complet toate culorile din PDF, creând un efect de tip negativ. Util pentru crearea unor versiuni în modul întunecat sau pentru reducerea oboselii oculare în lumină slabă."
 title = "Inversează toate culorile"
 
-[rightRail]
-annotations = "Anotări"
-applyRedactionsFirst = "Aplicați mai întâi redactările"
-closePdf = "Închide PDF"
-closeSelected = "Închideți fișierele selectate"
-deleteSelected = "Ștergeți paginile selectate"
-deselectAll = "Deselectați tot"
-downloadAll = "Descărcați tot"
-downloadSelected = "Descărcați fișierele selectate"
-draw = "Desenați"
-exitRedaction = "Ieși din modul Redactare"
-exportAll = "Exportați PDF"
-exportSelected = "Exportați paginile selectate"
-formFill = "Completează formularul"
-language = "Limbă"
-panMode = "Mod panoramare"
-print = "Imprimați PDF"
-readAloud = "Citește cu voce tare"
-readAloudLanguage = "Limbă"
-readAloudSpeed = "Viteză"
-redact = "Redactează"
-rotateLeft = "Rotiți la stânga"
-rotateRight = "Rotiți la dreapta"
-ruler = "Riglă / Măsurare"
-save = "Salvați"
-saveAll = "Salvează tot"
-saveAs = "Salvare ca"
-saveChanges = "Salvați modificările"
-search = "Căutați în PDF"
-selectAll = "Selectați tot"
-selectByNumber = "Selectați după numerele paginilor"
-selectLanguage = "Selectați limba"
-toggleAnnotations = "Comutați vizibilitatea adnotărilor"
-toggleAttachments = "Afișează/ascunde atașamentele"
-toggleBookmarks = "Comută semnele de carte"
-toggleComments = "Comentarii"
-toggleLayers = "Comutați straturile"
-toggleSidebar = "Comutați bara laterală"
-toggleTheme = "Comutați tema"
-
 [rotate]
 rotateLeft = "Rotiți în sens antiorar"
 rotateRight = "Rotiți în sens orar"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Ascunde conversiile indisponibile"
 hideUnavailableConversionsDescription = "Elimină opțiunile de conversie dezactivate în instrumentul Convert, în loc să fie afișate estompate."
 hideUnavailableTools = "Ascunde instrumentele indisponibile"
 hideUnavailableToolsDescription = "Elimină din listă instrumentele dezactivate de server, în loc să fie afișate estompate."
+language = "Limbă"
+languageDescription = "Alege limba afișată"
 logout = "Deconectare"
 setAsDefault = "Setează ca implicit"
+theme = "Temă"
+themeDark = "Întunecată"
+themeDescription = "Comută între modul deschis și întunecat"
+themeLight = "Deschisă"
 title = "General"
 user = "Utilizator"
 
@@ -6810,6 +6871,20 @@ title = "Informații despre versiune"
 auto = "Auto"
 fitPage = "Potrivire la pagină"
 fitWidth = "Potrivire la lățime"
+
+[settings.help]
+label = "Tururi"
+title = "Ajutor"
+
+[settings.help.adminTour]
+description = "Explorează managementul echipei, setările sistemului și funcțiile pentru întreprinderi."
+start = "Începe"
+title = "Tur de administrare"
+
+[settings.help.toolsTour]
+description = "Parcurge încărcarea fișierelor, alegerea unui instrument și revizuirea rezultatelor."
+start = "Începe"
+title = "Turul instrumentelor"
 
 [settings.hotkeys]
 capturing = "Apăsați tastele… (Esc pentru a anula)"
@@ -7780,6 +7855,8 @@ settings = "Setări"
 [tool]
 endpointUnavailable = "Acest instrument nu este disponibil pe serverul dvs."
 endpointUnavailableClickable = "Nu este disponibil în acest mod. Faceți clic pentru a vă autentifica."
+filesLoading = "Fișierele încă se încarcă, te rugăm să aștepți."
+filesLoadingProgress = "{{loaded}} / {{total}} fișiere se încarcă..."
 invalidParams = "Completați setările obligatorii."
 noFiles = "Adăugați un fișier pentru a începe."
 scopeFiles = "fișiere"
@@ -7789,10 +7866,15 @@ singleFileScope = "Se aplică numai pentru: {{fileName}}"
 viewerMode = "Comutați la editorul de fișiere pentru a selecta mai multe fișiere."
 
 [toolPanel]
+allTools = "Toate instrumentele"
 alpha = "Alpha"
+backToTools = "Înapoi la instrumente"
+collapse = "Restrânge panoul"
 comingSoon = "În curând:"
+expand = "Extinde panoul"
 placeholder = "Alegeți un instrument pentru a începe"
 premiumFeature = "Funcție premium:"
+search = "Caută instrumente"
 
 [toolPanel.fullscreen]
 comingSoon = "În curând:"
@@ -8342,6 +8424,51 @@ bullet2 = "Fundalurile transparente sunt recomandate pentru rezultate optime"
 bullet3 = "Imaginea va fi redimensionată pentru a se potrivi zonei semnăturii"
 description = "Încărcați o imagine de semnătură preexistentă. Ideală dacă aveți o semnătură scanată sau un logo al companiei."
 title = "Încărcați imaginea semnăturii"
+
+[workbenchBar]
+activeFiles = "Fișiere active"
+annotations = "Adnotări"
+applyRedactionsFirst = "Aplică mai întâi redactările"
+closeAll = "Închide toate fișierele"
+closePdf = "Închide PDF"
+closeSelected = "Închide fișierele selectate"
+deleteSelected = "Șterge paginile selectate"
+deselectAll = "Deselectează tot"
+downloadAll = "Descarcă tot"
+downloadSelected = "Descarcă fișierele selectate"
+draw = "Desenează"
+exitRedaction = "Ieși din modul de redactare"
+exportAll = "Exportă PDF"
+exportSelected = "Exportă paginile selectate"
+formFill = "Completează formularul"
+language = "Limbă"
+multiTool = "Instrument multiplu"
+panMode = "Mod panoramare"
+print = "Tipărește PDF"
+readAloud = "Citește cu voce tare"
+readAloudLanguage = "Limbă"
+readAloudSpeed = "Viteză"
+redact = "Redactează"
+rotateLeft = "Rotește la stânga"
+rotateRight = "Rotește la dreapta"
+ruler = "Riglă / Măsurare"
+save = "Salvează"
+saveAll = "Salvează tot"
+saveAs = "Salvează ca"
+saveChanges = "Salvează modificările"
+search = "Caută în PDF"
+selectAll = "Selectează tot"
+selectByNumber = "Selectează după numerele paginilor"
+selectLanguage = "Selectează limba"
+share = "Partajează"
+toggleAnnotations = "Comută vizibilitatea adnotărilor"
+toggleAttachments = "Comută atașamentele"
+toggleBookmarks = "Comută semnele de carte"
+toggleComments = "Comentarii"
+toggleLayers = "Comută straturile"
+toggleSidebar = "Comută bara laterală"
+toggleTheme = "Comută tema"
+viewer = "Vizualizator"
 
 [workspace]
 title = "Spațiu de lucru"
