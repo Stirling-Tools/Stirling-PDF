@@ -194,7 +194,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareRootNotPublic() {
-        // Avoid matching bare "/share" or "/share/" — must have a token segment
+        // Avoid matching bare "/share" or "/share/" - must have a token segment
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/", ""));
     }
@@ -208,7 +208,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareApiStillProtected() {
-        // Share-link data APIs must NOT be public — they enforce auth + access checks
+        // Share-link data APIs must NOT be public - they enforce auth + access checks
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(

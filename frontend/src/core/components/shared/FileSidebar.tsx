@@ -434,7 +434,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               data-testid="file-input"
             />
             {/* Open from Computer + My Files + Google Drive */}
-            {/* Tooltips only fire when collapsed — when expanded the visible
+            {/* Tooltips only fire when collapsed - when expanded the visible
                 text label below already identifies each row, so a tooltip
                 would just flash a duplicate. Distinct icons (UploadFile for
                 "Open from computer" vs FolderOpen for "My Files") so the

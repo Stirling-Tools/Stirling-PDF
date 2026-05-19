@@ -785,12 +785,12 @@ export default function FileManagerView() {
         )}
         {(() => {
           // Both the inline desktop buttons and the mobile kebab menu need
-          // these handlers — extract once so we don't drift two copies.
+          // these handlers - extract once so we don't drift two copies.
           const handleRefresh = async () => {
             setRefreshing(true);
             try {
               // pullFromServer bumps the folder revision, which the
-              // FolderProvider's effect reacts to by re-running refresh() —
+              // FolderProvider's effect reacts to by re-running refresh() -
               // no need to await folders.refresh() manually.
               const result = await folders.pullFromServer();
               if (!result.ok && result.reason !== "endpoint-missing") {
@@ -874,7 +874,7 @@ export default function FileManagerView() {
                 value={search}
                 onChange={setSearch}
               />
-              {/* Refresh — inline on desktop, folded into the kebab on mobile. */}
+              {/* Refresh - inline on desktop, folded into the kebab on mobile. */}
               <Tooltip
                 label={t("filesPage.refresh", "Refresh from server")}
                 withinPortal
@@ -892,7 +892,7 @@ export default function FileManagerView() {
                   <RefreshIcon />
                 </ActionIcon>
               </Tooltip>
-              {/* New folder — inline on desktop, folded into the kebab on mobile. */}
+              {/* New folder - inline on desktop, folded into the kebab on mobile. */}
               <span data-mobile-hide="true" style={{ display: "inline-flex" }}>
                 <Tooltip
                   label={
@@ -902,7 +902,7 @@ export default function FileManagerView() {
                   withinPortal
                 >
                   {/* Mantine disables tooltip pointer events on disabled
-                      children — wrap so the tooltip still fires on hover. */}
+                      children - wrap so the tooltip still fires on hover. */}
                   {newFolderDisabledReason ? (
                     <span style={{ display: "inline-flex" }}>
                       {newFolderButton}
@@ -1018,7 +1018,7 @@ export default function FileManagerView() {
             const TAB_DEFS = [
               { id: "all", label: t("filesPage.tabs.all", "All") },
               { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              // Shared only when the server actually has sharing enabled —
+              // Shared only when the server actually has sharing enabled -
               // see useSharingEnabled gate at the top of the component.
               ...(sharingEnabled
                 ? [

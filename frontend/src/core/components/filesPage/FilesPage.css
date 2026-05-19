@@ -1292,7 +1292,7 @@
   }
   .files-page-search input {
     /* `min-width: 0` lets flex actually shrink the input below its
-       default ~20-char intrinsic size — without this, the placeholder
+       default ~20-char intrinsic size - without this, the placeholder
        extends beyond the parent's clip box and bleeds onto neighbours. */
     min-width: 0;
     text-overflow: ellipsis;

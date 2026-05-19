@@ -904,7 +904,7 @@ for dir in "${CRITICAL_DIRS[@]}"; do
   if [ -d "$dir" ]; then
     # Test write access as the runtime user
     if ! run_as_runtime_user test -w "$dir" 2>/dev/null; then
-      log "WARNING: ${RUNTIME_USER} cannot write to $dir — attempting to fix permissions"
+      log "WARNING: ${RUNTIME_USER} cannot write to $dir - attempting to fix permissions"
       # Try adding group-write and world-write as fallbacks
       chmod -R o+rwX "$dir" 2>/dev/null \
         || chmod -R a+rwX "$dir" 2>/dev/null \
