@@ -543,13 +543,20 @@ export default function FileManagerView() {
           clearFilesPageReturnRoute();
         }
 
-        const added = await fileActions.addStirlingFileStubs(stubs, {
+        await fileActions.addStirlingFileStubs(stubs, {
           selectFiles: false,
         });
-        if (added.length === 1) {
-          setActiveFileId(added[0]!.fileId);
+        // Branch on the REQUESTED stubs, not the returned `added` list.
+        // addStirlingFileStubs dedup's against workspace state via `continue`
+        // and only returns newly-added files - so for a file already in the
+        // workspace (the user opens Quick view on a file they previously
+        // added) `added` is empty, neither branch fired, and the viewer
+        // landed on stale state. The stubs already-loaded are still valid
+        // targets for activation; we just don't need to dispatch them again.
+        if (stubs.length === 1) {
+          setActiveFileId(stubs[0]!.id);
           navActions.setWorkbench("viewer");
-        } else if (added.length > 1) {
+        } else if (stubs.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
         navigate("/");
@@ -1135,24 +1142,40 @@ export default function FileManagerView() {
               );
               const someSelected = !allSelected && selectedFiles.length > 0;
               return (
-                <Button
-                  variant="subtle"
-                  size="xs"
-                  onClick={() => {
-                    if (allSelected) {
-                      setSelectedFileIds(new Set());
-                    } else {
-                      setSelectedFileIds(
-                        new Set(visibleFiles.map((f) => f.id)),
-                      );
-                    }
-                  }}
-                  aria-pressed={allSelected || someSelected}
+                // Tooltip here is the discovery point for the new
+                // selection model: checkboxes are hidden until the user
+                // is in multi-select mode, so the Ctrl/Shift shortcuts
+                // need to be surfaced somewhere visible. Putting it on
+                // "Select all" (the closest semantic neighbour) gives
+                // users a place to look without adding a new button.
+                <Tooltip
+                  label={t(
+                    "filesPage.selectAllHint",
+                    "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range.",
+                  )}
+                  withinPortal
+                  multiline
+                  w={280}
                 >
-                  {allSelected
-                    ? t("filesPage.deselectAll", "Clear selection")
-                    : t("filesPage.selectAll", "Select all")}
-                </Button>
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    onClick={() => {
+                      if (allSelected) {
+                        setSelectedFileIds(new Set());
+                      } else {
+                        setSelectedFileIds(
+                          new Set(visibleFiles.map((f) => f.id)),
+                        );
+                      }
+                    }}
+                    aria-pressed={allSelected || someSelected}
+                  >
+                    {allSelected
+                      ? t("filesPage.deselectAll", "Clear selection")
+                      : t("filesPage.selectAll", "Select all")}
+                  </Button>
+                </Tooltip>
               );
             })()}
             <div className="files-page-toolbar-actions">

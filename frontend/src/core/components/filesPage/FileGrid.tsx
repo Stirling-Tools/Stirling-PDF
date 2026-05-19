@@ -286,6 +286,7 @@ function GridView({
                 activeWorkspaceFileIds?.has(entry.file.id as string) ?? false
               }
               selectedFileIds={selectedFileIds}
+              multiSelectActive={selectedFileIds.size >= 2}
               onClick={(e) =>
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
@@ -488,6 +489,11 @@ interface FileCardProps {
   /** Parent folder path shown as subtitle (search results only). */
   parentPath?: string;
   selectedFileIds: Set<FileId>;
+  /** True once the user is explicitly multi-selecting (2+ files). The
+   *  card shows its checkbox in this mode; in single-select / no-select
+   *  the checkbox is hidden and the highlight border is the only state
+   *  indicator. Avoids the always-visible-checkbox visual noise. */
+  multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
   onQuickView: () => void;
@@ -501,6 +507,7 @@ function FileCard({
   isSelected,
   isInWorkspace,
   selectedFileIds,
+  multiSelectActive,
   onClick,
   onDoubleClick,
   onQuickView,
@@ -568,30 +575,37 @@ function FileCard({
           {t("filesPage.inWorkspace", "Open")}
         </span>
       )}
-      <div className="files-page-card-selector">
-        <Checkbox
-          checked={isSelected}
-          onClick={(e) => {
-            // The checkbox always means "toggle this file in/out of the
-            // selection" - even without a modifier. Synthesise a click
-            // event with ctrl held so the parent handler takes the
-            // toggle branch instead of replacing the selection.
-            e.stopPropagation();
-            onClick({
-              ...e,
-              shiftKey: false,
-              ctrlKey: true,
-              metaKey: true,
-            } as unknown as React.MouseEvent);
-          }}
-          onChange={() => {
-            /* handled by onClick */
-          }}
-          aria-label={t("filesPage.selectFile", "Select file {{name}}", {
-            name: file.name,
-          })}
-        />
-      </div>
+      {/* Checkbox only renders once the user is explicitly in multi-select
+          mode (2+ files chosen via Ctrl/Shift-click, or one file then
+          another). For single-select the highlight border on the card is
+          the only state indicator - avoids the always-on-checkbox
+          visual noise and matches the file-explorer model. */}
+      {multiSelectActive && (
+        <div className="files-page-card-selector">
+          <Checkbox
+            checked={isSelected}
+            onClick={(e) => {
+              // The checkbox always means "toggle this file in/out of the
+              // selection" - even without a modifier. Synthesise a click
+              // event with ctrl held so the parent handler takes the
+              // toggle branch instead of replacing the selection.
+              e.stopPropagation();
+              onClick({
+                ...e,
+                shiftKey: false,
+                ctrlKey: true,
+                metaKey: true,
+              } as unknown as React.MouseEvent);
+            }}
+            onChange={() => {
+              /* handled by onClick */
+            }}
+            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+              name: file.name,
+            })}
+          />
+        </div>
+      )}
       <div className="files-page-card-thumb">
         {file.thumbnailUrl ? (
           // `draggable={false}` so grabbing the thumbnail image doesn't
@@ -820,6 +834,7 @@ function ListView({
                 activeWorkspaceFileIds?.has(entry.file.id as string) ?? false
               }
               selectedFileIds={selectedFileIds}
+              multiSelectActive={selectedFileIds.size >= 2}
               onClick={(e) =>
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
@@ -1018,6 +1033,8 @@ interface FileRowProps {
   isInWorkspace: boolean;
   parentPath?: string;
   selectedFileIds: Set<FileId>;
+  /** See FileCardProps. True once user has 2+ files selected. */
+  multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onOpen: () => void;
   onQuickView: () => void;
@@ -1031,6 +1048,7 @@ function FileRow({
   isInWorkspace,
   parentPath,
   selectedFileIds,
+  multiSelectActive,
   onClick,
   onOpen,
   onQuickView,
@@ -1073,25 +1091,36 @@ function FileRow({
         isInWorkspace ? " is-in-workspace" : ""
       }`}
     >
-      <Checkbox
-        checked={isSelected}
-        onClick={(e) => {
-          // Toggle this file in/out of the selection without modifier keys.
-          e.stopPropagation();
-          onClick({
-            ...e,
-            shiftKey: false,
-            ctrlKey: true,
-            metaKey: true,
-          } as unknown as React.MouseEvent);
-        }}
-        onChange={() => {
-          /* handled by onClick */
-        }}
-        aria-label={t("filesPage.selectFile", "Select file {{name}}", {
-          name: file.name,
-        })}
-      />
+      {/* Checkbox only shows in multi-select mode (see FileCard). When the
+          checkbox is hidden the first grid column collapses, but the row's
+          CSS grid keeps the columns aligned via the named template, so no
+          empty cell shows. */}
+      {multiSelectActive ? (
+        <Checkbox
+          checked={isSelected}
+          onClick={(e) => {
+            // Toggle this file in/out of the selection without modifier keys.
+            e.stopPropagation();
+            onClick({
+              ...e,
+              shiftKey: false,
+              ctrlKey: true,
+              metaKey: true,
+            } as unknown as React.MouseEvent);
+          }}
+          onChange={() => {
+            /* handled by onClick */
+          }}
+          aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+            name: file.name,
+          })}
+        />
+      ) : (
+        // Empty cell preserves the grid column so the rest of the row
+        // stays aligned with the list header (which still shows its own
+        // multi-select-toggle checkbox).
+        <span aria-hidden="true" />
+      )}
       <span
         style={{
           display: "flex",
