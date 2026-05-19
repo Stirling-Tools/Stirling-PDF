@@ -1806,7 +1806,11 @@ title = "스마트 이름 변경"
 [automate]
 copyToSaved = "저장됨으로 복사"
 desc = "PDF 작업을 연결해 다단계 워크플로를 구성하세요. 반복 작업에 적합합니다."
+export = "내보내기"
 exportForFolderScanning = "폴더 스캔용으로 내보내기"
+import = "가져오기"
+importPartialSuccess = "매핑되지 않은 작업 {{count}}개와 함께 가져왔습니다: {{ops}}"
+importSuccess = "가져온 자동화: {{name}}"
 invalidStep = "잘못된 단계"
 reviewTitle = "자동화 결과"
 title = "자동화"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} 구성"
 [automate.creation]
 createTitle = "자동화 만들기"
 editTitle = "자동화 편집"
+export = "내보내기"
 exportForFolderScanning = "폴더 스캔용으로 내보내기"
 intro = "자동화는 도구를 순차적으로 실행합니다. 시작하려면 실행 순서대로 도구를 추가하세요."
 save = "자동화 저장"
@@ -1852,8 +1857,27 @@ confirm = "돌아가기"
 message = "저장되지 않은 변경 사항이 있습니다. 돌아가시겠습니까? 모든 변경 사항이 사라집니다."
 title = "저장되지 않은 변경 사항"
 
+[automate.entryMenu]
+label = "{{title}}에 대한 메뉴 열기"
+
 [automate.files]
 placeholder = "이 자동화로 처리할 파일을 선택하세요"
+
+[automate.importModal]
+cancel = "취소"
+confirm = "가져오기"
+detectedAutomation = "자동화 JSON"
+detectedFolderScan = "폴더 스캔 JSON"
+dropHint = "여기에 JSON을 놓거나 클릭하여 파일을 선택하세요"
+dropSubhint = "자동화 및 폴더 스캔 구성 모두 허용됩니다"
+dropzoneAriaLabel = "자동화 JSON 파일을 여기에 놓으세요"
+intro = "JSON 파일을 놓거나 아래에 내용을 붙여넣으세요. 형식(자동화 또는 폴더 스캔)은 자동으로 감지됩니다."
+opCount = "작업 {{count}}개"
+parseError = "구문 분석할 수 없습니다: {{message}}"
+pasteLabel = "또는 JSON 붙여넣기"
+pastePlaceholder = "자동화 JSON을 여기에 붙여넣으세요…"
+title = "자동화 가져오기"
+unresolved = "매핑되지 않음: {{ops}}"
 
 [automate.run]
 title = "자동화 실행"
@@ -2670,6 +2694,10 @@ executing_tool_step = "{{tool}} 실행 중 ({{total}}단계 중 {{step}}단계).
 extracting_content = "문서에서 콘텐츠를 추출하는 중..."
 processing = "추출된 콘텐츠를 처리하는 중..."
 thinking = "생각하는 중..."
+whole_doc_compression_round = "메모를 통합하는 중..."
+whole_doc_read_done = "문서 읽기 완료..."
+whole_doc_read_started = "문서를 읽는 중..."
+whole_doc_slice_done = "문서를 읽는 중... ({{percent}}% 완료)"
 
 [chat.toolsUsed]
 summary = "도구 {{count}}개 실행함"
@@ -2712,6 +2740,7 @@ used = "사용됨"
 [compare]
 addFilesHint = "파일 단계에서 PDF를 추가하면 선택할 수 있습니다."
 clearSelected = "선택 항목 지우기"
+clearSlot = "파일 제거"
 cta = "비교"
 header = "PDF 비교"
 loading = "비교 중..."
@@ -2764,6 +2793,7 @@ title = "이 PDF는 서로 매우 다릅니다"
 [compare.edited]
 label = "수정된 PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "먼저 원본 PDF를 선택하세요"
 
 [compare.error]
 filesMissing = "선택한 파일을 찾을 수 없습니다. 다시 선택하세요."
@@ -2846,6 +2876,7 @@ pageLabel = "페이지"
 confirm = "바꾸고 다시 실행"
 confirmBody = "도구를 다시 실행합니다. 원본과 수정의 순서를 바꾸시겠습니까?"
 confirmTitle = "비교를 다시 실행할까요?"
+label = "바꾸기"
 
 [compare.toasts]
 unlinkedBody = "팁: 위/아래 화살표로 두 창을 함께 스크롤하고, 이동은 활성 창만 이동합니다."
@@ -3476,6 +3507,8 @@ unlockAll = "모두에 적용 ({{count}})"
 unlockAllPartialFail = "잘못된 비밀번호: {{names}}"
 unlockAllSuccess = "{{count}}개 파일의 잠금이 해제되었습니다."
 unlockPrompt = "계속하려면 PDF 잠금을 해제하세요"
+viewerLocked = "이 PDF는 암호로 보호되어 있습니다"
+viewerUnlock = "잠금 해제"
 
 [encryptedPdfUnlock.password]
 label = "PDF 비밀번호"
@@ -3583,6 +3616,9 @@ or = "또는"
 
 [fileEditor]
 addFiles = "파일 추가"
+pageCount = "{{count}}페이지"
+pageCount_one = "{{count}}페이지"
+pageCount_other = "{{count}}페이지"
 
 [fileManager]
 active = "활성"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "변경 사항이 업로드되지 않음"
 clearAll = "모두 지우기"
 clearSelection = "선택 해제"
 clickToUpload = "클릭하여 파일 업로드"
+closeAllFiles = "모든 파일 닫기"
 closeFile = "파일 닫기"
 cloudFile = "클라우드 파일"
 copyCreated = "복사본이 이 기기에 저장되었습니다."
@@ -3665,6 +3702,7 @@ selectAll = "모두 선택"
 selectedCount = "{{count}}개 선택됨"
 selectedFiles = "선택한 파일"
 share = "공유"
+shared = "공유됨"
 sharedByYou = "내가 공유함"
 sharedEditNoticeBody = "서버 버전의 이 파일에 대한 편집 권한이 없습니다. 편집 내용은 로컬 복사본으로 저장됩니다."
 sharedEditNoticeConfirm = "알겠습니다"
@@ -3704,6 +3742,41 @@ size = "파일 크기"
 title = "파일"
 upload = "업로드"
 uploadFiles = "파일 업로드"
+
+[fileSelectorPicker]
+empty = "사용 가능한 파일이 없습니다"
+placeholder = "파일 선택"
+search = "파일 필터링…"
+tabListLabel = "저장된 파일, 작업대, 업로드"
+upload = "컴퓨터에서 업로드"
+
+[fileSelectorPicker.sort]
+dateAsc = "오래된 순"
+dateDesc = "최신순"
+dateLabel = "최신"
+nameAsc = "A → Z"
+nameDesc = "Z → A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "저장된 파일"
+upload = "업로드"
+workbench = "작업대"
+
+[fileSidebar]
+addFiles = "파일 추가"
+collapse = "사이드바 접기"
+dropHint = "시작하려면 파일을 여세요"
+expand = "사이드바 펼치기"
+files = "파일"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive가 구성되지 않았습니다"
+noFiles = "아직 파일이 없습니다"
+openFileManager = "파일 관리자 열기"
+openFromComputer = "컴퓨터에서 열기"
+openSettings = "설정 열기"
+search = "검색"
+searchPlaceholder = "파일 검색..."
 
 [fileToPDF]
 credit = "이 서비스는 파일 변환을 위해 LibreOffice와 Unoconv를 사용합니다."
@@ -4202,6 +4275,11 @@ title = "PDF 오버레이"
 desc = "PDF 문서의 여러 페이지를 하나의 페이지로 병합"
 tags = "레이아웃,배치,결합"
 title = "다중 페이지 레이아웃"
+
+[home.pdfCommentAgent]
+desc = "프롬프트를 바탕으로 AI가 PDF에 스티키 노트 댓글로 주석을 달도록 요청하세요"
+tags = "AI,에이전트,댓글,주석,스티키 노트,검토,피드백,노트"
+title = "AI 댓글 추가"
 
 [home.pdfOrganiser]
 desc = "원하는 순서로 페이지 제거/재배치"
@@ -4903,7 +4981,6 @@ fileUpload = "<strong>파일</strong> 버튼으로 PDF를 업로드하거나 최
 leftPanel = "왼쪽 <strong>도구</strong> 패널에 가능한 작업이 모두 나열됩니다. 카테고리를 탐색하거나 검색해 빠르게 도구를 찾으세요."
 pageEditorView = "페이지 편집기로 전환해 페이지를 재정렬, 회전 또는 삭제하세요."
 quickAccess = "Reader, Automate, 내 파일, 모든 둘러보기로 이동하려면 <strong>빠른 실행</strong> 레일에서 시작하세요."
-rightRail = "<strong>오른쪽 레일</strong>에는 파일 선택, 테마/언어 변경, 결과 다운로드 등 빠른 작업이 있습니다."
 topBar = "상단 바에서 <strong>뷰어</strong>, <strong>페이지 편집기</strong>, <strong>활성 파일</strong> 간 전환할 수 있습니다."
 wrapUp = "이것이 V2의 새로운 점입니다. 언제든지 <strong>둘러보기</strong> 메뉴를 열어 이 둘러보기, 도구 둘러보기, 관리자 둘러보기를 다시 시청하세요."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "월간 선택"
 selectYearly = "연간 선택"
 title = "청구 주기 선택"
 totalForSeats = "합계({{count}} 좌석)"
+
+[pdfCommentAgent]
+submit = "댓글 생성"
+
+[pdfCommentAgent.error]
+emptyPrompt = "AI가 댓글을 달 내용을 입력하세요"
+failed = "댓글 생성에 실패했습니다"
+tooLong = "프롬프트가 너무 깁니다(최대 {{max}}자)"
+
+[pdfCommentAgent.prompt]
+label = "AI가 무엇에 대해 댓글을 달아야 하나요?"
+placeholder = "예: 모호한 날짜를 표시하고 명확한 표현을 제안해 주세요"
+
+[pdfCommentAgent.results]
+title = "댓글이 추가된 PDF"
+
+[pdfCommentAgent.settings]
+title = "댓글 지침"
 
 [pdfOrganiser]
 header = "PDF 페이지 정리"
@@ -6486,46 +6581,6 @@ title = "고대비"
 text = "PDF의 모든 색상을 완전히 반전하여 네거티브와 같은 효과를 만듭니다. 문서의 다크 모드 버전을 만들거나 저조도 환경에서 눈의 피로를 줄이는 데 유용합니다."
 title = "모든 색상 반전"
 
-[rightRail]
-annotations = "주석"
-applyRedactionsFirst = "먼저 가리기 적용"
-closePdf = "PDF 닫기"
-closeSelected = "선택한 파일 닫기"
-deleteSelected = "선택한 페이지 삭제"
-deselectAll = "모두 선택 해제"
-downloadAll = "전체 다운로드"
-downloadSelected = "선택한 파일 다운로드"
-draw = "그리기"
-exitRedaction = "가리기 모드 종료"
-exportAll = "PDF 내보내기"
-exportSelected = "선택한 페이지 내보내기"
-formFill = "양식 작성"
-language = "언어"
-panMode = "이동 모드"
-print = "PDF 인쇄"
-readAloud = "낭독"
-readAloudLanguage = "언어"
-readAloudSpeed = "속도"
-redact = "가리기"
-rotateLeft = "왼쪽으로 회전"
-rotateRight = "오른쪽으로 회전"
-ruler = "눈금자/측정"
-save = "저장"
-saveAll = "모두 저장"
-saveAs = "다른 이름으로 저장"
-saveChanges = "변경 내용 저장"
-search = "PDF 검색"
-selectAll = "모두 선택"
-selectByNumber = "페이지 번호로 선택"
-selectLanguage = "언어 선택"
-toggleAnnotations = "주석 가시성 전환"
-toggleAttachments = "첨부 파일 표시/숨기기"
-toggleBookmarks = "북마크 표시/숨기기"
-toggleComments = "댓글"
-toggleLayers = "레이어 전환"
-toggleSidebar = "사이드바 전환"
-toggleTheme = "테마 전환"
-
 [rotate]
 rotateLeft = "반시계 방향으로 회전"
 rotateRight = "시계 방향으로 회전"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "사용 불가 변환 숨기기"
 hideUnavailableConversionsDescription = "회색으로 표시하는 대신 변환 도구의 비활성화된 옵션을 숨깁니다."
 hideUnavailableTools = "사용 불가 도구 숨기기"
 hideUnavailableToolsDescription = "회색으로 표시하는 대신 서버에서 비활성화된 도구를 숨깁니다."
+language = "언어"
+languageDescription = "표시 언어를 선택하세요"
 logout = "로그아웃"
 setAsDefault = "기본값으로 설정"
+theme = "테마"
+themeDark = "다크"
+themeDescription = "라이트 모드와 다크 모드를 전환합니다"
+themeLight = "라이트"
 title = "일반"
 user = "사용자"
 
@@ -6810,6 +6871,20 @@ title = "버전 정보"
 auto = "자동"
 fitPage = "페이지 맞춤"
 fitWidth = "너비 맞춤"
+
+[settings.help]
+label = "둘러보기"
+title = "도움말"
+
+[settings.help.adminTour]
+description = "팀 관리, 시스템 설정, 엔터프라이즈 기능을 살펴보세요."
+start = "시작"
+title = "관리자 둘러보기"
+
+[settings.help.toolsTour]
+description = "파일 업로드, 도구 선택, 결과 검토 과정을 안내합니다."
+start = "시작"
+title = "도구 둘러보기"
 
 [settings.hotkeys]
 capturing = "키를 누르세요…(Esc로 취소)"
@@ -7780,6 +7855,8 @@ settings = "설정"
 [tool]
 endpointUnavailable = "이 도구는 서버에서 사용할 수 없습니다."
 endpointUnavailableClickable = "이 모드에서는 사용할 수 없습니다. 클릭하여 로그인하세요."
+filesLoading = "파일을 불러오는 중입니다. 잠시만 기다려 주세요."
+filesLoadingProgress = "{{loaded}} / {{total}} 파일 불러오는 중..."
 invalidParams = "필수 설정을 입력하세요."
 noFiles = "시작하려면 파일을 추가하세요."
 scopeFiles = "파일"
@@ -7789,10 +7866,15 @@ singleFileScope = "다음에만 적용: {{fileName}}"
 viewerMode = "여러 파일을 선택하려면 파일 편집기로 전환하세요."
 
 [toolPanel]
+allTools = "모든 도구"
 alpha = "알파"
+backToTools = "도구로 돌아가기"
+collapse = "패널 접기"
 comingSoon = "곧 제공:"
+expand = "패널 펼치기"
 placeholder = "시작하려면 도구를 선택하세요"
 premiumFeature = "프리미엄 기능:"
+search = "도구 검색"
 
 [toolPanel.fullscreen]
 comingSoon = "곧 제공 예정:"
@@ -8342,6 +8424,51 @@ bullet2 = "최상의 결과를 위해 투명 배경 권장"
 bullet3 = "서명 영역에 맞도록 이미지 크기 조정"
 description = "미리 만든 서명 이미지를 업로드합니다. 스캔한 서명이나 회사 로고가 있는 경우에 이상적입니다."
 title = "서명 이미지 업로드"
+
+[workbenchBar]
+activeFiles = "활성 파일"
+annotations = "주석"
+applyRedactionsFirst = "먼저 가리기 적용"
+closeAll = "모든 파일 닫기"
+closePdf = "PDF 닫기"
+closeSelected = "선택한 파일 닫기"
+deleteSelected = "선택한 페이지 삭제"
+deselectAll = "모두 선택 해제"
+downloadAll = "모두 다운로드"
+downloadSelected = "선택한 파일 다운로드"
+draw = "그리기"
+exitRedaction = "가리기 모드 종료"
+exportAll = "PDF 내보내기"
+exportSelected = "선택한 페이지 내보내기"
+formFill = "양식 채우기"
+language = "언어"
+multiTool = "멀티 도구"
+panMode = "이동 모드"
+print = "PDF 인쇄"
+readAloud = "읽어주기"
+readAloudLanguage = "언어"
+readAloudSpeed = "속도"
+redact = "가리기"
+rotateLeft = "왼쪽으로 회전"
+rotateRight = "오른쪽으로 회전"
+ruler = "자/측정"
+save = "저장"
+saveAll = "모두 저장"
+saveAs = "다른 이름으로 저장"
+saveChanges = "변경 사항 저장"
+search = "PDF 검색"
+selectAll = "모두 선택"
+selectByNumber = "페이지 번호로 선택"
+selectLanguage = "언어 선택"
+share = "공유"
+toggleAnnotations = "주석 표시 전환"
+toggleAttachments = "첨부 파일 표시 전환"
+toggleBookmarks = "책갈피 표시 전환"
+toggleComments = "댓글"
+toggleLayers = "레이어 표시 전환"
+toggleSidebar = "사이드바 표시 전환"
+toggleTheme = "테마 전환"
+viewer = "뷰어"
 
 [workspace]
 title = "워크스페이스"
