@@ -100,13 +100,18 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     return t(`update.priority.${key}`, priority || "Normal");
   };
 
-  const desktopNeedsUpdate = isDesktop && desktopVersion
-    ? updateService.compareVersions(updateSummary.latest_version || '0', desktopVersion) > 0
-    : false;
+  const desktopNeedsUpdate =
+    isDesktop && desktopVersion
+      ? updateService.compareVersions(
+          updateSummary.latest_version || "0",
+          desktopVersion,
+        ) > 0
+      : false;
 
-  const downloadUrl = (isDesktop && desktopNeedsUpdate)
-    ? updateService.getDownloadUrl(machineInfo, true)
-    : null;
+  const downloadUrl =
+    isDesktop && desktopNeedsUpdate
+      ? updateService.getDownloadUrl(machineInfo, true)
+      : null;
 
   return (
     <Modal

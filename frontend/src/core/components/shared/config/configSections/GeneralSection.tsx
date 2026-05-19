@@ -290,10 +290,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 )}
                 <Text size="sm" c="dimmed" mt={desktopVersion ? 4 : 0}>
                   {desktopVersion
-                    ? t(
-                        "settings.general.versionInfo.server",
-                        "Server Version",
-                      )
+                    ? t("settings.general.versionInfo.server", "Server Version")
                     : t(
                         "settings.general.updates.currentBackendVersion",
                         "Current Backend Version",
@@ -315,19 +312,33 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     </Text>
                   </Text>
                 )}
-                {isDesktop && desktopVersion && updateSummary && (() => {
-                  const desktopNeedsUpdate = updateService.compareVersions(updateSummary.latest_version || '0', desktopVersion) > 0;
-                  const serverNeedsUpdate = updateService.compareVersions(updateSummary.latest_version || '0', config.appVersion || '0') > 0;
+                {isDesktop &&
+                  desktopVersion &&
+                  updateSummary &&
+                  (() => {
+                    const desktopNeedsUpdate =
+                      updateService.compareVersions(
+                        updateSummary.latest_version || "0",
+                        desktopVersion,
+                      ) > 0;
+                    const serverNeedsUpdate =
+                      updateService.compareVersions(
+                        updateSummary.latest_version || "0",
+                        config.appVersion || "0",
+                      ) > 0;
 
-                  if (!desktopNeedsUpdate && serverNeedsUpdate) {
-                    return (
-                      <Text size="sm" c="orange" mt={4} fw={500}>
-                        {t('settings.general.updates.serverNeedsUpdate', 'Server needs to be updated by administrator')}
-                      </Text>
-                    );
-                  }
-                  return null;
-                })()}
+                    if (!desktopNeedsUpdate && serverNeedsUpdate) {
+                      return (
+                        <Text size="sm" c="orange" mt={4} fw={500}>
+                          {t(
+                            "settings.general.updates.serverNeedsUpdate",
+                            "Server needs to be updated by administrator",
+                          )}
+                        </Text>
+                      );
+                    }
+                    return null;
+                  })()}
               </div>
               <Group gap="sm">
                 <Button
@@ -364,47 +375,52 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                         />
                       }
                     >
-                      {t("settings.general.updates.viewDetails", "View Details")}
+                      {t(
+                        "settings.general.updates.viewDetails",
+                        "View Details",
+                      )}
                     </Button>
-                    {isDesktop && desktopVersion && (() => {
-                      const desktopNeedsUpdate =
-                        updateService.compareVersions(
-                          updateSummary.latest_version || "0",
-                          desktopVersion,
-                        ) > 0;
+                    {isDesktop &&
+                      desktopVersion &&
+                      (() => {
+                        const desktopNeedsUpdate =
+                          updateService.compareVersions(
+                            updateSummary.latest_version || "0",
+                            desktopVersion,
+                          ) > 0;
 
-                      if (!desktopNeedsUpdate) {
-                        return null;
-                      }
+                        if (!desktopNeedsUpdate) {
+                          return null;
+                        }
 
-                      const downloadUrl = updateService.getDownloadUrl(
-                        {
-                          machineType: config.machineType || "Unknown",
-                          activeSecurity: config.activeSecurity ?? false,
-                          licenseType: config.license ?? "NORMAL",
-                        },
-                        true,
-                      );
+                        const downloadUrl = updateService.getDownloadUrl(
+                          {
+                            machineType: config.machineType || "Unknown",
+                            activeSecurity: config.activeSecurity ?? false,
+                            licenseType: config.license ?? "NORMAL",
+                          },
+                          true,
+                        );
 
-                      return downloadUrl ? (
-                        <Button
-                          size="sm"
-                          variant="filled"
-                          component="a"
-                          href={downloadUrl}
-                          target="_blank"
-                          leftSection={
-                            <LocalIcon
-                              icon="download-rounded"
-                              width="1rem"
-                              height="1rem"
-                            />
-                          }
-                        >
-                          {t("update.downloadLatest", "Download Latest")}
-                        </Button>
-                      ) : null;
-                    })()}
+                        return downloadUrl ? (
+                          <Button
+                            size="sm"
+                            variant="filled"
+                            component="a"
+                            href={downloadUrl}
+                            target="_blank"
+                            leftSection={
+                              <LocalIcon
+                                icon="download-rounded"
+                                width="1rem"
+                                height="1rem"
+                              />
+                            }
+                          >
+                            {t("update.downloadLatest", "Download Latest")}
+                          </Button>
+                        ) : null;
+                      })()}
                   </>
                 )}
               </Group>
