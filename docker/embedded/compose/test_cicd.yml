@@ -16,6 +16,7 @@ services:
       - ../../../stirling/latest/data:/usr/share/tessdata:rw
       - ../../../stirling/latest/config:/configs:rw
       - ../../../stirling/latest/logs:/logs:rw
+      - ../../../stirling/latest/storage:/storage:rw
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
@@ -36,10 +37,4 @@ services:
       # The folder endpoints and the storage upload endpoint short-circuit
       # to 403 "Storage is disabled" when this is left at its default false.
       STORAGE_ENABLED: "true"
-      # Default basePath is `./storage` which resolves to `/app/storage`
-      # inside the container - the non-root container user (PUID 1002) has
-      # no write permission on `/app`, so Spring fails to create the dir
-      # and the whole context refuses to start. `/configs` is bind-mounted
-      # writable above, so route storage there.
-      STORAGE_LOCAL_BASEPATH: "/configs/storage"
     restart: on-failure:5
