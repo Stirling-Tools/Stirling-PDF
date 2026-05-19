@@ -21,7 +21,7 @@ permissions:
 jobs:
   check-files:
     if: github.event_name == 'pull_request_target'
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
       pull-requests: write # Allow writing to pull requests

@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   get-release-info:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.info.outputs.version }}
       deb_sha256: ${{ steps.hashes.outputs.deb_sha256 }}
@@ -67,7 +67,7 @@ jobs:
 
   publish-aur:
     needs: get-release-info
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-4'' }}'
+    runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
