@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   ActionIcon,
   Button,
+  Drawer,
   Group,
   Menu,
   MultiSelect,
@@ -17,6 +18,7 @@ import {
   Select,
   Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
@@ -80,6 +82,14 @@ export default function FileManagerView() {
   // sharing-feature gates (FileActions, FileInfoCard, ShareManagementModal,
   // etc.) - all read the same `config.storageSharingEnabled` flag.
   const { sharingEnabled } = useSharingEnabled();
+
+  // At ≤800px the inline details aside no longer fits next to the grid
+  // (and the rest of the chrome is in mobile-compaction mode). Switch
+  // the details panel to a right-side Drawer so file info isn't lost
+  // when the user selects a file on a narrow viewport. Matches the
+  // CSS breakpoint where .files-page-tree / .files-page-details
+  // historically display:none'd themselves.
+  const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -1420,7 +1430,9 @@ export default function FileManagerView() {
           </div>
         </main>
 
-        {selectedFiles.length > 0 && (
+        {/* Desktop: render the details panel inline as an <aside> sibling
+            of the main grid. CSS in FilesPage.css governs its width. */}
+        {selectedFiles.length > 0 && !isCompactDetailsViewport && (
           <FileDetailsPanel
             selectedFileIds={selectedFiles}
             fileMap={fileMap}
@@ -1433,6 +1445,40 @@ export default function FileManagerView() {
           />
         )}
       </div>
+
+      {/* Compact viewports (≤800px): inline aside is gone (no room next
+          to the grid) so render the same details panel inside a Drawer
+          that slides in from the right. Without this, selecting a file
+          on mobile/tablet sized viewports silently swallowed all file
+          info - no thumbnail, no version journey, no actions. */}
+      {isCompactDetailsViewport && (
+        <Drawer
+          opened={selectedFiles.length > 0}
+          onClose={() => clearSelection()}
+          position="right"
+          size="sm"
+          padding={0}
+          withCloseButton={false}
+          // The panel renders its own close button + header. Keep the
+          // Drawer scroll container at the body level so the long
+          // version-journey timeline scrolls inside the drawer without
+          // pushing the action stack off the bottom.
+          overlayProps={{ opacity: 0.45 }}
+        >
+          {selectedFiles.length > 0 && (
+            <FileDetailsPanel
+              selectedFileIds={selectedFiles}
+              fileMap={fileMap}
+              currentFolder={currentFolderRecord}
+              onClose={() => clearSelection()}
+              onAddToWorkspace={handleAddToWorkspace}
+              onQuickView={handleQuickView}
+              onMove={promptMoveFiles}
+              onRemove={handleRemoveFiles}
+            />
+          )}
+        </Drawer>
+      )}
 
       <MoveToFolderDialog
         opened={moveDialog.open}

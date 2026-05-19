@@ -170,6 +170,41 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* Allow this container to shrink below its intrinsic content width so
+     the bulk-action group + filter selects + view toggle can compete for
+     space without bursting out of the toolbar (which previously bled
+     under the right-hand details panel at wider viewports). */
+  min-width: 0;
+}
+
+/* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
+   are ICON-ONLY at every viewport. Even at 1280px when both side panels
+   are visible, the main area is only ~616px wide - the labelled versions
+   of these 4 buttons plus the 2 filter selects + view toggle simply
+   don't fit. Each button has a Tooltip + aria-label, so the icon alone
+   is accessible. */
+.files-page-toolbar-actions .mantine-Button-root {
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+  flex-shrink: 0;
+}
+.files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
+  margin-right: 0;
+}
+.files-page-toolbar-actions .mantine-Button-label {
+  display: none;
+}
+/* Pin the view toggle: never let it clip off the right. flex-shrink:0
+   keeps its width fixed; the rest of the row shrinks around it. */
+.files-page-toolbar-actions .mantine-SegmentedControl-root {
+  flex-shrink: 0;
+}
+/* Clip overflow on the toolbar itself as a safety net - the content
+   should always fit thanks to the rules above, but if a future addition
+   ever breaks that, this prevents the action group from bleeding into
+   sibling areas (notably the details panel on the right). */
+.files-page-toolbar {
+  overflow-x: hidden;
 }
 
 .files-page-toolbar-divider {
@@ -1122,8 +1157,13 @@
 }
 
 @media (max-width: 800px) {
-  .files-page-tree,
-  .files-page-details {
+  /* Tree slot inside the inline layout can't fit at this width - the
+     tree itself is still reachable via the FolderTreePanel slide-out.
+     Details panel visibility is controlled by JSX (conditional Drawer)
+     at this width, not CSS, so we don't blanket-hide .files-page-details
+     here - that would also hide it when it lives inside the Drawer's
+     portaled overlay tree. */
+  .files-page-tree {
     display: none;
   }
   .files-page-content {
@@ -1172,45 +1212,23 @@
     text-overflow: ellipsis;
   }
   .files-page-toolbar-actions {
-    /* Tighten the action group too so dropdowns + view toggle don't
-       overflow. */
     flex-wrap: nowrap;
     gap: 0.3rem;
-    min-width: 0;
   }
   .files-page-toolbar-actions .mantine-Select-root,
   .files-page-toolbar-actions .mantine-Select-input {
-    /* Mantine Select defaults to ~12rem which is huge for mid-narrow
-       widths. The inline `style={{ width: 140|160 }}` on the Selects
-       gets overridden here so they actually shrink. */
+    /* Mantine Select defaults to ~12rem which is huge for narrow widths.
+       The inline `style={{ width: 140|160 }}` on the Selects gets
+       overridden here so they actually shrink. */
     min-width: 0;
     max-width: 7.5rem;
     width: auto !important;
   }
-  /* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
-     collapse to icon-only here. The icon alone is enough signal once
-     the user has files selected - they're in active-action mode and
-     each button has a tooltip via its aria-label. */
-  .files-page-toolbar-actions .mantine-Button-root {
-    padding-left: 0.55rem;
-    padding-right: 0.55rem;
-    flex-shrink: 0;
-  }
-  .files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
-    margin-right: 0;
-  }
-  .files-page-toolbar-actions .mantine-Button-label {
-    display: none;
-  }
-  /* Pin the view toggle: never let it clip off the right. flex-shrink:0
-     keeps its width fixed; the rest of the row shrinks around it. */
-  .files-page-toolbar-actions .mantine-SegmentedControl-root {
-    flex-shrink: 0;
-  }
   /* The "Select all" / "Clear selection" toggle is a Mantine Button
      directly inside .files-page-toolbar (NOT inside the actions group),
-     so the icon-only collapse above doesn't apply to it. Pin it to
-     full text + nowrap so it never truncates to "Select al" mid-word. */
+     so the icon-only collapse from base styles doesn't apply to it.
+     Pin it to full text + nowrap so it never truncates to "Select al"
+     mid-word. */
   .files-page-toolbar > .mantine-Button-root {
     flex-shrink: 0;
     white-space: nowrap;
