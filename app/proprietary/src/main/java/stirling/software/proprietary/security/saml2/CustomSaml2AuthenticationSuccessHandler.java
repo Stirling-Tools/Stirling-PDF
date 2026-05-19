@@ -1,9 +1,9 @@
 package stirling.software.proprietary.security.saml2;
 
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
-import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -33,9 +33,11 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.oauth2.TauriOAuthUtils;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.DesktopClientUtils;
 
 @AllArgsConstructor
 @Slf4j
@@ -126,8 +128,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
 
                 boolean hasPassword = userExists && userService.hasPassword(username);
-                boolean isSSOUser =
-                        userExists && userService.isAuthenticationTypeByUsername(username, SSO);
+                boolean isSsoUser =
+                        userExists && userService.isSsoAuthenticationTypeByUsername(username);
                 boolean isSAML2User =
                         userExists && userService.isAuthenticationTypeByUsername(username, SAML2);
 
@@ -135,15 +137,15 @@ public class CustomSaml2AuthenticationSuccessHandler
                         "User status - Exists: {}, Has password: {}, Is SSO user: {}, Is SAML2 user: {}",
                         userExists,
                         hasPassword,
-                        isSSOUser,
+                        isSsoUser,
                         isSAML2User);
 
                 if (userExists
                         && hasPassword
-                        && (!isSSOUser || !isSAML2User)
+                        && !isSsoUser
                         && saml2Properties.getAutoCreateUser()) {
                     log.debug(
-                            "User {} exists with password but is not SSO user, redirecting to logout",
+                            "User {} exists with password but is not an SSO user, redirecting to logout",
                             username);
                     String origin = resolveOrigin(request);
                     response.sendRedirect(origin + "/logout?oAuth2AuthenticationErrorWeb=true");
@@ -190,10 +192,27 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                     // Generate JWT if v2 is enabled
                     if (jwtService.isJwtEnabled()) {
-                        String jwt =
-                                jwtService.generateToken(
-                                        authentication,
-                                        Map.of("authType", AuthenticationType.SAML2));
+                        Map<String, Object> claims = Map.of("authType", AuthenticationType.SAML2);
+
+                        // Detect desktop client and issue longer-lived tokens
+                        boolean isDesktopClient = DesktopClientUtils.isDesktopClient(request);
+                        String jwt;
+                        if (isDesktopClient) {
+                            // Desktop: Use configured desktop token expiry (default 30 days)
+                            int desktopExpiryMinutes =
+                                    DesktopClientUtils.getDesktopTokenExpiryMinutes(
+                                            applicationProperties);
+                            jwt = jwtService.generateToken(username, claims, desktopExpiryMinutes);
+                            log.info(
+                                    "Issued DESKTOP SAML token for user '{}': expiry={}min ({}d)",
+                                    username,
+                                    desktopExpiryMinutes,
+                                    desktopExpiryMinutes / 1440);
+                        } else {
+                            // Web: Use default expiry
+                            jwt = jwtService.generateToken(authentication, claims);
+                            log.debug("Issued WEB SAML token for user '{}'", username);
+                        }
 
                         // Build context-aware redirect URL based on the original request
                         String redirectUrl =
@@ -233,7 +252,16 @@ public class CustomSaml2AuthenticationSuccessHandler
         String redirectPath = resolveRedirectPath(request, contextPath);
         String origin = resolveOrigin(request);
         clearRedirectCookie(response);
-        return origin + redirectPath + "#access_token=" + jwt;
+        String url = origin + redirectPath + "#access_token=" + jwt;
+
+        String nonce = TauriSamlUtils.extractNonceFromRequest(request);
+        if (nonce != null) {
+            url +=
+                    "&nonce="
+                            + java.net.URLEncoder.encode(
+                                    nonce, java.nio.charset.StandardCharsets.UTF_8);
+        }
+        return url;
     }
 
     /**
@@ -256,6 +284,9 @@ public class CustomSaml2AuthenticationSuccessHandler
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
+        if (TauriSamlUtils.isTauriRelayState(request)) {
+            return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
+        }
         return extractRedirectPathFromCookie(request)
                 .filter(path -> path.startsWith("/"))
                 .orElseGet(() -> defaultCallbackPath(contextPath));
@@ -318,15 +349,18 @@ public class CustomSaml2AuthenticationSuccessHandler
         String referer = request.getHeader("Referer");
         if (referer != null && !referer.isEmpty()) {
             try {
-                java.net.URL refererUrl = new java.net.URL(referer);
-                String origin = refererUrl.getProtocol() + "://" + refererUrl.getHost();
-                if (refererUrl.getPort() != -1
-                        && refererUrl.getPort() != 80
-                        && refererUrl.getPort() != 443) {
-                    origin += ":" + refererUrl.getPort();
+                URI refererUri = URI.create(referer);
+                String host = refererUri.getHost();
+                if (host == null) {
+                    return Optional.empty();
+                }
+                String origin = refererUri.getScheme() + "://" + host;
+                int port = refererUri.getPort();
+                if (port != -1 && port != 80 && port != 443) {
+                    origin += ":" + port;
                 }
                 return Optional.of(origin);
-            } catch (java.net.MalformedURLException e) {
+            } catch (IllegalArgumentException e) {
                 log.debug(
                         "Malformed referer URL: {}, falling back to request-based origin", referer);
             }

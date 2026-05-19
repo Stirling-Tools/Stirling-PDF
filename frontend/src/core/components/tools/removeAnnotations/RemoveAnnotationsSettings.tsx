@@ -1,4 +1,4 @@
-import { Stack } from '@mantine/core';
+import { Stack } from "@mantine/core";
 
 const RemoveAnnotationsSettings = () => {
   return (

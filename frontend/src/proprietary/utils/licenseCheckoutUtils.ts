@@ -3,7 +3,7 @@
  * Used by both embedded and hosted checkout flows
  */
 
-import licenseService, { LicenseInfo } from '@app/services/licenseService';
+import licenseService, { LicenseInfo } from "@app/services/licenseService";
 
 /**
  * Result of license key polling
@@ -22,7 +22,7 @@ export interface PollConfig {
   /** Check if component is still mounted (prevents state updates after unmount) */
   isMounted?: () => boolean;
   /** Callback for status changes during polling */
-  onStatusChange?: (status: 'polling' | 'ready' | 'timeout') => void;
+  onStatusChange?: (status: "polling" | "ready" | "timeout") => void;
   /** Custom backoff intervals in milliseconds (default: [1000, 2000, 4000, 8000, 16000]) */
   backoffMs?: number[];
 }
@@ -33,7 +33,7 @@ export interface PollConfig {
  */
 export async function pollLicenseKeyWithBackoff(
   installationId: string,
-  config: PollConfig = {}
+  config: PollConfig = {},
 ): Promise<LicenseKeyPollResult> {
   const {
     isMounted = () => true,
@@ -43,14 +43,16 @@ export async function pollLicenseKeyWithBackoff(
 
   let attemptIndex = 0;
 
-  onStatusChange?.('polling');
-  console.log(`Starting license key polling for installation: ${installationId}`);
+  onStatusChange?.("polling");
+  console.log(
+    `Starting license key polling for installation: ${installationId}`,
+  );
 
   const poll = async (): Promise<LicenseKeyPollResult> => {
     // Check if component is still mounted
     if (!isMounted()) {
-      console.log('Polling cancelled: component unmounted');
-      return { success: false, error: 'Component unmounted' };
+      console.log("Polling cancelled: component unmounted");
+      return { success: false, error: "Component unmounted" };
     }
 
     const attemptNumber = attemptIndex + 1;
@@ -61,12 +63,12 @@ export async function pollLicenseKeyWithBackoff(
 
       // Check mounted after async operation
       if (!isMounted()) {
-        return { success: false, error: 'Component unmounted' };
+        return { success: false, error: "Component unmounted" };
       }
 
-      if (response.status === 'ready' && response.license_key) {
-        console.log('✅ License key ready!');
-        onStatusChange?.('ready');
+      if (response.status === "ready" && response.license_key) {
+        console.log("✅ License key ready!");
+        onStatusChange?.("ready");
         return {
           success: true,
           licenseKey: response.license_key,
@@ -77,43 +79,43 @@ export async function pollLicenseKeyWithBackoff(
       attemptIndex++;
 
       if (attemptIndex >= backoffMs.length) {
-        console.warn('⏱️ License polling timeout after all attempts');
-        onStatusChange?.('timeout');
+        console.warn("⏱️ License polling timeout after all attempts");
+        onStatusChange?.("timeout");
         return {
           success: false,
           timedOut: true,
-          error: 'Polling timeout - license key not ready',
+          error: "Polling timeout - license key not ready",
         };
       }
 
       // Wait before next attempt
       const nextDelay = backoffMs[attemptIndex];
       console.log(`Retrying in ${nextDelay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, nextDelay));
+      await new Promise((resolve) => setTimeout(resolve, nextDelay));
 
       return poll();
     } catch (error) {
       console.error(`Polling attempt ${attemptNumber} failed:`, error);
 
       if (!isMounted()) {
-        return { success: false, error: 'Component unmounted' };
+        return { success: false, error: "Component unmounted" };
       }
 
       attemptIndex++;
 
       if (attemptIndex >= backoffMs.length) {
-        console.error('Polling failed after all attempts');
-        onStatusChange?.('timeout');
+        console.error("Polling failed after all attempts");
+        onStatusChange?.("timeout");
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Polling failed',
+          error: error instanceof Error ? error.message : "Polling failed",
         };
       }
 
       // Retry with exponential backoff even on error
       const nextDelay = backoffMs[attemptIndex];
       console.log(`Retrying after error in ${nextDelay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, nextDelay));
+      await new Promise((resolve) => setTimeout(resolve, nextDelay));
 
       return poll();
     }
@@ -143,16 +145,16 @@ export async function activateLicenseKey(
     isMounted?: () => boolean;
     /** Callback when license is activated with updated info */
     onActivated?: (licenseInfo: LicenseInfo) => void;
-  } = {}
+  } = {},
 ): Promise<LicenseActivationResult> {
   const { isMounted = () => true, onActivated } = options;
 
   try {
-    console.log('Activating license key...');
+    console.log("Activating license key...");
     const saveResponse = await licenseService.saveLicenseKey(licenseKey);
 
     if (!isMounted()) {
-      return { success: false, error: 'Component unmounted' };
+      return { success: false, error: "Component unmounted" };
     }
 
     if (saveResponse.success) {
@@ -163,7 +165,7 @@ export async function activateLicenseKey(
         const licenseInfo = await licenseService.getLicenseInfo();
 
         if (!isMounted()) {
-          return { success: false, error: 'Component unmounted' };
+          return { success: false, error: "Component unmounted" };
         }
 
         onActivated?.(licenseInfo);
@@ -174,26 +176,29 @@ export async function activateLicenseKey(
           licenseInfo,
         };
       } catch (infoError) {
-        console.error('Error fetching license info after activation:', infoError);
+        console.error(
+          "Error fetching license info after activation:",
+          infoError,
+        );
         // Still return success since save succeeded
         return {
           success: true,
           licenseType: saveResponse.licenseType,
-          error: 'Failed to fetch updated license info',
+          error: "Failed to fetch updated license info",
         };
       }
     } else {
-      console.error('Failed to save license key:', saveResponse.error);
+      console.error("Failed to save license key:", saveResponse.error);
       return {
         success: false,
-        error: saveResponse.error || 'Failed to save license key',
+        error: saveResponse.error || "Failed to save license key",
       };
     }
   } catch (error) {
-    console.error('Error activating license key:', error);
+    console.error("Error activating license key:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Activation failed',
+      error: error instanceof Error ? error.message : "Activation failed",
     };
   }
 }
@@ -209,16 +214,16 @@ export async function resyncExistingLicense(
     isMounted?: () => boolean;
     /** Callback when license is resynced with updated info */
     onActivated?: (licenseInfo: LicenseInfo) => void;
-  } = {}
+  } = {},
 ): Promise<LicenseActivationResult> {
   const { isMounted = () => true, onActivated } = options;
 
   try {
-    console.log('Resyncing existing license with Keygen...');
+    console.log("Resyncing existing license with Keygen...");
     const resyncResponse = await licenseService.resyncLicense();
 
     if (!isMounted()) {
-      return { success: false, error: 'Component unmounted' };
+      return { success: false, error: "Component unmounted" };
     }
 
     if (resyncResponse.success) {
@@ -229,7 +234,7 @@ export async function resyncExistingLicense(
         const licenseInfo = await licenseService.getLicenseInfo();
 
         if (!isMounted()) {
-          return { success: false, error: 'Component unmounted' };
+          return { success: false, error: "Component unmounted" };
         }
 
         onActivated?.(licenseInfo);
@@ -240,26 +245,26 @@ export async function resyncExistingLicense(
           licenseInfo,
         };
       } catch (infoError) {
-        console.error('Error fetching license info after resync:', infoError);
+        console.error("Error fetching license info after resync:", infoError);
         // Still return success since resync succeeded
         return {
           success: true,
           licenseType: resyncResponse.licenseType,
-          error: 'Failed to fetch updated license info',
+          error: "Failed to fetch updated license info",
         };
       }
     } else {
-      console.error('Failed to resync license:', resyncResponse.error);
+      console.error("Failed to resync license:", resyncResponse.error);
       return {
         success: false,
-        error: resyncResponse.error || 'Failed to resync license',
+        error: resyncResponse.error || "Failed to resync license",
       };
     }
   } catch (error) {
-    console.error('Error resyncing license:', error);
+    console.error("Error resyncing license:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Resync failed',
+      error: error instanceof Error ? error.message : "Resync failed",
     };
   }
 }

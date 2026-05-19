@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect } from "react";
 
 /**
  * State conditions that affect accordion behavior
@@ -49,7 +49,7 @@ export interface AccordionStepsAPI<T extends string | number | symbol> {
  * with configurable collapse conditions.
  */
 export function useAccordionSteps<T extends string | number | symbol>(
-  config: UseAccordionStepsConfig<T>
+  config: UseAccordionStepsConfig<T>,
 ): AccordionStepsAPI<T> {
   const { initialStep, stateConditions, noneValue } = config;
 
@@ -62,43 +62,54 @@ export function useAccordionSteps<T extends string | number | symbol>(
     }
 
     return (
-      (stateConditions.hasFiles === false) ||
-      (stateConditions.hasResults === true) ||
-      (stateConditions.disabled === true)
+      stateConditions.hasFiles === false ||
+      stateConditions.hasResults === true ||
+      stateConditions.disabled === true
     );
   }, [stateConditions]);
 
   // Get collapsed state for a specific step
-  const getCollapsedState = useCallback((step: T): boolean => {
-    if (shouldCollapseAll) {
-      return true;
-    } else {
-      return openStep !== step;
-    }
-  }, [openStep, shouldCollapseAll]);
+  const getCollapsedState = useCallback(
+    (step: T): boolean => {
+      if (shouldCollapseAll) {
+        return true;
+      } else {
+        return openStep !== step;
+      }
+    },
+    [openStep, shouldCollapseAll],
+  );
 
   // Handle step toggle with accordion behavior
-  const handleStepToggle = useCallback((step: T) => {
-    if (stateConditions?.hasResults) {
-      config.afterResults?.();
-    }
-
-    // If all steps should be collapsed, don't allow opening
-    if (shouldCollapseAll) {
-      return;
-    }
-
-    // Accordion behavior: if clicking the open step, close it; otherwise open the clicked step
-    setOpenStep(currentStep => {
-      if (currentStep === step) {
-        // Clicking the open step - close it
-        return noneValue;
-      } else {
-        // Open the clicked step
-        return step;
+  const handleStepToggle = useCallback(
+    (step: T) => {
+      if (stateConditions?.hasResults) {
+        config.afterResults?.();
       }
-    });
-  }, [shouldCollapseAll, noneValue, stateConditions?.hasResults, config.afterResults]);
+
+      // If all steps should be collapsed, don't allow opening
+      if (shouldCollapseAll) {
+        return;
+      }
+
+      // Accordion behavior: if clicking the open step, close it; otherwise open the clicked step
+      setOpenStep((currentStep) => {
+        if (currentStep === step) {
+          // Clicking the open step - close it
+          return noneValue;
+        } else {
+          // Open the clicked step
+          return step;
+        }
+      });
+    },
+    [
+      shouldCollapseAll,
+      noneValue,
+      stateConditions?.hasResults,
+      config.afterResults,
+    ],
+  );
 
   // Close all steps
   const closeAllSteps = useCallback(() => {
@@ -118,6 +129,6 @@ export function useAccordionSteps<T extends string | number | symbol>(
     getCollapsedState,
     handleStepToggle,
     setOpenStep,
-    closeAllSteps
+    closeAllSteps,
   };
 }

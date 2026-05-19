@@ -40,15 +40,18 @@ public class User implements UserDetails, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "username", unique = true)
     private String username;
 
     @Column(name = "password")
+    @JsonIgnore
     private String password;
 
     @Column(name = "apiKey")
+    @JsonIgnore
     private String apiKey;
 
     @Column(name = "enabled")
@@ -87,7 +90,6 @@ public class User implements UserDetails, Serializable {
 
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
-    @Lob
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     @JsonIgnore

@@ -1,20 +1,20 @@
-import { useTranslation } from 'react-i18next';
-import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
-import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '@app/types/tool';
-import OverlayPdfsSettings from '@app/components/tools/overlayPdfs/OverlayPdfsSettings';
-import { useOverlayPdfsParameters } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters';
-import { useOverlayPdfsOperation } from '@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation';
-import { useOverlayPdfsTips } from '@app/components/tooltips/useOverlayPdfsTips';
+import { useTranslation } from "react-i18next";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import OverlayPdfsSettings from "@app/components/tools/overlayPdfs/OverlayPdfsSettings";
+import { useOverlayPdfsParameters } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import { useOverlayPdfsOperation } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { useOverlayPdfsTips } from "@app/components/tooltips/useOverlayPdfsTips";
 
 const OverlayPdfs = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'overlay-pdfs',
+    "overlay-pdfs",
     useOverlayPdfsParameters,
     useOverlayPdfsOperation,
-    props
+    props,
   );
   const overlayTips = useOverlayPdfsTips();
 
@@ -25,9 +25,11 @@ const OverlayPdfs = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t('overlay-pdfs.settings.title', 'Settings'),
+        title: t("overlay-pdfs.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: overlayTips,
         content: (
           <OverlayPdfsSettings
@@ -39,16 +41,17 @@ const OverlayPdfs = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t('overlay-pdfs.submit', 'Overlay and Review'),
+      text: t("overlay-pdfs.submit", "Overlay and Review"),
       isVisible: !base.hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: t('overlay-pdfs.results.title', 'Overlay Results'),
+      title: t("overlay-pdfs.results.title", "Overlay Results"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
     },
@@ -56,5 +59,3 @@ const OverlayPdfs = (props: BaseToolProps) => {
 };
 
 export default OverlayPdfs as ToolComponent;
-
-

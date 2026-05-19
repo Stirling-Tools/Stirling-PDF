@@ -51,9 +51,7 @@ public class ExternalAppDepConfig {
      */
     private final Map<String, List<String>> commandToGroupMapping;
 
-    private final ExecutorService pool =
-            Executors.newFixedThreadPool(
-                    Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
+    private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
     public ExternalAppDepConfig(
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
@@ -75,7 +73,8 @@ public class ExternalAppDepConfig {
         tmp.put("tesseract", List.of("tesseract"));
         tmp.put("rar", List.of("rar")); // Required for real CBR output
         tmp.put(calibrePath, List.of("Calibre"));
-        tmp.put("ffmpeg", List.of("FFmpeg"));
+        // ffmpeg disabled due to raised CVEs
+        // tmp.put("ffmpeg", List.of("FFmpeg"));
         tmp.put("magick", List.of("ImageMagick"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
@@ -118,7 +117,8 @@ public class ExternalAppDepConfig {
 
             for (String group : affectedGroups) {
                 List<String> affectedFeatures = getAffectedFeatures(group);
-                endpointConfiguration.disableGroup(group);
+                endpointConfiguration.disableGroup(
+                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
                 log.warn(
                         "Missing dependency: {} - Disabling group: {} (Affected features: {})",
                         command,
@@ -143,7 +143,8 @@ public class ExternalAppDepConfig {
                                     commandToGroupMapping.getOrDefault(
                                             command, List.of("Weasyprint"));
                             for (String group : affectedGroups) {
-                                endpointConfiguration.disableGroup(group);
+                                endpointConfiguration.disableGroup(
+                                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
                             }
                             log.warn(
                                     "WeasyPrint version {} is below required {} - disabling"
@@ -172,7 +173,8 @@ public class ExternalAppDepConfig {
                             List<String> affectedGroups =
                                     commandToGroupMapping.getOrDefault(command, List.of("qpdf"));
                             for (String group : affectedGroups) {
-                                endpointConfiguration.disableGroup(group);
+                                endpointConfiguration.disableGroup(
+                                        group, EndpointConfiguration.DisableReason.DEPENDENCY);
                             }
                             log.warn(
                                     "qpdf version {} is below required {} - disabling group(s): {}",
@@ -226,7 +228,8 @@ public class ExternalAppDepConfig {
         int ec = runAndWait(List.of(python, "-c", "import cv2"), DEFAULT_TIMEOUT).exitCode();
         if (ec != 0) {
             List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-            endpointConfiguration.disableGroup("OpenCV");
+            endpointConfiguration.disableGroup(
+                    "OpenCV", EndpointConfiguration.DisableReason.DEPENDENCY);
             log.warn(
                     "OpenCV not available in Python - Disabling OpenCV features: {}",
                     String.join(", ", openCVFeatures));
@@ -236,8 +239,10 @@ public class ExternalAppDepConfig {
     private void disablePythonAndOpenCV(String reason) {
         List<String> pythonFeatures = getAffectedFeatures("Python");
         List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-        endpointConfiguration.disableGroup("Python");
-        endpointConfiguration.disableGroup("OpenCV");
+        endpointConfiguration.disableGroup(
+                "Python", EndpointConfiguration.DisableReason.DEPENDENCY);
+        endpointConfiguration.disableGroup(
+                "OpenCV", EndpointConfiguration.DisableReason.DEPENDENCY);
         log.warn(
                 "Missing dependency: Python (reason: {}) - Disabling Python features: {} and OpenCV"
                         + " features: {}",

@@ -1,13 +1,13 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { MantineProvider } from '@mantine/core';
-import SanitizeSettings from '@app/components/tools/sanitize/SanitizeSettings';
-import { SanitizeParameters } from '@app/hooks/tools/sanitize/useSanitizeParameters';
+import { describe, expect, test, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
+import SanitizeSettings from "@app/components/tools/sanitize/SanitizeSettings";
+import { SanitizeParameters } from "@app/hooks/tools/sanitize/useSanitizeParameters";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: mockT })
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: mockT }),
 }));
 
 // Wrapper component to provide Mantine context
@@ -15,7 +15,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <MantineProvider>{children}</MantineProvider>
 );
 
-describe('SanitizeSettings', () => {
+describe("SanitizeSettings", () => {
   const defaultParameters: SanitizeParameters = {
     removeJavaScript: true,
     removeEmbeddedFiles: true,
@@ -31,33 +31,33 @@ describe('SanitizeSettings', () => {
     vi.clearAllMocks();
   });
 
-  test('should render all sanitization option checkboxes', () => {
+  test("should render all sanitization option checkboxes", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
           parameters={defaultParameters}
           onParameterChange={mockOnParameterChange}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Should render one checkbox for each parameter
     const expectedCheckboxCount = Object.keys(defaultParameters).length;
-    const checkboxes = screen.getAllByRole('checkbox');
+    const checkboxes = screen.getAllByRole("checkbox");
     expect(checkboxes).toHaveLength(expectedCheckboxCount);
   });
 
-  test('should show correct initial checkbox states based on parameters', () => {
+  test("should show correct initial checkbox states based on parameters", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
           parameters={defaultParameters}
           onParameterChange={mockOnParameterChange}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    const checkboxes = screen.getAllByRole('checkbox');
+    const checkboxes = screen.getAllByRole("checkbox");
     const parameterValues = Object.values(defaultParameters);
 
     parameterValues.forEach((value, index) => {
@@ -69,28 +69,34 @@ describe('SanitizeSettings', () => {
     });
   });
 
-  test('should call onParameterChange with correct parameters when checkboxes are clicked', () => {
+  test("should call onParameterChange with correct parameters when checkboxes are clicked", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
           parameters={defaultParameters}
           onParameterChange={mockOnParameterChange}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    const checkboxes = screen.getAllByRole('checkbox');
+    const checkboxes = screen.getAllByRole("checkbox");
 
     // Click the first checkbox (removeJavaScript - should toggle from true to false)
     fireEvent.click(checkboxes[0]);
-    expect(mockOnParameterChange).toHaveBeenCalledWith('removeJavaScript', false);
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "removeJavaScript",
+      false,
+    );
 
     // Click the third checkbox (removeXMPMetadata - should toggle from false to true)
     fireEvent.click(checkboxes[2]);
-    expect(mockOnParameterChange).toHaveBeenCalledWith('removeXMPMetadata', true);
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "removeXMPMetadata",
+      true,
+    );
   });
 
-  test('should disable all checkboxes when disabled prop is true', () => {
+  test("should disable all checkboxes when disabled prop is true", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
@@ -98,16 +104,16 @@ describe('SanitizeSettings', () => {
           onParameterChange={mockOnParameterChange}
           disabled={true}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    checkboxes.forEach(checkbox => {
+    const checkboxes = screen.getAllByRole("checkbox");
+    checkboxes.forEach((checkbox) => {
       expect(checkbox).toBeDisabled();
     });
   });
 
-  test('should enable all checkboxes when disabled prop is false or undefined', () => {
+  test("should enable all checkboxes when disabled prop is false or undefined", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
@@ -115,16 +121,16 @@ describe('SanitizeSettings', () => {
           onParameterChange={mockOnParameterChange}
           disabled={false}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    checkboxes.forEach(checkbox => {
+    const checkboxes = screen.getAllByRole("checkbox");
+    checkboxes.forEach((checkbox) => {
       expect(checkbox).not.toBeDisabled();
     });
   });
 
-  test('should handle different parameter combinations', () => {
+  test("should handle different parameter combinations", () => {
     const allEnabledParameters: SanitizeParameters = {
       removeJavaScript: true,
       removeEmbeddedFiles: true,
@@ -140,33 +146,45 @@ describe('SanitizeSettings', () => {
           parameters={allEnabledParameters}
           onParameterChange={mockOnParameterChange}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    checkboxes.forEach(checkbox => {
+    const checkboxes = screen.getAllByRole("checkbox");
+    checkboxes.forEach((checkbox) => {
       expect(checkbox).toBeChecked();
     });
   });
 
-  test('should call translation function with correct keys', () => {
+  test("should call translation function with correct keys", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
           parameters={defaultParameters}
           onParameterChange={mockOnParameterChange}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Verify that translation keys are being called (just check that it was called, not specific order)
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.title', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeJavaScript.label', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.removeEmbeddedFiles.label', expect.any(String));
-    expect(mockT).toHaveBeenCalledWith('sanitize.options.note', expect.any(String));
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.title",
+      expect.any(String),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.removeJavaScript.label",
+      expect.any(String),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.removeEmbeddedFiles.label",
+      expect.any(String),
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "sanitize.options.note",
+      expect.any(String),
+    );
   });
 
-  test('should not call onParameterChange when disabled', () => {
+  test("should not call onParameterChange when disabled", () => {
     render(
       <TestWrapper>
         <SanitizeSettings
@@ -174,13 +192,13 @@ describe('SanitizeSettings', () => {
           onParameterChange={mockOnParameterChange}
           disabled={true}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    const checkboxes = screen.getAllByRole('checkbox');
+    const checkboxes = screen.getAllByRole("checkbox");
 
     // Verify checkboxes are disabled
-    checkboxes.forEach(checkbox => {
+    checkboxes.forEach((checkbox) => {
       expect(checkbox).toBeDisabled();
     });
 

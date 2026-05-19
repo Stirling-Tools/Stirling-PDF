@@ -20,7 +20,9 @@ export const useEditedDocumentState = ({
   fileOrder,
   updateCurrentPages,
 }: UseEditedDocumentStateParams) => {
-  const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
+  const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(
+    null,
+  );
   const editedDocumentRef = useRef<PDFDocument | null>(null);
   const pagePositionCacheRef = useRef<Map<string, number>>(new Map());
   const pageNeighborCacheRef = useRef<Map<string, string | null>>(new Map());
@@ -78,6 +80,12 @@ export const useEditedDocumentState = ({
     }
   }, [mergedPdfDocument]);
 
+  useEffect(() => {
+    if (!mergedPdfDocument) {
+      setEditedDocument(null);
+    }
+  }, [mergedPdfDocument, setEditedDocument]);
+
   // Keep editedDocument in sync with out-of-band insert/remove events (e.g. uploads finishing)
   useEffect(() => {
     const currentEditedDocument = editedDocumentRef.current;
@@ -101,6 +109,8 @@ export const useEditedDocumentState = ({
         const sourcePages = mergedPdfDocument.pages;
         const sourceIds = new Set(sourcePages.map((p) => p.id));
         const prevIds = new Set(prev.pages.map((p) => p.id));
+        const hasOverlap = sourcePages.some((page) => prevIds.has(page.id));
+        const shouldResetToMerged = !hasOverlap;
 
         const newPages: PDFPage[] = [];
         for (const page of sourcePages) {
@@ -121,7 +131,9 @@ export const useEditedDocumentState = ({
           }
         }
 
-        if (hasAdditions || hasRemovals) {
+        if (shouldResetToMerged) {
+          pages = sourcePages.map((page) => ({ ...page }));
+        } else if (hasAdditions || hasRemovals) {
           pages = [...prev.pages];
 
           const placeholderPositions = new Map<FileId, number>();
@@ -135,14 +147,14 @@ export const useEditedDocumentState = ({
 
           if (hasRemovals) {
             pages = pages.filter(
-              (page) => sourceIds.has(page.id) || isEphemeralPage(page)
+              (page) => sourceIds.has(page.id) || isEphemeralPage(page),
             );
           }
 
           if (hasAdditions) {
             const mergedIndexMap = new Map<string, number>();
             sourcePages.forEach((page, index) =>
-              mergedIndexMap.set(page.id, index)
+              mergedIndexMap.set(page.id, index),
             );
 
             const additions = newPages
@@ -159,41 +171,49 @@ export const useEditedDocumentState = ({
                 return a.mergedIndex - b.mergedIndex;
               });
 
-            additions.forEach(({ page, neighborId, cachedIndex, mergedIndex }) => {
-              if (pages.some((existing) => existing.id === page.id)) {
-                return;
-              }
+            additions.forEach(
+              ({ page, neighborId, cachedIndex, mergedIndex }) => {
+                if (pages.some((existing) => existing.id === page.id)) {
+                  return;
+                }
 
-              let insertIndex: number;
-              const originalFileId = page.originalFileId;
-              const placeholderIndex =
-                originalFileId !== undefined
-                  ? nextInsertIndexByFile.get(originalFileId)
-                  : undefined;
+                let insertIndex: number;
+                const originalFileId = page.originalFileId;
+                const placeholderIndex =
+                  originalFileId !== undefined
+                    ? nextInsertIndexByFile.get(originalFileId)
+                    : undefined;
 
-              if (originalFileId && placeholderIndex !== undefined) {
-                insertIndex = Math.min(placeholderIndex, pages.length);
-                nextInsertIndexByFile.set(originalFileId, insertIndex + 1);
-              } else if (neighborId === null) {
-                insertIndex = 0;
-              } else if (neighborId) {
-                const neighborIndex = pages.findIndex((p) => p.id === neighborId);
-                if (neighborIndex !== -1) {
-                  insertIndex = neighborIndex + 1;
+                if (originalFileId && placeholderIndex !== undefined) {
+                  insertIndex = Math.min(placeholderIndex, pages.length);
+                  nextInsertIndexByFile.set(originalFileId, insertIndex + 1);
+                } else if (neighborId === null) {
+                  insertIndex = 0;
+                } else if (neighborId) {
+                  const neighborIndex = pages.findIndex(
+                    (p) => p.id === neighborId,
+                  );
+                  if (neighborIndex !== -1) {
+                    insertIndex = neighborIndex + 1;
+                  } else {
+                    const fallbackIndex =
+                      cachedIndex ?? mergedIndex ?? pages.length;
+                    insertIndex = Math.min(fallbackIndex, pages.length);
+                  }
                 } else {
-                  const fallbackIndex = cachedIndex ?? mergedIndex ?? pages.length;
+                  const fallbackIndex =
+                    cachedIndex ?? mergedIndex ?? pages.length;
                   insertIndex = Math.min(fallbackIndex, pages.length);
                 }
-              } else {
-                const fallbackIndex = cachedIndex ?? mergedIndex ?? pages.length;
-                insertIndex = Math.min(fallbackIndex, pages.length);
-              }
 
-              const clonedPage = { ...page };
-              pages.splice(insertIndex, 0, clonedPage);
-            });
+                const clonedPage = { ...page };
+                pages.splice(insertIndex, 0, clonedPage);
+              },
+            );
           }
+        }
 
+        if (shouldResetToMerged || hasAdditions || hasRemovals) {
           pages = pages.map((page, index) => ({
             ...page,
             pageNumber: index + 1,
@@ -227,10 +247,7 @@ export const useEditedDocumentState = ({
 
   const displayDocument = editedDocument || initialDocument;
 
-  const getEditedDocument = useCallback(
-    () => editedDocumentRef.current,
-    []
-  );
+  const getEditedDocument = useCallback(() => editedDocumentRef.current, []);
 
   useEffect(() => {
     updateCurrentPages(displayDocument?.pages ?? null);

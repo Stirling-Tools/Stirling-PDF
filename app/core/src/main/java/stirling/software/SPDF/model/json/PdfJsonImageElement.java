@@ -1,8 +1,5 @@
 package stirling.software.SPDF.model.json;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -30,7 +27,7 @@ public class PdfJsonImageElement {
     private Float right;
     private Float top;
     private Float bottom;
-    @Builder.Default private List<Float> transform = new ArrayList<>();
+    private float[] transform;
     private Integer zOrder;
     private String imageData;
     private String imageFormat;

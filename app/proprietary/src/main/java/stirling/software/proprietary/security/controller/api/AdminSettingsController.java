@@ -27,9 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -48,6 +45,9 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @AdminApi
 @RequiredArgsConstructor
@@ -163,50 +163,70 @@ public class AdminSettingsController {
                         responseCode = "500",
                         description = "Failed to save settings to configuration file")
             })
-    public ResponseEntity<String> updateSettings(
+    public ResponseEntity<Map<String, Object>> updateSettings(
             @Valid @RequestBody UpdateSettingsRequest request) {
         try {
             Map<String, Object> settings = request.getSettings();
             if (settings == null || settings.isEmpty()) {
-                return ResponseEntity.badRequest().body("No settings provided to update");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No settings provided to update"));
             }
 
-            int updatedCount = 0;
+            // Validate all settings first before applying any changes
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
 
                 if (!isValidSettingKey(key)) {
                     return ResponseEntity.badRequest()
-                            .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+                            .body(
+                                    Map.of(
+                                            "error",
+                                            "Invalid setting key format: "
+                                                    + HtmlUtils.htmlEscape(key)));
                 }
 
+                // Validate pipeline path settings
+                String validationError = validatePipelinePathSetting(key, value);
+                if (validationError != null) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
+                }
+            }
+
+            // Apply all updates in a single transaction (load once, update all, save once)
+            // This ensures nested settings like oauth2.client.* don't lose sibling values
+            GeneralUtils.updateSettingsTransactional(settings);
+
+            // Track all as pending changes
+            for (Map.Entry<String, Object> entry : settings.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
                 log.info("Admin updating setting: {} = {}", key, value);
-                GeneralUtils.saveKeyToSettings(key, value);
-
-                // Track this as a pending change
-                pendingChanges.put(key, value);
-
-                updatedCount++;
+                pendingChanges.put(key, value != null ? value : "");
             }
 
             return ResponseEntity.ok(
-                    String.format(
-                            "Successfully updated %d setting(s). Changes will take effect on"
-                                    + " application restart.",
-                            updatedCount));
+                    Map.of(
+                            "message",
+                            String.format(
+                                    "Successfully updated %d setting(s). Changes will take effect on"
+                                            + " application restart.",
+                                    settings.size())));
 
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", GENERIC_FILE_ERROR));
 
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key or value: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SETTING);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", GENERIC_INVALID_SETTING));
         } catch (Exception e) {
             log.error("Unexpected error while updating settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(GENERIC_SERVER_ERROR);
+                    .body(Map.of("error", GENERIC_SERVER_ERROR));
         }
     }
 
@@ -252,6 +272,9 @@ public class AdminSettingsController {
                 }
             }
 
+            // Mask sensitive fields before returning to frontend
+            sectionMap = maskSensitiveFields(sectionMap);
+
             log.debug(
                     "Admin requested settings section: {} (includePending={})",
                     sectionName,
@@ -283,20 +306,23 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to save settings")
             })
-    public ResponseEntity<String> updateSettingsSection(
+    public ResponseEntity<Map<String, Object>> updateSettingsSection(
             @PathVariable String sectionName, @Valid @RequestBody Map<String, Object> sectionData) {
         try {
             if (sectionData == null || sectionData.isEmpty()) {
-                return ResponseEntity.badRequest().body("No section data provided to update");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No section data provided to update"));
             }
 
             if (!isValidSectionName(sectionName)) {
                 return ResponseEntity.badRequest()
                         .body(
-                                "Invalid section name: "
-                                        + HtmlUtils.htmlEscape(sectionName)
-                                        + ". Valid sections: "
-                                        + String.join(", ", VALID_SECTION_NAMES));
+                                Map.of(
+                                        "error",
+                                        "Invalid section name: "
+                                                + HtmlUtils.htmlEscape(sectionName)
+                                                + ". Valid sections: "
+                                                + String.join(", ", VALID_SECTION_NAMES)));
             }
 
             // Auto-enable premium features if license key is provided
@@ -317,7 +343,11 @@ public class AdminSettingsController {
 
                 if (!isValidSettingKey(fullKey)) {
                     return ResponseEntity.badRequest()
-                            .body("Invalid setting key format: " + HtmlUtils.htmlEscape(fullKey));
+                            .body(
+                                    Map.of(
+                                            "error",
+                                            "Invalid setting key format: "
+                                                    + HtmlUtils.htmlEscape(fullKey)));
                 }
 
                 log.info("Admin updating section setting: {} = {}", fullKey, value);
@@ -331,21 +361,25 @@ public class AdminSettingsController {
 
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(
-                    String.format(
-                            "Successfully updated %d setting(s) in section '%s'. Changes will take"
-                                    + " effect on application restart.",
-                            updatedCount, escapedSectionName));
+                    Map.of(
+                            "message",
+                            String.format(
+                                    "Successfully updated %d setting(s) in section '%s'. Changes will take"
+                                            + " effect on application restart.",
+                                    updatedCount, escapedSectionName)));
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", GENERIC_FILE_ERROR));
         } catch (IllegalArgumentException e) {
             log.error("Invalid section data: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SECTION);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", GENERIC_INVALID_SECTION));
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(GENERIC_SERVER_ERROR);
+                    .body(Map.of("error", GENERIC_SERVER_ERROR));
         }
     }
 
@@ -377,6 +411,13 @@ public class AdminSettingsController {
                 return ResponseEntity.badRequest()
                         .body("Setting key not found: " + HtmlUtils.htmlEscape(key));
             }
+
+            // Mask sensitive values before returning
+            String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+            if (isSensitiveFieldWithPath(keyName, key)) {
+                value = createMaskedValue(value);
+            }
+
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
         } catch (IllegalArgumentException e) {
@@ -414,6 +455,20 @@ public class AdminSettingsController {
             }
 
             Object value = request.getValue();
+
+            // Prevent saving masked values for sensitive fields to avoid data loss
+            if ("********".equals(value)) {
+                String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+                if (isSensitiveFieldWithPath(keyName, key)) {
+                    log.warn(
+                            "Admin attempted to save masked value for sensitive field: {}. This operation is blocked to prevent data loss.",
+                            key);
+                    return ResponseEntity.badRequest()
+                            .body(
+                                    "Cannot save masked values for sensitive settings. Please provide the actual value.");
+                }
+            }
+
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
 
@@ -453,7 +508,7 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to initiate restart")
             })
-    public ResponseEntity<String> restartApplication() {
+    public ResponseEntity<Map<String, Object>> restartApplication() {
         try {
             log.warn("Admin initiated application restart");
 
@@ -465,13 +520,18 @@ public class AdminSettingsController {
                 log.error("Cannot restart: not running from JAR (likely development mode)");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                         .body(
-                                "Restart not available in development mode. Please restart the application manually.");
+                                Map.of(
+                                        "error",
+                                        "Restart not available in development mode. Please restart the application manually."));
             }
 
             if (helperJar == null || !Files.isRegularFile(helperJar)) {
                 log.error("Cannot restart: restart-helper.jar not found at expected location");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body("Restart helper not found. Please restart the application manually.");
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "Restart helper not found. Cannot perform application restart."));
             }
 
             // Get current application arguments
@@ -511,7 +571,8 @@ public class AdminSettingsController {
             pendingChanges.clear();
 
             // Give the HTTP response time to complete, then exit
-            new Thread(
+            Thread.ofVirtual()
+                    .start(
                             () -> {
                                 try {
                                     Thread.sleep(1000);
@@ -522,16 +583,20 @@ public class AdminSettingsController {
                                     log.error("Restart interrupted: {}", e.getMessage(), e);
                                     Thread.currentThread().interrupt();
                                 }
-                            })
-                    .start();
+                            });
 
             return ResponseEntity.ok(
-                    "Application restart initiated. The server will be back online shortly.");
+                    Map.of(
+                            "message",
+                            "Application restart initiated. The server will be back online shortly."));
 
         } catch (Exception e) {
             log.error("Failed to initiate restart: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to initiate application restart: " + e.getMessage());
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Failed to initiate application restart: " + e.getMessage()));
         }
     }
 
@@ -547,10 +612,12 @@ public class AdminSettingsController {
             case "endpoints" -> applicationProperties.getEndpoints();
             case "metrics" -> applicationProperties.getMetrics();
             case "mail" -> applicationProperties.getMail();
+            case "storage" -> applicationProperties.getStorage();
             case "premium" -> applicationProperties.getPremium();
             case "processexecutor", "processExecutor" -> applicationProperties.getProcessExecutor();
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
             case "legal" -> applicationProperties.getLegal();
+            case "telegram" -> applicationProperties.getTelegram();
             default -> null;
         };
     }
@@ -567,12 +634,14 @@ public class AdminSettingsController {
                     "endpoints",
                     "metrics",
                     "mail",
+                    "storage",
                     "premium",
                     "processExecutor",
                     "processexecutor",
                     "autoPipeline",
                     "autopipeline",
-                    "legal");
+                    "legal",
+                    "telegram");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =
@@ -608,6 +677,54 @@ public class AdminSettingsController {
         }
 
         return true;
+    }
+
+    private String validatePipelinePathSetting(String key, Object value) {
+        // Validate pipeline path settings
+        if (key.startsWith("system.customPaths.pipeline.watchedFoldersDirs")
+                && value instanceof java.util.List) {
+            @SuppressWarnings("unchecked")
+            java.util.List<String> paths = (java.util.List<String>) value;
+
+            // Check for empty or all-blank paths
+            if (paths.isEmpty()) {
+                return null; // Empty is OK, will use default
+            }
+
+            // Validate each path
+            java.util.Set<String> normalizedPaths = new java.util.HashSet<>();
+            for (String path : paths) {
+                if (path != null && !path.trim().isEmpty()) {
+                    try {
+                        java.nio.file.Path normalized =
+                                java.nio.file.Paths.get(path.trim()).toAbsolutePath().normalize();
+                        String normalizedStr = normalized.toString();
+
+                        // Check for duplicates
+                        if (normalizedPaths.contains(normalizedStr)) {
+                            return "Duplicate path detected: " + path;
+                        }
+                        normalizedPaths.add(normalizedStr);
+                    } catch (java.nio.file.InvalidPathException e) {
+                        return "Invalid path: " + path + " - " + e.getMessage();
+                    }
+                }
+            }
+
+            // Check for overlapping paths
+            java.util.List<String> pathList = new java.util.ArrayList<>(normalizedPaths);
+            for (int i = 0; i < pathList.size(); i++) {
+                java.nio.file.Path path1 = java.nio.file.Paths.get(pathList.get(i));
+                for (int j = i + 1; j < pathList.size(); j++) {
+                    java.nio.file.Path path2 = java.nio.file.Paths.get(pathList.get(j));
+                    if (path1.startsWith(path2) || path2.startsWith(path1)) {
+                        return "Overlapping paths detected: " + path1 + " and " + path2;
+                    }
+                }
+            }
+        }
+
+        return null; // Valid
     }
 
     private Object getSettingByKey(String key) {

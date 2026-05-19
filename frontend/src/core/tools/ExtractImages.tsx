@@ -10,10 +10,10 @@ const ExtractImages = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'extractImages',
+    "extractImages",
     useExtractImagesParameters,
     useExtractImagesOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -25,7 +25,9 @@ const ExtractImages = (props: BaseToolProps) => {
       {
         title: t("extractImages.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: (
           <ExtractImagesSettings
             parameters={base.params.parameters}
@@ -40,7 +42,8 @@ const ExtractImages = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

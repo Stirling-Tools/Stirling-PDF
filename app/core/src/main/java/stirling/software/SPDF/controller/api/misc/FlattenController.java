@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -30,6 +31,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -38,6 +40,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class FlattenController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/flatten")
     @StandardPdfResponse
@@ -46,7 +49,8 @@ public class FlattenController {
             description =
                     "Flattening just PDF form fields or converting each page to images to make text"
                             + " unselectable. Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
+    public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
@@ -58,7 +62,9 @@ public class FlattenController {
                     acroForm.flatten();
                 }
                 return WebResponseUtils.pdfDocToWebResponse(
-                        document, Filenames.toSimpleFileName(file.getOriginalFilename()));
+                        document,
+                        Filenames.toSimpleFileName(file.getOriginalFilename()),
+                        tempFileManager);
             } else {
                 // flatten whole page aka convert each page to image and re-add it (making text
                 // unselectable)
@@ -143,7 +149,9 @@ public class FlattenController {
                         }
                     }
                     return WebResponseUtils.pdfDocToWebResponse(
-                            newDocument, Filenames.toSimpleFileName(file.getOriginalFilename()));
+                            newDocument,
+                            Filenames.toSimpleFileName(file.getOriginalFilename()),
+                            tempFileManager);
                 }
             }
         }

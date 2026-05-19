@@ -10,7 +10,7 @@ const DEFAULT_UPPER_BOUND = { r: 255, g: 255, b: 255 }; // #FFFFFF
 
 export async function removeWhiteBackground(
   imageFile: File | string,
-  options: TransparencyOptions = {}
+  options: TransparencyOptions = {},
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -25,10 +25,10 @@ export async function removeWhiteBackground(
     };
 
     img.onerror = () => {
-      reject(new Error('Failed to load image'));
+      reject(new Error("Failed to load image"));
     };
 
-    if (typeof imageFile === 'string') {
+    if (typeof imageFile === "string") {
       img.src = imageFile;
     } else {
       const reader = new FileReader();
@@ -36,7 +36,7 @@ export async function removeWhiteBackground(
         img.src = e.target?.result as string;
       };
       reader.onerror = () => {
-        reject(new Error('Failed to read image file'));
+        reject(new Error("Failed to read image file"));
       };
       reader.readAsDataURL(imageFile);
     }
@@ -45,13 +45,13 @@ export async function removeWhiteBackground(
 
 function processImageTransparency(
   img: HTMLImageElement,
-  options: TransparencyOptions
+  options: TransparencyOptions,
 ): string {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
   if (!ctx) {
-    throw new Error('Failed to get canvas context');
+    throw new Error("Failed to get canvas context");
   }
 
   canvas.width = img.width;
@@ -71,12 +71,12 @@ function processImageTransparency(
     lowerBound = {
       r: Math.max(0, cornerColor.r - tolerance),
       g: Math.max(0, cornerColor.g - tolerance),
-      b: Math.max(0, cornerColor.b - tolerance)
+      b: Math.max(0, cornerColor.b - tolerance),
     };
     upperBound = {
       r: Math.min(255, cornerColor.r + tolerance),
       g: Math.min(255, cornerColor.g + tolerance),
-      b: Math.min(255, cornerColor.b + tolerance)
+      b: Math.min(255, cornerColor.b + tolerance),
     };
   }
 
@@ -86,9 +86,12 @@ function processImageTransparency(
     const b = data[i + 2];
 
     if (
-      r >= lowerBound.r && r <= upperBound.r &&
-      g >= lowerBound.g && g <= upperBound.g &&
-      b >= lowerBound.b && b <= upperBound.b
+      r >= lowerBound.r &&
+      r <= upperBound.r &&
+      g >= lowerBound.g &&
+      g <= upperBound.g &&
+      b >= lowerBound.b &&
+      b <= upperBound.b
     ) {
       data[i + 3] = 0;
     }
@@ -96,11 +99,14 @@ function processImageTransparency(
 
   ctx.putImageData(imageData, 0, 0);
 
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
-
-function detectCornerColor(imageData: ImageData): { r: number; g: number; b: number } {
+function detectCornerColor(imageData: ImageData): {
+  r: number;
+  g: number;
+  b: number;
+} {
   const { width, height, data } = imageData;
 
   const sampleSize = 5;
@@ -108,13 +114,15 @@ function detectCornerColor(imageData: ImageData): { r: number; g: number; b: num
     { x: 0, y: 0 }, // top-left
     { x: width - sampleSize, y: 0 }, // top-right
     { x: 0, y: height - sampleSize }, // bottom-left
-    { x: width - sampleSize, y: height - sampleSize } // bottom-right
+    { x: width - sampleSize, y: height - sampleSize }, // bottom-right
   ];
 
-  let totalR = 0, totalG = 0, totalB = 0;
+  let totalR = 0,
+    totalG = 0,
+    totalB = 0;
   let samples = 0;
 
-  corners.forEach(corner => {
+  corners.forEach((corner) => {
     for (let dy = 0; dy < sampleSize; dy++) {
       for (let dx = 0; dx < sampleSize; dx++) {
         const x = Math.min(width - 1, Math.max(0, corner.x + dx));
@@ -132,6 +140,6 @@ function detectCornerColor(imageData: ImageData): { r: number; g: number; b: num
   return {
     r: Math.round(totalR / samples),
     g: Math.round(totalG / samples),
-    b: Math.round(totalB / samples)
+    b: Math.round(totalB / samples),
   };
 }

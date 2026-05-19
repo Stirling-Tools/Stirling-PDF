@@ -89,10 +89,12 @@ class IndexedDBManager {
         const oldVersion = event.oldVersion;
         const transaction = request.transaction;
 
-        console.log(`Upgrading ${config.name} from v${oldVersion} to v${config.version}`);
+        console.log(
+          `Upgrading ${config.name} from v${oldVersion} to v${config.version}`,
+        );
 
         // Create or update object stores
-        config.stores.forEach(storeConfig => {
+        config.stores.forEach((storeConfig) => {
           let store: IDBObjectStore | undefined;
 
           if (db.objectStoreNames.contains(storeConfig.name)) {
@@ -102,14 +104,14 @@ class IndexedDBManager {
 
             // Add new indexes if they don't exist
             if (storeConfig.indexes && store) {
-              storeConfig.indexes.forEach(indexConfig => {
+              storeConfig.indexes.forEach((indexConfig) => {
                 if (!store?.indexNames.contains(indexConfig.name)) {
-                  store?.createIndex(
-                    indexConfig.name,
-                    indexConfig.keyPath,
-                    { unique: indexConfig.unique }
+                  store?.createIndex(indexConfig.name, indexConfig.keyPath, {
+                    unique: indexConfig.unique,
+                  });
+                  console.log(
+                    `Created index '${indexConfig.name}' on '${storeConfig.name}'`,
                   );
-                  console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
                 }
               });
             }
@@ -128,19 +130,23 @@ class IndexedDBManager {
 
             // Create indexes
             if (storeConfig.indexes) {
-              storeConfig.indexes.forEach(indexConfig => {
-                store?.createIndex(
-                  indexConfig.name,
-                  indexConfig.keyPath,
-                  { unique: indexConfig.unique }
+              storeConfig.indexes.forEach((indexConfig) => {
+                store?.createIndex(indexConfig.name, indexConfig.keyPath, {
+                  unique: indexConfig.unique,
+                });
+                console.log(
+                  `Created index '${indexConfig.name}' on '${storeConfig.name}'`,
                 );
-                console.log(`Created index '${indexConfig.name}' on '${storeConfig.name}'`);
               });
             }
           }
 
           // Perform data migration for files database
-          if (config.name === 'stirling-pdf-files' && storeConfig.name === 'files' && store) {
+          if (
+            config.name === "stirling-pdf-files" &&
+            storeConfig.name === "files" &&
+            store
+          ) {
             this.migrateFileHistoryFields(store, oldVersion);
           }
         });
@@ -151,13 +157,16 @@ class IndexedDBManager {
   /**
    * Migrate existing file records to include new file history fields
    */
-  private migrateFileHistoryFields(store: IDBObjectStore, oldVersion: number): void {
+  private migrateFileHistoryFields(
+    store: IDBObjectStore,
+    oldVersion: number,
+  ): void {
     // Only migrate if upgrading from a version before file history was added (version < 3)
     if (oldVersion >= 3) {
       return;
     }
 
-    console.log('Starting file history migration for existing records...');
+    console.log("Starting file history migration for existing records...");
 
     const cursor = store.openCursor();
     let migratedCount = 0;
@@ -200,19 +209,24 @@ class IndexedDBManager {
             cursor.update(record);
             migratedCount++;
           } catch (error) {
-            console.error('Failed to migrate record:', record.id, error);
+            console.error("Failed to migrate record:", record.id, error);
           }
         }
 
         cursor.continue();
       } else {
         // Migration complete
-        console.log(`File history migration completed. Migrated ${migratedCount} records.`);
+        console.log(
+          `File history migration completed. Migrated ${migratedCount} records.`,
+        );
       }
     };
 
     cursor.onerror = (event) => {
-      console.error('File history migration failed:', (event.target as IDBRequest).error);
+      console.error(
+        "File history migration failed:",
+        (event.target as IDBRequest).error,
+      );
     };
   }
 
@@ -290,39 +304,44 @@ class IndexedDBManager {
 // Pre-defined database configurations
 export const DATABASE_CONFIGS = {
   FILES: {
-    name: 'stirling-pdf-files',
+    name: "stirling-pdf-files",
     version: 3,
-    stores: [{
-      name: 'files',
-      keyPath: 'id',
-      indexes: [
-        { name: 'name', keyPath: 'name', unique: false },
-        { name: 'lastModified', keyPath: 'lastModified', unique: false },
-        { name: 'originalFileId', keyPath: 'originalFileId', unique: false },
-        { name: 'parentFileId', keyPath: 'parentFileId', unique: false },
-        { name: 'versionNumber', keyPath: 'versionNumber', unique: false }
-      ]
-    }]
+    stores: [
+      {
+        name: "files",
+        keyPath: "id",
+        indexes: [
+          { name: "name", keyPath: "name", unique: false },
+          { name: "lastModified", keyPath: "lastModified", unique: false },
+          { name: "originalFileId", keyPath: "originalFileId", unique: false },
+          { name: "parentFileId", keyPath: "parentFileId", unique: false },
+          { name: "versionNumber", keyPath: "versionNumber", unique: false },
+        ],
+      },
+    ],
   } as DatabaseConfig,
 
   DRAFTS: {
-    name: 'stirling-pdf-drafts',
+    name: "stirling-pdf-drafts",
     version: 1,
-    stores: [{
-      name: 'drafts',
-      keyPath: 'id'
-    }]
+    stores: [
+      {
+        name: "drafts",
+        keyPath: "id",
+      },
+    ],
   } as DatabaseConfig,
 
   PREFERENCES: {
-    name: 'stirling-pdf-preferences',
+    name: "stirling-pdf-preferences",
     version: 1,
-    stores: [{
-      name: 'preferences',
-      keyPath: 'key'
-    }]
+    stores: [
+      {
+        name: "preferences",
+        keyPath: "key",
+      },
+    ],
   } as DatabaseConfig,
-
 } as const;
 
 export const indexedDBManager = IndexedDBManager.getInstance();

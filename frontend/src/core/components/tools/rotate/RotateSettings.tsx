@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
-import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import { useAllFiles } from "@app/contexts/FileContext";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface RotateSettingsProps {
@@ -12,14 +12,17 @@ interface RotateSettingsProps {
   disabled?: boolean;
 }
 
-const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) => {
+const RotateSettings = ({
+  parameters,
+  disabled = false,
+}: RotateSettingsProps) => {
   const { t } = useTranslation();
-  const { selectedFileStubs } = useSelectedFiles();
+  const { fileStubs } = useAllFiles();
 
-  // Get the first selected file for preview
+  // Get the first file for preview
   const selectedStub = useMemo(() => {
-    return selectedFileStubs.length > 0 ? selectedFileStubs[0] : null;
-  }, [selectedFileStubs]);
+    return fileStubs.length > 0 ? fileStubs[0] : null;
+  }, [fileStubs]);
 
   // Get thumbnail for the selected file
   const [thumbnail, setThumbnail] = useState<string | null>(null);
@@ -33,19 +36,19 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft') {
+      if (event.key === "ArrowLeft") {
         event.preventDefault();
         parameters.rotateAnticlockwise();
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.key === "ArrowRight") {
         event.preventDefault();
         parameters.rotateClockwise();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [parameters]);
 
@@ -60,32 +63,29 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
         <Center>
           <Box
             style={{
-              width: '280px',
-              height: '280px',
-              border: '1px solid var(--mantine-color-gray-3)',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--mantine-color-gray-0)',
-              overflow: 'hidden',
+              width: "280px",
+              height: "280px",
+              border: "1px solid var(--mantine-color-gray-3)",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "var(--mantine-color-gray-0)",
+              overflow: "hidden",
             }}
           >
             <Box
               style={{
-                width: '100%',
-                height: '100%',
+                width: "100%",
+                height: "100%",
                 transform: `rotate(${currentAngle}deg)`,
-                transition: 'transform 0.3s ease-in-out',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                transition: "transform 0.3s ease-in-out",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <DocumentThumbnail
-                file={selectedStub}
-                thumbnail={thumbnail}
-              />
+              <DocumentThumbnail file={selectedStub} thumbnail={thumbnail} />
             </Box>
           </Box>
         </Center>
@@ -101,7 +101,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
           aria-label={t("rotate.rotateLeft", "Rotate Anticlockwise")}
           title={t("rotate.rotateLeft", "Rotate Anticlockwise")}
         >
-          <RotateLeftIcon style={{ fontSize: '1.5rem' }} />
+          <RotateLeftIcon style={{ fontSize: "1.5rem" }} />
         </ActionIcon>
 
         <ActionIcon
@@ -112,7 +112,7 @@ const RotateSettings = ({ parameters, disabled = false }: RotateSettingsProps) =
           aria-label={t("rotate.rotateRight", "Rotate Clockwise")}
           title={t("rotate.rotateRight", "Rotate Clockwise")}
         >
-          <RotateRightIcon style={{ fontSize: '1.5rem' }} />
+          <RotateRightIcon style={{ fontSize: "1.5rem" }} />
         </ActionIcon>
       </Group>
     </Stack>

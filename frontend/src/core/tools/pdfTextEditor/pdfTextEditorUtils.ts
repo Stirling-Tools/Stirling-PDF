@@ -7,7 +7,7 @@ import {
   TextGroup,
   DEFAULT_PAGE_HEIGHT,
   DEFAULT_PAGE_WIDTH,
-} from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
+} from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
 
 const LINE_TOLERANCE = 2;
 const GAP_FACTOR = 0.6;
@@ -26,16 +26,16 @@ type FontMetricsMap = Map<string, FontMetrics>;
 
 const sanitizeParagraphText = (text: string | undefined | null): string => {
   if (!text) {
-    return '';
+    return "";
   }
-  return text.replace(/\r?\n/g, '');
+  return text.replace(/\r?\n/g, "");
 };
 
 const splitParagraphIntoLines = (text: string | undefined | null): string[] => {
   if (text === null || text === undefined) {
-    return [''];
+    return [""];
   }
-  return text.replace(/\r/g, '').split('\n');
+  return text.replace(/\r/g, "").split("\n");
 };
 
 const extractElementBaseline = (element: PdfJsonTextElement): number | null => {
@@ -44,15 +44,18 @@ const extractElementBaseline = (element: PdfJsonTextElement): number | null => {
   }
   if (element.textMatrix && element.textMatrix.length >= 6) {
     const baseline = element.textMatrix[5];
-    return typeof baseline === 'number' ? baseline : null;
+    return typeof baseline === "number" ? baseline : null;
   }
-  if (typeof element.y === 'number') {
+  if (typeof element.y === "number") {
     return element.y;
   }
   return null;
 };
 
-const shiftElementsBy = (elements: PdfJsonTextElement[], delta: number): PdfJsonTextElement[] => {
+const shiftElementsBy = (
+  elements: PdfJsonTextElement[],
+  delta: number,
+): PdfJsonTextElement[] => {
   if (delta === 0) {
     return elements.map(cloneTextElement);
   }
@@ -63,7 +66,7 @@ const shiftElementsBy = (elements: PdfJsonTextElement[], delta: number): PdfJson
       matrix[5] = (matrix[5] ?? 0) + delta;
       clone.textMatrix = matrix;
     }
-    if (typeof clone.y === 'number') {
+    if (typeof clone.y === "number") {
       clone.y += delta;
     } else if (clone.y === null || clone.y === undefined) {
       clone.y = delta;
@@ -79,20 +82,26 @@ const countGraphemes = (text: string): number => {
   return Array.from(text).length;
 };
 
-const metricsFor = (metrics: FontMetricsMap | undefined, fontId?: string | null): FontMetrics | undefined => {
+const metricsFor = (
+  metrics: FontMetricsMap | undefined,
+  fontId?: string | null,
+): FontMetrics | undefined => {
   if (!metrics || !fontId) {
     return undefined;
   }
   return metrics.get(fontId) ?? undefined;
 };
 
-const buildFontMetrics = (document: PdfJsonDocument | null | undefined): FontMetricsMap => {
+const buildFontMetrics = (
+  document: PdfJsonDocument | null | undefined,
+): FontMetricsMap => {
   const metrics: FontMetricsMap = new Map();
   document?.fonts?.forEach((font) => {
     if (!font) {
       return;
     }
-    const unitsPerEm = font.unitsPerEm && font.unitsPerEm > 0 ? font.unitsPerEm : 1000;
+    const unitsPerEm =
+      font.unitsPerEm && font.unitsPerEm > 0 ? font.unitsPerEm : 1000;
     const ascent = font.ascent ?? unitsPerEm * 0.8;
     const descent = font.descent ?? -(unitsPerEm * 0.2);
     const metric: FontMetrics = { unitsPerEm, ascent, descent };
@@ -106,16 +115,23 @@ const buildFontMetrics = (document: PdfJsonDocument | null | undefined): FontMet
   return metrics;
 };
 
-export const valueOr = (value: number | null | undefined, fallback = 0): number => {
+export const valueOr = (
+  value: number | null | undefined,
+  fallback = 0,
+): number => {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return fallback;
   }
   return value;
 };
 
-export const cloneTextElement = (element: PdfJsonTextElement): PdfJsonTextElement => ({
+export const cloneTextElement = (
+  element: PdfJsonTextElement,
+): PdfJsonTextElement => ({
   ...element,
-  textMatrix: element.textMatrix ? [...element.textMatrix] : element.textMatrix ?? undefined,
+  textMatrix: element.textMatrix
+    ? [...element.textMatrix]
+    : (element.textMatrix ?? undefined),
 });
 
 const clearGlyphHints = (element: PdfJsonTextElement): void => {
@@ -125,9 +141,13 @@ const clearGlyphHints = (element: PdfJsonTextElement): void => {
   element.charCodes = undefined;
 };
 
-export const cloneImageElement = (element: PdfJsonImageElement): PdfJsonImageElement => ({
+export const cloneImageElement = (
+  element: PdfJsonImageElement,
+): PdfJsonImageElement => ({
   ...element,
-  transform: element.transform ? [...element.transform] : element.transform ?? undefined,
+  transform: element.transform
+    ? [...element.transform]
+    : (element.transform ?? undefined),
 });
 
 const getBaseline = (element: PdfJsonTextElement): number => {
@@ -144,13 +164,16 @@ const getX = (element: PdfJsonTextElement): number => {
   return valueOr(element.x);
 };
 
-const getWidth = (element: PdfJsonTextElement, metrics?: FontMetricsMap): number => {
+const getWidth = (
+  element: PdfJsonTextElement,
+  metrics?: FontMetricsMap,
+): number => {
   const width = valueOr(element.width, 0);
   if (width > 0) {
     return width;
   }
 
-  const text = element.text ?? '';
+  const text = element.text ?? "";
   const glyphCount = Math.max(1, countGraphemes(text));
   const spacingFallback = Math.max(
     valueOr(element.spaceWidth, 0),
@@ -165,12 +188,20 @@ const getWidth = (element: PdfJsonTextElement, metrics?: FontMetricsMap): number
   const fontSize = getFontSize(element);
   const fontMetrics = metricsFor(metrics, element.fontId);
   if (fontMetrics) {
-    const unitsPerEm = fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
+    const unitsPerEm =
+      fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
     const ascentUnits = fontMetrics.ascent ?? unitsPerEm * 0.8;
     const descentUnits = Math.abs(fontMetrics.descent ?? -(unitsPerEm * 0.2));
-    const combinedUnits = Math.max(unitsPerEm * 0.8, ascentUnits + descentUnits);
-    const averageAdvanceUnits = Math.max(unitsPerEm * 0.5, combinedUnits / Math.max(1, glyphCount));
-    const fallbackWidth = (averageAdvanceUnits / unitsPerEm) * glyphCount * fontSize;
+    const combinedUnits = Math.max(
+      unitsPerEm * 0.8,
+      ascentUnits + descentUnits,
+    );
+    const averageAdvanceUnits = Math.max(
+      unitsPerEm * 0.5,
+      combinedUnits / Math.max(1, glyphCount),
+    );
+    const fallbackWidth =
+      (averageAdvanceUnits / unitsPerEm) * glyphCount * fontSize;
     if (fallbackWidth > 0) {
       return fallbackWidth;
     }
@@ -179,9 +210,13 @@ const getWidth = (element: PdfJsonTextElement, metrics?: FontMetricsMap): number
   return fontSize * glyphCount * 0.5;
 };
 
-const getFontSize = (element: PdfJsonTextElement): number => valueOr(element.fontMatrixSize ?? element.fontSize, 12);
+const getFontSize = (element: PdfJsonTextElement): number =>
+  valueOr(element.fontMatrixSize ?? element.fontSize, 12);
 
-const getHeight = (element: PdfJsonTextElement, metrics?: FontMetricsMap): number => {
+const getHeight = (
+  element: PdfJsonTextElement,
+  metrics?: FontMetricsMap,
+): number => {
   const height = valueOr(element.height, 0);
   if (height > 0) {
     return height;
@@ -189,7 +224,8 @@ const getHeight = (element: PdfJsonTextElement, metrics?: FontMetricsMap): numbe
   const fontSize = getFontSize(element);
   const fontMetrics = metricsFor(metrics, element.fontId);
   if (fontMetrics) {
-    const unitsPerEm = fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
+    const unitsPerEm =
+      fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
     const ascentUnits = fontMetrics.ascent ?? unitsPerEm * 0.8;
     const descentUnits = Math.abs(fontMetrics.descent ?? -(unitsPerEm * 0.2));
     const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
@@ -213,7 +249,8 @@ const getElementBounds = (
   let descentRatio = 0.2;
   const fontMetrics = metricsFor(metrics, element.fontId);
   if (fontMetrics) {
-    const unitsPerEm = fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
+    const unitsPerEm =
+      fontMetrics.unitsPerEm > 0 ? fontMetrics.unitsPerEm : 1000;
     const ascentUnits = fontMetrics.ascent ?? unitsPerEm * 0.8;
     const descentUnits = Math.abs(fontMetrics.descent ?? -(unitsPerEm * 0.2));
     const totalUnits = Math.max(unitsPerEm, ascentUnits + descentUnits);
@@ -235,11 +272,23 @@ const getElementBounds = (
 
 export const getImageBounds = (element: PdfJsonImageElement): BoundingBox => {
   const left = valueOr(element.left ?? element.x, 0);
-  const computedWidth = valueOr(element.width, Math.max(valueOr(element.right, left) - left, 0));
-  const right = valueOr(element.right ?? left + computedWidth, left + computedWidth);
+  const computedWidth = valueOr(
+    element.width,
+    Math.max(valueOr(element.right, left) - left, 0),
+  );
+  const right = valueOr(
+    element.right ?? left + computedWidth,
+    left + computedWidth,
+  );
   const bottom = valueOr(element.bottom ?? element.y, 0);
-  const computedHeight = valueOr(element.height, Math.max(valueOr(element.top, bottom) - bottom, 0));
-  const top = valueOr(element.top ?? bottom + computedHeight, bottom + computedHeight);
+  const computedHeight = valueOr(
+    element.height,
+    Math.max(valueOr(element.top, bottom) - bottom, 0),
+  );
+  const top = valueOr(
+    element.top ?? bottom + computedHeight,
+    bottom + computedHeight,
+  );
   return {
     left,
     right,
@@ -283,7 +332,7 @@ const mergeBounds = (bounds: BoundingBox[]): BoundingBox => {
       top: Math.min(acc.top, current.top),
       bottom: Math.max(acc.bottom, current.bottom),
     }),
-    { ...bounds[0] }
+    { ...bounds[0] },
   );
 };
 
@@ -313,18 +362,21 @@ const shouldInsertSpace = (
     return true;
   }
 
-  const prevText = (prev.text ?? '').trimEnd();
-  if (prevText.endsWith('-')) {
+  const prevText = (prev.text ?? "").trimEnd();
+  if (prevText.endsWith("-")) {
     return false;
   }
 
   return false;
 };
 
-const buildGroupText = (elements: PdfJsonTextElement[], metrics?: FontMetricsMap): string => {
-  let result = '';
+const buildGroupText = (
+  elements: PdfJsonTextElement[],
+  metrics?: FontMetricsMap,
+): string => {
+  let result = "";
   elements.forEach((element, index) => {
-    const value = element.text ?? '';
+    const value = element.text ?? "";
     if (index === 0) {
       result += value;
       return;
@@ -335,7 +387,7 @@ const buildGroupText = (elements: PdfJsonTextElement[], metrics?: FontMetricsMap
     const startsWithWhitespace = /^\s/u.test(value);
 
     if (needsSpace && !startsWithWhitespace) {
-      result += ' ';
+      result += " ";
     }
     result += value;
   });
@@ -349,7 +401,7 @@ const rgbToCss = (components: number[]): string => {
     const b = Math.round(Math.max(0, Math.min(1, components[2])) * 255);
     return `rgb(${r}, ${g}, ${b})`;
   }
-  return 'rgb(0, 0, 0)';
+  return "rgb(0, 0, 0)";
 };
 
 const cmykToCss = (components: number[]): string => {
@@ -363,7 +415,7 @@ const cmykToCss = (components: number[]): string => {
     const b = Math.round(255 * (1 - y) * (1 - k));
     return `rgb(${r}, ${g}, ${b})`;
   }
-  return 'rgb(0, 0, 0)';
+  return "rgb(0, 0, 0)";
 };
 
 const grayToCss = (components: number[]): string => {
@@ -371,24 +423,28 @@ const grayToCss = (components: number[]): string => {
     const gray = Math.round(Math.max(0, Math.min(1, components[0])) * 255);
     return `rgb(${gray}, ${gray}, ${gray})`;
   }
-  return 'rgb(0, 0, 0)';
+  return "rgb(0, 0, 0)";
 };
 
 const extractColor = (element: PdfJsonTextElement): string | null => {
   const fillColor = element.fillColor;
-  if (!fillColor || !fillColor.components || fillColor.components.length === 0) {
+  if (
+    !fillColor ||
+    !fillColor.components ||
+    fillColor.components.length === 0
+  ) {
     return null;
   }
 
-  const colorSpace = (fillColor.colorSpace ?? '').toLowerCase();
+  const colorSpace = (fillColor.colorSpace ?? "").toLowerCase();
 
-  if (colorSpace.includes('rgb') || colorSpace.includes('srgb')) {
+  if (colorSpace.includes("rgb") || colorSpace.includes("srgb")) {
     return rgbToCss(fillColor.components);
   }
-  if (colorSpace.includes('cmyk')) {
+  if (colorSpace.includes("cmyk")) {
     return cmykToCss(fillColor.components);
   }
-  if (colorSpace.includes('gray') || colorSpace.includes('grey')) {
+  if (colorSpace.includes("gray") || colorSpace.includes("grey")) {
     return grayToCss(fillColor.components);
   }
 
@@ -432,7 +488,9 @@ const extractElementRotation = (element: PdfJsonTextElement): number | null => {
   return normalizeAngle(angle);
 };
 
-const computeGroupRotation = (elements: PdfJsonTextElement[]): number | null => {
+const computeGroupRotation = (
+  elements: PdfJsonTextElement[],
+): number | null => {
   const angles = elements
     .map(extractElementRotation)
     .filter((angle): angle is number => angle !== null);
@@ -456,7 +514,9 @@ const computeGroupRotation = (elements: PdfJsonTextElement[]): number | null => 
   return Math.abs(normalized) < 0.5 ? null : normalized;
 };
 
-const getAnchorPoint = (element: PdfJsonTextElement): { x: number; y: number } => {
+const getAnchorPoint = (
+  element: PdfJsonTextElement,
+): { x: number; y: number } => {
   if (element.textMatrix && element.textMatrix.length === 6) {
     return {
       x: valueOr(element.textMatrix[4]),
@@ -472,9 +532,12 @@ const getAnchorPoint = (element: PdfJsonTextElement): { x: number; y: number } =
 const computeBaselineLength = (
   elements: PdfJsonTextElement[],
   metrics?: FontMetricsMap,
-): number => elements.reduce((acc, current) => acc + getWidth(current, metrics), 0);
+): number =>
+  elements.reduce((acc, current) => acc + getWidth(current, metrics), 0);
 
-const computeAverageBaseline = (elements: PdfJsonTextElement[]): number | null => {
+const computeAverageBaseline = (
+  elements: PdfJsonTextElement[],
+): number | null => {
   if (elements.length === 0) {
     return null;
   }
@@ -493,7 +556,9 @@ const createGroup = (
 ): TextGroup => {
   const clones = elements.map(cloneTextElement);
   const originalClones = clones.map(cloneTextElement);
-  const bounds = mergeBounds(elements.map((element) => getElementBounds(element, metrics)));
+  const bounds = mergeBounds(
+    elements.map((element) => getElementBounds(element, metrics)),
+  );
   const firstElement = elements[0];
   const rotation = computeGroupRotation(elements);
   const anchor = rotation !== null ? getAnchorPoint(firstElement) : null;
@@ -561,7 +626,8 @@ const groupLinesIntoParagraphs = (
     const prevLeft = prevLine.bounds.left;
     const currentLeft = currentLine.bounds.left;
     const leftAlignmentTolerance = avgFontSize * 0.3;
-    const isLeftAligned = Math.abs(prevLeft - currentLeft) <= leftAlignmentTolerance;
+    const isLeftAligned =
+      Math.abs(prevLeft - currentLeft) <= leftAlignmentTolerance;
 
     // Check if fonts match
     const sameFont = prevLine.fontId === currentLine.fontId;
@@ -580,31 +646,47 @@ const groupLinesIntoParagraphs = (
     const currentWidth = currentRight - currentLeft;
 
     // Count word count to help identify bullets (typically short)
-    const prevWords = (prevLine.text ?? '').split(/\s+/).filter(w => w.length > 0).length;
-    const currentWords = (currentLine.text ?? '').split(/\s+/).filter(w => w.length > 0).length;
-    const prevText = (prevLine.text ?? '').trim();
-    const currentText = (currentLine.text ?? '').trim();
+    const prevWords = (prevLine.text ?? "")
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length;
+    const currentWords = (currentLine.text ?? "")
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length;
+    const prevText = (prevLine.text ?? "").trim();
+    const currentText = (currentLine.text ?? "").trim();
 
     // Bullet detection - look for bullet markers or very short lines
-    const bulletMarkerRegex = /^[\u2022\u2023\u25E6\u2043\u2219•·◦‣⁃\-*]\s|^\d+[.)]\s|^[a-z][.)]\s/i;
+    const bulletMarkerRegex =
+      /^[\u2022\u2023\u25E6\u2043\u2219•·◦‣⁃\-*]\s|^\d+[.)]\s|^[a-z][.)]\s/i;
     const prevHasBulletMarker = bulletMarkerRegex.test(prevText);
     const currentHasBulletMarker = bulletMarkerRegex.test(currentText);
 
     // True bullets are:
     // 1. Have bullet markers/numbers OR
     // 2. Very short (< 10 words) AND much narrower than average (< 60% of page width)
-    const headingKeywords = ['action items', 'next steps', 'notes', 'logistics', 'tasks'];
+    const headingKeywords = [
+      "action items",
+      "next steps",
+      "notes",
+      "logistics",
+      "tasks",
+    ];
     const normalizedPageWidth = pageWidth > 0 ? pageWidth : avgFontSize * 70;
-    const maxReferenceWidth = normalizedPageWidth > 0 ? normalizedPageWidth : avgFontSize * 70;
+    const maxReferenceWidth =
+      normalizedPageWidth > 0 ? normalizedPageWidth : avgFontSize * 70;
     const indentDelta = currentLeft - prevLeft;
     const indentThreshold = Math.max(avgFontSize * 0.6, 8);
     const hasIndent = indentDelta > indentThreshold;
-    const currentWidthRatio = maxReferenceWidth > 0 ? currentWidth / maxReferenceWidth : 0;
-    const prevWidthRatio = maxReferenceWidth > 0 ? prevWidth / maxReferenceWidth : 0;
+    const currentWidthRatio =
+      maxReferenceWidth > 0 ? currentWidth / maxReferenceWidth : 0;
+    const prevWidthRatio =
+      maxReferenceWidth > 0 ? prevWidth / maxReferenceWidth : 0;
     const prevLooksLikeHeading =
-      prevText.endsWith(':') ||
+      prevText.endsWith(":") ||
       (prevWords <= 4 && prevWidthRatio < 0.4) ||
-      headingKeywords.some((keyword) => prevText.toLowerCase().includes(keyword));
+      headingKeywords.some((keyword) =>
+        prevText.toLowerCase().includes(keyword),
+      );
 
     const wrapCandidate =
       !currentHasBulletMarker &&
@@ -619,8 +701,13 @@ const groupLinesIntoParagraphs = (
       ? false
       : currentHasBulletMarker ||
         (hasIndent && (currentWords <= 14 || currentWidthRatio <= 0.65)) ||
-        (prevLooksLikeHeading && (currentWords <= 16 || currentWidthRatio <= 0.8 || prevWidthRatio < 0.35)) ||
-        (currentWords <= 8 && currentWidthRatio <= 0.45 && prevWidth - currentWidth > avgFontSize * 4);
+        (prevLooksLikeHeading &&
+          (currentWords <= 16 ||
+            currentWidthRatio <= 0.8 ||
+            prevWidthRatio < 0.35)) ||
+        (currentWords <= 8 &&
+          currentWidthRatio <= 0.45 &&
+          prevWidth - currentWidth > avgFontSize * 4);
 
     const prevIsBullet = bulletFlags.get(prevLine.id) ?? prevHasBulletMarker;
     bulletFlags.set(currentLine.id, currentIsBullet);
@@ -647,10 +734,18 @@ const groupLinesIntoParagraphs = (
 
     if (i < 10 || likelyBulletStart || bothAreBullets || !shouldMerge) {
       console.log(`  Line ${i}:`);
-      console.log(`    prev: "${prevText.substring(0, 40)}" (${prevWords}w, ${prevWidth.toFixed(0)}pt, marker:${prevHasBulletMarker}, bullet:${prevIsBullet})`);
-      console.log(`    curr: "${currentText.substring(0, 40)}" (${currentWords}w, ${currentWidth.toFixed(0)}pt, marker:${currentHasBulletMarker}, bullet:${currentIsBullet})`);
-      console.log(`    checks: leftAlign:${isLeftAligned} (${Math.abs(prevLeft - currentLeft).toFixed(1)}pt), sameFont:${sameFont}, spacing:${hasReasonableSpacing} (${lineSpacing.toFixed(1)}pt/${maxReasonableSpacing.toFixed(1)}pt)`);
-      console.log(`    decision: merge=${shouldMerge} (bulletStart:${likelyBulletStart}, bothBullets:${bothAreBullets})`);
+      console.log(
+        `    prev: "${prevText.substring(0, 40)}" (${prevWords}w, ${prevWidth.toFixed(0)}pt, marker:${prevHasBulletMarker}, bullet:${prevIsBullet})`,
+      );
+      console.log(
+        `    curr: "${currentText.substring(0, 40)}" (${currentWords}w, ${currentWidth.toFixed(0)}pt, marker:${currentHasBulletMarker}, bullet:${currentIsBullet})`,
+      );
+      console.log(
+        `    checks: leftAlign:${isLeftAligned} (${Math.abs(prevLeft - currentLeft).toFixed(1)}pt), sameFont:${sameFont}, spacing:${hasReasonableSpacing} (${lineSpacing.toFixed(1)}pt/${maxReasonableSpacing.toFixed(1)}pt)`,
+      );
+      console.log(
+        `    decision: merge=${shouldMerge} (bulletStart:${likelyBulletStart}, bothBullets:${bothAreBullets})`,
+      );
     }
 
     if (shouldMerge) {
@@ -673,23 +768,29 @@ const groupLinesIntoParagraphs = (
     }
 
     // Combine all elements from all lines
-    const lineTemplates = lines.map(line => cloneLineTemplate(line));
+    const lineTemplates = lines.map((line) => cloneLineTemplate(line));
     const flattenedLineTemplates = lineTemplates.flatMap((line) =>
       line.childLineGroups && line.childLineGroups.length > 0
         ? line.childLineGroups
         : [line],
     );
-    const allLines = flattenedLineTemplates.length > 0 ? flattenedLineTemplates : lineTemplates;
-    const allElements = allLines.flatMap(line => line.originalElements);
+    const allLines =
+      flattenedLineTemplates.length > 0
+        ? flattenedLineTemplates
+        : lineTemplates;
+    const allElements = allLines.flatMap((line) => line.originalElements);
     const pageIndex = lines[0].pageIndex;
-    const lineElementCounts = allLines.map((line) => line.originalElements.length);
+    const lineElementCounts = allLines.map(
+      (line) => line.originalElements.length,
+    );
 
     // Create merged group with newlines between lines
-    const paragraphText = allLines.map(line => line.text).join('\n');
-    const mergedBounds = mergeBounds(allLines.map(line => line.bounds));
+    const paragraphText = allLines.map((line) => line.text).join("\n");
+    const mergedBounds = mergeBounds(allLines.map((line) => line.bounds));
     const spacingValues: number[] = [];
     for (let i = 1; i < allLines.length; i++) {
-      const prevBaseline = allLines[i - 1].baseline ?? allLines[i - 1].bounds.bottom;
+      const prevBaseline =
+        allLines[i - 1].baseline ?? allLines[i - 1].bounds.bottom;
       const currentBaseline = allLines[i].baseline ?? allLines[i].bounds.bottom;
       const spacing = Math.abs(prevBaseline - currentBaseline);
       if (spacing > 0) {
@@ -698,7 +799,8 @@ const groupLinesIntoParagraphs = (
     }
     const averageSpacing =
       spacingValues.length > 0
-        ? spacingValues.reduce((sum, value) => sum + value, 0) / spacingValues.length
+        ? spacingValues.reduce((sum, value) => sum + value, 0) /
+          spacingValues.length
         : null;
 
     const firstElement = allElements[0];
@@ -735,7 +837,7 @@ export const groupPageTextElements = (
   page: PdfJsonPage | null | undefined,
   pageIndex: number,
   metrics?: FontMetricsMap,
-  groupingMode: 'auto' | 'paragraph' | 'singleLine' = 'auto',
+  groupingMode: "auto" | "paragraph" | "singleLine" = "auto",
 ): TextGroup[] => {
   if (!page?.textElements || page.textElements.length === 0) {
     return [];
@@ -756,7 +858,9 @@ export const groupPageTextElements = (
     const fontSize = getFontSize(element);
     const tolerance = Math.max(LINE_TOLERANCE, fontSize * 0.12);
 
-    const existingLine = lines.find((line) => Math.abs(line.baseline - baseline) <= tolerance);
+    const existingLine = lines.find(
+      (line) => Math.abs(line.baseline - baseline) <= tolerance,
+    );
 
     if (existingLine) {
       existingLine.elements.push(element);
@@ -782,7 +886,8 @@ export const groupPageTextElements = (
       }
 
       const previous = currentBucket[currentBucket.length - 1];
-      const gap = getX(element) - (getX(previous) + getWidth(previous, metrics));
+      const gap =
+        getX(element) - (getX(previous) + getWidth(previous, metrics));
       const avgFontSize = (getFontSize(previous) + getFontSize(element)) / 2;
       const splitThreshold = Math.max(SPACE_MIN_GAP, avgFontSize * GAP_FACTOR);
 
@@ -795,7 +900,10 @@ export const groupPageTextElements = (
         const baselineDelta = Math.abs(prevBaseline - currentBaseline);
         const prevEndX = getX(previous) + getWidth(previous, metrics);
         const _prevEndY = prevBaseline;
-        const diagonalGap = Math.hypot(Math.max(0, getX(element) - prevEndX), baselineDelta);
+        const diagonalGap = Math.hypot(
+          Math.max(0, getX(element) - prevEndX),
+          baselineDelta,
+        );
         const diagonalThreshold = Math.max(avgFontSize * 0.8, splitThreshold);
         if (diagonalGap <= diagonalThreshold) {
           shouldSplit = false;
@@ -814,7 +922,9 @@ export const groupPageTextElements = (
       }
 
       if (shouldSplit) {
-        lineGroups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
+        lineGroups.push(
+          createGroup(pageIndex, groupCounter, currentBucket, metrics),
+        );
         groupCounter += 1;
         currentBucket = [element];
       } else {
@@ -823,18 +933,20 @@ export const groupPageTextElements = (
     });
 
     if (currentBucket.length > 0) {
-      lineGroups.push(createGroup(pageIndex, groupCounter, currentBucket, metrics));
+      lineGroups.push(
+        createGroup(pageIndex, groupCounter, currentBucket, metrics),
+      );
       groupCounter += 1;
     }
   });
 
   // Apply paragraph grouping based on mode
-  if (groupingMode === 'singleLine') {
+  if (groupingMode === "singleLine") {
     // Single line mode: skip paragraph grouping
     return lineGroups;
   }
 
-  if (groupingMode === 'paragraph') {
+  if (groupingMode === "paragraph") {
     // Paragraph mode: always apply grouping
     return groupLinesIntoParagraphs(lineGroups, pageWidth, metrics);
   }
@@ -852,11 +964,11 @@ export const groupPageTextElements = (
   const fullWidthThreshold = pageWidth * 0.7;
 
   lineGroups.forEach((group) => {
-    const text = (group.text || '').trim();
+    const text = (group.text || "").trim();
     if (text.length === 0) return;
 
     totalGroups++;
-    const lines = text.split('\n');
+    const lines = text.split("\n");
     const lineCount = lines.length;
     const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
@@ -887,12 +999,14 @@ export const groupPageTextElements = (
   const fullWidthRatio = fullWidthLines / totalGroups;
 
   // Calculate variance in line lengths (paragraphs have varying lengths, lists are uniform)
-  const variance = wordCounts.reduce((sum, count) => {
-    const diff = count - avgWordsPerGroup;
-    return sum + diff * diff;
-  }, 0) / totalGroups;
+  const variance =
+    wordCounts.reduce((sum, count) => {
+      const diff = count - avgWordsPerGroup;
+      return sum + diff * diff;
+    }, 0) / totalGroups;
   const stdDev = Math.sqrt(variance);
-  const coefficientOfVariation = avgWordsPerGroup > 0 ? stdDev / avgWordsPerGroup : 0;
+  const coefficientOfVariation =
+    avgWordsPerGroup > 0 ? stdDev / avgWordsPerGroup : 0;
 
   // Check each criterion
   const criterion1 = avgWordsPerGroup > 5;
@@ -902,38 +1016,59 @@ export const groupPageTextElements = (
   const isParagraphPage = criterion1 && criterion2 && criterion3;
 
   // Log detection stats
-  console.log(`📄 Page ${pageIndex} Grouping Analysis (mode: ${groupingMode}):`);
+  console.log(
+    `📄 Page ${pageIndex} Grouping Analysis (mode: ${groupingMode}):`,
+  );
   console.log(`   Stats:`);
-  console.log(`     • Page width: ${pageWidth.toFixed(1)}pt (full-width threshold: ${fullWidthThreshold.toFixed(1)}pt)`);
+  console.log(
+    `     • Page width: ${pageWidth.toFixed(1)}pt (full-width threshold: ${fullWidthThreshold.toFixed(1)}pt)`,
+  );
   console.log(`     • Multi-line groups: ${multiLineGroups}`);
   console.log(`     • Total groups: ${totalGroups}`);
   console.log(`     • Total words: ${totalWords}`);
-  console.log(`     • Long text groups (≥10 words or ≥50 chars): ${longTextGroups}`);
+  console.log(
+    `     • Long text groups (≥10 words or ≥50 chars): ${longTextGroups}`,
+  );
   console.log(`     • Full-width lines (≥70% page width): ${fullWidthLines}`);
   console.log(`     • Avg words per group: ${avgWordsPerGroup.toFixed(2)}`);
   console.log(`     • Long text ratio: ${(longTextRatio * 100).toFixed(1)}%`);
   console.log(`     • Full-width ratio: ${(fullWidthRatio * 100).toFixed(1)}%`);
   console.log(`     • Std deviation: ${stdDev.toFixed(2)}`);
-  console.log(`     • Coefficient of variation: ${coefficientOfVariation.toFixed(2)}`);
+  console.log(
+    `     • Coefficient of variation: ${coefficientOfVariation.toFixed(2)}`,
+  );
   console.log(`   Criteria:`);
-  console.log(`     1. Avg Words Per Group: ${criterion1 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(
+    `     1. Avg Words Per Group: ${criterion1 ? "✅ PASS" : "❌ FAIL"}`,
+  );
   console.log(`        (${avgWordsPerGroup.toFixed(2)} > 5)`);
-  console.log(`     2. Long Text Ratio: ${criterion2 ? '✅ PASS' : '❌ FAIL'}`);
+  console.log(`     2. Long Text Ratio: ${criterion2 ? "✅ PASS" : "❌ FAIL"}`);
   console.log(`        (${(longTextRatio * 100).toFixed(1)}% > 40%)`);
-  console.log(`     3. Line Width Pattern: ${criterion3 ? '✅ PASS' : '❌ FAIL'}`);
-  console.log(`        (CV ${coefficientOfVariation.toFixed(2)} > 0.5 OR ${(fullWidthRatio * 100).toFixed(1)}% > 60%)`);
-  console.log(`        ${coefficientOfVariation > 0.5 ? '✓ High variance (varying line lengths)' : '✗ Low variance'} ${fullWidthRatio > 0.6 ? '✓ Many full-width lines (paragraph-like)' : '✗ Few full-width lines (list-like)'}`);
-  console.log(`   Decision: ${isParagraphPage ? '📝 PARAGRAPH MODE' : '📋 LINE MODE'}`);
+  console.log(
+    `     3. Line Width Pattern: ${criterion3 ? "✅ PASS" : "❌ FAIL"}`,
+  );
+  console.log(
+    `        (CV ${coefficientOfVariation.toFixed(2)} > 0.5 OR ${(fullWidthRatio * 100).toFixed(1)}% > 60%)`,
+  );
+  console.log(
+    `        ${coefficientOfVariation > 0.5 ? "✓ High variance (varying line lengths)" : "✗ Low variance"} ${fullWidthRatio > 0.6 ? "✓ Many full-width lines (paragraph-like)" : "✗ Few full-width lines (list-like)"}`,
+  );
+  console.log(
+    `   Decision: ${isParagraphPage ? "📝 PARAGRAPH MODE" : "📋 LINE MODE"}`,
+  );
   if (isParagraphPage) {
     console.log(`   Reason: All three criteria passed (AND logic)`);
   } else {
     const failedReasons = [];
-    if (!criterion1) failedReasons.push('low average words per group');
-    if (!criterion2) failedReasons.push('low ratio of long text groups');
-    if (!criterion3) failedReasons.push('low variance and few full-width lines (list-like structure)');
-    console.log(`   Reason: ${failedReasons.join(', ')}`);
+    if (!criterion1) failedReasons.push("low average words per group");
+    if (!criterion2) failedReasons.push("low ratio of long text groups");
+    if (!criterion3)
+      failedReasons.push(
+        "low variance and few full-width lines (list-like structure)",
+      );
+    console.log(`   Reason: ${failedReasons.join(", ")}`);
   }
-  console.log('');
+  console.log("");
 
   // Only apply paragraph grouping if it looks like a paragraph-heavy page
   if (isParagraphPage) {
@@ -948,11 +1083,13 @@ export const groupPageTextElements = (
 
 export const groupDocumentText = (
   document: PdfJsonDocument | null | undefined,
-  groupingMode: 'auto' | 'paragraph' | 'singleLine' = 'auto',
+  groupingMode: "auto" | "paragraph" | "singleLine" = "auto",
 ): TextGroup[][] => {
   const pages = document?.pages ?? [];
   const metrics = buildFontMetrics(document);
-  return pages.map((page, index) => groupPageTextElements(page, index, metrics, groupingMode));
+  return pages.map((page, index) =>
+    groupPageTextElements(page, index, metrics, groupingMode),
+  );
 };
 
 export const extractPageImages = (
@@ -976,14 +1113,18 @@ export const extractDocumentImages = (
   return pages.map((page, index) => extractPageImages(page, index));
 };
 
-export const deepCloneDocument = (document: PdfJsonDocument): PdfJsonDocument => {
-  if (typeof structuredClone === 'function') {
+export const deepCloneDocument = (
+  document: PdfJsonDocument,
+): PdfJsonDocument => {
+  if (typeof structuredClone === "function") {
     return structuredClone(document);
   }
   return JSON.parse(JSON.stringify(document));
 };
 
-export const pageDimensions = (page: PdfJsonPage | null | undefined): { width: number; height: number } => {
+export const pageDimensions = (
+  page: PdfJsonPage | null | undefined,
+): { width: number; height: number } => {
   const width = valueOr(page?.width, DEFAULT_PAGE_WIDTH);
   const height = valueOr(page?.height, DEFAULT_PAGE_HEIGHT);
 
@@ -999,9 +1140,9 @@ export const pageDimensions = (page: PdfJsonPage | null | undefined): { width: n
     DEFAULT_PAGE_WIDTH,
     DEFAULT_PAGE_HEIGHT,
     commonFormats: {
-      'US Letter': '612 × 792 pt',
-      'A4': '595 × 842 pt',
-      'Legal': '612 × 1008 pt',
+      "US Letter": "612 × 792 pt",
+      A4: "595 × 842 pt",
+      Legal: "612 × 1008 pt",
     },
   });
 
@@ -1019,7 +1160,10 @@ export const createMergedElement = (group: TextGroup): PdfJsonTextElement => {
   return merged;
 };
 
-const distributeTextAcrossElements = (text: string | undefined, elements: PdfJsonTextElement[]): boolean => {
+const distributeTextAcrossElements = (
+  text: string | undefined,
+  elements: PdfJsonTextElement[],
+): boolean => {
   if (elements.length === 0) {
     return true;
   }
@@ -1028,14 +1172,14 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
   const targetChars = Array.from(normalizedText);
   if (targetChars.length === 0) {
     elements.forEach((element) => {
-      element.text = '';
+      element.text = "";
       clearGlyphHints(element);
     });
     return true;
   }
 
   const capacities = elements.map((element) => {
-    const originalText = element.text ?? '';
+    const originalText = element.text ?? "";
     const graphemeCount = Array.from(originalText).length;
     return graphemeCount > 0 ? graphemeCount : 1;
   });
@@ -1050,25 +1194,33 @@ const distributeTextAcrossElements = (text: string | undefined, elements: PdfJso
       } else {
         const capacity = Math.max(capacities[index], 1);
         const minRemainingForRest = Math.max(elements.length - index - 1, 0);
-        sliceLength = Math.min(capacity, Math.max(remaining - minRemainingForRest, 1));
+        sliceLength = Math.min(
+          capacity,
+          Math.max(remaining - minRemainingForRest, 1),
+        );
       }
     }
 
-    element.text = sliceLength > 0 ? targetChars.slice(cursor, cursor + sliceLength).join('') : '';
+    element.text =
+      sliceLength > 0
+        ? targetChars.slice(cursor, cursor + sliceLength).join("")
+        : "";
     clearGlyphHints(element);
     cursor += sliceLength;
   });
 
   elements.forEach((element) => {
     if (element.text == null) {
-      element.text = '';
+      element.text = "";
     }
   });
 
   return true;
 };
 
-const sliceElementsByLineCounts = (group: TextGroup): PdfJsonTextElement[][] => {
+const sliceElementsByLineCounts = (
+  group: TextGroup,
+): PdfJsonTextElement[][] => {
   const counts = group.lineElementCounts;
   if (!counts || counts.length === 0) {
     if (!group.originalElements.length) {
@@ -1092,8 +1244,10 @@ const sliceElementsByLineCounts = (group: TextGroup): PdfJsonTextElement[][] => 
   return result;
 };
 
-const rebuildParagraphLineElements = (group: TextGroup): PdfJsonTextElement[] | null => {
-  if (!group.text || !group.text.includes('\n')) {
+const rebuildParagraphLineElements = (
+  group: TextGroup,
+): PdfJsonTextElement[] | null => {
+  if (!group.text || !group.text.includes("\n")) {
     return null;
   }
 
@@ -1169,7 +1323,7 @@ const rebuildParagraphLineElements = (group: TextGroup): PdfJsonTextElement[] | 
       primary.text = normalizedLine;
       clearGlyphHints(primary);
       for (let i = 1; i < clones.length; i += 1) {
-        clones[i].text = '';
+        clones[i].text = "";
         clearGlyphHints(clones[i]);
       }
     }
@@ -1209,7 +1363,7 @@ export const buildUpdatedDocument = (
       ...page,
       textElements: updatedElements,
       imageElements: images.map(cloneImageElement),
-      contentStreams: page.contentStreams ?? [],
+      contentStreams: page.contentStreams ?? null,
     };
   });
 
@@ -1254,7 +1408,7 @@ export const restoreGlyphElements = (
           return;
         }
         const originalGlyphCount = group.originalElements.reduce(
-          (sum, element) => sum + countGraphemes(element.text ?? ''),
+          (sum, element) => sum + countGraphemes(element.text ?? ""),
           0,
         );
         const normalizedText = sanitizeParagraphText(group.text);
@@ -1266,7 +1420,10 @@ export const restoreGlyphElements = (
         }
 
         const originals = group.originalElements.map(cloneTextElement);
-        const distributed = distributeTextAcrossElements(normalizedText, originals);
+        const distributed = distributeTextAcrossElements(
+          normalizedText,
+          originals,
+        );
         if (distributed) {
           rebuiltElements.push(...originals);
         } else {
@@ -1282,16 +1439,20 @@ export const restoreGlyphElements = (
       ...page,
       textElements: rebuiltElements,
       imageElements: images.map(cloneImageElement),
-      contentStreams: page.contentStreams ?? [],
+      contentStreams: page.contentStreams ?? null,
     };
   });
 
   return updated;
 };
 
-const approxEqual = (a: number | null | undefined, b: number | null | undefined, tolerance = 0.25): boolean => {
-  const first = typeof a === 'number' && Number.isFinite(a) ? a : 0;
-  const second = typeof b === 'number' && Number.isFinite(b) ? b : 0;
+const approxEqual = (
+  a: number | null | undefined,
+  b: number | null | undefined,
+  tolerance = 0.25,
+): boolean => {
+  const first = typeof a === "number" && Number.isFinite(a) ? a : 0;
+  const second = typeof b === "number" && Number.isFinite(b) ? b : 0;
   return Math.abs(first - second) <= tolerance;
 };
 
@@ -1329,7 +1490,8 @@ const areImageElementsEqual = (
   }
 
   const sameData = (current.imageData ?? null) === (original.imageData ?? null);
-  const sameFormat = (current.imageFormat ?? null) === (original.imageFormat ?? null);
+  const sameFormat =
+    (current.imageFormat ?? null) === (original.imageFormat ?? null);
 
   return (
     sameData &&

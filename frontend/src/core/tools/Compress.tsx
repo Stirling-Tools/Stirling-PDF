@@ -12,10 +12,10 @@ const Compress = (props: BaseToolProps) => {
   const compressTips = useCompressTips();
 
   const base = useBaseTool(
-    'compress',
+    "compress",
     useCompressParameters,
     useCompressOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const Compress = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: compressTips,
         content: (
           <CompressSettings
@@ -43,7 +45,8 @@ const Compress = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,
@@ -54,6 +57,5 @@ const Compress = (props: BaseToolProps) => {
     },
   });
 };
-
 
 export default Compress as ToolComponent;

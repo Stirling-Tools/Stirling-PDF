@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import CardSelector from "@app/components/shared/CardSelector";
 import SplitSettings from "@app/components/tools/split/SplitSettings";
@@ -8,32 +9,49 @@ import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { useSplitMethodTips } from "@app/components/tooltips/useSplitMethodTips";
 import { useSplitSettingsTips } from "@app/components/tooltips/useSplitSettingsTips";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { type SplitMethod, METHOD_OPTIONS, type MethodOption } from "@app/constants/splitConstants";
+import {
+  type SplitMethod,
+  METHOD_OPTIONS,
+  type MethodOption,
+  ENDPOINTS,
+} from "@app/constants/splitConstants";
+import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'split',
+    "split",
     useSplitParameters,
     useSplitOperation,
-    props
+    props,
   );
+
+  // Check which split endpoints are available
+  const allSplitEndpoints = useMemo(() => Object.values(ENDPOINTS), []);
+  const { endpointStatus } = useMultipleEndpointsEnabled(allSplitEndpoints);
+
+  // Filter METHOD_OPTIONS to only show methods with enabled endpoints
+  const availableMethodOptions = useMemo(() => {
+    return METHOD_OPTIONS.filter((option) => {
+      const endpoint = ENDPOINTS[option.value];
+      // If endpoint status is not loaded yet, show all options (optimistic)
+      // If endpoint is explicitly disabled (false), hide the option
+      return endpointStatus[endpoint] !== false;
+    });
+  }, [endpointStatus]);
 
   const methodTips = useSplitMethodTips();
   const settingsTips = useSplitSettingsTips(base.params.parameters.method);
 
-  // Get tooltip content for a specific method
-  const getMethodTooltip = (option: MethodOption) => {
-    const tooltipContent = useSplitSettingsTips(option.value);
-    return tooltipContent?.tips || [];
-  };
-
   // Get the method name for the settings step title
   const getSettingsTitle = () => {
-    if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
+    if (!base.params.parameters.method)
+      return t("split.steps.settings", "Settings");
 
-    const methodOption = METHOD_OPTIONS.find(option => option.value === base.params.parameters.method);
+    const methodOption = METHOD_OPTIONS.find(
+      (option) => option.value === base.params.parameters.method,
+    );
     if (!methodOption) return t("split.steps.settings", "Settings");
 
     const prefix = t(methodOption.prefixKey, "Split by");
@@ -50,21 +68,22 @@ const Split = (props: BaseToolProps) => {
       {
         title: t("split.steps.chooseMethod", "Choose Method"),
         isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
-        onCollapsedClick: () => base.params.updateParameter('method', ''),
+        onCollapsedClick: () => base.params.updateParameter("method", null),
         tooltip: methodTips,
         content: (
           <CardSelector<SplitMethod, MethodOption>
-            options={METHOD_OPTIONS}
-            onSelect={(method) => base.params.updateParameter('method', method)}
+            options={availableMethodOptions}
+            onSelect={(method) => base.params.updateParameter("method", method)}
             disabled={base.endpointLoading}
-            getTooltipContent={getMethodTooltip}
           />
         ),
       },
       {
         title: getSettingsTitle(),
         isCollapsed: !base.params.parameters.method, // Collapsed until method selected
-        onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: settingsTips || undefined,
         content: (
           <SplitSettings
@@ -80,7 +99,8 @@ const Split = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

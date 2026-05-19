@@ -19,11 +19,11 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
       - name: AI PR Title Analysis
         if: steps.actor.outputs.is_repo_dev == 'true'
         id: ai-title-analysis
-        uses: actions/ai-inference@334892bb203895caaed82ec52d23c1ed9385151e # v2.0.4
+        uses: actions/ai-inference@e09e65981758de8b2fdab13c2bfb7c7d5493b0b6 # v2.0.7
         with:
           model: openai/gpt-4o
           system-prompt-file: ".github/config/system-prompt.txt"
@@ -158,7 +158,7 @@ jobs:
 
       - name: Post comment on PR if needed
         if: steps.actor.outputs.is_repo_dev == 'true'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         continue-on-error: true
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}

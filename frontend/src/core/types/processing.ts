@@ -1,5 +1,11 @@
 export interface ProcessingError {
-  type: 'network' | 'parsing' | 'memory' | 'corruption' | 'timeout' | 'cancelled';
+  type:
+    | "network"
+    | "parsing"
+    | "memory"
+    | "corruption"
+    | "timeout"
+    | "cancelled";
   message: string;
   recoverable: boolean;
   retryCount: number;
@@ -10,7 +16,7 @@ export interface ProcessingError {
 export interface ProcessingState {
   fileKey: string;
   fileName: string;
-  status: 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
+  status: "pending" | "processing" | "completed" | "error" | "cancelled";
   progress: number; // 0-100
   strategy: ProcessingStrategy;
   error?: ProcessingError;
@@ -60,12 +66,16 @@ export interface CacheStats {
   maxSizeBytes: number;
 }
 
-export type ProcessingStrategy = 'immediate_full' | 'progressive_chunked' | 'metadata_only' | 'priority_pages';
+export type ProcessingStrategy =
+  | "immediate_full"
+  | "progressive_chunked"
+  | "metadata_only"
+  | "priority_pages";
 
 export interface ProcessingConfig {
   strategy: ProcessingStrategy;
   chunkSize: number; // Pages per chunk
-  thumbnailQuality: 'low' | 'medium' | 'high';
+  thumbnailQuality: "low" | "medium" | "high";
   priorityPageCount: number; // Number of priority pages to process first
   useWebWorker: boolean;
   maxRetries: number;

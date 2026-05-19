@@ -42,9 +42,10 @@ public class LanguageService {
                             languageCode -> {
                                 Set<String> allowedLanguages =
                                         new HashSet<>(applicationProperties.getUi().getLanguages());
+                                // Empty list means all languages are allowed (no filtering)
+                                // Non-empty list acts as a strict whitelist
                                 return allowedLanguages.isEmpty()
-                                        || allowedLanguages.contains(languageCode)
-                                        || "en_GB".equals(languageCode);
+                                        || allowedLanguages.contains(languageCode);
                             })
                     .collect(Collectors.toSet());
 

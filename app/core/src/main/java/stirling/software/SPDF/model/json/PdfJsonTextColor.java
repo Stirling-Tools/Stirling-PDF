@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.json;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -17,5 +15,5 @@ import lombok.NoArgsConstructor;
 public class PdfJsonTextColor {
 
     private String colorSpace;
-    private List<Float> components;
+    private float[] components;
 }

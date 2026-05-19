@@ -2,56 +2,119 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ProcessExecutorTest {
+class ProcessExecutorTest {
 
-    private ProcessExecutor processExecutor;
+    // Use reflection to test private validateCommand method
+    private void invokeValidateCommand(ProcessExecutor executor, List<String> command)
+            throws Exception {
+        Method method = ProcessExecutor.class.getDeclaredMethod("validateCommand", List.class);
+        method.setAccessible(true);
+        try {
+            method.invoke(executor, command);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            throw (Exception) e.getCause();
+        }
+    }
 
-    @BeforeEach
-    public void setUp() {
-        // Initialize the ProcessExecutor instance
-        processExecutor = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE);
+    private ProcessExecutor getExecutor() {
+        return ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF);
     }
 
     @Test
-    public void testRunCommandWithOutputHandling() throws IOException, InterruptedException {
-        // Mock the command to execute
-        List<String> command = new ArrayList<>();
-        command.add("java");
-        command.add("-version");
+    void testValidateCommand_nullCommand() {
+        assertThrows(
+                IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), null));
+    }
 
-        // Execute the command
+    @Test
+    void testValidateCommand_emptyCommand() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), List.of()));
+    }
+
+    @Test
+    void testValidateCommand_nullArgument() {
+        List<String> command = new ArrayList<>();
+        command.add("echo");
+        command.add(null);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), command));
+    }
+
+    @Test
+    void testValidateCommand_nullByteInArgument() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), List.of("echo", "bad\0arg")));
+    }
+
+    @Test
+    void testValidateCommand_newlineInArgument() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), List.of("echo", "bad\narg")));
+    }
+
+    @Test
+    void testValidateCommand_carriageReturnInArgument() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), List.of("echo", "bad\rarg")));
+    }
+
+    @Test
+    void testValidateCommand_pathTraversal() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), List.of("../../bin/evil")));
+    }
+
+    @Test
+    void testValidateCommand_blankExecutable() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invokeValidateCommand(getExecutor(), List.of("  ")));
+    }
+
+    @Test
+    void testValidateCommand_validSimpleCommand() throws Exception {
+        // Simple command names (no path) should pass validation
+        invokeValidateCommand(getExecutor(), List.of("echo", "hello"));
+    }
+
+    @Test
+    void testGetInstance_returnsSameInstance() {
+        ProcessExecutor e1 = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF);
+        ProcessExecutor e2 = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF);
+        assertSame(e1, e2);
+    }
+
+    @Test
+    void testGetInstance_differentProcessTypes() {
+        ProcessExecutor e1 = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF);
+        ProcessExecutor e2 = ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT);
+        assertNotSame(e1, e2);
+    }
+
+    @Test
+    void testProcessExecutorResult() {
+        ProcessExecutor executor = getExecutor();
         ProcessExecutor.ProcessExecutorResult result =
-                processExecutor.runCommandWithOutputHandling(command);
-
-        // Check the exit code and output messages
+                executor.new ProcessExecutorResult(0, "success");
         assertEquals(0, result.getRc());
-        assertNotNull(result.getMessages()); // Check if messages are not null
-    }
+        assertEquals("success", result.getMessages());
 
-    @Test
-    public void testRunCommandWithOutputHandling_Error() {
-        // Mock the command to execute
-        List<String> command = new ArrayList<>();
-        command.add("nonexistent-command");
-
-        // Execute the command and expect an IOException
-        IOException thrown =
-                assertThrows(
-                        IOException.class,
-                        () -> processExecutor.runCommandWithOutputHandling(command));
-
-        // Check the exception message to ensure it indicates the command was not found
-        String errorMessage = thrown.getMessage();
-        assertTrue(
-                errorMessage.contains("error=2")
-                        || errorMessage.contains("No such file or directory"),
-                "Unexpected error message: " + errorMessage);
+        result.setRc(1);
+        result.setMessages("error");
+        assertEquals(1, result.getRc());
+        assertEquals("error", result.getMessages());
     }
 }

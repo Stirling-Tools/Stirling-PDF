@@ -1,6 +1,6 @@
 # Adding New React Tools to Stirling PDF
 
-This guide covers how to add new PDF tools to the React frontend, either by migrating existing Thymeleaf templates or creating entirely new tools.
+This guide covers how to add new PDF tools to the React frontend.
 
 ## Overview
 
@@ -188,7 +188,7 @@ import { use[ToolName]Tips } from "../components/tooltips/use[ToolName]Tips";
 
 const [ToolName] = (props: BaseToolProps) => {
   const tips = use[ToolName]Tips();
-  
+
   // In your steps array:
   steps: [
     {
@@ -257,22 +257,14 @@ Update translation files. **Important: Only update `en-GB` files** - other langu
 - Add `options.*` keys if your tool has settings with descriptions
 
 **Tooltip Writing Guidelines:**
-- **Use simple, everyday language** - avoid technical terms like "converts interactive elements" 
+- **Use simple, everyday language** - avoid technical terms like "converts interactive elements"
 - **Focus on benefits** - explain what the user gains, not how it works internally
 - **Use concrete examples** - "text boxes become regular text" vs "form fields are flattened"
 - **Answer user questions** - "What does this do?", "When should I use this?", "What's this option for?"
 - **Keep descriptions concise** - 1-2 sentences maximum per section
 - **Use bullet points** for multiple benefits or features
 
-## 6. Migration from Thymeleaf
-When migrating existing Thymeleaf templates:
-
-1. **Identify Form Parameters**: Look at the original `<form>` inputs to determine parameter structure
-2. **Extract Translation Keys**: Find `#{key.name}` references and add them to JSON translations (For many tools these translations will already exist but some parts will be missing)
-3. **Map API Endpoint**: Note the `th:action` URL for the operation hook
-4. **Preserve Functionality**: Ensure all original form behaviour is replicated which is applicable to V2 react UI
-
-## 7. Testing Your Tool
+## 6. Testing Your Tool
 - Verify tool appears in UI with correct icon and description
 - Test with various file sizes and types
 - Confirm translations work

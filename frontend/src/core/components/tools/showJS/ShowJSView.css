@@ -1,5 +1,7 @@
 .showjs-code {
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
   font-size: 12px;
   line-height: 1.5;
   white-space: pre;
@@ -90,7 +92,7 @@
   border: 1px solid var(--mantine-color-gray-4);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--right-rail-bg);
+  background: var(--bg-file-manager);
 }
 
 .showjs-toolbar {

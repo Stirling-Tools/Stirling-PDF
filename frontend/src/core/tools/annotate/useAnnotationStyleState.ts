@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import type { AnnotationToolId } from '@app/components/viewer/viewerTypes';
+import { useCallback, useMemo, useState } from "react";
+import type { AnnotationToolId } from "@app/components/viewer/viewerTypes";
 
 type Size = { width: number; height: number };
 
@@ -23,7 +23,7 @@ interface StyleState {
   squigglyOpacity: number;
   textColor: string;
   textSize: number;
-  textAlignment: 'left' | 'center' | 'right';
+  textAlignment: "left" | "center" | "right";
   textBackgroundColor: string;
   noteBackgroundColor: string;
   shapeStrokeColor: string;
@@ -48,7 +48,7 @@ interface StyleActions {
   setSquigglyOpacity: (value: number) => void;
   setTextColor: (value: string) => void;
   setTextSize: (value: number) => void;
-  setTextAlignment: (value: 'left' | 'center' | 'right') => void;
+  setTextAlignment: (value: "left" | "center" | "right") => void;
   setTextBackgroundColor: (value: string) => void;
   setNoteBackgroundColor: (value: string) => void;
   setShapeStrokeColor: (value: string) => void;
@@ -61,7 +61,7 @@ interface StyleActions {
 
 export type BuildToolOptionsFn = (
   toolId: AnnotationToolId,
-  extras?: BuildToolOptionsExtras
+  extras?: BuildToolOptionsExtras,
 ) => Record<string, unknown>;
 
 export interface AnnotationStyleStateReturn {
@@ -72,26 +72,28 @@ export interface AnnotationStyleStateReturn {
 }
 
 export const useAnnotationStyleState = (
-  cssToPdfSize?: (size: Size) => Size
+  cssToPdfSize?: (size: Size) => Size,
 ): AnnotationStyleStateReturn => {
-  const [inkColor, setInkColor] = useState('#1f2933');
+  const [inkColor, setInkColor] = useState("#1f2933");
   const [inkWidth, setInkWidth] = useState(2);
-  const [highlightColor, setHighlightColor] = useState('#ffd54f');
+  const [highlightColor, setHighlightColor] = useState("#ffd54f");
   const [highlightOpacity, setHighlightOpacity] = useState(60);
   const [freehandHighlighterWidth, setFreehandHighlighterWidth] = useState(6);
-  const [underlineColor, setUnderlineColor] = useState('#ffb300');
+  const [underlineColor, setUnderlineColor] = useState("#ffb300");
   const [underlineOpacity, setUnderlineOpacity] = useState(100);
-  const [strikeoutColor, setStrikeoutColor] = useState('#e53935');
+  const [strikeoutColor, setStrikeoutColor] = useState("#e53935");
   const [strikeoutOpacity, setStrikeoutOpacity] = useState(100);
-  const [squigglyColor, setSquigglyColor] = useState('#00acc1');
+  const [squigglyColor, setSquigglyColor] = useState("#00acc1");
   const [squigglyOpacity, setSquigglyOpacity] = useState(100);
-  const [textColor, setTextColor] = useState('#111111');
+  const [textColor, setTextColor] = useState("#111111");
   const [textSize, setTextSize] = useState(14);
-  const [textAlignment, setTextAlignment] = useState<'left' | 'center' | 'right'>('left');
-  const [textBackgroundColor, setTextBackgroundColor] = useState<string>('');
-  const [noteBackgroundColor, setNoteBackgroundColor] = useState('#ffd54f');
-  const [shapeStrokeColor, setShapeStrokeColor] = useState('#cf5b5b');
-  const [shapeFillColor, setShapeFillColor] = useState('#0000ff');
+  const [textAlignment, setTextAlignment] = useState<
+    "left" | "center" | "right"
+  >("left");
+  const [textBackgroundColor, setTextBackgroundColor] = useState<string>("");
+  const [noteBackgroundColor, setNoteBackgroundColor] = useState("#ffd54f");
+  const [shapeStrokeColor, setShapeStrokeColor] = useState("#cf5b5b");
+  const [shapeFillColor, setShapeFillColor] = useState("#0000ff");
   const [shapeOpacity, setShapeOpacity] = useState(50);
   const [shapeStrokeOpacity, setShapeStrokeOpacity] = useState(50);
   const [shapeFillOpacity, setShapeFillOpacity] = useState(50);
@@ -105,8 +107,8 @@ export const useAnnotationStyleState = (
             customData: {
               toolId,
               annotationToolId: toolId,
-              source: 'annotate',
-              author: 'User',
+              source: "annotate",
+              author: "User",
               createdAt: new Date().toISOString(),
               modifiedAt: new Date().toISOString(),
             },
@@ -114,25 +116,42 @@ export const useAnnotationStyleState = (
         : {};
 
       switch (toolId) {
-        case 'ink':
+        case "ink":
           return { color: inkColor, thickness: inkWidth, ...metadata };
-        case 'inkHighlighter':
+        case "inkHighlighter":
           return {
             color: highlightColor,
             opacity: highlightOpacity / 100,
             thickness: freehandHighlighterWidth,
             ...metadata,
           };
-        case 'highlight':
-          return { color: highlightColor, opacity: highlightOpacity / 100, ...metadata };
-        case 'underline':
-          return { color: underlineColor, opacity: underlineOpacity / 100, ...metadata };
-        case 'strikeout':
-          return { color: strikeoutColor, opacity: strikeoutOpacity / 100, ...metadata };
-        case 'squiggly':
-          return { color: squigglyColor, opacity: squigglyOpacity / 100, ...metadata };
-        case 'text': {
-          const textAlignNumber = textAlignment === 'left' ? 0 : textAlignment === 'center' ? 1 : 2;
+        case "highlight":
+          return {
+            color: highlightColor,
+            opacity: highlightOpacity / 100,
+            ...metadata,
+          };
+        case "underline":
+          return {
+            color: underlineColor,
+            opacity: underlineOpacity / 100,
+            ...metadata,
+          };
+        case "strikeout":
+          return {
+            color: strikeoutColor,
+            opacity: strikeoutOpacity / 100,
+            ...metadata,
+          };
+        case "squiggly":
+          return {
+            color: squigglyColor,
+            opacity: squigglyOpacity / 100,
+            ...metadata,
+          };
+        case "text": {
+          const textAlignNumber =
+            textAlignment === "left" ? 0 : textAlignment === "center" ? 1 : 2;
           return {
             color: textColor,
             textColor: textColor,
@@ -142,8 +161,8 @@ export const useAnnotationStyleState = (
             ...metadata,
           };
         }
-        case 'note': {
-          const noteFillColor = noteBackgroundColor || 'transparent';
+        case "note": {
+          const noteFillColor = noteBackgroundColor || "transparent";
           return {
             color: textColor,
             fillColor: noteFillColor,
@@ -151,9 +170,9 @@ export const useAnnotationStyleState = (
             ...metadata,
           };
         }
-        case 'square':
-        case 'circle':
-        case 'polygon':
+        case "square":
+        case "circle":
+        case "polygon":
           return {
             color: shapeFillColor,
             strokeColor: shapeStrokeColor,
@@ -163,9 +182,9 @@ export const useAnnotationStyleState = (
             borderWidth: shapeThickness,
             ...metadata,
           };
-        case 'line':
-        case 'polyline':
-        case 'lineArrow':
+        case "line":
+        case "polyline":
+        case "lineArrow":
           return {
             color: shapeStrokeColor,
             strokeColor: shapeStrokeColor,
@@ -173,9 +192,11 @@ export const useAnnotationStyleState = (
             borderWidth: shapeThickness,
             ...metadata,
           };
-        case 'stamp': {
+        case "stamp": {
           const pdfSize =
-            extras?.stampImageSize && cssToPdfSize ? cssToPdfSize(extras.stampImageSize) : undefined;
+            extras?.stampImageSize && cssToPdfSize
+              ? cssToPdfSize(extras.stampImageSize)
+              : undefined;
           return {
             imageSrc: extras?.stampImageData,
             ...(pdfSize ? { imageSize: pdfSize } : {}),
@@ -210,20 +231,21 @@ export const useAnnotationStyleState = (
       textSize,
       underlineColor,
       underlineOpacity,
-    ]
+    ],
   );
 
   const getActiveColor = useCallback(
     (target: string | null) => {
-      if (target === 'ink') return inkColor;
-      if (target === 'highlight' || target === 'inkHighlighter') return highlightColor;
-      if (target === 'underline') return underlineColor;
-      if (target === 'strikeout') return strikeoutColor;
-      if (target === 'squiggly') return squigglyColor;
-      if (target === 'shapeStroke') return shapeStrokeColor;
-      if (target === 'shapeFill') return shapeFillColor;
-      if (target === 'textBackground') return textBackgroundColor || '#ffffff';
-      if (target === 'noteBackground') return noteBackgroundColor || '#ffffff';
+      if (target === "ink") return inkColor;
+      if (target === "highlight" || target === "inkHighlighter")
+        return highlightColor;
+      if (target === "underline") return underlineColor;
+      if (target === "strikeout") return strikeoutColor;
+      if (target === "squiggly") return squigglyColor;
+      if (target === "shapeStroke") return shapeStrokeColor;
+      if (target === "shapeFill") return shapeFillColor;
+      if (target === "textBackground") return textBackgroundColor || "#ffffff";
+      if (target === "noteBackground") return noteBackgroundColor || "#ffffff";
       return textColor;
     },
     [
@@ -237,7 +259,7 @@ export const useAnnotationStyleState = (
       textBackgroundColor,
       textColor,
       underlineColor,
-    ]
+    ],
   );
 
   const styleState: StyleState = useMemo(
@@ -288,7 +310,7 @@ export const useAnnotationStyleState = (
       textSize,
       underlineColor,
       underlineOpacity,
-    ]
+    ],
   );
 
   const styleActions: StyleActions = {

@@ -1,7 +1,7 @@
-import { ActionIcon, Popover } from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import BulkSelectionPanel from '@app/components/pageEditor/BulkSelectionPanel';
+import { ActionIcon, Popover } from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import BulkSelectionPanel from "@app/components/pageEditor/BulkSelectionPanel";
 
 interface PageSelectByNumberButtonProps {
   disabled: boolean;
@@ -25,15 +25,20 @@ export default function PageSelectByNumberButton({
   updatePagesFromCSV,
 }: PageSelectByNumberButtonProps) {
   return (
-    <Tooltip content={label} position="left" offset={12} arrow portalTarget={document.body}>
-      <div className={`right-rail-fade enter`}>
+    <Tooltip
+      content={label}
+      position="bottom"
+      offset={12}
+      arrow
+      portalTarget={document.body}
+    >
+      <div>
         <Popover position="left" withArrow shadow="md" offset={8}>
           <Popover.Target>
-            <div style={{ display: 'inline-flex' }}>
+            <div style={{ display: "inline-flex" }}>
               <ActionIcon
                 variant="subtle"
                 radius="md"
-                className="right-rail-icon"
                 disabled={disabled || totalPages === 0}
                 aria-label={label}
               >
@@ -42,7 +47,7 @@ export default function PageSelectByNumberButton({
             </div>
           </Popover.Target>
           <Popover.Dropdown>
-            <div style={{ minWidth: '24rem', maxWidth: '32rem' }}>
+            <div style={{ minWidth: "24rem", maxWidth: "32rem" }}>
               <BulkSelectionPanel
                 csvInput={csvInput}
                 setCsvInput={setCsvInput}

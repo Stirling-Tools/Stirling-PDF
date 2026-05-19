@@ -1,7 +1,7 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rficokptxxxxtyzcvgmx.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
@@ -14,7 +14,7 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 // Log warning if not configured (for self-hosted installations)
 if (!isSupabaseConfigured) {
   console.warn(
-    'Supabase is not configured. Checkout and billing features will be disabled. ' +
-    'Static plan information will be displayed instead.'
+    "Supabase is not configured. Checkout and billing features will be disabled. " +
+      "Static plan information will be displayed instead.",
   );
 }

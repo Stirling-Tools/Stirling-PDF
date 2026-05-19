@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useBookmarkCapability } from '@embedpdf/plugin-bookmark/react';
-import { BookmarkCapability } from '@embedpdf/plugin-bookmark';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { BookmarkState, BookmarkAPIWrapper } from '@app/contexts/viewer/viewerBridges';
+import { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  useBookmarkCapability,
+  BookmarkCapability,
+} from "@embedpdf/plugin-bookmark/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import {
+  BookmarkState,
+  BookmarkAPIWrapper,
+} from "@app/contexts/viewer/viewerBridges";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
+/**
+ * Connects the PDF bookmark plugin to the shared ViewerContext.
+ */
 export function BookmarkAPIBridge() {
   const { provides: bookmarkCapability } = useBookmarkCapability();
   const { registerBridge } = useViewer();
@@ -12,10 +21,20 @@ export function BookmarkAPIBridge() {
     isLoading: false,
     error: null,
   });
+  const documentReady = useDocumentReady();
 
   const fetchBookmarks = useCallback(
     async (capability: BookmarkCapability) => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      if (!documentReady) {
+        setState((prev) => ({
+          ...prev,
+          error: "Document not ready or bookmark capability not available",
+          isLoading: false,
+        }));
+        return [];
+      }
+
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
       try {
         const task = capability.getBookmarks();
         const result = await task.toPromise();
@@ -26,7 +45,8 @@ export function BookmarkAPIBridge() {
         });
         return result.bookmarks ?? [];
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to load bookmarks';
+        const message =
+          error instanceof Error ? error.message : "Failed to load bookmarks";
         setState({
           bookmarks: null,
           isLoading: false,
@@ -35,11 +55,12 @@ export function BookmarkAPIBridge() {
         throw error;
       }
     },
-    []
+    [documentReady],
   );
 
   const api = useMemo<BookmarkAPIWrapper | null>(() => {
-    if (!bookmarkCapability) return null;
+    // Only provide API when both capability AND document are ready
+    if (!bookmarkCapability || !documentReady) return null;
 
     return {
       fetchBookmarks: () => fetchBookmarks(bookmarkCapability),
@@ -58,15 +79,22 @@ export function BookmarkAPIBridge() {
         });
       },
     };
-  }, [bookmarkCapability, fetchBookmarks]);
+  }, [bookmarkCapability, documentReady, fetchBookmarks]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api) {
+      registerBridge("bookmark", null);
+      return;
+    }
 
-    registerBridge('bookmark', {
+    registerBridge("bookmark", {
       state,
       api,
     });
+
+    return () => {
+      registerBridge("bookmark", null);
+    };
   }, [api, state, registerBridge]);
 
   return null;

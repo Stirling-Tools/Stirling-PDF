@@ -1,19 +1,19 @@
 /**
  * OnboardingTour Component
- * 
+ *
  * Reusable tour wrapper that encapsulates all Reactour configuration.
  * Used by the main Onboarding component for both the 'tour' step and
  * when the tour is open but onboarding is inactive.
  */
 
-import React from 'react';
-import { TourProvider, useTour, type StepType } from '@reactour/tour';
-import { CloseButton, ActionIcon } from '@mantine/core';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckIcon from '@mui/icons-material/Check';
-import type { TFunction } from 'i18next';
-import i18n from '@app/i18n';
+import React from "react";
+import { TourProvider, useTour, type StepType } from "@reactour/tour";
+import { CloseButton, ActionIcon } from "@mantine/core";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CheckIcon from "@mui/icons-material/Check";
+import type { TFunction } from "i18next";
+import i18n from "@app/i18n";
 
 /**
  * TourContent - Controls the tour visibility
@@ -49,7 +49,7 @@ interface CloseArgs {
 
 interface OnboardingTourProps {
   tourSteps: StepType[];
-  tourType: 'admin' | 'tools' | 'whatsnew';
+  tourType: "admin" | "tools" | "whatsnew";
   isRTL: boolean;
   t: TFunction;
   isOpen: boolean;
@@ -72,7 +72,7 @@ export default function OnboardingTour({
     <TourProvider
       key={`${tourType}-${i18n.language}`}
       steps={tourSteps}
-      maskClassName={tourType === 'admin' ? 'admin-tour-mask' : undefined}
+      maskClassName={tourType === "admin" ? "admin-tour-mask" : undefined}
       onClickClose={onClose}
       onClickMask={onAdvance}
       onClickHighlighted={(e, clickProps) => {
@@ -80,10 +80,10 @@ export default function OnboardingTour({
         onAdvance(clickProps);
       }}
       keyboardHandler={(e, clickProps, status) => {
-        if (e.key === 'ArrowRight' && !status?.isRightDisabled && clickProps) {
+        if (e.key === "ArrowRight" && !status?.isRightDisabled && clickProps) {
           e.preventDefault();
           onAdvance(clickProps);
-        } else if (e.key === 'Escape' && !status?.isEscDisabled && clickProps) {
+        } else if (e.key === "Escape" && !status?.isEscDisabled && clickProps) {
           e.preventDefault();
           onClose(clickProps);
         }
@@ -92,12 +92,12 @@ export default function OnboardingTour({
       styles={{
         popover: (base) => ({
           ...base,
-          backgroundColor: 'var(--mantine-color-body)',
-          color: 'var(--mantine-color-text)',
-          borderRadius: '8px',
-          padding: '20px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          maxWidth: '400px',
+          backgroundColor: "var(--mantine-color-body)",
+          color: "var(--mantine-color-text)",
+          borderRadius: "8px",
+          padding: "20px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          maxWidth: "400px",
         }),
         maskArea: (base) => ({
           ...base,
@@ -105,11 +105,11 @@ export default function OnboardingTour({
         }),
         badge: (base) => ({
           ...base,
-          backgroundColor: 'var(--mantine-primary-color-filled)',
+          backgroundColor: "var(--mantine-primary-color-filled)",
         }),
         controls: (base) => ({
           ...base,
-          justifyContent: 'center',
+          justifyContent: "center",
         }),
       }}
       highlightedMaskClassName="tour-highlight-glow"
@@ -119,15 +119,31 @@ export default function OnboardingTour({
       disableInteraction={true}
       disableDotsNavigation={false}
       prevButton={() => null}
-      nextButton={({ currentStep: tourCurrentStep, stepsLength, setCurrentStep, setIsOpen }) => {
+      nextButton={({
+        currentStep: tourCurrentStep,
+        stepsLength,
+        setCurrentStep,
+        setIsOpen,
+      }) => {
         const isLast = tourCurrentStep === stepsLength - 1;
         const ArrowIcon = isRTL ? ArrowBackIcon : ArrowForwardIcon;
         return (
           <ActionIcon
-            onClick={() => onAdvance({ setCurrentStep, currentStep: tourCurrentStep, steps: tourSteps, setIsOpen })}
+            onClick={() =>
+              onAdvance({
+                setCurrentStep,
+                currentStep: tourCurrentStep,
+                steps: tourSteps,
+                setIsOpen,
+              })
+            }
             variant="subtle"
             size="lg"
-            aria-label={isLast ? t('onboarding.finish', 'Finish') : t('onboarding.next', 'Next')}
+            aria-label={
+              isLast
+                ? t("onboarding.finish", "Finish")
+                : t("onboarding.next", "Next")
+            }
           >
             {isLast ? <CheckIcon /> : <ArrowIcon />}
           </ActionIcon>
@@ -135,10 +151,17 @@ export default function OnboardingTour({
       }}
       components={{
         Close: ({ onClick }) => (
-          <CloseButton onClick={onClick} size="md" style={{ position: 'absolute', top: '8px', right: '8px' }} />
+          <CloseButton
+            onClick={onClick}
+            size="md"
+            style={{ position: "absolute", top: "8px", right: "8px" }}
+          />
         ),
         Content: ({ content }: { content: string }) => (
-          <div style={{ paddingRight: '16px' }} dangerouslySetInnerHTML={{ __html: content }} />
+          <div
+            style={{ paddingRight: "16px" }}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         ),
       }}
     >
@@ -148,4 +171,3 @@ export default function OnboardingTour({
 }
 
 export type { AdvanceArgs, CloseArgs };
-

@@ -12,10 +12,10 @@ const ScannerImageSplit = (props: BaseToolProps) => {
   const scannerImageSplitTips = useScannerImageSplitTips();
 
   const base = useBaseTool(
-    'scannerImageSplit',
+    "scannerImageSplit",
     useScannerImageSplitParameters,
     useScannerImageSplitOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -27,7 +27,9 @@ const ScannerImageSplit = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: scannerImageSplitTips,
         content: (
           <ScannerImageSplitSettings
@@ -43,7 +45,8 @@ const ScannerImageSplit = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

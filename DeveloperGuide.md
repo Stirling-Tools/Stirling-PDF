@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. **Stirling 2.0** represents a complete frontend rewrite, replacing the legacy Thymeleaf-based UI with a modern React SPA (Single Page Application).
+Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. **Stirling 2.0** represents a complete frontend rewrite with a modern React SPA (Single Page Application).
 
 This guide focuses on developing for Stirling 2.0, including both the React frontend and Spring Boot backend development workflows.
 
@@ -11,7 +11,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 **Stirling 2.0** is built using:
 
 **Backend:**
-- Spring Boot (Java 17+, JDK 21 recommended)
+- Spring Boot (Java 21+, JDK 25 recommended)
 - PDFBox for core PDF operations
 - LibreOffice for document conversions
 - qpdf for PDF optimization
@@ -38,18 +38,17 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - PDF file association support
 - Self-contained JRE bundling with JLink
 
-**Legacy (reference only during development):**
-- Thymeleaf templates (being completely replaced in 2.0)
-
 ## 3. Development Environment Setup
 
 ### Prerequisites
 
+- [Task](https://taskfile.dev/installation/) — unified command runner (recommended)
 - Docker
 - Git
-- Java JDK 17 or later (JDK 21 recommended)
+- Java JDK 21 or later (JDK 25 recommended)
 - Node.js 18+ and npm (required for frontend development)
 - Gradle 7.0 or later (Included within the repo)
+- [uv](https://docs.astral.sh/uv/) — Python package manager (required for engine development)
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)
 
@@ -62,7 +61,7 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
    cd Stirling-PDF
    ```
 
-2. Install Docker and JDK17 if not already installed.
+2. Install Docker and JDK 21 (or JDK 25 recommended) if not already installed.
 
 3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
    1. Only VSCode
@@ -85,13 +84,29 @@ For local testing, you should generally be testing the full 'Security' version o
 5. **Frontend Setup (Required for Stirling 2.0)**
    Navigate to the frontend directory and install dependencies using npm.
 
+### Verify Setup
+
+Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes.
+
 ## 4. Stirling 2.0 Development Workflow
+
+### Using Taskfile (Recommended)
+
+The fastest way to start developing:
+
+1. **Start developing**: `task dev` (runs backend + frontend concurrently — Ctrl+C to stop)
+2. **Or start services individually** in separate terminals:
+   - `task backend:dev` — Spring Boot on localhost:8080
+   - `task frontend:dev` — Vite on localhost:5173
+   - `task engine:dev` — FastAPI on localhost:5001
+
+Run `task --list` to see all available commands.
 
 ### Frontend Development (React)
 The frontend is a React SPA that runs independently during development:
 
-1. **Start the backend**: Run the Spring Boot application (serves API endpoints on localhost:8080)
-2. **Start the frontend dev server**: Navigate to the frontend directory and run the development server (serves UI on localhost:5173)
+1. **Start the backend**: `task backend:dev` (serves API endpoints on localhost:8080)
+2. **Start the frontend dev server**: `task frontend:dev` (serves UI on localhost:5173)
 3. **Development flow**: The Vite dev server automatically proxies API calls to the backend
 
 ### File Storage Architecture
@@ -100,12 +115,12 @@ Stirling 2.0 uses client-side file storage:
 - **PDF.js**: Handles client-side PDF rendering and processing
 - **URL Parameters**: Support for deep linking and tool state persistence
 
-### Legacy Code Reference
-The existing Thymeleaf templates remain in the codebase during development as reference material but will be completely removed for the 2.0 release.
-
 ### Tauri Desktop App Development
 Stirling-PDF can be packaged as a cross-platform desktop application using Tauri with PDF file association support and bundled JRE.
-See [the frontend README](frontend/README.md#tauri) for build instructions.
+
+Using Taskfile: `task desktop:dev` (development) or `task desktop:build` (production build).
+
+See [the frontend README](frontend/README.md#tauri) for detailed build instructions.
 
 ## 5. Project Structure
 
@@ -154,7 +169,6 @@ Stirling-PDF/
 │   │       │   ├── css/
 │   │       │   ├── js/
 │   │       │   └── pdfjs/
-│   │       └── templates/         # Legacy Thymeleaf templates (reference only)
 │   └── test/
 ├── testing/               # Cucumber and integration tests
 │   └── cucumber/          # Cucumber test files
@@ -194,7 +208,7 @@ services:
         limits:
           memory: 4G
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -q 'Please sign in'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -q 'Please sign in'"]
       interval: 5s
       timeout: 10s
       retries: 16
@@ -229,6 +243,20 @@ docker-compose -f exampleYmlFiles/docker-compose-latest-security.yml up
 
 ### Building Docker Images
 
+#### Using Taskfile (Recommended)
+
+```bash
+task docker:build            # standard image
+task docker:build:fat        # fat image (all features)
+task docker:build:ultra-lite # ultra-lite image
+task docker:up               # start standard compose stack
+task docker:up:fat           # start fat compose stack
+task docker:down             # stop all stacks
+task docker:logs             # tail logs
+```
+
+#### Manual Docker Builds
+
 Stirling-PDF uses different Docker images for various configurations. The build process is controlled by environment variables and uses specific Dockerfile variants. Here's how to build the Docker images:
 
 1. Set the security environment variable:
@@ -237,10 +265,10 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
    ```
 
-2. Build the project with Gradle:
+2. Build the project:
 
    ```bash
-   ./gradlew clean build
+   task backend:build
    ```
 
 3. Build the Docker images:
@@ -268,9 +296,18 @@ Note: The `--no-cache` and `--pull` flags ensure that the build process uses the
 
 ## 7. Testing
 
+### Quick Testing with Taskfile
+
+Run all unit/integration tests across all components:
+
+```bash
+task test    # run all tests (backend + frontend + engine)
+task check   # full quality gate: lint + typecheck + test
+```
+
 ### Comprehensive Testing Script
 
-Stirling-PDF provides a `test.sh` script in the root directory. This script builds all versions of Stirling-PDF, checks that each version works, and runs Cucumber tests. It's recommended to run this script before submitting a final pull request.
+Stirling-PDF also provides a `test.sh` script in the root directory for Docker integration tests. This script builds all versions of Stirling-PDF, checks that each version works, and runs Cucumber tests. It's recommended to run this script before submitting a final pull request.
 
 To run the test script:
 
@@ -296,10 +333,11 @@ Note: The `test.sh` script will run automatically when you raise a PR. However, 
 
 For React frontend development:
 
-1. Start the backend: Run the Spring Boot application to serve API endpoints on localhost:8080
-2. Start the frontend dev server: Navigate to the frontend directory and run the development server on localhost:5173
+1. Start the backend: `task backend:dev` (serves API endpoints on localhost:8080)
+2. Start the frontend dev server: `task frontend:dev` (serves UI on localhost:5173)
 3. The Vite dev server automatically proxies API calls to the backend
-4. Test React components, UI interactions, and IndexedDB file operations using browser developer tools
+4. Run frontend tests: `task frontend:test` (or `task frontend:test:watch` for watch mode)
+5. Test React components, UI interactions, and IndexedDB file operations using browser developer tools
 
 ### Local Testing (Java and UI Components)
 
@@ -309,14 +347,13 @@ For quick iterations and development of Java backend, JavaScript, and UI compone
 - RESTful API endpoints
 - JavaScript functionality
 - User interface components and styling
-- Thymeleaf templates
 
 To run Stirling-PDF locally:
 
 1. Compile and run the project using built-in IDE methods or by running:
 
    ```bash
-   ./gradlew bootRun
+   task backend:dev
    ```
 
 2. Access the application at `http://localhost:8080` in your web browser.
@@ -337,10 +374,11 @@ Important notes:
 2. Create a new branch for your feature or bug fix.
 3. Make your changes and commit them with clear, descriptive messages and ensure any documentation is updated related to your changes.
 4. Test your changes thoroughly in the Docker environment.
-5. Run the `test.sh` script to ensure all versions build correctly and pass the Cucumber tests:
+5. Run the quality gate and integration tests:
 
    ```bash
-   ./test.sh
+   task check   # lint + typecheck + test across all components
+   ./test.sh    # Docker integration tests (builds all variants + Cucumber)
    ```
 
 6. Push your changes to your fork.
@@ -401,7 +439,7 @@ Remember to test your changes thoroughly to ensure they don't break any existing
 
 ### React Component Development (Stirling 2.0)
 
-For Stirling 2.0, new features are built as React components instead of Thymeleaf templates:
+For Stirling 2.0, new features are built as React components:
 
 #### Creating a New Tool Component
 
@@ -448,61 +486,6 @@ For Stirling 2.0, new features are built as React components instead of Thymelea
 3. **Register in Tool Picker:**
    Update the tool picker component to include the new tool with proper routing and URL parameter support.
 
-### Legacy Reference: Overview of Thymeleaf
-
-Thymeleaf is a server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot.
-
-### Thymeleaf overview
-
-In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `stirling-pdf/src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
-
-Some examples of this are:
-
-```html
-<th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-```
-or
-```html
-<th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-```
-
-Where it uses the `th:block`, `th:` indicating it's a special Thymeleaf element to be used server-side in generating the HTML, and block being the actual element type.
-In this case, we are inserting the `navbar` entry within the `fragments/navbar.html` fragment into the `th:block` element.
-
-They can be more complex, such as:
-
-```html
-<th:block th:insert="~{fragments/common :: head(title=#{pageExtracter.title}, header=#{pageExtracter.header})}"></th:block>
-```
-
-Which is the same as above but passes the parameters title and header into the fragment `common.html` to be used in its HTML generation.
-
-Thymeleaf can also be used to loop through objects or pass things from the Java side into the HTML side.
-
-```java
- @GetMapping
-       public String newFeaturePage(Model model) {
-           model.addAttribute("exampleData", exampleData);
-           return "new-feature";
-       }
-```
-
-In the above example, if exampleData is a list of plain java objects of class Person and within it, you had id, name, age, etc. You can reference it like so
-
-```html
-<tbody>
-   <!-- Use th:each to iterate over the list -->
-   <tr th:each="person : ${exampleData}">
-       <td th:text="${person.id}"></td>
-       <td th:text="${person.name}"></td>
-       <td th:text="${person.age}"></td>
-       <td th:text="${person.email}"></td>
-   </tr>
-</tbody>
-```
-
-This would generate n entries of tr for each person in exampleData
-
 ### Adding a New Feature to the Backend (API)
 
 1. **Create a New Controller:**
@@ -527,7 +510,7 @@ This would generate n entries of tr for each person in exampleData
        @GetMapping
        @Operation(summary = "New Feature", description = "This is a new feature endpoint.")
        public String newFeature() {
-           return "NewFeatureResponse"; // This refers to the NewFeatureResponse.html template presenting the user with the generated html from that file when they navigate to /api/v1/new-feature
+           return "NewFeatureResponse";
        }
    }
    ```
@@ -582,91 +565,6 @@ This would generate n entries of tr for each person in exampleData
   }
   ```
 
-### Adding a New Feature to the Frontend (UI)
-
-1. **Create a New Thymeleaf Template:**
-   - Create a new HTML file in the `stirling-pdf/src/main/resources/templates` directory.
-   - Use Thymeleaf attributes to dynamically generate content.
-   - Use `extract-page.html` as a base example for the HTML template, which is useful to ensure importing of the general layout, navbar, and footer.
-
-   ```html
-   <!DOCTYPE html>
-   <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
-     <head>
-     <th:block th:insert="~{fragments/common :: head(title=#{newFeature.title}, header=#{newFeature.header})}"></th:block>
-     </head>
-
-     <body>
-       <div id="page-container">
-         <div id="content-wrap">
-           <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-           <br><br>
-           <div class="container">
-             <div class="row justify-content-center">
-               <div class="col-md-6 bg-card">
-                 <div class="tool-header">
-                   <span class="material-symbols-rounded tool-header-icon organize">upload</span>
-                   <span class="tool-header-text" th:text="#{newFeature.header}"></span>
-                 </div>
-                 <form th:action="@{'/api/v1/new-feature'}" method="post" enctype="multipart/form-data">
-                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                   <input type="hidden" id="customMode" name="customMode" value="">
-                   <div class="mb-3">
-                     <label for="featureInput" th:text="#{newFeature.prompt}"></label>
-                     <input type="text" class="form-control" id="featureInput" name="featureInput" th:placeholder="#{newFeature.placeholder}" required>
-                   </div>
-
-                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{newFeature.submit}"></button>
-                 </form>
-               </div>
-             </div>
-           </div>
-         </div>
-         <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-       </div>
-     </body>
-   </html>
-   ```
-
-2. **Create a New Controller for the UI:**
-   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/ui` directory.
-   - Annotate the class with `@Controller` and `@RequestMapping` to define the UI endpoint.
-
-   ```java
-   package stirling.software.SPDF.controller.ui;
-
-   import org.springframework.beans.factory.annotation.Autowired;
-   import org.springframework.stereotype.Controller;
-   import org.springframework.ui.Model;
-   import org.springframework.web.bind.annotation.GetMapping;
-   import org.springframework.web.bind.annotation.RequestMapping;
-   import stirling.software.SPDF.service.NewFeatureService;
-
-   @Controller
-   @RequestMapping("/new-feature")
-   public class NewFeatureUIController {
-
-       @Autowired
-       private NewFeatureService newFeatureService;
-
-       @GetMapping
-       public String newFeaturePage(Model model) {
-           model.addAttribute("newFeatureData", newFeatureService.getNewFeatureData());
-           return "new-feature";
-       }
-   }
-   ```
-
-3. **Update the Navigation Bar:**
-   - Add a link to the new feature page in the navigation bar.
-   - Update the `stirling-pdf/src/main/resources/templates/fragments/navbar.html` file.
-
-   ```html
-   <li class="nav-item">
-       <a class="nav-link" th:href="@{'/new-feature'}">New Feature</a>
-   </li>
-   ```
-
 ## Adding New Translations to Existing Language Files in Stirling-PDF
 
 When adding a new feature or modifying existing ones in Stirling-PDF, you'll need to add new translation entries to the existing language files. Here's a step-by-step guide:
@@ -695,16 +593,5 @@ pdfSplitter.input.pages=Enter page numbers to split
 ```
 
 Add these entries to the default GB language file and any others you wish, translating the values as appropriate for each language.
-
-### 3. Use Translations in Thymeleaf Templates
-
-In your Thymeleaf templates, use the `#{key}` syntax to reference the new translations:
-
-```html
-<h1 th:text="#{pdfSplitter.title}">PDF Splitter</h1>
-<p th:text="#{pdfSplitter.description}">Split your PDF into multiple documents</p>
-<input type="text" th:placeholder="#{pdfSplitter.input.pages}">
-<button th:text="#{pdfSplitter.button.split}">Split PDF</button>
-```
 
 Remember, never hard-code text in your templates or Java code. Always use translation keys to ensure proper localization.

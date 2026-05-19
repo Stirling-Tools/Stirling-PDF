@@ -32,19 +32,27 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
         <StorageIcon />
         <div style={{ flex: 1 }}>
           <Text size="sm" fw={500}>
-            {t("fileManager.storage", "Storage")}: {formatFileSize(storageStats.used)}
+            {t("fileManager.storage", "Storage")}:{" "}
+            {formatFileSize(storageStats.used)}
             {storageStats.quota && ` / ${formatFileSize(storageStats.quota)}`}
           </Text>
           {storageStats.quota && (
             <Progress
               value={storageUsagePercent}
-              color={storageUsagePercent > 80 ? "red" : storageUsagePercent > 60 ? "yellow" : "blue"}
+              color={
+                storageUsagePercent > 80
+                  ? "red"
+                  : storageUsagePercent > 60
+                    ? "yellow"
+                    : "blue"
+              }
               size="sm"
               mt={4}
             />
           )}
           <Text size="xs" c="dimmed">
-            {storageStats.fileCount} {t("fileManager.filesStored", "files stored")}
+            {storageStats.fileCount}{" "}
+            {t("fileManager.filesStored", "files stored")}
           </Text>
         </div>
         <Group gap="xs">

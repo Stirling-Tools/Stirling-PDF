@@ -1,8 +1,8 @@
-import { Modal, Text, Group, Button, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
+import { Modal, Text, Group, Button, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface RestartConfirmationModalProps {
   opened: boolean;
@@ -23,7 +23,7 @@ export default function RestartConfirmationModal({
       onClose={onClose}
       title={
         <Text fw={600} size="lg">
-          {t('admin.settings.restart.title', 'Restart Required')}
+          {t("admin.settings.restart.title", "Restart Required")}
         </Text>
       }
       centered
@@ -34,15 +34,15 @@ export default function RestartConfirmationModal({
       <Stack gap="lg">
         <Text size="sm">
           {t(
-            'admin.settings.restart.message',
-            'Settings have been saved successfully. A server restart is required for the changes to take effect.'
+            "admin.settings.restart.message",
+            "Settings have been saved successfully. A server restart is required for the changes to take effect.",
           )}
         </Text>
 
         <Text size="sm" c="dimmed">
           {t(
-            'admin.settings.restart.question',
-            'Would you like to restart the server now or later?'
+            "admin.settings.restart.question",
+            "Would you like to restart the server now or later?",
           )}
         </Text>
 
@@ -52,14 +52,14 @@ export default function RestartConfirmationModal({
             leftSection={<ScheduleIcon style={{ fontSize: 16 }} />}
             onClick={onClose}
           >
-            {t('admin.settings.restart.later', 'Restart Later')}
+            {t("admin.settings.restart.later", "Restart Later")}
           </Button>
           <Button
             color="blue"
             leftSection={<RefreshIcon style={{ fontSize: 16 }} />}
             onClick={onRestart}
           >
-            {t('admin.settings.restart.now', 'Restart Now')}
+            {t("admin.settings.restart.now", "Restart Now")}
           </Button>
         </Group>
       </Stack>

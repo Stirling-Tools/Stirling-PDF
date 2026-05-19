@@ -18,15 +18,15 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
         with:
           egress-policy: audit
 
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Get commit hashes for frontend and backend
         id: commit-hashes
@@ -85,18 +85,20 @@ jobs:
           fi
 
       - name: Login to Docker Hub
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
       - name: Build and push frontend image
         if: steps.check-frontend.outputs.exists == 'false'
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-v2-frontend
+          cache-to: type=gha,mode=max,scope=stirling-v2-frontend
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
@@ -105,11 +107,13 @@ jobs:
 
       - name: Build and push backend image
         if: steps.check-backend.outputs.exists == 'false'
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
           file: ./docker/backend/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-v2-backend
+          cache-to: type=gha,mode=max,scope=stirling-v2-backend
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest

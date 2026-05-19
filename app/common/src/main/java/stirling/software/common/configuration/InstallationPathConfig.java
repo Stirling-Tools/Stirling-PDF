@@ -1,8 +1,6 @@
 package stirling.software.common.configuration;
 
 import java.io.File;
-import java.nio.file.Paths;
-import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,27 +59,17 @@ public class InstallationPathConfig {
     }
 
     private static String initializeBasePath() {
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-            String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-            if (os.contains("win")) {
-                return Paths.get(
-                                System.getenv("APPDATA"), // parent path
-                                "Stirling-PDF")
-                        + File.separator;
-            } else if (os.contains("mac")) {
-                return Paths.get(
-                                System.getProperty("user.home"),
-                                "Library",
-                                "Application Support",
-                                "Stirling-PDF")
-                        + File.separator;
-            } else {
-                return Paths.get(
-                                System.getProperty("user.home"), // parent path
-                                ".config",
-                                "Stirling-PDF")
-                        + File.separator;
-            }
+        // Allow tests / harnesses to redirect the entire state tree (configs,
+        // backups, customFiles, pipeline, logs) to an isolated location via
+        // -Dstirling.base-path=... or STIRLING_BASE_PATH=... so a Playwright
+        // run never touches a developer's working state.
+        String override = System.getProperty("stirling.base-path");
+        if (override == null || override.isBlank()) {
+            override = System.getenv("STIRLING_BASE_PATH");
+        }
+        if (override != null && !override.isBlank()) {
+            boolean hasTrailingSeparator = override.endsWith("/") || override.endsWith("\\");
+            return hasTrailingSeparator ? override : override + File.separator;
         }
         return "." + File.separator;
     }

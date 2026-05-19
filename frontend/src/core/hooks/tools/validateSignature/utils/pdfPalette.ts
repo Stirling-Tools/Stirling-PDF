@@ -1,9 +1,18 @@
-import { rgb } from 'pdf-lib';
+import { rgb } from "@app/services/pdfiumDocBuilder";
 
 type RgbTuple = [number, number, number];
 
 const defaultLightPalette: Record<
-  'headerBackground' | 'accent' | 'textPrimary' | 'textMuted' | 'boxBackground' | 'boxBorder' | 'warning' | 'danger' | 'success' | 'neutral',
+  | "headerBackground"
+  | "accent"
+  | "textPrimary"
+  | "textMuted"
+  | "boxBackground"
+  | "boxBorder"
+  | "warning"
+  | "danger"
+  | "success"
+  | "neutral",
   RgbTuple
 > = {
   headerBackground: [239, 246, 255],
@@ -21,22 +30,24 @@ const defaultLightPalette: Record<
 const toRgb = ([r, g, b]: RgbTuple) => rgb(r / 255, g / 255, b / 255);
 
 /**
- * Utility function to get CSS variable values and convert them to pdf-lib RGB format.
+ * Utility function to get CSS variable values and convert them to RGB format.
  * Falls back to sensible defaults when the CSS variable cannot be resolved.
  */
 function getCssVariableAsRgb(variableName: string, fallback: RgbTuple) {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return toRgb(fallback);
   }
 
-  const value = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
 
   if (!value) {
     console.warn(`CSS variable ${variableName} not found, using fallback`);
     return toRgb(fallback);
   }
 
-  const [r, g, b] = value.split(' ').map(Number);
+  const [r, g, b] = value.split(" ").map(Number);
 
   if ([r, g, b].some((component) => Number.isNaN(component))) {
     console.warn(`Invalid CSS variable format for ${variableName}: ${value}`);
@@ -47,14 +58,38 @@ function getCssVariableAsRgb(variableName: string, fallback: RgbTuple) {
 }
 
 export const colorPalette = {
-  headerBackground: getCssVariableAsRgb('--pdf-light-header-bg', defaultLightPalette.headerBackground),
-  accent: getCssVariableAsRgb('--pdf-light-accent', defaultLightPalette.accent),
-  textPrimary: getCssVariableAsRgb('--pdf-light-text-primary', defaultLightPalette.textPrimary),
-  textMuted: getCssVariableAsRgb('--pdf-light-text-muted', defaultLightPalette.textMuted),
-  boxBackground: getCssVariableAsRgb('--pdf-light-box-bg', defaultLightPalette.boxBackground),
-  boxBorder: getCssVariableAsRgb('--pdf-light-box-border', defaultLightPalette.boxBorder),
-  warning: getCssVariableAsRgb('--pdf-light-warning', defaultLightPalette.warning),
-  danger: getCssVariableAsRgb('--pdf-light-danger', defaultLightPalette.danger),
-  success: getCssVariableAsRgb('--pdf-light-success', defaultLightPalette.success),
-  neutral: getCssVariableAsRgb('--pdf-light-neutral', defaultLightPalette.neutral),
+  headerBackground: getCssVariableAsRgb(
+    "--pdf-light-header-bg",
+    defaultLightPalette.headerBackground,
+  ),
+  accent: getCssVariableAsRgb("--pdf-light-accent", defaultLightPalette.accent),
+  textPrimary: getCssVariableAsRgb(
+    "--pdf-light-text-primary",
+    defaultLightPalette.textPrimary,
+  ),
+  textMuted: getCssVariableAsRgb(
+    "--pdf-light-text-muted",
+    defaultLightPalette.textMuted,
+  ),
+  boxBackground: getCssVariableAsRgb(
+    "--pdf-light-box-bg",
+    defaultLightPalette.boxBackground,
+  ),
+  boxBorder: getCssVariableAsRgb(
+    "--pdf-light-box-border",
+    defaultLightPalette.boxBorder,
+  ),
+  warning: getCssVariableAsRgb(
+    "--pdf-light-warning",
+    defaultLightPalette.warning,
+  ),
+  danger: getCssVariableAsRgb("--pdf-light-danger", defaultLightPalette.danger),
+  success: getCssVariableAsRgb(
+    "--pdf-light-success",
+    defaultLightPalette.success,
+  ),
+  neutral: getCssVariableAsRgb(
+    "--pdf-light-neutral",
+    defaultLightPalette.neutral,
+  ),
 };

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Stack } from '@mantine/core';
-import { BaseAnnotationTool } from '@app/components/annotation/shared/BaseAnnotationTool';
-import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
+import React, { useState } from "react";
+import { Stack } from "@mantine/core";
+import { BaseAnnotationTool } from "@app/components/annotation/shared/BaseAnnotationTool";
+import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 
 interface ImageToolProps {
   onImageChange?: (data: string | null) => void;
@@ -10,7 +10,7 @@ interface ImageToolProps {
 
 export const ImageTool: React.FC<ImageToolProps> = ({
   onImageChange,
-  disabled = false
+  disabled = false,
 }) => {
   const [, setImageData] = useState<string | null>(null);
 
@@ -23,7 +23,7 @@ export const ImageTool: React.FC<ImageToolProps> = ({
             if (e.target?.result) {
               resolve(e.target.result as string);
             } else {
-              reject(new Error('Failed to read file'));
+              reject(new Error("Failed to read file"));
             }
           };
           reader.onerror = () => reject(reader.error);
@@ -33,7 +33,7 @@ export const ImageTool: React.FC<ImageToolProps> = ({
         setImageData(result);
         onImageChange?.(result);
       } catch (error) {
-        console.error('Error reading file:', error);
+        console.error("Error reading file:", error);
       }
     } else if (!file) {
       setImageData(null);
@@ -44,7 +44,7 @@ export const ImageTool: React.FC<ImageToolProps> = ({
   const toolConfig = {
     enableImageUpload: true,
     showPlaceButton: true,
-    placeButtonText: "Place Image"
+    placeButtonText: "Place Image",
   };
 
   return (
@@ -59,7 +59,7 @@ export const ImageTool: React.FC<ImageToolProps> = ({
           disabled={disabled}
           label="Upload Image"
           placeholder="Select image file"
-          hint="Upload a PNG, JPG, or other image file to place on the PDF"
+          hint="Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG files will be converted to PNG for compatibility."
         />
       </Stack>
     </BaseAnnotationTool>

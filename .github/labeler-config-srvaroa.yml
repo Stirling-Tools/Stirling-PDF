@@ -63,9 +63,6 @@ labels:
     files:
       - 'app/core/src/main/resources/static/.*'
       - 'app/proprietary/src/main/resources/static/.*'
-      - 'app/core/src/main/java/stirling/software/SPDF/controller/web/.*'
-      - 'app/core/src/main/java/stirling/software/SPDF/UI/.*'
-      - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
       - 'frontend/**'
       - 'frontend/.*'
       - 'frontend/**/.*'
@@ -74,6 +71,12 @@ labels:
     files:
       - 'frontend/src-tauri/**'
       - 'frontend/src-tauri/.*'
+
+  - label: 'engine'
+    files:
+      - 'engine/**'
+      - 'engine/.*'
+      - 'engine/**/.*'
 
   - label: 'Java'
     files:

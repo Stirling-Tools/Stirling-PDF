@@ -1,11 +1,13 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -21,6 +23,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -28,13 +32,14 @@ import stirling.software.common.util.WebResponseUtils;
 public class ShowJavascript {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/show-javascript")
     @JavaScriptResponse
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")
-    public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile file) throws Exception {
+    public ResponseEntity<Resource> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
         StringBuilder script = new StringBuilder();
         boolean foundScript = false;
@@ -77,8 +82,17 @@ public class ShowJavascript {
                                 .append("' does not contain Javascript");
             }
 
-            return WebResponseUtils.bytesToWebResponse(
-                    script.toString().getBytes(StandardCharsets.UTF_8),
+            TempFile tempOut = tempFileManager.createManagedTempFile(".js");
+            try {
+                Files.write(
+                        tempOut.getFile().toPath(),
+                        script.toString().getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                tempOut.close();
+                throw e;
+            }
+            return WebResponseUtils.fileToWebResponse(
+                    tempOut,
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js",
                     MediaType.TEXT_PLAIN);
         }

@@ -8,12 +8,12 @@
  * the main app chrome is not displayed.
  */
 export const AUTH_ROUTES = [
-  '/login',
-  '/signup',
-  '/auth',
-  '/invite',
-  '/forgot-password',
-  '/reset-password',
+  "/login",
+  "/signup",
+  "/auth",
+  "/invite",
+  "/forgot-password",
+  "/reset-password",
 ];
 
 /**
@@ -22,4 +22,3 @@ export const AUTH_ROUTES = [
 export function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTES.some((route) => pathname.startsWith(route));
 }
-

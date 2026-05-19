@@ -1,14 +1,11 @@
 import { Dispatch, SetStateAction, useCallback } from "react";
 
-import type {
-  useFileActions,
-  useFileState,
-} from "@app/contexts/FileContext";
+import type { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { documentManipulationService } from "@app/services/documentManipulationService";
 import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
 import { FileId } from "@app/types/file";
-import { PDFDocument } from "@app/types/pageEditor";
+import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
 type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
@@ -16,14 +13,16 @@ type FileSelectors = ReturnType<typeof useFileState>["selectors"];
 interface UsePageEditorExportParams {
   displayDocument: PDFDocument | null;
   selectedPageIds: string[];
-  splitPositions: Set<number>;
+  splitPositions: Set<string>;
   selectedFileIds: FileId[];
   selectors: FileSelectors;
   actions: FileActions;
   setHasUnsavedChanges: (dirty: boolean) => void;
   exportLoading: boolean;
   setExportLoading: (loading: boolean) => void;
-  setSplitPositions: Dispatch<SetStateAction<Set<number>>>;
+  setSplitPositions: Dispatch<SetStateAction<Set<string>>>;
+  clearPersistedDocument: () => void;
+  updateCurrentPages: (pages: PDFPage[] | null) => void;
 }
 
 const removePlaceholderPages = (document: PDFDocument): PDFDocument => {
@@ -45,7 +44,7 @@ const removePlaceholderPages = (document: PDFDocument): PDFDocument => {
 };
 
 const normalizeProcessedDocuments = (
-  processed: PDFDocument | PDFDocument[]
+  processed: PDFDocument | PDFDocument[],
 ): PDFDocument | PDFDocument[] => {
   if (Array.isArray(processed)) {
     const normalized = processed
@@ -67,6 +66,8 @@ export const usePageEditorExport = ({
   exportLoading,
   setExportLoading,
   setSplitPositions,
+  clearPersistedDocument,
+  updateCurrentPages,
 }: UsePageEditorExportParams) => {
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
@@ -111,22 +112,25 @@ export const usePageEditorExport = ({
         documentManipulationService.applyDOMChangesToDocument(
           displayDocument,
           displayDocument,
-          splitPositions
+          splitPositions,
         );
 
-      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+      const normalizedDocuments =
+        normalizeProcessedDocuments(processedDocuments);
       const documentWithDOMState = Array.isArray(normalizedDocuments)
         ? normalizedDocuments[0]
         : normalizedDocuments;
 
       if (!documentWithDOMState || documentWithDOMState.pages.length === 0) {
-        console.warn("Export skipped: no concrete pages available after filtering placeholders.");
+        console.warn(
+          "Export skipped: no concrete pages available after filtering placeholders.",
+        );
         setExportLoading(false);
         return;
       }
 
       const validSelectedPageIds = selectedPageIds.filter((pageId) =>
-        documentWithDOMState.pages.some((page) => page.id === pageId)
+        documentWithDOMState.pages.some((page) => page.id === pageId),
       );
 
       const sourceFiles = getSourceFiles();
@@ -136,12 +140,18 @@ export const usePageEditorExport = ({
             documentWithDOMState,
             sourceFiles,
             validSelectedPageIds,
-            { selectedOnly: true, filename: exportFilename }
+            {
+              selectedOnly: true,
+              filename: exportFilename,
+            },
           )
         : await pdfExportService.exportPDF(
             documentWithDOMState,
             validSelectedPageIds,
-            { selectedOnly: true, filename: exportFilename }
+            {
+              selectedOnly: true,
+              filename: exportFilename,
+            },
           );
 
       pdfExportService.downloadFile(result.blob, result.filename);
@@ -171,16 +181,21 @@ export const usePageEditorExport = ({
         documentManipulationService.applyDOMChangesToDocument(
           displayDocument,
           displayDocument,
-          splitPositions
+          splitPositions,
         );
 
-      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+      const normalizedDocuments =
+        normalizeProcessedDocuments(processedDocuments);
 
       if (
-        (Array.isArray(normalizedDocuments) && normalizedDocuments.length === 0) ||
-        (!Array.isArray(normalizedDocuments) && normalizedDocuments.pages.length === 0)
+        (Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.length === 0) ||
+        (!Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.pages.length === 0)
       ) {
-        console.warn("Export skipped: no concrete pages available after filtering placeholders.");
+        console.warn(
+          "Export skipped: no concrete pages available after filtering placeholders.",
+        );
         setExportLoading(false);
         return;
       }
@@ -190,7 +205,7 @@ export const usePageEditorExport = ({
       const files = await exportProcessedDocumentsToFiles(
         normalizedDocuments,
         sourceFiles,
-        exportFilename
+        exportFilename,
       );
 
       if (files.length > 1) {
@@ -235,16 +250,21 @@ export const usePageEditorExport = ({
         documentManipulationService.applyDOMChangesToDocument(
           displayDocument,
           displayDocument,
-          splitPositions
+          splitPositions,
         );
 
-      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+      const normalizedDocuments =
+        normalizeProcessedDocuments(processedDocuments);
 
       if (
-        (Array.isArray(normalizedDocuments) && normalizedDocuments.length === 0) ||
-        (!Array.isArray(normalizedDocuments) && normalizedDocuments.pages.length === 0)
+        (Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.length === 0) ||
+        (!Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.pages.length === 0)
       ) {
-        console.warn("Apply changes skipped: no concrete pages available after filtering placeholders.");
+        console.warn(
+          "Apply changes skipped: no concrete pages available after filtering placeholders.",
+        );
         setExportLoading(false);
         return;
       }
@@ -254,11 +274,11 @@ export const usePageEditorExport = ({
       const files = await exportProcessedDocumentsToFiles(
         normalizedDocuments,
         sourceFiles,
-        exportFilename
+        exportFilename,
       );
 
       // Add "_multitool" suffix to filenames
-      const renamedFiles = files.map(file => {
+      const renamedFiles = files.map((file) => {
         const nameParts = file.name.match(/^(.+?)(\.pdf)$/i);
         if (nameParts) {
           const baseName = nameParts[1];
@@ -272,11 +292,33 @@ export const usePageEditorExport = ({
       // Store source file IDs before adding new files
       const sourceFileIds = [...selectedFileIds];
 
+      // Clear all cached page state to prevent stale data from being merged
+      clearPersistedDocument();
+      updateCurrentPages(null);
+
+      // Deselect old files immediately so the view can reset before we mutate the file list
+      actions.setSelectedFiles([]);
+
+      // Remove the original files before inserting the newly generated versions
+      if (sourceFileIds.length > 0) {
+        await actions.removeFiles(sourceFileIds, true);
+      }
+
       const newStirlingFiles = await actions.addFiles(renamedFiles, {
         selectFiles: true,
       });
       if (newStirlingFiles.length > 0) {
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
+      }
+
+      if (sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
+        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
+        if (sourceStub?.localFilePath) {
+          actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
+            localFilePath: sourceStub.localFilePath,
+            isDirty: true,
+          });
+        }
       }
 
       // Remove source files from context
@@ -300,6 +342,8 @@ export const usePageEditorExport = ({
     selectedFileIds,
     setHasUnsavedChanges,
     setExportLoading,
+    clearPersistedDocument,
+    updateCurrentPages,
   ]);
 
   return {

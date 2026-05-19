@@ -10,15 +10,12 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
 
@@ -27,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -35,27 +34,24 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
+@ConvertApi
 @Slf4j
-@Tag(name = "Convert", description = "Convert APIs")
 @RequiredArgsConstructor
 public class PdfVectorExportController {
 
-    private static final MediaType PDF_MEDIA_TYPE = MediaType.APPLICATION_PDF;
     private static final Set<String> GHOSTSCRIPT_INPUTS =
             Set.of("ps", "eps", "epsf"); // PCL/PXL/XPS require GhostPDL (gpcl6/gxps)
 
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/vector/pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/vector/pdf")
     @Operation(
             summary = "Convert PostScript formats to PDF",
             description =
                     "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript."
                             + " Input:PS/EPS Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> convertGhostscriptInputsToPdf(
+    public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
         String originalName =
@@ -67,9 +63,9 @@ public class PdfVectorExportController {
                         ? FilenameUtils.getExtension(originalName).toLowerCase(Locale.ROOT)
                         : "";
 
+        TempFile outputTemp = tempFileManager.createManagedTempFile(".pdf");
         try (TempFile inputTemp =
-                        new TempFile(tempFileManager, extension.isEmpty() ? "" : "." + extension);
-                TempFile outputTemp = new TempFile(tempFileManager, ".pdf")) {
+                new TempFile(tempFileManager, extension.isEmpty() ? "" : "." + extension)) {
 
             request.getFileInput().transferTo(inputTemp.getFile());
 
@@ -87,20 +83,22 @@ public class PdfVectorExportController {
                         "Unsupported Ghostscript input format {0}",
                         extension);
             }
-
-            byte[] pdfBytes = Files.readAllBytes(outputTemp.getPath());
-            String outputName = GeneralUtils.generateFilename(originalName, "_converted.pdf");
-            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputName, PDF_MEDIA_TYPE);
+        } catch (Exception e) {
+            outputTemp.close();
+            throw e;
         }
+
+        String outputName = GeneralUtils.generateFilename(originalName, "_converted.pdf");
+        return WebResponseUtils.pdfFileToWebResponse(outputTemp, outputName);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/vector")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/vector")
     @Operation(
             summary = "Convert PDF to vector format",
             description =
                     "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS)."
                             + " Input:PDF Output:VECTOR Type:SISO")
-    public ResponseEntity<byte[]> convertPdfToVector(
+    public ResponseEntity<Resource> convertPdfToVector(
             @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
 
         String originalName =
@@ -114,35 +112,37 @@ public class PdfVectorExportController {
         }
         outputFormat = outputFormat.toLowerCase(Locale.ROOT);
 
-        try (TempFile inputTemp = new TempFile(tempFileManager, ".pdf");
-                TempFile outputTemp = new TempFile(tempFileManager, "." + outputFormat)) {
+        TempFile outputTemp = tempFileManager.createManagedTempFile("." + outputFormat);
+        try (TempFile inputTemp = new TempFile(tempFileManager, ".pdf")) {
 
             request.getFileInput().transferTo(inputTemp.getFile());
 
             runGhostscriptPdfToVector(inputTemp.getPath(), outputTemp.getPath(), outputFormat);
-
-            byte[] vectorBytes = Files.readAllBytes(outputTemp.getPath());
-            String outputName =
-                    GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
-
-            MediaType mediaType;
-            switch (outputFormat.toLowerCase(Locale.ROOT)) {
-                case "eps":
-                case "ps":
-                    mediaType = MediaType.parseMediaType("application/postscript");
-                    break;
-                case "pcl":
-                    mediaType = MediaType.parseMediaType("application/vnd.hp-PCL");
-                    break;
-                case "xps":
-                    mediaType = MediaType.parseMediaType("application/vnd.ms-xpsdocument");
-                    break;
-                default:
-                    mediaType = MediaType.APPLICATION_OCTET_STREAM;
-            }
-
-            return WebResponseUtils.bytesToWebResponse(vectorBytes, outputName, mediaType);
+        } catch (Exception e) {
+            outputTemp.close();
+            throw e;
         }
+
+        String outputName =
+                GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
+
+        MediaType mediaType;
+        switch (outputFormat.toLowerCase(Locale.ROOT)) {
+            case "eps":
+            case "ps":
+                mediaType = MediaType.parseMediaType("application/postscript");
+                break;
+            case "pcl":
+                mediaType = MediaType.parseMediaType("application/vnd.hp-PCL");
+                break;
+            case "xps":
+                mediaType = MediaType.parseMediaType("application/vnd.ms-xpsdocument");
+                break;
+            default:
+                mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        return WebResponseUtils.fileToWebResponse(outputTemp, outputName, mediaType);
     }
 
     private void runGhostscriptPdfToVector(Path inputPath, Path outputPath, String outputFormat)

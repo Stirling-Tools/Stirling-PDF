@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import apiClient from '@app/services/apiClient';
+import { useState, useEffect } from "react";
+import apiClient from "@app/services/apiClient";
 
 export interface FooterInfo {
   analyticsEnabled?: boolean;
@@ -23,13 +23,16 @@ export function useFooterInfo() {
     const fetchFooterInfo = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get<FooterInfo>('/api/v1/ui-data/footer-info', {
-          suppressErrorToast: true,
-        } as any);
+        const response = await apiClient.get<FooterInfo>(
+          "/api/v1/ui-data/footer-info",
+          {
+            suppressErrorToast: true,
+          } as any,
+        );
         setFooterInfo(response.data);
         setError(null);
       } catch (err) {
-        console.error('[useFooterInfo] Failed to fetch footer info:', err);
+        console.error("[useFooterInfo] Failed to fetch footer info:", err);
         setError(err as Error);
         // Set defaults on error
         setFooterInfo({

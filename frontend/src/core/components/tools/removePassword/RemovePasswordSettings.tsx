@@ -4,21 +4,31 @@ import { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRem
 
 interface RemovePasswordSettingsProps {
   parameters: RemovePasswordParameters;
-  onParameterChange: <K extends keyof RemovePasswordParameters>(key: K, value: RemovePasswordParameters[K]) => void;
+  onParameterChange: <K extends keyof RemovePasswordParameters>(
+    key: K,
+    value: RemovePasswordParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const RemovePasswordSettings = ({ parameters, onParameterChange, disabled = false }: RemovePasswordSettingsProps) => {
+const RemovePasswordSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: RemovePasswordSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="md">
       <Stack gap="sm">
         <PasswordInput
-          label={t('removePassword.password.label', 'Current Password')}
-          placeholder={t('removePassword.password.placeholder', 'Enter current password')}
+          label={t("removePassword.password.label", "Current Password")}
+          placeholder={t(
+            "removePassword.password.placeholder",
+            "Enter current password",
+          )}
           value={parameters.password}
-          onChange={(e) => onParameterChange('password', e.target.value)}
+          onChange={(e) => onParameterChange("password", e.target.value)}
           disabled={disabled}
           required
         />

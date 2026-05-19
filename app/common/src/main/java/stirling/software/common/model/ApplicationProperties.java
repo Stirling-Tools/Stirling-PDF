@@ -29,6 +29,8 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.YamlPropertySourceFactory;
+import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
@@ -55,12 +58,14 @@ public class ApplicationProperties {
     private Legal legal = new Legal();
     private Security security = new Security();
     private System system = new System();
+    private Storage storage = new Storage();
     private Ui ui = new Ui();
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
     private Mail mail = new Mail();
+    private Telegram telegram = new Telegram();
 
     private Premium premium = new Premium();
 
@@ -70,6 +75,8 @@ public class ApplicationProperties {
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
+    private AiEngine aiEngine = new AiEngine();
+    private InternalApi internalApi = new InternalApi();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -97,9 +104,93 @@ public class ApplicationProperties {
         return propertySource;
     }
 
+    /**
+     * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports
+     * SYSTEMFILEUPLOADLIMIT (format: "100MB") and SYSTEM_MAXFILESIZE (format: "100" in MB).
+     */
+    @PostConstruct
+    public void initializeFileUploadLimitFromEnv() {
+        // Only override if fileUploadLimit is not already set in settings.yml
+        if (system.getFileUploadLimit() == null || system.getFileUploadLimit().isEmpty()) {
+            String fileUploadLimit = null;
+
+            // Check SYSTEMFILEUPLOADLIMIT first (format: "100MB", "1GB", etc.)
+            String systemFileUploadLimit = java.lang.System.getenv("SYSTEMFILEUPLOADLIMIT");
+            if (systemFileUploadLimit != null && !systemFileUploadLimit.trim().isEmpty()) {
+                fileUploadLimit = systemFileUploadLimit.trim();
+                log.info("Setting fileUploadLimit from SYSTEMFILEUPLOADLIMIT: {}", fileUploadLimit);
+            } else {
+                // Check SYSTEM_MAXFILESIZE (format: number in MB, e.g., "100")
+                String systemMaxFileSize = java.lang.System.getenv("SYSTEM_MAXFILESIZE");
+                if (systemMaxFileSize != null && !systemMaxFileSize.trim().isEmpty()) {
+                    try {
+                        // Validate it's a number
+                        long sizeInMB = Long.parseLong(systemMaxFileSize.trim());
+                        if (sizeInMB > 0 && sizeInMB <= 999) {
+                            fileUploadLimit = sizeInMB + "MB";
+                            log.info(
+                                    "Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB",
+                                    sizeInMB);
+                        } else {
+                            log.warn(
+                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring",
+                                    sizeInMB);
+                        }
+                    } catch (NumberFormatException e) {
+                        log.warn(
+                                "SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring",
+                                systemMaxFileSize);
+                    }
+                }
+            }
+
+            if (fileUploadLimit != null) {
+                system.setFileUploadLimit(fileUploadLimit);
+            }
+        }
+    }
+
     @Data
     public static class AutoPipeline {
         private String outputFolder;
+        private FileReadiness fileReadiness = new FileReadiness();
+
+        /**
+         * Configuration for the {@link stirling.software.common.util.FileReadinessChecker}.
+         * Controls how the pipeline determines whether a file is fully written and stable before
+         * processing begins.
+         */
+        @Data
+        public static class FileReadiness {
+            /**
+             * Master toggle. When {@code false} every readiness check is skipped and all files are
+             * considered immediately ready (preserves legacy behaviour).
+             */
+            private boolean enabled = true;
+
+            /**
+             * How long (in milliseconds) a file must remain unmodified before it is considered
+             * stable. Files modified more recently than this threshold are skipped and retried on
+             * the next scan cycle. Default: 5 000 ms (5 seconds).
+             */
+            private long settleTimeMillis = 5000;
+
+            /**
+             * How long (in milliseconds) to pause between two consecutive file-size reads when
+             * checking whether a file is still being written. If the size differs between the two
+             * reads the file is considered unstable. This catches active copies on Linux/macOS
+             * where advisory locking alone cannot detect a mid-copy file. Default: 500 ms.
+             */
+            private long sizeCheckDelayMillis = 500;
+
+            /**
+             * Optional list of file extensions (without the leading dot, case-insensitive) that are
+             * allowed through the readiness check. An empty list means all extensions are accepted.
+             * Example: {@code ["pdf", "tiff"]} will skip any file whose extension is not {@code
+             * pdf} or {@code tiff}.
+             */
+            private List<String> allowedExtensions = new java.util.ArrayList<>();
+        }
     }
 
     @Data
@@ -143,6 +234,33 @@ public class ApplicationProperties {
     }
 
     @Data
+    public static class AiEngine {
+        private boolean enabled = false;
+        private String url = "http://localhost:5001";
+        private int timeoutSeconds = 120;
+
+        /**
+         * Longer timeout for heavy operations like RAG ingestion, which embeds the whole document
+         * and can take multiple minutes for large books. Applied per-call when the caller
+         * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
+         */
+        private int longRunningTimeoutSeconds = 600;
+    }
+
+    /**
+     * HTTP timeouts for loopback calls to internal Stirling API endpoints, used by the AI workflow
+     * executor and the pipeline processor. A bounded read timeout prevents a hung tool (e.g. an
+     * infinite loop in a PDF processing service) from stalling the entire chat workflow forever.
+     * Tools that legitimately need longer than the read timeout should be invoked through the async
+     * job executor instead of synchronously.
+     */
+    @Data
+    public static class InternalApi {
+        private int connectTimeoutSeconds = 10;
+        private int readTimeoutSeconds = 300;
+    }
+
+    @Data
     public static class Legal {
         private String termsAndConditions;
         private String privacyPolicy;
@@ -163,6 +281,8 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
+        private Timestamp timestamp = new Timestamp();
+        private String xFrameOptions = "DENY";
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -314,11 +434,11 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return !ValidationUtils.isStringEmpty(this.getIssuer())
-                        && !ValidationUtils.isStringEmpty(this.getClientId())
-                        && !ValidationUtils.isStringEmpty(this.getClientSecret())
-                        && !ValidationUtils.isCollectionEmpty(this.getScopes())
-                        && !ValidationUtils.isStringEmpty(this.getUseAsUsername());
+                return !ValidationUtils.isStringEmpty(this.issuer)
+                        && !ValidationUtils.isStringEmpty(this.clientId)
+                        && !ValidationUtils.isStringEmpty(this.clientSecret)
+                        && !ValidationUtils.isCollectionEmpty(this.scopes)
+                        && !ValidationUtils.isStringEmpty(this.useAsUsername);
             }
 
             @Data
@@ -343,12 +463,107 @@ public class ApplicationProperties {
             }
         }
 
+        /**
+         * JWT token configuration.
+         *
+         * <p><b>BREAKING CHANGE (v2.0):</b> Default token expiry increased from 12 hours (720
+         * minutes) to 24 hours (1440 minutes). If you require the previous behavior, explicitly set
+         * {@code tokenExpiryMinutes: 720} in your configuration.
+         */
         @Data
         public static class Jwt {
             private boolean enableKeystore = true;
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
-            private int keyRetentionDays = 7;
+
+            /**
+             * JWT access token lifetime in minutes for web clients.
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_TOKEN_EXPIRY_MINUTES} minutes (24 hours).
+             *
+             * <p><b>BREAKING CHANGE:</b> Previously hardcoded to 720 minutes (12 hours). Now
+             * defaults to 1440 minutes (24 hours).
+             */
+            private int tokenExpiryMinutes = JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+
+            /**
+             * JWT access token lifetime in minutes for desktop clients (Tauri app).
+             *
+             * <p>Desktop clients are automatically detected via User-Agent header and receive
+             * longer-lived tokens because they run on personal devices with OS-level encrypted
+             * storage (macOS Keychain, Windows Credential Manager, Linux Secret Service).
+             *
+             * <p>This provides better UX (login once per month) while maintaining security through
+             * device encryption and secure storage, matching the behavior of popular desktop apps
+             * like Slack, Discord, VS Code, etc.
+             *
+             * <p>Default: 43200 minutes (30 days).
+             */
+            private int desktopTokenExpiryMinutes = 43200;
+
+            /**
+             * Allowed clock skew in seconds for JWT validation.
+             *
+             * <p>Tolerates small time drift between client and server clocks. Tokens that are
+             * slightly expired or slightly in the future (within this window) will still be
+             * accepted.
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_CLOCK_SKEW_SECONDS} seconds.
+             */
+            private int allowedClockSkewSeconds = JwtConstants.DEFAULT_CLOCK_SKEW_SECONDS;
+
+            /**
+             * Grace period in minutes for refreshing expired tokens.
+             *
+             * <p>Allows token refresh using an expired access token if the token expired within
+             * this many minutes. This provides better UX by allowing users to refresh slightly
+             * expired tokens without re-authentication.
+             *
+             * <p>Rate limiting is applied to prevent abuse of expired tokens within the grace
+             * window (max {@value JwtConstants#MAX_REFRESH_ATTEMPTS_IN_GRACE} attempts).
+             *
+             * <p>Default: {@value JwtConstants#DEFAULT_REFRESH_GRACE_MINUTES} minutes.
+             */
+            private int refreshGraceMinutes = JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
+
+            /**
+             * Calculate number of days to retain old JWT signing keys.
+             *
+             * <p>Automatically calculated based on the longest token lifetime plus a proportional
+             * safety buffer. Keys must be retained for at least as long as the tokens they signed
+             * remain valid, otherwise token verification will fail.
+             *
+             * <p>Formula: ceil((maxTokenExpiry + 10% buffer + refreshGrace + clockSkew) / 1440)
+             *
+             * <p>The buffer includes:
+             *
+             * <ul>
+             *   <li>10% of token lifetime (scales with token duration)
+             *   <li>Token refresh grace period ({@link #refreshGraceMinutes})
+             *   <li>Clock skew tolerance ({@link #allowedClockSkewSeconds} converted to minutes)
+             * </ul>
+             *
+             * @return calculated key retention period in days
+             */
+            public int getKeyRetentionDays() {
+                final int MINUTES_PER_DAY = 1440;
+                final double BUFFER_PERCENTAGE = 0.10; // 10% buffer
+
+                int maxTokenExpiryMinutes = Math.max(tokenExpiryMinutes, desktopTokenExpiryMinutes);
+
+                // Add 10% buffer (scales with token lifetime)
+                int bufferMinutes = (int) Math.ceil(maxTokenExpiryMinutes * BUFFER_PERCENTAGE);
+
+                // Add refresh grace period
+                bufferMinutes += refreshGraceMinutes;
+
+                // Add clock skew (convert seconds to minutes, round up)
+                bufferMinutes += (int) Math.ceil(allowedClockSkewSeconds / 60.0);
+
+                // Total retention in minutes, convert to days (round up)
+                int totalMinutes = maxTokenExpiryMinutes + bufferMinutes;
+                return (int) Math.ceil(totalMinutes / (double) MINUTES_PER_DAY);
+            }
         }
 
         @Data
@@ -384,6 +599,12 @@ public class ApplicationProperties {
                 private String mode = "none";
                 private boolean hardFail = false;
             }
+        }
+
+        @Data
+        public static class Timestamp {
+            private String defaultTsaUrl = "http://timestamp.digicert.com";
+            private List<String> customTsaUrls = new ArrayList<>();
         }
     }
 
@@ -429,19 +650,52 @@ public class ApplicationProperties {
         }
 
         public boolean isAnalyticsEnabled() {
-            return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+            return this.enableAnalytics != null && this.enableAnalytics;
         }
 
         public boolean isPosthogEnabled() {
             // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled()
-                    && (this.getEnablePosthog() == null || this.getEnablePosthog());
+            return this.isAnalyticsEnabled() && (this.enablePosthog == null || this.enablePosthog);
         }
 
         public boolean isScarfEnabled() {
             // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled()
-                    && (this.getEnableScarf() == null || this.getEnableScarf());
+            return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
+        }
+    }
+
+    @Data
+    public static class Storage {
+        private boolean enabled = false;
+        private String provider = "local";
+        private Local local = new Local();
+        private Quotas quotas = new Quotas();
+        private Sharing sharing = new Sharing();
+        private Signing signing = new Signing();
+
+        @Data
+        public static class Local {
+            private String basePath = InstallationPathConfig.getPath() + "storage";
+        }
+
+        @Data
+        public static class Sharing {
+            private boolean enabled = false;
+            private boolean linkEnabled = false;
+            private boolean emailEnabled = false;
+            private int linkExpirationDays = 3;
+        }
+
+        @Data
+        public static class Quotas {
+            private long maxStorageMbPerUser = -1;
+            private long maxStorageMbTotal = -1;
+            private long maxFileMb = -1;
+        }
+
+        @Data
+        public static class Signing {
+            private boolean enabled = false;
         }
     }
 
@@ -457,7 +711,9 @@ public class ApplicationProperties {
 
         @Data
         public static class Pipeline {
+            private String pipelineDir;
             private String watchedFoldersDir;
+            private List<String> watchedFoldersDirs = new ArrayList<>();
             private String finishedFoldersDir;
             private String webUIConfigsDir;
         }
@@ -551,10 +807,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-      Driver {
-        driverName='%s'
-      }
-      """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -564,6 +820,9 @@ public class ApplicationProperties {
         private String appNameNavbar;
         private List<String> languages;
         private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
+        private boolean defaultHideUnavailableTools = false;
+        private boolean defaultHideUnavailableConversions = false;
+        private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
@@ -575,6 +834,12 @@ public class ApplicationProperties {
                 return "modern";
             }
             return "classic"; // default
+        }
+
+        @Data
+        public static class HideDisabledTools {
+            private boolean googleDrive = false;
+            private boolean mobileQRScanner = false;
         }
     }
 
@@ -607,6 +872,7 @@ public class ApplicationProperties {
         private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
+        @Deprecated
         @Data
         public static class CustomMetadata {
             private boolean autoUpdateMetadata;
@@ -614,16 +880,23 @@ public class ApplicationProperties {
             private String creator;
             private String producer;
 
+            @Deprecated
             public String getCreator() {
                 return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
             }
 
+            @Deprecated
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
             }
         }
     }
 
+    /**
+     * Mail server configuration properties.
+     *
+     * @since 0.46.1
+     */
     @Data
     public static class Mail {
         private boolean enabled;
@@ -646,6 +919,102 @@ public class ApplicationProperties {
         private Boolean sslCheckServerIdentity;
     }
 
+    /**
+     * Telegram bot configuration properties.
+     *
+     * @since 2.2.x
+     */
+    @Data
+    public static class Telegram {
+        private Boolean enabled = false;
+        @ToString.Exclude private String botToken;
+        private String botUsername;
+        private String pipelineInboxFolder = "telegram";
+        private Boolean customFolderSuffix = false;
+        private Boolean enableAllowUserIDs = false;
+        private List<Long> allowUserIDs = new ArrayList<>();
+        private Boolean enableAllowChannelIDs = false;
+        private List<Long> allowChannelIDs = new ArrayList<>();
+        private long processingTimeoutSeconds = 180;
+        private long pollingIntervalMillis = 2000;
+        private Feedback feedback = new Feedback();
+
+        /**
+         * Configuration for feedback messages sent by the Telegram bot.
+         *
+         * @since 2.2.x
+         */
+        @Data
+        public static class Feedback {
+            private Channel channel = new Channel();
+            private User user = new User();
+
+            /**
+             * Channel-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class Channel {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * the channel (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to the
+                 * channel (to avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+
+            /**
+             * User-specific feedback settings.
+             *
+             * @since 2.2.x
+             */
+            @Data
+            public static class User {
+                /**
+                 * Set to {@code false} to hide/suppress "no valid document" feedback messages to
+                 * users (to avoid spam).
+                 */
+                private Boolean noValidDocument = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress generic error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorMessage = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress processing error feedback messages to users
+                 * (to avoid spam).
+                 */
+                private Boolean errorProcessing = true;
+
+                /**
+                 * Set to {@code false} to hide/suppress "processing" feedback messages to users (to
+                 * avoid spam).
+                 */
+                private Boolean processing = true;
+            }
+        }
+    }
+
     @Data
     public static class Premium {
         private boolean enabled;
@@ -659,6 +1028,15 @@ public class ApplicationProperties {
             private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
+            private GoogleDrive googleDrive = new GoogleDrive();
+
+            @Data
+            public static class GoogleDrive {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String apiKey = "";
+                private String appId = "";
+            }
 
             @Data
             public static class CustomMetadata {
@@ -708,6 +1086,12 @@ public class ApplicationProperties {
                 private boolean enabled = true;
                 private int level = 2; // 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
                 private int retentionDays = 90;
+                private boolean captureFileHash =
+                        false; // Capture SHA-256 hash of files (increases processing time)
+                private boolean capturePdfAuthor =
+                        false; // Capture PDF author metadata (increases processing time)
+                private boolean captureOperationResults =
+                        false; // Capture operation return values (not recommended, high volume)
             }
 
             @Data
@@ -722,6 +1106,16 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+        private boolean autoUnoServer = true;
+        private List<UnoServerEndpoint> unoServerEndpoints = new ArrayList<>();
+
+        @Data
+        public static class UnoServerEndpoint {
+            private String host = "127.0.0.1";
+            private int port = 2003;
+            private String hostLocation = "auto"; // auto|local|remote
+            private String protocol = "http"; // http|https
+        }
 
         @Data
         public static class SessionLimit {

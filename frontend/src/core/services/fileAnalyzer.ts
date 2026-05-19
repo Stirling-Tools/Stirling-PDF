@@ -1,16 +1,35 @@
-import { FileAnalysis, ProcessingStrategy } from '@app/types/processing';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import type { PDFDocumentProxy } from "pdfjs-dist";
+
+// Scan the last ~8KB of the PDF for an /Encrypt entry. The trailer lives near
+// the tail of the file, so this is enough in practice while staying cheap.
+// For files smaller than the window, the whole file is scanned.
+function hasEncryptMarker(buffer: ArrayBuffer): boolean {
+  const TAIL_BYTES = 8 * 1024;
+  const offset = Math.max(0, buffer.byteLength - TAIL_BYTES);
+  const view = new Uint8Array(buffer, offset);
+  // "/Encrypt" as ASCII bytes
+  const needle = [0x2f, 0x45, 0x6e, 0x63, 0x72, 0x79, 0x70, 0x74];
+  outer: for (let i = 0; i <= view.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (view[i + j] !== needle[j]) continue outer;
+    }
+    return true;
+  }
+  return false;
+}
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
-    SMALL: 10 * 1024 * 1024,  // 10MB
+    SMALL: 10 * 1024 * 1024, // 10MB
     MEDIUM: 50 * 1024 * 1024, // 50MB
     LARGE: 200 * 1024 * 1024, // 200MB
   };
 
   private static readonly PAGE_THRESHOLDS = {
-    FEW: 10,    // < 10 pages - immediate full processing
-    MANY: 50,   // < 50 pages - priority pages
+    FEW: 10, // < 10 pages - immediate full processing
+    MANY: 50, // < 50 pages - priority pages
     MASSIVE: 100, // < 100 pages - progressive chunked
     // >100 pages = metadata only
   };
@@ -23,7 +42,7 @@ export class FileAnalyzer {
       fileSize: file.size,
       isEncrypted: false,
       isCorrupted: false,
-      recommendedStrategy: 'metadata_only',
+      recommendedStrategy: "metadata_only",
       estimatedProcessingTime: 0,
     };
 
@@ -35,19 +54,21 @@ export class FileAnalyzer {
       analysis.isCorrupted = quickAnalysis.isCorrupted;
 
       // Determine strategy based on file characteristics
-      analysis.recommendedStrategy = this.determineStrategy(file.size, quickAnalysis.pageCount);
+      analysis.recommendedStrategy = this.determineStrategy(
+        file.size,
+        quickAnalysis.pageCount,
+      );
 
       // Estimate processing time
       analysis.estimatedProcessingTime = this.estimateProcessingTime(
         file.size,
         quickAnalysis.pageCount,
-        analysis.recommendedStrategy
+        analysis.recommendedStrategy,
       );
-
     } catch (error) {
-      console.error('File analysis failed:', error);
+      console.error("File analysis failed:", error);
       analysis.isCorrupted = true;
-      analysis.recommendedStrategy = 'metadata_only';
+      analysis.recommendedStrategy = "metadata_only";
     }
 
     return analysis;
@@ -56,72 +77,119 @@ export class FileAnalyzer {
   /**
    * Quick PDF analysis without full processing
    */
-  private static async quickPDFAnalysis(file: File): Promise<{
+  /**
+   * Cheap encryption-only probe for the upload-time detection path.
+   *
+   * Looks for a /Encrypt entry in the last 8KB of the file (where the PDF
+   * trailer lives). If absent, the file is definitely not encrypted and we
+   * can skip a full pdf.js parse. If present, falls back to pdf.js so we can
+   * distinguish user-password (blocks open) from owner-password-only (opens
+   * fine) — only the former should prompt.
+   */
+  static async isPDFUserPasswordProtected(file: File): Promise<boolean> {
+    const arrayBuffer = await file.arrayBuffer();
+    if (!hasEncryptMarker(arrayBuffer)) return false;
+
+    let pdf: PDFDocumentProxy | undefined;
+    try {
+      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
+        stopAtErrors: false,
+        verbosity: 0,
+      });
+      // pdf.js opened it — owner-password-only case, no prompt needed.
+      return false;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message.toLowerCase() : "";
+      return (
+        errorMessage.includes("password") || errorMessage.includes("encrypted")
+      );
+    } finally {
+      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+    }
+  }
+
+  static async quickPDFAnalysis(file: File): Promise<{
     pageCount: number;
     isEncrypted: boolean;
     isCorrupted: boolean;
   }> {
+    let pdf: PDFDocumentProxy | undefined;
     try {
       // For small files, read the whole file
       // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
 
-      const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
+      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
         stopAtErrors: false, // Don't stop at minor errors
-        verbosity: 0 // Suppress PDF.js warnings
+        verbosity: 0, // Suppress PDF.js warnings
       });
 
       const pageCount = pdf.numPages;
-      const isEncrypted = (pdf as any).isEncrypted;
 
-      // Clean up using worker manager
-      pdfWorkerManager.destroyDocument(pdf);
-
+      // If pdf.js opened the document successfully, the user can view it — even if
+      // the PDF carries encryption dictionaries (owner-password-only case).  We only
+      // flag isEncrypted when pdf.js *fails* to open the file (caught below).
       return {
         pageCount,
-        isEncrypted,
-        isCorrupted: false
+        isEncrypted: false,
+        isCorrupted: false,
       };
-
     } catch (error) {
       // Try to determine if it's corruption vs encryption
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
-      const isEncrypted = errorMessage.includes('password') || errorMessage.includes('encrypted');
+      const errorMessage =
+        error instanceof Error ? error.message.toLowerCase() : "";
+      const isEncrypted =
+        errorMessage.includes("password") || errorMessage.includes("encrypted");
 
       return {
         pageCount: 0,
         isEncrypted,
-        isCorrupted: !isEncrypted // If not encrypted, probably corrupted
+        isCorrupted: !isEncrypted, // If not encrypted, probably corrupted
       };
+    } finally {
+      if (pdf) pdfWorkerManager.destroyDocument(pdf);
     }
   }
 
   /**
    * Determine the best processing strategy based on file characteristics
    */
-  private static determineStrategy(fileSize: number, pageCount?: number): ProcessingStrategy {
+  private static determineStrategy(
+    fileSize: number,
+    pageCount?: number,
+  ): ProcessingStrategy {
     // Handle corrupted or encrypted files
     if (!pageCount || pageCount === 0) {
-      return 'metadata_only';
+      return "metadata_only";
     }
 
     // Small files with few pages - process everything immediately
-    if (fileSize <= this.SIZE_THRESHOLDS.SMALL && pageCount <= this.PAGE_THRESHOLDS.FEW) {
-      return 'immediate_full';
+    if (
+      fileSize <= this.SIZE_THRESHOLDS.SMALL &&
+      pageCount <= this.PAGE_THRESHOLDS.FEW
+    ) {
+      return "immediate_full";
     }
 
     // Medium files or many pages - priority pages first, then progressive
-    if (fileSize <= this.SIZE_THRESHOLDS.MEDIUM && pageCount <= this.PAGE_THRESHOLDS.MANY) {
-      return 'priority_pages';
+    if (
+      fileSize <= this.SIZE_THRESHOLDS.MEDIUM &&
+      pageCount <= this.PAGE_THRESHOLDS.MANY
+    ) {
+      return "priority_pages";
     }
 
     // Large files or massive page counts - chunked processing
-    if (fileSize <= this.SIZE_THRESHOLDS.LARGE && pageCount <= this.PAGE_THRESHOLDS.MASSIVE) {
-      return 'progressive_chunked';
+    if (
+      fileSize <= this.SIZE_THRESHOLDS.LARGE &&
+      pageCount <= this.PAGE_THRESHOLDS.MASSIVE
+    ) {
+      return "progressive_chunked";
     }
 
     // Very large files - metadata only
-    return 'metadata_only';
+    return "metadata_only";
   }
 
   /**
@@ -130,31 +198,31 @@ export class FileAnalyzer {
   private static estimateProcessingTime(
     _fileSize: number,
     pageCount: number = 0,
-    strategy: ProcessingStrategy
+    strategy: ProcessingStrategy,
   ): number {
     const baseTimes = {
-      immediate_full: 200,      // 200ms per page
-      priority_pages: 150,     // 150ms per page (optimized)
+      immediate_full: 200, // 200ms per page
+      priority_pages: 150, // 150ms per page (optimized)
       progressive_chunked: 100, // 100ms per page (chunked)
-      metadata_only: 50        // 50ms total
+      metadata_only: 50, // 50ms total
     };
 
     const baseTime = baseTimes[strategy];
 
     switch (strategy) {
-      case 'metadata_only':
+      case "metadata_only":
         return baseTime;
 
-      case 'immediate_full':
+      case "immediate_full":
         return pageCount * baseTime;
 
-      case 'priority_pages': {
+      case "priority_pages": {
         // Estimate time for priority pages (first 10)
         const priorityPages = Math.min(pageCount, 10);
         return priorityPages * baseTime;
       }
 
-      case 'progressive_chunked': {
+      case "progressive_chunked": {
         // Estimate time for first chunk (20 pages)
         const firstChunk = Math.min(pageCount, 20);
         return firstChunk * baseTime;
@@ -195,8 +263,11 @@ export class FileAnalyzer {
     const recommendations = {
       totalEstimatedTime,
       suggestedBatchSize: this.calculateBatchSize(files.length, totalSize),
-      shouldUseWebWorker: totalPages > 100 || totalSize > this.SIZE_THRESHOLDS.MEDIUM,
-      memoryWarning: totalSize > this.SIZE_THRESHOLDS.LARGE || totalPages > this.PAGE_THRESHOLDS.MASSIVE
+      shouldUseWebWorker:
+        totalPages > 100 || totalSize > this.SIZE_THRESHOLDS.MEDIUM,
+      memoryWarning:
+        totalSize > this.SIZE_THRESHOLDS.LARGE ||
+        totalPages > this.PAGE_THRESHOLDS.MASSIVE,
     };
 
     return { analyses, recommendations };
@@ -205,7 +276,10 @@ export class FileAnalyzer {
   /**
    * Calculate optimal batch size for processing multiple files
    */
-  private static calculateBatchSize(fileCount: number, totalSize: number): number {
+  private static calculateBatchSize(
+    fileCount: number,
+    totalSize: number,
+  ): number {
     // Process small batches for large total sizes
     if (totalSize > this.SIZE_THRESHOLDS.LARGE) {
       return Math.max(1, Math.floor(fileCount / 4));
@@ -223,7 +297,10 @@ export class FileAnalyzer {
    * Check if a file appears to be a valid PDF
    */
   static async isValidPDF(file: File): Promise<boolean> {
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       return false;
     }
 
@@ -233,7 +310,7 @@ export class FileAnalyzer {
       const headerBytes = new Uint8Array(await header.arrayBuffer());
       const headerString = String.fromCharCode(...headerBytes);
 
-      return headerString.startsWith('%PDF-');
+      return headerString.startsWith("%PDF-");
     } catch {
       return false;
     }

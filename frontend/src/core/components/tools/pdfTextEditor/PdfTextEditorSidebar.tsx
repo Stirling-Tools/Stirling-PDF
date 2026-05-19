@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -13,22 +13,25 @@ import {
   Stack,
   Switch,
   Text,
-} from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined';
+} from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import FileDownloadIcon from "@mui/icons-material/FileDownloadOutlined";
 
-import { PdfTextEditorViewData, TextGroup } from '@app/tools/pdfTextEditor/pdfTextEditorTypes';
-import { pageDimensions } from '@app/tools/pdfTextEditor/pdfTextEditorUtils';
-import FontStatusPanel from '@app/components/tools/pdfTextEditor/FontStatusPanel';
-import ToolStep from '@app/components/tools/shared/ToolStep';
-import { usePdfTextEditorTips } from '@app/components/tooltips/usePdfTextEditorTips';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import LocalIcon from '@app/components/shared/LocalIcon';
+import {
+  PdfTextEditorViewData,
+  TextGroup,
+} from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
+import { pageDimensions } from "@app/tools/pdfTextEditor/pdfTextEditorUtils";
+import FontStatusPanel from "@app/components/tools/pdfTextEditor/FontStatusPanel";
+import ToolStep from "@app/components/tools/shared/ToolStep";
+import { usePdfTextEditorTips } from "@app/components/tooltips/usePdfTextEditorTips";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
-type GroupingMode = 'auto' | 'paragraph' | 'singleLine';
+type GroupingMode = "auto" | "paragraph" | "singleLine";
 
 interface PdfTextEditorSidebarProps {
   data: PdfTextEditorViewData;
@@ -46,10 +49,12 @@ const analyzePageContentType = (
   const widths = groups.map((g) => Math.max(g.bounds.right - g.bounds.left, 1));
   const avgWidth = widths.reduce((sum, w) => sum + w, 0) / widths.length;
   const stdDev = Math.sqrt(
-    widths.reduce((sum, w) => sum + Math.pow(w - avgWidth, 2), 0) / widths.length,
+    widths.reduce((sum, w) => sum + Math.pow(w - avgWidth, 2), 0) /
+      widths.length,
   );
   const coefficientOfVariation = avgWidth > 0 ? stdDev / avgWidth : 0;
-  const fullWidthRatio = widths.filter((w) => w > pageWidth * 0.65).length / widths.length;
+  const fullWidthRatio =
+    widths.filter((w) => w > pageWidth * 0.65).length / widths.length;
 
   const criterion1 = groups.length >= 3;
   const criterion2 = avgWidth > pageWidth * 0.3;
@@ -60,8 +65,10 @@ const analyzePageContentType = (
 
 const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
   const { t } = useTranslation();
-  const [pendingModeChange, setPendingModeChange] = useState<GroupingMode | null>(null);
-  const [advancedSettingsCollapsed, setAdvancedSettingsCollapsed] = useState(false);
+  const [pendingModeChange, setPendingModeChange] =
+    useState<GroupingMode | null>(null);
+  const [advancedSettingsCollapsed, setAdvancedSettingsCollapsed] =
+    useState(false);
   const [fontsCollapsed, setFontsCollapsed] = useState(false);
   const pdfTextEditorTips = usePdfTextEditorTips();
 
@@ -97,13 +104,16 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
     return analyzePageContentType(pageGroups, pageWidth);
   }, [pageGroups, pageWidth]);
 
-  const handleModeChangeRequest = useCallback((newMode: GroupingMode) => {
-    if (hasChanges && newMode !== externalGroupingMode) {
-      setPendingModeChange(newMode);
-    } else {
-      onGroupingModeChange(newMode);
-    }
-  }, [hasChanges, externalGroupingMode, onGroupingModeChange]);
+  const handleModeChangeRequest = useCallback(
+    (newMode: GroupingMode) => {
+      if (hasChanges && newMode !== externalGroupingMode) {
+        setPendingModeChange(newMode);
+      } else {
+        onGroupingModeChange(newMode);
+      }
+    },
+    [hasChanges, externalGroupingMode, onGroupingModeChange],
+  );
 
   const handleConfirmModeChange = useCallback(() => {
     if (pendingModeChange) {
@@ -118,7 +128,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
 
   return (
     <>
-      <Stack style={{ height: '100%', display: 'flex' }} gap={0}>
+      <Stack style={{ height: "100%", display: "flex" }} gap={0}>
         <ScrollArea style={{ flex: 1 }} offsetScrollbars>
           <Stack gap="md">
             <Stack gap="xs" pl="md" pr={0} pt="md">
@@ -126,10 +136,10 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
               <Flex align="center" justify="space-between">
                 <Flex align="center" gap="xs">
                   <Text fw={600} size="sm">
-                    {t('pdfTextEditor.title', 'PDF Text Editor')}
+                    {t("pdfTextEditor.title", "PDF Text Editor")}
                   </Text>
                   <Badge size="xs" variant="light" color="orange">
-                    {t('toolPanel.alpha', 'Alpha')}
+                    {t("toolPanel.alpha", "Alpha")}
                   </Badge>
                 </Flex>
                 <Tooltip
@@ -139,47 +149,72 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   pinOnClick
                 >
                   <ActionIcon variant="subtle" color="blue" size="sm">
-                    <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" />
+                    <LocalIcon
+                      icon="info-outline-rounded"
+                      width="1.25rem"
+                      height="1.25rem"
+                    />
                   </ActionIcon>
                 </Tooltip>
               </Flex>
 
               {fileName && (
                 <Text size="sm" c="dimmed">
-                  {t('pdfTextEditor.currentFile', 'Current file: {{name}}', { name: fileName })}
+                  {t("pdfTextEditor.currentFile", "Current file: {{name}}", {
+                    name: fileName,
+                  })}
                 </Text>
               )}
             </Stack>
 
             <ToolStep
-              title={t('pdfTextEditor.options.advanced.title', 'Advanced Settings')}
+              title={t(
+                "pdfTextEditor.options.advanced.title",
+                "Advanced Settings",
+              )}
               isCollapsed={advancedSettingsCollapsed}
-              onCollapsedClick={() => setAdvancedSettingsCollapsed(!advancedSettingsCollapsed)}
+              onCollapsedClick={() =>
+                setAdvancedSettingsCollapsed(!advancedSettingsCollapsed)
+              }
             >
               <Stack gap="md">
                 <Divider />
                 <Group justify="space-between" align="center">
-                  <Group gap={4} align="center" style={{ flex: 1, minWidth: 0 }}>
+                  <Group
+                    gap={4}
+                    align="center"
+                    style={{ flex: 1, minWidth: 0 }}
+                  >
                     <Tooltip
                       sidebarTooltip={false}
                       content={t(
-                        'pdfTextEditor.options.autoScaleText.description',
-                        'Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.'
+                        "pdfTextEditor.options.autoScaleText.description",
+                        "Automatically scales text horizontally to fit within its original bounding box when font rendering differs from PDF.",
                       )}
                       position="top"
                     >
-                      <ActionIcon variant="subtle" color="gray" size="sm" style={{ flexShrink: 0 }}>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        style={{ flexShrink: 0 }}
+                      >
                         <InfoOutlinedIcon fontSize="small" />
                       </ActionIcon>
                     </Tooltip>
                     <Text fw={500} size="sm" style={{ flex: 1 }}>
-                      {t('pdfTextEditor.options.autoScaleText.title', 'Auto-scale text to fit boxes')}
+                      {t(
+                        "pdfTextEditor.options.autoScaleText.title",
+                        "Auto-scale text to fit boxes",
+                      )}
                     </Text>
                   </Group>
                   <Switch
                     size="md"
                     checked={autoScaleText}
-                    onChange={(event) => onAutoScaleTextChange(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      onAutoScaleTextChange(event.currentTarget.checked)
+                    }
                   />
                 </Group>
 
@@ -188,42 +223,77 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                 <Stack gap="xs">
                   <Group gap={4} align="center">
                     <Text fw={500} size="sm">
-                      {t('pdfTextEditor.options.groupingMode.title', 'Text Grouping Mode')}
+                      {t(
+                        "pdfTextEditor.options.groupingMode.title",
+                        "Text Grouping Mode",
+                      )}
                     </Text>
-                    {externalGroupingMode === 'auto' && isParagraphPage && (
-                      <Badge size="xs" color="blue" variant="light" key={`para-${selectedPage}`}>
-                        {t('pdfTextEditor.pageType.paragraph', 'Paragraph page')}
+                    {externalGroupingMode === "auto" && isParagraphPage && (
+                      <Badge
+                        size="xs"
+                        color="blue"
+                        variant="light"
+                        key={`para-${selectedPage}`}
+                      >
+                        {t(
+                          "pdfTextEditor.pageType.paragraph",
+                          "Paragraph page",
+                        )}
                       </Badge>
                     )}
-                    {externalGroupingMode === 'auto' && !isParagraphPage && hasDocument && (
-                      <Badge size="xs" color="gray" variant="light" key={`sparse-${selectedPage}`}>
-                        {t('pdfTextEditor.pageType.sparse', 'Sparse text')}
-                      </Badge>
-                    )}
+                    {externalGroupingMode === "auto" &&
+                      !isParagraphPage &&
+                      hasDocument && (
+                        <Badge
+                          size="xs"
+                          color="gray"
+                          variant="light"
+                          key={`sparse-${selectedPage}`}
+                        >
+                          {t("pdfTextEditor.pageType.sparse", "Sparse text")}
+                        </Badge>
+                      )}
                   </Group>
                   <Text size="xs" c="dimmed">
-                    {externalGroupingMode === 'auto'
+                    {externalGroupingMode === "auto"
                       ? t(
-                          'pdfTextEditor.options.groupingMode.autoDescription',
-                          'Automatically detects page type and groups text appropriately.'
+                          "pdfTextEditor.options.groupingMode.autoDescription",
+                          "Automatically detects page type and groups text appropriately.",
                         )
-                      : externalGroupingMode === 'paragraph'
+                      : externalGroupingMode === "paragraph"
                         ? t(
-                            'pdfTextEditor.options.groupingMode.paragraphDescription',
-                            'Groups aligned lines into multi-line paragraph text boxes.'
+                            "pdfTextEditor.options.groupingMode.paragraphDescription",
+                            "Groups aligned lines into multi-line paragraph text boxes.",
                           )
                         : t(
-                            'pdfTextEditor.options.groupingMode.singleLineDescription',
-                            'Keeps each PDF text line as a separate text box.'
+                            "pdfTextEditor.options.groupingMode.singleLineDescription",
+                            "Keeps each PDF text line as a separate text box.",
                           )}
                   </Text>
                   <SegmentedControl
                     value={externalGroupingMode}
-                    onChange={(value) => handleModeChangeRequest(value as GroupingMode)}
+                    onChange={(value) =>
+                      handleModeChangeRequest(value as GroupingMode)
+                    }
                     data={[
-                      { label: t('pdfTextEditor.groupingMode.auto', 'Auto'), value: 'auto' },
-                      { label: t('pdfTextEditor.groupingMode.paragraph', 'Paragraph'), value: 'paragraph' },
-                      { label: t('pdfTextEditor.groupingMode.singleLine', 'Single Line'), value: 'singleLine' },
+                      {
+                        label: t("pdfTextEditor.groupingMode.auto", "Auto"),
+                        value: "auto",
+                      },
+                      {
+                        label: t(
+                          "pdfTextEditor.groupingMode.paragraph",
+                          "Paragraph",
+                        ),
+                        value: "paragraph",
+                      },
+                      {
+                        label: t(
+                          "pdfTextEditor.groupingMode.singleLine",
+                          "Single Line",
+                        ),
+                        value: "singleLine",
+                      },
                     ]}
                     fullWidth
                   />
@@ -232,27 +302,43 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                 <Divider />
 
                 <Group justify="space-between" align="center">
-                  <Group gap={4} align="center" style={{ flex: 1, minWidth: 0 }}>
+                  <Group
+                    gap={4}
+                    align="center"
+                    style={{ flex: 1, minWidth: 0 }}
+                  >
                     <Tooltip
                       sidebarTooltip={false}
                       content={t(
-                        'pdfTextEditor.options.forceSingleElement.description',
-                        'When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.'
+                        "pdfTextEditor.options.forceSingleElement.description",
+                        "When enabled, the editor exports each edited text box as one PDF text element to avoid overlapping glyphs or mixed fonts.",
                       )}
                       position="top"
                     >
-                      <ActionIcon variant="subtle" color="gray" size="sm" style={{ flexShrink: 0 }}>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        style={{ flexShrink: 0 }}
+                      >
                         <InfoOutlinedIcon fontSize="small" />
                       </ActionIcon>
                     </Tooltip>
                     <Text fw={500} size="sm" style={{ flex: 1 }}>
-                      {t('pdfTextEditor.options.forceSingleElement.title', 'Lock edited text to a single PDF element')}
+                      {t(
+                        "pdfTextEditor.options.forceSingleElement.title",
+                        "Lock edited text to a single PDF element",
+                      )}
                     </Text>
                   </Group>
                   <Switch
                     size="md"
                     checked={forceSingleTextElement}
-                    onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      onForceSingleTextElementChange(
+                        event.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
               </Stack>
@@ -270,15 +356,15 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
         </ScrollArea>
 
         <Group gap="xs" wrap="nowrap" p="md">
-            <Button
-              variant="filled"
-              onClick={onSaveToWorkbench}
-              loading={isSavingToWorkbench}
-              disabled={!hasDocument || !hasChanges || isConverting}
-              style={{ flex: 1 }}
-            >
-              {t('pdfTextEditor.actions.applyChanges', 'Apply Changes')}
-            </Button>
+          <Button
+            variant="filled"
+            onClick={onSaveToWorkbench}
+            loading={isSavingToWorkbench}
+            disabled={!hasDocument || !hasChanges || isConverting}
+            style={{ flex: 1 }}
+          >
+            {t("pdfTextEditor.actions.applyChanges", "Apply Changes")}
+          </Button>
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
               <ActionIcon
@@ -295,14 +381,14 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                 onClick={() => onGeneratePdf()}
                 disabled={!hasChanges || isGeneratingPdf}
               >
-                {t('pdfTextEditor.actions.downloadCopy', 'Download Copy')}
+                {t("pdfTextEditor.actions.downloadCopy", "Download Copy")}
               </Menu.Item>
               <Menu.Item
                 leftSection={<AutorenewIcon fontSize="small" />}
                 onClick={onReset}
                 color="red"
               >
-                {t('pdfTextEditor.actions.reset', 'Reset Changes')}
+                {t("pdfTextEditor.actions.reset", "Reset Changes")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -313,22 +399,22 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
       <Modal
         opened={pendingModeChange !== null}
         onClose={handleCancelModeChange}
-        title={t('pdfTextEditor.modeChange.title', 'Confirm Mode Change')}
+        title={t("pdfTextEditor.modeChange.title", "Confirm Mode Change")}
         centered
       >
         <Stack gap="md">
           <Text>
             {t(
-              'pdfTextEditor.modeChange.warning',
-              'Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?'
+              "pdfTextEditor.modeChange.warning",
+              "Changing the text grouping mode will reset all unsaved changes. Are you sure you want to continue?",
             )}
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button variant="default" onClick={handleCancelModeChange}>
-              {t('pdfTextEditor.modeChange.cancel', 'Cancel')}
+              {t("pdfTextEditor.modeChange.cancel", "Cancel")}
             </Button>
             <Button color="red" onClick={handleConfirmModeChange}>
-              {t('pdfTextEditor.modeChange.confirm', 'Reset and Change Mode')}
+              {t("pdfTextEditor.modeChange.confirm", "Reset and Change Mode")}
             </Button>
           </Group>
         </Stack>

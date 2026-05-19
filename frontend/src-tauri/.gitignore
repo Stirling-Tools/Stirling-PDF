@@ -3,3 +3,5 @@
 /target/
 /gen/schemas
 /runtime/
+
+**/stirling_thumbnail_handler.dll

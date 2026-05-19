@@ -32,24 +32,23 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
@@ -60,10 +59,8 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/misc")
+@MiscApi
 @Slf4j
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 @RequiredArgsConstructor
 public class CompressController {
 
@@ -332,7 +329,8 @@ public class CompressController {
                                     + "_"
                                     + image.getBitsPerComponent();
 
-                    return bytesToHexString(generateMD5(enhancedData.getBytes()));
+                    return bytesToHexString(
+                            generateMD5(enhancedData.getBytes(StandardCharsets.UTF_8)));
                 }
                 return "empty-stream";
             }
@@ -731,7 +729,8 @@ public class CompressController {
                 params.append("_").append(image.getDecode().toString());
             }
 
-            return bytesToHexString(generateMD5(params.toString().getBytes()));
+            return bytesToHexString(
+                    generateMD5(params.toString().getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             return "fallback-decode-" + System.identityHashCode(image);
         }
@@ -802,7 +801,8 @@ public class CompressController {
                     metadata.append("_softmask");
                 }
 
-                return bytesToHexString(generateMD5(metadata.toString().getBytes()));
+                return bytesToHexString(
+                        generateMD5(metadata.toString().getBytes(StandardCharsets.UTF_8)));
             } catch (Exception e) {
                 return "fallback-meta-" + System.identityHashCode(image);
             }
@@ -922,13 +922,13 @@ public class CompressController {
         return Math.min(9, currentLevel + 1);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/compress-pdf")
     @Operation(
             summary = "Optimize PDF file",
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
                             + " parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
+    public ResponseEntity<Resource> optimizePdf(@ModelAttribute OptimizePdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
 
@@ -1101,7 +1101,8 @@ public class CompressController {
 
             try {
                 try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {
-                    return WebResponseUtils.pdfDocToWebResponse(document, outputFilename);
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            document, outputFilename, tempFileManager);
                 }
             } catch (IOException e) {
                 throw ExceptionUtils.handlePdfException(e, "PDF optimization");

@@ -3,20 +3,25 @@ import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import ReorganizePagesSettings from "@app/components/tools/reorganizePages/ReorganizePagesSettings";
 import { useReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
 import { useReorganizePagesOperation } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
 
-const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const ReorganizePages = ({
+  onPreviewFile,
+  onComplete,
+  onError,
+}: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const params = useReorganizePagesParameters();
   const operation = useReorganizePagesOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("rearrange-pages");
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("rearrange-pages");
 
   useEffect(() => {
     operation.resetResults();
@@ -30,16 +35,20 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
         onComplete(operation.files);
       }
     } catch (error: any) {
-      onError?.(error?.message || t("reorganizePages.error.failed", "Failed to reorganize pages"));
+      onError?.(
+        error?.message ||
+          t("reorganizePages.error.failed", "Failed to reorganize pages"),
+      );
     }
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const hasResults =
+    operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum Step {
-    NONE = 'none',
-    SETTINGS = 'settings'
+    NONE = "none",
+    SETTINGS = "settings",
   }
 
   const accordion = useAccordionSteps<Step>({
@@ -47,12 +56,12 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
     initialStep: Step.SETTINGS,
     stateConditions: {
       hasFiles,
-      hasResults
+      hasResults,
     },
     afterResults: () => {
       operation.resetResults();
       onPreviewFile?.(null);
-    }
+    },
   });
 
   const steps = [
@@ -68,7 +77,7 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
           disabled={endpointLoading}
         />
       ),
-    }
+    },
   ];
 
   return createToolFlow({
@@ -78,16 +87,17 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
     },
     steps,
     executeButton: {
-      text: t('reorganizePages.submit', 'Reorganize Pages'),
+      text: t("reorganizePages.submit", "Reorganize Pages"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleExecute,
-      disabled: !params.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: params.validateParameters(),
     },
     review: {
       isVisible: hasResults,
       operation: operation,
-      title: t('reorganizePages.results.title', 'Pages Reorganized'),
+      title: t("reorganizePages.results.title", "Pages Reorganized"),
       onFileClick: (file) => onPreviewFile?.(file),
       onUndo: async () => {
         await operation.undoOperation();
@@ -100,5 +110,3 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
 (ReorganizePages as any).tool = () => useReorganizePagesOperation;
 
 export default ReorganizePages as ToolComponent;
-
-

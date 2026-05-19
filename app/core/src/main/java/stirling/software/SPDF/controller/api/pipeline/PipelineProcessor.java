@@ -11,33 +11,26 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-import io.github.pixee.security.ZipSecurity;
-
-import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
-import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.ZipExtractionUtils;
 
 @Service
 @Slf4j
@@ -45,22 +38,22 @@ public class PipelineProcessor {
 
     private final ApiDocService apiDocService;
 
-    private final UserServiceInterface userService;
+    private final InternalApiClient internalApiClient;
 
-    private final ServletContext servletContext;
+    private final TempFileManager tempFileManager;
 
     public PipelineProcessor(
             ApiDocService apiDocService,
-            @Autowired(required = false) UserServiceInterface userService,
-            ServletContext servletContext) {
+            InternalApiClient internalApiClient,
+            TempFileManager tempFileManager) {
         this.apiDocService = apiDocService;
-        this.userService = userService;
-        this.servletContext = servletContext;
+        this.internalApiClient = internalApiClient;
+        this.tempFileManager = tempFileManager;
     }
 
     public static String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
-        int dotIndex = filename.lastIndexOf(".");
+        int dotIndex = filename.lastIndexOf('.');
         if (dotIndex == -1) {
             // No extension found
             return filename;
@@ -68,24 +61,13 @@ public class PipelineProcessor {
         String name = filename.substring(0, dotIndex);
         String extension = filename.substring(dotIndex);
         // Finding the last underscore
-        int underscoreIndex = name.lastIndexOf("_");
+        int underscoreIndex = name.lastIndexOf('_');
         if (underscoreIndex == -1) {
             // No underscore found
             return filename;
         }
         // Removing the last part and reattaching the extension
         return name.substring(0, underscoreIndex) + extension;
-    }
-
-    private String getApiKeyForUser() {
-        if (userService == null) return "";
-        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
-    }
-
-    private String getBaseUrl() {
-        String contextPath = servletContext.getContextPath();
-        String port = SPDFApplication.getStaticPort();
-        return "http://localhost:" + port + contextPath + "/";
     }
 
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
@@ -115,7 +97,6 @@ public class PipelineProcessor {
                         "Invalid operation: " + operation + " with parameters: " + parameters);
             }
 
-            String url = getBaseUrl() + operation;
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
                 for (Resource file : outputFiles) {
@@ -137,14 +118,21 @@ public class PipelineProcessor {
                                     body.add(entry.getKey(), entry.getValue());
                                 }
                             }
-                            ResponseEntity<byte[]> response = sendWebRequest(url, body);
+                            ResponseEntity<Resource> response =
+                                    internalApiClient.post(operation, body);
                             // If the operation is filter and the response body is null or empty,
                             // skip
                             // this
                             // file
+                            if (response.getBody()
+                                    instanceof
+                                    InternalApiClient.TempFileResource tempFileResource) {
+                                result.addTempFile(tempFileResource.getTempFile());
+                            }
+
                             if (operation.startsWith("/api/v1/filter/filter-")
                                     && (response.getBody() == null
-                                            || response.getBody().length == 0)) {
+                                            || response.getBody().contentLength() == 0)) {
                                 filtersApplied = true;
                                 log.info("Skipping file due to filtering {}", operation);
                                 continue;
@@ -154,7 +142,7 @@ public class PipelineProcessor {
                                 hasErrors = true;
                                 continue;
                             }
-                            processOutputFiles(operation, response, newOutputFiles);
+                            processOutputFiles(operation, response, newOutputFiles, result);
                         }
                     }
                     if (!hasInputFileType) {
@@ -162,7 +150,7 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf("."))
+                                    filename.substring(filename.lastIndexOf('.'))
                                             .toLowerCase(Locale.ROOT);
                         }
 
@@ -215,10 +203,14 @@ public class PipelineProcessor {
                             body.add(entry.getKey(), entry.getValue());
                         }
                     }
-                    ResponseEntity<byte[]> response = sendWebRequest(url, body);
+                    ResponseEntity<Resource> response = internalApiClient.post(operation, body);
+                    if (response.getBody()
+                            instanceof InternalApiClient.TempFileResource tempFileResource) {
+                        result.addTempFile(tempFileResource.getTempFile());
+                    }
                     // Handle the response
                     if (HttpStatus.OK.equals(response.getStatusCode())) {
-                        processOutputFiles(operation, response, newOutputFiles);
+                        processOutputFiles(operation, response, newOutputFiles, result);
                     } else {
                         // Log error if the response status is not OK
                         logPrintStream.println(
@@ -234,7 +226,7 @@ public class PipelineProcessor {
                                                 String filename = file.getFilename();
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
-                                                                    filename.lastIndexOf("."))
+                                                                    filename.lastIndexOf('.'))
                                                             .toLowerCase(Locale.ROOT);
                                                 }
                                                 return "no extension";
@@ -267,22 +259,11 @@ public class PipelineProcessor {
         return result;
     }
 
-    /* package */ ResponseEntity<byte[]> sendWebRequest(
-            String url, MultiValueMap<String, Object> body) {
-        RestTemplate restTemplate = new RestTemplate();
-        // Set up headers, including API key
-        HttpHeaders headers = new HttpHeaders();
-        String apiKey = getApiKeyForUser();
-        headers.add("X-API-KEY", apiKey);
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        // Create HttpEntity with the body and headers
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-        // Make the request to the REST endpoint
-        return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
-    }
-
     private List<Resource> processOutputFiles(
-            String operation, ResponseEntity<byte[]> response, List<Resource> newOutputFiles)
+            String operation,
+            ResponseEntity<Resource> response,
+            List<Resource> newOutputFiles,
+            PipelineResult result)
             throws IOException {
         // Define filename
         String newFilename;
@@ -296,12 +277,18 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody(), newFilename)) {
+        if (ZipExtractionUtils.isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files
-            newOutputFiles.addAll(unzip(response.getBody()));
+            newOutputFiles.addAll(
+                    ZipExtractionUtils.extractZip(
+                            response.getBody(), tempFileManager, result::addTempFile));
         } else {
+            final Resource tempResource = response.getBody();
+            if (tempResource instanceof InternalApiClient.TempFileResource tfr) {
+                result.addTempFile(tfr.getTempFile());
+            }
             Resource outputResource =
-                    new ByteArrayResource(response.getBody()) {
+                    new FileSystemResource(tempResource.getFile()) {
 
                         @Override
                         public String getFilename() {
@@ -313,7 +300,7 @@ public class PipelineProcessor {
         return newOutputFiles;
     }
 
-    public String extractFilename(ResponseEntity<byte[]> response) {
+    public String extractFilename(ResponseEntity<Resource> response) {
         // Default filename if not found
         String filename = "default-filename.ext";
         HttpHeaders headers = response.getHeaders();
@@ -348,14 +335,7 @@ public class PipelineProcessor {
             // debug statement
             log.info("Reading file: {}", path);
             if (Files.exists(path)) {
-                Resource fileResource =
-                        new ByteArrayResource(Files.readAllBytes(path)) {
-
-                            @Override
-                            public String getFilename() {
-                                return file.getName();
-                            }
-                        };
+                Resource fileResource = new FileSystemResource(file);
                 outputFiles.add(fileResource);
             } else {
                 log.info("File not found: {}", path);
@@ -372,8 +352,11 @@ public class PipelineProcessor {
         }
         List<Resource> outputFiles = new ArrayList<>();
         for (MultipartFile file : files) {
+            Path tempFile = Files.createTempFile("SPDF-upload-", ".tmp");
+            file.transferTo(tempFile);
+
             Resource fileResource =
-                    new ByteArrayResource(file.getBytes()) {
+                    new FileSystemResource(tempFile.toFile()) {
 
                         @Override
                         public String getFilename() {
@@ -384,59 +367,5 @@ public class PipelineProcessor {
         }
         log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
-    }
-
-    private boolean isZip(byte[] data, String filename) {
-        if (data == null || data.length < 4) {
-            return false;
-        }
-        if (filename != null) {
-            String lower = filename.toLowerCase();
-            if (lower.endsWith(".cbz")) {
-                // Treat CBZ as non-zip for our unzipping purposes
-                return false;
-            }
-        }
-        // Check the first four bytes of the data against the standard zip magic number
-        return data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04;
-    }
-
-    private boolean isZip(byte[] data) {
-        return isZip(data, null);
-    }
-
-    private List<Resource> unzip(byte[] data) throws IOException {
-        log.info("Unzipping data of length: {}", data.length);
-        List<Resource> unzippedFiles = new ArrayList<>();
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-                ZipInputStream zis = ZipSecurity.createHardenedInputStream(bais)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
-                int count;
-                while ((count = zis.read(buffer)) != -1) {
-                    baos.write(buffer, 0, count);
-                }
-                final String filename = entry.getName();
-                Resource fileResource =
-                        new ByteArrayResource(baos.toByteArray()) {
-
-                            @Override
-                            public String getFilename() {
-                                return filename;
-                            }
-                        };
-                // If the unzipped file is a zip file, unzip it
-                if (isZip(baos.toByteArray(), filename)) {
-                    log.info("File {} is a zip file. Unzipping...", filename);
-                    unzippedFiles.addAll(unzip(baos.toByteArray()));
-                } else {
-                    unzippedFiles.add(fileResource);
-                }
-            }
-        }
-        log.info("Unzipping completed. {} files were unzipped.", unzippedFiles.size());
-        return unzippedFiles;
     }
 }

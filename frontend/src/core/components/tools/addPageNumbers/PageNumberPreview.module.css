@@ -55,15 +55,48 @@
 }
 
 /* Position numbers at edges within each tile with extra top/bottom spacing */
-.gridTile:nth-child(1) { align-items: flex-start; justify-content: flex-start; padding-top: 4px; } /* top-left */
-.gridTile:nth-child(2) { align-items: flex-start; justify-content: center; padding-top: 4px; }     /* top-center */
-.gridTile:nth-child(3) { align-items: flex-start; justify-content: flex-end; padding-top: 4px; }  /* top-right */
-.gridTile:nth-child(4) { align-items: center; justify-content: flex-start; }    /* middle-left */
-.gridTile:nth-child(5) { align-items: center; justify-content: center; }        /* center */
-.gridTile:nth-child(6) { align-items: center; justify-content: flex-end; }      /* middle-right */
-.gridTile:nth-child(7) { align-items: flex-end; justify-content: flex-start; padding-bottom: 4px; }  /* bottom-left */
-.gridTile:nth-child(8) { align-items: flex-end; justify-content: center; padding-bottom: 4px; }      /* bottom-center */
-.gridTile:nth-child(9) { align-items: flex-end; justify-content: flex-end; padding-bottom: 4px; }    /* bottom-right */
+.gridTile:nth-child(1) {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 4px;
+} /* top-left */
+.gridTile:nth-child(2) {
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+} /* top-center */
+.gridTile:nth-child(3) {
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-top: 4px;
+} /* top-right */
+.gridTile:nth-child(4) {
+  align-items: center;
+  justify-content: flex-start;
+} /* middle-left */
+.gridTile:nth-child(5) {
+  align-items: center;
+  justify-content: center;
+} /* center */
+.gridTile:nth-child(6) {
+  align-items: center;
+  justify-content: flex-end;
+} /* middle-right */
+.gridTile:nth-child(7) {
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: 4px;
+} /* bottom-left */
+.gridTile:nth-child(8) {
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+} /* bottom-center */
+.gridTile:nth-child(9) {
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 4px;
+} /* bottom-right */
 
 /* Base padding for all tiles */
 .gridTile {

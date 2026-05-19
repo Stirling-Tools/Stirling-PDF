@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import LoginHeader from '@app/routes/login/LoginHeader';
-import ErrorMessage from '@app/routes/login/ErrorMessage';
-import EmailPasswordForm from '@app/routes/login/EmailPasswordForm';
-import DividerWithText from '@app/components/shared/DividerWithText';
-import { DesktopOAuthButtons } from '@app/components/SetupWizard/DesktopOAuthButtons';
-import { SelfHostedLink } from '@app/components/SetupWizard/SelfHostedLink';
-import { UserInfo } from '@app/services/authService';
-import '@app/routes/authShared/auth.css';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import LoginHeader from "@app/routes/login/LoginHeader";
+import ErrorMessage from "@app/routes/login/ErrorMessage";
+import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
+import DividerWithText from "@app/components/shared/DividerWithText";
+import { DesktopOAuthButtons } from "@app/components/SetupWizard/DesktopOAuthButtons";
+import { SelfHostedLink } from "@app/components/SetupWizard/SelfHostedLink";
+import { UserInfo } from "@app/services/authService";
+import "@app/routes/authShared/auth.css";
 
 interface SaaSLoginScreenProps {
   serverUrl: string;
@@ -15,6 +15,8 @@ interface SaaSLoginScreenProps {
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   onSelfHostedClick: () => void;
   onSwitchToSignup: () => void;
+  onSkipSignIn?: () => void;
+  onClose?: () => void;
   loading: boolean;
   error: string | null;
 }
@@ -25,23 +27,29 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   onOAuthSuccess,
   onSelfHostedClick,
   onSwitchToSignup,
+  onSkipSignIn,
+  onClose,
   loading,
   error,
 }) => {
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleEmailPasswordSubmit = async () => {
     // Validation
     if (!email.trim()) {
-      setValidationError(t('setup.login.error.emptyEmail', 'Please enter your email'));
+      setValidationError(
+        t("setup.login.error.emptyEmail", "Please enter your email"),
+      );
       return;
     }
 
     if (!password) {
-      setValidationError(t('setup.login.error.emptyPassword', 'Please enter your password'));
+      setValidationError(
+        t("setup.login.error.emptyPassword", "Please enter your password"),
+      );
       return;
     }
 
@@ -57,7 +65,10 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
   return (
     <>
-      <LoginHeader title={t('setup.saas.title', 'Sign in to Stirling Cloud')} />
+      <LoginHeader
+        title={t("setup.saas.title", "Sign in to Stirling Cloud")}
+        onClose={onClose}
+      />
 
       <ErrorMessage error={displayError} />
 
@@ -67,14 +78,11 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         isDisabled={loading}
         serverUrl={serverUrl}
         mode="saas"
-        providers={[
-          { id: 'google' },
-          { id: 'github' },
-        ]}
+        providers={[{ id: "google" }, { id: "github" }]}
       />
 
       <DividerWithText
-        text={t('setup.login.orContinueWith', 'Or continue with email')}
+        text={t("setup.login.orContinueWith", "Or continue with email")}
         respondsToDarkMode={false}
         opacity={0.4}
       />
@@ -92,10 +100,13 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         }}
         onSubmit={handleEmailPasswordSubmit}
         isSubmitting={loading}
-        submitButtonText={t('setup.login.submit', 'Login')}
+        submitButtonText={t("setup.login.submit", "Login")}
       />
 
-      <div className="navigation-link-container" style={{ marginTop: '0.5rem', textAlign: 'right' }}>
+      <div
+        className="navigation-link-container"
+        style={{ marginTop: "0.5rem", textAlign: "right" }}
+      >
         <button
           type="button"
           onClick={() => {
@@ -105,11 +116,27 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
           className="navigation-link-button"
           disabled={loading}
         >
-          {t('signup.signUp', 'Sign Up')}
+          {t("signup.signUp", "Sign Up")}
         </button>
       </div>
 
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
+
+      {onSkipSignIn && (
+        <div
+          className="navigation-link-container"
+          style={{ marginTop: "0.5rem", textAlign: "center" }}
+        >
+          <button
+            type="button"
+            onClick={onSkipSignIn}
+            className="navigation-link-button"
+            disabled={loading}
+          >
+            {t("setup.login.skipSignIn", "Continue without signing in")}
+          </button>
+        </div>
+      )}
     </>
   );
 };

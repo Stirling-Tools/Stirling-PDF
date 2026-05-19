@@ -1,10 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -15,29 +12,29 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/general")
-@Tag(name = "General", description = "General APIs")
+@GeneralApi
 @RequiredArgsConstructor
 @Slf4j
 public class CropController {
@@ -49,6 +46,7 @@ public class CropController {
     private static final String PDF_EXTENSION = ".pdf";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     private static int[] detectContentBounds(BufferedImage image) {
         int width = image.getWidth();
@@ -122,13 +120,20 @@ public class CropController {
         return r >= threshold && g >= threshold && b >= threshold;
     }
 
-    @PostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    private final EndpointConfiguration endpointConfiguration;
+
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
+
+    @AutoJobPostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Crops a PDF document",
             description =
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
+    public ResponseEntity<Resource> cropPdf(@ModelAttribute CropPdfForm request)
+            throws IOException {
         if (request.isAutoCrop()) {
             return cropWithAutomaticDetection(request);
         }
@@ -141,14 +146,14 @@ public class CropController {
                     "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
         }
 
-        if (request.isRemoveDataOutsideCrop()) {
+        if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {
             return cropWithGhostscript(request);
         } else {
             return cropWithPDFBox(request);
         }
     }
 
-    private ResponseEntity<byte[]> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
+    private ResponseEntity<Resource> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
             throws IOException {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
@@ -193,19 +198,16 @@ public class CropController {
                                     cropBounds.height));
                 }
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                newDocument.save(baos);
-                byte[] pdfContent = baos.toByteArray();
-
-                return WebResponseUtils.bytesToWebResponse(
-                        pdfContent,
+                return WebResponseUtils.pdfDocToWebResponse(
+                        newDocument,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
+                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
+                        tempFileManager);
             }
         }
     }
 
-    private ResponseEntity<byte[]> cropWithPDFBox(@ModelAttribute CropPdfForm request)
+    private ResponseEntity<Resource> cropWithPDFBox(@ModelAttribute CropPdfForm request)
             throws IOException {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
 
@@ -252,22 +254,19 @@ public class CropController {
                                     request.getHeight()));
                 }
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                newDocument.save(baos);
-
-                byte[] pdfContent = baos.toByteArray();
-                return WebResponseUtils.bytesToWebResponse(
-                        pdfContent,
+                return WebResponseUtils.pdfDocToWebResponse(
+                        newDocument,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
+                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
+                        tempFileManager);
             }
         }
     }
 
-    private ResponseEntity<byte[]> cropWithGhostscript(@ModelAttribute CropPdfForm request)
+    private ResponseEntity<Resource> cropWithGhostscript(@ModelAttribute CropPdfForm request)
             throws IOException {
-        Path tempInputFile = null;
-        Path tempOutputFile = null;
+        TempFile tempInputFile = null;
+        TempFile tempOutputFile = null;
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
             for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
@@ -281,11 +280,11 @@ public class CropController {
                 page.setCropBox(cropBox);
             }
 
-            tempInputFile = Files.createTempFile(TEMP_INPUT_PREFIX, PDF_EXTENSION);
-            tempOutputFile = Files.createTempFile(TEMP_OUTPUT_PREFIX, PDF_EXTENSION);
+            tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+            tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
 
             // Save the source document with crop boxes
-            sourceDocument.save(tempInputFile.toFile());
+            sourceDocument.save(tempInputFile.getFile());
 
             // Execute Ghostscript to process the crop boxes
             ProcessExecutor processExecutor =
@@ -296,15 +295,15 @@ public class CropController {
                             "-sDEVICE=pdfwrite",
                             "-dUseCropBox",
                             "-o",
-                            tempOutputFile.toString(),
-                            tempInputFile.toString());
+                            tempOutputFile.getAbsolutePath(),
+                            tempInputFile.getAbsolutePath());
 
             processExecutor.runCommandWithOutputHandling(command);
 
-            byte[] pdfContent = Files.readAllBytes(tempOutputFile);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
+            TempFile out = tempOutputFile;
+            tempOutputFile = null; // ownership transferred to response Resource
+            return WebResponseUtils.pdfFileToWebResponse(
+                    out,
                     GeneralUtils.generateFilename(
                             request.getFileInput().getOriginalFilename(), "_cropped.pdf"));
 
@@ -313,10 +312,10 @@ public class CropController {
             throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
         } finally {
             if (tempInputFile != null) {
-                Files.deleteIfExists(tempInputFile);
+                tempInputFile.close();
             }
             if (tempOutputFile != null) {
-                Files.deleteIfExists(tempOutputFile);
+                tempOutputFile.close();
             }
         }
     }

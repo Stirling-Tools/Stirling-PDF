@@ -2,21 +2,21 @@
  * File selectors - Pure functions for accessing file state
  */
 
-import { FileId } from '@app/types/file';
+import { FileId } from "@app/types/file";
 import {
   StirlingFileStub,
   FileContextState,
   FileContextSelectors,
   StirlingFile,
-  createStirlingFile
-} from '@app/types/fileContext';
+  createStirlingFile,
+} from "@app/types/fileContext";
 
 /**
  * Create stable selectors using stateRef and filesRef
  */
 export function createFileSelectors(
   stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
 ): FileContextSelectors {
   return {
     getFile: (id: FileId) => {
@@ -27,7 +27,7 @@ export function createFileSelectors(
     getFiles: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
       return currentIds
-        .map(id => {
+        .map((id) => {
           const file = filesRef.current.get(id);
           return file ? createStirlingFile(file, id) : undefined;
         })
@@ -38,14 +38,16 @@ export function createFileSelectors(
 
     getStirlingFileStubs: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
-      return currentIds.map(id => stateRef.current.files.byId[id]).filter(Boolean);
+      return currentIds
+        .map((id) => stateRef.current.files.byId[id])
+        .filter(Boolean);
     },
 
     getAllFileIds: () => stateRef.current.files.ids,
 
     getSelectedFiles: () => {
       return stateRef.current.ui.selectedFileIds
-        .map(id => {
+        .map((id) => {
           const file = filesRef.current.get(id);
           return file ? createStirlingFile(file, id) : undefined;
         })
@@ -54,7 +56,7 @@ export function createFileSelectors(
 
     getSelectedStirlingFileStubs: () => {
       return stateRef.current.ui.selectedFileIds
-        .map(id => stateRef.current.files.byId[id])
+        .map((id) => stateRef.current.files.byId[id])
         .filter(Boolean);
     },
 
@@ -65,7 +67,7 @@ export function createFileSelectors(
 
     getPinnedFiles: () => {
       return Array.from(stateRef.current.pinnedFiles)
-        .map(id => {
+        .map((id) => {
           const file = filesRef.current.get(id);
           return file ? createStirlingFile(file, id) : undefined;
         })
@@ -74,7 +76,7 @@ export function createFileSelectors(
 
     getPinnedStirlingFileStubs: () => {
       return Array.from(stateRef.current.pinnedFiles)
-        .map(id => stateRef.current.files.byId[id])
+        .map((id) => stateRef.current.files.byId[id])
         .filter(Boolean);
     },
 
@@ -85,22 +87,23 @@ export function createFileSelectors(
     // Stable signature for effects - prevents unnecessary re-renders
     getFilesSignature: () => {
       return stateRef.current.files.ids
-        .map(id => {
+        .map((id) => {
           const record = stateRef.current.files.byId[id];
-          return record ? `${id}:${record.size}:${record.lastModified}` : '';
+          return record ? `${id}:${record.size}:${record.lastModified}` : "";
         })
-        .join('|');
+        .join("|");
     },
-
   };
 }
 
 /**
  * Helper for building quickKey sets for deduplication
  */
-export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileStub>): Set<string> {
+export function buildQuickKeySet(
+  stirlingFileStubs: Record<FileId, StirlingFileStub>,
+): Set<string> {
   const quickKeys = new Set<string>();
-  Object.values(stirlingFileStubs).forEach(record => {
+  Object.values(stirlingFileStubs).forEach((record) => {
     if (record.quickKey) {
       quickKeys.add(record.quickKey);
     }
@@ -111,9 +114,11 @@ export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileS
 /**
  * Helper for building quickKey sets from IndexedDB metadata
  */
-export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; size: number; lastModified: number }>): Set<string> {
+export function buildQuickKeySetFromMetadata(
+  metadata: Array<{ name: string; size: number; lastModified: number }>,
+): Set<string> {
   const quickKeys = new Set<string>();
-  metadata.forEach(meta => {
+  metadata.forEach((meta) => {
     // Format: name|size|lastModified (same as createQuickKey)
     const quickKey = `${meta.name}|${meta.size}|${meta.lastModified}`;
     quickKeys.add(quickKey);
@@ -126,13 +131,13 @@ export function buildQuickKeySetFromMetadata(metadata: Array<{ name: string; siz
  */
 export function getPrimaryFile(
   stateRef: React.MutableRefObject<FileContextState>,
-  filesRef: React.MutableRefObject<Map<FileId, File>>
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
 ): { file?: File; record?: StirlingFileStub } {
   const primaryFileId = stateRef.current.files.ids[0];
   if (!primaryFileId) return {};
 
   return {
     file: filesRef.current.get(primaryFileId),
-    record: stateRef.current.files.byId[primaryFileId]
+    record: stateRef.current.files.byId[primaryFileId],
   };
 }

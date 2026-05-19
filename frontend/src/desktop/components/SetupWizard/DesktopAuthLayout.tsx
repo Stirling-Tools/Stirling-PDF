@@ -1,33 +1,43 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
-import buildLoginSlides from '@app/components/shared/loginSlides';
-import styles from '@app/routes/authShared/AuthLayout.module.css';
-import { useLogoVariant } from '@app/hooks/useLogoVariant';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LoginRightCarousel from "@app/components/shared/LoginRightCarousel";
+import buildLoginSlides from "@app/components/shared/loginSlides";
+import styles from "@app/routes/authShared/AuthLayout.module.css";
+import { useLogoVariant } from "@app/hooks/useLogoVariant";
 
 interface DesktopAuthLayoutProps {
   children: React.ReactNode;
 }
 
-export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({ children }) => {
+export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({
+  children,
+}) => {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [hideRightPanel, setHideRightPanel] = useState(false);
   const logoVariant = useLogoVariant();
-  const imageSlides = useMemo(() => buildLoginSlides(logoVariant, t), [logoVariant, t]);
+  const imageSlides = useMemo(
+    () => buildLoginSlides(logoVariant, t),
+    [logoVariant, t],
+  );
 
   // Force light mode on auth pages
   useEffect(() => {
     const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute('data-mantine-color-scheme');
+    const previousColorScheme = htmlElement.getAttribute(
+      "data-mantine-color-scheme",
+    );
 
     // Set light mode
-    htmlElement.setAttribute('data-mantine-color-scheme', 'light');
+    htmlElement.setAttribute("data-mantine-color-scheme", "light");
 
     // Cleanup: restore previous theme when leaving auth pages
     return () => {
       if (previousColorScheme) {
-        htmlElement.setAttribute('data-mantine-color-scheme', previousColorScheme);
+        htmlElement.setAttribute(
+          "data-mantine-color-scheme",
+          previousColorScheme,
+        );
       }
     };
   }, []);
@@ -44,11 +54,11 @@ export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({ children }
       setHideRightPanel(tooNarrow || tooShort);
     };
     update();
-    window.addEventListener('resize', update);
-    window.addEventListener('orientationchange', update);
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
     return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('orientationchange', update);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
     };
   }, []);
 
@@ -56,15 +66,17 @@ export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({ children }
     <div className={styles.authContainer}>
       <div
         ref={cardRef}
-        className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ''}`}
+        className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}
       >
         <div className={styles.authLeftPanel}>
-          <div className={styles.authContent}>
-            {children}
-          </div>
+          <div className={styles.authContent}>{children}</div>
         </div>
         {!hideRightPanel && (
-          <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />
+          <LoginRightCarousel
+            imageSlides={imageSlides}
+            initialSeconds={5}
+            slideSeconds={8}
+          />
         )}
       </div>
     </div>

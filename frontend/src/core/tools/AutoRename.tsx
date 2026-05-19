@@ -7,18 +7,18 @@ import { useAutoRenameParameters } from "@app/hooks/tools/autoRename/useAutoRena
 import { useAutoRenameOperation } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
 import { useAutoRenameTips } from "@app/components/tooltips/useAutoRenameTips";
 
-const AutoRename =(props: BaseToolProps) => {
+const AutoRename = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const autoRenameTips = useAutoRenameTips();
 
   const base = useBaseTool(
-    'auto-rename-pdf-file',
+    "auto-rename-pdf-file",
     useAutoRenameParameters,
     useAutoRenameOperation,
-    props
+    props,
   );
 
-return createToolFlow({
+  return createToolFlow({
     files: {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
@@ -36,7 +36,8 @@ return createToolFlow({
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

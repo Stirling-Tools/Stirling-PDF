@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useServerExperience } from '@app/hooks/useServerExperience';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { useServerExperience } from "@app/hooks/useServerExperience";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 import {
   ONBOARDING_STEPS,
@@ -10,39 +10,48 @@ import {
   type OnboardingRuntimeState,
   type OnboardingConditionContext,
   DEFAULT_RUNTIME_STATE,
-} from '@app/components/onboarding/orchestrator/onboardingConfig';
+} from "@app/components/onboarding/orchestrator/onboardingConfig";
 import {
   isOnboardingCompleted,
   markOnboardingCompleted,
   migrateFromLegacyPreferences,
-} from '@app/components/onboarding/orchestrator/onboardingStorage';
-import { accountService } from '@app/services/accountService';
-import { useBypassOnboarding } from '@app/components/onboarding/useBypassOnboarding';
+} from "@app/components/onboarding/orchestrator/onboardingStorage";
+import { accountService } from "@app/services/accountService";
+import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
 
-const AUTH_ROUTES = ['/login', '/signup', '/auth', '/invite'];
-const SESSION_TOUR_REQUESTED = 'onboarding::session::tour-requested';
-const SESSION_TOUR_TYPE = 'onboarding::session::tour-type';
-const SESSION_SELECTED_ROLE = 'onboarding::session::selected-role';
+const AUTH_ROUTES = ["/login", "/signup", "/auth", "/invite"];
+const SESSION_TOUR_REQUESTED = "onboarding::session::tour-requested";
+const SESSION_TOUR_TYPE = "onboarding::session::tour-type";
+const SESSION_SELECTED_ROLE = "onboarding::session::selected-role";
 
 // Check if user has an auth token (to avoid flash before redirect)
 function hasAuthToken(): boolean {
-  if (typeof window === 'undefined') return false;
-  return !!localStorage.getItem('stirling_jwt');
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem("stirling_jwt");
 }
 
 // Get initial runtime state from session storage (survives remounts)
-function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRuntimeState {
-  if (typeof window === 'undefined') {
+function getInitialRuntimeState(
+  baseState: OnboardingRuntimeState,
+): OnboardingRuntimeState {
+  if (typeof window === "undefined") {
     return baseState;
   }
 
   try {
-    const tourRequested = sessionStorage.getItem(SESSION_TOUR_REQUESTED) === 'true';
+    const tourRequested =
+      sessionStorage.getItem(SESSION_TOUR_REQUESTED) === "true";
     const sessionTourType = sessionStorage.getItem(SESSION_TOUR_TYPE);
-    const tourType = (sessionTourType === 'admin' || sessionTourType === 'tools' || sessionTourType === 'whatsnew')
-      ? sessionTourType
-      : 'whatsnew';
-    const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as 'admin' | 'user' | null;
+    const tourType =
+      sessionTourType === "admin" ||
+      sessionTourType === "tools" ||
+      sessionTourType === "whatsnew"
+        ? sessionTourType
+        : "whatsnew";
+    const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as
+      | "admin"
+      | "user"
+      | null;
 
     return {
       ...baseState,
@@ -56,11 +65,14 @@ function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRu
 }
 
 function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     if (state.tourRequested !== undefined) {
-      sessionStorage.setItem(SESSION_TOUR_REQUESTED, state.tourRequested ? 'true' : 'false');
+      sessionStorage.setItem(
+        SESSION_TOUR_REQUESTED,
+        state.tourRequested ? "true" : "false",
+      );
     }
     if (state.tourType !== undefined) {
       sessionStorage.setItem(SESSION_TOUR_TYPE, state.tourType);
@@ -73,12 +85,15 @@ function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
       }
     }
   } catch (error) {
-    console.error('[useOnboardingOrchestrator] Error persisting runtime state:', error);
+    console.error(
+      "[useOnboardingOrchestrator] Error persisting runtime state:",
+      error,
+    );
   }
 }
 
 function clearRuntimeStateSession(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
     sessionStorage.removeItem(SESSION_TOUR_REQUESTED);
@@ -86,6 +101,21 @@ function clearRuntimeStateSession(): void {
     sessionStorage.removeItem(SESSION_SELECTED_ROLE);
   } catch {
     // Ignore errors
+  }
+}
+
+function parseMfaRequired(settings: string | null | undefined): boolean {
+  if (!settings) return false;
+
+  try {
+    const parsed = JSON.parse(settings) as { mfaRequired?: string };
+    return parsed.mfaRequired?.toLowerCase() === "true";
+  } catch (error) {
+    console.warn(
+      "[useOnboardingOrchestrator] Failed to parse account settings JSON:",
+      error,
+    );
+    return false;
   }
 }
 
@@ -140,7 +170,7 @@ export interface UseOnboardingOrchestratorOptions {
 }
 
 export function useOnboardingOrchestrator(
-  options?: UseOnboardingOrchestratorOptions
+  options?: UseOnboardingOrchestratorOptions,
 ): UseOnboardingOrchestratorResult {
   const defaultState = options?.defaultRuntimeState ?? DEFAULT_RUNTIME_STATE;
   const serverExperience = useServerExperience();
@@ -149,7 +179,7 @@ export function useOnboardingOrchestrator(
   const bypassOnboarding = useBypassOnboarding();
 
   const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() =>
-    getInitialRuntimeState(defaultState)
+    getInitialRuntimeState(defaultState),
   );
   const [isPaused, setIsPaused] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -174,10 +204,11 @@ export function useOnboardingOrchestrator(
         totalUsers: serverExperience.totalUsers,
         freeTierLimit: serverExperience.freeTierLimit,
         isOverLimit: serverExperience.overFreeTierLimit ?? false,
-        requiresLicense: !serverExperience.hasPaidLicense && (
-          serverExperience.overFreeTierLimit === true ||
-          (serverExperience.effectiveIsAdmin && serverExperience.userCountResolved)
-        ),
+        requiresLicense:
+          !serverExperience.hasPaidLicense &&
+          (serverExperience.overFreeTierLimit === true ||
+            (serverExperience.effectiveIsAdmin &&
+              serverExperience.userCountResolved)),
       },
     }));
   }, [
@@ -205,8 +236,13 @@ export function useOnboardingOrchestrator(
           requiresPasswordChange: accountData.changeCredsFlag,
           firstLoginUsername: accountData.username,
           usingDefaultCredentials: loginPageData.showDefaultCredentials,
+          requiresMfaSetup: parseMfaRequired(accountData.settings),
         }));
-      } catch {
+      } catch (error) {
+        console.log(
+          "[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:",
+          error,
+        );
         // Account endpoint failed - user not logged in or security disabled
       }
     };
@@ -216,33 +252,39 @@ export function useOnboardingOrchestrator(
     }
   }, [config?.enableLogin, configLoading]);
 
-  const isOnAuthRoute = AUTH_ROUTES.some((route) => location.pathname.startsWith(route));
+  const isOnAuthRoute = AUTH_ROUTES.some((route) =>
+    location.pathname.startsWith(route),
+  );
   const loginEnabled = config?.enableLogin === true;
   const isUnauthenticatedWithLoginEnabled = loginEnabled && !hasAuthToken();
   const shouldBlockOnboarding =
-    bypassOnboarding || isOnAuthRoute || configLoading || isUnauthenticatedWithLoginEnabled;
+    bypassOnboarding ||
+    isOnAuthRoute ||
+    configLoading ||
+    isUnauthenticatedWithLoginEnabled;
 
-  const conditionContext = useMemo<OnboardingConditionContext>(() => ({
-    ...serverExperience,
-    ...runtimeState,
-    effectiveIsAdmin: serverExperience.effectiveIsAdmin ||
-      (!serverExperience.loginEnabled && runtimeState.selectedRole === 'admin'),
-  }), [serverExperience, runtimeState]);
+  const conditionContext = useMemo<OnboardingConditionContext>(
+    () => ({
+      ...serverExperience,
+      ...runtimeState,
+      effectiveIsAdmin:
+        serverExperience.effectiveIsAdmin ||
+        (!serverExperience.loginEnabled &&
+          runtimeState.selectedRole === "admin"),
+    }),
+    [serverExperience, runtimeState],
+  );
 
   const activeFlow = useMemo(() => {
-    // If password change is required, ONLY show the first-login step
-    if (runtimeState.requiresPasswordChange) {
-      return ONBOARDING_STEPS.filter((step) => step.id === 'first-login');
-    }
     return ONBOARDING_STEPS.filter((step) => step.condition(conditionContext));
-  }, [conditionContext, runtimeState.requiresPasswordChange]);
+  }, [conditionContext]);
 
   // Wait for config AND admin status before calculating initial step
-  const adminStatusResolved = !configLoading && (
-    config?.enableLogin === false ||
-    config?.enableLogin === undefined ||
-    config?.isAdmin !== undefined
-  );
+  const adminStatusResolved =
+    !configLoading &&
+    (config?.enableLogin === false ||
+      config?.enableLogin === undefined ||
+      config?.isAdmin !== undefined);
 
   useEffect(() => {
     if (configLoading || !adminStatusResolved) return;
@@ -255,7 +297,7 @@ export function useOnboardingOrchestrator(
     }
 
     // If onboarding has been completed, don't show it
-    if (isOnboardingCompleted() && !runtimeState.requiresPasswordChange) {
+    if (isOnboardingCompleted()) {
       setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
       return;
@@ -266,18 +308,31 @@ export function useOnboardingOrchestrator(
       setCurrentStepIndex(0);
       initialIndexSet.current = true;
     }
-  }, [activeFlow, configLoading, adminStatusResolved, runtimeState.requiresPasswordChange]);
+  }, [activeFlow, configLoading, adminStatusResolved]);
 
   const totalSteps = activeFlow.length;
 
-  const isComplete = isInitialized &&
-    (totalSteps === 0 || currentStepIndex >= totalSteps || isOnboardingCompleted());
-  const currentStep = (currentStepIndex >= 0 && currentStepIndex < totalSteps)
-    ? activeFlow[currentStepIndex]
-    : null;
-  const isActive = !shouldBlockOnboarding && !isPaused && !isComplete && isInitialized && currentStep !== null;
-  const isLoading = configLoading || !adminStatusResolved || !isInitialized ||
-    !initialIndexSet.current || (currentStepIndex === -1 && activeFlow.length > 0);
+  const isComplete =
+    isInitialized &&
+    (totalSteps === 0 ||
+      currentStepIndex >= totalSteps ||
+      isOnboardingCompleted());
+  const currentStep =
+    currentStepIndex >= 0 && currentStepIndex < totalSteps
+      ? activeFlow[currentStepIndex]
+      : null;
+  const isActive =
+    !shouldBlockOnboarding &&
+    !isPaused &&
+    !isComplete &&
+    isInitialized &&
+    currentStep !== null;
+  const isLoading =
+    configLoading ||
+    !adminStatusResolved ||
+    !isInitialized ||
+    !initialIndexSet.current ||
+    (currentStepIndex === -1 && activeFlow.length > 0);
 
   useEffect(() => {
     if (!configLoading && !isInitialized) setIsInitialized(true);
@@ -315,24 +370,29 @@ export function useOnboardingOrchestrator(
     setCurrentStepIndex(nextIndex);
   }, [currentStepIndex, totalSteps]);
 
-
-  const updateRuntimeState = useCallback((updates: Partial<OnboardingRuntimeState>) => {
-    persistRuntimeState(updates);
-    setRuntimeState((prev) => ({ ...prev, ...updates }));
-  }, []);
+  const updateRuntimeState = useCallback(
+    (updates: Partial<OnboardingRuntimeState>) => {
+      persistRuntimeState(updates);
+      setRuntimeState((prev) => ({ ...prev, ...updates }));
+    },
+    [],
+  );
 
   const refreshFlow = useCallback(() => {
     initialIndexSet.current = false;
     setCurrentStepIndex(-1);
   }, []);
 
-  const startStep = useCallback((stepId: OnboardingStepId) => {
-    const index = activeFlow.findIndex((step) => step.id === stepId);
-    if (index !== -1) {
-      setCurrentStepIndex(index);
-      setIsPaused(false);
-    }
-  }, [activeFlow]);
+  const startStep = useCallback(
+    (stepId: OnboardingStepId) => {
+      const index = activeFlow.findIndex((step) => step.id === stepId);
+      if (index !== -1) {
+        setCurrentStepIndex(index);
+        setIsPaused(false);
+      }
+    },
+    [activeFlow],
+  );
 
   const pause = useCallback(() => setIsPaused(true), []);
   const resume = useCallback(() => setIsPaused(false), []);

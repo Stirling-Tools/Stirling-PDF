@@ -1,36 +1,36 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
-@RestController
-@RequestMapping("/api/v1/convert")
-@Tag(name = "Convert", description = "Convert APIs")
+@ConvertApi
 @RequiredArgsConstructor
 public class ConvertPDFToOffice {
 
@@ -38,13 +38,13 @@ public class ConvertPDFToOffice {
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/presentation")
     @Operation(
             summary = "Convert PDF to Presentation format",
             description =
                     "This endpoint converts a given PDF file to a Presentation format. Input:PDF"
                             + " Output:PPT Type:SISO")
-    public ResponseEntity<byte[]> processPdfToPresentation(
+    public ResponseEntity<Resource> processPdfToPresentation(
             @ModelAttribute PdfToPresentationRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -53,39 +53,43 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/text")
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description =
                     "This endpoint converts a given PDF file to Text or RTF format. Input:PDF"
                             + " Output:TXT Type:SISO")
-    public ResponseEntity<byte[]> processPdfToRTForTXT(
+    public ResponseEntity<Resource> processPdfToRTForTXT(
             @ModelAttribute PdfToTextOrRTFRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
         if ("txt".equals(request.getOutputFormat())) {
+            String fileName =
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
+            TempFile finalOut = tempFileManager.createManagedTempFile(".txt");
             try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
                 PDFTextStripper stripper = new PDFTextStripper();
                 String text = stripper.getText(document);
-                return WebResponseUtils.bytesToWebResponse(
-                        text.getBytes(),
-                        GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt"),
-                        MediaType.TEXT_PLAIN);
+                Files.writeString(finalOut.getPath(), text, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                finalOut.close();
+                throw e;
             }
+            return WebResponseUtils.fileToWebResponse(finalOut, fileName, MediaType.TEXT_PLAIN);
         } else {
             PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
             return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/word")
     @Operation(
             summary = "Convert PDF to Word document",
             description =
                     "This endpoint converts a given PDF file to a Word document format. Input:PDF"
                             + " Output:WORD Type:SISO")
-    public ResponseEntity<byte[]> processPdfToWord(@ModelAttribute PdfToWordRequest request)
+    public ResponseEntity<Resource> processPdfToWord(@ModelAttribute PdfToWordRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -93,13 +97,13 @@ public class ConvertPDFToOffice {
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/xml")
     @Operation(
             summary = "Convert PDF to XML",
             description =
                     "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
+    public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);

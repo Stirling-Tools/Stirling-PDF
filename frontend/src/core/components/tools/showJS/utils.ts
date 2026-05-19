@@ -1,3 +1,5 @@
+import { downloadFromUrl } from "@app/services/downloadService";
+
 export type ShowJsTokenType = "kw" | "str" | "num" | "com" | "plain";
 export type ShowJsToken = { type: ShowJsTokenType; text: string };
 
@@ -40,7 +42,10 @@ const JS_KEYWORDS = new Set([
   "of",
 ]);
 
-export function tokenizeToLines(src: string, keywords: Set<string> = JS_KEYWORDS): ShowJsToken[][] {
+export function tokenizeToLines(
+  src: string,
+  keywords: Set<string> = JS_KEYWORDS,
+): ShowJsToken[][] {
   const lines: ShowJsToken[][] = [];
   let current: ShowJsToken[] = [];
   let i = 0;
@@ -202,7 +207,9 @@ export function tokenizeToLines(src: string, keywords: Set<string> = JS_KEYWORDS
   return lines;
 }
 
-export function computeBlocks(src: string): Array<{ start: number; end: number }> {
+export function computeBlocks(
+  src: string,
+): Array<{ start: number; end: number }> {
   const res: Array<{ start: number; end: number }> = [];
   let i = 0;
   let line = 0;
@@ -349,7 +356,10 @@ export function computeSearchMatches(
   return list;
 }
 
-export async function copyTextToClipboard(text: string, fallbackElement?: HTMLElement | null): Promise<boolean> {
+export async function copyTextToClipboard(
+  text: string,
+  fallbackElement?: HTMLElement | null,
+): Promise<boolean> {
   try {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       await navigator.clipboard.writeText(text || "");
@@ -372,11 +382,9 @@ export async function copyTextToClipboard(text: string, fallbackElement?: HTMLEl
   }
 }
 
-export function triggerDownload(url: string, filename: string): void {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+export async function triggerDownload(
+  url: string,
+  filename: string,
+): Promise<void> {
+  await downloadFromUrl(url, filename);
 }

@@ -18,7 +18,7 @@ const NumberInputWithUnit = ({
   unit,
   min,
   max,
-  disabled = false
+  disabled = false,
 }: NumberInputWithUnitProps) => {
   const [localValue, setLocalValue] = useState<number | string>(value);
 
@@ -33,7 +33,15 @@ const NumberInputWithUnit = ({
 
   return (
     <Stack gap="xs" style={{ flex: 1 }}>
-      <Text size="xs" fw={500} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <Text
+        size="xs"
+        fw={500}
+        style={{
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
         {label}
       </Text>
       <NumberInput

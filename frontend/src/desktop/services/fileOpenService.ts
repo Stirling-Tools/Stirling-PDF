@@ -1,8 +1,10 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from "@tauri-apps/api/core";
 
 export interface FileOpenService {
   getOpenedFiles(): Promise<string[]>;
-  readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
+  readFileAsArrayBuffer(
+    filePath: string,
+  ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
   clearOpenedFiles(): Promise<void>;
   onFileOpened(callback: (filePath: string) => void): () => void; // Returns unlisten function
 }
@@ -10,40 +12,45 @@ export interface FileOpenService {
 class TauriFileOpenService implements FileOpenService {
   async getOpenedFiles(): Promise<string[]> {
     try {
-      console.log('🔍 Calling invoke(get_opened_files)...');
-      const result = await invoke<string[]>('get_opened_files');
-      console.log('🔍 invoke(get_opened_files) returned:', result);
+      console.log("🔍 Calling invoke(pop_opened_files)...");
+      const result = await invoke<string[]>("pop_opened_files");
+      console.log("🔍 invoke(pop_opened_files) returned:", result);
       return result;
     } catch (error) {
-      console.error('❌ Failed to get opened files:', error);
+      console.error("❌ Failed to get opened files:", error);
       return [];
     }
   }
 
-  async readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
+  async readFileAsArrayBuffer(
+    filePath: string,
+  ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
     try {
-      const { readFile } = await import('@tauri-apps/plugin-fs');
+      const { readFile } = await import("@tauri-apps/plugin-fs");
 
       const fileData = await readFile(filePath);
-      const fileName = filePath.split(/[\\/]/).pop() || 'opened-file.pdf';
+      const fileName = filePath.split(/[\\/]/).pop() || "opened-file.pdf";
 
       return {
         fileName,
-        arrayBuffer: fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength)
+        arrayBuffer: fileData.buffer.slice(
+          fileData.byteOffset,
+          fileData.byteOffset + fileData.byteLength,
+        ),
       };
     } catch (error) {
-      console.error('Failed to read file:', error);
+      console.error("Failed to read file:", error);
       return null;
     }
   }
 
   async clearOpenedFiles(): Promise<void> {
     try {
-      console.log('🔍 Calling invoke(clear_opened_files)...');
-      await invoke('clear_opened_files');
-      console.log('✅ Successfully cleared opened files');
+      console.log("🔍 Calling invoke(clear_opened_files)...");
+      await invoke("clear_opened_files");
+      console.log("✅ Successfully cleared opened files");
     } catch (error) {
-      console.error('❌ Failed to clear opened files:', error);
+      console.error("❌ Failed to clear opened files:", error);
     }
   }
 
@@ -60,7 +67,7 @@ class TauriFileOpenService implements FileOpenService {
 
         // Only import if in Tauri environment
         if (isTauri()) {
-          const { listen } = await import('@tauri-apps/api/event');
+          const { listen } = await import("@tauri-apps/api/event");
 
           // Check again after async import
           if (isCleanedUp) {
@@ -68,8 +75,8 @@ class TauriFileOpenService implements FileOpenService {
           }
 
           // Listen for unified file open events (all platforms)
-          const unlisten = await listen('file-opened', (event) => {
-            console.log('📂 File open event received:', event.payload);
+          const unlisten = await listen("file-opened", (event) => {
+            console.log("📂 File open event received:", event.payload);
             callback(event.payload as string);
           });
 
@@ -78,9 +85,9 @@ class TauriFileOpenService implements FileOpenService {
             cleanup = () => {
               try {
                 unlisten();
-                console.log('✅ File event listeners cleaned up');
+                console.log("✅ File event listeners cleaned up");
               } catch (error) {
-                console.error('❌ Error during file event cleanup:', error);
+                console.error("❌ Error during file event cleanup:", error);
               }
             };
           } else {
@@ -88,12 +95,12 @@ class TauriFileOpenService implements FileOpenService {
             try {
               unlisten();
             } catch (error) {
-              console.error('❌ Error during immediate cleanup:', error);
+              console.error("❌ Error during immediate cleanup:", error);
             }
           }
         }
       } catch (error) {
-        console.error('❌ Failed to setup file event listeners:', error);
+        console.error("❌ Failed to setup file event listeners:", error);
       }
     };
 
@@ -115,7 +122,9 @@ class WebFileOpenService implements FileOpenService {
     return [];
   }
 
-  async readFileAsArrayBuffer(_filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
+  async readFileAsArrayBuffer(
+    _filePath: string,
+  ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
     // In web mode, cannot read arbitrary file paths
     return null;
   }
@@ -126,7 +135,7 @@ class WebFileOpenService implements FileOpenService {
 
   onFileOpened(_callback: (filePath: string) => void): () => void {
     // In web mode, no file events - return no-op cleanup function
-    console.log('ℹ️ Web mode: File event listeners not supported');
+    console.log("ℹ️ Web mode: File event listeners not supported");
     return () => {
       // No-op cleanup for web mode
     };

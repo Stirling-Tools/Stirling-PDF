@@ -23,6 +23,9 @@ public class AuditConfigurationProperties {
     private final boolean enabled;
     private final int level;
     private final int retentionDays;
+    private final boolean captureFileHash;
+    private final boolean capturePdfAuthor;
+    private final boolean captureOperationResults;
 
     public AuditConfigurationProperties(ApplicationProperties applicationProperties) {
         ApplicationProperties.Premium.EnterpriseFeatures.Audit auditConfig =
@@ -37,11 +40,19 @@ public class AuditConfigurationProperties {
         // Retention days (0 means infinite)
         this.retentionDays = auditConfig.getRetentionDays();
 
+        // Metadata and detail capture flags
+        this.captureFileHash = auditConfig.isCaptureFileHash();
+        this.capturePdfAuthor = auditConfig.isCapturePdfAuthor();
+        this.captureOperationResults = auditConfig.isCaptureOperationResults();
+
         log.debug(
-                "Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite)",
+                "Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite), fileHash={}, pdfAuthor={}, operationResults={}",
                 this.enabled,
                 this.level,
-                this.retentionDays);
+                this.retentionDays,
+                this.captureFileHash,
+                this.capturePdfAuthor,
+                this.captureOperationResults);
     }
 
     /**

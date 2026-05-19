@@ -1,23 +1,32 @@
-import { useCallback } from 'react';
-import { Box } from '@mantine/core';
-import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useFileHandler } from '@app/hooks/useFileHandler';
-import { useFileState } from '@app/contexts/FileContext';
-import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
-import { isBaseWorkbench } from '@app/types/workbench';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import styles from '@app/components/layout/Workbench.module.css';
+import { useEffect, useState, Suspense, lazy } from "react";
+import { Box, Loader, Center } from "@mantine/core";
+import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useFileState } from "@app/contexts/FileContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
+import { isBaseWorkbench } from "@app/types/workbench";
+import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import styles from "@app/components/layout/Workbench.module.css";
 
-import TopControls from '@app/components/shared/TopControls';
-import FileEditor from '@app/components/fileEditor/FileEditor';
-import PageEditor from '@app/components/pageEditor/PageEditor';
-import PageEditorControls from '@app/components/pageEditor/PageEditorControls';
-import Viewer from '@app/components/viewer/Viewer';
-import LandingPage from '@app/components/shared/LandingPage';
-import Footer from '@app/components/shared/Footer';
-import DismissAllErrorsButton from '@app/components/shared/DismissAllErrorsButton';
+import WorkbenchBar from "@app/components/shared/WorkbenchBar";
+import LandingPage from "@app/components/shared/LandingPage";
+import Footer from "@app/components/shared/Footer";
+import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+
+// Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
+// full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
+// is open. Lazy-loading keeps all of that out of the initial bundle.
+const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
+const PageEditor = lazy(() => import("@app/components/pageEditor/PageEditor"));
+const PageEditorControls = lazy(
+  () => import("@app/components/pageEditor/PageEditorControls"),
+);
+const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -49,72 +58,59 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
+  const hasFiles = activeFiles.length > 0;
 
-  // Get active file index from ViewerContext
-  const { activeFileIndex, setActiveFileIndex } = useViewer();
-  
-  // Get navigation guard for unsaved changes check when switching files
-  const { requestNavigation } = useNavigationGuard();
-
-  // Wrap file selection to check for unsaved changes before switching
-  // requestNavigation will show the modal if there are unsaved changes, otherwise navigate immediately
-  const handleFileSelect = useCallback((index: number) => {
-    // Don't do anything if selecting the same file
-    if (index === activeFileIndex) return;
-    
-    // requestNavigation handles the unsaved changes check internally
-    requestNavigation(() => {
-      setActiveFileIndex(index);
-    });
-  }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
+  // Enable bar transitions after first paint so the initial hidden state shows
+  // without animating (landing page on load shouldn't animate the bar up).
+  const [barTransitionEnabled, setBarTransitionEnabled] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setBarTransitionEnabled(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
-    const previousMode = sessionStorage.getItem('previousMode');
-    if (previousMode === 'split') {
+    const previousMode = sessionStorage.getItem("previousMode");
+    if (previousMode === "split") {
       // Use context's handleToolSelect which coordinates tool selection and view changes
-      handleToolSelect('split');
-      sessionStorage.removeItem('previousMode');
-    } else if (previousMode === 'compress') {
-      handleToolSelect('compress');
-      sessionStorage.removeItem('previousMode');
-    } else if (previousMode === 'convert') {
-      handleToolSelect('convert');
-      sessionStorage.removeItem('previousMode');
+      handleToolSelect("split");
+      sessionStorage.removeItem("previousMode");
+    } else if (previousMode === "compress") {
+      handleToolSelect("compress");
+      sessionStorage.removeItem("previousMode");
+    } else if (previousMode === "convert") {
+      handleToolSelect("convert");
+      sessionStorage.removeItem("previousMode");
     } else {
-      setCurrentView('fileEditor');
+      setCurrentView("fileEditor");
     }
   };
 
   const renderMainContent = () => {
-    // Check for custom workbench views first
+    // Check if we're showing a custom workbench first
+    // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {
-      const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
+      const customView = customWorkbenchViews.find(
+        (view) => view.workbenchId === currentView && view.data != null,
+      );
       if (customView) {
-        // PDF text editor handles its own empty state (shows dropzone when no document)
-        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor';
-        if (handlesOwnEmptyState || activeFiles.length > 0) {
-          const CustomComponent = customView.component;
-          return <CustomComponent data={customView.data} />;
-        }
+        const CustomComponent = customView.component;
+        return <CustomComponent data={customView.data} />;
       }
     }
 
-    // For base workbenches (or custom views that don't handle empty state), show landing page when no files
     if (activeFiles.length === 0) {
-      return (
-        <LandingPage
-        />
-      );
+      return <LandingPage />;
     }
 
     switch (currentView) {
       case "fileEditor":
-
         return (
           <FileEditor
             toolMode={!!selectedToolId}
-            supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
+            supportedExtensions={
+              selectedTool?.supportedFormats || VIEWER_SUPPORTED_EXTENSIONS
+            }
             {...(!selectedToolId && {
               onOpenPageEditor: () => {
                 setCurrentView("pageEditor");
@@ -122,58 +118,62 @@ export default function Workbench() {
               onMergeFiles: (filesToMerge) => {
                 addFiles(filesToMerge);
                 setCurrentView("viewer");
-              }
+              },
             })}
           />
         );
 
       case "viewer":
-        
         return (
           <Viewer
             sidebarsVisible={sidebarsVisible}
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
             onClose={handlePreviewClose}
-            activeFileIndex={activeFileIndex}
-            setActiveFileIndex={setActiveFileIndex}
           />
         );
 
       case "pageEditor":
-        
         return (
-          <>
-            <PageEditor
-              onFunctionsReady={setPageEditorFunctions}
-            />
+          <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
+            <PageEditor onFunctionsReady={setPageEditorFunctions} />
             {pageEditorFunctions && (
-              <PageEditorControls
-                onClosePdf={pageEditorFunctions.closePdf}
-                onUndo={pageEditorFunctions.handleUndo}
-                onRedo={pageEditorFunctions.handleRedo}
-                canUndo={pageEditorFunctions.canUndo}
-                canRedo={pageEditorFunctions.canRedo}
-                onRotate={pageEditorFunctions.handleRotate}
-                onDelete={pageEditorFunctions.handleDelete}
-                onSplit={pageEditorFunctions.handleSplit}
-                onSplitAll={pageEditorFunctions.handleSplitAll}
-                onPageBreak={pageEditorFunctions.handlePageBreak}
-                onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
-                onExportAll={pageEditorFunctions.onExportAll}
-                exportLoading={pageEditorFunctions.exportLoading}
-                selectionMode={pageEditorFunctions.selectionMode}
-                selectedPageIds={pageEditorFunctions.selectedPageIds}
-                displayDocument={pageEditorFunctions.displayDocument}
-                splitPositions={pageEditorFunctions.splitPositions}
-                totalPages={pageEditorFunctions.totalPages}
-              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                }}
+              >
+                <PageEditorControls
+                  onClosePdf={pageEditorFunctions.closePdf}
+                  onUndo={pageEditorFunctions.handleUndo}
+                  onRedo={pageEditorFunctions.handleRedo}
+                  canUndo={pageEditorFunctions.canUndo}
+                  canRedo={pageEditorFunctions.canRedo}
+                  onRotate={pageEditorFunctions.handleRotate}
+                  onDelete={pageEditorFunctions.handleDelete}
+                  onSplit={pageEditorFunctions.handleSplit}
+                  onSplitAll={pageEditorFunctions.handleSplitAll}
+                  onPageBreak={pageEditorFunctions.handlePageBreak}
+                  onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
+                  onExportAll={pageEditorFunctions.onExportAll}
+                  exportLoading={pageEditorFunctions.exportLoading}
+                  selectionMode={pageEditorFunctions.selectionMode}
+                  selectedPageIds={pageEditorFunctions.selectedPageIds}
+                  displayDocument={pageEditorFunctions.displayDocument}
+                  splitPositions={pageEditorFunctions.splitPositions}
+                  totalPages={pageEditorFunctions.totalPages}
+                />
+              </div>
             )}
-          </>
+          </div>
         );
 
       default:
-        return <LandingPage />;
+        return null;
     }
   };
 
@@ -184,22 +184,25 @@ export default function Workbench() {
       style={
         isRainbowMode
           ? {} // No background color in rainbow mode
-          : { backgroundColor: 'var(--bg-background)' }
+          : { backgroundColor: "var(--bg-background)" }
       }
     >
-      {/* Top Controls */}
-      {activeFiles.length > 0 && (
-        <TopControls
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map(f => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
-          onFileSelect={handleFileSelect}
-        />
+      {/* Workbench Bar - animates in/out based on file presence */}
+      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)
+        ?.hideTopControls && (
+        <div
+          className={styles.workbenchBarWrapper}
+          data-hidden={String(!hasFiles)}
+          data-no-transition={String(!barTransitionEnabled)}
+        >
+          <div className={styles.workbenchBarInner}>
+            <WorkbenchBar
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+              hasFiles={hasFiles}
+            />
+          </div>
+        </div>
       )}
 
       {/* Dismiss All Errors Button */}
@@ -207,12 +210,21 @@ export default function Workbench() {
 
       {/* Main content area */}
       <Box
-        className={`flex-1 min-h-0 relative z-10 ${styles.workbenchScrollable}`}
+        className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
         style={{
-          transition: 'opacity 0.15s ease-in-out',
+          transition: "opacity 0.15s ease-in-out",
+          ...(currentView === "pageEditor" && { height: 0 }),
         }}
       >
-        {renderMainContent()}
+        <Suspense
+          fallback={
+            <Center style={{ height: "100%" }}>
+              <Loader />
+            </Center>
+          }
+        >
+          {renderMainContent()}
+        </Suspense>
       </Box>
 
       <Footer

@@ -19,6 +19,7 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
+import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -113,8 +114,14 @@ public class InitialSecuritySetup {
                 && userService.findByUsernameIgnoreCase(initialUsername).isEmpty()) {
 
             Team team = teamService.getOrCreateDefaultTeam();
-            userService.saveUser(
-                    initialUsername, initialPassword, team, Role.ADMIN.getRoleId(), false);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(initialUsername)
+                            .password(initialPassword)
+                            .team(team)
+                            .role(Role.ADMIN.getRoleId())
+                            .firstLogin(false);
+            userService.saveUserCore(builder.build());
             log.info("Admin user created: {}", initialUsername);
         } else {
             createDefaultAdminUser();
@@ -127,8 +134,14 @@ public class InitialSecuritySetup {
 
         if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {
             Team team = teamService.getOrCreateDefaultTeam();
-            userService.saveUser(
-                    defaultUsername, defaultPassword, team, Role.ADMIN.getRoleId(), true);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(defaultUsername)
+                            .password(defaultPassword)
+                            .team(team)
+                            .role(Role.ADMIN.getRoleId())
+                            .firstLogin(true);
+            userService.saveUserCore(builder.build());
             log.info("Default admin user created: {}", defaultUsername);
         }
     }
@@ -137,12 +150,14 @@ public class InitialSecuritySetup {
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
             Team team = teamService.getOrCreateInternalTeam();
-            userService.saveUser(
-                    Role.INTERNAL_API_USER.getRoleId(),
-                    UUID.randomUUID().toString(),
-                    team,
-                    Role.INTERNAL_API_USER.getRoleId(),
-                    false);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(Role.INTERNAL_API_USER.getRoleId())
+                            .password(UUID.randomUUID().toString())
+                            .team(team)
+                            .role(Role.INTERNAL_API_USER.getRoleId())
+                            .firstLogin(false);
+            userService.saveUserCore(builder.build());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
         } else {

@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -184,5 +189,77 @@ class FileStorageTest {
 
         // Assert
         assertFalse(result);
+    }
+
+    @Test
+    void storeFromResource_happyPath_persistsContent() throws IOException {
+        // Arrange
+        byte[] payload = "resource-body-bytes".getBytes(StandardCharsets.UTF_8);
+        Resource resource = new ByteArrayResource(payload);
+
+        // Act
+        String fileId = fileStorage.storeFromResource(resource, "whatever.pdf");
+
+        // Assert
+        assertNotNull(fileId);
+        assertTrue(Files.exists(tempDir.resolve(fileId)));
+        assertArrayEquals(payload, fileStorage.retrieveBytes(fileId));
+    }
+
+    @Test
+    void storeFromResource_failureCleansUpPartialFile() throws IOException {
+        // Arrange: a Resource whose getInputStream returns a stream that throws after
+        // emitting a few bytes. The finally block in storeFromResource should remove
+        // the partial file on disk.
+        byte[] head = "partial".getBytes(StandardCharsets.UTF_8);
+        Resource flakyResource =
+                new ByteArrayResource(head) {
+                    @Override
+                    public InputStream getInputStream() {
+                        return new InputStream() {
+                            private int position = 0;
+
+                            @Override
+                            public int read() throws IOException {
+                                if (position < head.length) {
+                                    return head[position++] & 0xFF;
+                                }
+                                throw new IOException("simulated mid-copy read failure");
+                            }
+
+                            @Override
+                            public int read(byte[] b, int off, int len) throws IOException {
+                                if (position >= head.length) {
+                                    throw new IOException("simulated mid-copy read failure");
+                                }
+                                int toCopy = Math.min(len, head.length - position);
+                                System.arraycopy(head, position, b, off, toCopy);
+                                position += toCopy;
+                                return toCopy;
+                            }
+                        };
+                    }
+                };
+
+        // Snapshot dir contents before the call so we can detect any lingering file.
+        long filesBefore;
+        try (Stream<Path> s = Files.list(tempDir)) {
+            filesBefore = s.count();
+        }
+
+        // Act + Assert: IOException must propagate out — not be swallowed.
+        assertThrows(
+                IOException.class, () -> fileStorage.storeFromResource(flakyResource, "n.pdf"));
+
+        // Assert: no partial file lingers under the storage directory — the finally
+        // branch's deleteIfExists must have cleaned it up.
+        long filesAfter;
+        try (Stream<Path> s = Files.list(tempDir)) {
+            filesAfter = s.count();
+        }
+        assertEquals(
+                filesBefore,
+                filesAfter,
+                "partial file must be cleaned up by storeFromResource finally block");
     }
 }

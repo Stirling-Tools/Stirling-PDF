@@ -1,0 +1,97 @@
+services:
+  stirling-pdf:
+    container_name: Stirling-PDF-Security-Remote-UNO
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    build:
+      context: ../../..
+      dockerfile: docker/embedded/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - 8080:8080
+    volumes:
+      - ../../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../../stirling/latest/config:/configs:rw
+      - ../../../stirling/latest/logs:/logs:rw
+      - stirling-tmp:/tmp/stirling-pdf:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      SECURITY_ENABLELOGIN: "false"
+      # Disable auto UNO server (we're using remote servers instead)
+      PROCESS_EXECUTOR_AUTO_UNO_SERVER: "false"
+      # Configure remote UNO server pool
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST: "unoserver1"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_HOST_LOCATION: "remote"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_0_PROTOCOL: "http"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_HOST: "unoserver2"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_PORT: "2003"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_HOST_LOCATION: "remote"
+      PROCESS_EXECUTOR_UNO_SERVER_ENDPOINTS_1_PROTOCOL: "http"
+      # Session limit should match endpoint count for optimal concurrency
+      PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "2"
+      # STIRLING_JVM_PROFILE: "balanced"  # Options: balanced (G1GC, default), performance (Shenandoah)
+      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active profile
+      PUID: 1002
+      PGID: 1002
+      UMASK: "022"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest with Security + Remote UNO Servers
+      UI_APPNAMENAVBAR: Stirling-PDF Latest
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "true"
+      SHOW_SURVEY: "true"
+    depends_on:
+      unoserver1:
+        condition: service_healthy
+      unoserver2:
+        condition: service_healthy
+    networks:
+      - stirling-network
+    restart: on-failure:5
+
+  unoserver1:
+    container_name: UNO-Server-1
+    # See docker/unoserver/VERSION for available tags.
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
+    environment:
+      UNOSERVER_PORT: "2003"
+      UNOSERVER_UNO_PORT: "2002"
+      UNOSERVER_CONVERSION_TIMEOUT: "1800"
+      # Recycle hourly to bound LibreOffice memory; 0 disables, floor 60s.
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
+    volumes:
+      - stirling-tmp:/tmp/stirling-pdf:rw
+    expose:
+      - "2003"
+    networks:
+      - stirling-network
+    restart: on-failure:5
+
+  unoserver2:
+    container_name: UNO-Server-2
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
+    environment:
+      UNOSERVER_PORT: "2003"
+      UNOSERVER_UNO_PORT: "2002"
+      UNOSERVER_CONVERSION_TIMEOUT: "1800"
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
+    volumes:
+      - stirling-tmp:/tmp/stirling-pdf:rw
+    expose:
+      - "2003"
+    networks:
+      - stirling-network
+    restart: on-failure:5
+
+networks:
+  stirling-network:
+    driver: bridge
+
+volumes:
+  stirling-tmp:

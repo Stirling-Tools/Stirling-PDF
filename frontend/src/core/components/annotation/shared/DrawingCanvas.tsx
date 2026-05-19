@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Paper, Button, Modal, Stack, Text, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { ColorSwatchButton } from '@app/components/annotation/shared/ColorPicker';
-import PenSizeSelector from '@app/components/tools/sign/PenSizeSelector';
-import SignaturePad from 'signature_pad';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
+import React, { useEffect, useRef, useState } from "react";
+import { Paper, Button, Modal, Stack, Text, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { ColorSwatchButton } from "@app/components/annotation/shared/ColorPicker";
+import PenSizeSelector from "@app/components/tools/sign/PenSizeSelector";
+import SignaturePad from "signature_pad";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
 
 interface DrawingCanvasProps {
   selectedColor: string;
@@ -15,7 +15,9 @@ interface DrawingCanvasProps {
   onPenSizeInputChange: (input: string) => void;
   onSignatureDataChange: (data: string | null) => void;
   onDrawingComplete?: () => void;
+  onModalClose?: () => void;
   disabled?: boolean;
+  autoOpen?: boolean;
   width?: number;
   height?: number;
   modalWidth?: number;
@@ -33,7 +35,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onPenSizeInputChange,
   onSignatureDataChange,
   onDrawingComplete,
+  onModalClose,
   disabled = false,
+  autoOpen = false,
   width = 400,
   height = 150,
   initialSignatureData,
@@ -43,7 +47,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePad | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [savedSignatureData, setSavedSignatureData] = useState<string | null>(null);
+  const [savedSignatureData, setSavedSignatureData] = useState<string | null>(
+    null,
+  );
 
   const initPad = (canvas: HTMLCanvasElement) => {
     if (!padRef.current) {
@@ -64,7 +70,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       if (savedSignatureData) {
         const img = new Image();
         img.onload = () => {
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           }
@@ -83,14 +89,21 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     setModalOpen(true);
   };
 
+  useEffect(() => {
+    if (autoOpen) openModal();
+  }, [autoOpen]);
+
   const trimCanvas = (canvas: HTMLCanvasElement): string => {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return canvas.toDataURL('image/png');
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return canvas.toDataURL("image/png");
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const pixels = imageData.data;
 
-    let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+    let minX = canvas.width,
+      minY = canvas.height,
+      maxX = 0,
+      maxY = 0;
 
     // Find bounds of non-transparent pixels
     for (let y = 0; y < canvas.height; y++) {
@@ -109,27 +122,40 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     const trimHeight = maxY - minY + 1;
 
     // Create trimmed canvas
-    const trimmedCanvas = document.createElement('canvas');
+    const trimmedCanvas = document.createElement("canvas");
     trimmedCanvas.width = trimWidth;
     trimmedCanvas.height = trimHeight;
-    const trimmedCtx = trimmedCanvas.getContext('2d');
+    const trimmedCtx = trimmedCanvas.getContext("2d");
     if (trimmedCtx) {
-      trimmedCtx.drawImage(canvas, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
+      trimmedCtx.drawImage(
+        canvas,
+        minX,
+        minY,
+        trimWidth,
+        trimHeight,
+        0,
+        0,
+        trimWidth,
+        trimHeight,
+      );
     }
 
-    return trimmedCanvas.toDataURL('image/png');
+    return trimmedCanvas.toDataURL("image/png");
   };
 
   const renderPreview = (dataUrl: string) => {
     const canvas = previewCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const img = new Image();
     img.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const scale = Math.min(
+        canvas.width / img.width,
+        canvas.height / img.height,
+      );
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
       const x = (canvas.width - scaledWidth) / 2;
@@ -145,7 +171,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       const canvas = modalCanvasRef.current;
       if (canvas) {
         const trimmedPng = trimCanvas(canvas);
-        const untrimmedPng = canvas.toDataURL('image/png');
+        const untrimmedPng = canvas.toDataURL("image/png");
         setSavedSignatureData(untrimmedPng); // Save untrimmed for restoration
         onSignatureDataChange(trimmedPng);
         renderPreview(trimmedPng);
@@ -160,6 +186,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       padRef.current = null;
     }
     setModalOpen(false);
+    onModalClose?.();
   };
 
   const clear = () => {
@@ -167,9 +194,14 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       padRef.current.clear();
     }
     if (previewCanvasRef.current) {
-      const ctx = previewCanvasRef.current.getContext('2d');
+      const ctx = previewCanvasRef.current.getContext("2d");
       if (ctx) {
-        ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
+        ctx.clearRect(
+          0,
+          0,
+          previewCanvasRef.current.width,
+          previewCanvasRef.current.height,
+        );
       }
     }
     setSavedSignatureData(null); // Clear saved signature
@@ -200,7 +232,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   useEffect(() => {
     const canvas = previewCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     if (!initialSignatureData) {
@@ -218,33 +250,41 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       <Paper withBorder p="md">
         <Stack gap="sm">
           <PrivateContent>
-          <Text fw={500}>{t('sign.canvas.heading', 'Draw your signature')}</Text>
-          <canvas
-            ref={previewCanvasRef}
-            width={width}
-            height={height}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              cursor: disabled ? 'default' : 'pointer',
-              backgroundColor: '#ffffff',
-              width: '100%',
-            }}
-            onClick={disabled ? undefined : openModal}
-          />
+            <Text fw={500}>
+              {t("sign.canvas.heading", "Draw your signature")}
+            </Text>
+            <canvas
+              ref={previewCanvasRef}
+              width={width}
+              height={height}
+              style={{
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                cursor: disabled ? "default" : "pointer",
+                backgroundColor: "#ffffff",
+                width: "100%",
+              }}
+              onClick={disabled ? undefined : openModal}
+            />
           </PrivateContent>
           <Text size="sm" c="dimmed" ta="center">
-            {t('sign.canvas.clickToOpen', 'Click to open the drawing canvas')}
+            {t("sign.canvas.clickToOpen", "Click to open the drawing canvas")}
           </Text>
         </Stack>
       </Paper>
 
-      <Modal opened={modalOpen} onClose={closeModal} title={t('sign.canvas.modalTitle', 'Draw your signature')} size="auto" centered>
+      <Modal
+        opened={modalOpen}
+        onClose={closeModal}
+        title={t("sign.canvas.modalTitle", "Draw your signature")}
+        size="auto"
+        centered
+      >
         <Stack gap="md">
           <Group gap="lg" align="flex-end" wrap="wrap">
             <Stack gap={4} style={{ minWidth: 120 }}>
               <Text size="sm" fw={500}>
-                {t('sign.canvas.colorLabel', 'Colour')}
+                {t("sign.canvas.colorLabel", "Colour")}
               </Text>
               <ColorSwatchButton
                 color={selectedColor}
@@ -253,7 +293,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
             </Stack>
             <Stack gap={4} style={{ minWidth: 120 }}>
               <Text size="sm" fw={500}>
-                {t('sign.canvas.penSizeLabel', 'Pen size')}
+                {t("sign.canvas.penSizeLabel", "Pen size")}
               </Text>
               <PenSizeSelector
                 value={penSize}
@@ -263,9 +303,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                   updatePenSize(size);
                 }}
                 onInputChange={onPenSizeInputChange}
-                placeholder={t('sign.canvas.penSizePlaceholder', 'Size')}
+                placeholder={t("sign.canvas.penSizePlaceholder", "Size")}
                 size="compact-sm"
-                style={{ width: '80px' }}
+                style={{ width: "80px" }}
               />
             </Stack>
           </Group>
@@ -277,26 +317,24 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 if (el) initPad(el);
               }}
               style={{
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                display: 'block',
-                touchAction: 'none',
-                backgroundColor: 'white',
-                width: '100%',
-                maxWidth: '50rem',
-                height: '25rem',
-                cursor: 'crosshair',
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                display: "block",
+                touchAction: "none",
+                backgroundColor: "white",
+                width: "100%",
+                maxWidth: "50rem",
+                height: "25rem",
+                cursor: "crosshair",
               }}
             />
           </PrivateContent>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Button variant="subtle" color="red" onClick={clear}>
-              {t('sign.canvas.clear', 'Clear canvas')}
+              {t("sign.canvas.clear", "Clear canvas")}
             </Button>
-            <Button onClick={closeModal}>
-              {t('common.done', 'Done')}
-            </Button>
+            <Button onClick={closeModal}>{t("common.done", "Done")}</Button>
           </div>
         </Stack>
       </Modal>

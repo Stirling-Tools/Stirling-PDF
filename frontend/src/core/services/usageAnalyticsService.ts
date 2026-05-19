@@ -1,4 +1,4 @@
-import apiClient from '@app/services/apiClient';
+import apiClient from "@app/services/apiClient";
 
 export interface EndpointStatistic {
   endpoint: string;
@@ -23,7 +23,7 @@ const usageAnalyticsService = {
    */
   async getEndpointStatistics(
     limit?: number,
-    dataType: 'all' | 'api' | 'ui' = 'all'
+    dataType: "all" | "api" | "ui" = "all",
   ): Promise<EndpointStatisticsResponse> {
     const params: Record<string, any> = {};
 
@@ -31,13 +31,15 @@ const usageAnalyticsService = {
       params.limit = limit;
     }
 
-    if (dataType !== 'all') {
+    if (dataType !== "all") {
       params.dataType = dataType;
     }
 
     const response = await apiClient.get<EndpointStatisticsResponse>(
-      '/api/v1/proprietary/ui-data/usage-endpoint-statistics',
-      { params }
+      "/api/v1/proprietary/ui-data/usage-endpoint-statistics",
+      {
+        params,
+      },
     );
     return response.data;
   },
@@ -47,7 +49,7 @@ const usageAnalyticsService = {
    */
   async getChartData(
     limit?: number,
-    dataType: 'all' | 'api' | 'ui' = 'all'
+    dataType: "all" | "api" | "ui" = "all",
   ): Promise<UsageChartData> {
     const stats = await this.getEndpointStatistics(limit, dataType);
 

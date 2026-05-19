@@ -1,7 +1,10 @@
-import { useCallback } from 'react';
-import licenseService, { PlanTier } from '@app/services/licenseService';
-import { resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
-import { CheckoutState, PollingStatus } from '@app/components/shared/stripeCheckout/types/checkout';
+import { useCallback } from "react";
+import licenseService, { PlanTier } from "@app/services/licenseService";
+import { resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
+import {
+  CheckoutState,
+  PollingStatus,
+} from "@app/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Checkout session creation and payment handling hook
@@ -19,20 +22,25 @@ export const useCheckoutSession = (
   pollForLicenseKey: (installId: string) => Promise<void>,
   onSuccess?: (sessionId: string) => void,
   onError?: (error: string) => void,
-  onLicenseActivated?: (licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => void
+  onLicenseActivated?: (licenseInfo: {
+    licenseType: string;
+    enabled: boolean;
+    maxUsers: number;
+    hasKey: boolean;
+  }) => void,
 ) => {
   const createCheckoutSession = useCallback(async () => {
     if (!selectedPlan) {
       setState({
-        currentStage: 'error',
-        error: 'Selected plan period is not available',
+        currentStage: "error",
+        error: "Selected plan period is not available",
         loading: false,
       });
       return;
     }
 
     try {
-      setState(prev => ({ ...prev, loading: true }));
+      setState((prev) => ({ ...prev, loading: true }));
 
       // Fetch installation ID from backend
       let fetchedInstallationId = installationId;
@@ -46,13 +54,20 @@ export const useCheckoutSession = (
       let existingLicenseKey: string | undefined;
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
-        if (licenseInfo?.licenseType && licenseInfo.licenseType !== 'NORMAL' && licenseInfo.licenseKey) {
+        if (
+          licenseInfo?.licenseType &&
+          licenseInfo.licenseType !== "NORMAL" &&
+          licenseInfo.licenseKey
+        ) {
           existingLicenseKey = licenseInfo.licenseKey;
           setCurrentLicenseKey(existingLicenseKey);
-          console.log('Found existing valid license for upgrade');
+          console.log("Found existing valid license for upgrade");
         }
       } catch (error) {
-        console.warn('Could not fetch license info, proceeding as new license:', error);
+        console.warn(
+          "Could not fetch license info, proceeding as new license:",
+          error,
+        );
       }
 
       const response = await licenseService.createCheckoutSession({
@@ -66,14 +81,14 @@ export const useCheckoutSession = (
 
       // Check if we got a redirect URL (hosted checkout for HTTP)
       if (response.url) {
-        console.log('Redirecting to Stripe hosted checkout:', response.url);
+        console.log("Redirecting to Stripe hosted checkout:", response.url);
         // Redirect to Stripe's hosted checkout page
         window.location.href = response.url;
         return;
       }
 
       // Otherwise, use embedded checkout (HTTPS)
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         clientSecret: response.clientSecret,
         sessionId: response.sessionId,
@@ -81,9 +96,11 @@ export const useCheckoutSession = (
       }));
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to create checkout session';
+        err instanceof Error
+          ? err.message
+          : "Failed to create checkout session";
       setState({
-        currentStage: 'error',
+        currentStage: "error",
         error: errorMessage,
         loading: false,
       });
@@ -97,18 +114,18 @@ export const useCheckoutSession = (
     setState,
     setInstallationId,
     setCurrentLicenseKey,
-    onError
+    onError,
   ]);
 
   const handlePaymentComplete = useCallback(async () => {
     // Preserve state when changing stage
-    setState(prev => ({ ...prev, currentStage: 'success' }));
+    setState((prev) => ({ ...prev, currentStage: "success" }));
 
     // Check if this is an upgrade (existing license key) or new plan
     if (currentLicenseKey) {
       // UPGRADE FLOW: Resync existing license with Keygen
-      console.log('Upgrade detected - resyncing existing license with Keygen');
-      setPollingStatus('polling');
+      console.log("Upgrade detected - resyncing existing license with Keygen");
+      setPollingStatus("polling");
 
       const activation = await resyncExistingLicense({
         isMounted: () => true, // Modal is open, no need to check
@@ -117,26 +134,26 @@ export const useCheckoutSession = (
 
       if (activation.success) {
         console.log(`License upgraded successfully: ${activation.licenseType}`);
-        setPollingStatus('ready');
+        setPollingStatus("ready");
       } else {
-        console.error('Failed to sync upgraded license:', activation.error);
-        setPollingStatus('timeout');
+        console.error("Failed to sync upgraded license:", activation.error);
+        setPollingStatus("timeout");
       }
 
       // Notify parent (don't wait - upgrade is complete)
-      onSuccess?.(state.sessionId || '');
+      onSuccess?.(state.sessionId || "");
     } else {
       // NEW PLAN FLOW: Poll for new license key
-      console.log('New subscription - polling for license key');
+      console.log("New subscription - polling for license key");
 
       if (installationId) {
         pollForLicenseKey(installationId).finally(() => {
           // Only notify parent after polling completes or times out
-          onSuccess?.(state.sessionId || '');
+          onSuccess?.(state.sessionId || "");
         });
       } else {
         // No installation ID, notify immediately
-        onSuccess?.(state.sessionId || '');
+        onSuccess?.(state.sessionId || "");
       }
     }
   }, [
@@ -147,7 +164,7 @@ export const useCheckoutSession = (
     setPollingStatus,
     pollForLicenseKey,
     onSuccess,
-    onLicenseActivated
+    onLicenseActivated,
   ]);
 
   return {

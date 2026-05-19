@@ -1,7 +1,10 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from "@app/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
-export type RedactMode = 'automatic' | 'manual';
+export type RedactMode = "automatic" | "manual";
 
 export interface RedactParameters extends BaseParameters {
   mode: RedactMode;
@@ -16,11 +19,11 @@ export interface RedactParameters extends BaseParameters {
 }
 
 export const defaultParameters: RedactParameters = {
-  mode: 'automatic',
+  mode: "automatic",
   wordsToRedact: [],
   useRegex: false,
   wholeWordSearch: false,
-  redactColor: '#000000',
+  redactColor: "#000000",
   customPadding: 0.1,
   convertPDFToImage: true,
 };
@@ -31,18 +34,21 @@ export const useRedactParameters = (): RedactParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: (params) => {
-      if (params.mode === 'automatic') {
-        return '/api/v1/security/auto-redact';
+      if (params.mode === "automatic") {
+        return "/api/v1/security/auto-redact";
       }
       // Manual redaction handled client-side (validation prevents this path)
-      return '';
+      return "";
     },
     validateFn: (params) => {
-      if (params.mode === 'automatic') {
-        return params.wordsToRedact.length > 0 && params.wordsToRedact.some(word => word.trim().length > 0);
+      if (params.mode === "automatic") {
+        return (
+          params.wordsToRedact.length > 0 &&
+          params.wordsToRedact.some((word) => word.trim().length > 0)
+        );
       }
       // Manual mode is not yet supported via this flow
       return false;
-    }
+    },
   });
 };

@@ -1,6 +1,10 @@
 import { Center, Stack, Loader, Text } from "@mantine/core";
 
-export default function ToolLoadingFallback({ toolName }: { toolName?: string }) {
+export default function ToolLoadingFallback({
+  toolName,
+}: {
+  toolName?: string;
+}) {
   return (
     <Center h="100%" w="100%">
       <Stack align="center" gap="md">

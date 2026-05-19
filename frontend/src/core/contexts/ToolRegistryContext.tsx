@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext } from "react";
 
 import type {
   ToolRegistryEntry,
@@ -6,8 +6,8 @@ import type {
   RegularToolRegistry,
   SuperToolRegistry,
   LinkToolRegistry,
-} from '@app/data/toolsTaxonomy';
-import type { ToolId } from '@app/types/toolId';
+} from "@app/data/toolsTaxonomy";
+import type { ToolId } from "@app/types/toolId";
 
 export interface ToolRegistryCatalog {
   regularTools: RegularToolRegistry;
@@ -22,7 +22,9 @@ const ToolRegistryContext = createContext<ToolRegistryCatalog | null>(null);
 export const useToolRegistry = (): ToolRegistryCatalog => {
   const context = useContext(ToolRegistryContext);
   if (context === null) {
-    throw new Error('useToolRegistry must be used within a ToolRegistryProvider');
+    throw new Error(
+      "useToolRegistry must be used within a ToolRegistryProvider",
+    );
   }
   return context;
 };

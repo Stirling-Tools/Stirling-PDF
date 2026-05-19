@@ -1,7 +1,17 @@
 name: Build and Test Workflow
 
+# Top-level PR / merge-queue gate. Detects which paths changed and dispatches
+# to the dedicated reusable workflows under .github/workflows/. Each child
+# workflow keeps its own setup/teardown so this file stays a routing layer.
+#
+# The final `all-checks-passed` job is the single status check that branch
+# protection should require — it succeeds only if every required upstream
+# job either succeeded or was legitimately skipped by its path filter.
+
 on:
   pull_request:
+    branches: ["main"]
+  merge_group:
     branches: ["main"]
   workflow_dispatch:
 
@@ -30,304 +40,193 @@ jobs:
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      docker-base: ${{ steps.changes.outputs.docker-base }}
+      tauri: ${{ steps.changes.outputs.tauri }}
+      engine: ${{ steps.changes.outputs.engine }}
+      proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: changes
         with:
           filters: .github/config/.files.yaml
 
   build:
-    runs-on: ubuntu-latest
+    needs: [files-changed]
     permissions:
       actions: read
+      contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk-version: [17, 21]
-        spring-security: [true, false]
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: ${{ matrix.jdk-version }}
-          distribution: "temurin"
-
-      - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build -PnoSpotless
-        env:
-          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
-
-      - name: Check Test Reports Exist
-        if: always()
-        run: |
-          declare -a dirs=(
-            "app/core/build/reports/tests/"
-            "app/core/build/test-results/"
-            "app/common/build/reports/tests/"
-            "app/common/build/test-results/"
-            "app/proprietary/build/reports/tests/"
-            "app/proprietary/build/test-results/"
-          )
-          for dir in "${dirs[@]}"; do
-            if [ ! -d "$dir" ]; then
-              echo "Missing $dir"
-              exit 1
-            fi
-          done
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
-          path: |
-            app/**/build/reports/tests/
-            app/**/build/test-results/
-            app/**/build/reports/problems/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
+      pull-requests: write
+    uses: ./.github/workflows/backend-build.yml
+    secrets: inherit
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
     needs: [files-changed]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
-        env:
-          DISABLE_ADDITIONAL_FEATURES: true
-
-      - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: openapi-docs
-          path: ./SwaggerDoc.json
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check-openapi.yml
+    secrets: inherit
 
   frontend-validation:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: files-changed
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Set up Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-      - name: Type-check frontend
-        run: cd frontend && npm run prebuild && npm run typecheck:all
-      - name: Lint frontend
-        run: cd frontend && npm run lint
-      - name: Build frontend
-        run: cd frontend && npm run build
-      - name: Run frontend tests
-        run: cd frontend && npm run test -- --run
-      - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: frontend-build
-          path: frontend/dist/
-          retention-days: 3
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/frontend-validation.yml
+    secrets: inherit
+
+  playwright-e2e:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-stubbed.yml
+    secrets: inherit
+
+  playwright-e2e-live:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-live.yml
+    secrets: inherit
+
+  playwright-e2e-enterprise:
+    if: needs.files-changed.outputs.proprietary == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-enterprise.yml
+    secrets: inherit
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
     needs: [files-changed, build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: check the licenses for compatibility
-        run: ./gradlew clean checkLicense
-
-      - name: FAILED - check the licenses for compatibility
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: dependencies-without-allowed-license.json
-          path: build/reports/dependency-license/dependencies-without-allowed-license.json
-          retention-days: 3
+    permissions:
+      contents: read
+    uses: ./.github/workflows/check-licence.yml
+    secrets: inherit
 
   docker-compose-tests:
     if: needs.files-changed.outputs.project == 'true'
-    needs: files-changed
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
-    #     (github.event_name == 'pull_request' &&
-    #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
-    #     (
-    #       contains(github.event.pull_request.labels.*.name, 'Front End') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Java') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Back End') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Security') ||
-    #       contains(github.event.pull_request.labels.*.name, 'API') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Docker') ||
-    #       contains(github.event.pull_request.labels.*.name, 'Test')
-    #     )
-    #     )
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
-
-      - name: Install Docker Compose
-        run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
-      - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
-        with:
-          python-version: "3.12"
-          cache: "pip" # caching pip dependencies
-          cache-dependency-path: ./testing/cucumber/requirements.txt
-
-      - name: Pip requirements
-        run: |
-          pip install --require-hashes -r ./testing/cucumber/requirements.txt
-
-      - name: Run Docker Compose Tests
-        run: |
-          chmod +x ./testing/test_webpages.sh
-          chmod +x ./testing/test.sh
-          chmod +x ./testing/test_disabledEndpoints.sh
-          ./testing/test.sh
+    needs: [files-changed]
+    permissions:
+      actions: write
+      contents: read
+      checks: write
+    uses: ./.github/workflows/docker-compose-tests.yml
+    secrets: inherit
+    with:
+      docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
     needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/test-build-docker.yml
+    secrets: inherit
+    with:
+      docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
+
+  tauri-build:
+    if: needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/tauri-build.yml
+    secrets: inherit
+
+  ai-engine:
+    if: needs.files-changed.outputs.engine == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/ai-engine.yml
+    secrets: inherit
+
+  pre-commit:
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/pre_commit.yml
+    secrets: inherit
+
+  dependency-review:
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/dependency-review.yml
+    secrets: inherit
+
+  # Single status check that branch protection should mark as required.
+  # Succeeds when every upstream job is either `success` or `skipped` (path-
+  # gated jobs that didn't apply this run). Any `failure` or `cancelled`
+  # result fails the gate. `if: always()` ensures the gate evaluates even
+  # when an upstream job fails.
+  all-checks-passed:
+    name: All checks passed
+    if: always()
+    needs:
+      - files-changed
+      - build
+      - check-generateOpenApiDocs
+      - frontend-validation
+      - playwright-e2e
+      - playwright-e2e-live
+      - playwright-e2e-enterprise
+      - check-licence
+      - docker-compose-tests
+      - test-build-docker-images
+      - tauri-build
+      - ai-engine
+      - pre-commit
+      - dependency-review
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - docker-rev: docker/embedded/Dockerfile
-            artifact-suffix: Dockerfile
-          - docker-rev: docker/embedded/Dockerfile.ultra-lite
-            artifact-suffix: Dockerfile.ultra-lite
-          - docker-rev: docker/embedded/Dockerfile.fat
-            artifact-suffix: Dockerfile.fat
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - name: Checkout Repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Free disk space on runner
-        run: |
-          echo "Disk space before cleanup:" && df -h
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
-          docker system prune -af || true
-          echo "Disk space after cleanup:" && df -h
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Build application
-        run: ./gradlew clean build
+      - name: Verify every required job passed (or was legitimately skipped)
         env:
-          DISABLE_ADDITIONAL_FEATURES: true
-          STIRLING_PDF_DESKTOP_UI: false
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
-
-      - name: Build ${{ matrix.docker-rev }}
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./${{ matrix.docker-rev }}
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64/v8
-          provenance: true
-          sbom: true
-
-      - name: Upload Reports
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: reports-docker-${{ matrix.artifact-suffix }}
-          path: |
-            build/reports/tests/
-            build/test-results/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
+          RESULTS: |
+            files-changed=${{ needs.files-changed.result }}
+            build=${{ needs.build.result }}
+            check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
+            frontend-validation=${{ needs.frontend-validation.result }}
+            playwright-e2e=${{ needs.playwright-e2e.result }}
+            playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
+            playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}
+            check-licence=${{ needs.check-licence.result }}
+            docker-compose-tests=${{ needs.docker-compose-tests.result }}
+            test-build-docker-images=${{ needs.test-build-docker-images.result }}
+            tauri-build=${{ needs.tauri-build.result }}
+            ai-engine=${{ needs.ai-engine.result }}
+            pre-commit=${{ needs.pre-commit.result }}
+            dependency-review=${{ needs.dependency-review.result }}
+        run: |
+          ok=true
+          while IFS='=' read -r name result; do
+            [ -z "$name" ] && continue
+            case "$result" in
+              success|skipped) printf '  %-30s %s\n' "$name" "$result" ;;
+              *)               printf '✗ %-30s %s\n' "$name" "$result"; ok=false ;;
+            esac
+          done <<< "$RESULTS"
+          if [ "$ok" != "true" ]; then
+            echo ""
+            echo "One or more required checks failed or were cancelled."
+            exit 1
+          fi
+          echo ""
+          echo "All required checks passed."

@@ -8,7 +8,6 @@ interface ToolRendererProps extends BaseToolProps {
   selectedToolKey: ToolId;
 }
 
-
 const ToolRenderer = ({
   selectedToolKey,
   onPreviewFile,
@@ -17,9 +16,10 @@ const ToolRenderer = ({
 }: ToolRendererProps) => {
   // Get the tool from context (instead of direct hook call)
   const { toolRegistry } = useToolWorkflow();
-  const selectedTool = (selectedToolKey in toolRegistry)
-    ? toolRegistry[selectedToolKey as ToolId]
-    : undefined;
+  const selectedTool =
+    selectedToolKey in toolRegistry
+      ? toolRegistry[selectedToolKey as ToolId]
+      : undefined;
 
   // Handle tools that only work in workbenches (read, multiTool)
   if (selectedTool && !selectedTool.component && selectedTool.workbench) {

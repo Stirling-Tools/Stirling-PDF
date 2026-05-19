@@ -2,13 +2,17 @@
  * URL synchronization hooks for tool routing with registry support
  */
 
-import { useEffect, useCallback, useRef } from 'react';
-import { ToolId } from '@app/types/toolId';
-import { parseToolRoute, updateToolRoute, clearToolRoute } from '@app/utils/urlRouting';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import { firePixel } from '@app/utils/scarfTracking';
-import { withBasePath } from '@app/constants/app';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useEffect, useCallback, useRef } from "react";
+import { ToolId } from "@app/types/toolId";
+import {
+  parseToolRoute,
+  updateToolRoute,
+  clearToolRoute,
+} from "@app/utils/urlRouting";
+import { ToolRegistry } from "@app/data/toolsTaxonomy";
+import { firePixel } from "@app/utils/scarfTracking";
+import { withBasePath } from "@app/constants/app";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
  * Hook to sync workbench and tool with URL using registry
@@ -18,28 +22,31 @@ export function useNavigationUrlSync(
   handleToolSelect: (toolId: ToolId) => void,
   clearToolSelection: () => void,
   registry: ToolRegistry,
-  enableSync: boolean = true
+  enableSync: boolean = true,
 ) {
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
   const hasInitialized = useRef(false);
   const prevSelectedTool = useRef<ToolId | null>(null);
-  
+
   // Check if tool requires premium and redirect if needed
-  const checkPremiumAndSelect = useCallback((toolId: ToolId) => {
-    const tool = registry[toolId];
-    if (tool?.requiresPremium === true && premiumEnabled !== true) {
-      // Premium tool accessed without premium - redirect to home
-      const homePath = withBasePath('/');
-      if (window.location.pathname !== homePath) {
-        clearToolRoute(true); // Use replaceState to avoid adding to history
-        window.location.href = homePath;
+  const checkPremiumAndSelect = useCallback(
+    (toolId: ToolId) => {
+      const tool = registry[toolId];
+      if (tool?.requiresPremium === true && premiumEnabled !== true) {
+        // Premium tool accessed without premium - redirect to home
+        const homePath = withBasePath("/");
+        if (window.location.pathname !== homePath) {
+          clearToolRoute(true); // Use replaceState to avoid adding to history
+          window.location.href = homePath;
+        }
+        return;
       }
-      return;
-    }
-    handleToolSelect(toolId);
-  }, [registry, premiumEnabled, handleToolSelect]);
-  
+      handleToolSelect(toolId);
+    },
+    [registry, premiumEnabled, handleToolSelect],
+  );
+
   // Initialize workbench and tool from URL on mount
   useEffect(() => {
     if (!enableSync) return;
@@ -53,15 +60,14 @@ export function useNavigationUrlSync(
     firePixel(currentPath);
 
     const route = parseToolRoute(registry);
-    if (route.toolId !== selectedTool) {
-      if (route.toolId) {
+    if (route.toolId) {
+      // URL specifies a tool — navigate to it (URL takes precedence over startup view preference)
+      if (route.toolId !== selectedTool) {
         checkPremiumAndSelect(route.toolId);
-      } else if (selectedTool !== null) {
-        // Only clear selection if we actually had a tool selected
-        // Don't clear on initial load when selectedTool starts as null
-        clearToolSelection();
       }
     }
+    // When the URL is the home path (no tool), leave selectedTool untouched so that
+    // the startup view preference (defaultStartupView) is respected.
 
     hasInitialized.current = true;
   }, [checkPremiumAndSelect, config, enableSync, registry, selectedTool]); // Include dependencies
@@ -75,7 +81,7 @@ export function useNavigationUrlSync(
     } else if (prevSelectedTool.current !== null) {
       // Only clear URL if we had a tool before (user navigated away)
       // Don't clear on initial load when both current and previous are null
-      const homePath = withBasePath('/');
+      const homePath = withBasePath("/");
       if (window.location.pathname !== homePath) {
         clearToolRoute(false); // Use pushState for user navigation
       }
@@ -103,36 +109,50 @@ export function useNavigationUrlSync(
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedTool, handleToolSelect, clearToolSelection, registry, enableSync, checkPremiumAndSelect]);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [
+    selectedTool,
+    handleToolSelect,
+    clearToolSelection,
+    registry,
+    enableSync,
+    checkPremiumAndSelect,
+  ]);
 }
 
 /**
  * Hook to programmatically navigate to tools with registry support
  */
 export function useToolNavigation(registry: ToolRegistry) {
-  const navigateToTool = useCallback((toolId: ToolId) => {
-    updateToolRoute(toolId, registry);
+  const navigateToTool = useCallback(
+    (toolId: ToolId) => {
+      updateToolRoute(toolId, registry);
 
-    // Dispatch a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('toolNavigation', {
-      detail: { toolId }
-    }));
-  }, [registry]);
+      // Dispatch a custom event to notify other components
+      window.dispatchEvent(
+        new CustomEvent("toolNavigation", {
+          detail: { toolId },
+        }),
+      );
+    },
+    [registry],
+  );
 
   const navigateToHome = useCallback(() => {
     clearToolRoute();
 
     // Dispatch a custom event to notify other components
-    window.dispatchEvent(new CustomEvent('toolNavigation', {
-      detail: { toolId: null }
-    }));
+    window.dispatchEvent(
+      new CustomEvent("toolNavigation", {
+        detail: { toolId: null },
+      }),
+    );
   }, []);
 
   return {
     navigateToTool,
-    navigateToHome
+    navigateToHome,
   };
 }
 

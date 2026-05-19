@@ -18,13 +18,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontSignatureCalculator;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component
@@ -202,20 +202,34 @@ public class Type3FontLibrary {
         if (payload == null) {
             return null;
         }
-        byte[] data = null;
+        String base64;
         if (payload.base64 != null && !payload.base64.isBlank()) {
+            // Validate the base64 string without wasteful full decode
+            // Only decode a small prefix to verify encoding is valid
             try {
-                data = Base64.getDecoder().decode(payload.base64);
+                byte[] probe =
+                        Base64.getDecoder()
+                                .decode(
+                                        payload.base64.substring(
+                                                0, Math.min(4, payload.base64.length())));
+                if (probe.length == 0 && payload.base64.length() <= 4) {
+                    return null;
+                }
             } catch (IllegalArgumentException ex) {
                 log.warn("[TYPE3] Invalid base64 payload in Type3 library: {}", ex.getMessage());
+                return null;
             }
+            // Keep the original base64 string directly — avoids 3x memory pressure
+            base64 = payload.base64;
         } else if (payload.resource != null && !payload.resource.isBlank()) {
-            data = loadResourceBytes(payload.resource);
-        }
-        if (data == null || data.length == 0) {
+            byte[] data = loadResourceBytes(payload.resource);
+            if (data == null || data.length == 0) {
+                return null;
+            }
+            base64 = Base64.getEncoder().encodeToString(data);
+        } else {
             return null;
         }
-        String base64 = Base64.getEncoder().encodeToString(data);
         return new Type3FontLibraryPayload(base64, normalizeFormat(payload.format));
     }
 

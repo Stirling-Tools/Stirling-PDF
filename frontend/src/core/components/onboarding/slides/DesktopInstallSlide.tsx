@@ -1,8 +1,11 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { SlideConfig } from '@app/types/types';
-import { UNIFIED_CIRCLE_CONFIG } from '@app/components/onboarding/slides/unifiedBackgroundConfig';
-import { DesktopInstallTitle, type OSOption } from '@app/components/onboarding/slides/DesktopInstallTitle';
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { SlideConfig } from "@app/types/types";
+import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import {
+  DesktopInstallTitle,
+  type OSOption,
+} from "@app/components/onboarding/slides/DesktopInstallTitle";
 
 export type { OSOption };
 
@@ -19,8 +22,8 @@ const DesktopInstallBody = () => {
   return (
     <span>
       {t(
-        'onboarding.desktopInstall.body',
-        'Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer.',
+        "onboarding.desktopInstall.body",
+        "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer.",
       )}
     </span>
   );
@@ -32,11 +35,10 @@ export default function DesktopInstallSlide({
   osOptions = [],
   onDownloadUrlChange,
 }: DesktopInstallSlideProps): SlideConfig {
-
   return {
-    key: 'desktop-install',
+    key: "desktop-install",
     title: (
-      <DesktopInstallTitle 
+      <DesktopInstallTitle
         osLabel={osLabel}
         osUrl={osUrl}
         osOptions={osOptions || []}
@@ -46,9 +48,8 @@ export default function DesktopInstallSlide({
     body: <DesktopInstallBody />,
     downloadUrl: osUrl,
     background: {
-      gradientStops: ['#2563EB', '#0EA5E9'],
+      gradientStops: ["#2563EB", "#0EA5E9"],
       circles: UNIFIED_CIRCLE_CONFIG,
     },
   };
 }
-

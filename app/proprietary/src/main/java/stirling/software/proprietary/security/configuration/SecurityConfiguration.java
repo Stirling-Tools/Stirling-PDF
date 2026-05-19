@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.configuration;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,23 +9,28 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml5AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -81,7 +87,7 @@ public class SecurityConfiguration {
     private final PersistentLoginRepository persistentLoginRepository;
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
-    private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+    private final OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
     private final ClientRegistrationRepository clientRegistrationRepository;
@@ -104,7 +110,7 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
-                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+                    OpenSaml5AuthenticationRequestResolver saml2AuthenticationRequestResolver,
             @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository,
             stirling.software.proprietary.service.UserLicenseSettingsService
                     licenseSettingsService) {
@@ -133,6 +139,35 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Configures HttpFirewall to allow non-ASCII characters in header values. This fixes issues
+     * with reverse proxies (like Authelia) that may set headers with non-ASCII characters (e.g.,
+     * "Remote-User: Dvořák").
+     *
+     * <p>By default, StrictHttpFirewall rejects header values containing non-ASCII characters. This
+     * configuration allows valid UTF-8 encoded characters while maintaining security.
+     *
+     * @return Configured HttpFirewall that allows non-ASCII characters in headers
+     */
+    @Bean
+    public HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        // Allow non-ASCII characters but continue to reject control characters such as newlines.
+        // Pattern adapted from Spring Security's StrictHttpFirewall documentation.
+        Pattern allowedChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]]*");
+
+        firewall.setAllowedHeaderValues(
+                headerValue -> headerValue != null && allowedChars.matcher(headerValue).matches());
+
+        // Allow non-ASCII characters and newlines in parameter values.
+        Pattern allowedParamChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]\\r\\n]*");
+        firewall.setAllowedParameterValues(
+                parameterValue ->
+                        parameterValue != null
+                                && allowedParamChars.matcher(parameterValue).matches());
+        return firewall;
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         List<String> configuredOrigins = null;
@@ -150,7 +185,8 @@ public class SecurityConfiguration {
             // Default to allowing all origins when nothing is configured
             cfg.setAllowedOriginPatterns(List.of("*"));
             log.info(
-                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
+                    "No CORS allowed origins configured in settings.yml"
+                            + " (system.corsAllowedOrigins); allowing all origins.");
         }
 
         // Explicitly configure supported HTTP methods (include OPTIONS for preflight)
@@ -185,10 +221,38 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain samlFilterChain(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        http.securityMatcher("/saml2/**", "/login/saml2/**");
+
+        SessionCreationPolicy sessionPolicy =
+                (securityProperties.isSaml2Active() && runningProOrHigher)
+                        ? SessionCreationPolicy.IF_REQUIRED
+                        : SessionCreationPolicy.STATELESS;
+
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             @Lazy IPRateLimitingFilter rateLimitingFilter,
             @Lazy JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
+        SessionCreationPolicy sessionPolicy = SessionCreationPolicy.STATELESS;
+        return configureSecurity(http, rateLimitingFilter, jwtAuthenticationFilter, sessionPolicy);
+    }
+
+    private SecurityFilterChain configureSecurity(
+            HttpSecurity http,
+            @Lazy IPRateLimitingFilter rateLimitingFilter,
+            @Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+            SessionCreationPolicy sessionPolicy)
             throws Exception {
         // Enable CORS only if we have configured origins
         CorsConfigurationSource corsSource = corsConfigurationSource();
@@ -196,22 +260,49 @@ public class SecurityConfiguration {
             http.cors(cors -> cors.configurationSource(corsSource));
         } else {
             // Explicitly disable CORS when no origins are configured
-            http.cors(cors -> cors.disable());
+            http.cors(CorsConfigurer::disable);
         }
 
         http.csrf(CsrfConfigurer::disable);
+
+        // Configure X-Frame-Options based on settings.yml configuration
+        // When login is disabled, automatically disable X-Frame-Options to allow embedding
+        if (!loginEnabledValue) {
+            http.headers(headers -> headers.frameOptions(FrameOptionsConfig::disable));
+        } else {
+            String xFrameOption = securityProperties.getXFrameOptions();
+            if (xFrameOption != null) {
+                http.headers(
+                        headers -> {
+                            if ("DISABLED".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(FrameOptionsConfig::disable);
+                            } else if ("SAMEORIGIN".equalsIgnoreCase(xFrameOption)) {
+                                headers.frameOptions(FrameOptionsConfig::sameOrigin);
+                            } else {
+                                // Default to DENY
+                                headers.frameOptions(FrameOptionsConfig::deny);
+                            }
+                        });
+            } else {
+                // If not configured, use default DENY
+                http.headers(headers -> headers.frameOptions(FrameOptionsConfig::deny));
+            }
+        }
 
         if (loginEnabledValue) {
 
             http.addFilterBefore(
                             userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                    // TODO: IPRateLimitingFilter disabled — limit is 1M (no-op) and raw Filter
+                    // impl causes Spring Security async dispatch bug (response already committed
+                    // errors on StreamingResponseBody endpoints). Re-enable once converted to
+                    // OncePerRequestFilter with proper config-driven limits.
+                    // .addFilterBefore(rateLimitingFilter,
+                    // UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
 
             http.sessionManagement(
-                    sessionManagement ->
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS));
+                    sessionManagement -> sessionManagement.sessionCreationPolicy(sessionPolicy));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
 
@@ -310,7 +401,8 @@ public class SecurityConfiguration {
                                                     securityProperties.getOauth2(),
                                                     userService,
                                                     jwtService,
-                                                    licenseSettingsService))
+                                                    licenseSettingsService,
+                                                    applicationProperties))
                                     .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
                                     // Add existing Authorities from the database
                                     .userInfoEndpoint(
@@ -329,8 +421,8 @@ public class SecurityConfiguration {
             }
             // Handle SAML
             if (securityProperties.isSaml2Active() && runningProOrHigher) {
-                OpenSaml4AuthenticationProvider authenticationProvider =
-                        new OpenSaml4AuthenticationProvider();
+                OpenSaml5AuthenticationProvider authenticationProvider =
+                        new OpenSaml5AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(
                         new CustomSaml2ResponseAuthenticationConverter(userService));
                 http.authenticationProvider(authenticationProvider)

@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../../",
+    "paths": {
+      "@app/*": ["src/desktop/*", "src/proprietary/*", "src/core/*"],
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"]
+    }
+  },
+  "include": [
+    "../global.d.ts",
+    "../*.js",
+    "../*.ts",
+    "../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}

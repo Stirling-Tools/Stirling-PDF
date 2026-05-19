@@ -1,6 +1,6 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { usePreferences } from '@app/contexts/PreferencesContext';
-import type { ThemeMode } from '@app/constants/theme';
+import { useCallback, useRef, useEffect } from "react";
+import { usePreferences } from "@app/contexts/PreferencesContext";
+import type { ThemeMode } from "@app/constants/theme";
 
 interface RainbowThemeHook {
   themeMode: ThemeMode;
@@ -24,25 +24,28 @@ export function useRainbowTheme(): RainbowThemeHook {
 
   // Apply rainbow class to body whenever theme changes
   useEffect(() => {
-    if (themeMode === 'rainbow') {
-      document.body.classList.add('rainbow-mode-active');
+    if (themeMode === "rainbow") {
+      document.body.classList.add("rainbow-mode-active");
       showRainbowNotification();
     } else {
-      document.body.classList.remove('rainbow-mode-active');
+      document.body.classList.remove("rainbow-mode-active");
     }
   }, [themeMode]);
 
   const showRainbowNotification = () => {
     // Remove any existing notification
-    const existingNotification = document.getElementById('rainbow-notification');
+    const existingNotification = document.getElementById(
+      "rainbow-notification",
+    );
     if (existingNotification) {
       existingNotification.remove();
     }
 
     // Create and show rainbow notification
-    const notification = document.createElement('div');
-    notification.id = 'rainbow-notification';
-    notification.innerHTML = '🌈 RAINBOW MODE ACTIVATED! 🌈<br><small>Button disabled for 3 seconds, then click to exit</small>';
+    const notification = document.createElement("div");
+    notification.id = "rainbow-notification";
+    notification.innerHTML =
+      "🌈 RAINBOW MODE ACTIVATED! 🌈<br><small>Button disabled for 3 seconds, then click to exit</small>";
     notification.style.cssText = `
       position: fixed;
       top: 20px;
@@ -68,7 +71,7 @@ export function useRainbowTheme(): RainbowThemeHook {
     // Auto-remove notification after 3 seconds
     setTimeout(() => {
       if (notification) {
-        notification.style.opacity = '0';
+        notification.style.opacity = "0";
         setTimeout(() => {
           if (notification.parentNode) {
             notification.parentNode.removeChild(notification);
@@ -80,15 +83,17 @@ export function useRainbowTheme(): RainbowThemeHook {
 
   const showExitNotification = () => {
     // Remove any existing notification
-    const existingNotification = document.getElementById('rainbow-exit-notification');
+    const existingNotification = document.getElementById(
+      "rainbow-exit-notification",
+    );
     if (existingNotification) {
       existingNotification.remove();
     }
 
     // Create and show exit notification
-    const notification = document.createElement('div');
-    notification.id = 'rainbow-exit-notification';
-    notification.innerHTML = '🌙 Rainbow mode deactivated';
+    const notification = document.createElement("div");
+    notification.id = "rainbow-exit-notification";
+    notification.innerHTML = "🌙 Rainbow mode deactivated";
     notification.style.cssText = `
       position: fixed;
       top: 20px;
@@ -112,7 +117,7 @@ export function useRainbowTheme(): RainbowThemeHook {
     // Auto-remove notification after 2 seconds
     setTimeout(() => {
       if (notification) {
-        notification.style.opacity = '0';
+        notification.style.opacity = "0";
         setTimeout(() => {
           if (notification.parentNode) {
             notification.parentNode.removeChild(notification);
@@ -131,9 +136,9 @@ export function useRainbowTheme(): RainbowThemeHook {
     const currentTime = Date.now();
 
     // Simple exit from rainbow mode with single click (after cooldown period)
-    if (themeMode === 'rainbow') {
-      updatePreference('theme', 'light');
-      console.log('🌈 Rainbow mode deactivated. Thanks for trying it!');
+    if (themeMode === "rainbow") {
+      updatePreference("theme", "light");
+      console.log("🌈 Rainbow mode deactivated. Thanks for trying it!");
       showExitNotification();
       return;
     }
@@ -148,15 +153,21 @@ export function useRainbowTheme(): RainbowThemeHook {
 
     // Easter egg: Activate rainbow mode after 10 rapid toggles
     if (allowRainbowMode && toggleCount.current >= 10) {
-      updatePreference('theme', 'rainbow');
-      console.log('🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!');
-      console.log('🌈 Button will be disabled for 3 seconds, then click once to exit!');
+      updatePreference("theme", "rainbow");
+      console.log(
+        "🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!",
+      );
+      console.log(
+        "🌈 Button will be disabled for 3 seconds, then click once to exit!",
+      );
 
       // Disable toggle for 3 seconds
       isToggleDisabled.current = true;
       setTimeout(() => {
         isToggleDisabled.current = false;
-        console.log('🌈 Theme toggle re-enabled! Click once to exit rainbow mode.');
+        console.log(
+          "🌈 Theme toggle re-enabled! Click once to exit rainbow mode.",
+        );
       }, 3000);
 
       // Reset counter
@@ -165,25 +176,25 @@ export function useRainbowTheme(): RainbowThemeHook {
     }
 
     // Normal theme switching
-    const nextTheme = themeMode === 'light' ? 'dark' : 'light';
-    updatePreference('theme', nextTheme);
+    const nextTheme = themeMode === "light" ? "dark" : "light";
+    updatePreference("theme", nextTheme);
   }, [themeMode, updatePreference]);
 
   const activateRainbow = useCallback(() => {
-    updatePreference('theme', 'rainbow');
-    console.log('🌈 Rainbow mode manually activated!');
+    updatePreference("theme", "rainbow");
+    console.log("🌈 Rainbow mode manually activated!");
   }, [updatePreference]);
 
   const deactivateRainbow = useCallback(() => {
-    if (themeMode === 'rainbow') {
-      updatePreference('theme', 'light');
-      console.log('🌈 Rainbow mode manually deactivated.');
+    if (themeMode === "rainbow") {
+      updatePreference("theme", "light");
+      console.log("🌈 Rainbow mode manually deactivated.");
     }
   }, [themeMode, updatePreference]);
 
   return {
     themeMode,
-    isRainbowMode: themeMode === 'rainbow',
+    isRainbowMode: themeMode === "rainbow",
     isToggleDisabled: isToggleDisabled.current,
     toggleTheme,
     activateRainbow,

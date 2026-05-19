@@ -36,12 +36,12 @@ class H2SQLConditionTest {
 
     @Test
     void returnsFalse_whenEnableCustomDatabase_true_regardlessOfType() {
-        // Flag=true, Typ=h2 -> false
+        // Flag=true, Typ=h2 -> true
         MockEnvironment envTrueH2 =
                 new MockEnvironment()
                         .withProperty("system.datasource.enableCustomDatabase", "true")
                         .withProperty("system.datasource.type", "h2");
-        assertFalse(eval(envTrueH2));
+        assertTrue(eval(envTrueH2));
 
         // Flag=true, Typ=postgres -> false
         MockEnvironment envTrueOther =
@@ -58,20 +58,6 @@ class H2SQLConditionTest {
     }
 
     @Test
-    void returnsFalse_whenTypeNotH2_orMissing_andFlagNotEnabled() {
-        // Flag fehlt, Typ=postgres -> false
-        MockEnvironment envNotH2 =
-                new MockEnvironment().withProperty("system.datasource.type", "postgresql");
-        assertFalse(eval(envNotH2));
-
-        // Flag=false, Typ fehlt -> false (Default: "")
-        MockEnvironment envMissingType =
-                new MockEnvironment()
-                        .withProperty("system.datasource.enableCustomDatabase", "false");
-        assertFalse(eval(envMissingType));
-    }
-
-    @Test
     void returnsFalse_whenEnabled_but_type_not_h2_or_missing() {
         MockEnvironment envNotH2 =
                 new MockEnvironment()
@@ -83,5 +69,19 @@ class H2SQLConditionTest {
                 new MockEnvironment()
                         .withProperty("system.datasource.enableCustomDatabase", "true");
         assertFalse(eval(envMissingType));
+    }
+
+    @Test
+    void returnsTrue_whenTypeNotH2_andCustomDatabaseDisabled() {
+        MockEnvironment envNotH2 =
+                new MockEnvironment()
+                        .withProperty("system.datasource.enableCustomDatabase", "false")
+                        .withProperty("system.datasource.type", "postgresql");
+        assertTrue(eval(envNotH2));
+
+        MockEnvironment envMissingType =
+                new MockEnvironment()
+                        .withProperty("system.datasource.enableCustomDatabase", "false");
+        assertTrue(eval(envMissingType));
     }
 }

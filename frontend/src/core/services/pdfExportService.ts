@@ -1,5 +1,18 @@
-import { PDFDocument as PDFLibDocument, degrees, PageSizes } from 'pdf-lib';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
+import {
+  getPdfiumModule,
+  openRawDocumentSafe,
+  closeRawDocument,
+  saveRawDocument,
+  importPages,
+  setPageRotation,
+  addNewPage,
+} from "@app/services/pdfiumService";
+import { downloadFile } from "@app/services/downloadService";
+import { PDFDocument, PDFPage } from "@app/types/pageEditor";
+
+// A4 dimensions in PDF points (72 dpi)
+const A4_WIDTH = 595.276;
+const A4_HEIGHT = 841.89;
 
 export interface ExportOptions {
   selectedOnly?: boolean;
@@ -13,30 +26,38 @@ export class PDFExportService {
   async exportPDF(
     pdfDocument: PDFDocument,
     selectedPageIds: string[] = [],
-    options: ExportOptions = {}
+    options: ExportOptions = {},
   ): Promise<{ blob: Blob; filename: string }> {
     const { selectedOnly = false, filename } = options;
 
     try {
-      // Determine which pages to export
-      const pagesToExport = selectedOnly && selectedPageIds.length > 0
-        ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
-        : pdfDocument.pages;
+      const pagesToExport =
+        selectedOnly && selectedPageIds.length > 0
+          ? pdfDocument.pages.filter((page) =>
+              selectedPageIds.includes(page.id),
+            )
+          : pdfDocument.pages;
 
       if (pagesToExport.length === 0) {
-        throw new Error('No pages to export');
+        throw new Error("No pages to export");
       }
 
-      // Load original PDF and create new document
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
-      const sourceDoc = await PDFLibDocument.load(originalPDFBytes, { ignoreEncryption: true });
-      const blob = await this.createSingleDocument(sourceDoc, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name);
+      const blob = await this.createSingleDocument(
+        originalPDFBytes,
+        pagesToExport,
+      );
+      const exportFilename = this.generateFilename(
+        filename || pdfDocument.name,
+      );
 
       return { blob, filename: exportFilename };
     } catch (error) {
-      console.error('PDF export error:', error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("PDF export error:", error);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { cause: error },
+      );
     }
   }
 
@@ -47,152 +68,201 @@ export class PDFExportService {
     pdfDocument: PDFDocument,
     sourceFiles: Map<string, File>,
     selectedPageIds: string[] = [],
-    options: ExportOptions = {}
+    options: ExportOptions = {},
   ): Promise<{ blob: Blob; filename: string }> {
     const { selectedOnly = false, filename } = options;
 
     try {
-      // Determine which pages to export
-      const pagesToExport = selectedOnly && selectedPageIds.length > 0
-        ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
-        : pdfDocument.pages;
+      const pagesToExport =
+        selectedOnly && selectedPageIds.length > 0
+          ? pdfDocument.pages.filter((page) =>
+              selectedPageIds.includes(page.id),
+            )
+          : pdfDocument.pages;
 
       if (pagesToExport.length === 0) {
-        throw new Error('No pages to export');
+        throw new Error("No pages to export");
       }
 
-      const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name);
+      const blob = await this.createMultiSourceDocument(
+        sourceFiles,
+        pagesToExport,
+      );
+      const exportFilename = this.generateFilename(
+        filename || pdfDocument.name,
+      );
 
       return { blob, filename: exportFilename };
     } catch (error) {
-      console.error('Multi-file PDF export error:', error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Multi-file PDF export error:", error);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { cause: error },
+      );
     }
   }
 
   /**
-   * Create a PDF document from multiple source files
+   * Create a PDF document from multiple source files using PDFium WASM.
    */
   private async createMultiSourceDocument(
     sourceFiles: Map<string, File>,
-    pages: PDFPage[]
+    pages: PDFPage[],
   ): Promise<Blob> {
-    const newDoc = await PDFLibDocument.create();
+    const m = await getPdfiumModule();
+
+    // Create destination document
+    const destDocPtr = m.FPDF_CreateNewDocument();
+    if (!destDocPtr)
+      throw new Error("PDFium: failed to create destination document");
 
     // Load all source documents once and cache them
-    const loadedDocs = new Map<string, PDFLibDocument>();
+    const loadedDocs = new Map<string, number>();
 
-    for (const [fileId, file] of sourceFiles) {
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const doc = await PDFLibDocument.load(arrayBuffer, { ignoreEncryption: true });
-        loadedDocs.set(fileId, doc);
-      } catch (error) {
-        console.warn(`Failed to load source file ${fileId}:`, error);
-      }
-    }
-
-    for (const page of pages) {
-      if (page.isBlankPage || page.originalPageNumber === -1) {
-        // Create a blank page
-        const blankPage = newDoc.addPage(PageSizes.A4);
-
-        blankPage.setRotation(degrees(page.rotation));
-      } else if (page.originalFileId && loadedDocs.has(page.originalFileId)) {
-        // Get the correct source document for this page
-        const sourceDoc = loadedDocs.get(page.originalFileId)!;
-        const sourcePageIndex = page.originalPageNumber - 1;
-
-        if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
-          // Copy the page from the correct source document
-          const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-
-          copiedPage.setRotation(degrees(page.rotation));
-
-          newDoc.addPage(copiedPage);
+    try {
+      for (const [fileId, file] of sourceFiles) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const docPtr = await openRawDocumentSafe(arrayBuffer);
+          loadedDocs.set(fileId, docPtr);
+        } catch (error) {
+          console.warn(`Failed to load source file ${fileId}:`, error);
         }
-      } else {
-        console.warn(`Cannot find source document for page ${page.pageNumber} (fileId: ${page.originalFileId})`);
       }
+
+      let insertIdx = 0;
+      for (const page of pages) {
+        if (page.isBlankPage || page.originalPageNumber === -1) {
+          // Insert a blank A4 page
+          await addNewPage(destDocPtr, insertIdx, A4_WIDTH, A4_HEIGHT);
+          // Apply rotation
+          const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
+          if (pdfiumRotation !== 0) {
+            await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
+          }
+          insertIdx++;
+        } else if (page.originalFileId && loadedDocs.has(page.originalFileId)) {
+          const srcDocPtr = loadedDocs.get(page.originalFileId)!;
+          const srcPageCount = m.FPDF_GetPageCount(srcDocPtr);
+          const sourcePageIndex = page.originalPageNumber - 1;
+
+          if (sourcePageIndex >= 0 && sourcePageIndex < srcPageCount) {
+            // Import the specific page (1-based page range for FPDF_ImportPages)
+            const pageRange = String(sourcePageIndex + 1);
+            const imported = await importPages(
+              destDocPtr,
+              srcDocPtr,
+              pageRange,
+              insertIdx,
+            );
+            if (!imported) {
+              console.warn(
+                `[PDFExport] importPages failed for fileId=${page.originalFileId} pageRange=${pageRange} — page will be missing from output.`,
+              );
+            }
+
+            // Apply rotation
+            const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
+            if (pdfiumRotation !== 0) {
+              await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
+            }
+            insertIdx++;
+          }
+        } else {
+          console.warn(
+            `Cannot find source document for page ${page.pageNumber} (fileId: ${page.originalFileId})`,
+          );
+        }
+      }
+
+      // Save the assembled document
+      const resultBuf = await saveRawDocument(destDocPtr);
+      return new Blob([resultBuf], { type: "application/pdf" });
+    } finally {
+      // Cleanup all loaded source documents
+      for (const docPtr of loadedDocs.values()) {
+        await closeRawDocument(docPtr);
+      }
+      m.FPDF_CloseDocument(destDocPtr);
     }
-
-    // Set metadata
-    newDoc.setCreator('Stirling PDF');
-    newDoc.setProducer('Stirling PDF');
-    newDoc.setCreationDate(new Date());
-    newDoc.setModificationDate(new Date());
-
-    const pdfBytes = await newDoc.save();
-    return new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
   }
 
   /**
-   * Create a single PDF document with all operations applied (single source)
+   * Create a single PDF document with all operations applied (single source) using PDFium.
    */
   private async createSingleDocument(
-    sourceDoc: PDFLibDocument,
-    pages: PDFPage[]
+    sourceData: ArrayBuffer,
+    pages: PDFPage[],
   ): Promise<Blob> {
-    const newDoc = await PDFLibDocument.create();
+    const m = await getPdfiumModule();
 
-    for (const page of pages) {
-      if (page.isBlankPage || page.originalPageNumber === -1) {
-        // Create a blank page
-        const blankPage = newDoc.addPage(PageSizes.A4);
-
-        blankPage.setRotation(degrees(page.rotation));
-      } else {
-        // Get the original page from source document using originalPageNumber
-        const sourcePageIndex = page.originalPageNumber - 1;
-
-        if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
-          // Copy the page
-          const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-
-          copiedPage.setRotation(degrees(page.rotation));
-
-          newDoc.addPage(copiedPage);
-        }
-      }
+    // Open source document
+    const srcDocPtr = await openRawDocumentSafe(sourceData);
+    const destDocPtr = m.FPDF_CreateNewDocument();
+    if (!destDocPtr) {
+      await closeRawDocument(srcDocPtr);
+      throw new Error("PDFium: failed to create destination document");
     }
 
-    // Set metadata
-    newDoc.setCreator('Stirling PDF');
-    newDoc.setProducer('Stirling PDF');
-    newDoc.setCreationDate(new Date());
-    newDoc.setModificationDate(new Date());
+    try {
+      const srcPageCount = m.FPDF_GetPageCount(srcDocPtr);
+      let insertIdx = 0;
 
-    const pdfBytes = await newDoc.save();
-    return new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
+      for (const page of pages) {
+        if (page.isBlankPage || page.originalPageNumber === -1) {
+          await addNewPage(destDocPtr, insertIdx, A4_WIDTH, A4_HEIGHT);
+          const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
+          if (pdfiumRotation !== 0) {
+            await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
+          }
+          insertIdx++;
+        } else {
+          const sourcePageIndex = page.originalPageNumber - 1;
+
+          if (sourcePageIndex >= 0 && sourcePageIndex < srcPageCount) {
+            const pageRange = String(sourcePageIndex + 1);
+            const imported = await importPages(
+              destDocPtr,
+              srcDocPtr,
+              pageRange,
+              insertIdx,
+            );
+            if (!imported) {
+              console.warn(
+                `[PDFExport] importPages failed for page ${page.originalPageNumber} pageRange=${pageRange} — page will be missing from output.`,
+              );
+            }
+
+            const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
+            if (pdfiumRotation !== 0) {
+              await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
+            }
+            insertIdx++;
+          }
+        }
+      }
+
+      const resultBuf = await saveRawDocument(destDocPtr);
+      return new Blob([resultBuf], { type: "application/pdf" });
+    } finally {
+      await closeRawDocument(srcDocPtr);
+      m.FPDF_CloseDocument(destDocPtr);
+    }
   }
-
 
   /**
    * Generate appropriate filename for export
    */
   private generateFilename(originalName: string): string {
-    const baseName = originalName.replace(/\.pdf$/i, '');
+    const baseName = originalName.replace(/\.pdf$/i, "");
     return `${baseName}.pdf`;
   }
-
 
   /**
    * Download a single file
    */
   downloadFile(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Clean up the URL after a short delay
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    void downloadFile({ data: blob, filename });
   }
 
   /**
@@ -202,30 +272,34 @@ export class PDFExportService {
     blobs.forEach((blob, index) => {
       setTimeout(() => {
         this.downloadFile(blob, filenames[index]);
-      }, index * 500); // Stagger downloads
+      }, index * 500);
     });
   }
 
   /**
    * Validate PDF operations before export
    */
-  validateExport(pdfDocument: PDFDocument, selectedPageIds: string[], selectedOnly: boolean): string[] {
+  validateExport(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[],
+    selectedOnly: boolean,
+  ): string[] {
     const errors: string[] = [];
 
     if (selectedOnly && selectedPageIds.length === 0) {
-      errors.push('No pages selected for export');
+      errors.push("No pages selected for export");
     }
 
     if (pdfDocument.pages.length === 0) {
-      errors.push('No pages available to export');
+      errors.push("No pages available to export");
     }
 
     const pagesToExport = selectedOnly
-      ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
+      ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 
     if (pagesToExport.length === 0) {
-      errors.push('No valid pages to export after applying filters');
+      errors.push("No valid pages to export after applying filters");
     }
 
     return errors;
@@ -234,20 +308,23 @@ export class PDFExportService {
   /**
    * Get export preview information
    */
-  getExportInfo(pdfDocument: PDFDocument, selectedPageIds: string[], selectedOnly: boolean): {
+  getExportInfo(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[],
+    selectedOnly: boolean,
+  ): {
     pageCount: number;
     splitCount: number;
     estimatedSize: string;
   } {
     const pagesToExport = selectedOnly
-      ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
+      ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 
     const splitCount = pagesToExport.reduce((count, page) => {
       return count + (page.splitAfter ? 1 : 0);
-    }, 1); // At least 1 document
+    }, 1);
 
-    // Rough size estimation (very approximate)
     const avgPageSize = pdfDocument.file.size / pdfDocument.totalPages;
     const estimatedBytes = avgPageSize * pagesToExport.length;
     const estimatedSize = this.formatFileSize(estimatedBytes);
@@ -255,7 +332,7 @@ export class PDFExportService {
     return {
       pageCount: pagesToExport.length,
       splitCount,
-      estimatedSize
+      estimatedSize,
     };
   }
 
@@ -263,11 +340,28 @@ export class PDFExportService {
    * Format file size for display
    */
   private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+}
+
+/**
+ * Convert degrees (0, 90, 180, 270) to PDFium rotation enum (0, 1, 2, 3).
+ */
+function degreesToPdfiumRotation(degrees: number): number {
+  const normalized = ((degrees % 360) + 360) % 360;
+  switch (normalized) {
+    case 90:
+      return 1;
+    case 180:
+      return 2;
+    case 270:
+      return 3;
+    default:
+      return 0;
   }
 }
 

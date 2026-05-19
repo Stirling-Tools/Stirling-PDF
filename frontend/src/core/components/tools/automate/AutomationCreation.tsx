@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Text,
@@ -8,17 +8,25 @@ import {
   TextInput,
   Textarea,
   Divider,
-  Modal
-} from '@mantine/core';
-import { Z_INDEX_AUTOMATE_MODAL } from '@app/styles/zIndex';
-import CheckIcon from '@mui/icons-material/Check';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
-import ToolConfigurationModal from '@app/components/tools/automate/ToolConfigurationModal';
-import ToolList from '@app/components/tools/automate/ToolList';
-import IconSelector from '@app/components/tools/automate/IconSelector';
-import { AutomationConfig, AutomationMode, AutomationTool } from '@app/types/automation';
-import { useAutomationForm } from '@app/hooks/tools/automate/useAutomationForm';
-
+  Modal,
+} from "@mantine/core";
+import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
+import CheckIcon from "@mui/icons-material/Check";
+import DownloadIcon from "@mui/icons-material/Download";
+import { ToolRegistry } from "@app/data/toolsTaxonomy";
+import ToolConfigurationModal from "@app/components/tools/automate/ToolConfigurationModal";
+import ToolList from "@app/components/tools/automate/ToolList";
+import IconSelector from "@app/components/tools/automate/IconSelector";
+import {
+  AutomationConfig,
+  AutomationMode,
+  AutomationTool,
+} from "@app/types/automation";
+import { useAutomationForm } from "@app/hooks/tools/automate/useAutomationForm";
+import {
+  downloadAutomationConfig,
+  downloadFolderScanningConfig,
+} from "@app/utils/automationConverter";
 
 interface AutomationCreationProps {
   mode: AutomationMode;
@@ -28,7 +36,13 @@ interface AutomationCreationProps {
   toolRegistry: Partial<ToolRegistry>;
 }
 
-export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry }: AutomationCreationProps) {
+export default function AutomationCreation({
+  mode,
+  existingAutomation,
+  onBack,
+  onComplete,
+  toolRegistry,
+}: AutomationCreationProps) {
   const { t } = useTranslation();
 
   const {
@@ -43,13 +57,12 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     updateTool,
     canSaveAutomation,
     getToolName,
-    getToolDefaultParameters
+    getToolDefaultParameters,
   } = useAutomationForm({ mode, existingAutomation, toolRegistry });
 
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [configuraingToolIndex, setConfiguringToolIndex] = useState(-1);
   const [unsavedWarningOpen, setUnsavedWarningOpen] = useState(false);
-
 
   const configureTool = (index: number) => {
     setConfiguringToolIndex(index);
@@ -60,7 +73,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
     if (configuraingToolIndex >= 0) {
       updateTool(configuraingToolIndex, {
         configured: true,
-        parameters
+        parameters,
       });
     }
     setConfigModalOpen(false);
@@ -75,10 +88,10 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   const handleToolAdd = () => {
     const newTool: AutomationTool = {
       id: `tool-${Date.now()}`,
-      operation: '',
-      name: t('automate.creation.tools.selectTool', 'Select a tool...'),
+      operation: "",
+      name: t("automate.creation.tools.selectTool", "Select a tool..."),
       configured: false,
-      parameters: {}
+      parameters: {},
     };
     updateTool(selectedTools.length, newTool);
   };
@@ -99,14 +112,15 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       name: automationName.trim(),
       description: automationDescription.trim(),
       icon: automationIcon,
-      operations: selectedTools.map(tool => ({
+      operations: selectedTools.map((tool) => ({
         operation: tool.operation,
-        parameters: tool.parameters || {}
-      }))
+        parameters: tool.parameters || {},
+      })),
     };
 
     try {
-      const { automationStorage } = await import('@app/services/automationStorage');
+      const { automationStorage } =
+        await import("@app/services/automationStorage");
       let savedAutomation;
 
       if (mode === AutomationMode.EDIT && existingAutomation) {
@@ -115,35 +129,69 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
         if (nameChanged) {
           // Name changed - create new automation
-          savedAutomation = await automationStorage.saveAutomation(automationData);
+          savedAutomation =
+            await automationStorage.saveAutomation(automationData);
         } else {
           // Name unchanged - update existing automation
           const updatedAutomation = {
             ...existingAutomation,
             ...automationData,
             id: existingAutomation.id,
-            createdAt: existingAutomation.createdAt
+            createdAt: existingAutomation.createdAt,
           };
-          savedAutomation = await automationStorage.updateAutomation(updatedAutomation);
+          savedAutomation =
+            await automationStorage.updateAutomation(updatedAutomation);
         }
       } else {
         // Create mode - always create new automation
-        savedAutomation = await automationStorage.saveAutomation(automationData);
+        savedAutomation =
+          await automationStorage.saveAutomation(automationData);
       }
 
       onComplete(savedAutomation);
     } catch (error) {
-      console.error('Error saving automation:', error);
+      console.error("Error saving automation:", error);
     }
   };
 
-  const currentConfigTool = configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
+  const currentConfigTool =
+    configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
+
+  /**
+   * Build a temporary AutomationConfig from in-progress form state so the
+   * export buttons can run without requiring the user to save first. The
+   * `id` and timestamps are placeholders — the export utilities strip them.
+   */
+  const buildExportableAutomation = (): AutomationConfig => ({
+    id: existingAutomation?.id || "temp",
+    name: automationName.trim(),
+    description: automationDescription.trim(),
+    icon: automationIcon,
+    operations: selectedTools.map((tool) => ({
+      operation: tool.operation,
+      parameters: tool.parameters || {},
+    })),
+    createdAt: existingAutomation?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
 
   return (
     <div>
-        <Text size="sm" mb="md" p="md"  style={{borderRadius:'var(--mantine-radius-md)', background: 'var(--color-gray-200)', color: 'var(--mantine-color-text)' }}>
-            {t("automate.creation.intro", "Automations run tools sequentially. To get started, add tools in the order you want them to run.")}
-        </Text>
+      <Text
+        size="sm"
+        mb="md"
+        p="md"
+        style={{
+          borderRadius: "var(--mantine-radius-md)",
+          background: "var(--color-gray-200)",
+          color: "var(--mantine-color-text)",
+        }}
+      >
+        {t(
+          "automate.creation.intro",
+          "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+        )}
+      </Text>
       <Divider mb="md" />
 
       <Stack gap="md">
@@ -151,17 +199,20 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
         <Group gap="xs" align="flex-end">
           <Stack gap="xs" style={{ flex: 1 }}>
             <TextInput
-              placeholder={t('automate.creation.name.placeholder', 'My Automation')}
+              placeholder={t(
+                "automate.creation.name.placeholder",
+                "My Automation",
+              )}
               value={automationName}
               withAsterisk
-              label={t('automate.creation.name.label', 'Automation Name')}
+              label={t("automate.creation.name.label", "Automation Name")}
               onChange={(e) => setAutomationName(e.currentTarget.value)}
               size="sm"
             />
           </Stack>
 
           <IconSelector
-            value={automationIcon || 'SettingsIcon'}
+            value={automationIcon || "SettingsIcon"}
             onChange={setAutomationIcon}
             size="sm"
           />
@@ -169,14 +220,16 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
         {/* Automation Description */}
         <Textarea
-          placeholder={t('automate.creation.description.placeholder', 'Describe what this automation does...')}
+          placeholder={t(
+            "automate.creation.description.placeholder",
+            "Describe what this automation does...",
+          )}
           value={automationDescription}
-          label={t('automate.creation.description.label', 'Description')}
+          label={t("automate.creation.description.label", "Description")}
           onChange={(e) => setAutomationDescription(e.currentTarget.value)}
           size="sm"
           rows={3}
         />
-
 
         {/* Selected Tools List */}
         {selectedTools.length > 0 && (
@@ -194,15 +247,46 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
 
         <Divider />
 
-        {/* Save Button */}
-        <Button
-          leftSection={<CheckIcon />}
-          onClick={saveAutomation}
-          disabled={!canSaveAutomation()}
-          fullWidth
-        >
-          {t('automate.creation.save', 'Save Automation')}
-        </Button>
+        {/* Action Buttons */}
+        <Stack gap="sm">
+          <Button
+            leftSection={<CheckIcon />}
+            onClick={saveAutomation}
+            disabled={!canSaveAutomation()}
+            fullWidth
+          >
+            {t("automate.creation.save", "Save Automation")}
+          </Button>
+
+          <Group gap="sm" grow>
+            <Button
+              leftSection={<DownloadIcon />}
+              onClick={() => {
+                downloadAutomationConfig(buildExportableAutomation());
+              }}
+              disabled={!canSaveAutomation()}
+              variant="light"
+            >
+              {t("automate.creation.export", "Export")}
+            </Button>
+            <Button
+              leftSection={<DownloadIcon />}
+              onClick={() => {
+                downloadFolderScanningConfig(
+                  buildExportableAutomation(),
+                  toolRegistry,
+                );
+              }}
+              disabled={!canSaveAutomation()}
+              variant="light"
+            >
+              {t(
+                "automate.creation.exportForFolderScanning",
+                "Export for Folder Scanning",
+              )}
+            </Button>
+          </Group>
+        </Stack>
       </Stack>
 
       {/* Tool Configuration Modal */}
@@ -220,20 +304,23 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
       <Modal
         opened={unsavedWarningOpen}
         onClose={handleCancelBack}
-        title={t('automate.creation.unsavedChanges.title', 'Unsaved Changes')}
+        title={t("automate.creation.unsavedChanges.title", "Unsaved Changes")}
         centered
         zIndex={Z_INDEX_AUTOMATE_MODAL}
       >
         <Stack gap="md">
           <Text>
-            {t('automate.creation.unsavedChanges.message', 'You have unsaved changes. Are you sure you want to go back? All changes will be lost.')}
+            {t(
+              "automate.creation.unsavedChanges.message",
+              "You have unsaved changes. Are you sure you want to go back? All changes will be lost.",
+            )}
           </Text>
           <Group gap="md" justify="flex-end">
             <Button variant="outline" onClick={handleCancelBack}>
-              {t('automate.creation.unsavedChanges.cancel', 'Cancel')}
+              {t("automate.creation.unsavedChanges.cancel", "Cancel")}
             </Button>
             <Button color="red" onClick={handleConfirmBack}>
-              {t('automate.creation.unsavedChanges.confirm', 'Go Back')}
+              {t("automate.creation.unsavedChanges.confirm", "Go Back")}
             </Button>
           </Group>
         </Stack>

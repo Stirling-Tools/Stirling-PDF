@@ -68,6 +68,56 @@
   color: var(--onboarding-body, #1f2937);
 }
 
+.mfaSlideContent {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.mfaCard {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-surface, #ffffff);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.mfaSetupGrid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.mfaQrCard {
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+  display: flex;
+  justify-content: center;
+}
+
+.mfaSteps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--onboarding-body, #1f2937);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mfaForm {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .mfaSetupGrid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
 .heroIconsContainer {
   display: flex;
   gap: 32px;
@@ -90,7 +140,9 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,7 +182,14 @@
 }
 
 .iconLabel {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
@@ -215,7 +274,7 @@
   opacity: 1;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.9);
-  color: #1F2933;
+  color: #1f2933;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
@@ -231,7 +290,14 @@
 
 /* Title styles */
 .titleText {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   font-weight: 600;
   font-size: 22px;
   color: var(--onboarding-title);
@@ -239,7 +305,14 @@
 
 /* Body text styles */
 .bodyText {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   font-size: 16px;
   color: var(--onboarding-body);
   line-height: 1.5;
@@ -263,8 +336,8 @@
 }
 
 .v2Badge {
-  background: #DBEFFF;
-  color: #2A4BFF;
+  background: #dbefff;
+  color: #2a4bff;
   padding: 4px 12px;
   border-radius: 6px;
   font-size: 14px;

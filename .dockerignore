@@ -1,75 +1,110 @@
-# Node modules and build artifacts
-node_modules
-frontend/node_modules
-frontend/dist
-frontend/build
-frontend/.vite
-frontend/.tauri
-frontend/src-tauri/target
-
-# Gradle build artifacts
-.gradle
-build
-bin
-target
-out
-
-# Git
-.git
+# Version control
+.git/
 .gitignore
+.git-blame-ignore-revs
+.gitattributes
 
-# IDE
-.vscode
-.idea
+# Build outputs
+build/
+*/build/
+**/build/
+out/
+target/
+**/target/
+bin/
+version_builds/
+
+# Gradle caches (local, not what's in the container)
+.gradle/
+**/.gradle/
+.gradle-home/
+
+# Task (go-task) cache
+.task/
+
+# Node / frontend
+node_modules/
+**/node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/playwright-report/
+.npm/
+.yarn/
+
+# Tauri/desktop builds
+src-tauri/target/
+src-tauri/dist/
+frontend/src-tauri/target/
+frontend/src-tauri/dist/
+
+# IDE and editor
+.idea/
+.vscode/
+.settings/
+.settings.zip
+.classpath
+.project
+.devcontainer/
 *.iml
-*.iws
 *.ipr
+*.iws
 
-# Logs
+# Logs and temp files
 *.log
-logs
+*.tmp
+*.pid
+.DS_Store
+Thumbs.db
+logs/
 
-# Environment files
+# Docker itself
+Dockerfile*
+.dockerignore
+
+# CI / CD configs (not needed in build context)
+.github/
+.circleci/
+.gitlab-ci.yml
+
+# Test reports
+**/test-results/
+**/jacoco/
+test_*.pdf
+
+# Testing and documentation (not needed in build)
+testing/
+docs/
+devGuide/
+devTools/
+*.md
+README*
+
+# Separate projects not consumed by the Java/frontend build
+commonforms-onnx/
+
+# Runtime mount points used by docker-compose volumes, not build input
+stirling/
+customFiles/
+configs/
+
+# Claude Code workspace
+.claude/
+
+# Python caches
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+**/__pycache__/
+
+# Local env
 .env
 .env.*
 !.env.example
+!engine/.env
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Java compiled files
-*.class
-*.jar
-*.war
-*.ear
-
-# Test reports
-test-results
-coverage
-
-# Docker
-docker-compose.override.yml
-.dockerignore
-
-# Temporary files
-tmp
-temp
-*.tmp
+# Misc
 *.swp
+*.swo
 *~
-
-# Runtime database and config files (locked by running app)
-app/core/configs/**
-stirling/**
-stirling-pdf-DB*.mv.db
-stirling-pdf-DB*.trace.db
-
-# Documentation
-*.md
-!README.md
-docs
-
-# CI/CD
-.github
-.gitlab-ci.yml
+.DS_Store
+.cache/

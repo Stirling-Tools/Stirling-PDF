@@ -2,128 +2,148 @@
  * Unit tests for useConvertParameters hook
  */
 
-import { describe, test, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
-import { FIT_OPTIONS } from '@app/constants/convertConstants';
+import { describe, test, expect } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { FIT_OPTIONS } from "@app/constants/convertConstants";
 
-describe('useConvertParameters', () => {
-
-  describe('Parameter Management', () => {
-
-    test('should initialize with default parameters', () => {
+describe("useConvertParameters", () => {
+  describe("Parameter Management", () => {
+    test("should initialize with default parameters", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      expect(result.current.parameters.fromExtension).toBe('');
-      expect(result.current.parameters.toExtension).toBe('');
-      expect(result.current.parameters.imageOptions.colorType).toBe('color');
+      expect(result.current.parameters.fromExtension).toBe("");
+      expect(result.current.parameters.toExtension).toBe("");
+      expect(result.current.parameters.imageOptions.colorType).toBe("color");
       expect(result.current.parameters.imageOptions.dpi).toBe(300);
-      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe('multiple');
+      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe(
+        "multiple",
+      );
       expect(result.current.parameters.htmlOptions.zoomLevel).toBe(1.0);
-      expect(result.current.parameters.emailOptions.includeAttachments).toBe(true);
-      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(10);
+      expect(result.current.parameters.emailOptions.includeAttachments).toBe(
+        true,
+      );
+      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(
+        10,
+      );
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(false);
-      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(false);
-      expect(result.current.parameters.pdfaOptions.outputFormat).toBe('pdfa-1');
+      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(
+        false,
+      );
+      expect(result.current.parameters.pdfaOptions.outputFormat).toBe(
+        "pdfa-2b",
+      );
     });
 
-    test('should update individual parameters', () => {
+    test("should update individual parameters", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
+        result.current.updateParameter("fromExtension", "pdf");
       });
 
-      expect(result.current.parameters.fromExtension).toBe('pdf');
-      expect(result.current.parameters.toExtension).toBe(''); // Should not affect other params
+      expect(result.current.parameters.fromExtension).toBe("pdf");
+      expect(result.current.parameters.toExtension).toBe(""); // Should not affect other params
     });
 
-    test('should update nested image options', () => {
+    test("should update nested image options", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('imageOptions', {
-          colorType: 'grayscale',
+        result.current.updateParameter("imageOptions", {
+          colorType: "grayscale",
           dpi: 150,
-          singleOrMultiple: 'single',
+          singleOrMultiple: "single",
           fitOption: FIT_OPTIONS.FILL_PAGE,
           autoRotate: false,
           combineImages: false,
         });
       });
 
-      expect(result.current.parameters.imageOptions.colorType).toBe('grayscale');
+      expect(result.current.parameters.imageOptions.colorType).toBe(
+        "grayscale",
+      );
       expect(result.current.parameters.imageOptions.dpi).toBe(150);
-      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe('single');
-      expect(result.current.parameters.imageOptions.fitOption).toBe(FIT_OPTIONS.FILL_PAGE);
+      expect(result.current.parameters.imageOptions.singleOrMultiple).toBe(
+        "single",
+      );
+      expect(result.current.parameters.imageOptions.fitOption).toBe(
+        FIT_OPTIONS.FILL_PAGE,
+      );
       expect(result.current.parameters.imageOptions.autoRotate).toBe(false);
       expect(result.current.parameters.imageOptions.combineImages).toBe(false);
     });
 
-    test('should update nested HTML options', () => {
+    test("should update nested HTML options", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('htmlOptions', {
-          zoomLevel: 1.5
+        result.current.updateParameter("htmlOptions", {
+          zoomLevel: 1.5,
         });
       });
 
       expect(result.current.parameters.htmlOptions.zoomLevel).toBe(1.5);
     });
 
-    test('should update nested email options', () => {
+    test("should update nested email options", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('emailOptions', {
+        result.current.updateParameter("emailOptions", {
           includeAttachments: false,
           maxAttachmentSizeMB: 20,
           downloadHtml: true,
-          includeAllRecipients: true
+          includeAllRecipients: true,
         });
       });
 
-      expect(result.current.parameters.emailOptions.includeAttachments).toBe(false);
-      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(20);
+      expect(result.current.parameters.emailOptions.includeAttachments).toBe(
+        false,
+      );
+      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(
+        20,
+      );
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(true);
-      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(true);
+      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(
+        true,
+      );
     });
 
-    test('should update nested PDF/A options', () => {
+    test("should update nested PDF/A options", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('pdfaOptions', {
-          outputFormat: 'pdfa'
+        result.current.updateParameter("pdfaOptions", {
+          outputFormat: "pdfa",
+          strict: false,
         });
       });
 
-      expect(result.current.parameters.pdfaOptions.outputFormat).toBe('pdfa');
+      expect(result.current.parameters.pdfaOptions.outputFormat).toBe("pdfa");
     });
 
-    test('should reset parameters to defaults', () => {
+    test("should reset parameters to defaults", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
-        result.current.updateParameter('toExtension', 'png');
+        result.current.updateParameter("fromExtension", "pdf");
+        result.current.updateParameter("toExtension", "png");
       });
 
-      expect(result.current.parameters.fromExtension).toBe('pdf');
+      expect(result.current.parameters.fromExtension).toBe("pdf");
 
       act(() => {
         result.current.resetParameters();
       });
 
-      expect(result.current.parameters.fromExtension).toBe('');
-      expect(result.current.parameters.toExtension).toBe('');
+      expect(result.current.parameters.fromExtension).toBe("");
+      expect(result.current.parameters.toExtension).toBe("");
     });
   });
 
-  describe('Parameter Validation', () => {
-
-    test('should validate parameters correctly', () => {
+  describe("Parameter Validation", () => {
+    test("should validate parameters correctly", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       // No parameters - should be invalid
@@ -131,100 +151,100 @@ describe('useConvertParameters', () => {
 
       // Only fromExtension - should be invalid
       act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
+        result.current.updateParameter("fromExtension", "pdf");
       });
       expect(result.current.validateParameters()).toBe(false);
 
       // Both extensions with supported conversion - should be valid
       act(() => {
-        result.current.updateParameter('toExtension', 'png');
+        result.current.updateParameter("toExtension", "png");
       });
       expect(result.current.validateParameters()).toBe(true);
     });
 
-    test('should validate unsupported conversions', () => {
+    test("should validate unsupported conversions", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
-        result.current.updateParameter('toExtension', 'unsupported');
+        result.current.updateParameter("fromExtension", "pdf");
+        result.current.updateParameter("toExtension", "unsupported");
       });
 
       expect(result.current.validateParameters()).toBe(false);
     });
-
   });
 
-  describe('Endpoint Generation', () => {
-
-    test('should generate correct endpoint names', () => {
+  describe("Endpoint Generation", () => {
+    test("should generate correct endpoint names", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
-        result.current.updateParameter('toExtension', 'png');
+        result.current.updateParameter("fromExtension", "pdf");
+        result.current.updateParameter("toExtension", "png");
       });
 
       const endpointName = result.current.getEndpointName();
-      expect(endpointName).toBe('pdf-to-img');
+      expect(endpointName).toBe("pdf-to-img");
     });
 
-    test('should generate correct endpoint URLs', () => {
+    test("should generate correct endpoint URLs", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
-        result.current.updateParameter('toExtension', 'png');
+        result.current.updateParameter("fromExtension", "pdf");
+        result.current.updateParameter("toExtension", "png");
       });
 
       const endpoint = result.current.getEndpoint();
-      expect(endpoint).toBe('/api/v1/convert/pdf/img');
+      expect(endpoint).toBe("/api/v1/convert/pdf/img");
     });
 
-    test('should return empty strings for invalid conversions', () => {
+    test("should return empty strings for invalid conversions", () => {
       const { result } = renderHook(() => useConvertParameters());
 
       act(() => {
-        result.current.updateParameter('fromExtension', 'invalid');
-        result.current.updateParameter('toExtension', 'invalid');
+        result.current.updateParameter("fromExtension", "invalid");
+        result.current.updateParameter("toExtension", "invalid");
       });
 
-      expect(result.current.getEndpointName()).toBe('');
-      expect(result.current.getEndpoint()).toBe('');
+      expect(result.current.getEndpointName()).toBe("");
+      expect(result.current.getEndpoint()).toBe("");
     });
   });
 
-  describe('Available Extensions', () => {
-
-    test('should return available extensions for valid source format', () => {
+  describe("Available Extensions", () => {
+    test("should return available extensions for valid source format", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const availableExtensions = result.current.getAvailableToExtensions('pdf');
+      const availableExtensions =
+        result.current.getAvailableToExtensions("pdf");
 
       expect(availableExtensions.length).toBeGreaterThan(0);
-      expect(availableExtensions.some(ext => ext.value === 'png')).toBe(true);
-      expect(availableExtensions.some(ext => ext.value === 'jpg')).toBe(true);
+      expect(availableExtensions.some((ext) => ext.value === "png")).toBe(true);
+      expect(availableExtensions.some((ext) => ext.value === "jpg")).toBe(true);
     });
 
-    test('should return empty array for invalid source format', () => {
+    test("should return empty array for invalid source format", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const availableExtensions = result.current.getAvailableToExtensions('invalid');
+      const availableExtensions =
+        result.current.getAvailableToExtensions("invalid");
 
-      expect(availableExtensions).toEqual([{
-        "group": "Document",
-        "label": "PDF",
-        "value": "pdf",
-      }]);
+      expect(availableExtensions).toEqual([
+        {
+          group: "Document",
+          label: "PDF",
+          value: "pdf",
+        },
+      ]);
     });
 
-    test('should return empty array for empty source format', () => {
+    test("should return empty array for empty source format", () => {
       const { result } = renderHook(() => useConvertParameters());
 
-      const availableExtensions = result.current.getAvailableToExtensions('');
+      const availableExtensions = result.current.getAvailableToExtensions("");
 
       expect(availableExtensions).toEqual([]);
     });
   });
-
 });

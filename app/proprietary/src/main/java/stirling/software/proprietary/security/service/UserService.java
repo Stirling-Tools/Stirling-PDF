@@ -1,5 +1,10 @@
 package stirling.software.proprietary.security.service;
 
+import static stirling.software.proprietary.security.service.MfaService.MFA_ENABLED_KEY;
+import static stirling.software.proprietary.security.service.MfaService.MFA_LAST_USED_STEP_KEY;
+import static stirling.software.proprietary.security.service.MfaService.MFA_REQUIRED_KEY;
+import static stirling.software.proprietary.security.service.MfaService.MFA_SECRET_KEY;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,6 +41,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
+import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
@@ -42,6 +49,16 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.storage.model.FileShare;
+import stirling.software.proprietary.storage.model.StorageCleanupEntry;
+import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
+import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
+import stirling.software.proprietary.workflow.service.UserServerCertificateService;
 
 @Service
 @Slf4j
@@ -62,6 +79,16 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
+    private final PersistentLoginRepository persistentLoginRepository;
+    private final UserServerCertificateService userServerCertificateService;
+    private final WorkflowParticipantRepository workflowParticipantRepository;
+    private final WorkflowSessionRepository workflowSessionRepository;
+    private final StoredFileRepository storedFileRepository;
+    private final StorageCleanupEntryRepository storageCleanupEntryRepository;
+    private final FileShareRepository fileShareRepository;
+    private final FileShareAccessRepository fileShareAccessRepository;
+
+    @Transactional
     public void processSSOPostLogin(
             String username,
             String ssoProviderId,
@@ -101,7 +128,13 @@ public class UserService implements UserServiceInterface {
         }
 
         if (autoCreateUser) {
-            saveUser(username, ssoProviderId, ssoProvider, type);
+            SaveUserRequest.Builder builder =
+                    SaveUserRequest.builder()
+                            .username(username)
+                            .ssoProviderId(ssoProviderId)
+                            .ssoProvider(ssoProvider)
+                            .authenticationType(type);
+            saveUserCore(builder.build());
         }
     }
 
@@ -141,6 +174,14 @@ public class UserService implements UserServiceInterface {
         return user;
     }
 
+    private User saveUser(Optional<User> user, String apiKey) {
+        if (user.isPresent()) {
+            user.get().setApiKey(apiKey);
+            return userRepository.save(user.get());
+        }
+        throw new UsernameNotFoundException("User not found");
+    }
+
     public User refreshApiKeyForUser(String username) {
         // reuse the add API key method for refreshing
         return addApiKeyToUser(username);
@@ -155,6 +196,15 @@ public class UserService implements UserServiceInterface {
             user = addApiKeyToUser(username);
         }
         return user.getApiKey();
+    }
+
+    @Override
+    public String getCurrentUserApiKey() {
+        String username = getCurrentUsername();
+        if (username == null || username.isEmpty()) {
+            throw new IllegalStateException("Cannot determine calling user for API key lookup");
+        }
+        return getApiKeyForUser(username);
     }
 
     public boolean isValidApiKey(String apiKey) {
@@ -179,173 +229,76 @@ public class UserService implements UserServiceInterface {
         return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
-    public void saveUser(String username, AuthenticationType authenticationType)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        saveUser(username, authenticationType, (Long) null, Role.USER.getRoleId());
-    }
-
-    public void saveUser(
-            String username,
-            String ssoProviderId,
-            String ssoProvider,
-            AuthenticationType authenticationType)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        saveUser(
-                username,
-                ssoProviderId,
-                ssoProvider,
-                authenticationType,
-                (Long) null,
-                Role.USER.getRoleId());
-    }
-
-    private User saveUser(Optional<User> user, String apiKey) {
-        if (user.isPresent()) {
-            user.get().setApiKey(apiKey);
-            return userRepository.save(user.get());
-        }
-        throw new UsernameNotFoundException("User not found");
-    }
-
-    public User saveUser(
-            String username, AuthenticationType authenticationType, Long teamId, String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
-                username, // username
-                null, // password
-                null, // ssoProviderId
-                null, // ssoProvider
-                authenticationType, // authenticationType
-                teamId, // teamId
-                null, // team
-                role, // role
-                false, // firstLogin
-                true // enabled
-                );
-    }
-
-    public User saveUser(
-            String username,
-            String ssoProviderId,
-            String ssoProvider,
-            AuthenticationType authenticationType,
-            Long teamId,
-            String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
-                username, // username
-                null, // password
-                ssoProviderId, // ssoProviderId
-                ssoProvider, // ssoProvider
-                authenticationType, // authenticationType
-                teamId, // teamId
-                null, // team
-                role, // role
-                false, // firstLogin
-                true // enabled
-                );
-    }
-
-    public User saveUser(
-            String username, AuthenticationType authenticationType, Team team, String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
-                username, // username
-                null, // password
-                null, // ssoProviderId
-                null, // ssoProvider
-                authenticationType, // authenticationType
-                null, // teamId
-                team, // team
-                role, // role
-                false, // firstLogin
-                true // enabled
-                );
-    }
-
-    public User saveUser(String username, String password, Long teamId)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
-                username, // username
-                password, // password
-                null, // ssoProviderId
-                null, // ssoProvider
-                AuthenticationType.WEB, // authenticationType
-                teamId, // teamId
-                null, // team
-                Role.USER.getRoleId(), // role
-                false, // firstLogin
-                true // enabled
-                );
-    }
-
-    public User saveUser(
-            String username, String password, Team team, String role, boolean firstLogin)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
-                username, // username
-                password, // password
-                null, // ssoProviderId
-                null, // ssoProvider
-                AuthenticationType.WEB, // authenticationType
-                null, // teamId
-                team, // team
-                role, // role
-                firstLogin, // firstLogin
-                true // enabled
-                );
-    }
-
-    public User saveUser(
-            String username, String password, Long teamId, String role, boolean firstLogin)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        return saveUserCore(
-                username, // username
-                password, // password
-                null, // ssoProviderId
-                null, // ssoProvider
-                AuthenticationType.WEB, // authenticationType
-                teamId, // teamId
-                null, // team
-                role, // role
-                firstLogin, // firstLogin
-                true // enabled
-                );
-    }
-
-    public void saveUser(String username, String password, Long teamId, String role)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        saveUser(username, password, teamId, role, false);
-    }
-
-    public void saveUser(
-            String username, String password, Long teamId, boolean firstLogin, boolean enabled)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        saveUserCore(
-                username, // username
-                password, // password
-                null, // ssoProviderId
-                null, // ssoProvider
-                AuthenticationType.WEB, // authenticationType
-                teamId, // teamId
-                null, // team
-                Role.USER.getRoleId(), // role
-                firstLogin, // firstLogin
-                enabled // enabled
-                );
-    }
-
+    @Transactional
     public void deleteUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
-            for (Authority authority : userOpt.get().getAuthorities()) {
+            User user = userOpt.get();
+            for (Authority authority : user.getAuthorities()) {
                 if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
                     return;
                 }
             }
-            userRepository.delete(userOpt.get());
+            deleteUserRelatedData(user);
+            userRepository.delete(user);
+            persistentLoginRepository.deleteByUsername(username);
         }
         invalidateUserSessions(username);
+    }
+
+    private void deleteUserRelatedData(User user) {
+        log.info("Deleting all associated data for user: {}", user.getUsername());
+
+        // Delete server certificate (non-nullable OneToOne → User)
+        userServerCertificateService.deleteUserCertificate(user.getId());
+
+        // Delete FileShareAccess records where this user is the accessor
+        fileShareAccessRepository.deleteByUser(user);
+
+        // Delete FileShare records where this user is the recipient (shared with them by others).
+        // FileShareAccess for those shares must be cleared first (no cascade from FileShare side).
+        List<FileShare> sharesTargetingUser = fileShareRepository.findBySharedWithUser(user);
+        sharesTargetingUser.forEach(fileShareAccessRepository::deleteByFileShare);
+        fileShareRepository.deleteAll(sharesTargetingUser);
+
+        // Null out WorkflowParticipant.user for sessions this user participates in but does not
+        // own.
+        // The participant record is retained to preserve the workflow audit trail.
+        workflowParticipantRepository.clearUserReferences(user);
+
+        // Break circular FK: null out stored_files.workflow_session_id before deleting sessions
+        storedFileRepository.clearWorkflowSessionReferencesByOwner(user);
+
+        // Delete WorkflowSessions (CascadeType.ALL cascades to WorkflowParticipant)
+        workflowSessionRepository.deleteAll(
+                workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
+
+        // Collect storage keys for physical cleanup before deleting DB records
+        List<StoredFile> files = storedFileRepository.findAllByOwner(user);
+        List<String> storageKeys =
+                files.stream()
+                        .flatMap(
+                                f ->
+                                        java.util.stream.Stream.of(
+                                                f.getStorageKey(),
+                                                f.getHistoryStorageKey(),
+                                                f.getAuditLogStorageKey()))
+                        .filter(k -> k != null && !k.isBlank())
+                        .toList();
+
+        // Clear FileShareAccess per share (no cascade from FileShare), then delete StoredFiles
+        // (CascadeType.ALL on StoredFile.shares cascades to FileShare)
+        for (StoredFile file : files) {
+            file.getShares().forEach(fileShareAccessRepository::deleteByFileShare);
+        }
+        storedFileRepository.deleteAll(files);
+
+        // Schedule physical deletion of all storage blobs; StorageCleanupService handles retry
+        for (String key : storageKeys) {
+            StorageCleanupEntry entry = new StorageCleanupEntry();
+            entry.setStorageKey(key);
+            storageCleanupEntryRepository.save(entry);
+        }
     }
 
     public boolean usernameExists(String username) {
@@ -485,75 +438,71 @@ public class UserService implements UserServiceInterface {
     }
 
     /**
-     * Core implementation for saving a user with all possible parameters. This method centralizes
-     * the common logic for all saveUser variants.
+     * Core method to save a user based on the provided SaveUserRequest.
      *
-     * @param username Username for the new user
-     * @param password Password for the user (may be null for SSO/OAuth users)
-     * @param ssoProviderId Unique identifier from SSO provider (may be null for non-SSO users)
-     * @param ssoProvider Name of the SSO provider (may be null for non-SSO users)
-     * @param authenticationType Type of authentication (WEB, SSO, etc.)
-     * @param teamId ID of the team to assign (may be null to use default)
-     * @param team Team object to assign (takes precedence over teamId if both provided)
-     * @param role Role to assign to the user
-     * @param firstLogin Whether this is the user's first login
-     * @param enabled Whether the user account is enabled
+     * @param request The SaveUserRequest containing user details
      * @return The saved User object
-     * @throws IllegalArgumentException If username is invalid or team is invalid
-     * @throws SQLException If database operation fails
-     * @throws UnsupportedProviderException If provider is not supported
+     * @throws IllegalArgumentException If the username is invalid
+     * @throws SQLException If a database error occurs
+     * @throws UnsupportedProviderException If an unsupported provider is specified
      */
-    private User saveUserCore(
-            String username,
-            String password,
-            String ssoProviderId,
-            String ssoProvider,
-            AuthenticationType authenticationType,
-            Long teamId,
-            Team team,
-            String role,
-            boolean firstLogin,
-            boolean enabled)
+    public User saveUserCore(SaveUserRequest request)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
 
-        if (!isUsernameValid(username)) {
+        if (!isUsernameValid(request.getUsername())) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
 
         User user = new User();
-        user.setUsername(username);
+        user.setUsername(request.getUsername());
 
         // Set password if provided
-        if (password != null && !password.isEmpty()) {
-            user.setPassword(passwordEncoder.encode(password));
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         // Set SSO provider details if provided
-        if (ssoProviderId != null && ssoProvider != null) {
-            user.setSsoProviderId(ssoProviderId);
-            user.setSsoProvider(ssoProvider);
+        if (request.getSsoProviderId() != null && request.getSsoProvider() != null) {
+            user.setSsoProviderId(request.getSsoProviderId());
+            user.setSsoProvider(request.getSsoProvider());
         }
 
         // Set authentication type
-        user.setAuthenticationType(authenticationType);
+        user.setAuthenticationType(request.getAuthenticationType());
 
         // Set enabled status
-        user.setEnabled(enabled);
+        user.setEnabled(request.isEnabled());
 
         // Set first login flag
-        user.setFirstLogin(firstLogin);
+        user.setFirstLogin(request.isFirstLogin());
+
+        // Set MFA requirement
+        Map<String, String> settings = user.getSettings();
+        settings.put(MFA_REQUIRED_KEY, String.valueOf(request.isRequireMfa()));
+        settings.put(MFA_ENABLED_KEY, String.valueOf(request.isMfaEnabled()));
+        if (request.getMfaSecret() != null && !request.getMfaSecret().isEmpty()) {
+            settings.put(MFA_SECRET_KEY, request.getMfaSecret());
+        } else {
+            settings.remove(MFA_SECRET_KEY);
+        }
+        if (request.getMfaLastUsedStep() != null) {
+            settings.put(MFA_LAST_USED_STEP_KEY, String.valueOf(request.getMfaLastUsedStep()));
+        } else {
+            settings.remove(MFA_LAST_USED_STEP_KEY);
+        }
+        log.info(
+                "MFA required set to true for user {} {}",
+                request.getUsername(),
+                user.getSettings().toString());
 
         // Set role (authority)
-        if (role == null) {
-            role = Role.USER.getRoleId();
-        }
-        user.addAuthority(new Authority(role, user));
+        user.addAuthority(new Authority(request.getRole(), user));
 
         // Resolve and set team
-        if (team != null) {
-            user.setTeam(team);
+        if (request.getTeam() != null) {
+            user.setTeam(request.getTeam());
         } else {
-            user.setTeam(resolveTeam(teamId, this::getDefaultTeam));
+            user.setTeam(resolveTeam(request.getTeamId(), this::getDefaultTeam));
         }
 
         // Save user
@@ -600,6 +549,32 @@ public class UserService implements UserServiceInterface {
         return user.isPresent() && user.get().hasPassword();
     }
 
+    public boolean isSsoAuthenticationTypeByUsername(String username) {
+        Optional<User> user = findByUsernameIgnoreCase(username);
+        if (user.isEmpty()) {
+            return false;
+        }
+
+        String authType = user.get().getAuthenticationType();
+        if (authType == null) {
+            return false;
+        }
+
+        try {
+            AuthenticationType authenticationType =
+                    AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            if (authenticationType == AuthenticationType.OAUTH2
+                    || authenticationType == AuthenticationType.SAML2) {
+                return true;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Fall through to legacy string comparison below
+        }
+
+        // Backward compatibility for legacy "SSO" value without relying on the deprecated enum
+        return "SSO".equalsIgnoreCase(authType);
+    }
+
     public boolean isAuthenticationTypeByUsername(
             String username, AuthenticationType authenticationType) {
         Optional<User> user = findByUsernameIgnoreCase(username);
@@ -636,22 +611,39 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Try SecurityContext first (normal request context)
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                Object principal = auth.getPrincipal();
 
-        if (principal instanceof UserDetails detailsUser) {
-            return detailsUser.getUsername();
-        } else if (principal instanceof User domainUser) {
-            return domainUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            return saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            return stringUser;
+                if (principal instanceof UserDetails detailsUser) {
+                    return detailsUser.getUsername();
+                } else if (principal instanceof User domainUser) {
+                    return domainUser.getUsername();
+                } else if (principal instanceof OAuth2User oAuth2User) {
+                    return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                    return saml2User.name();
+                } else if (principal instanceof String stringUser) {
+                    return stringUser;
+                }
+            }
+        } catch (Exception e) {
+            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
         }
+
+        // Fallback to MDC for async contexts (e.g., when called from async job threads)
+        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it
+        String mdcPrincipal = MDC.get("auditPrincipal");
+        if (mdcPrincipal != null && !mdcPrincipal.isEmpty()) {
+            return mdcPrincipal;
+        }
+
         return null;
     }
 
+    @Override
     public boolean isCurrentUserAdmin() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -667,6 +659,7 @@ public class UserService implements UserServiceInterface {
         return false;
     }
 
+    @Override
     public boolean isCurrentUserFirstLogin() {
         try {
             String username = getCurrentUsername();

@@ -1,0 +1,77 @@
+.chat-toggle-button {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--mantine-color-body);
+  border-left: 1px solid
+    var(--border-subtle, var(--mantine-color-default-border));
+  z-index: 999;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid
+    var(--border-subtle, var(--mantine-color-default-border));
+  flex-shrink: 0;
+}
+
+.chat-panel-messages {
+  flex: 1;
+  min-height: 0;
+}
+
+.chat-panel-input {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: 1px solid
+    var(--border-subtle, var(--mantine-color-default-border));
+  flex-shrink: 0;
+}
+
+/* Message layout */
+.chat-message {
+  display: flex;
+}
+
+.chat-message-user {
+  justify-content: flex-end;
+}
+
+.chat-message-assistant {
+  justify-content: flex-start;
+}
+
+/* Bubble styling */
+.chat-bubble {
+  max-width: 85%;
+}
+
+.chat-bubble-user {
+  background: var(--mantine-color-blue-filled) !important;
+  color: white !important;
+}
+
+.chat-bubble-user * {
+  color: white !important;
+}
+
+.chat-bubble-assistant {
+  background: var(--mantine-color-default-hover) !important;
+}

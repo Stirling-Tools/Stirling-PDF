@@ -9,10 +9,10 @@ const SingleLargePage = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
   const base = useBaseTool(
-    'singleLargePage',
+    "singleLargePage",
     useSingleLargePageParameters,
     useSingleLargePageOperation,
-    props
+    props,
   );
 
   return createToolFlow({
@@ -26,7 +26,8 @@ const SingleLargePage = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

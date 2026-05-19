@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Group, Text, ActionIcon, Menu, Button, Box } from '@mantine/core';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import { ToolIcon } from '@app/components/shared/ToolIcon';
-import { ToolRegistry } from '@app/data/toolsTaxonomy';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Group, Text, ActionIcon, Menu, Button, Box } from "@mantine/core";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DownloadIcon from "@mui/icons-material/Download";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { ToolIcon } from "@app/components/shared/ToolIcon";
+import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 
 interface AutomationEntryProps {
@@ -31,6 +33,12 @@ interface AutomationEntryProps {
   onDelete?: () => void;
   /** Copy handler (for suggested automations) */
   onCopy?: () => void;
+  /** Export handler — folder scanning JSON */
+  onExportFolderScan?: () => void;
+  /** Export handler — native Automate JSON (renders as just "Export") */
+  onExportAutomation?: () => void;
+  /** Import handler — opens the import modal (used on "Create New" entry) */
+  onImport?: () => void;
   /** Tool registry to resolve operation names */
   toolRegistry?: Partial<ToolRegistry>;
 }
@@ -46,7 +54,10 @@ export default function AutomationEntry({
   onEdit,
   onDelete,
   onCopy,
-  toolRegistry
+  onExportFolderScan,
+  onExportAutomation,
+  onImport,
+  toolRegistry,
 }: AutomationEntryProps) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
@@ -76,12 +87,12 @@ export default function AutomationEntry({
           size="sm"
           fw={600}
           style={{
-            color: 'var(--mantine-primary-color-filled)',
-            background: 'var(--mantine-primary-color-light)',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            fontSize: '0.75rem',
-            whiteSpace: 'nowrap'
+            color: "var(--mantine-primary-color-filled)",
+            background: "var(--mantine-primary-color-light)",
+            padding: "2px 6px",
+            borderRadius: "4px",
+            fontSize: "0.75rem",
+            whiteSpace: "nowrap",
           }}
         >
           {getToolDisplayName(op)}
@@ -95,14 +106,25 @@ export default function AutomationEntry({
     ));
 
     return (
-      <div style={{ minWidth: '400px', width: 'auto' }}>
+      <div style={{ minWidth: "400px", width: "auto" }}>
         {description && (
-          <Text size="sm" mb={8} style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+          <Text
+            size="sm"
+            mb={8}
+            style={{ whiteSpace: "normal", wordWrap: "break-word" }}
+          >
             {description}
           </Text>
         )}
         {operations.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              whiteSpace: "nowrap",
+            }}
+          >
             {toolChain}
           </div>
         )}
@@ -115,13 +137,23 @@ export default function AutomationEntry({
       {BadgeIcon && (
         <ToolIcon
           icon={<BadgeIcon />}
-          {...(keepIconColor && { color: 'var(--mantine-primary-color-filled)' })}
+          {...(keepIconColor && {
+            color: "var(--mantine-primary-color-filled)",
+          })}
         />
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          flex: 1,
+          overflow: "visible",
+        }}
+      >
         {title ? (
           // Custom automation with title
-          <Text size="sm" style={{ textAlign: 'left' }}>
+          <Text size="sm" style={{ textAlign: "left" }}>
             {title}
           </Text>
         ) : (
@@ -129,9 +161,7 @@ export default function AutomationEntry({
           <Group gap="xs" justify="flex-start" style={{ flex: 1 }}>
             {operations.map((op, index) => (
               <React.Fragment key={`${op}-${index}`}>
-                <Text size="sm">
-                  {getToolDisplayName(op)}
-                </Text>
+                <Text size="sm">{getToolDisplayName(op)}</Text>
                 {index < operations.length - 1 && (
                   <Text size="sm" c="dimmed">
                     →
@@ -147,7 +177,7 @@ export default function AutomationEntry({
 
   const wrapperContent = (
     <Box
-      style={{ position: 'relative', width: '100%' }}
+      style={{ position: "relative", width: "100%" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -163,13 +193,15 @@ export default function AutomationEntry({
           root: {
             borderRadius: 0,
             color: "var(--tools-text-and-icon-color)",
-            overflow: 'visible',
-            backgroundColor: shouldShowMenu ? 'var(--automation-entry-hover-bg)' : undefined,
-            '&:hover': {
-              backgroundColor: 'var(--automation-entry-hover-bg)'
-            }
+            overflow: "visible",
+            backgroundColor: shouldShowMenu
+              ? "var(--automation-entry-hover-bg)"
+              : undefined,
+            "&:hover": {
+              backgroundColor: "var(--automation-entry-hover-bg)",
+            },
           },
-          label: { overflow: 'visible' }
+          label: { overflow: "visible" },
         }}
       >
         {buttonContent}
@@ -186,16 +218,21 @@ export default function AutomationEntry({
               variant="subtle"
               c="dimmed"
               size="md"
+              aria-label={t(
+                "automate.entryMenu.label",
+                "Open menu for {{title}}",
+                { title: title || operations.join(" → ") },
+              )}
               onClick={(e) => e.stopPropagation()}
               style={{
-                position: 'absolute',
-                right: '0.5rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
+                position: "absolute",
+                right: "0.5rem",
+                top: "50%",
+                transform: "translateY(-50%)",
                 zIndex: 1,
                 opacity: shouldShowMenu ? 1 : 0,
-                transition: 'opacity 0.2s ease',
-                pointerEvents: shouldShowMenu ? 'auto' : 'none'
+                transition: "opacity 0.2s ease",
+                pointerEvents: shouldShowMenu ? "auto" : "none",
               }}
             >
               <MoreVertIcon style={{ fontSize: 20 }} />
@@ -203,6 +240,17 @@ export default function AutomationEntry({
           </Menu.Target>
 
           <Menu.Dropdown>
+            {onImport && (
+              <Menu.Item
+                leftSection={<UploadFileIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onImport();
+                }}
+              >
+                {t("automate.import", "Import")}
+              </Menu.Item>
+            )}
             {onCopy && (
               <Menu.Item
                 leftSection={<ContentCopyIcon style={{ fontSize: 16 }} />}
@@ -211,7 +259,7 @@ export default function AutomationEntry({
                   onCopy();
                 }}
               >
-                {t('automate.copyToSaved', 'Copy to Saved')}
+                {t("automate.copyToSaved", "Copy to Saved")}
               </Menu.Item>
             )}
             {onEdit && (
@@ -222,7 +270,32 @@ export default function AutomationEntry({
                   onEdit();
                 }}
               >
-                {t('edit', 'Edit')}
+                {t("edit", "Edit")}
+              </Menu.Item>
+            )}
+            {onExportAutomation && (
+              <Menu.Item
+                leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExportAutomation();
+                }}
+              >
+                {t("automate.export", "Export")}
+              </Menu.Item>
+            )}
+            {onExportFolderScan && (
+              <Menu.Item
+                leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExportFolderScan();
+                }}
+              >
+                {t(
+                  "automate.exportForFolderScanning",
+                  "Export for Folder Scanning",
+                )}
               </Menu.Item>
             )}
             {onDelete && (
@@ -233,7 +306,7 @@ export default function AutomationEntry({
                   onDelete();
                 }}
               >
-                {t('delete', 'Delete')}
+                {t("delete", "Delete")}
               </Menu.Item>
             )}
           </Menu.Dropdown>

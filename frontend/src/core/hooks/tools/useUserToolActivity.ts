@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ToolId } from '@app/types/toolId';
+import { useState, useEffect, useCallback } from "react";
+import { ToolId } from "@app/types/toolId";
 
-const RECENT_TOOLS_KEY = 'stirlingpdf.recentTools';
-const FAVORITE_TOOLS_KEY = 'stirlingpdf.favoriteTools';
+const RECENT_TOOLS_KEY = "stirlingpdf.recentTools";
+const FAVORITE_TOOLS_KEY = "stirlingpdf.favoriteTools";
 
 export function useToolHistory() {
   const [recentTools, setRecentTools] = useState<ToolId[]>([]);
@@ -10,7 +10,7 @@ export function useToolHistory() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -36,10 +36,9 @@ export function useToolHistory() {
     }
   }, []);
 
-
   // Toggle favorite status
   const toggleFavorite = useCallback((toolId: ToolId) => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -58,7 +57,7 @@ export function useToolHistory() {
     (toolId: ToolId): boolean => {
       return favoriteTools.includes(toolId);
     },
-    [favoriteTools]
+    [favoriteTools],
   );
 
   return {

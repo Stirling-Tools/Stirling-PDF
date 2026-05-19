@@ -32,8 +32,8 @@ public class AddStampRequest extends PDFWithPageNums {
     private String alphabet = "roman";
 
     @Schema(
-            description = "The font size of the stamp text and image",
-            defaultValue = "30",
+            description = "The font size of the stamp text and image in points.",
+            defaultValue = "40",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private float fontSize;
 

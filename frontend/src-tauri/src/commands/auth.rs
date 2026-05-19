@@ -6,13 +6,17 @@ use tauri_plugin_store::StoreExt;
 use tiny_http::{Response, Server};
 use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
+use rand::Rng;
+use rand::distr::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
+const TOKENS_STORE_FILE: &str = "tokens.json";
+const REFRESH_TOKEN_STORE_KEY: &str = "refresh_token";
+const AUTH_TOKEN_STORE_KEY: &str = "auth_token";
 const KEYRING_SERVICE: &str = "stirling-pdf";
 const KEYRING_TOKEN_KEY: &str = "auth-token";
+const KEYRING_REFRESH_TOKEN_KEY: &str = "refresh-token";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserInfo {
@@ -31,69 +35,246 @@ fn get_keyring_entry() -> Result<Entry, String> {
     Ok(entry)
 }
 
+fn get_refresh_token_keyring_entry() -> Result<Entry, String> {
+    Entry::new(KEYRING_SERVICE, KEYRING_REFRESH_TOKEN_KEY)
+        .map_err(|e| format!("Failed to access keyring: {}", e))
+}
+
 #[tauri::command]
-pub async fn save_auth_token(_app_handle: AppHandle, token: String) -> Result<(), String> {
-    if token.is_empty() {
+pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(), String> {
+    let trimmed = token.trim();
+    if trimmed.is_empty() {
         log::warn!("Attempted to save empty auth token");
         return Err("Token cannot be empty".to_string());
     }
 
-    let entry = get_keyring_entry()?;
+    if trimmed.len() != token.len() {
+        log::debug!("Auth token had surrounding whitespace; storing trimmed token");
+    }
 
-    entry
-        .set_password(&token)
-        .map_err(|e| {
-            log::error!("Failed to set password in keyring: {}", e);
-            format!("Failed to save token to keyring: {}", e)
-        })?;
-
-    // Verify the save worked
-    match entry.get_password() {
-        Ok(retrieved_token) => {
-            if retrieved_token != token {
-                log::error!("Token verification failed: Retrieved token doesn't match");
-                return Err("Token verification failed after save".to_string());
+    // Try keyring first (works in environments where Credential Manager persists writes).
+    // Any failure - including entry creation - falls through to the Tauri Store fallback
+    // below, never an early return, so restricted environments still persist the token.
+    match get_keyring_entry() {
+        Ok(entry) => match entry.set_password(trimmed) {
+            Ok(_) => {
+                // Verify it persists. On managed Win10 Pro environments (GPO restricting
+                // Credential Manager, AV/EDR rules, roaming-profile DPAPI quirks) the
+                // read-back can return the wrong value or NoEntry even when set succeeded.
+                match entry.get_password() {
+                    Ok(saved) if saved == trimmed => {
+                        // Clear any stale fallback copy so the keyring stays authoritative.
+                        if let Ok(store) = app_handle.store(TOKENS_STORE_FILE) {
+                            if store.get(AUTH_TOKEN_STORE_KEY).is_some() {
+                                store.delete(AUTH_TOKEN_STORE_KEY);
+                                let _ = store.save();
+                            }
+                        }
+                        log::info!("Auth token saved to keyring");
+                        return Ok(());
+                    }
+                    _ => {
+                        log::info!("Keyring did not persist auth token - using Tauri Store fallback");
+                    }
+                }
             }
-        }
+            Err(e) => {
+                log::info!("Keyring set failed for auth token: {} - using Tauri Store fallback", e);
+            }
+        },
         Err(e) => {
-            log::error!("Token verification failed: {}", e);
-            return Err(format!("Token verification failed: {}", e));
+            log::info!("Keyring entry unavailable for auth token: {} - using Tauri Store fallback", e);
         }
     }
+
+    // Fallback to Tauri Store (same pattern as save_refresh_token)
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    store.set(
+        AUTH_TOKEN_STORE_KEY,
+        serde_json::to_value(trimmed)
+            .map_err(|e| format!("Failed to serialize token: {}", e))?,
+    );
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save tokens store: {}", e))?;
+
+    log::info!("Auth token saved to Tauri Store (fallback)");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, String> {
+    // Try keyring first (production / unrestricted environments). Any failure -
+    // including entry creation - falls through to the Tauri Store fallback below.
+    match get_keyring_entry() {
+        Ok(entry) => match entry.get_password() {
+            Ok(token) => return Ok(Some(token)),
+            Err(keyring::Error::NoEntry) => {
+                log::debug!("No auth token in keyring, trying Tauri Store");
+            }
+            Err(e) => {
+                log::warn!("Keyring error reading auth token: {} - trying Tauri Store", e);
+            }
+        },
+        Err(e) => {
+            log::warn!("Keyring entry unavailable for auth token: {} - trying Tauri Store", e);
+        }
+    }
+
+    // Fallback to Tauri Store
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    let token: Option<String> = store
+        .get(AUTH_TOKEN_STORE_KEY)
+        .and_then(|v| serde_json::from_value(v.clone()).ok());
+
+    Ok(token)
+}
+
+#[tauri::command]
+pub async fn clear_auth_token(app_handle: AppHandle) -> Result<(), String> {
+    // Clear from keyring (best-effort). Entry creation failure must not block clearing
+    // the disk fallback, otherwise a stale fallback token could survive sign-out.
+    match get_keyring_entry() {
+        Ok(entry) => match entry.delete_credential() {
+            Ok(_) | Err(keyring::Error::NoEntry) => {}
+            Err(e) => {
+                log::warn!("Failed to delete keyring credential: {}. Attempting overwrite with empty token.", e);
+                // Overwrite with an empty token so a stale value cannot be reused
+                if let Err(e2) = entry.set_password("") {
+                    log::warn!("Failed to overwrite keyring auth token: {}", e2);
+                }
+            }
+        },
+        Err(e) => {
+            log::warn!("Keyring entry unavailable while clearing auth token: {} - clearing Tauri Store fallback only", e);
+        }
+    }
+
+    // Clear from Tauri Store fallback
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    store.delete(AUTH_TOKEN_STORE_KEY);
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save tokens store: {}", e))?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn get_auth_token(_app_handle: AppHandle) -> Result<Option<String>, String> {
-    let entry = get_keyring_entry()?;
+pub async fn save_refresh_token(app_handle: AppHandle, token: String) -> Result<(), String> {
+    log::info!("Saving refresh token - trying keyring first");
 
-    match entry.get_password() {
-        Ok(token) => Ok(Some(token)),
-        Err(keyring::Error::NoEntry) => Ok(None),
+    let entry = get_refresh_token_keyring_entry()?;
+
+    // Try keyring (works in production with code signing)
+    match entry.set_password(&token) {
+        Ok(_) => {
+            // Verify it persists (fails in unsigned dev builds)
+            match entry.get_password() {
+                Ok(saved) if saved == token => {
+                    log::info!("✅ Refresh token saved to keyring (production mode)");
+                    return Ok(());
+                }
+                _ => {
+                    log::info!("Keyring doesn't persist - using Tauri Store fallback (dev mode)");
+                }
+            }
+        }
         Err(e) => {
-            log::error!("Failed to retrieve token from keyring: {}", e);
-            Err(format!("Failed to retrieve token: {}", e))
-        },
+            log::info!("Keyring failed: {} - using Tauri Store fallback", e);
+        }
     }
+
+    // Fallback to Tauri Store (dev mode without code signing)
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    store.set(
+        REFRESH_TOKEN_STORE_KEY,
+        serde_json::to_value(&token)
+            .map_err(|e| format!("Failed to serialize token: {}", e))?,
+    );
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save tokens store: {}", e))?;
+
+    log::info!("✅ Refresh token saved to Tauri Store (fallback)");
+    Ok(())
 }
 
 #[tauri::command]
-pub async fn clear_auth_token(_app_handle: AppHandle) -> Result<(), String> {
-    let entry = get_keyring_entry()?;
-
-    // Delete the token - ignore error if it doesn't exist
-    match entry.delete_credential() {
-        Ok(_) | Err(keyring::Error::NoEntry) => Ok(()),
+pub async fn get_refresh_token(app_handle: AppHandle) -> Result<Option<String>, String> {
+    // Try keyring first (production)
+    let entry = get_refresh_token_keyring_entry()?;
+    match entry.get_password() {
+        Ok(token) => {
+            log::info!("✅ Refresh token retrieved from keyring");
+            return Ok(Some(token));
+        }
+        Err(keyring::Error::NoEntry) => {
+            log::debug!("No token in keyring, trying Tauri Store");
+        }
         Err(e) => {
-            log::warn!("Failed to delete keyring credential: {}. Attempting overwrite with empty token.", e);
-            // As a fallback, overwrite with an empty token so a stale value cannot be reused
-            match entry.set_password("") {
-                Ok(_) => Ok(()),
-                Err(e2) => Err(format!("Failed to clear token (delete + overwrite failed): {}", e2)),
-            }
-        },
+            log::warn!("Keyring error: {} - trying Tauri Store", e);
+        }
     }
+
+    // Fallback to Tauri Store (dev)
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    let token: Option<String> = store
+        .get(REFRESH_TOKEN_STORE_KEY)
+        .and_then(|v| serde_json::from_value(v.clone()).ok());
+
+    if token.is_some() {
+        log::info!("✅ Refresh token retrieved from Tauri Store");
+    } else {
+        log::info!("No refresh token found");
+    }
+
+    Ok(token)
+}
+
+#[tauri::command]
+pub async fn clear_refresh_token(app_handle: AppHandle) -> Result<(), String> {
+    log::info!("Clearing refresh token from all storage");
+
+    // Clear from keyring
+    let entry = get_refresh_token_keyring_entry()?;
+    match entry.delete_credential() {
+        Ok(_) => log::info!("Cleared from keyring"),
+        Err(keyring::Error::NoEntry) => log::debug!("Not in keyring"),
+        Err(e) => log::warn!("Keyring clear error: {}", e),
+    }
+
+    // Clear from Tauri Store
+    let store = app_handle
+        .store(TOKENS_STORE_FILE)
+        .map_err(|e| format!("Failed to access tokens store: {}", e))?;
+
+    store.delete(REFRESH_TOKEN_STORE_KEY);
+
+    store
+        .save()
+        .map_err(|e| format!("Failed to save tokens store: {}", e))?;
+
+    log::info!("✅ Refresh token cleared");
+    Ok(())
 }
 
 #[tauri::command]
@@ -201,14 +382,28 @@ pub async fn login(
     server_url: String,
     username: String,
     password: String,
+    mfa_code: Option<String>,
     supabase_key: String,
     saas_server_url: String,
 ) -> Result<LoginResponse, String> {
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
 
-    // Create HTTP client
-    let client = reqwest::Client::new();
+    // Create HTTP client with certificate bypass
+    // This handles:
+    // - Self-signed certificates
+    // - Missing intermediate certificates
+    // - Certificate hostname mismatches
+    // Note: Rustls only supports TLS 1.2 and TLS 1.3
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(std::time::Duration::from_secs(30))
+        .user_agent("StirlingPDF-Desktop/1.0 Tauri")
+        .build()
+        .map_err(|e| {
+            log::error!("Failed to create HTTP client: {}", e);
+            format!("Failed to create HTTP client: {}", e)
+        })?;
 
     if is_supabase {
         // Supabase authentication flow
@@ -229,7 +424,24 @@ pub async fn login(
             .json(&request_body)
             .send()
             .await
-            .map_err(|e| format!("Network error: {}", e))?;
+            .map_err(|e| {
+                let error_msg = e.to_string();
+                let error_lower = error_msg.to_lowercase();
+                log::error!("Supabase login network error: {}", e);
+
+                // Detect TLS version mismatch
+                if error_lower.contains("peer is incompatible") ||
+                   error_lower.contains("protocol version") ||
+                   error_lower.contains("peerincompatible") ||
+                   (error_lower.contains("handshake") && (error_lower.contains("tls") || error_lower.contains("ssl"))) {
+                    format!(
+                        "TLS version not supported: The Supabase server appears to require an unsupported TLS version. \
+                        Please contact support. Technical details: {}", e
+                    )
+                } else {
+                    format!("Network error connecting to Supabase: {}", e)
+                }
+            })?;
 
         let status = response.status();
 
@@ -272,15 +484,57 @@ pub async fn login(
         let login_url = format!("{}/api/v1/auth/login", server_url.trim_end_matches('/'));
         log::debug!("Spring Boot login URL: {}", login_url);
 
+        let mut payload = serde_json::json!({
+            "username": username,
+            "password": password,
+        });
+
+        if let Some(code) = mfa_code
+            .as_ref()
+            .map(|c| c.trim())
+            .filter(|c| !c.is_empty())
+        {
+            payload["mfaCode"] = serde_json::Value::String(code.to_string());
+        }
+
         let response = client
             .post(&login_url)
-            .json(&serde_json::json!({
-                "username": username,
-                "password": password,
-            }))
+            .json(&payload)
             .send()
             .await
-            .map_err(|e| format!("Network error: {}", e))?;
+            .map_err(|e| {
+                let error_msg = e.to_string();
+                let error_lower = error_msg.to_lowercase();
+                log::error!("Spring Boot login network error: {}", e);
+
+                // Detect TLS version mismatch (server using TLS 1.0/1.1)
+                if error_lower.contains("peer is incompatible") ||
+                   error_lower.contains("protocol version") ||
+                   error_lower.contains("peerincompatible") ||
+                   (error_lower.contains("handshake") && (error_lower.contains("tls") || error_lower.contains("ssl"))) {
+                    format!(
+                        "TLS version not supported: The server appears to be using TLS 1.0 or TLS 1.1, which are not supported by this desktop app. \
+                        Please upgrade your server to use TLS 1.2 or higher, or use the web version of Stirling-PDF instead. \
+                        Technical details: {}", e
+                    )
+                // Other TLS/SSL errors (certificate issues)
+                } else if error_lower.contains("tls") || error_lower.contains("ssl") ||
+                   error_lower.contains("certificate") || error_lower.contains("decrypt") {
+                    format!(
+                        "TLS/SSL connection error: This usually means the server has certificate issues. \
+                        The desktop app accepts self-signed certificates, so this might be a TLS version issue. \
+                        Technical details: {}", e
+                    )
+                } else if error_lower.contains("connection refused") {
+                    format!("Connection refused: Server is not reachable at {}. Check if the server is running and the URL is correct.", login_url)
+                } else if error_lower.contains("timeout") {
+                    format!("Connection timeout: Server at {} is not responding. Check your network connection.", login_url)
+                } else if error_lower.contains("dns") || error_lower.contains("resolve") {
+                    format!("DNS resolution failed: Cannot resolve hostname. Check if the server URL is correct.")
+                } else {
+                    format!("Network error: {}", e)
+                }
+            })?;
 
         let status = response.status();
         log::debug!("Spring Boot login response status: {}", status);
@@ -291,6 +545,19 @@ pub async fn login(
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             log::error!("Spring Boot login failed with status {}: {}", status, error_text);
+
+            if let Ok(error_json) = serde_json::from_str::<serde_json::Value>(&error_text) {
+                let error_code = error_json
+                    .get("error")
+                    .and_then(|value| value.as_str())
+                    .map(|value| value.to_string());
+
+                if let Some(code) = error_code {
+                    if code == "mfa_required" || code == "invalid_mfa_code" {
+                        return Err(code);
+                    }
+                }
+            }
 
             return Err(if status.as_u16() == 401 {
                 "Invalid username or password".to_string()
@@ -319,8 +586,8 @@ pub async fn login(
 
 /// Generate PKCE code_verifier (random 43-128 character string)
 fn generate_code_verifier() -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
+    rand::rng()
+        .sample_iter(Alphanumeric)
         .take(128)
         .map(char::from)
         .collect()
@@ -476,7 +743,21 @@ async fn exchange_code_for_token(
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Exchanging authorization code for access token with PKCE");
 
-    let client = reqwest::Client::new();
+    // Create HTTP client with certificate bypass
+    // This handles:
+    // - Self-signed certificates
+    // - Missing intermediate certificates
+    // - Certificate hostname mismatches
+    // Note: Rustls only supports TLS 1.2 and TLS 1.3
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(std::time::Duration::from_secs(30))
+        .user_agent("StirlingPDF-Desktop/1.0 Tauri")
+        .build()
+        .map_err(|e| {
+            log::error!("Failed to create HTTP client: {}", e);
+            format!("Failed to create HTTP client: {}", e)
+        })?;
     // grant_type goes in query string, not body!
     let token_url = format!("{}/auth/v1/token?grant_type=pkce", auth_server_url.trim_end_matches('/'));
 
@@ -497,7 +778,24 @@ async fn exchange_code_for_token(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Failed to exchange code for token: {}", e))?;
+        .map_err(|e| {
+            let error_msg = e.to_string();
+            let error_lower = error_msg.to_lowercase();
+            log::error!("OAuth token exchange network error: {}", e);
+
+            // Detect TLS version mismatch
+            if error_lower.contains("peer is incompatible") ||
+               error_lower.contains("protocol version") ||
+               error_lower.contains("peerincompatible") ||
+               (error_lower.contains("handshake") && (error_lower.contains("tls") || error_lower.contains("ssl"))) {
+                format!(
+                    "TLS version not supported: The authentication server appears to require an unsupported TLS version. \
+                    Please contact support. Technical details: {}", e
+                )
+            } else {
+                format!("Failed to exchange code for token: {}", e)
+            }
+        })?;
 
     let status = response.status();
     if !status.is_success() {

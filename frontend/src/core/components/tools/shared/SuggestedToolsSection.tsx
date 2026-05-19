@@ -1,8 +1,8 @@
-import React from 'react';
-import { Stack, Text, Divider, Card, Group, Anchor } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useSuggestedTools } from '@app/hooks/useSuggestedTools';
-import { ToolIcon } from '@app/components/shared/ToolIcon';
+import React from "react";
+import { Stack, Text, Divider, Card, Group, Anchor } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useSuggestedTools } from "@app/hooks/useSuggestedTools";
+import { ToolIcon } from "@app/components/shared/ToolIcon";
 
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();
@@ -13,7 +13,7 @@ export function SuggestedToolsSection(): React.ReactElement {
       <Divider />
 
       <Text size="lg" fw={600}>
-        {t('editYourNewFiles', 'Edit your new file(s)')}
+        {t("editYourNewFiles", "Edit your new file(s)")}
       </Text>
 
       <Stack gap="xs">
@@ -24,13 +24,9 @@ export function SuggestedToolsSection(): React.ReactElement {
               key={tool.id}
               href={tool.href}
               onClick={tool.onClick}
-              style={{ textDecoration: 'none', color: 'inherit' }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
-              <Card
-                p="sm"
-                withBorder
-                style={{ cursor: 'pointer' }}
-              >
+              <Card p="sm" withBorder style={{ cursor: "pointer" }}>
                 <Group gap="xs">
                   <ToolIcon icon={<IconComponent />} />
                   <Text size="sm" fw={500}>

@@ -1,5 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionIcon, Box, Button, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Group,
+  Stack,
+  Text,
+  ScrollArea,
+  TextInput,
+} from "@mantine/core";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
@@ -59,7 +74,9 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
   }, [downloadUrl, downloadFilename]);
 
   const [lines, setLines] = useState<ShowJsToken[][]>([]);
-  const [blocks, setBlocks] = useState<Array<{ start: number; end: number }>>([]);
+  const [blocks, setBlocks] = useState<Array<{ start: number; end: number }>>(
+    [],
+  );
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -98,7 +115,9 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
 
   // Search
   const [query, setQuery] = useState("");
-  const [matches, setMatches] = useState<Array<{ line: number; start: number; end: number }>>([]);
+  const [matches, setMatches] = useState<
+    Array<{ line: number; start: number; end: number }>
+  >([]);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -125,7 +144,9 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
       }
     }
     if (scrollAreaInnerRef.current) {
-      const el = scrollAreaInnerRef.current.querySelector(`[data-code-line="${m.line}"]`) as HTMLElement | null;
+      const el = scrollAreaInnerRef.current.querySelector(
+        `[data-code-line="${m.line}"]`,
+      ) as HTMLElement | null;
       if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [active, matches, startToEnd, collapsed]);
@@ -149,7 +170,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               size="sm"
               variant="subtle"
               onClick={() => {
-                if (matches.length) setActive((p) => (p - 1 + matches.length) % matches.length);
+                if (matches.length)
+                  setActive((p) => (p - 1 + matches.length) % matches.length);
               }}
               aria-label={t("common.previous", "Previous")}
             >
@@ -184,7 +206,9 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               onClick={handleCopy}
               leftSection={<ContentCopyRoundedIcon fontSize="small" />}
             >
-              {copied ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
+              {copied
+                ? t("common.copied", "Copied!")
+                : t("common.copy", "Copy")}
             </Button>
           </Group>
         </div>
@@ -196,7 +220,9 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                 const end = startToEnd.get(ln);
                 const folded = end != null && collapsed.has(ln);
                 let pos = 0;
-                const lineMatches = matches.map((m, idx) => ({ ...m, idx })).filter((m) => m.line === ln);
+                const lineMatches = matches
+                  .map((m, idx) => ({ ...m, idx }))
+                  .filter((m) => m.line === ln);
                 const content: React.ReactNode[] = [];
                 tokens.forEach((tok, ti) => {
                   const textSeg = tok.text;
@@ -204,7 +230,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                   const tokenEnd = pos + textSeg.length;
 
                   if (!query || lineMatches.length === 0) {
-                    const cls = tok.type === "plain" ? undefined : `tok-${tok.type}`;
+                    const cls =
+                      tok.type === "plain" ? undefined : `tok-${tok.type}`;
                     content.push(
                       <span key={`t-${ln}-${ti}`} className={cls}>
                         {textSeg}
@@ -220,7 +247,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                     .sort((a, b) => a.start - b.start);
 
                   if (matchesInToken.length === 0) {
-                    const cls = tok.type === "plain" ? undefined : `tok-${tok.type}`;
+                    const cls =
+                      tok.type === "plain" ? undefined : `tok-${tok.type}`;
                     content.push(
                       <span key={`t-${ln}-${ti}`} className={cls}>
                         {textSeg}
@@ -231,11 +259,15 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                   }
 
                   let cursor = 0;
-                  const tokenCls = tok.type === "plain" ? "" : `tok-${tok.type}`;
+                  const tokenCls =
+                    tok.type === "plain" ? "" : `tok-${tok.type}`;
 
                   matchesInToken.forEach((m, mi) => {
                     const localStart = Math.max(0, m.start - tokenStart);
-                    const localEnd = Math.min(textSeg.length, m.end - tokenStart);
+                    const localEnd = Math.min(
+                      textSeg.length,
+                      m.end - tokenStart,
+                    );
 
                     // before match
                     if (localStart > cursor) {
@@ -250,10 +282,18 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                     // matched piece
                     const hitText = textSeg.slice(localStart, localEnd);
                     const hitCls =
-                      ["search-hit", m.idx === active ? "search-hit-active" : "", tokenCls].filter(Boolean).join(" ") ||
-                      undefined;
+                      [
+                        "search-hit",
+                        m.idx === active ? "search-hit-active" : "",
+                        tokenCls,
+                      ]
+                        .filter(Boolean)
+                        .join(" ") || undefined;
                     content.push(
-                      <span key={`t-${ln}-${ti}-h-${localStart}-${mi}`} className={hitCls}>
+                      <span
+                        key={`t-${ln}-${ti}-h-${localStart}-${mi}`}
+                        className={hitCls}
+                      >
                         {hitText}
                       </span>,
                     );
@@ -274,13 +314,21 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                   pos = tokenEnd;
                 });
                 return (
-                  <div key={`l-${ln}`} className="code-line" data-code-line={ln}>
+                  <div
+                    key={`l-${ln}`}
+                    className="code-line"
+                    data-code-line={ln}
+                  >
                     <div className="code-gutter">
                       {end != null ? (
                         <button
                           className={`fold-toggle ${folded ? "fold-collapsed" : ""}`}
                           onClick={() => toggleFold(ln)}
-                          aria-label={folded ? t("common.expand", "Expand") : t("common.collapse", "Collapse")}
+                          aria-label={
+                            folded
+                              ? t("common.expand", "Expand")
+                              : t("common.collapse", "Collapse")
+                          }
                         >
                           {folded ? "▸" : "▾"}
                         </button>
@@ -291,7 +339,9 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                     </div>
                     <div className="code-content">
                       {content}
-                      {folded && <span className="collapsed-inline">{"{...}"}</span>}
+                      {folded && (
+                        <span className="collapsed-inline">{"{...}"}</span>
+                      )}
                     </div>
                   </div>
                 );

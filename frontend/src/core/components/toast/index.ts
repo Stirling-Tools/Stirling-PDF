@@ -1,6 +1,10 @@
-import { ToastApi, ToastInstance, ToastOptions } from '@app/components/toast/types';
-import { useToast, ToastProvider } from '@app/components/toast/ToastContext';
-import ToastRenderer from '@app/components/toast/ToastRenderer';
+import {
+  ToastApi,
+  ToastInstance,
+  ToastOptions,
+} from "@app/components/toast/types";
+import { useToast, ToastProvider } from "@app/components/toast/ToastContext";
+import ToastRenderer from "@app/components/toast/ToastRenderer";
 
 export { useToast, ToastProvider, ToastRenderer };
 
@@ -15,7 +19,7 @@ function createImperativeApi() {
   return {
     provide(instance: ToastContextApi) {
       api = instance;
-      subscribers.splice(0).forEach(cb => cb(instance));
+      subscribers.splice(0).forEach((cb) => cb(instance));
     },
     get(): ToastContextApi | null {
       return api;
@@ -45,8 +49,10 @@ export function alert(options: ToastOptions) {
     return _api.get()!.show(options);
   }
   // Queue until provider mounts
-  let id = '';
-  _api?.onReady((api) => { id = api.show(options); });
+  let id = "";
+  _api?.onReady((api) => {
+    id = api.show(options);
+  });
   return id;
 }
 
@@ -65,4 +71,3 @@ export function dismissToast(id: string) {
 export function dismissAllToasts() {
   _api?.get()?.dismissAll();
 }
-

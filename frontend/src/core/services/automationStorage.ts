@@ -15,9 +15,9 @@ export interface AutomationConfig {
 }
 
 class AutomationStorage {
-  private dbName = 'StirlingPDF_Automations';
+  private dbName = "StirlingPDF_Automations";
   private dbVersion = 1;
-  private storeName = 'automations';
+  private storeName = "automations";
   private db: IDBDatabase | null = null;
 
   async init(): Promise<void> {
@@ -25,7 +25,7 @@ class AutomationStorage {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
       request.onerror = () => {
-        reject(new Error('Failed to open automation storage database'));
+        reject(new Error("Failed to open automation storage database"));
       };
 
       request.onsuccess = () => {
@@ -35,11 +35,11 @@ class AutomationStorage {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          store.createIndex('name', 'name', { unique: false });
-          store.createIndex('createdAt', 'createdAt', { unique: false });
+          const store = db.createObjectStore(this.storeName, { keyPath: "id" });
+          store.createIndex("name", "name", { unique: false });
+          store.createIndex("createdAt", "createdAt", { unique: false });
         }
       };
     });
@@ -49,27 +49,29 @@ class AutomationStorage {
     if (!this.db) {
       await this.init();
     }
-    
+
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
-    
+
     return this.db;
   }
 
-  async saveAutomation(automation: Omit<AutomationConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<AutomationConfig> {
+  async saveAutomation(
+    automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">,
+  ): Promise<AutomationConfig> {
     const db = await this.ensureDB();
     const timestamp = new Date().toISOString();
-    
+
     const automationWithMeta: AutomationConfig = {
       id: `automation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...automation,
       createdAt: timestamp,
-      updatedAt: timestamp
+      updatedAt: timestamp,
     };
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.add(automationWithMeta);
 
@@ -78,21 +80,23 @@ class AutomationStorage {
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to save automation'));
+        reject(new Error("Failed to save automation"));
       };
     });
   }
 
-  async updateAutomation(automation: AutomationConfig): Promise<AutomationConfig> {
+  async updateAutomation(
+    automation: AutomationConfig,
+  ): Promise<AutomationConfig> {
     const db = await this.ensureDB();
-    
+
     const updatedAutomation: AutomationConfig = {
       ...automation,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.put(updatedAutomation);
 
@@ -101,7 +105,7 @@ class AutomationStorage {
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to update automation'));
+        reject(new Error("Failed to update automation"));
       };
     });
   }
@@ -110,7 +114,7 @@ class AutomationStorage {
     const db = await this.ensureDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
 
@@ -119,7 +123,7 @@ class AutomationStorage {
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to get automation'));
+        reject(new Error("Failed to get automation"));
       };
     });
   }
@@ -128,19 +132,22 @@ class AutomationStorage {
     const db = await this.ensureDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readonly');
+      const transaction = db.transaction([this.storeName], "readonly");
       const store = transaction.objectStore(this.storeName);
       const request = store.getAll();
 
       request.onsuccess = () => {
         const automations = request.result || [];
         // Sort by creation date, newest first
-        automations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        automations.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
         resolve(automations);
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to get automations'));
+        reject(new Error("Failed to get automations"));
       };
     });
   }
@@ -149,7 +156,7 @@ class AutomationStorage {
     const db = await this.ensureDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], 'readwrite');
+      const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(id);
 
@@ -158,23 +165,27 @@ class AutomationStorage {
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to delete automation'));
+        reject(new Error("Failed to delete automation"));
       };
     });
   }
 
   async searchAutomations(query: string): Promise<AutomationConfig[]> {
     const automations = await this.getAllAutomations();
-    
+
     if (!query.trim()) {
       return automations;
     }
 
     const lowerQuery = query.toLowerCase();
-    return automations.filter(automation => 
-      automation.name.toLowerCase().includes(lowerQuery) ||
-      (automation.description && automation.description.toLowerCase().includes(lowerQuery)) ||
-      automation.operations.some(op => op.operation.toLowerCase().includes(lowerQuery))
+    return automations.filter(
+      (automation) =>
+        automation.name.toLowerCase().includes(lowerQuery) ||
+        (automation.description &&
+          automation.description.toLowerCase().includes(lowerQuery)) ||
+        automation.operations.some((op) =>
+          op.operation.toLowerCase().includes(lowerQuery),
+        ),
     );
   }
 }

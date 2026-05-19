@@ -1,13 +1,12 @@
 export interface SidebarState {
   sidebarsVisible: boolean;
-  leftPanelView: 'toolPicker' | 'toolContent';
+  leftPanelView: "toolPicker" | "toolContent";
   readerMode: boolean;
 }
 
 export interface SidebarRefs {
   quickAccessRef: React.RefObject<HTMLDivElement | null>;
   toolPanelRef: React.RefObject<HTMLDivElement | null>;
-  rightRailRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export interface SidebarInfo {
@@ -21,7 +20,9 @@ export interface SidebarContextValue {
   sidebarState: SidebarState;
   sidebarRefs: SidebarRefs;
   setSidebarsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  setLeftPanelView: React.Dispatch<React.SetStateAction<'toolPicker' | 'toolContent'>>;
+  setLeftPanelView: React.Dispatch<
+    React.SetStateAction<"toolPicker" | "toolContent">
+  >;
   setReaderMode: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -34,7 +35,7 @@ export interface ButtonConfig {
   name: string;
   icon: React.ReactNode;
   isRound?: boolean;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: "sm" | "md" | "lg" | "xl";
   onClick: () => void;
-  type?: 'navigation' | 'modal' | 'action';
+  type?: "navigation" | "modal" | "action";
 }

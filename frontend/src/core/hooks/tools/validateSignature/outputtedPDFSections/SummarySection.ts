@@ -1,24 +1,31 @@
-import type { TFunction } from 'i18next';
-import { PDFFont, PDFImage, PDFPage } from 'pdf-lib';
-import { SignatureValidationReportEntry } from '@app/types/validateSignature';
-import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
-import { drawThumbnailImage, drawThumbnailPlaceholder } from '@app/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
-import { formatFileSize } from '@app/hooks/tools/validateSignature/utils/pdfText';
+import type { TFunction } from "i18next";
+import {
+  PdfiumFont,
+  PdfiumImage,
+  PdfiumPage,
+} from "@app/services/pdfiumDocBuilder";
+import { SignatureValidationReportEntry } from "@app/types/validateSignature";
+import { drawFieldBox } from "@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
+import {
+  drawThumbnailImage,
+  drawThumbnailPlaceholder,
+} from "@app/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+import { formatFileSize } from "@app/hooks/tools/validateSignature/utils/pdfText";
 
 interface DrawSummarySectionOptions {
-  page: PDFPage;
+  page: PdfiumPage;
   cursorY: number;
   entry: SignatureValidationReportEntry;
-  font: PDFFont;
-  fontBold: PDFFont;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   marginX: number;
   contentWidth: number;
   columnGap: number;
   statusText: string;
-  statusColor: (typeof colorPalette)['success'];
-  loadThumbnail: (url: string) => Promise<{ image: PDFImage } | null>;
-  t: TFunction<'translation'>;
+  statusColor: (typeof colorPalette)["success"];
+  loadThumbnail: (url: string) => Promise<{ image: PdfiumImage } | null>;
+  t: TFunction<"translation">;
 }
 
 export const drawSummarySection = async ({
@@ -49,7 +56,7 @@ export const drawSummarySection = async ({
 
   const latestSignatureLabel = latestSignatureTimestamp.length
     ? new Date(Math.max(...latestSignatureTimestamp)).toLocaleString()
-    : '--';
+    : "--";
 
   const titleBaseline = summaryTop - 12 - titleFontSize;
   page.drawText(entry.fileName, {
@@ -60,7 +67,10 @@ export const drawSummarySection = async ({
     color: colorPalette.textPrimary,
   });
 
-  const subtitle = t('validateSignature.report.shortTitle', 'Signature Summary');
+  const subtitle = t(
+    "validateSignature.report.shortTitle",
+    "Signature Summary",
+  );
   const subtitleBaseline = titleBaseline - subtitleFontSize - 6;
   page.drawText(subtitle, {
     x: summaryX,
@@ -77,12 +87,30 @@ export const drawSummarySection = async ({
     }>
   > = [
     [
-      { label: t('validateSignature.report.fields.fileSize', 'File Size'), value: formatFileSize(entry.fileSize) },
-      { label: t('validateSignature.report.fields.created', 'Created'), value: entry.createdAtLabel ?? '--' },
+      {
+        label: t("validateSignature.report.fields.fileSize", "File Size"),
+        value: formatFileSize(entry.fileSize),
+      },
+      {
+        label: t("validateSignature.report.fields.created", "Created"),
+        value: entry.createdAtLabel ?? "--",
+      },
     ],
     [
-      { label: t('validateSignature.report.fields.signatureDate', 'Signature Date'), value: latestSignatureLabel },
-      { label: t('validateSignature.report.fields.signatureCount', 'Total Signatures'), value: entry.signatures.length.toString() },
+      {
+        label: t(
+          "validateSignature.report.fields.signatureDate",
+          "Signature Date",
+        ),
+        value: latestSignatureLabel,
+      },
+      {
+        label: t(
+          "validateSignature.report.fields.signatureCount",
+          "Total Signatures",
+        ),
+        value: entry.signatures.length.toString(),
+      },
     ],
   ];
 
@@ -94,7 +122,9 @@ export const drawSummarySection = async ({
     const singleColumn = fields.length === 1;
     fields.forEach((field, index) => {
       const fieldWidth = singleColumn ? summaryWidth : summaryColumnWidth;
-      const x = singleColumn ? summaryX : summaryX + index * (summaryColumnWidth + columnGap);
+      const x = singleColumn
+        ? summaryX
+        : summaryX + index * (summaryColumnWidth + columnGap);
       const fieldHeight = drawFieldBox({
         page,
         font,
@@ -131,12 +161,33 @@ export const drawSummarySection = async ({
         borderColor: colorPalette.boxBorder,
         borderWidth: 1,
       });
-      drawThumbnailImage(page, thumbnail.image, thumbX, thumbTop, thumbnailWidth, thumbnailHeight);
+      drawThumbnailImage(
+        page,
+        thumbnail.image,
+        thumbX,
+        thumbTop,
+        thumbnailWidth,
+        thumbnailHeight,
+      );
     } else {
-      drawThumbnailPlaceholder(page, fontBold, thumbX, thumbTop, thumbnailWidth, thumbnailHeight);
+      drawThumbnailPlaceholder(
+        page,
+        fontBold,
+        thumbX,
+        thumbTop,
+        thumbnailWidth,
+        thumbnailHeight,
+      );
     }
   } else {
-    drawThumbnailPlaceholder(page, fontBold, thumbX, thumbTop, thumbnailWidth, thumbnailHeight);
+    drawThumbnailPlaceholder(
+      page,
+      fontBold,
+      thumbX,
+      thumbTop,
+      thumbnailWidth,
+      thumbnailHeight,
+    );
   }
 
   const summarySectionHeight = Math.max(thumbnailHeight, rightContentHeight);

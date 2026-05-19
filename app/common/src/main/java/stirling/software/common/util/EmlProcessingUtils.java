@@ -1,5 +1,7 @@
 package stirling.software.common.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -8,32 +10,41 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 
+import lombok.Synchronized;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 
+@Slf4j
 @UtilityClass
 public class EmlProcessingUtils {
 
     // Style constants
-    private static final int DEFAULT_FONT_SIZE = 12;
-    private static final String DEFAULT_FONT_FAMILY = "Helvetica, sans-serif";
-    private static final float DEFAULT_LINE_HEIGHT = 1.4f;
-    private static final String DEFAULT_ZOOM = "1.0";
-    private static final String DEFAULT_TEXT_COLOR = "#202124";
-    private static final String DEFAULT_BACKGROUND_COLOR = "#ffffff";
-    private static final String DEFAULT_BORDER_COLOR = "#e8eaed";
-    private static final String ATTACHMENT_BACKGROUND_COLOR = "#f9f9f9";
-    private static final String ATTACHMENT_BORDER_COLOR = "#eeeeee";
+    private final int DEFAULT_FONT_SIZE = 12;
+    private final String DEFAULT_FONT_FAMILY = "Helvetica, sans-serif";
+    private final float DEFAULT_LINE_HEIGHT = 1.4f;
+    private final String DEFAULT_ZOOM = "1.0";
+    private final String DEFAULT_TEXT_COLOR = "#202124";
+    private final String DEFAULT_BACKGROUND_COLOR = "#ffffff";
+    private final String DEFAULT_BORDER_COLOR = "#e8eaed";
+    private final String ATTACHMENT_BACKGROUND_COLOR = "#f9f9f9";
+    private final String ATTACHMENT_BORDER_COLOR = "#eeeeee";
 
-    private static final int EML_CHECK_LENGTH = 8192;
-    private static final int MIN_HEADER_COUNT_FOR_VALID_EML = 2;
-
-    // MIME type detection
-    private static final Map<String, String> EXTENSION_TO_MIME_TYPE =
+    private final String CSS_RESOURCE_PATH = "templates/email-pdf-styles.css";
+    private final int EML_CHECK_LENGTH = 8192;
+    private final int MIN_HEADER_COUNT_FOR_VALID_EML = 2;
+    // MSG file magic bytes (Compound File Binary Format / OLE2)
+    // D0 CF 11 E0 A1 B1 1A E1
+    private final byte[] MSG_MAGIC_BYTES = {
+        (byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0,
+        (byte) 0xA1, (byte) 0xB1, (byte) 0x1A, (byte) 0xE1
+    };
+    private final Map<String, String> EXTENSION_TO_MIME_TYPE =
             Map.of(
                     ".png", MediaType.IMAGE_PNG_VALUE,
                     ".jpg", MediaType.IMAGE_JPEG_VALUE,
@@ -45,10 +56,15 @@ public class EmlProcessingUtils {
                     ".ico", "image/x-icon",
                     ".tiff", "image/tiff",
                     ".tif", "image/tiff");
+    private volatile String cachedCssContent = null;
 
-    public static void validateEmlInput(byte[] emlBytes) {
+    public void validateEmlInput(byte[] emlBytes) {
         if (emlBytes == null || emlBytes.length == 0) {
             throw ExceptionUtils.createEmlEmptyException();
+        }
+
+        if (isMsgFile(emlBytes)) {
+            return; // Valid MSG file, no further EML validation needed
         }
 
         if (isInvalidEmlFormat(emlBytes)) {
@@ -56,7 +72,20 @@ public class EmlProcessingUtils {
         }
     }
 
-    private static boolean isInvalidEmlFormat(byte[] emlBytes) {
+    public boolean isMsgFile(byte[] fileBytes) {
+        if (fileBytes == null || fileBytes.length < MSG_MAGIC_BYTES.length) {
+            return false;
+        }
+
+        for (int i = 0; i < MSG_MAGIC_BYTES.length; i++) {
+            if (fileBytes[i] != MSG_MAGIC_BYTES[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isInvalidEmlFormat(byte[] emlBytes) {
         try {
             int checkLength = Math.min(emlBytes.length, EML_CHECK_LENGTH);
             String content;
@@ -101,7 +130,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String generateEnhancedEmailHtml(
+    public String generateEnhancedEmailHtml(
             EmlParser.EmailContent content,
             EmlToPdfRequest request,
             CustomHtmlSanitizer customHtmlSanitizer) {
@@ -145,7 +174,7 @@ public class EmlProcessingUtils {
             html.append(
                     String.format(
                             Locale.ROOT,
-                            "<div><strong>CC:</strong> %s</div>\n",
+                            "<div><strong>CC:</strong> %s</div>%n",
                             sanitizeText(content.getCc(), customHtmlSanitizer)));
         }
 
@@ -153,7 +182,7 @@ public class EmlProcessingUtils {
             html.append(
                     String.format(
                             Locale.ROOT,
-                            "<div><strong>BCC:</strong> %s</div>\n",
+                            "<div><strong>BCC:</strong> %s</div>%n",
                             sanitizeText(content.getBcc(), customHtmlSanitizer)));
         }
 
@@ -161,19 +190,19 @@ public class EmlProcessingUtils {
             html.append(
                     String.format(
                             Locale.ROOT,
-                            "<div><strong>Date:</strong> %s</div>\n",
+                            "<div><strong>Date:</strong> %s</div>%n",
                             PdfAttachmentHandler.formatEmailDate(content.getDate())));
         } else if (content.getDateString() != null && !content.getDateString().trim().isEmpty()) {
             html.append(
                     String.format(
                             Locale.ROOT,
-                            "<div><strong>Date:</strong> %s</div>\n",
+                            "<div><strong>Date:</strong> %s</div>%n",
                             sanitizeText(content.getDateString(), customHtmlSanitizer)));
         }
 
-        html.append("</div></div>\n");
+        html.append(String.format(Locale.ROOT, "</div></div>%n"));
 
-        html.append("<div class=\"email-body\">\n");
+        html.append(String.format(Locale.ROOT, "<div class=\"email-body\">%n"));
         if (content.getHtmlBody() != null && !content.getHtmlBody().trim().isEmpty()) {
             String processedHtml =
                     processEmailHtmlBody(content.getHtmlBody(), content, customHtmlSanitizer);
@@ -187,17 +216,17 @@ public class EmlProcessingUtils {
         } else {
             html.append("<div class=\"no-content\"><p><em>No content available</em></p></div>");
         }
-        html.append("</div>\n");
+        html.append(String.format(Locale.ROOT, "</div>%n"));
 
         if (content.getAttachmentCount() > 0 || !content.getAttachments().isEmpty()) {
-            appendAttachmentsSection(html, content, request, customHtmlSanitizer);
+            appendAttachmentsSection(html, content, request);
         }
 
-        html.append("</div>\n</body></html>");
+        html.append(String.format(Locale.ROOT, "</div>%n</body></html>"));
         return html.toString();
     }
 
-    public static String processEmailHtmlBody(
+    public String processEmailHtmlBody(
             String htmlBody,
             EmlParser.EmailContent emailContent,
             CustomHtmlSanitizer customHtmlSanitizer) {
@@ -224,8 +253,7 @@ public class EmlProcessingUtils {
         return processed;
     }
 
-    public static String convertTextToHtml(
-            String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
+    public String convertTextToHtml(String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
         if (textBody == null) return "";
 
         String html =
@@ -255,129 +283,25 @@ public class EmlProcessingUtils {
         return html;
     }
 
-    private static void appendEnhancedStyles(StringBuilder html) {
-        String css =
+    private void appendEnhancedStyles(StringBuilder html) {
+        html.append(
                 String.format(
                         Locale.ROOT,
                         """
-                        body {
-                          font-family: %s;
-                          font-size: %dpx;
-                          line-height: %s;
-                          color: %s;
-                          margin: 0;
-                          padding: 16px;
-                          background-color: %s;
-                        }
-
-                        .email-container {
-                          width: 100%%;
-                          max-width: 100%%;
-                          margin: 0 auto;
-                        }
-
-                        .email-header {
-                          padding-bottom: 10px;
-                          border-bottom: 1px solid %s;
-                          margin-bottom: 10px;
-                        }
-
-                        .email-header h1 {
-                          margin: 0 0 10px 0;
-                          font-size: %dpx;
-                          font-weight: bold;
-                        }
-
-                        .email-meta div {
-                          margin-bottom: 2px;
-                          font-size: %dpx;
-                        }
-
-                        .email-body {
-                          word-wrap: break-word;
-                        }
-
-                        .attachment-section {
-                          margin-top: 15px;
-                          padding: 10px;
-                          background-color: %s;
-                          border: 1px solid %s;
-                          border-radius: 3px;
-                        }
-
-                        .attachment-section h3 {
-                          margin: 0 0 8px 0;
-                          font-size: %dpx;
-                        }
-
-                        .attachment-item {
-                          padding: 5px 0;
-                        }
-
-                        .attachment-icon {
-                          margin-right: 5px;
-                        }
-
-                        .attachment-details, .attachment-type {
-                          font-size: %dpx;
-                          color: #555555;
-                        }
-
-                        .attachment-inclusion-note, .attachment-info-note {
-                          margin-top: 8px;
-                          padding: 6px;
-                          font-size: %dpx;
-                          border-radius: 3px;
-                        }
-
-                        .attachment-inclusion-note {
-                          background-color: #e6ffed;
-                          border: 1px solid #d4f7dc;
-                          color: #006420;
-                        }
-
-                        .attachment-info-note {
-                          background-color: #fff9e6;
-                          border: 1px solid #fff0c2;
-                          color: #664d00;
-                        }
-
-                        .attachment-link-container {
-                          display: flex;
-                          align-items: center;
-                          padding: 8px;
-                          background-color: #f8f9fa;
-                          border: 1px solid #dee2e6;
-                          border-radius: 4px;
-                          margin: 4px 0;
-                        }
-
-                        .attachment-link-container:hover {
-                          background-color: #e9ecef;
-                        }
-
-                        .attachment-note {
-                          font-size: %dpx;
-                          color: #6c757d;
-                          font-style: italic;
-                          margin-left: 8px;
-                        }
-
-                        .no-content {
-                          padding: 20px;
-                          text-align: center;
-                          color: #666;
-                          font-style: italic;
-                        }
-
-                        .text-body {
-                          white-space: pre-wrap;
-                        }
-
-                        img {
-                          max-width: 100%%;
-                          height: auto;
-                          display: block;
+                        :root {
+                          --font-family: %s;
+                          --font-size: %dpx;
+                          --line-height: %s;
+                          --text-color: %s;
+                          --bg-color: %s;
+                          --border-color: %s;
+                          --header-font-size: %dpx;
+                          --meta-font-size: %dpx;
+                          --attachment-bg: %s;
+                          --attachment-border: %s;
+                          --attachment-header-size: %dpx;
+                          --attachment-detail-size: %dpx;
+                          --note-font-size: %dpx;
                         }
                         """,
                         DEFAULT_FONT_FAMILY,
@@ -386,29 +310,70 @@ public class EmlProcessingUtils {
                         DEFAULT_TEXT_COLOR,
                         DEFAULT_BACKGROUND_COLOR,
                         DEFAULT_BORDER_COLOR,
-                        DEFAULT_FONT_SIZE + 4,
-                        DEFAULT_FONT_SIZE - 1,
+                        DEFAULT_FONT_SIZE + 6,
+                        DEFAULT_FONT_SIZE,
                         ATTACHMENT_BACKGROUND_COLOR,
                         ATTACHMENT_BORDER_COLOR,
-                        DEFAULT_FONT_SIZE + 1,
-                        DEFAULT_FONT_SIZE - 2,
-                        DEFAULT_FONT_SIZE - 2,
-                        DEFAULT_FONT_SIZE - 3);
+                        DEFAULT_FONT_SIZE + 2,
+                        DEFAULT_FONT_SIZE - 1,
+                        DEFAULT_FONT_SIZE - 1));
 
-        html.append(css);
+        html.append(loadEmailStyles());
     }
 
-    private static void appendAttachmentsSection(
-            StringBuilder html,
-            EmlParser.EmailContent content,
-            EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer) {
-        html.append("<div class=\"attachment-section\">\n");
+    @Synchronized
+    private String loadEmailStyles() {
+        if (cachedCssContent != null) {
+            return cachedCssContent;
+        }
+
+        try {
+            ClassPathResource resource = new ClassPathResource(CSS_RESOURCE_PATH);
+            try (InputStream inputStream = resource.getInputStream()) {
+                cachedCssContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                return cachedCssContent;
+            }
+        } catch (IOException e) {
+            log.warn("Failed to load email CSS from resource, using fallback: {}", e.getMessage());
+            cachedCssContent = getFallbackStyles(); // Cache fallback to avoid repeated attempts
+            return cachedCssContent;
+        }
+    }
+
+    private String getFallbackStyles() {
+        return """
+            /* Minimal fallback - main CSS resource failed to load */
+            body {
+                font-family: var(--font-family, Helvetica, sans-serif);
+                font-size: var(--font-size, 12px);
+                line-height: var(--line-height, 1.4);
+                color: var(--text-color, #202124);
+                margin: 0;
+                padding: 20px;
+                word-wrap: break-word;
+            }
+            .email-container { max-width: 100%; }
+            .email-header { border-bottom: 1px solid #ccc; margin-bottom: 16px; padding-bottom: 12px; }
+            .email-header h1 { margin: 0 0 8px 0; font-size: 18px; }
+            .email-meta { font-size: 12px; color: #666; }
+            .email-body { line-height: 1.6; }
+            .attachment-section { margin-top: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; }
+            .attachment-item { padding: 6px 0; border-bottom: 1px solid #ddd; }
+            .no-content { padding: 20px; text-align: center; color: #888; font-style: italic; }
+            img { max-width: 100%; height: auto; }
+            """;
+    }
+
+    private void appendAttachmentsSection(
+            StringBuilder html, EmlParser.EmailContent content, EmlToPdfRequest request) {
+        html.append(String.format(Locale.ROOT, "<div class=\"attachment-section\">%n"));
         int displayedAttachmentCount =
                 content.getAttachmentCount() > 0
                         ? content.getAttachmentCount()
                         : content.getAttachments().size();
-        html.append("<h3>Attachments (").append(displayedAttachmentCount).append(")</h3>\n");
+        html.append(
+                String.format(
+                        Locale.ROOT, "<h3>Attachments (%d)</h3>%n", displayedAttachmentCount));
 
         if (!content.getAttachments().isEmpty()) {
             for (int i = 0; i < content.getAttachments().size(); i++) {
@@ -461,10 +426,10 @@ public class EmlProcessingUtils {
                     </div>
                     """);
         }
-        html.append("</div>\n");
+        html.append(String.format(Locale.ROOT, "</div>%n"));
     }
 
-    public static HTMLToPdfRequest createHtmlRequest(EmlToPdfRequest request) {
+    public HTMLToPdfRequest createHtmlRequest(EmlToPdfRequest request) {
         HTMLToPdfRequest htmlRequest = new HTMLToPdfRequest();
 
         if (request != null) {
@@ -475,7 +440,7 @@ public class EmlProcessingUtils {
         return htmlRequest;
     }
 
-    public static String detectMimeType(String filename, String existingMimeType) {
+    public String detectMimeType(String filename, String existingMimeType) {
         if (existingMimeType != null && !existingMimeType.isEmpty()) {
             return existingMimeType;
         }
@@ -492,7 +457,7 @@ public class EmlProcessingUtils {
         return MediaType.IMAGE_PNG_VALUE; // Default MIME type
     }
 
-    public static String decodeUrlEncoded(String encoded) {
+    public String decodeUrlEncoded(String encoded) {
         try {
             return java.net.URLDecoder.decode(encoded, StandardCharsets.UTF_8);
         } catch (Exception e) {
@@ -500,7 +465,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String decodeMimeHeader(String encodedText) {
+    public String decodeMimeHeader(String encodedText) {
         if (encodedText == null || encodedText.trim().isEmpty()) {
             return encodedText;
         }
@@ -566,7 +531,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    private static String decodeQuotedPrintable(String encodedText, String charset) {
+    private String decodeQuotedPrintable(String encodedText, String charset) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < encodedText.length(); i++) {
             char c = encodedText.charAt(i);
@@ -609,7 +574,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String escapeHtml(String text) {
+    public String escapeHtml(String text) {
         if (text == null) return "";
         return text.replace("&", "&amp;")
                 .replace("<", "&lt;")
@@ -618,7 +583,7 @@ public class EmlProcessingUtils {
                 .replace("'", "&#39;");
     }
 
-    public static String sanitizeText(String text, CustomHtmlSanitizer customHtmlSanitizer) {
+    public String sanitizeText(String text, CustomHtmlSanitizer customHtmlSanitizer) {
         if (customHtmlSanitizer != null) {
             return customHtmlSanitizer.sanitize(text);
         } else {
@@ -626,7 +591,7 @@ public class EmlProcessingUtils {
         }
     }
 
-    public static String simplifyHtmlContent(String htmlContent) {
+    public String simplifyHtmlContent(String htmlContent) {
         String simplified =
                 RegexPatternUtils.getInstance()
                         .getScriptTagPattern()

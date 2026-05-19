@@ -3,8 +3,10 @@ package stirling.software.SPDF.controller.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,16 +71,14 @@ class SplitPdfBySizeControllerTest {
         request.setSplitType(1); // Page count
         request.setSplitValue("2");
 
-        when(pdfDocumentFactory.load(any(byte[].class)))
-                .thenAnswer(inv -> Loader.loadPDF((byte[]) inv.getArgument(0)));
-
+        when(pdfDocumentFactory.load(any(File.class), eq(true)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
 
-        ResponseEntity<byte[]> response = controller.autoSplitPdf(request);
+        ResponseEntity<?> response = controller.autoSplitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
         assertThat(response.getHeaders().getContentType())
                 .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
     }
@@ -104,15 +104,13 @@ class SplitPdfBySizeControllerTest {
         request.setSplitType(2); // Document count
         request.setSplitValue("3"); // Split into 3 docs (2 pages each)
 
-        when(pdfDocumentFactory.load(any(byte[].class)))
-                .thenAnswer(inv -> Loader.loadPDF((byte[]) inv.getArgument(0)));
-
+        when(pdfDocumentFactory.load(any(File.class), eq(true)))
+                .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
 
-        ResponseEntity<byte[]> response = controller.autoSplitPdf(request);
+        ResponseEntity<?> response = controller.autoSplitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
     }
 }

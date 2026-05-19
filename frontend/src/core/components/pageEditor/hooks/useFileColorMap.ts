@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { FileId } from '@app/types/file';
+import { useMemo, useRef } from "react";
+import { FileId } from "@app/types/file";
 
 /**
  * Maintains stable color assignments for a collection of file IDs.
@@ -8,7 +8,7 @@ import { FileId } from '@app/types/file';
 export function useFileColorMap(fileIds: FileId[]): Map<FileId, number> {
   const assignmentsRef = useRef(new Map<FileId, number>());
 
-  const serializedIds = useMemo(() => fileIds.join(','), [fileIds]);
+  const serializedIds = useMemo(() => fileIds.join(","), [fileIds]);
 
   return useMemo(() => {
     const assignments = assignmentsRef.current;

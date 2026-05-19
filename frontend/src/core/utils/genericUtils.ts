@@ -25,7 +25,7 @@ export function addEventListenerWithCleanup(
   target: EventTarget,
   event: string,
   handler: EventListener,
-  options?: boolean | AddEventListenerOptions
+  options?: boolean | AddEventListenerOptions,
 ): () => void {
   target.addEventListener(event, handler, options);
   return () => target.removeEventListener(event, handler, options);
@@ -37,6 +37,9 @@ export function addEventListenerWithCleanup(
  * @param element - The element to check against
  * @returns True if the click was outside the element
  */
-export function isClickOutside(event: MouseEvent, element: HTMLElement | null): boolean {
+export function isClickOutside(
+  event: MouseEvent,
+  element: HTMLElement | null,
+): boolean {
   return element ? !element.contains(event.target as Node) : true;
 }

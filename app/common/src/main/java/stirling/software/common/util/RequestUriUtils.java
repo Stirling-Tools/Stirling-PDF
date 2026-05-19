@@ -38,12 +38,12 @@ public class RequestUriUtils {
         }
 
         // Specific static files bundled with the frontend
-        if (normalizedUri.equals("/robots.txt")
-                || normalizedUri.equals("/favicon.ico")
-                || normalizedUri.equals("/manifest.json")
-                || normalizedUri.equals("/site.webmanifest")
-                || normalizedUri.equals("/manifest-classic.json")
-                || normalizedUri.equals("/index.html")) {
+        if ("/robots.txt".equals(normalizedUri)
+                || "/favicon.ico".equals(normalizedUri)
+                || "/manifest.json".equals(normalizedUri)
+                || "/site.webmanifest".equals(normalizedUri)
+                || "/manifest-classic.json".equals(normalizedUri)
+                || "/index.html".equals(normalizedUri)) {
             return true;
         }
 
@@ -86,7 +86,6 @@ public class RequestUriUtils {
         // Blocklist of backend/non-frontend paths that should still go through filters
         String[] backendOnlyPrefixes = {
             "/register",
-            "/invite",
             "/pipeline",
             "/pdfjs",
             "/pdfjs-legacy",
@@ -173,9 +172,19 @@ public class RequestUriUtils {
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
+                // Health Endoints
+                || trimmedUri.startsWith("/actuator/health")
+                || trimmedUri.startsWith("/health")
+                || trimmedUri.startsWith("/healthz")
+                || trimmedUri.startsWith("/liveness")
+                || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
-                || trimmedUri.startsWith("/v1/api-docs");
+                || trimmedUri.startsWith("/v1/api-docs")
+                // Workflow participant endpoints — access controlled by share tokens, not login
+                || trimmedUri.startsWith("/api/v1/workflow/participant/")
+                // Share-link SPA bootstrap; data APIs remain protected
+                || trimmedUri.matches("^/share/[^/]+/?$");
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

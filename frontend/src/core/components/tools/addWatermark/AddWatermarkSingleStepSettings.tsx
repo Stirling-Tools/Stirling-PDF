@@ -16,17 +16,26 @@ import WatermarkFormatting from "@app/components/tools/addWatermark/WatermarkFor
 
 interface AddWatermarkSingleStepSettingsProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(
+    key: K,
+    value: AddWatermarkParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const AddWatermarkSingleStepSettings = ({ parameters, onParameterChange, disabled = false }: AddWatermarkSingleStepSettingsProps) => {
+const AddWatermarkSingleStepSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: AddWatermarkSingleStepSettingsProps) => {
   return (
     <Stack gap="lg">
       {/* Watermark Type Selection */}
       <WatermarkTypeSettings
         watermarkType={parameters.watermarkType}
-        onWatermarkTypeChange={(type) => onParameterChange("watermarkType", type)}
+        onWatermarkTypeChange={(type) =>
+          onParameterChange("watermarkType", type)
+        }
         disabled={disabled}
       />
 
