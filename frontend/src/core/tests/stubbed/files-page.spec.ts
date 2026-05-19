@@ -15,8 +15,6 @@ import type { Page, Route } from "@playwright/test";
 // shape as StirlingFileStub minus the File data blob (the file manager
 // only needs the stub to render the grid; opening / downloading would
 // need the blob too).
-const STUB_LOCAL_FILE_ID = "stub-local-001";
-const STUB_CLOUD_FILE_ID = "stub-cloud-001";
 
 interface SeedFile {
   id: string;
@@ -193,7 +191,9 @@ test.describe("Files page", () => {
 
       // 2+ selected: checkboxes appear on every file card.
       await cards.nth(1).click({ modifiers: ["Control"] });
-      await expect(page.locator(".files-page-card-selector").first()).toBeVisible();
+      await expect(
+        page.locator(".files-page-card-selector").first(),
+      ).toBeVisible();
     });
 
     test("Select all tooltip explains Ctrl/Shift shortcuts", async ({
@@ -360,9 +360,7 @@ test.describe("Files page", () => {
       // nothing. draggable={false} on the thumb img makes the card-
       // level handler the sole authority on drag intent.
       await gotoFilesPage(page);
-      const thumbImg = page
-        .locator(".files-page-card-thumb img")
-        .first();
+      const thumbImg = page.locator(".files-page-card-thumb img").first();
       if ((await thumbImg.count()) === 0) {
         test.skip(
           true,
