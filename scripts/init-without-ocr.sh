@@ -887,8 +887,8 @@ fi
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
 log "Setting permissions..."
-mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline || true
-CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/tmp/stirling-pdf" "/app.jar")
+mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline /storage || true
+CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
 CHOWN_OK=true
 for p in "${CHOWN_PATHS[@]}"; do
@@ -899,7 +899,7 @@ for p in "${CHOWN_PATHS[@]}"; do
 done
 
 # Verify write access to critical directories; repair if chown failed on bind mounts
-CRITICAL_DIRS=("/configs" "/logs" "/customFiles" "/pipeline")
+CRITICAL_DIRS=("/configs" "/logs" "/customFiles" "/pipeline" "/storage")
 for dir in "${CRITICAL_DIRS[@]}"; do
   if [ -d "$dir" ]; then
     # Test write access as the runtime user
