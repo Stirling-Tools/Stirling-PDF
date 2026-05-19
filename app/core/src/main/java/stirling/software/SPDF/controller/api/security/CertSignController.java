@@ -153,10 +153,6 @@ public class CertSignController {
             }
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
-            if (e instanceof RuntimeException re) {
-                throw re;
-            }
-            throw new RuntimeException("Failed to sign PDF", e);
         }
     }
 
