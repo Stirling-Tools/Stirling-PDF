@@ -1806,7 +1806,11 @@ title = "Розумне перейменування"
 [automate]
 copyToSaved = "Копіювати до збережених"
 desc = "Створюйте багатокрокові процеси, поєднуючи дії з PDF. Ідеально для повторюваних завдань."
+export = "Експортувати"
 exportForFolderScanning = "Експорт для сканування папок"
+import = "Імпортувати"
+importPartialSuccess = "Імпортовано з {{count}} незіставленими операціями: {{ops}}"
+importSuccess = "Імпортовано автоматизацію: {{name}}"
 invalidStep = "Некоректний крок"
 reviewTitle = "Результати автоматизації"
 title = "Автоматизація"
@@ -1822,6 +1826,7 @@ title = "Налаштувати {{toolName}}"
 [automate.creation]
 createTitle = "Створити автоматизацію"
 editTitle = "Редагувати автоматизацію"
+export = "Експортувати"
 exportForFolderScanning = "Експорт для сканування папок"
 intro = "Автоматизації запускають інструменти послідовно. Щоб почати, додайте інструменти в порядку їх виконання."
 save = "Зберегти автоматизацію"
@@ -1852,8 +1857,27 @@ confirm = "Повернутися"
 message = "У вас є незбережені зміни. Ви впевнені, що хочете повернутися? Усі зміни буде втрачено."
 title = "Незбережені зміни"
 
+[automate.entryMenu]
+label = "Відкрити меню для {{title}}"
+
 [automate.files]
 placeholder = "Виберіть файли для обробки цією автоматизацією"
+
+[automate.importModal]
+cancel = "Скасувати"
+confirm = "Імпортувати"
+detectedAutomation = "JSON автоматизації"
+detectedFolderScan = "JSON сканування папок"
+dropHint = "Перетягніть JSON сюди або натисніть, щоб вибрати файл"
+dropSubhint = "Приймаються конфігурації як Автоматизації, так і Сканування папок"
+dropzoneAriaLabel = "Перетягніть сюди файл JSON автоматизації"
+intro = "Перетягніть файл JSON або вставте його вміст нижче. Формат (Автоматизація чи Сканування папок) визначається автоматично."
+opCount = "{{count}} операцій"
+parseError = "Не вдалося розібрати: {{message}}"
+pasteLabel = "Або вставте JSON"
+pastePlaceholder = "Вставте сюди ваш JSON автоматизації…"
+title = "Імпорт автоматизації"
+unresolved = "Незіставлені: {{ops}}"
 
 [automate.run]
 title = "Запустити автоматизацію"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Запускаю {{tool}} (крок {{step}} із {{total
 extracting_content = "Витягую вміст з ваших документів..."
 processing = "Обробляю витягнутий вміст..."
 thinking = "Думаю..."
+whole_doc_compression_round = "Об’єднання нотаток..."
+whole_doc_read_done = "Завершено читання документа..."
+whole_doc_read_started = "Читання документа..."
+whole_doc_slice_done = "Читання документа... ({{percent}}% виконано)"
 
 [chat.toolsUsed]
 summary = "Запущено {{count}} інструментів"
@@ -2712,6 +2740,7 @@ used = "використано"
 [compare]
 addFilesHint = "Додайте PDF на кроці «Файли», щоб мати змогу вибирати."
 clearSelected = "Очистити вибране"
+clearSlot = "Прибрати файл"
 cta = "Порівняти"
 header = "Порівняння PDF"
 loading = "Порівняння…"
@@ -2764,6 +2793,7 @@ title = "Ці PDF виглядають дуже різними"
 [compare.edited]
 label = "Відредагований PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Спочатку виберіть початковий PDF"
 
 [compare.error]
 filesMissing = "Не вдалося знайти вибрані файли. Будь ласка, виберіть їх знову."
@@ -2846,6 +2876,7 @@ pageLabel = "Сторінка"
 confirm = "Поміняти та перезапустити"
 confirmBody = "Це повторно запустить інструмент. Ви впевнені, що хочете поміняти місцями Оригінал та Редагований?"
 confirmTitle = "Повторити порівняння?"
+label = "Поміняти місцями"
 
 [compare.toasts]
 unlinkedBody = "Підказка: Стрілки Вгору/Вниз прокручують обидві панелі; панорамування рухає лише активну панель."
@@ -3476,6 +3507,8 @@ unlockAll = "Застосувати до всіх ({{count}})"
 unlockAllPartialFail = "Неправильний пароль для: {{names}}"
 unlockAllSuccess = "Розблоковано {{count}} файл(и)."
 unlockPrompt = "Розблокуйте PDF, щоб продовжити"
+viewerLocked = "Цей PDF захищено паролем"
+viewerUnlock = "Розблокувати"
 
 [encryptedPdfUnlock.password]
 label = "Пароль PDF"
@@ -3583,6 +3616,9 @@ or = "або"
 
 [fileEditor]
 addFiles = "Додати файли"
+pageCount = "{{count}} сторінок"
+pageCount_one = "{{count}} сторінка"
+pageCount_other = "{{count}} сторінок"
 
 [fileManager]
 active = "Активний"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Зміни не завантажено"
 clearAll = "Очистити все"
 clearSelection = "Очистити вибір"
 clickToUpload = "Натисніть, щоб завантажити файли"
+closeAllFiles = "Закрити всі файли"
 closeFile = "Закрити файл"
 cloudFile = "Хмарний файл"
 copyCreated = "Копію збережено на цьому пристрої."
@@ -3665,6 +3702,7 @@ selectAll = "Вибрати все"
 selectedCount = "Вибрано {{count}}"
 selectedFiles = "Вибрані файли"
 share = "Поділитися"
+shared = "Спільні"
 sharedByYou = "Надано вами"
 sharedEditNoticeBody = "У вас немає прав редагування серверної версії цього файлу. Будь-які зміни буде збережено як локальну копію."
 sharedEditNoticeConfirm = "Зрозуміло"
@@ -3704,6 +3742,41 @@ size = "Розмір файлу"
 title = "Файли"
 upload = "Завантажити"
 uploadFiles = "Завантажити файли"
+
+[fileSelectorPicker]
+empty = "Немає доступних файлів"
+placeholder = "Виберіть файл"
+search = "Фільтрувати файли…"
+tabListLabel = "Збережені файли, робоча область, завантаження"
+upload = "Завантажити з комп’ютера"
+
+[fileSelectorPicker.sort]
+dateAsc = "Спочатку найстаріші"
+dateDesc = "Спочатку найновіші"
+dateLabel = "Останні"
+nameAsc = "Від A до Z"
+nameDesc = "Від Z до A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Збережені файли"
+upload = "Завантаження"
+workbench = "Робоча область"
+
+[fileSidebar]
+addFiles = "Додати файли"
+collapse = "Згорнути бічну панель"
+dropHint = "Відкрийте файли, щоб почати"
+expand = "Розгорнути бічну панель"
+files = "Файли"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive не налаштовано"
+noFiles = "Файлів ще немає"
+openFileManager = "Відкрити файловий менеджер"
+openFromComputer = "Відкрити з комп’ютера"
+openSettings = "Відкрити налаштування"
+search = "Пошук"
+searchPlaceholder = "Пошук файлів..."
 
 [fileToPDF]
 credit = "Цей сервіс використовує LibreOffice та Unoconv для перетворення файлів."
@@ -4202,6 +4275,11 @@ title = "Накладення PDF"
 desc = "Об'єднання кількох сторінок документа PDF в одну сторінку"
 tags = "макет,розташувати,поєднати"
 title = "Об'єднати сторінки"
+
+[home.pdfCommentAgent]
+desc = "Попросіть AI анотувати PDF стікер-нотатками за вашим запитом"
+tags = "AI,агент,коментар,анотувати,стікер,перегляд,відгук,нотатки"
+title = "Додати коментарі AI"
 
 [home.pdfOrganiser]
 desc = "Видалення/перестановка сторінок у будь-якому порядку"
@@ -4903,7 +4981,6 @@ fileUpload = "Скористайтеся кнопкою <strong>Файли</stro
 leftPanel = "Ліва панель <strong>Інструменти</strong> містить усе, що можна зробити. Переглядайте категорії або шукайте, щоб швидко знайти інструмент."
 pageEditorView = "Перейдіть до Редактора сторінок, щоб змінювати порядок, обертати чи видаляти сторінки."
 quickAccess = "Почніть із панелі <strong>Швидкий доступ</strong>, щоб переходити між Читачем, Автоматизацією, вашими файлами та всіма турами."
-rightRail = "<strong>Права панель</strong> містить швидкі дії: вибір файлів, зміну теми чи мови та завантаження результатів."
 topBar = "Верхня панель дозволяє перемикатися між <strong>Переглядачем</strong>, <strong>Редактором сторінок</strong> та <strong>Активними файлами</strong>."
 wrapUp = "Ось що нового у V2. Відкривайте меню <strong>Тури</strong> будь-коли, щоб переглянути це знову, тур інструментами або тур для адміністратора."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Обрати щомісячну"
 selectYearly = "Обрати річну"
 title = "Оберіть період оплати"
 totalForSeats = "Разом ({{count}} місць)"
+
+[pdfCommentAgent]
+submit = "Згенерувати коментарі"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Будь ласка, опишіть, що саме AI має прокоментувати"
+failed = "Не вдалося згенерувати коментарі"
+tooLong = "Запит надто довгий (максимум {{max}} символів)"
+
+[pdfCommentAgent.prompt]
+label = "Про що має коментувати AI?"
+placeholder = "напр.: Позначте будь-які неоднозначні дати та запропонуйте уточнення"
+
+[pdfCommentAgent.results]
+title = "PDF з коментарями"
+
+[pdfCommentAgent.settings]
+title = "Інструкції для коментарів"
 
 [pdfOrganiser]
 header = "Організатор PDF-сторінок"
@@ -6486,46 +6581,6 @@ title = "Висока контрастність"
 text = "Повністю інвертує всі кольори в PDF, створюючи ефект, схожий на негатив. Корисно для створення темних версій документів або зменшення навантаження на очі в умовах слабкого освітлення."
 title = "Інвертувати всі кольори"
 
-[rightRail]
-annotations = "Анотації"
-applyRedactionsFirst = "Спочатку застосуйте зачорнення"
-closePdf = "Закрити PDF"
-closeSelected = "Закрити вибрані файли"
-deleteSelected = "Видалити вибрані сторінки"
-deselectAll = "Скасувати вибір усіх"
-downloadAll = "Завантажити все"
-downloadSelected = "Завантажити вибрані файли"
-draw = "Малювати"
-exitRedaction = "Вийти з режиму зачорнення"
-exportAll = "Експорт PDF"
-exportSelected = "Експорт вибраних сторінок"
-formFill = "Заповнити форму"
-language = "Мова"
-panMode = "Режим переміщення"
-print = "Надрукувати PDF"
-readAloud = "Читати вголос"
-readAloudLanguage = "Мова"
-readAloudSpeed = "Швидкість"
-redact = "Зачорнити"
-rotateLeft = "Повернути ліворуч"
-rotateRight = "Повернути праворуч"
-ruler = "Лінійка / Вимірювання"
-save = "Зберегти"
-saveAll = "Зберегти все"
-saveAs = "Зберегти як"
-saveChanges = "Зберегти зміни"
-search = "Пошук у PDF"
-selectAll = "Вибрати все"
-selectByNumber = "Вибрати за номерами сторінок"
-selectLanguage = "Виберіть мову"
-toggleAnnotations = "Перемкнути видимість анотацій"
-toggleAttachments = "Показати/приховати вкладення"
-toggleBookmarks = "Перемкнути закладки"
-toggleComments = "Коментарі"
-toggleLayers = "Перемкнути шари"
-toggleSidebar = "Перемкнути бічну панель"
-toggleTheme = "Перемкнути тему"
-
 [rotate]
 rotateLeft = "Повернути проти годинникової стрілки"
 rotateRight = "Повернути за годинниковою стрілкою"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Приховувати недоступні пер
 hideUnavailableConversionsDescription = "Прибирати вимкнені опції перетворення в інструменті Convert замість показу сірим."
 hideUnavailableTools = "Приховувати недоступні інструменти"
 hideUnavailableToolsDescription = "Прибирати інструменти, вимкнені вашим сервером, замість показу сірим."
+language = "Мова"
+languageDescription = "Виберіть мову інтерфейсу"
 logout = "Вийти"
 setAsDefault = "Зробити типовим"
+theme = "Тема"
+themeDark = "Темна"
+themeDescription = "Перемикання між світлим і темним режимами"
+themeLight = "Світла"
 title = "Загальні"
 user = "Користувач"
 
@@ -6810,6 +6871,20 @@ title = "Відомості про версію"
 auto = "Авто"
 fitPage = "Умістити сторінку"
 fitWidth = "За шириною"
+
+[settings.help]
+label = "Тури"
+title = "Довідка"
+
+[settings.help.adminTour]
+description = "Ознайомтеся з керуванням командою, системними налаштуваннями та функціями для підприємств."
+start = "Почати"
+title = "Тур для адміністратора"
+
+[settings.help.toolsTour]
+description = "Пройдіть шлях завантаження файлів, вибору інструмента та перегляду результатів."
+start = "Почати"
+title = "Тур за інструментами"
 
 [settings.hotkeys]
 capturing = "Натисніть клавіші… (Esc для скасування)"
@@ -7780,6 +7855,8 @@ settings = "Налаштування"
 [tool]
 endpointUnavailable = "Цей інструмент недоступний на вашому сервері."
 endpointUnavailableClickable = "Недоступно в цьому режимі. Натисніть, щоб увійти."
+filesLoading = "Файли ще завантажуються, зачекайте."
+filesLoadingProgress = "{{loaded}} / {{total}} файлів завантажується..."
 invalidParams = "Заповніть обов’язкові налаштування."
 noFiles = "Додайте файл, щоб розпочати."
 scopeFiles = "файли"
@@ -7789,10 +7866,15 @@ singleFileScope = "Застосовується лише до: {{fileName}}"
 viewerMode = "Перейдіть до редактора файлів, щоб вибрати кілька файлів."
 
 [toolPanel]
+allTools = "Усі інструменти"
 alpha = "Альфа"
+backToTools = "Назад до інструментів"
+collapse = "Згорнути панель"
 comingSoon = "Незабаром:"
+expand = "Розгорнути панель"
 placeholder = "Виберіть інструмент, щоб почати"
 premiumFeature = "Преміум-функція:"
+search = "Пошук інструментів"
 
 [toolPanel.fullscreen]
 comingSoon = "Незабаром:"
@@ -8342,6 +8424,51 @@ bullet2 = "Для найкращих результатів рекомендов
 bullet3 = "Зображення буде змінено за розміром під область підпису"
 description = "Завантажте заздалегідь створене зображення підпису. Ідеально, якщо у вас є відсканований підпис або логотип компанії."
 title = "Завантажити зображення підпису"
+
+[workbenchBar]
+activeFiles = "Активні файли"
+annotations = "Анотації"
+applyRedactionsFirst = "Спочатку застосувати затемнення"
+closeAll = "Закрити всі файли"
+closePdf = "Закрити PDF"
+closeSelected = "Закрити вибрані файли"
+deleteSelected = "Видалити вибрані сторінки"
+deselectAll = "Скасувати вибір"
+downloadAll = "Завантажити всі"
+downloadSelected = "Завантажити вибрані файли"
+draw = "Малювати"
+exitRedaction = "Вийти з режиму затемнення"
+exportAll = "Експортувати PDF"
+exportSelected = "Експортувати вибрані сторінки"
+formFill = "Заповнити форму"
+language = "Мова"
+multiTool = "Мультиінструмент"
+panMode = "Режим переміщення"
+print = "Надрукувати PDF"
+readAloud = "Читати вголос"
+readAloudLanguage = "Мова"
+readAloudSpeed = "Швидкість"
+redact = "Затемнити"
+rotateLeft = "Повернути ліворуч"
+rotateRight = "Повернути праворуч"
+ruler = "Лінійка / Вимірювання"
+save = "Зберегти"
+saveAll = "Зберегти всі"
+saveAs = "Зберегти як"
+saveChanges = "Зберегти зміни"
+search = "Пошук у PDF"
+selectAll = "Вибрати все"
+selectByNumber = "Вибрати за номерами сторінок"
+selectLanguage = "Вибрати мову"
+share = "Поділитися"
+toggleAnnotations = "Перемкнути видимість анотацій"
+toggleAttachments = "Перемкнути вкладення"
+toggleBookmarks = "Перемкнути закладки"
+toggleComments = "Коментарі"
+toggleLayers = "Перемкнути шари"
+toggleSidebar = "Перемкнути бічну панель"
+toggleTheme = "Перемкнути тему"
+viewer = "Переглядач"
 
 [workspace]
 title = "Робочий простір"
