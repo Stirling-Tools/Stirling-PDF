@@ -504,8 +504,14 @@ function VersionTimeline({
                 >
                   <Badge
                     size="xs"
-                    variant={isActive ? "filled" : "light"}
-                    color={isActive ? "blue" : "gray"}
+                    // Filled-blue for the active version, outline-blue
+                    // for older ones. Keeping the whole family on the
+                    // blue color so the row badges read as one set, and
+                    // using `outline` (not `light`) so the chip has a
+                    // visible border ring in dark mode - `light + gray`
+                    // washes out against the panel surface.
+                    variant={isActive ? "filled" : "outline"}
+                    color="blue"
                   >
                     v{v.versionNumber ?? 1}
                   </Badge>
