@@ -22,6 +22,8 @@ jobs:
       actions: write
       contents: read
       checks: write
+    env:
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
       - name: Harden Runner
