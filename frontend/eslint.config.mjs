@@ -75,6 +75,40 @@ export default defineConfig(
       ],
     },
   },
+  // The shared/ layer is the seed of a future packages/shared-ui — it must
+  // only depend on third-party packages and on itself. If it ever imports
+  // from editor or portal layers, extraction to a standalone package later
+  // becomes a rewrite instead of a `git mv`.
+  {
+    files: ["src/shared/**/*.{js,mjs,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@app/",
+              message:
+                "src/shared/ must not depend on editor or portal layers. Use @shared/* or third-party imports only.",
+            },
+            {
+              regex: "^@core/",
+              message: "src/shared/ must not depend on src/core/.",
+            },
+            {
+              regex: "^@proprietary/",
+              message: "src/shared/ must not depend on src/proprietary/.",
+            },
+            {
+              regex: "^@tauri-apps/",
+              message: "src/shared/ must remain web-compatible (no Tauri APIs).",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {
     files: [
@@ -82,6 +116,8 @@ export default defineConfig(
       "src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
       "src/saas/**/*.{js,mjs,jsx,ts,tsx}",
       "src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
+      "src/portal/**/*.{js,mjs,jsx,ts,tsx}",
+      "src/shared/**/*.{js,mjs,jsx,ts,tsx}",
     ],
     languageOptions: {
       parserOptions: {
