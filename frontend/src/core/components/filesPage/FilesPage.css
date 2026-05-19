@@ -773,7 +773,11 @@
 }
 
 .files-page-details-header {
-  padding: 0.95rem 1.1rem;
+  /* Tight vertical padding so the "DETAILS" label hugs the body content
+     below it - it's a quiet section header, not a banner, and the old
+     ~16px top + 18px body padding wasted nearly two character heights
+     of vertical space before the user saw the file thumbnail. */
+  padding: 0.35rem 1.1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -789,11 +793,14 @@
 }
 
 .files-page-details-body {
-  padding: 1.1rem;
+  /* Smaller top padding to pair with the tightened header above. Side
+     and bottom padding stays at 1.1rem so the content still breathes
+     against the panel edges. */
+  padding: 0.3rem 1.1rem 1.1rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.65rem;
 }
 
 .files-page-details-thumb {
@@ -806,6 +813,12 @@
   justify-content: center;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  /* Inside an overflow-y:auto flex column, `aspect-ratio` alone doesn't
+     guarantee intrinsic height - flex-shrink:1 (default) can squash the
+     thumb to a 2px sliver when the column gets cramped (notably after
+     tightening the body padding above). Pin shrink so the thumb keeps
+     its 4:3 box. */
+  flex-shrink: 0;
 }
 
 .files-page-details-thumb img {
