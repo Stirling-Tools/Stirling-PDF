@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Badge, Button, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Button, Menu, Tooltip } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -9,6 +9,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import HistoryIcon from "@mui/icons-material/History";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { FileId } from "@app/types/file";
 import { FolderRecord } from "@app/types/folder";
@@ -151,12 +152,18 @@ export function FileDetailsPanel({
                 {single.name}
               </h3>
               {ext && (
-                <Badge size="sm" variant="light" color="gray">
+                // `variant="default"` adapts to Mantine's theme palette so
+                // the ext chip stays legible in both light and dark mode.
+                // `light + gray` was washing out against the panel surface
+                // in dark mode.
+                <Badge size="sm" variant="default">
                   {ext}
                 </Badge>
               )}
               {(single.versionNumber ?? 1) > 1 && (
-                <Badge size="sm" variant="light" color="blue">
+                // Filled blue for the active version - high contrast in any
+                // theme, mirrors the per-version row badge below.
+                <Badge size="sm" variant="filled" color="blue">
                   v{single.versionNumber}
                 </Badge>
               )}
@@ -226,9 +233,13 @@ export function FileDetailsPanel({
                           isActive ? " is-active" : ""
                         }`}
                       >
+                        {/* Filled-blue for active, outline-gray for older
+                            entries. Both render with strong contrast in
+                            dark mode (the previous `light + gray`
+                            blended into the panel surface). */}
                         <Badge
                           size="xs"
-                          variant={isActive ? "filled" : "light"}
+                          variant={isActive ? "filled" : "outline"}
                           color={isActive ? "blue" : "gray"}
                         >
                           v{version.versionNumber ?? 1}
@@ -245,25 +256,70 @@ export function FileDetailsPanel({
                           </div>
                         </div>
                         {!isActive && (
-                          <Tooltip
-                            label={t(
-                              "filesPage.viewVersion",
-                              "View this version",
-                            )}
-                            withinPortal
-                          >
-                            <ActionIcon
-                              variant="subtle"
-                              size="sm"
-                              onClick={() => onQuickView(version.id)}
-                              aria-label={t(
-                                "filesPage.viewVersion",
-                                "View this version",
-                              )}
-                            >
-                              <VisibilityIcon fontSize="small" />
-                            </ActionIcon>
-                          </Tooltip>
+                          // Kebab menu rather than a single eye icon - the
+                          // legacy file manager exposed Download + Restore +
+                          // Delete per past version, and reviewers asked for
+                          // parity. Quick view stays as the first item since
+                          // it's the lowest-commitment action for "is this
+                          // the version I'm looking for?".
+                          <Menu position="bottom-end" withinPortal shadow="md">
+                            <Menu.Target>
+                              <ActionIcon
+                                variant="subtle"
+                                size="sm"
+                                aria-label={t(
+                                  "filesPage.versionActions",
+                                  "Version actions",
+                                )}
+                              >
+                                <MoreVertIcon fontSize="small" />
+                              </ActionIcon>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                              <Menu.Item
+                                leftSection={
+                                  <VisibilityIcon fontSize="small" />
+                                }
+                                onClick={() => onQuickView(version.id)}
+                              >
+                                {t(
+                                  "filesPage.viewVersion",
+                                  "View this version",
+                                )}
+                              </Menu.Item>
+                              <Menu.Item
+                                leftSection={<OpenInNewIcon fontSize="small" />}
+                                onClick={() => onAddToWorkspace([version.id])}
+                              >
+                                {t(
+                                  "filesPage.openVersionInWorkspace",
+                                  "Open in workspace",
+                                )}
+                              </Menu.Item>
+                              <Menu.Item
+                                leftSection={<DownloadIcon fontSize="small" />}
+                                onClick={() => {
+                                  void downloadFileFromStorage(version);
+                                }}
+                              >
+                                {t(
+                                  "filesPage.downloadVersion",
+                                  "Download this version",
+                                )}
+                              </Menu.Item>
+                              <Menu.Divider />
+                              <Menu.Item
+                                color="red"
+                                leftSection={<DeleteIcon fontSize="small" />}
+                                onClick={() => onRemove([version.id])}
+                              >
+                                {t(
+                                  "filesPage.removeVersion",
+                                  "Remove this version",
+                                )}
+                              </Menu.Item>
+                            </Menu.Dropdown>
+                          </Menu>
                         )}
                       </li>
                     );
