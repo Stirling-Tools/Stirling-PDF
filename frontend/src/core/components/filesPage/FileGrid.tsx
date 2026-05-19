@@ -594,7 +594,13 @@ function FileCard({
       </div>
       <div className="files-page-card-thumb">
         {file.thumbnailUrl ? (
-          <img src={file.thumbnailUrl} alt="" />
+          // `draggable={false}` so grabbing the thumbnail image doesn't
+          // hijack the drag: native HTML <img> elements are draggable
+          // by default and produce a browser-native image drag (the one
+          // that shows "download.png" and saves the bitmap on drop).
+          // We want the parent card's onDragStart to fire instead so
+          // the drop targets see our FILES_PAGE_DRAG_TYPE payload.
+          <img src={file.thumbnailUrl} alt="" draggable={false} />
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
@@ -1098,6 +1104,10 @@ function FileRow({
           <img
             src={file.thumbnailUrl}
             alt=""
+            // See FileCard above - native <img> drag hijacks the row's
+            // onDragStart and turns the drop into a "download.png" save
+            // instead of our folder-move payload.
+            draggable={false}
             style={{
               width: "1.5rem",
               height: "1.5rem",
