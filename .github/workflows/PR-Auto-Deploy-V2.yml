@@ -111,6 +111,7 @@ jobs:
       id-token: write
     env:
       USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
       - name: Harden Runner

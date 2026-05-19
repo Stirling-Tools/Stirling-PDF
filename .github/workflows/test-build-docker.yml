@@ -38,6 +38,7 @@ jobs:
       id-token: write
     env:
       USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -194,6 +195,7 @@ jobs:
       id-token: write
     env:
       USE_DEPOT: ${{ !(github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))) }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
