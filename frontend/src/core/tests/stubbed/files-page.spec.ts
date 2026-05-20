@@ -37,6 +37,9 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
     const open = window.indexedDB.open("stirling-pdf-files", 4);
     open.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      // The app expects BOTH `files` and `folders` stores on this DB.
+      // Seeding only `files` makes subsequent folderStorage transactions
+      // throw "One of the specified object stores was not found".
       if (!db.objectStoreNames.contains("files")) {
         const store = db.createObjectStore("files", { keyPath: "id" });
         store.createIndex("name", "name", { unique: false });
@@ -44,6 +47,13 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
         store.createIndex("originalFileId", "originalFileId", {
           unique: false,
         });
+      }
+      if (!db.objectStoreNames.contains("folders")) {
+        const fStore = db.createObjectStore("folders", { keyPath: "id" });
+        fStore.createIndex("parentFolderId", "parentFolderId", {
+          unique: false,
+        });
+        fStore.createIndex("name", "name", { unique: false });
       }
     };
     open.onsuccess = () => {

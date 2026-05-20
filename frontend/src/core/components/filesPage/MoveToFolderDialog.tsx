@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActionIcon,
   Alert,
   Button,
   Group,
@@ -8,11 +9,13 @@ import {
   Stack,
   Text,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
 import HomeIcon from "@mui/icons-material/Home";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import CloseIcon from "@mui/icons-material/Close";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -241,19 +244,34 @@ export function MoveToFolderDialog({
                   autoFocus
                 />
                 <Button
-                  variant="default"
-                  onClick={handleCancel}
-                  disabled={creating}
-                >
-                  {t("filesPage.moveDialog.newFolderCancel", "Cancel")}
-                </Button>
-                <Button
                   loading={creating}
                   disabled={trimmedName.length === 0}
                   onClick={handleCreate}
                 >
                   {t("filesPage.moveDialog.newFolderCreate", "Create")}
                 </Button>
+                {/* X icon - collapses the inline create row without
+                    closing the whole dialog. Earlier this was a "Cancel"
+                    button which visually clashed with the dialog footer
+                    Cancel (two identical labels confusing the user). */}
+                <Tooltip
+                  label={t("filesPage.moveDialog.newFolderCancel", "Discard")}
+                  withinPortal
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="lg"
+                    onClick={handleCancel}
+                    disabled={creating}
+                    aria-label={t(
+                      "filesPage.moveDialog.newFolderCancel",
+                      "Discard",
+                    )}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </ActionIcon>
+                </Tooltip>
               </Group>
             ) : (
               <Button
