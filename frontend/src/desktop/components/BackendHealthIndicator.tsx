@@ -1,7 +1,8 @@
 import React, { useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Tooltip, useMantineTheme, rem } from "@mantine/core";
+import { Box, Tooltip, useMantineTheme, rem, Stack, Text } from "@mantine/core";
 import { useBackendHealth } from "@app/hooks/useBackendHealth";
+import { useVersionInfo } from "@app/hooks/useVersionInfo";
 
 interface BackendHealthIndicatorProps {
   className?: string;
@@ -13,8 +14,9 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { status, isOnline, checkHealth } = useBackendHealth();
+  const { desktopVersion, serverVersion } = useVersionInfo();
 
-  const label = useMemo(() => {
+  const statusText = useMemo(() => {
     if (status === "starting") {
       return t("backendHealth.checking", "Checking backend status...");
     }
@@ -25,6 +27,38 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
 
     return t("backendHealth.offline", "Backend Offline");
   }, [status, isOnline, t]);
+
+  const versionLines = useMemo(() => {
+    const lines: string[] = [];
+    if (desktopVersion) {
+      lines.push(`Desktop: ${desktopVersion}`);
+    }
+    if (serverVersion) {
+      lines.push(`Server: ${serverVersion}`);
+    }
+    return lines;
+  }, [desktopVersion, serverVersion]);
+
+  const ariaLabel = useMemo(() => {
+    if (versionLines.length === 0) {
+      return statusText;
+    }
+    return `${statusText} (${versionLines.join(", ")})`;
+  }, [statusText, versionLines]);
+
+  const label =
+    versionLines.length > 0 ? (
+      <Stack gap={4}>
+        <Text size="sm">{statusText}</Text>
+        {versionLines.map((line, idx) => (
+          <Text key={idx} size="xs" c="dimmed">
+            {line}
+          </Text>
+        ))}
+      </Stack>
+    ) : (
+      statusText
+    );
 
   const dotColor = useMemo(() => {
     if (status === "starting") {
@@ -59,7 +93,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
         className={className ? `${className}` : undefined}
         role="status"
         aria-live="polite"
-        aria-label={label}
+        aria-label={ariaLabel}
         tabIndex={0}
         onClick={checkHealth}
         onKeyDown={handleKeyDown}

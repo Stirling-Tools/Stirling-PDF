@@ -27,12 +27,14 @@ import DownloadIcon from "@mui/icons-material/Download";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
-interface UpdateModalProps {
+export interface UpdateModalProps {
   opened: boolean;
   onClose: () => void;
   currentVersion: string;
   updateSummary: UpdateSummary;
   machineInfo: MachineInfo;
+  isDesktop?: boolean;
+  desktopVersion?: string | null;
 }
 
 const UpdateModal: React.FC<UpdateModalProps> = ({
@@ -41,6 +43,8 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
   currentVersion,
   updateSummary,
   machineInfo,
+  isDesktop = false,
+  desktopVersion,
 }) => {
   const { t } = useTranslation();
   const [fullUpdateInfo, setFullUpdateInfo] = useState<FullUpdateInfo | null>(
@@ -96,7 +100,18 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     return t(`update.priority.${key}`, priority || "Normal");
   };
 
-  const downloadUrl = updateService.getDownloadUrl(machineInfo);
+  const desktopNeedsUpdate =
+    isDesktop && desktopVersion
+      ? updateService.compareVersions(
+          updateSummary.latest_version || "0",
+          desktopVersion,
+        ) > 0
+      : false;
+
+  const downloadUrl =
+    isDesktop && desktopNeedsUpdate
+      ? updateService.getDownloadUrl(machineInfo, true)
+      : null;
 
   return (
     <Modal
@@ -504,7 +519,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               component="a"
               href={downloadUrl}
               target="_blank"
-              color="green"
+              variant="filled"
               leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
             >
               {t("update.downloadLatest", "Download Latest")}
