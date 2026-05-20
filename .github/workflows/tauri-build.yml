@@ -158,21 +158,6 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
-      - name: Sign JPDFium dylibs inside bootJar (macOS only)
-        # JPDFium's publish workflow has no Apple Developer credentials, so
-        # the .dylibs it ships in jpdfium-natives-darwin-*.jar are unsigned.
-        # Apple's notarytool walks into nested .jars inside the .app and
-        # rejects unsigned binaries. Tauri's own codesign walk doesn't open
-        # .jars, so we have to re-sign them here, between bootJar build and
-        # tauri-action, using this build's Developer ID identity. The script
-        # is non-fatal: if APPLE_SIGNING_IDENTITY isn't set (e.g. PR build
-        # from a fork) it exits 0 and notarytool will continue to report
-        # the unsigned-binary error.
-        if: matrix.platform == 'macos-15' && env.APPLE_SIGNING_IDENTITY != ''
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
-        run: bash scripts/sign-jpdfium-dylibs-in-bootjar.sh
-
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
@@ -283,6 +268,17 @@ jobs:
           echo "Certificate ID: $CERT_ID"
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
+
+      - name: Sign JPDFium dylibs inside bootJar (macOS only)
+        # JPDFium's publish workflow has no Apple Developer credentials, so
+        # the .dylibs it ships in jpdfium-natives-darwin-*.jar are unsigned.
+        # Apple's notarytool walks into nested .jars inside the .app and
+        # rejects unsigned binaries. Tauri's own codesign walk doesn't open
+        # .jars, so we have to re-sign them here, between cert import and
+        # tauri-action, using this build's Developer ID identity (set in
+        # GITHUB_ENV by the Verify Certificate step above).
+        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        run: bash scripts/sign-jpdfium-dylibs-in-bootjar.sh
 
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
