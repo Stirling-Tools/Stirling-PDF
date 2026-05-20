@@ -805,7 +805,11 @@ public class SigningFinalizationService {
                         participant.getName() != null ? participant.getName() : "Shared Signing",
                         location != null ? location : "",
                         reason != null ? reason : "Document Signing",
-                        showLogo != null ? showLogo : false);
+                        showLogo != null ? showLogo : false,
+                        null,
+                        null,
+                        null,
+                        null);
 
         log.info(
                 "Digital signature applied for {} using cert type {}",

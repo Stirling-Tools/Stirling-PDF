@@ -69,4 +69,33 @@ public class SignPDFWithCertRequest extends PDFFile {
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
+
+    @Schema(
+            description =
+                    "Left edge of the visible signature widget, as a fraction of the page width"
+                            + " (0–1, top-left origin). Optional; omit all four rectangle fields to"
+                            + " use the legacy default placement.",
+            minimum = 0,
+            maximum = 1)
+    private Double signatureRectX;
+
+    @Schema(
+            description =
+                    "Top edge of the visible signature widget, as a fraction of the page height"
+                            + " (0–1, top-left origin).",
+            minimum = 0,
+            maximum = 1)
+    private Double signatureRectY;
+
+    @Schema(
+            description = "Width of the visible signature widget as a fraction of the page width",
+            minimum = 0.01,
+            maximum = 1)
+    private Double signatureRectWidth;
+
+    @Schema(
+            description = "Height of the visible signature widget as a fraction of the page height",
+            minimum = 0.01,
+            maximum = 1)
+    private Double signatureRectHeight;
 }
