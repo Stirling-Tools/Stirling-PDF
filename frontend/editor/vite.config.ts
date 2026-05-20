@@ -21,10 +21,11 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the
-  // `VITE_` prefix.
-  const env = loadEnv(mode, process.cwd(), "");
+  // Load env files relative to this config (frontend/editor/), regardless of
+  // where the build was invoked from. The previous `process.cwd()` worked when
+  // this file lived at frontend/, but after the editor was moved under
+  // frontend/editor/ the cwd-based lookup would miss editor/.env*.
+  const env = loadEnv(mode, import.meta.dirname, "");
 
   // Resolve the effective build mode.
   // Explicit --mode flags take precedence; otherwise default to proprietary
@@ -86,8 +87,9 @@ export default defineConfig(async ({ mode }) => {
       viteStaticCopy({
         targets: [
           {
-            //provides static pdfium so embedpdf can run without cdn
-            src: "node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
+            // node_modules is hoisted to the workspace root (frontend/), so
+            // these paths walk up one level from editor/.
+            src: "../node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
             dest: "pdfium",
           },
           {
@@ -99,13 +101,13 @@ export default defineConfig(async ({ mode }) => {
             // pdfjs-dist CMap data for CJK / non-latin glyph mapping — required
             // when rendering PDFs inside workers where the default DOM fetch paths
             // aren't available.
-            src: "node_modules/pdfjs-dist/cmaps/*",
+            src: "../node_modules/pdfjs-dist/cmaps/*",
             dest: "pdfjs/cmaps",
           },
           {
             // pdfjs-dist standard font data (Helvetica/Times/etc.) — needed so
             // workers can substitute non-embedded base 14 fonts without DOM access.
-            src: "node_modules/pdfjs-dist/standard_fonts/*",
+            src: "../node_modules/pdfjs-dist/standard_fonts/*",
             dest: "pdfjs/standard_fonts",
           },
         ],

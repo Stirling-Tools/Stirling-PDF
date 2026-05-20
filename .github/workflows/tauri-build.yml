@@ -299,7 +299,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -357,7 +357,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend
+          projectPath: ./frontend/editor
           tauriScript: npx tauri
           # Linux: build deb+rpm only here. AppImage runs in its own
           # continue-on-error step below so its persistent linuxdeploy
@@ -382,7 +382,7 @@ jobs:
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
-          projectPath: ./frontend
+          projectPath: ./frontend/editor
           tauriScript: npx tauri
           args: --bundles appimage
 
@@ -400,7 +400,7 @@ jobs:
         if: matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
           DMG_FILE=$(find . -name "*.dmg" | head -1)
           if [ -n "$DMG_FILE" ]; then
             echo "Found DMG: $DMG_FILE"
@@ -415,7 +415,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ./dist
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
@@ -505,7 +505,7 @@ jobs:
       - name: Verify build artifacts
         shell: bash
         run: |
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
 
           # Check for expected artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
@@ -536,7 +536,7 @@ jobs:
       - name: Test artifact sizes
         shell: bash
         run: |
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
           find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then

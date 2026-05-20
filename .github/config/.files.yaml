@@ -58,12 +58,12 @@ frontend: &frontend
 # Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
 # job on changes to any of these.
 tauri: &tauri
-  - frontend/src-tauri/**
-  - frontend/src/desktop/**
-  - frontend/tsconfig.desktop.json
+  - frontend/editor/src-tauri/**
+  - frontend/editor/src/desktop/**
+  - frontend/editor/tsconfig.desktop.vite.json
   - frontend/package.json
   - frontend/package-lock.json
-  - frontend/vite.config.ts
+  - frontend/editor/vite.config.ts
   - .github/workflows/tauri-build.yml
 
 # Files that affect the AI engine (Python tool models, fixers, tests). Gate
@@ -78,7 +78,7 @@ licenses-frontend: &licenses-frontend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - "frontend/package.json"
   - "frontend/package-lock.json"
-  - "frontend/scripts/generate-licenses.js"
+  - "frontend/editor/scripts/generate-licenses.js"
 
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
@@ -88,8 +88,8 @@ licenses-backend: &licenses-backend
 # Playwright job on changes to any of these on PRs.
 proprietary: &proprietary
   - app/proprietary/**
-  - frontend/src/proprietary/**
-  - frontend/src/core/tests/enterprise/**
+  - frontend/editor/src/proprietary/**
+  - frontend/editor/src/core/tests/enterprise/**
   - testing/compose/docker-compose-keycloak-oauth.yml
   - testing/compose/docker-compose-keycloak-saml.yml
   - testing/compose/keycloak-realm-oauth.json

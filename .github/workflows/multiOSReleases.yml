@@ -418,7 +418,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -431,7 +431,7 @@ jobs:
           }
           EOF
           echo "Generated tauri.windows.conf.json (alias masked):"
-          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
+          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/editor/src-tauri/tauri.windows.conf.json
 
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
@@ -479,7 +479,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend
+          projectPath: ./frontend/editor
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
@@ -505,7 +505,7 @@ jobs:
           $allSigned = $true
 
           # Check MSI installer (outer wrapper - what users download)
-          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
+          $msiFiles = Get-ChildItem -Path "./frontend/editor/src-tauri/target" -Filter "*.msi" -Recurse -File
           if ($msiFiles.Count -eq 0) {
             Write-Host "[ERROR] No MSI found under target/"
             exit 1
@@ -574,7 +574,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p ./dist
-          cd ./frontend/src-tauri/target
+          cd ./frontend/editor/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
