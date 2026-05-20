@@ -328,40 +328,31 @@
    ========================= */
 
 .addFileCard {
+  width: 260px;
+  max-width: 260px;
+  height: calc(310px - 0.5rem);
+  margin: 0.5rem auto 0;
   background: var(--file-card-bg);
-  border: 2px dashed var(--border-default);
-  border-radius: 0.0625rem;
+  border: 1.5px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
   cursor: pointer;
-  transition: all 0.18s ease;
-  max-width: 100%;
-  max-height: 100%;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.2s ease,
+    border-color 0.18s ease;
   overflow: hidden;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  opacity: 0.7;
 }
 
 .addFileCard:hover {
-  opacity: 1;
-  border-color: var(--color-blue-500);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+  border-color: var(--accent-interactive);
 }
 
-.addFileCard:focus {
-  outline: 2px solid var(--color-blue-500);
+.addFileCard:focus-visible {
+  outline: 2px solid var(--accent-interactive);
   outline-offset: 2px;
-}
-
-.addFileHeader {
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.addFileCard:hover .addFileHeader {
-  background: var(--color-blue-500);
-  color: white;
 }
 
 .addFileContent {

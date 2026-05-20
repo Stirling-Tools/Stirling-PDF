@@ -232,12 +232,15 @@ export default function Onboarding() {
           loadSampleFile: tourOrch.loadSampleFile,
           switchToActiveFiles: tourOrch.switchToActiveFiles,
           pinFile: tourOrch.pinFile,
+          revealFileCardHoverMenu: tourOrch.revealFileCardHoverMenu,
           modifyCropSettings: tourOrch.modifyCropSettings,
           executeTool: tourOrch.executeTool,
           openFilesModal,
+          openSettingsHelpSection: () =>
+            adminTourOrch.navigateToSection("help"),
         },
       }),
-    [t, tourOrch, closeFilesModal, openFilesModal],
+    [t, tourOrch, adminTourOrch, closeFilesModal, openFilesModal],
   );
 
   const whatsNewStepsConfig = useMemo(
@@ -253,7 +256,6 @@ export default function Onboarding() {
           switchToViewer: tourOrch.switchToViewer,
           switchToPageEditor: tourOrch.switchToPageEditor,
           switchToActiveFiles: tourOrch.switchToActiveFiles,
-          selectFirstFile: tourOrch.selectFirstFile,
         },
       }),
     [t, tourOrch, closeFilesModal, openFilesModal],

@@ -1806,7 +1806,11 @@ title = "Pametno preimenovanje"
 [automate]
 copyToSaved = "Kopiraj u spremljeno"
 desc = "Izgradite višekoračne tijekove rada povezivanjem PDF radnji. Idealno za ponavljajuće zadatke."
+export = "Izvoz"
 exportForFolderScanning = "Izvoz za skeniranje mape"
+import = "Uvoz"
+importPartialSuccess = "Uvezeno s {{count}} nepovezanih operacija: {{ops}}"
+importSuccess = "Uvezena automatizacija: {{name}}"
 invalidStep = "Nevažeći korak"
 reviewTitle = "Rezultati automatizacije"
 title = "Automatizacija"
@@ -1822,6 +1826,7 @@ title = "Konfiguriraj {{toolName}}"
 [automate.creation]
 createTitle = "Stvori automatizaciju"
 editTitle = "Uredi automatizaciju"
+export = "Izvoz"
 exportForFolderScanning = "Izvoz za skeniranje mape"
 intro = "Automatizacije pokreću alate sekvencijalno. Za početak dodajte alate redoslijedom kojim želite da se izvršavaju."
 save = "Spremi automatizaciju"
@@ -1852,8 +1857,27 @@ confirm = "Vrati se"
 message = "Imate nespremljene promjene. Jeste li sigurni da se želite vratiti? Sve promjene bit će izgubljene."
 title = "Nespremljene promjene"
 
+[automate.entryMenu]
+label = "Otvori izbornik za {{title}}"
+
 [automate.files]
 placeholder = "Odaberite datoteke za obradu ovom automatizacijom"
+
+[automate.importModal]
+cancel = "Odustani"
+confirm = "Uvezi"
+detectedAutomation = "JSON za automatizaciju"
+detectedFolderScan = "JSON za skeniranje mapa"
+dropHint = "Ispustite JSON ovdje ili kliknite za odabir datoteke"
+dropSubhint = "Prihvaćaju se i konfiguracije za Automatizaciju i Skeniranje mapa"
+dropzoneAriaLabel = "Ispustite JSON datoteku automatizacije ovdje"
+intro = "Ispustite JSON datoteku ili zalijepite njezin sadržaj ispod. Format (Automatizacija ili Skeniranje mapa) prepoznaje se automatski."
+opCount = "{{count}} operacija"
+parseError = "Nije moguće parsirati: {{message}}"
+pasteLabel = "Ili zalijepite JSON"
+pastePlaceholder = "Zalijepite svoj JSON za automatizaciju ovdje…"
+title = "Uvezi automatizaciju"
+unresolved = "Nepovezano: {{ops}}"
 
 [automate.run]
 title = "Pokreni automatizaciju"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Pokrećem {{tool}} (korak {{step}} od {{total}})..."
 extracting_content = "Izdvajam sadržaj iz vaših dokumenata..."
 processing = "Obrađujem izdvojeni sadržaj..."
 thinking = "Razmišljam..."
+whole_doc_compression_round = "Konsolidiranje bilješki..."
+whole_doc_read_done = "Završeno čitanje dokumenta..."
+whole_doc_read_started = "Čitanje dokumenta..."
+whole_doc_slice_done = "Čitanje dokumenta... ({{percent}}% dovršeno)"
 
 [chat.toolsUsed]
 summary = "Pokrenuto {{count}} alata"
@@ -2712,6 +2740,7 @@ used = "iskorišteno"
 [compare]
 addFilesHint = "Dodajte PDF-ove u koraku Datoteke kako biste omogućili odabir."
 clearSelected = "Očisti odabrano"
+clearSlot = "Ukloni datoteku"
 cta = "Usporedi"
 header = "Usporedite PDF-ove"
 loading = "Uspoređivanje..."
@@ -2764,6 +2793,7 @@ title = "Ovi PDF-ovi izgledaju vrlo različito"
 [compare.edited]
 label = "Uređeni PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Najprije odaberite izvorni PDF"
 
 [compare.error]
 filesMissing = "Nije moguće locirati odabrane datoteke. Molimo ponovno ih odaberite."
@@ -2846,6 +2876,7 @@ pageLabel = "Stranica"
 confirm = "Zamijeni i ponovno pokreni"
 confirmBody = "Ovo će ponovno pokrenuti alat. Jeste li sigurni da želite zamijeniti redoslijed Izvornog i Uređenog?"
 confirmTitle = "Ponovno pokrenuti usporedbu?"
+label = "Zamijeni"
 
 [compare.toasts]
 unlinkedBody = "Savjet: Strelice Gore/Dolje pomiču oba okna; panoramiranje pomiče samo aktivno okno."
@@ -3476,6 +3507,8 @@ unlockAll = "Primijeni na sve ({{count}})"
 unlockAllPartialFail = "Pogrešna lozinka za: {{names}}"
 unlockAllSuccess = "Otključano {{count}} datoteka."
 unlockPrompt = "Otključajte PDF za nastavak"
+viewerLocked = "Ovaj PDF je zaštićen lozinkom"
+viewerUnlock = "Otključaj"
 
 [encryptedPdfUnlock.password]
 label = "Lozinka za PDF"
@@ -3583,6 +3616,9 @@ or = "ili"
 
 [fileEditor]
 addFiles = "Dodaj datoteke"
+pageCount = "{{count}} stranica"
+pageCount_one = "{{count}} stranica"
+pageCount_other = "{{count}} stranica"
 
 [fileManager]
 active = "Aktivno"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Promjene nisu prenesene"
 clearAll = "Očisti sve"
 clearSelection = "Očisti odabir"
 clickToUpload = "Kliknite za otpremu datoteka"
+closeAllFiles = "Zatvori sve datoteke"
 closeFile = "Zatvori datoteku"
 cloudFile = "Datoteka u oblaku"
 copyCreated = "Kopija spremljena na ovaj uređaj."
@@ -3665,6 +3702,7 @@ selectAll = "Odaberi sve"
 selectedCount = "{{count}} odabrano"
 selectedFiles = "Odabrane datoteke"
 share = "Podijeli"
+shared = "Dijeljeno"
 sharedByYou = "Podijeljeno od vas"
 sharedEditNoticeBody = "Nemate prava uređivanja poslužiteljske verzije ove datoteke. Sve izmjene koje napravite bit će spremljene kao lokalna kopija."
 sharedEditNoticeConfirm = "Razumijem"
@@ -3704,6 +3742,41 @@ size = "Veličina datoteke"
 title = "Datoteke"
 upload = "Učitaj"
 uploadFiles = "Učitaj datoteke"
+
+[fileSelectorPicker]
+empty = "Nema dostupnih datoteka"
+placeholder = "Odaberite datoteku"
+search = "Filtriraj datoteke…"
+tabListLabel = "Spremljene datoteke, radni prostor, učitavanje"
+upload = "Učitaj s računala"
+
+[fileSelectorPicker.sort]
+dateAsc = "Najstarije prvo"
+dateDesc = "Najnovije prvo"
+dateLabel = "Najnovije"
+nameAsc = "A do Ž"
+nameDesc = "Ž do A"
+nameLabel = "A–Ž"
+
+[fileSelectorPicker.tabs]
+saved = "Spremljene datoteke"
+upload = "Učitavanje"
+workbench = "Radni prostor"
+
+[fileSidebar]
+addFiles = "Dodaj datoteke"
+collapse = "Sažmi bočnu traku"
+dropHint = "Otvorite datoteke za početak"
+expand = "Proširi bočnu traku"
+files = "Datoteke"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive nije konfiguriran"
+noFiles = "Još nema datoteka"
+openFileManager = "Otvori upravitelj datoteka"
+openFromComputer = "Otvori s računala"
+openSettings = "Otvori postavke"
+search = "Pretraži"
+searchPlaceholder = "Pretraži datoteke..."
 
 [fileToPDF]
 credit = "Ova usluga koristi LibreOffice i Unoconv za pretvaranje datoteka."
@@ -4202,6 +4275,11 @@ title = "Preklapanje PDF-ova"
 desc = "Spojite više stranica PDF dokumenta u jednu stranicu"
 tags = "izgled,rasporedi,spoji"
 title = "Izgled s više stranica"
+
+[home.pdfCommentAgent]
+desc = "Zamolite AI da označi PDF komentarima u obliku ljepljivih bilješki prema vašem upitu"
+tags = "AI,agent,komentar,anotiranje,ljepljiva bilješka,pregled,povratne informacije,bilješke"
+title = "Dodaj AI komentare"
 
 [home.pdfOrganiser]
 desc = "Uklonite/preuredite stranice bilo kojim redoslijedom"
@@ -4903,7 +4981,6 @@ fileUpload = "Koristite gumb <strong>Datoteke</strong> za otpremu ili odabir ned
 leftPanel = "Lijevi panel <strong>Alati</strong> navodi sve što možete učiniti. Pregledajte kategorije ili pretražite kako biste brzo našli alat."
 pageEditorView = "Prebacite se na Uređivač stranica za promjenu redoslijeda, rotiranje ili brisanje stranica."
 quickAccess = "Započnite na traci <strong>Brzi pristup</strong> kako biste skakali između Čitača, Automatizacije, svojih datoteka i svih obilazaka."
-rightRail = "<strong>Desna traka</strong> sadrži brze radnje za odabir datoteka, promjenu teme ili jezika i preuzimanje rezultata."
 topBar = "Gornja traka omogućuje prebacivanje između <strong>Preglednika</strong>, <strong>Uređivača stranica</strong> i <strong>Aktivnih datoteka</strong>."
 wrapUp = "To je ono što je novo u V2. Otvorite izbornik <strong>Obilasci</strong> bilo kada za reprizu ovoga, obilaska Alata ili Administratorskog obilaska."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Odaberi mjesečno"
 selectYearly = "Odaberi godišnje"
 title = "Odaberite obračunsko razdoblje"
 totalForSeats = "Ukupno ({{count}} mjesta)"
+
+[pdfCommentAgent]
+submit = "Generiraj komentare"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Molimo opišite na što AI treba komentirati"
+failed = "Nije uspjelo generiranje komentara"
+tooLong = "Upit je predugačak (najviše {{max}} znakova)"
+
+[pdfCommentAgent.prompt]
+label = "Na što bi AI trebao komentirati?"
+placeholder = "npr. Označi sve dvosmislene datume i predloži pojašnjenja"
+
+[pdfCommentAgent.results]
+title = "Komentirani PDF"
+
+[pdfCommentAgent.settings]
+title = "Upute za komentiranje"
 
 [pdfOrganiser]
 header = "Organizator stranica u PDF-u"
@@ -6486,46 +6581,6 @@ title = "Visoki kontrast"
 text = "U potpunosti invertirajte sve boje u PDF-u, stvarajući efekt sličan negativu. Korisno za izradu tamnih verzija dokumenata ili smanjenje naprezanja očiju pri slabom osvjetljenju."
 title = "Invertiraj sve boje"
 
-[rightRail]
-annotations = "Anotacije"
-applyRedactionsFirst = "Najprije primijeni zacrnjivanja"
-closePdf = "Zatvori PDF"
-closeSelected = "Zatvori odabrane datoteke"
-deleteSelected = "Izbriši odabrane stranice"
-deselectAll = "Poništi sav odabir"
-downloadAll = "Preuzmi sve"
-downloadSelected = "Preuzmi odabrane datoteke"
-draw = "Crtaj"
-exitRedaction = "Izađi iz načina zacrnjivanja"
-exportAll = "Izvezi PDF"
-exportSelected = "Izvezi odabrane stranice"
-formFill = "Ispuni obrazac"
-language = "Jezik"
-panMode = "Način pomicanja"
-print = "Ispis PDF-a"
-readAloud = "Čitanje naglas"
-readAloudLanguage = "Jezik"
-readAloudSpeed = "Brzina"
-redact = "Zacrni"
-rotateLeft = "Rotiraj ulijevo"
-rotateRight = "Rotiraj udesno"
-ruler = "Ravnalo / mjerenje"
-save = "Spremi"
-saveAll = "Spremi sve"
-saveAs = "Spremi kao"
-saveChanges = "Spremi promjene"
-search = "Pretraži PDF"
-selectAll = "Odaberi sve"
-selectByNumber = "Odaberi po brojevima stranica"
-selectLanguage = "Odaberite jezik"
-toggleAnnotations = "Prebaci vidljivost bilješki"
-toggleAttachments = "Prikaži/sakrij priloge"
-toggleBookmarks = "Prebaci knjižne oznake"
-toggleComments = "Komentari"
-toggleLayers = "Prikaži/sakrij slojeve"
-toggleSidebar = "Prebaci bočnu traku"
-toggleTheme = "Prebaci temu"
-
 [rotate]
 rotateLeft = "Zakreni suprotno od kazaljke na satu"
 rotateRight = "Zakreni u smjeru kazaljke na satu"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Sakrij nedostupne pretvorbe"
 hideUnavailableConversionsDescription = "Uklonite onemogućene opcije pretvorbe u alatu Pretvori umjesto da su zasivljene."
 hideUnavailableTools = "Sakrij nedostupne alate"
 hideUnavailableToolsDescription = "Uklonite alate koje je poslužitelj onemogućio umjesto da su zasivljeni."
+language = "Jezik"
+languageDescription = "Odaberite jezik prikaza"
 logout = "Odjava"
 setAsDefault = "Postavi kao zadano"
+theme = "Tema"
+themeDark = "Tamna"
+themeDescription = "Prebacite između svijetlog i tamnog načina"
+themeLight = "Svijetla"
 title = "Općenito"
 user = "Korisnik"
 
@@ -6810,6 +6871,20 @@ title = "Informacije o verziji"
 auto = "Automatski"
 fitPage = "Prilagodi stranici"
 fitWidth = "Prilagodi širini"
+
+[settings.help]
+label = "Obilasci"
+title = "Pomoć"
+
+[settings.help.adminTour]
+description = "Istražite upravljanje timom, postavke sustava i značajke za poduzeća."
+start = "Pokreni"
+title = "Administratorski obilazak"
+
+[settings.help.toolsTour]
+description = "Prođite kroz učitavanje datoteka, odabir alata i pregled rezultata."
+start = "Pokreni"
+title = "Obilazak alata"
 
 [settings.hotkeys]
 capturing = "Pritisnite tipke… (Esc za otkazivanje)"
@@ -7780,6 +7855,8 @@ settings = "Postavke"
 [tool]
 endpointUnavailable = "Ovaj alat nije dostupan na vašem poslužitelju."
 endpointUnavailableClickable = "Nije dostupno u ovom načinu. Kliknite za prijavu."
+filesLoading = "Datoteke se još učitavaju, pričekajte."
+filesLoadingProgress = "{{loaded}} / {{total}} datoteka se učitava..."
 invalidParams = "Ispunite potrebne postavke."
 noFiles = "Dodajte datoteku za početak."
 scopeFiles = "datoteke"
@@ -7789,10 +7866,15 @@ singleFileScope = "Primjenjuje se samo na: {{fileName}}"
 viewerMode = "Prebacite se u uređivač datoteka da biste odabrali više datoteka."
 
 [toolPanel]
+allTools = "Svi alati"
 alpha = "Alfa"
+backToTools = "Natrag na alate"
+collapse = "Sažmi panel"
 comingSoon = "Uskoro:"
+expand = "Proširi panel"
 placeholder = "Odaberite alat za početak"
 premiumFeature = "Premium značajka:"
+search = "Pretraži alate"
 
 [toolPanel.fullscreen]
 comingSoon = "Uskoro:"
@@ -8342,6 +8424,51 @@ bullet2 = "Za najbolje rezultate preporučuju se prozirne pozadine"
 bullet3 = "Slika će se promijeniti veličinom kako bi odgovarala području potpisa"
 description = "Učitajte unaprijed izrađenu sliku potpisa. Idealno ako imate skenirani potpis ili logotip tvrtke."
 title = "Učitaj sliku potpisa"
+
+[workbenchBar]
+activeFiles = "Aktivne datoteke"
+annotations = "Anotacije"
+applyRedactionsFirst = "Najprije primijeni zatamnjenja"
+closeAll = "Zatvori sve datoteke"
+closePdf = "Zatvori PDF"
+closeSelected = "Zatvori odabrane datoteke"
+deleteSelected = "Izbriši odabrane stranice"
+deselectAll = "Poništi odabir svega"
+downloadAll = "Preuzmi sve"
+downloadSelected = "Preuzmi odabrane datoteke"
+draw = "Crtaj"
+exitRedaction = "Izađi iz načina zatamnjivanja"
+exportAll = "Izvezi PDF"
+exportSelected = "Izvezi odabrane stranice"
+formFill = "Ispuni obrazac"
+language = "Jezik"
+multiTool = "Višenamjenski alat"
+panMode = "Način pomicanja"
+print = "Ispis PDF-a"
+readAloud = "Čitaj naglas"
+readAloudLanguage = "Jezik"
+readAloudSpeed = "Brzina"
+redact = "Zatamni"
+rotateLeft = "Rotiraj ulijevo"
+rotateRight = "Rotiraj udesno"
+ruler = "Ravnalo / Mjerenje"
+save = "Spremi"
+saveAll = "Spremi sve"
+saveAs = "Spremi kao"
+saveChanges = "Spremi promjene"
+search = "Pretraži PDF"
+selectAll = "Odaberi sve"
+selectByNumber = "Odaberi po brojevima stranica"
+selectLanguage = "Odaberi jezik"
+share = "Podijeli"
+toggleAnnotations = "Uključi/isključi vidljivost anotacija"
+toggleAttachments = "Uključi/isključi privitke"
+toggleBookmarks = "Uključi/isključi oznake"
+toggleComments = "Komentari"
+toggleLayers = "Uključi/isključi slojeve"
+toggleSidebar = "Uključi/isključi bočnu traku"
+toggleTheme = "Uključi/isključi temu"
+viewer = "Preglednik"
 
 [workspace]
 title = "Radni prostor"

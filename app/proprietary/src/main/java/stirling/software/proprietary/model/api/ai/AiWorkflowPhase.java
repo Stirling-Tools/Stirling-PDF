@@ -9,7 +9,13 @@ public enum AiWorkflowPhase {
     CALLING_ENGINE("calling_engine"),
     EXTRACTING_CONTENT("extracting_content"),
     EXECUTING_TOOL("executing_tool"),
-    PROCESSING("processing");
+    PROCESSING("processing"),
+    /**
+     * Generic engine-emitted progress event (e.g. chunked-reasoner slice progress). The original
+     * engine event JSON is carried in {@link AiWorkflowProgressEvent#getEngineDetail()}, including
+     * a specific {@code phase} string the frontend can switch on.
+     */
+    ENGINE_PROGRESS("engine_progress");
 
     private final String value;
 

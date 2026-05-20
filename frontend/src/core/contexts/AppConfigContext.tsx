@@ -1,6 +1,7 @@
 import React, {
   createContext,
   useContext,
+  useMemo,
   useState,
   useEffect,
   ReactNode,
@@ -219,12 +220,15 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
   const refetch = useCallback(() => fetchConfig(true), [fetchConfig]);
 
-  const value: AppConfigContextValue = {
-    config,
-    loading,
-    error,
-    refetch,
-  };
+  const value = useMemo<AppConfigContextValue>(
+    () => ({
+      config,
+      loading,
+      error,
+      refetch,
+    }),
+    [config, loading, error, refetch],
+  );
 
   return (
     <AppConfigContext.Provider value={value}>
