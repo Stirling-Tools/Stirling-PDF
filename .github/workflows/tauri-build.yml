@@ -47,9 +47,14 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           PLATFORM: ${{ inputs.platform }}
         run: |
-          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
-          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal"}'
-          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}'
+          # jpdfium_platforms: comma-separated subset of JPDFium natives to bundle into
+          # the per-matrix bootJar — Tauri bundles only run on the OS they were built
+          # for, so shipping foreign-OS natives wastes ~45 MB. macOS uses both
+          # darwin-arm64 + darwin-x64 because the --target universal-apple-darwin
+          # bundle is fat (both archs in one .app).
+          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
+          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
+          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
           # Resolve requested platform — populated by either workflow_dispatch
           # or workflow_call inputs; both paths default to "all".
@@ -148,15 +153,24 @@ jobs:
         if: matrix.platform == 'macos-15'
         env:
           AARCH64_JAVA_HOME: ${{ env.JAVA_HOME }}
+          # universal-mac calls jlink:jar transitively → bootJar build needs
+          # both darwin natives. Without this it'd default to host-arch only
+          # and the x86_64 half of the universal bundle would crash on ICU
+          # / qpdf / harfbuzz dlopen at startup.
+          JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:jlink:universal-mac
 
       - name: Prepare desktop build
-        run: task desktop:prepare
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
+          # Tell jlink:jar (called transitively) to bundle only this matrix
+          # entry's natives into the bootJar — saves ~45 MB out of the
+          # ~58 MB JPDFium overhead per bundle vs shipping all 5 OSes.
+          JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
+        run: task desktop:prepare
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
