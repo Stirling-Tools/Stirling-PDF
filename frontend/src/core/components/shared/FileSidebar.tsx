@@ -49,11 +49,25 @@ export interface FileSidebarProps {
    * announce a stale action.
    */
   toggleAriaLabel?: string;
+  /**
+   * Override for the toggle/burger button's icon. When the parent routes the
+   * burger to something other than expand/collapse (e.g. a "back to home"
+   * action on /files), passing a different icon (typically an arrow) makes
+   * the action self-evident without having to read the tooltip. Defaults to
+   * the hamburger MenuIcon.
+   */
+  toggleIcon?: React.ReactNode;
 }
 
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
-    { collapsed = false, onToggleCollapse, onOpenSettings, toggleAriaLabel },
+    {
+      collapsed = false,
+      onToggleCollapse,
+      onOpenSettings,
+      toggleAriaLabel,
+      toggleIcon,
+    },
     ref,
   ) {
     const { t } = useTranslation();
@@ -357,7 +371,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   : t("fileSidebar.collapse", "Collapse sidebar"))
               }
             >
-              <MenuIcon className="file-sidebar-menu-icon" />
+              {/* Wrap the icon so we can hand-off the file-sidebar-menu-icon
+                  styling (height/width/colour) to whatever the parent
+                  supplies as toggleIcon - typically a back-arrow on /files.
+                  Default stays as the hamburger MenuIcon.
+                  `data-toggle-flip-rtl` lets the parent opt-in to a CSS
+                  scaleX(-1) flip in RTL - directional icons like the back
+                  arrow should mirror, but the (symmetric) hamburger
+                  shouldn't. */}
+              <span
+                className="file-sidebar-menu-icon"
+                data-toggle-flip-rtl={toggleIcon ? "true" : undefined}
+              >
+                {toggleIcon ?? <MenuIcon />}
+              </span>
               {!collapsed && (
                 <Wordmark
                   alt="Stirling PDF"

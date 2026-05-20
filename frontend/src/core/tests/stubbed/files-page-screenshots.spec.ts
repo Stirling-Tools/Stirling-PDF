@@ -410,6 +410,101 @@ test.describe("Files page screenshots", () => {
     });
   });
 
+  // ─── RTL pass ────────────────────────────────────────────────────────────
+  // Same coverage in RTL (dir=rtl, Arabic locale fallback) so the new
+  // surfaces (sub-toolbar, empty-state CTAs, Move dialog inline create
+  // folder, details panel) flip correctly without breaking layout.
+  // The app reads `dir` from <html dir=...>; setting it via initScript
+  // before the first paint avoids a flash of LTR.
+
+  async function enableRtl(page: Page): Promise<void> {
+    // Seed BOTH the language and the dir attribute. The app's i18n init
+    // sets dir="rtl" only when the active i18n language is in the
+    // rtlLanguages list ("ar-AR" / "fa-IR"); setting just dir would be
+    // clobbered when i18n loads. Setting both the storage keys it uses
+    // (`i18nextLng` + the source flag) AND the dir attribute eagerly
+    // means the page renders RTL from the first paint.
+    await page.addInitScript(() => {
+      localStorage.setItem("i18nextLng", "ar-AR");
+      localStorage.setItem("stirling-language", "ar-AR");
+      localStorage.setItem("stirling-language-source", "user");
+      document.documentElement.setAttribute("dir", "rtl");
+      document.documentElement.setAttribute("lang", "ar-AR");
+    });
+  }
+
+  test("15_rtl_empty_state_ctas", async ({ page }) => {
+    await enableRtl(page);
+    await stubStorageApis(page);
+    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".files-page-empty")).toBeVisible({
+      timeout: 5_000,
+    });
+    await settle(page);
+    await page.screenshot({ path: shotPath("15_rtl_empty_state_ctas") });
+  });
+
+  test("16_rtl_subtoolbar_with_files", async ({ page }) => {
+    await enableRtl(page);
+    await stubStorageApis(page);
+    await seedFiles(page, [
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      { id: "bravo", name: "bravo.pdf", remoteStorageId: null },
+    ]);
+    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".files-page-card").first()).toBeVisible({
+      timeout: 5_000,
+    });
+    await settle(page);
+    await page.screenshot({ path: shotPath("16_rtl_subtoolbar_with_files") });
+  });
+
+  test("17_rtl_move_dialog_create_folder", async ({ page }) => {
+    await enableRtl(page);
+    await stubStorageApis(page);
+    await seedFiles(page, [
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+    ]);
+    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".files-page-card").first()).toBeVisible({
+      timeout: 5_000,
+    });
+    const card = page
+      .locator(".files-page-card:not(.is-folder)")
+      .filter({ hasText: "alpha.pdf" });
+    await card.getByRole("button", { name: /File actions/i }).click();
+    await page.getByRole("menuitem", { name: /Move to/i }).click();
+    await page.getByRole("button", { name: /Create new folder/i }).click();
+    await expect(
+      page.getByRole("textbox", { name: /New folder name/i }),
+    ).toBeVisible();
+    await settle(page);
+    await page.screenshot({
+      path: shotPath("17_rtl_move_dialog_create_folder"),
+    });
+  });
+
+  test("18_rtl_details_panel_save_to_server", async ({ page }) => {
+    await enableRtl(page);
+    await stubStorageApis(page);
+    await seedFiles(page, [
+      { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+    ]);
+    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".files-page-card").first()).toBeVisible({
+      timeout: 5_000,
+    });
+    await page
+      .locator(".files-page-card:not(.is-folder)")
+      .filter({ hasText: "alpha.pdf" })
+      .click();
+    await expect(page.locator(".files-page-details")).toBeVisible();
+    await settle(page);
+    await page.screenshot({
+      path: shotPath("18_rtl_details_panel_save_to_server"),
+    });
+  });
+
   test("14_dark_details_panel_save_to_server", async ({ page }) => {
     await enableDarkMode(page);
     await stubStorageApis(page);

@@ -17,6 +17,7 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
@@ -27,7 +28,11 @@ import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { FilesPageProvider } from "@app/contexts/FilesPageContext";
-import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
+// FolderTreePanel removed - the secondary "My Files" left column was
+// dropped from the /files layout (see the comment near the old render
+// site below). Import retained as commented context if it ever needs
+// to come back.
+// import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 
 import "@app/pages/HomePage.css";
 
@@ -96,9 +101,9 @@ export default function HomePage() {
   ]);
 
   // Auto-collapse the FileSidebar in My Files (the workbench already shows
-  // the folder tree and file grid, so the sidebar's recent-files list is
-  // redundant). Snapshot the user's pre-collapse state on entry so we can
-  // restore it on exit.
+  // the file grid, breadcrumb, and a sub-toolbar with Upload + New folder,
+  // so the sidebar's recent-files list is redundant). Snapshot the user's
+  // pre-collapse state on entry so we can restore it on exit.
   //
   // Edge-only transitions: snapshot on `?? → myFiles` and restore on
   // `myFiles → ??`. The naive "react to workbench any time" version is
@@ -474,13 +479,18 @@ export default function HomePage() {
                   ? t("fileSidebar.leaveMyFiles", "Leave My Files")
                   : undefined
               }
+              // Swap the burger for a back-arrow ONLY when in My Files
+              // so the action ("leave") is visually obvious. Other modes
+              // keep the hamburger (expand/collapse semantics).
+              toggleIcon={
+                navigationState.workbench === "myFiles" ? (
+                  <ArrowBackIcon />
+                ) : undefined
+              }
               onToggleCollapse={() => {
-                // While in My Files the FolderTreePanel already occupies
-                // the left rail. Expanding the FileSidebar on top would
-                // stack two panels, so the burger here acts as "leave
-                // My Files" - navigate back home. The FileSidebar's
-                // auto-collapse effect will then restore its previous
-                // expanded state.
+                // While in My Files the burger acts as "leave My Files"
+                // (navigate back home). On other workbenches it toggles
+                // the sidebar's collapsed state.
                 if (navigationState.workbench === "myFiles") {
                   navigate("/");
                   return;
@@ -489,7 +499,13 @@ export default function HomePage() {
               }}
               onOpenSettings={() => setConfigModalOpen(true)}
             />
-            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
+            {/* FolderTreePanel removed. It used to render here as a
+                secondary "My Files" tree column on /files only - now
+                gone because the file-manager grid + breadcrumb already
+                give folder context, and the redundant tree took up
+                screen real estate without paying its way. Outside
+                /files it was always width:0 so other workbenches see
+                no layout change. */}
             <Workbench />
             {!hideToolPanel && <ToolPanel />}
             <FileManager selectedTool={selectedTool} />

@@ -48,6 +48,26 @@
   flex-shrink: 0;
 }
 
+/* The toggle icon is now wrapped in a span so the parent can swap the
+ * MUI icon (e.g. burger → back-arrow on /files). MUI's SvgIcon uses 1em
+ * width/height so it scales with the wrapper's font-size, keeping the
+ * existing 18px look. The direct >svg target lets us also size native
+ * children (e.g. ArrowBackIcon) consistently. */
+.file-sidebar-menu-icon > svg {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
+}
+
+/* In RTL, mirror directional toggle icons (e.g. the back arrow used on
+ * /files). The symmetric hamburger doesn't carry data-toggle-flip-rtl
+ * so it stays unflipped. Scoped to the icon wrapper so the rest of
+ * the sidebar layout (which uses logical properties) keeps the
+ * Mantine RTL behaviour. */
+[dir="rtl"] .file-sidebar-menu-icon[data-toggle-flip-rtl="true"] > svg {
+  transform: scaleX(-1);
+}
+
 .file-sidebar-brand-text {
   height: 22px;
   width: auto;
