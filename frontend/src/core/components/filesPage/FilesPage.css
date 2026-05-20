@@ -14,8 +14,10 @@
    * via overflow:hidden), middle column holds the search, right column
    * holds the action buttons right-aligned. */
   display: grid;
-  grid-template-columns:
-    minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(
+      0,
+      1fr
+    );
   align-items: center;
   gap: 0.5rem;
   min-height: 48px;
