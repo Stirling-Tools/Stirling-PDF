@@ -161,12 +161,7 @@
   font-weight: 500;
 }
 
-/* Sub-toolbar primary actions (Upload + New folder). Sits at the start
- * of the toolbar so the CTAs are inline with where the user's eye lands
- * (above the grid) instead of buried in the far-corner header.
- * flex-shrink:0 stops the buttons from collapsing into ellipses when
- * the toolbar is tight; the count text + select-all are the elastic
- * elements, not these. */
+/* Upload + New folder at the start of the toolbar. */
 .files-page-toolbar-create {
   display: inline-flex;
   align-items: center;
@@ -775,10 +770,7 @@
   line-height: 1.5;
 }
 
-/* Empty-state CTAs - centered button row with breathing room above the
- * hint text. The buttons sit right in the user's eye-line so on
- * widescreen monitors they don't have to hunt the top-right corner for
- * Upload / New folder. Stacks on phones for finger-sized tap targets. */
+/* Empty-state CTA row; stacks on phones. */
 .files-page-empty-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1302,10 +1294,7 @@
   .files-page-header [data-desktop-hide="true"] {
     display: inline-flex !important;
   }
-  /* Same mobile-hide rule but scoped to the sub-toolbar create buttons.
-   * On phones the toolbar can't spare the horizontal space for two
-   * fully-labelled buttons and the corner Upload button is still right
-   * there in the header for thumb reach. */
+  /* Mobile-hide for sub-toolbar create buttons. */
   .files-page-toolbar [data-mobile-hide="true"] {
     display: none !important;
   }

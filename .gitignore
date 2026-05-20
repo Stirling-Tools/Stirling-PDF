@@ -272,7 +272,5 @@ docs/type3/signatures/
 .playwright-mcp/
 *.playwright-mcp.png
 
-# Playwright screenshot artifacts from the stubbed screenshot specs
-# (frontend/src/core/tests/stubbed/*-screenshots.spec.ts). Local-only -
-# regenerated on demand by re-running the spec.
+# Local screenshot artifacts from *-screenshots.spec.ts
 frontend/screenshots/

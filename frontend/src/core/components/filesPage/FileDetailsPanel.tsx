@@ -37,9 +37,7 @@ interface FileDetailsPanelProps {
   onQuickView: (fileId: FileId) => void;
   onMove: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
-  /** Upload the given local-only files to the server. Optional - the
-   *  panel only renders the "Save to server" action when supplied AND
-   *  the current selection contains at least one local-only file. */
+  /** Save to server; only shown when at least one selected file is local-only. */
   onSaveToServer?: (files: StirlingFileStub[]) => void;
 }
 
@@ -64,13 +62,10 @@ export function FileDetailsPanel({
     [selectedFileIds, fileMap],
   );
 
-  // Hooks must run unconditionally - declare state before the early return.
+  // Hooks must run before any early return.
   const [downloading, setDownloading] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  // Previous versions of the selected file (same originalFileId). Empty
-  // when only the single first version exists OR when multi-select is
-  // active (history is per-file). Loaded lazily off IDB so the panel
-  // mounts immediately and the version list slides in once it resolves.
+  // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
   useEffect(() => {
@@ -102,10 +97,7 @@ export function FileDetailsPanel({
   const single = files.length === 1 ? files[0]! : null;
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const ext = single ? (single.name.split(".").pop() ?? "").toUpperCase() : "";
-  // Subset still needing a server upload. Drives visibility of the
-  // "Save to server" action in the right-side bulk actions - same
-  // rule as the toolbar bulk button: if every selected file is
-  // already on the server, the action has nothing to do.
+  // Files still needing a server upload; drives Save-to-server visibility.
   const localOnlyFiles = files.filter((f) => f.remoteStorageId == null);
 
   const handleDownload = async () => {
@@ -170,15 +162,10 @@ export function FileDetailsPanel({
                 {single.name}
               </h3>
               {ext && (
-                // Custom span instead of Mantine Badge - Mantine's
-                // variant="default" rendered effectively invisible in dark
-                // mode (no background, washed-out border). Project CSS
-                // vars adapt to the active color scheme.
+                // Custom span; Mantine Badge default rendered invisible in dark mode.
                 <span className="files-page-details-ext-tag">{ext}</span>
               )}
               {(single.versionNumber ?? 1) > 1 && (
-                // Filled blue for the active version - high contrast in any
-                // theme, mirrors the per-version row badge below.
                 <Badge size="sm" variant="filled" color="blue">
                   v{single.versionNumber}
                 </Badge>
@@ -316,8 +303,7 @@ export function FileDetailsPanel({
                 onClick={() => setShareModalOpen(true)}
                 styles={{
                   root: {
-                    // Restore pointer events so the Tooltip still hovers
-                    // when the button is disabled (Mantine strips them).
+                    // Keep tooltip hoverable while button is disabled.
                     pointerEvents: sharingEnabled ? undefined : "auto",
                   },
                 }}
@@ -333,10 +319,7 @@ export function FileDetailsPanel({
           >
             {t("filesPage.moveTo", "Move to…")}
           </Button>
-          {/* "Save to server" - mirrors the toolbar bulk button so the
-              action is still reachable when the inline toolbar is hidden
-              or the user is working from the details panel. Shown only
-              when at least one selected file is still local-only. */}
+          {/* Save to server; shown when any selected file is local-only. */}
           {onSaveToServer && localOnlyFiles.length > 0 && (
             <Button
               leftSection={<CloudUploadIcon fontSize="small" />}
@@ -356,11 +339,7 @@ export function FileDetailsPanel({
           </Button>
         </div>
       </div>
-      {/* Mount the share modal once at the panel level so it survives
-          across version-row interactions and dismisses cleanly. Still
-          gated on sharingEnabled because the modal itself only makes
-          sense when sharing is server-enabled - the always-rendered
-          Share button is disabled in that case so the modal never opens. */}
+      {/* Single panel-level mount; gated on sharingEnabled. */}
       {single && sharingEnabled && (
         <ShareManagementModal
           opened={shareModalOpen}
@@ -381,12 +360,7 @@ function DetailField({ label, value }: { label: string; value: string }) {
   );
 }
 
-/**
- * The "+ tool" that produced `version` from the immediately prior version.
- * Each tool run appends one entry to `toolHistory` and bumps `versionNumber`
- * by 1, so the delta is the entry at index = prevToolHistory.length.
- * Returns null for v1 (no prior version exists).
- */
+/** Tool that produced `version` from `prior`; null for v1. */
 function deltaToolFor(
   version: StirlingFileStub,
   prior: StirlingFileStub | null,
@@ -398,23 +372,16 @@ function deltaToolFor(
 }
 
 interface VersionTimelineProps {
-  /** Full chain, sorted oldest-first as returned by getHistoryChainStubs. */
+  /** Chain sorted oldest-first. */
   chain: StirlingFileStub[];
-  /** The version currently selected in the details panel. */
+  /** Currently selected version. */
   currentId: FileId;
   onQuickView: (fileId: FileId) => void;
   onAddToWorkspace: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
 }
 
-/**
- * Vertical timeline of version history with per-row "+ tool" deltas.
- * Active version is highlighted. Each row is expandable (chevron) to
- * surface size / modified-date / full cumulative tool chain. Chains
- * longer than `COLLAPSE_THRESHOLD` versions collapse the middle entries
- * behind a "...N more versions..." button so 10-deep journeys still fit
- * the panel without scrolling.
- */
+/** Version timeline with per-row tool deltas and collapse-when-long. */
 function VersionTimeline({
   chain,
   currentId,
@@ -426,9 +393,7 @@ function VersionTimeline({
   const [expandedIds, setExpandedIds] = useState<Set<FileId>>(new Set());
   const [showAllCollapsed, setShowAllCollapsed] = useState(false);
 
-  // Newest-first ordering matches how users read journey panels (current
-  // state at top, scroll down for older history) and matches the legacy
-  // FileHistoryGroup behaviour.
+  // Newest-first ordering.
   const ordered = useMemo(
     () =>
       [...chain].sort(
@@ -437,9 +402,7 @@ function VersionTimeline({
     [chain],
   );
 
-  // For computing "+ tool" deltas, we need the chronological neighbour
-  // (the version with versionNumber - 1). Build an index keyed by version
-  // number so we can look up the prior version regardless of array order.
+  // Index by versionNumber for prior-version lookup.
   const byVersionNumber = useMemo(() => {
     const map = new Map<number, StirlingFileStub>();
     for (const v of chain) {
@@ -448,9 +411,7 @@ function VersionTimeline({
     return map;
   }, [chain]);
 
-  // Collapse the middle when the chain is long: 3 newest + ellipsis + 2
-  // oldest. The ellipsis row itself is rendered inline as a synthetic
-  // entry; it's not a real version.
+  // Collapse middle when long: 3 newest + ellipsis + 2 oldest.
   const COLLAPSE_THRESHOLD = 6;
   const collapsible = ordered.length > COLLAPSE_THRESHOLD;
   type Row =
@@ -553,12 +514,6 @@ function VersionTimeline({
                 >
                   <Badge
                     size="xs"
-                    // Filled-blue for the active version, outline-blue
-                    // for older ones. Keeping the whole family on the
-                    // blue color so the row badges read as one set, and
-                    // using `outline` (not `light`) so the chip has a
-                    // visible border ring in dark mode - `light + gray`
-                    // washes out against the panel surface.
                     variant={isActive ? "filled" : "outline"}
                     color="blue"
                   >
@@ -655,13 +610,7 @@ function VersionTimeline({
                   )}
                 </div>
                 {isExpanded && (
-                  // Expanded body only shows things the compact row above
-                  // hasn't already exposed: the per-version filename (the
-                  // compact summary just shows the v-badge + tool delta)
-                  // and the cumulative tool chain (compact shows only the
-                  // delta tool, not the full journey to this version).
-                  // The version's created/modified date and size are
-                  // already in the meta line, so we don't repeat them.
+                  // Filename + full cumulative tool chain.
                   <div className="files-page-details-version-timeline-expanded">
                     <DetailField
                       label={t("filesPage.field.name", "Name")}
@@ -702,11 +651,7 @@ function VersionTimeline({
   );
 }
 
-/**
- * Resolves a `ToolId` to its translated user-facing tool name (e.g.
- * "rotate" -> "Rotate PDF"). The same `home.{toolId}.title` key
- * convention used by ToolChain.
- */
+/** Translated tool name via `home.{toolId}.title`. */
 function ToolLabel({ toolId }: { toolId: ToolId }) {
   const { t } = useTranslation();
   return <span>{t(`home.${toolId}.title`, toolId)}</span>;

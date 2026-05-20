@@ -40,34 +40,23 @@ export interface FilesPageEntry {
   /** Number of files inside this folder (folder entries only). */
   folderFileCount?: number;
   file?: StirlingFileStub;
-  /**
-   * Pretty path of the parent folder relative to the current view. Set only
-   * for search results that live outside the current folder - gives the user
-   * "where does this hit actually live?" without a navigation. Empty/undefined
-   * for items that ARE in the current folder.
-   */
+  /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
 
 interface FileGridProps {
   entries: FilesPageEntry[];
   selectedFileIds: Set<FileId>;
-  /** Ids of files already loaded in the active workspace - shown with
-   *  an "Open" indicator so the user can tell at a glance which files
-   *  they're already using. Passed as a Set<string> because FileIds
-   *  are branded strings and Set lookup needs a stable hash. */
+  /** Ids of files loaded in the active workspace. */
   activeWorkspaceFileIds?: Set<string>;
   viewMode: FilesPageViewMode;
   onSelectFile: (id: FileId, shiftKey: boolean, ctrlKey: boolean) => void;
-  /**
-   * Replace the entire selection set. Used by the list-view header
-   * checkbox (and elsewhere) to bulk-select or clear visible files.
-   */
+  /** Replace the entire selection set. */
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
-  /** "Add to workspace" - committed open, no back affordance. */
+  /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
-  /** "Quick view" - peek with a back-to-folder affordance. */
+  /** "Quick view". */
   onQuickView: (file: StirlingFileStub) => void;
   onMoveFiles: (
     fileIds: FileId[],
@@ -85,29 +74,19 @@ interface FileGridProps {
   ) => void;
   onRemoveFiles: (fileIds: FileId[]) => void;
   onPromptMoveFiles: (fileIds: FileId[]) => void;
-  /** "Save to server" - per-file action shown in kebab when the file is
-   *  local-only (no remoteStorageId). Optional so the prop is harmless
-   *  when storage is disabled; FileManagerView gates the wiring. */
+  /** Per-file Save to server; hidden when file already has remoteStorageId. */
   onSaveToServer?: (file: StirlingFileStub) => void;
-  /** Optional - when supplied the list-view column headers become
-   *  sortable. */
+  /** When supplied the list-view column headers become sortable. */
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
   currentTab?: "all" | "local" | "cloud" | "recent" | "shared";
-  /** Cloud reachability - switches the cloud empty state between
-   *  "no files yet" and "no cached cloud files". */
+  /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
-  /** Empty-state CTAs - center-of-grid call-to-action buttons rendered
-   *  when there are no entries. The corner header buttons are still
-   *  there for power users, but the wide-monitor "where do I click?"
-   *  problem goes away when the actions are surfaced where the eye
-   *  actually lands. Both are optional - pass undefined to hide the
-   *  matching button. `newFolderDisabledReason` mirrors the header
-   *  button's disabled gating; when non-null the CTA shows a tooltip
-   *  with the reason instead of being a working button. */
+  /** Empty-state CTA handlers; if absent the matching button hides. */
   onEmptyUpload?: () => void;
   onEmptyCreateFolder?: () => void;
+  /** Non-null disables the New folder CTA with this reason as tooltip. */
   newFolderDisabledReason?: string | null;
 }
 
@@ -146,9 +125,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
 }
 
 function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
-  // Six rectangular placeholders that mirror the card layout - gives a
-  // sense of "loading rhythm" rather than a blank panel while IndexedDB
-  // resolves.
+  // Six placeholders mirroring the card layout while IDB resolves.
   const placeholders = Array.from({ length: 6 });
   if (viewMode === "list") {
     return (
@@ -200,16 +177,14 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 }
 
 interface EmptyStateProps {
-  /** Which tab the user is on; drives copy + iconography. */
+  /** Drives copy + iconography. */
   tab?: "all" | "local" | "cloud" | "recent" | "shared";
-  /** Whether the cloud backend is currently reachable; switches the cloud
-   *  empty state from "no files yet" to "no cached cloud files". */
+  /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
-  /** CTAs - see FileGridProps. Optional; if absent, the button hides. */
+  /** CTA handlers; absent => button hidden. */
   onUpload?: () => void;
   onCreateFolder?: () => void;
-  /** When non-null, the New folder CTA is disabled with this reason
-   *  surfaced via a tooltip. Mirrors the header button's gating. */
+  /** Non-null disables New folder CTA with this reason. */
   newFolderDisabledReason?: string | null;
 }
 
@@ -271,10 +246,7 @@ function EmptyState({
         };
     }
   })();
-  // CTAs are suppressed on the "recent" and "shared" tabs since neither
-  // upload-to-server nor create-folder semantically apply there (recent
-  // is read-only, shared mirrors files from other accounts). The "local"
-  // empty state hides create-folder too because folders are cloud-only.
+  // Recent/Shared are read-only; Local is cloud-only for folders.
   const showUpload = Boolean(onUpload) && tab !== "recent" && tab !== "shared";
   const showCreateFolder =
     Boolean(onCreateFolder) &&
@@ -308,8 +280,7 @@ function EmptyState({
                 multiline
                 w={260}
               >
-                {/* Wrap so the tooltip still hovers when the button is
-                    disabled - Mantine strips pointer events otherwise. */}
+                {/* Wrap so tooltip hovers while button is disabled. */}
                 <span style={{ display: "inline-flex" }}>
                   <Button
                     size="md"
@@ -418,7 +389,7 @@ function GridView({
 interface FolderCardProps {
   folder: FolderRecord;
   fileCount: number;
-  /** Parent breadcrumb path shown as a subtitle (search results only). */
+  /** Subtitle for search results outside current folder. */
   parentPath?: string;
   selectedFileIds: Set<FileId>;
   onOpen: () => void;
@@ -463,8 +434,7 @@ function FolderCard({
     onDrop: (e) => {
       const payload = parseFilesPageDragPayload(e.dataTransfer);
       if (!payload) return;
-      // Surface rejections rather than letting unhandled-promise-rejection
-      // hide an IDB quota / transaction abort behind a silent no-op.
+      // Surface rejections instead of silent no-op on IDB failures.
       if (payload.kind === "files") {
         Promise.resolve(onMoveFiles(payload.fileIds)).catch((err) =>
           surfaceDrop(err, "move files into folder"),
@@ -593,23 +563,17 @@ interface FileCardProps {
   file: StirlingFileStub;
   isSelected: boolean;
   isInWorkspace: boolean;
-  /** Parent folder path shown as subtitle (search results only). */
+  /** Subtitle for search results outside current folder. */
   parentPath?: string;
   selectedFileIds: Set<FileId>;
-  /** True once the user is explicitly multi-selecting (2+ files). The
-   *  card shows its checkbox in this mode; in single-select / no-select
-   *  the checkbox is hidden and the highlight border is the only state
-   *  indicator. Avoids the always-visible-checkbox visual noise. */
+  /** Shows the checkbox once 2+ files are selected. */
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
   onQuickView: () => void;
   onRemove: () => void;
   onMove: () => void;
-  /** Optional - kebab shows a "Save to server" item only when this
-   *  callback is supplied AND the file has no remoteStorageId. The
-   *  caller decides whether the action is even available (storage
-   *  enabled, sign-in state, etc). */
+  /** Kebab Save to server; only fires when file is local-only. */
   onSaveToServer?: () => void;
 }
 
@@ -654,8 +618,7 @@ function FileCard({
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      // If the card isn't already part of the selection, treat the
-      // right-click as a select then open the menu.
+      // Right-click on unselected card selects first, then opens menu.
       if (!isSelected) onClick(e);
       kebabRef.current?.click();
     },
@@ -698,10 +661,7 @@ function FileCard({
           <Checkbox
             checked={isSelected}
             onClick={(e) => {
-              // The checkbox always means "toggle this file in/out of the
-              // selection" - even without a modifier. Synthesise a click
-              // event with ctrl held so the parent handler takes the
-              // toggle branch instead of replacing the selection.
+              // Synthesise ctrl-click so parent takes the toggle branch.
               e.stopPropagation();
               onClick({
                 ...e,
@@ -721,12 +681,7 @@ function FileCard({
       )}
       <div className="files-page-card-thumb">
         {file.thumbnailUrl ? (
-          // `draggable={false}` so grabbing the thumbnail image doesn't
-          // hijack the drag: native HTML <img> elements are draggable
-          // by default and produce a browser-native image drag (the one
-          // that shows "download.png" and saves the bitmap on drop).
-          // We want the parent card's onDragStart to fire instead so
-          // the drop targets see our FILES_PAGE_DRAG_TYPE payload.
+          // draggable={false} so card's onDragStart fires, not native image drag.
           <img src={file.thumbnailUrl} alt="" draggable={false} />
         ) : (
           <div className="files-page-card-thumb-fallback">
@@ -799,10 +754,7 @@ function FileCard({
             >
               {t("filesPage.moveTo", "Move to…")}
             </Menu.Item>
-            {/* "Save to server" - per-file shortcut for the same
-                bulk-toolbar action. Hidden once the file is already
-                synced (no useful op left) and when no callback was
-                supplied (storage feature disabled). */}
+            {/* Per-file Save to server; hidden when already on server. */}
             {onSaveToServer && file.remoteStorageId == null && (
               <Menu.Item
                 leftSection={<CloudUploadIcon fontSize="small" />}
@@ -1165,14 +1117,14 @@ interface FileRowProps {
   isInWorkspace: boolean;
   parentPath?: string;
   selectedFileIds: Set<FileId>;
-  /** See FileCardProps. True once user has 2+ files selected. */
+  /** Shows the checkbox once 2+ files are selected. */
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onOpen: () => void;
   onQuickView: () => void;
   onRemove: () => void;
   onMove: () => void;
-  /** See FileCardProps - same per-file save action, shown in row kebab. */
+  /** Kebab Save to server; only fires when file is local-only. */
   onSaveToServer?: () => void;
 }
 
@@ -1251,9 +1203,7 @@ function FileRow({
           })}
         />
       ) : (
-        // Empty cell preserves the grid column so the rest of the row
-        // stays aligned with the list header (which still shows its own
-        // multi-select-toggle checkbox).
+        // Empty cell preserves grid column alignment.
         <span aria-hidden="true" />
       )}
       <span
@@ -1268,9 +1218,7 @@ function FileRow({
           <img
             src={file.thumbnailUrl}
             alt=""
-            // See FileCard above - native <img> drag hijacks the row's
-            // onDragStart and turns the drop into a "download.png" save
-            // instead of our folder-move payload.
+            // draggable={false} so row's onDragStart fires, not native image drag.
             draggable={false}
             style={{
               width: "1.5rem",
@@ -1360,7 +1308,7 @@ function FileRow({
           >
             {t("filesPage.moveTo", "Move to…")}
           </Menu.Item>
-          {/* See FileCard kebab - same hide-when-already-on-server rule. */}
+          {/* Per-file Save to server; hidden when already on server. */}
           {onSaveToServer && file.remoteStorageId == null && (
             <Menu.Item
               leftSection={<CloudUploadIcon fontSize="small" />}

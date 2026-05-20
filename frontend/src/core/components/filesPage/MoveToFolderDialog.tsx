@@ -24,23 +24,11 @@ interface MoveToFolderDialogProps {
   opened: boolean;
   onClose: () => void;
   folders: FolderRecord[];
-  /**
-   * When moving a folder, pass its id so its own descendants are
-   * excluded from the candidate destinations (no cycles).
-   */
+  /** Folder being moved; excludes its descendants from destinations. */
   disabledFolderId?: FolderId | null;
   initialFolderId?: FolderId | null;
   onConfirm: (folderId: FolderId | null) => void | Promise<void>;
-  /**
-   * Optional - when supplied, the dialog renders an inline "Create new
-   * folder" affordance that calls this back with the desired name and
-   * the currently-highlighted target as parent. After creation the new
-   * folder becomes the move target so the user can confirm the move
-   * without bouncing out of the dialog.
-   *
-   * When omitted (e.g. caller doesn't have server folder write access)
-   * the affordance is hidden entirely.
-   */
+  /** Inline-create folder; new folder becomes the move target. */
   onCreateFolder?: (
     name: string,
     parentFolderId: FolderId | null,
@@ -60,9 +48,7 @@ export function MoveToFolderDialog({
   const [target, setTarget] = useState<FolderId | null>(initialFolderId);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Inline create-folder state. Hidden by default - reveal via the
-  // "Create new folder" button below the tree. Keeping it in the same
-  // dialog avoids the user having to cancel out, create, and come back.
+  // Inline create-folder state; revealed by the toggle.
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -79,11 +65,7 @@ export function MoveToFolderDialog({
     }
   }, [opened, initialFolderId]);
 
-  /**
-   * One pass over `folders` to build {@code byParent}, the {@code depthById}
-   * cache, and the blocked set. The previous code rebuilt {@code byId}
-   * inside every {@code NestedPick} render (O(N²) per dialog open).
-   */
+  /** Single-pass build of parent index, depths, and blocked descendants. */
   const { depthById, blocked, treeOrder } = useMemo(() => {
     const byParent = new Map<FolderId | null, FolderRecord[]>();
     for (const folder of folders) {
@@ -97,13 +79,7 @@ export function MoveToFolderDialog({
       );
     }
 
-    // Pre-order DFS - children appear directly under their parent.
-    // Capped at MAX_TREE_DEPTH for the same reason as FolderTreeSidebar
-    // and FolderContext.build (kept in lockstep at 50): a corrupted IDB
-    // cache or hand-edited folder chain deeper than the server enforces
-    // would otherwise blow the JS stack here. Silent truncate - any
-    // descendant beyond depth 50 just won't appear as a move target,
-    // which is a strict improvement over a crash.
+    // Pre-order DFS; truncates past MAX_TREE_DEPTH to prevent stack overflow.
     const MAX_TREE_DEPTH = 50;
     const order: FolderRecord[] = [];
     const depths = new Map<FolderId, number>();
@@ -178,11 +154,7 @@ export function MoveToFolderDialog({
             />
           ))}
         </div>
-        {/* Inline "Create new folder" affordance. Hidden until the user
-            clicks the button so the dialog stays compact. Once revealed
-            it creates a folder under the currently-highlighted target
-            (the chosen parent) and selects the new folder so the user
-            can immediately confirm the move. */}
+        {/* Inline Create new folder; new folder becomes the move target. */}
         {onCreateFolder &&
           (() => {
             const trimmedName = newFolderName.trim();
@@ -193,8 +165,7 @@ export function MoveToFolderDialog({
               try {
                 const created = await onCreateFolder(
                   trimmedName,
-                  // The selected destination is the parent. If the user
-                  // picked "All files" (root), the new folder sits at root.
+                  // ROOT becomes null parent.
                   target === ROOT_FOLDER_ID ? null : target,
                 );
                 setTarget(created.id);
@@ -250,10 +221,7 @@ export function MoveToFolderDialog({
                 >
                   {t("filesPage.moveDialog.newFolderCreate", "Create")}
                 </Button>
-                {/* X icon - collapses the inline create row without
-                    closing the whole dialog. Earlier this was a "Cancel"
-                    button which visually clashed with the dialog footer
-                    Cancel (two identical labels confusing the user). */}
+                {/* X collapses the inline create row only. */}
                 <Tooltip
                   label={t("filesPage.moveDialog.newFolderCancel", "Discard")}
                   withinPortal

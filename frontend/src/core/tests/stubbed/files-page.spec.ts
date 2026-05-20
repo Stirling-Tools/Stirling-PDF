@@ -1,20 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 
-/**
- * Stubbed coverage for the `/files` page (the file manager workbench
- * surface). These specs verify UI invariants the live backend isn't
- * needed for - selection model, button visibility under different
- * selection states, mobile drawer behaviour, drag-and-drop wiring,
- * etc. Tests that exercise actual storage round-trips (folder upload,
- * server move) live in a separate live spec, not here.
- */
-
-// Local-only file (no remoteStorageId) and cloud file fixtures, written
-// straight into IDB before the React app boots. Both share the same
-// shape as StirlingFileStub minus the File data blob (the file manager
-// only needs the stub to render the grid; opening / downloading would
-// need the blob too).
+/** Stubbed coverage for the /files page UI invariants. */
 
 interface SeedFile {
   id: string;
@@ -24,22 +11,13 @@ interface SeedFile {
   toolHistory?: Array<{ toolId: string; timestamp: number }>;
 }
 
-/**
- * Pre-seed the `stirling-pdf-files` IDB with a handful of test files
- * before the app starts. Runs as an initScript so the database is
- * populated by the time FilesPageContext does its first read.
- *
- * The records are minimal stubs - just enough fields for the grid to
- * render and for FilesPageContext's isLeaf filter to accept them.
- */
+/** Seed IDB before the React app boots. */
 async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
   await page.addInitScript((records) => {
     const open = window.indexedDB.open("stirling-pdf-files", 4);
     open.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      // The app expects BOTH `files` and `folders` stores on this DB.
-      // Seeding only `files` makes subsequent folderStorage transactions
-      // throw "One of the specified object stores was not found".
+      // Create both `files` and `folders` stores on this DB.
       if (!db.objectStoreNames.contains("files")) {
         const store = db.createObjectStore("files", { keyPath: "id" });
         store.createIndex("name", "name", { unique: false });
@@ -71,9 +49,7 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
           size: 1024,
           lastModified: now,
           createdAt: now,
-          // Tiny ArrayBuffer placeholder. The grid only renders stubs;
-          // opening the file would require real bytes, which the specs
-          // here don't exercise.
+          // Placeholder; opening would need real bytes.
           data: new ArrayBuffer(8),
           thumbnail: null,
           isLeaf: true,
@@ -96,35 +72,19 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
   }, files);
 }
 
-/**
- * Stub the storage / folder endpoints the `/files` page hits on mount.
- * Returns the registered handler so individual specs can override the
- * folders list mid-test if they need to (none currently do).
- */
+/** Stub the storage + config endpoints hit on mount. */
 async function stubStorageApis(
   page: Page,
   opts: { storageEnabled?: boolean; sharingEnabled?: boolean } = {},
 ): Promise<void> {
   const { storageEnabled = true, sharingEnabled = false } = opts;
-  // No `enableLogin` field - if we set it the AppConfig context triggers
-  // the auth/login flow on mount, which redirects away from /files. The
-  // server-side ConfigController normally derives storageEnabled from
-  // enableLogin AND storage.enabled, but here we set storageEnabled
-  // directly so the FolderContext serverReachable pipeline runs without
-  // the auth side-effects.
+  // No enableLogin; setting it would trigger the auth redirect.
   const configPayload = {
     appVersion: "test",
     storageEnabled,
     storageSharingEnabled: sharingEnabled,
     storageShareLinksEnabled: sharingEnabled,
   };
-  // The app reads its config from `/api/v1/config/app-config` via the
-  // AppConfigContext hook on mount. `serverReachable` (and therefore
-  // the New folder / Create folder gating) depends on
-  // `appConfig.storageEnabled === true` flipping the
-  // `pullFromServer` pipeline. We stub both the modern app-config path
-  // and the older bare `/config` path so historical callers still
-  // resolve cleanly.
   await page.route("**/api/v1/config/app-config", (route: Route) =>
     route.fulfill({ json: configPayload }),
   );
@@ -134,18 +94,12 @@ async function stubStorageApis(
   await page.route("**/api/v1/storage/folders", (route: Route) =>
     route.fulfill({ json: [] }),
   );
-  // Anything else under storage - return empty so the page doesn't
-  // throw on unexpected calls.
   await page.route("**/api/v1/storage/**", (route: Route) =>
     route.fulfill({ json: [] }),
   );
 }
 
-/**
- * Standard /files page navigation + readiness wait. The page is ready
- * when the file grid has rendered at least one card from the seeded
- * fixtures (waits cap at 5s so a missing seed fails fast).
- */
+/** Navigate to /files and wait for at least one seeded card. */
 async function gotoFilesPage(page: Page): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".files-page-card").first()).toBeVisible({
@@ -189,10 +143,7 @@ test.describe("Files page", () => {
       await cards.nth(1).click({ modifiers: ["Control"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
 
-      // In multi-select mode (2+), plain-click ADDS instead of
-      // replacing - this is the Google Drive pattern the team explicitly
-      // moved to so users don't lose their selection when they reach
-      // for one more file.
+      // In multi-select (2+), plain-click ADDS instead of replacing.
       await cards.nth(2).click();
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(3);
 
@@ -209,8 +160,7 @@ test.describe("Files page", () => {
       // 0 selected: no checkboxes anywhere on file cards.
       await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
 
-      // 1 selected: still no checkbox (the highlight border is the
-      // single-select state indicator).
+      // 1 selected: still no checkbox (highlight border is the indicator).
       await cards.nth(0).click();
       await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
 
@@ -225,9 +175,7 @@ test.describe("Files page", () => {
       page,
     }) => {
       await gotoFilesPage(page);
-      // The tooltip is the only discovery point for the new selection
-      // model - if this assertion ever breaks, users will be left
-      // guessing how to multi-select.
+      // Tooltip is the discovery point for Ctrl/Shift multi-select.
       const selectAll = page.getByRole("button", { name: /^Select all$/i });
       await selectAll.hover();
       await expect(
@@ -263,10 +211,7 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      // Two entry points share the same accessible name when a local
-      // file is selected: the toolbar bulk button AND the details
-      // panel button. Assert via `.first()` so the test stays green
-      // even though strict-mode would otherwise reject the multi-match.
+      // Two entry points share the name; use .first() for strict mode.
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }).first(),
       ).toBeVisible();
@@ -293,9 +238,7 @@ test.describe("Files page", () => {
       page,
     }) => {
       await gotoFilesPage(page);
-      // Open the per-card kebab WITHOUT first selecting - the kebab
-      // entry must work straight from the card so the user doesn't have
-      // to round-trip through the toolbar.
+      // Open the kebab without first selecting.
       const localCard = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" });
@@ -309,8 +252,7 @@ test.describe("Files page", () => {
       page,
     }) => {
       await gotoFilesPage(page);
-      // Cloud file's kebab shouldn't show a Save-to-server option -
-      // there's nothing to upload.
+      // Cloud file kebab omits Save to server.
       const cloudCard = page
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "cloud-a.pdf" });
@@ -334,15 +276,9 @@ test.describe("Files page", () => {
       page,
     }) => {
       await gotoFilesPage(page);
-      // The native file input is hidden via display:none; the spec
-      // simulates an upload by writing to it directly. The file blob
-      // is tiny - we're verifying the routing behaviour, not the
-      // actual PDF processing pipeline.
+      // Write to the hidden file input directly.
       const tinyPdf = Buffer.from("%PDF-1.4\n%%EOF", "utf8");
       const input = page.locator('input[data-testid="file-input"]').first();
-      // The file manager's "Open from computer" hidden input is the
-      // primary upload entry. If the selector ever changes, this test
-      // will need updating.
       if ((await input.count()) === 0) {
         test.skip(
           true,
@@ -354,10 +290,7 @@ test.describe("Files page", () => {
         mimeType: "application/pdf",
         buffer: tinyPdf,
       });
-      // After upload the user should stay on /files (NOT be routed to
-      // /viewer or /tools). The earlier behaviour auto-activated the
-      // uploaded file in workspace state, which silently popped it up
-      // the next time the user navigated to /viewer.
+      // Upload must leave the user on /files.
       await page.waitForTimeout(500);
       await expect(page).toHaveURL(/\/files/);
     });
@@ -380,18 +313,14 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "active-test.pdf" });
       await card.click();
-      // First Add to workspace - adds the file then routes to viewer.
+      // First Add to workspace; routes to viewer.
       await page
         .getByRole("button", { name: /Add to workspace/i })
         .first()
         .click();
       await expect(page).not.toHaveURL(/\/files/, { timeout: 3_000 });
 
-      // Navigate back to /files and add the same (now-active) file again.
-      // The previous bug returned [] from addStirlingFileStubs (dedup
-      // skip), neither viewer/fileEditor branch fired, leaving the
-      // workbench in stale state. Today the activation branches on the
-      // REQUESTED stubs, not the dedup'd added list.
+      // Re-add the now-active file; activation branches on requested stubs.
       await page.goto("/files", { waitUntil: "domcontentloaded" });
       const card2 = page
         .locator(".files-page-card:not(.is-folder)")
@@ -417,11 +346,7 @@ test.describe("Files page", () => {
     test.use({ autoGoto: false });
 
     test("card thumbnail <img> is not natively draggable", async ({ page }) => {
-      // When the <img> is natively draggable (the browser default), the
-      // user gets a "download.png" ghost and the card's onDragStart
-      // handler never fires - meaning drops onto folders silently do
-      // nothing. draggable={false} on the thumb img makes the card-
-      // level handler the sole authority on drag intent.
+      // draggable={false} keeps the card's onDragStart as drag authority.
       await gotoFilesPage(page);
       const thumbImg = page.locator(".files-page-card-thumb img").first();
       if ((await thumbImg.count()) === 0) {
@@ -449,10 +374,7 @@ test.describe("Files page", () => {
     });
 
     test("drawer does NOT auto-open on file selection", async ({ page }) => {
-      // The original implementation auto-opened the drawer whenever a
-      // file was selected, which blocked multi-select (the backdrop
-      // intercepted taps on other file cards). Now the drawer only
-      // opens when the user taps the explicit "Show details" button.
+      // Drawer is button-triggered only.
       await gotoFilesPage(page);
       await page
         .locator(".files-page-card:not(.is-folder)")
@@ -486,9 +408,7 @@ test.describe("Files page", () => {
       await gotoFilesPage(page);
       const cards = page.locator(".files-page-card:not(.is-folder)");
       await cards.nth(0).click();
-      // The drawer doesn't intercept this second-card click because it's
-      // not open by default - this was the whole point of the
-      // button-trigger refactor.
+      // Drawer stays closed so the second click reaches the card.
       await cards.nth(1).click({ modifiers: ["Control"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
     });
@@ -554,9 +474,6 @@ test.describe("Files page", () => {
         .filter({ hasText: "to-move.pdf" });
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Move to/i }).click();
-      // The dialog now exposes an inline "Create new folder…" toggle
-      // so the user can spin up a destination folder without leaving
-      // the dialog.
       await expect(
         page.getByRole("button", { name: /Create new folder/i }),
       ).toBeVisible();

@@ -1,16 +1,4 @@
-/**
- * FilesPageContext - shared state for the My Files view.
- *
- * The tree navigator (rendered next to the FileSidebar) and the main file
- * grid (rendered inside the Workbench area) both need access to:
- *   - the cached file list and file-counts per folder
- *   - the current selection
- *   - dialog state (new folder / rename / move)
- *   - shared action helpers (move files, move folder, delete folder)
- *
- * Hoisting these into a context lets the two views render as independent
- * siblings without prop-drilling.
- */
+/** Shared state for the My Files view. */
 
 import React, {
   createContext,
@@ -32,12 +20,7 @@ import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
 
-/**
- * Allowed values for the view-toggle in the files-page toolbar. Kept as a
- * `as const` tuple so consumers can iterate the modes (`FILES_PAGE_VIEW_MODES`)
- * without restating them, and the union `FilesPageViewMode` stays the single
- * source of truth.
- */
+/** View-toggle modes; tuple keeps the union and iterator in sync. */
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
 export type FilesPageViewMode = (typeof FILES_PAGE_VIEW_MODES)[number];
 export type FilesPageSortMode =
@@ -53,15 +36,7 @@ export type FilesPageOriginFilter =
   | "cloud"
   | "shared-with-me";
 
-/**
- * Tab views are presets that filter+navigate the file manager at once.
- *
- * - `all`    → tree visible; folder = currentFolderId (cloud)
- * - `local`  → only files with `remoteStorageId == null`; folders disabled
- * - `cloud`  → only cloud files; Local pseudo-folder hidden from tree
- * - `recent` → flat last-50-modified across both; folder context ignored
- * - `shared` → only files `remoteOwnedByCurrentUser === false`
- */
+/** all|local|cloud|recent|shared filter presets. */
 export type FilesPageTab = "all" | "local" | "cloud" | "recent" | "shared";
 
 export interface FolderNameDialogState {
@@ -144,20 +119,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Narrow the dep - only setError is read, and useState setters are
-  // identity-stable across renders, so refresh ends up effectively dep-less.
-  // Earlier [folders] dep caused refresh to be recreated whenever any
-  // FolderContext field changed → IDB re-read on every folder navigation.
+  // Narrow dep so refresh isn't recreated on every folders field change.
   const setFoldersError = folders.setError;
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const stubs = await fileStorage.getAllStirlingFileStubs();
       setAllFiles(stubs.filter((s) => s.isLeaf !== false));
-      // Don't setError(null) on success - refresh fires after every file
-      // mutation and from a useEffect; clearing here wiped folder-sync
-      // errors a heartbeat after they appeared. Errors live until either
-      // the user dismisses them or pullFromServer itself succeeds.
+      // Don't clear errors here; let dismiss or pullFromServer handle them.
     } catch (err) {
       console.error("[FilesPageContext] refresh failed", err);
       setFoldersError(
@@ -264,14 +233,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   // Action helpers ----------------------------------------------------------
 
-  /**
-   * Move files. Cloud files go through the server first (so cross-PC sync
-   * sees the move); local-only files moving INTO a folder trigger an
-   * auto-upload to the server (the user's intent in dropping onto a folder
-   * is "put it there", which on a server-folder implies uploading first);
-   * local-only files moving to ROOT are a no-op (they have no folder
-   * concept locally).
-   */
+  /** Cloud files move server-first; local files auto-upload then move. */
   const moveFilesTo = useCallback(
     async (fileIds: FileId[], folderId: FolderId | null) => {
       if (fileIds.length === 0) return;
@@ -279,20 +241,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         .map((id) => fileMap.get(id))
         .filter((s): s is StirlingFileStub => Boolean(s));
       const localOnly = stubs.filter((s) => s.remoteStorageId == null);
-      // Cloud files are gathered AFTER the auto-upload step below so that
-      // any local file we just promoted to cloud counts as a cloud file
-      // for the bulk-move call. (Array reference is const; .push mutates.)
+      // Cloud list is mutated below with newly-promoted local files.
       const cloudFiles = stubs.filter((s) => s.remoteStorageId != null);
 
       if (folderId !== null && localOnly.length > 0) {
-        // Auto-upload local files to the server before assigning them to
-        // the folder. The user's intent in dropping a file onto a cloud
-        // folder is "put it in this folder", which on a server-folder
-        // implies the server upload. Per file we call uploadHistoryChain
-        // (NOT the bundling uploadHistoryChains - that shares N files as
-        // ONE remote item, which would collapse the selection into a
-        // single folder entry). Each file gets its own remoteStorageId
-        // and shows up as its own folder member.
+        // Per-file uploadHistoryChain so each gets its own remoteStorageId.
         try {
           for (const stub of localOnly) {
             const rootId = (stub.originalFileId || stub.id) as FileId;
@@ -312,8 +265,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
                 remoteSharedViaLink: false,
               });
             }
-            // Append the just-promoted file to the cloud-files list so the
-            // bulk-move call below assigns its folder in the same round.
+            // Promoted file joins the bulk-move round.
             cloudFiles.push({
               ...stub,
               remoteStorageId: remoteId,
@@ -367,8 +319,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local-only files moving to ROOT (folderId == null) is a no-op in terms
-      // of cloud state; nothing to write either. Falls through.
+      // Local files moving to ROOT need no cloud write.
       await refresh();
     },
     [indexedDB, refresh, fileMap, folders, t, fileActions],
@@ -376,8 +327,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const moveFolderTo = useCallback(
     async (folderId: FolderId, newParentId: FolderId | null) => {
-      // Optimistic cycle guard - server enforces too, but blocking here
-      // avoids the round-trip and surfaces a clear, immediate message.
+      // Client-side cycle guard.
       if (newParentId !== null && folders.isDescendant(newParentId, folderId)) {
         folders.setError(
           t(
@@ -426,9 +376,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const deleteFolder = useCallback(
     async (folder: FolderRecord) => {
-      // Walk the full subtree, not just direct children - recursive delete
-      // affects every nested file, so showing only the direct-count was
-      // misleading users into approving destructive operations blind.
+      // Walk the full subtree for the confirm count.
       const subtreeIds = new Set<FolderId>([folder.id]);
       const stack: FolderId[] = [folder.id];
       while (stack.length > 0) {
@@ -457,9 +405,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [allFiles, folders, refresh, t],
   );
 
-  // Memoise the value object so consumers don't re-render when an unrelated
-  // ancestor renders. Without this every keystroke in the search input
-  // produced a fresh context value and re-rendered every FileCard.
+  // Memoise to avoid re-rendering every FileCard on unrelated state churn.
   const value = useMemo<FilesPageContextValue>(
     () => ({
       allFiles,

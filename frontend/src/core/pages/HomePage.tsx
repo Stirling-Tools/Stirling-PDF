@@ -28,11 +28,7 @@ import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { FilesPageProvider } from "@app/contexts/FilesPageContext";
-// FolderTreePanel removed - the secondary "My Files" left column was
-// dropped from the /files layout (see the comment near the old render
-// site below). Import retained as commented context if it ever needs
-// to come back.
-// import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
+// FolderTreePanel no longer rendered.
 
 import "@app/pages/HomePage.css";
 
@@ -63,9 +59,7 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const location = useLocation();
-  // Start the sidebar collapsed if we mount directly on /files, so the
-  // expand→collapse CSS transition doesn't leave the browser with a stale
-  // 260px layout box.
+  // Collapse the sidebar when mounting directly on /files.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(() =>
     location.pathname.startsWith("/files"),
   );
@@ -100,16 +94,7 @@ export default function HomePage() {
     activeFiles.length,
   ]);
 
-  // Auto-collapse the FileSidebar in My Files (the workbench already shows
-  // the file grid, breadcrumb, and a sub-toolbar with Upload + New folder,
-  // so the sidebar's recent-files list is redundant). Snapshot the user's
-  // pre-collapse state on entry so we can restore it on exit.
-  //
-  // Edge-only transitions: snapshot on `?? → myFiles` and restore on
-  // `myFiles → ??`. The naive "react to workbench any time" version is
-  // brittle because the URL-sync effect runs in the *next* tick after
-  // mount, which means a direct-mount on /files sees one fake "leave"
-  // before its first "enter" and would clobber the ref.
+  // Auto-collapse the FileSidebar on /files; snapshot prior state for restore.
   const previousSidebarCollapsedRef = useRef<boolean | null>(null);
   const prevWorkbenchRef = useRef(navigationState.workbench);
   useEffect(() => {
@@ -127,11 +112,7 @@ export default function HomePage() {
       previousSidebarCollapsedRef.current = null;
     }
     prevWorkbenchRef.current = curr;
-    // `fileSidebarCollapsed` is intentionally read as a snapshot at the
-    // moment of the entry transition only - re-running on every sidebar
-    // toggle would clobber the snapshot we just captured. (This project's
-    // ESLint config doesn't ship the react-hooks/exhaustive-deps rule, so
-    // no eslint-disable comment is needed here.)
+    // fileSidebarCollapsed read as snapshot on transition only.
   }, [navigationState.workbench]);
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
@@ -479,18 +460,13 @@ export default function HomePage() {
                   ? t("fileSidebar.leaveMyFiles", "Leave My Files")
                   : undefined
               }
-              // Swap the burger for a back-arrow ONLY when in My Files
-              // so the action ("leave") is visually obvious. Other modes
-              // keep the hamburger (expand/collapse semantics).
+              // Back-arrow on /files; burger elsewhere.
               toggleIcon={
                 navigationState.workbench === "myFiles" ? (
                   <ArrowBackIcon />
                 ) : undefined
               }
               onToggleCollapse={() => {
-                // While in My Files the burger acts as "leave My Files"
-                // (navigate back home). On other workbenches it toggles
-                // the sidebar's collapsed state.
                 if (navigationState.workbench === "myFiles") {
                   navigate("/");
                   return;
@@ -499,13 +475,6 @@ export default function HomePage() {
               }}
               onOpenSettings={() => setConfigModalOpen(true)}
             />
-            {/* FolderTreePanel removed. It used to render here as a
-                secondary "My Files" tree column on /files only - now
-                gone because the file-manager grid + breadcrumb already
-                give folder context, and the redundant tree took up
-                screen real estate without paying its way. Outside
-                /files it was always width:0 so other workbenches see
-                no layout change. */}
             <Workbench />
             {!hideToolPanel && <ToolPanel />}
             <FileManager selectedTool={selectedTool} />

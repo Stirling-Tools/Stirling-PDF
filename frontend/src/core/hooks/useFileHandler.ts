@@ -11,9 +11,7 @@ export const useFileHandler = () => {
       options: {
         insertAfterPageId?: string;
         selectFiles?: boolean;
-        // When true, persists to IDB but does NOT add the files to the
-        // workspace state. Used by the file manager so uploads from
-        // /files don't silently pop up later in /viewer or /tools.
+        /** Persist to IDB without dispatching to workspace state. */
         skipWorkspaceDispatch?: boolean;
       } = {},
     ): Promise<StirlingFile[]> => {

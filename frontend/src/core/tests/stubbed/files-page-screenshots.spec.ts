@@ -2,14 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "node:path";
 
-/**
- * Screenshot-driven visual review of the /files page surfaces added in
- * this PR (empty-state CTAs, sub-toolbar, Save to server entry points,
- * Move dialog inline create-folder). Runs as a stubbed spec so it stays
- * deterministic and offline-friendly. Each test dumps a PNG under
- * `screenshots/files-page/<scenario>.png` so a human (or the agent) can
- * eyeball the result without spinning up the live backend.
- */
+/** Screenshot review of /files surfaces; dumps PNGs to screenshots/files-page. */
 
 interface SeedFile {
   id: string;
@@ -22,10 +15,7 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
     const open = window.indexedDB.open("stirling-pdf-files", 4);
     open.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      // The app expects BOTH `files` and `folders` stores on this DB.
-      // Seeding only `files` makes subsequent folderStorage transactions
-      // throw "One of the specified object stores was not found", which
-      // surfaces as a red error banner in the UI. Create both.
+      // Create both `files` and `folders` stores on this DB.
       if (!db.objectStoreNames.contains("files")) {
         const store = db.createObjectStore("files", { keyPath: "id" });
         store.createIndex("name", "name", { unique: false });
@@ -115,9 +105,7 @@ function shotPath(name: string): string {
 }
 
 async function settle(page: Page, ms = 350): Promise<void> {
-  // Give Mantine portals + drawer/modal transitions time to land. The
-  // animations are usually <200ms; 350 is a safe upper bound that won't
-  // bloat the spec runtime.
+  // Let Mantine portal transitions settle.
   await page.waitForTimeout(ms);
 }
 
@@ -126,7 +114,6 @@ test.describe("Files page screenshots", () => {
 
   test("01_empty_state_ctas", async ({ page }) => {
     await stubStorageApis(page);
-    // No seedFiles - grid renders empty so the CTAs are the focus.
     await page.goto("/files", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".files-page-empty")).toBeVisible({
       timeout: 5_000,
@@ -212,7 +199,6 @@ test.describe("Files page screenshots", () => {
       .locator(".files-page-card:not(.is-folder)")
       .filter({ hasText: "alpha.pdf" })
       .click();
-    // Right panel should now show the file details + Save to server button.
     await expect(page.locator(".files-page-details")).toBeVisible();
     await settle(page);
     await page.screenshot({
@@ -258,9 +244,7 @@ test.describe("Files page screenshots", () => {
     await expect(
       page.getByRole("dialog", { name: /Move to folder/i }),
     ).toBeVisible();
-    // Click the "Create new folder…" toggle inside the dialog.
     await page.getByRole("button", { name: /Create new folder/i }).click();
-    // Inline input + Create button now visible.
     await expect(
       page.getByRole("textbox", { name: /New folder name/i }),
     ).toBeVisible();
@@ -286,8 +270,6 @@ test.describe("Files page screenshots", () => {
   });
 
   test("08b_move_dialog_after_create_folder", async ({ page }) => {
-    // Stub the create-folder POST so the dialog gets a real folder back
-    // and reflects the new selection.
     await stubStorageApis(page);
     await seedFiles(page, [
       { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
@@ -296,9 +278,7 @@ test.describe("Files page screenshots", () => {
       "**/api/v1/storage/folders",
       async (route: Route) => {
         if (route.request().method() === "POST") {
-          // FolderId is a UUID-branded string - parseFolderId rejects
-          // anything that isn't RFC-4122 shaped, so any made-up id like
-          // "new-folder-id" would explode here. Use a real UUID literal.
+          // FolderId must be a UUID; timestamps must be ISO strings.
           await route.fulfill({
             json: {
               id: "11111111-2222-4333-8444-555555555555",
@@ -306,9 +286,6 @@ test.describe("Files page screenshots", () => {
               parentFolderId: null,
               color: null,
               icon: null,
-              // ISO strings - parseTimestamp goes through Date.parse so a
-              // bare millis-since-epoch number triggers an "Invalid
-              // timestamp" error.
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
@@ -333,9 +310,7 @@ test.describe("Files page screenshots", () => {
       .getByRole("textbox", { name: /New folder name/i })
       .fill("Reports");
     await page.getByRole("button", { name: /^Create$/i }).click();
-    // The inline create row should collapse back to the toggle button -
-    // proves the create succeeded and the new folder is now the move
-    // target.
+    // Inline row collapses back; create succeeded.
     await expect(
       page.getByRole("button", { name: /Create new folder/i }),
     ).toBeVisible({ timeout: 3_000 });
@@ -346,11 +321,6 @@ test.describe("Files page screenshots", () => {
   });
 
   // ─── Dark mode pass ─────────────────────────────────────────────────────
-  // Same scenarios as the headline grid + empty-state + dialog shots, but
-  // with the page forced into dark mode. The Mantine color scheme is
-  // controlled by localStorage; setting it before goto avoids a flash of
-  // light mode during the first render.
-
   async function enableDarkMode(page: Page): Promise<void> {
     await page.addInitScript(() => {
       localStorage.setItem("mantine-color-scheme", "dark");
@@ -411,19 +381,8 @@ test.describe("Files page screenshots", () => {
   });
 
   // ─── RTL pass ────────────────────────────────────────────────────────────
-  // Same coverage in RTL (dir=rtl, Arabic locale fallback) so the new
-  // surfaces (sub-toolbar, empty-state CTAs, Move dialog inline create
-  // folder, details panel) flip correctly without breaking layout.
-  // The app reads `dir` from <html dir=...>; setting it via initScript
-  // before the first paint avoids a flash of LTR.
-
   async function enableRtl(page: Page): Promise<void> {
-    // Seed BOTH the language and the dir attribute. The app's i18n init
-    // sets dir="rtl" only when the active i18n language is in the
-    // rtlLanguages list ("ar-AR" / "fa-IR"); setting just dir would be
-    // clobbered when i18n loads. Setting both the storage keys it uses
-    // (`i18nextLng` + the source flag) AND the dir attribute eagerly
-    // means the page renders RTL from the first paint.
+    // Seed language + dir before first paint.
     await page.addInitScript(() => {
       localStorage.setItem("i18nextLng", "ar-AR");
       localStorage.setItem("stirling-language", "ar-AR");

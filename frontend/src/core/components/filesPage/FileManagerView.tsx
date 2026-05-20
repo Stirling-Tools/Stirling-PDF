@@ -78,35 +78,16 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Sharing is gated server-side. Hide the "Shared with me" tab entirely
-  // when the deployment didn't enable it - the tab was always empty in
-  // that case and just confused users into thinking sharing was broken.
-  // Use the shared hook so this gate stays in lockstep with the other
-  // sharing-feature gates (FileActions, FileInfoCard, ShareManagementModal,
-  // etc.) - all read the same `config.storageSharingEnabled` flag.
+  // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
 
-  // At ≤800px the inline details aside no longer fits next to the grid
-  // (and the rest of the chrome is in mobile-compaction mode). On these
-  // viewports a Mantine Drawer hosts the details panel content. The
-  // Drawer is BUTTON-TRIGGERED (not auto-opened on selection) - opening
-  // it on every selection blocked multi-select because the backdrop
-  // intercepted taps on other file cards.
+  // ≤800px hosts the details panel in a button-triggered Drawer.
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
-  // Full-screen drawer on phones (≤640) so there's no awkward empty strip
-  // showing the grid peeking through behind the backdrop; on tablet-sized
-  // viewports (641-800) a smaller drawer keeps some grid context visible.
+  // Phones get a full-screen drawer; tablets get a smaller one.
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // "Save to server" confirmation modal target. When non-null the modal
-  // is open against this explicit file set. Two entry points feed it:
-  //   1. Bulk toolbar/details button - uses the current local-only
-  //      selection (`localOnlySelectedStubs`).
-  //   2. Per-file kebab "Save to server" - uses [file] so the action
-  //      hits exactly the row the user clicked, regardless of any wider
-  //      multi-select state.
-  // Targets root in both cases (no folder assignment); folder-assignment
-  // requires the explicit drop-on-folder flow.
+  // Save-to-server modal target. Bulk button uses local-only selection;
+  // per-file kebab uses [file]. Targets root; folder placement is via drop.
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
@@ -175,18 +156,14 @@ export default function FileManagerView() {
     }
   }, [location.pathname, foldersById, setCurrentFolderId]);
 
-  // If the deployment turned sharing off after the user last visited
-  // (e.g. cached state had currentTab === "shared"), the Shared tab is
-  // no longer rendered above - bounce back to All so the user doesn't
-  // sit on an inert tab with no content.
+  // Bounce off the Shared tab when sharing isn't enabled.
   useEffect(() => {
     if (!sharingEnabled && currentTab === "shared") {
       setCurrentTab("all");
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
 
-  // Push URL when the user picks a folder. Only sync while we're still on
-  // /files so an explicit close doesn't bounce us back.
+  // Push folder selection into the URL while still on /files.
   useEffect(() => {
     if (!window.location.pathname.startsWith("/files")) return;
     const target =
@@ -198,15 +175,7 @@ export default function FileManagerView() {
 
   // ─── visible items (current folder + sort + search) ─────────────────────
 
-  /**
-   * Set of folder IDs in the subtree rooted at currentFolderId - that is,
-   * currentFolderId itself plus every descendant. Used to widen search
-   * results to include subfolder hits without changing the no-search
-   * navigation behaviour (where only direct children appear).
-   *
-   * Includes `null` when at root so file predicates like
-   * `subtreeFolderIds.has(file.folderId ?? null)` work uniformly.
-   */
+  /** currentFolderId + all descendants. Includes `null` when at root. */
   const subtreeFolderIds = useMemo(() => {
     const set = new Set<FolderId | null>();
     set.add(currentFolderId);
@@ -216,8 +185,7 @@ export default function FileManagerView() {
       list.push(f.id);
       childMap.set(f.parentFolderId, list);
     }
-    // Iterative DFS - recursive form risked a stack overflow on a deeply
-    // nested chain a user could create.
+    // Iterative DFS to avoid stack overflow on deep chains.
     const stack: (FolderId | null)[] = [currentFolderId];
     while (stack.length > 0) {
       const cur = stack.pop()!;
@@ -231,9 +199,7 @@ export default function FileManagerView() {
   }, [folders.folders, currentFolderId]);
 
   const visibleFolders = useMemo(() => {
-    // Folders only appear in cloud-rooted tabs. Local / Recent / Shared
-    // tabs are flat file views - showing cloud folders there would be
-    // confusing (the user clicked Local to escape folders).
+    // Folders only appear in cloud-rooted tabs.
     if (
       currentTab === "local" ||
       currentTab === "recent" ||
@@ -244,16 +210,14 @@ export default function FileManagerView() {
     const lc = search.toLowerCase();
     const matched = folders.folders.filter((f) => {
       if (search) {
-        // Recursive search: show any folder anywhere in the current
-        // subtree whose name matches. Hide the current folder itself
-        // (its "match" would be circular and useless).
+        // Subtree-wide name match; exclude the current folder itself.
         return (
           f.id !== currentFolderId &&
           subtreeFolderIds.has(f.parentFolderId) &&
           f.name.toLowerCase().includes(lc)
         );
       }
-      // No search: classic direct-children-only view.
+      // Direct children only.
       return f.parentFolderId === currentFolderId;
     });
     return matched.sort((a, b) =>
@@ -261,13 +225,9 @@ export default function FileManagerView() {
     );
   }, [folders.folders, currentFolderId, search, currentTab, subtreeFolderIds]);
 
-  // Files in the current folder (before search/origin/type filtering). Used
-  // to compute the *available* file-type list for the dropdown - that way
-  // the dropdown shows what's actually here rather than every type we've
-  // ever seen.
+  // Files in current folder, pre-filter. Drives the type-filter dropdown.
   const filesInCurrentFolder = useMemo(() => {
-    // Tab takes precedence - folders are a cloud-only concept; the tabs
-    // override navigation when the user is in Local/Recent/Shared.
+    // Tab overrides folder navigation for Local/Recent/Shared.
     switch (currentTab) {
       case "local":
         // Local = files with no server copy. folderId is forced null on this
@@ -275,9 +235,7 @@ export default function FileManagerView() {
         // stale local-folder rows from a pre-pivot DB don't slip through.
         return allFiles.filter((f) => f.remoteStorageId == null);
       case "cloud":
-        // Cloud bucket excludes local-only files. With an active search we
-        // widen to any cloud file in the current subtree; otherwise the
-        // classic direct-folder match.
+        // Cloud bucket; search widens to subtree, else direct-folder match.
         return allFiles.filter((f) => {
           if (f.remoteStorageId == null) return false;
           if (search) return subtreeFolderIds.has(f.folderId ?? null);
@@ -294,8 +252,7 @@ export default function FileManagerView() {
         return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
       case "all":
       default:
-        // Search widens to the subtree so a user typing "invoice" at root
-        // finds /Receipts/2024/Q1-invoice.pdf without having to navigate first.
+        // Search widens to the subtree.
         return allFiles.filter((f) => {
           if (search) return subtreeFolderIds.has(f.folderId ?? null);
           return (f.folderId ?? null) === (currentFolderId ?? null);
@@ -491,17 +448,10 @@ export default function FileManagerView() {
       });
       const fileIds = added.map((f) => f.fileId);
       const target = currentFolderId;
-      // Newly-uploaded files are local-only (no remoteStorageId yet). The
-      // BaseFileMetadata invariant requires folderId == null for local files,
-      // so we MUST NOT set folderId to a cloud folder here - that would put
-      // the file in two tabs at once (Local view by remoteStorageId predicate
-      // AND the cloud folder by folderId match). Drop them at root; the
-      // (future) save-to-cloud action is the right place to choose a folder.
+      // Uploaded files land in Local (folderId stays null).
       if (
         target !== null &&
         fileIds.length > 0 &&
-        // Only relevant for cloud folders; ROOT keeps them at the "right"
-        // place anyway, and currentTab being cloud means a real folder.
         (currentTab === "all" || currentTab === "cloud")
       ) {
         folders.setError(
@@ -527,14 +477,8 @@ export default function FileManagerView() {
   );
 
   // ─── add to workspace vs quick view ─────────────────────────────────────
-  //
-  // The two actions look similar but have different intent:
-  //   addToWorkspace - user is committing these files to the workspace so
-  //     they can run tools on them. No back-to-files affordance - they
-  //     came here to work, not to peek.
-  //   quickView - user is taking a quick look at one file. A "Back to My
-  //     Files" pill appears in the WorkbenchBar so they can return without
-  //     navigating manually.
+  // addToWorkspace: commit; no back affordance.
+  // quickView: peek; "Back to My Files" pill in WorkbenchBar.
   const openFilesInWorkbench = useCallback(
     async (fileIds: FileId[], options: { trackReturn: boolean }) => {
       const stubs = fileIds
@@ -560,13 +504,7 @@ export default function FileManagerView() {
         await fileActions.addStirlingFileStubs(stubs, {
           selectFiles: false,
         });
-        // Branch on the REQUESTED stubs, not the returned `added` list.
-        // addStirlingFileStubs dedup's against workspace state via `continue`
-        // and only returns newly-added files - so for a file already in the
-        // workspace (the user opens Quick view on a file they previously
-        // added) `added` is empty, neither branch fired, and the viewer
-        // landed on stale state. The stubs already-loaded are still valid
-        // targets for activation; we just don't need to dispatch them again.
+        // Branch on requested stubs so already-active files still activate.
         if (stubs.length === 1) {
           setActiveFileId(stubs[0]!.id);
           navActions.setWorkbench("viewer");
@@ -606,8 +544,7 @@ export default function FileManagerView() {
 
   const handleOpenFile = useCallback(
     (file: StirlingFileStub) => {
-      // Double-clicking a file is the "commit" action - drop the file
-      // straight into the workspace, same as the Add-to-workspace button.
+      // Double-click commits to workspace.
       void handleAddToWorkspace([file.id]);
     },
     [handleAddToWorkspace],
@@ -677,8 +614,7 @@ export default function FileManagerView() {
 
   // ─── close / exit ───────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
-    // User explicitly left My Files without opening a file - drop the
-    // return-route hint so the workbench doesn't show a stale back button.
+    // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
     navigate("/");
   }, [navigate]);
@@ -745,8 +681,7 @@ export default function FileManagerView() {
       for (const overlay of overlays) {
         if ((overlay as HTMLElement).offsetWidth > 0) return;
       }
-      // Esc-once cancels the selection rather than closing the
-      // workbench - keeps users from accidentally losing their place.
+      // Esc-once cancels selection before closing the workbench.
       if (selectedFileIds.size > 0) {
         clearSelection();
         return;
@@ -775,10 +710,7 @@ export default function FileManagerView() {
     [selectedFileIds],
   );
 
-  // Selected files that haven't been uploaded to the server yet. Drives
-  // visibility of the "Save to server" bulk-action button - when ALL
-  // selected files are already on the server, that button has nothing
-  // to do and should hide itself.
+  // Local-only subset of selection; drives Save-to-server visibility.
   const localOnlySelectedStubs = useMemo(
     () =>
       selectedFiles
@@ -790,11 +722,7 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
-  // Why "New folder" is/isn't available right now. Used by the header
-  // button AND the empty-state CTA so both surfaces explain themselves
-  // consistently (and stay in lockstep if the gating rules change).
-  // null = button is actionable; string = disabled with this reason
-  // shown via tooltip.
+  // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
     if (currentTab === "local") {
       return t(
@@ -820,10 +748,6 @@ export default function FileManagerView() {
   return (
     <div className="files-page" ref={dropZoneRef}>
       <header className="files-page-header">
-        {/* Single Back affordance - was previously a Home + Tools + Close
-            trio that all did the same handleClose action. Mobile gets the
-            same button (no data-mobile-hide) since the bottom bar nav is
-            the only other way out. */}
         <Button
           variant="subtle"
           size="sm"
@@ -832,10 +756,7 @@ export default function FileManagerView() {
         >
           {t("filesPage.back", "Back")}
         </Button>
-        {/* Breadcrumb only makes sense when the view is folder-rooted.
-            Local / Recent / Shared are flat virtual buckets - showing
-            a stale folder path here would mislead the user about where
-            they actually are. */}
+        {/* Breadcrumb only for folder-rooted tabs. */}
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
         {(currentTab === "local" ||
           currentTab === "recent" ||
@@ -885,11 +806,7 @@ export default function FileManagerView() {
               setRefreshing(false);
             }
           };
-          // Wrap the button in a Tooltip so the disabled state EXPLAINS
-          // itself - users were left wondering why "New folder" was greyed
-          // out. The label tells them the feature exists and points at how
-          // to turn it on. `disabled={!disabled-state}` on the tooltip
-          // suppresses it when the button is actionable.
+          // Tooltip carries the disabled reason when the button is greyed.
           const newFolderButton = (
             <Tooltip
               label={newFolderDisabledReason ?? ""}
@@ -908,11 +825,7 @@ export default function FileManagerView() {
                 data-disabled={newFolderDisabledReason !== null || undefined}
                 styles={{
                   root: {
-                    // Mantine's disabled style ignores pointer events, which
-                    // also kills the Tooltip hover. `pointer-events: auto`
-                    // restores hover on the disabled button without making
-                    // it clickable (the click handler itself is suppressed
-                    // by Mantine while disabled is true).
+                    // Keep tooltip hoverable while button is disabled.
                     pointerEvents:
                       newFolderDisabledReason !== null ? "auto" : undefined,
                   },
@@ -956,8 +869,7 @@ export default function FileManagerView() {
                   }
                   withinPortal
                 >
-                  {/* Mantine disables tooltip pointer events on disabled
-                      children - wrap so the tooltip still fires on hover. */}
+                  {/* Wrap so tooltip fires while button is disabled. */}
                   {newFolderDisabledReason ? (
                     <span style={{ display: "inline-flex" }}>
                       {newFolderButton}
@@ -981,9 +893,7 @@ export default function FileManagerView() {
                 style={{ display: "none" }}
                 onChange={onFileInputChange}
               />
-              {/* Mobile overflow: collapses Refresh + New folder so the
-                  toolbar isn't clipped on narrow viewports. CSS hides this
-                  on >640px via `data-desktop-hide`. */}
+              {/* Mobile overflow kebab; CSS hides this above 640px. */}
               <Menu shadow="md" position="bottom-end" withinPortal>
                 <Menu.Target>
                   <ActionIcon
@@ -1057,24 +967,12 @@ export default function FileManagerView() {
 
       <div className="files-page-body">
         <main className="files-page-main">
-          {/* Tabs are presets: each one filters the file list and chooses
-              whether folder cards appear at all. Switching tabs is the
-              fastest path between "see my local files" and "browse cloud".
-              Keyboard model follows WAI-ARIA Tabs: roving tabindex + arrow
-              keys to move + Home/End to jump. */}
+          {/* Tab strip filters the file list; ARIA Tabs keyboard model. */}
           {(() => {
-            // Compact tab strip - used as a quick view filter. The tree on
-            // the left has the same Local pinned row, so this is intentional
-            // redundancy for users who reach for the toolbar instead of the
-            // tree. Kept low-key so it doesn't compete with primary actions.
-            // Local and Cloud removed - the pinned "Local" row in the tree
-            // sidebar covers Local, and the default "All" view already shows
-            // cloud folders. Recent + Shared remain as virtual-bucket filters.
             const TAB_DEFS = [
               { id: "all", label: t("filesPage.tabs.all", "All") },
               { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              // Shared only when the server actually has sharing enabled -
-              // see useSharingEnabled gate at the top of the component.
+              // Shared only when sharingEnabled.
               ...(sharingEnabled
                 ? [
                     {
@@ -1096,10 +994,6 @@ export default function FileManagerView() {
                 onKeyDown={(e) => {
                   const idx = TAB_DEFS.findIndex((t2) => t2.id === currentTab);
                   if (idx < 0) return;
-                  // No initializer: every branch below either assigns or
-                  // returns, so seeding `next = idx` was a no-useless-assignment
-                  // lint hit. TS's definite-assignment analysis picks up the
-                  // assignments through the if/else chain.
                   let next: number;
                   if (e.key === "ArrowRight")
                     next = (idx + 1) % TAB_DEFS.length;
@@ -1154,14 +1048,7 @@ export default function FileManagerView() {
           })()}
 
           <div className="files-page-toolbar">
-            {/* Primary file actions sit at the START of the toolbar -
-                immediately above the grid, in the user's eye-line.
-                The corner header buttons are still there for muscle
-                memory, but on widescreen monitors the top-right corner
-                is a long way from where attention actually lands; this
-                row solves that. Hidden on very narrow viewports
-                (≤480px) where the corner buttons are close enough and
-                the toolbar can't spare the horizontal space. */}
+            {/* Upload + New folder; hidden on phones (corner buttons cover). */}
             <div className="files-page-toolbar-create" data-mobile-hide="true">
               <Tooltip
                 label={t("filesPage.upload", "Upload")}
@@ -1226,22 +1113,13 @@ export default function FileManagerView() {
               )}
             </span>
             {(() => {
-              // Select all / Clear toggle: operates on the currently-visible
-              // file list (post search/origin/type filters), not on `allFiles`,
-              // so the user gets what they see. Hidden when there are no
-              // visible files to act on.
+              // Select all / Clear toggle over visible files.
               if (visibleFiles.length === 0) return null;
               const allSelected = visibleFiles.every((f) =>
                 selectedFileIds.has(f.id),
               );
               const someSelected = !allSelected && selectedFiles.length > 0;
               return (
-                // Tooltip here is the discovery point for the new
-                // selection model: checkboxes are hidden until the user
-                // is in multi-select mode, so the Ctrl/Shift shortcuts
-                // need to be surfaced somewhere visible. Putting it on
-                // "Select all" (the closest semantic neighbour) gives
-                // users a place to look without adding a new button.
                 <Tooltip
                   label={t(
                     "filesPage.selectAllHint",
@@ -1275,11 +1153,7 @@ export default function FileManagerView() {
             <div className="files-page-toolbar-actions">
               {selectedFiles.length > 0 &&
                 (() => {
-                  // Labels for the bulk-action buttons. CSS hides the
-                  // visible label text at ≤900px (collapsing the buttons
-                  // to icon-only so the toolbar fits without wrapping)
-                  // - so each button gets a Tooltip + aria-label here
-                  // for both pointer-hover and screen-reader access.
+                  // Bulk-action labels; CSS collapses to icon-only below 900px.
                   const addLabel =
                     selectedFiles.length === 1
                       ? t("filesPage.addToWorkspace", "Add to workspace")
@@ -1292,12 +1166,7 @@ export default function FileManagerView() {
                   const removeLabel = t("filesPage.remove", "Remove");
                   const quickViewLabel = t("filesPage.quickView", "Quick view");
                   return (
-                    // wrap="nowrap" so the bulk-action row stays single-
-                    // line - default Mantine Group wraps when narrow,
-                    // which was pushing the "X" clear button onto a
-                    // second row. The CSS on .files-page-toolbar-actions
-                    // already clips overflow, and each Button has
-                    // flex-shrink:0, so nowrap is safe.
+                    // wrap="nowrap" keeps the row single-line.
                     <Group gap="xs" wrap="nowrap">
                       <Tooltip label={addLabel} withinPortal>
                         <Button
@@ -1323,13 +1192,7 @@ export default function FileManagerView() {
                           </Button>
                         </Tooltip>
                       )}
-                      {/* "Save to server" - only when at least one
-                          selected file is still local-only. The button
-                          opens a confirmation modal (the user has to
-                          explicitly opt-in to a server upload, never
-                          silent). Server-only files don't need this
-                          action so the button hides when everything
-                          selected is already on the server. */}
+                      {/* Save to server; hidden when no local-only file selected. */}
                       {localOnlySelectedStubs.length > 0 && (
                         <Tooltip
                           label={t("filesPage.saveToServer", "Save to server")}
@@ -1351,12 +1214,7 @@ export default function FileManagerView() {
                           </Button>
                         </Tooltip>
                       )}
-                      {/* "Show details" button - only on compact viewports
-                          where the inline details aside is gone. The
-                          replacement Drawer is BUTTON-TRIGGERED (not
-                          auto-opened on selection) so multi-select still
-                          works - tapping more file checkboxes adds to the
-                          selection without a backdrop blocking the row. */}
+                      {/* Show details button on compact viewports. */}
                       {selectedFiles.length === 1 &&
                         isCompactDetailsViewport && (
                           <Tooltip
@@ -1634,8 +1492,7 @@ export default function FileManagerView() {
           </div>
         </main>
 
-        {/* Desktop: render the details panel inline as an <aside> sibling
-            of the main grid. CSS in FilesPage.css governs its width. */}
+        {/* Inline aside on desktop. */}
         {selectedFiles.length > 0 && !isCompactDetailsViewport && (
           <FileDetailsPanel
             selectedFileIds={selectedFiles}
@@ -1651,19 +1508,7 @@ export default function FileManagerView() {
         )}
       </div>
 
-      {/* Compact viewports (≤800px): inline aside is gone (no room next
-          to the grid) so the same details panel lives inside a Drawer.
-          The Drawer is button-triggered (via the "Show details" button
-          in the bulk-action row), NOT auto-opened on selection - that
-          earlier auto-open behaviour blocked multi-select because the
-          backdrop intercepted taps on other file cards.
-
-          On very narrow phones (≤480px) the Drawer is full-width so
-          there's no awkward empty strip showing the grid peeking through
-          on the left; on tablet-sized compact viewports a smaller width
-          keeps some context. The Drawer's own close handler clears
-          `mobileDetailsOpen` only - selection stays so the bulk-action
-          row keeps showing. */}
+      {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
         <Drawer
           opened={mobileDetailsOpen && selectedFiles.length === 1}
@@ -1672,10 +1517,6 @@ export default function FileManagerView() {
           size={useFullScreenDrawer ? "100%" : "sm"}
           padding={0}
           withCloseButton={false}
-          // The panel renders its own close button + header. Keep the
-          // Drawer scroll container at the body level so the long
-          // version-journey timeline scrolls inside the drawer without
-          // pushing the action stack off the bottom.
           overlayProps={{ opacity: 0.45 }}
         >
           {mobileDetailsOpen && selectedFiles.length === 1 && (
@@ -1707,10 +1548,7 @@ export default function FileManagerView() {
             await moveFolderTo(moveDialog.folderId, target);
           }
         }}
-        // Inline-create folder while picking a move target. Only wired
-        // when the server is reachable - matches the gating on the
-        // header New folder button so the dialog doesn't expose an
-        // affordance that would fail.
+        // Inline-create folder; gated on serverReachable.
         onCreateFolder={
           folders.serverReachable
             ? (name, parentFolderId) =>
@@ -1736,11 +1574,7 @@ export default function FileManagerView() {
         onSubmit={submitFolderName}
       />
 
-      {/* Save-to-server confirmation modal. `saveToServerTarget` is the
-          snapshot of files to upload set at open time, so changes to
-          selection (or the file list) while the modal is open can't
-          quietly retarget the upload. The key forces a fresh modal
-          instance each time the target changes. */}
+      {/* Save-to-server modal; keyed on target so updates don't retarget. */}
       <BulkUploadToServerModal
         key={`save-${(saveToServerTarget ?? []).map((s) => s.id).join(",")}`}
         opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
