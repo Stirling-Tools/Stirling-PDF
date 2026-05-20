@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { useFolders } from "@app/contexts/FolderContext";
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord } from "@app/types/folder";
 
@@ -26,10 +25,9 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
     fileCountsByFolder,
     openNewFolderDialog,
     openRenameFolderDialog,
-    deleteFolder,
+    promptDeleteFolder,
     moveFilesTo,
   } = useFilesPage();
-  const { setError } = useFolders();
 
   return (
     <div
@@ -53,15 +51,7 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
           onRenameFolder={(folder: FolderRecord) =>
             openRenameFolderDialog(folder)
           }
-          onDeleteFolder={(folder: FolderRecord) => {
-            deleteFolder(folder).catch((err) =>
-              setError(
-                err instanceof Error
-                  ? `Could not delete folder: ${err.message}`
-                  : "Could not delete folder.",
-              ),
-            );
-          }}
+          onDeleteFolder={promptDeleteFolder}
           onMoveFilesIntoFolder={async (
             targetId: FolderId | null,
             fileIds: FileId[],
