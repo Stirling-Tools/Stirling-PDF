@@ -1,8 +1,8 @@
 accessInvite = "Invitar"
-addToDoc = "Agregar al Documento"
+addToDoc = "Agregar al documento"
 alphabet = "Alfabeto"
 apply = "Aplicar"
-applyAndContinue = "Aplicar y continuar"
+applyAndContinue = "Guardar y salir"
 areYouSure = "¿Seguro que quieres salir?"
 back = "Atrás"
 black = "Negro"
@@ -25,7 +25,7 @@ confirmCloseSaveFailed = "Guardado con errores. No fue posible guardar {{count}}
 confirmCloseSaveFailedTitle = "Error al guardar"
 confirmCloseUnsaved = "Este archivo tiene cambios sin guardar."
 confirmCloseUnsavedList = "Tienes {{count}} archivo{{plural}} con cambios sin guardar.\n\n{{fileList}}"
-confirmPasswordErrorMessage = "Deben coincidir Nueva Contraseña y Confirmar Nueva Contraseña."
+confirmPasswordErrorMessage = "La nueva contraseña y su confirmación deben coincidir."
 custom = "Personalizado..."
 customPosition = "Posición personalizada"
 customTextTooltip = "Formato personalizado opcional para los números de página. Usa {n} como marcador para el número. Ejemplo: \"Página {n}\" mostrará \"Página 1\", \"Página 2\", etc."
@@ -45,9 +45,9 @@ downloadPdf = "Descargar PDF"
 downloadUnavailable = "Descarga no disponible para este elemento"
 edit = "Editar"
 editSecret = "Editar este valor"
-editYourNewFiles = "Editar sus nuevos archivos"
-encryptedFileBlocked = "El archivo está protegido con contraseña. Desbloquéelo primero."
-encryptedFilesBlocked = "Hay {{count}} archivos protegidos con contraseña. Desbloquéelos primero."
+editYourNewFiles = "Editar tus archivos nuevos"
+encryptedFileBlocked = "El archivo está protegido con contraseña. Desbloquéalo primero."
+encryptedFilesBlocked = "Hay {{count}} archivos protegidos con contraseña. Desbloquéalos primero."
 exportAndContinue = "Exportar y continuar"
 false = "Falso"
 fileNotSavedToDisk = "No guardado en el disco"
@@ -59,7 +59,7 @@ fontSizeTooltip = "Tamaño del texto del número de página en puntos. Números 
 fontTypeTooltip = "Familia de fuente para los números de página. Elige según el estilo de tu documento."
 genericSubmit = "Procesar"
 goHomepage = "Ir a la página principal"
-goToPage = "Ir a página"
+goToPage = "Ir"
 green = "Verde"
 help = "Ayuda"
 imgPrompt = "Seleccionar Imagen(es)"
@@ -69,7 +69,7 @@ insufficientCredits = "Créditos insuficientes. Requeridos: {{requiredCredits}},
 invalidPasswordMessage = "La contraseña no puede dejarse en blanco y no puede empezar ni terminar con espacios."
 invalidUndoData = "No se puede deshacer: datos de la operación no válidos"
 invalidUsernameMessage = "Nombre de usuario no válido, el nombre de usuario solo puede contener letras, números y los siguientes caracteres especiales @._+- o debe ser una dirección de correo electrónico válida."
-joinDiscord = "Únase a nuestro servidor Discord"
+joinDiscord = "Únete a nuestro servidor de Discord"
 keepWorking = "Seguir trabajando"
 loading = "Cargando..."
 loadingCredits = "Comprobando créditos..."
@@ -77,26 +77,26 @@ loadingProStatus = "Comprobando estado de suscripción..."
 logOut = "Cerrar sesión"
 marginTooltip = "Distancia entre el número de página y el borde de la página."
 moreOptions = "Más Opciones"
-multiPdfDropPrompt = "Seleccione (o arrastre y suelte) todos los PDF que necesite"
+multiPdfDropPrompt = "Selecciona (o arrastra y suelta) todos los PDF que necesites"
 multiPdfPrompt = "Seleccionar PDFs (2+)"
 never = "Nunca"
 no = "No"
-noFavourites = "No se agregaron favoritos"
-noFileSelected = "No ha seleccionado ningún archivo. Por favor, cargue uno."
+noFavourites = "No hay favoritos añadidos"
+noFileSelected = "No has seleccionado ningún archivo. Por favor, carga uno."
 noFilesToUndo = "No se puede deshacer: no se procesaron archivos en la última operación"
 noOperationToUndo = "No hay ninguna operación para deshacer"
 notAuthenticatedMessage = "Usuario no autenticado."
 nothingToUndo = "Nada que deshacer"
-noticeTopUpOrPlan = "No hay suficientes créditos, por favor recarga o actualiza tu plan"
+noticeTopUpOrPlan = "No hay suficientes créditos; recarga o actualiza tu plan"
 noValidFiles = "No hay archivos válidos para procesar"
 oops = "¡Ups!"
 openInViewer = "Abrir en el visor"
 operationCancelled = "Operación cancelada"
 page = "Página"
 pageNum = "Número de página"
-pageOrderPrompt = "Orden personalizado de páginas (Introduzca una lista de números de página separados por coma o funciones como 2n+1):"
+pageOrderPrompt = "Orden personalizado de páginas (Introduce una lista de números de página separados por coma o funciones como 2n+1):"
 pages = "Páginas"
-pageSelectionPrompt = "Selección personalizada de páginas (Introduzca una lista de números de página separados por comas 1,5,6 o funciones como 2n+1):"
+pageSelectionPrompt = "Selección personalizada de páginas (Introduce una lista de números de página separados por comas 1,5,6 o funciones como 2n+1):"
 password = "Contraseña"
 pdfPrompt = "Seleccionar PDF(s)"
 pendingRedactions = "Tienes censuras sin aplicar que se perderán."
@@ -128,14 +128,14 @@ true = "Verdadero"
 undo = "Deshacer"
 undoDataMismatch = "No se puede deshacer: los datos de la operación están corruptos"
 undoFailed = "No se pudo deshacer la operación"
-undoOperationTooltip = "Haga clic para deshacer la última operación y restaurar los archivos originales"
+undoOperationTooltip = "Haz clic para deshacer la última operación y restaurar los archivos originales"
 undoQuotaError = "No se puede deshacer: espacio de almacenamiento insuficiente"
 undoStorageError = "Deshacer completado, pero algunos archivos no se pudieron guardar en el almacenamiento"
 undoSuccess = "Operación deshecha correctamente"
 unknown = "Desconocido"
 unpin = "Desfijar archivo (reemplazar tras ejecutar la herramienta)"
-unsavedChanges = "Tiene cambios sin guardar en su PDF. ¿Qué le gustaría hacer?"
-unsavedChangesTitle = "Cambios sin Guardar"
+unsavedChanges = "Tienes cambios sin guardar en tu PDF. ¿Qué te gustaría hacer?"
+unsavedChangesTitle = "Cambios sin guardar"
 unsupported = "No compatible"
 uploadLimit = "Tamaño máximo de archivo:"
 uploadLimitExceededPlural = "son demasiado grandes. El tamaño máximo permitido es"
@@ -145,24 +145,24 @@ userAlreadyExistsWebMessage = "El usuario ya existe como usuario web."
 username = "Nombre de usuario"
 usernameExistsMessage = "El nuevo nombre de usuario está en uso."
 userNotFoundMessage = "Usuario no encontrado."
-visitGithub = "Visitar Repositorio de GitHub"
+visitGithub = "Visitar el repositorio de GitHub"
 welcome = "Bienvenido"
 white = "Blanco"
-WorkInProgess = "Trabajo en curso. Puede no funcionar o tener errores. ¡Por favor, informa de cualquier problema!"
+WorkInProgess = "En desarrollo. Puede fallar o tener errores. Informa de cualquier problema."
 yes = "Sí"
 
 [account]
 accountSettings = "Configuración de la cuenta"
-adminSettings = "Configuración de Administrador - Ver y Añadir Usuarios"
-changePassword = "Cambiar Contraseña"
+adminSettings = "Configuración de administrador: ver y añadir usuarios"
+changePassword = "Cambiar contraseña"
 changeUsername = "Cambiar nombre de usuario"
 changeUsernameDescription = "Actualiza tu nombre de usuario. Se cerrará tu sesión tras actualizar."
-confirmNewPassword = "Confirmar Nueva Contraseña"
-newPassword = "Nueva Contraseña"
-newUsername = "nuevo nombre de usuario"
+confirmNewPassword = "Confirmar nueva contraseña"
+newPassword = "Nueva contraseña"
+newUsername = "Nuevo nombre de usuario"
 newUsernamePlaceholder = "Introduce tu nuevo nombre de usuario"
 oldPassword = "Contraseña anterior"
-password = "Confirmar contraseña"
+password = "Contraseña de confirmación"
 property = "Propiedad"
 settingsCompare = "Comparación de configuraciones:"
 signOut = "Cerrar sesión"
@@ -172,7 +172,7 @@ syncToBrowser = "Sincronizar cuenta -> Navegador"
 title = "Configuración de la cuenta"
 userControlSettings = "Configuración de control de usuario"
 webBrowserSettings = "Configuración del navegador"
-yourApiKey = "Su clave API"
+yourApiKey = "Tu clave de API"
 
 [account.mfa]
 codeLabel = "Código de autenticación"
@@ -207,7 +207,7 @@ failed = "Se produjo un error al añadir adjuntos al PDF."
 [AddAttachmentsRequest]
 addMoreFiles = "Añadir más archivos..."
 attachments = "Seleccionar archivos adjuntos"
-info = "Seleccione archivos para adjuntar a su PDF. Estos archivos se incrustarán y serán accesibles a través del panel de archivos adjuntos del PDF."
+info = "Selecciona archivos para adjuntar a tu PDF. Estos archivos se incrustarán y serán accesibles a través del panel de archivos adjuntos del PDF."
 placeholder = "Elegir archivos..."
 selectedFiles = "Archivos seleccionados"
 selectFiles = "Seleccionar archivos para adjuntar"
@@ -223,11 +223,11 @@ title = "Resultados de archivos adjuntos"
 title = "Qué hace"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "Acerca de Añadir adjuntos"
+title = "Acerca de añadir adjuntos"
 
 [addImage]
 applySignatures = "Aplicar imágenes"
-header = "Añadir imagen al PDF"
+header = "Añadir imágenes al PDF"
 tags = "img,jpg,imagen,fotografía"
 title = "Añadir imagen"
 
@@ -238,13 +238,13 @@ failed = "Se produjo un error al añadir la imagen al PDF."
 hint = "Soporta archivos PNG, JPEG, GIF, BMP, TIFF y SVG. Los archivos SVG se convertirán a PNG para su incrustación."
 label = "Archivo de imagen"
 name = "Imagen"
-placeholder = "Suba una imagen"
+placeholder = "Sube una imagen"
 
 [addImage.instructions]
-noSignature = "Suba una imagen arriba para habilitar la colocación."
+noSignature = "Sube una imagen para habilitar la colocación."
 paused = "Colocación en pausa"
-resumeHint = "Reanude la colocación para hacer clic y añadir su imagen."
-text = "Después de subir su imagen arriba, haga clic en cualquier parte del PDF para colocarla."
+resumeHint = "Reanuda la colocación para hacer clic y añadir tu imagen."
+text = "Después de subir tu imagen, haz clic en cualquier parte del PDF para colocarla."
 title = "Cómo añadir imágenes"
 
 [addImage.mode]
@@ -261,9 +261,9 @@ defaultImageLabel = "Imagen subida"
 defaultLabel = "Imagen"
 
 [addImage.step]
-createDesc = "Suba la imagen que desea añadir"
+createDesc = "Sube la imagen que quieres añadir"
 place = "Colocar imagen"
-placeDesc = "Haga clic en el PDF para añadir su imagen"
+placeDesc = "Haz clic en el PDF para añadir tu imagen"
 
 [addImage.steps]
 configure = "Configurar imagen"
@@ -302,7 +302,7 @@ title = "Resultados de numeración de páginas"
 
 [addPassword]
 completed = "Protección con contraseña aplicada"
-desc = "Cifre su documento PDF con una contraseña."
+desc = "Cifra tu documento PDF con una contraseña."
 filenamePrefix = "cifrado"
 submit = "Encriptar"
 title = "Proteger con contraseña"
@@ -322,11 +322,11 @@ stepTitle = "Contraseñas y cifrado"
 
 [addPassword.passwords.owner]
 label = "Contraseña de propietario"
-placeholder = "Introduzca la contraseña de propietario"
+placeholder = "Introduce la contraseña de propietario"
 
 [addPassword.passwords.user]
 label = "Contraseña de usuario"
-placeholder = "Introduzca la contraseña de usuario"
+placeholder = "Introduce la contraseña de usuario"
 
 [addPassword.results]
 title = "PDFs cifrados"
@@ -1411,18 +1411,12 @@ title = "Mensajes de retroalimentación"
 
 [admin.settings.telegram.feedback.channel]
 title = "Reglas de retroalimentación en canales"
-
-[admin.settings.telegram.feedback.channel.errorMessage]
-description = "Mostrar mensajes de error detallados para los canales."
-label = "Mostrar mensajes de error (Canal)"
-
-[admin.settings.telegram.feedback.channel.errorProcessing]
-description = "Enviar mensajes de error de procesamiento a los canales."
-label = "Mostrar errores de procesamiento (Canal)"
-
-[admin.settings.telegram.feedback.channel.noValidDocument]
-description = "Suprimir la respuesta de sin documento válido para subidas en canales."
-label = "Mostrar \"Sin documento válido\" (Canal)"
+errorMessage.description = "Mostrar mensajes de error detallados para los canales."
+errorMessage.label = "Mostrar mensajes de error (Canal)"
+errorProcessing.description = "Enviar mensajes de error de procesamiento a los canales."
+errorProcessing.label = "Mostrar errores de procesamiento (Canal)"
+noValidDocument.description = "Suprimir la respuesta de sin documento válido para subidas en canales."
+noValidDocument.label = "Mostrar \"Sin documento válido\" (Canal)"
 
 [admin.settings.telegram.feedback.general.enabled]
 description = "Controla si el bot envía mensajes de retroalimentación en absoluto."
@@ -1430,18 +1424,12 @@ label = "Habilitar retroalimentación"
 
 [admin.settings.telegram.feedback.user]
 title = "Reglas de retroalimentación a usuarios"
-
-[admin.settings.telegram.feedback.user.errorMessage]
-description = "Mostrar mensajes de error detallados para los usuarios."
-label = "Mostrar mensajes de error (Usuario)"
-
-[admin.settings.telegram.feedback.user.errorProcessing]
-description = "Enviar mensajes de error de procesamiento a los usuarios."
-label = "Mostrar errores de procesamiento (Usuario)"
-
-[admin.settings.telegram.feedback.user.noValidDocument]
-description = "Suprimir la respuesta de sin documento válido para subidas de usuarios."
-label = "Mostrar \"Sin documento válido\" (Usuario)"
+errorMessage.description = "Mostrar mensajes de error detallados para los usuarios."
+errorMessage.label = "Mostrar mensajes de error (Usuario)"
+errorProcessing.description = "Enviar mensajes de error de procesamiento a los usuarios."
+errorProcessing.label = "Mostrar errores de procesamiento (Usuario)"
+noValidDocument.description = "Suprimir la respuesta de sin documento válido para subidas de usuarios."
+noValidDocument.label = "Mostrar \"Sin documento válido\" (Usuario)"
 
 [admin.settings.telegram.pipelineInboxFolder]
 description = "Carpeta bajo el directorio de pipeline donde se almacenan los archivos entrantes de Telegram."
@@ -1911,16 +1899,32 @@ processImagesDesc = "Convierte varios archivos de imagen en un solo documento PD
 securePdfIngestion = "Ingesta segura de PDF"
 securePdfIngestionDesc = "Flujo de trabajo integral de procesamiento de PDF que sanea documentos, aplica OCR con limpieza, convierte a formato PDF/A para archivo a largo plazo y optimiza el tamaño del archivo."
 secureWorkflow = "Flujo de trabajo de seguridad"
-secureWorkflowDesc = "Asegura documentos PDF eliminando contenido potencialmente malicioso como JavaScript y archivos incrustados, luego añade protección con contraseña para evitar acceso no autorizado. La contraseña se establece en 'password' de forma predeterminada."
+secureWorkflowDesc = "Asegura documentos PDF eliminando contenido potencialmente malicioso como JavaScript y archivos incrustados, luego añade protección con contraseña para evitar accesos no autorizados. La contraseña se establece en 'password' por defecto."
 
 [autoRename]
 description = "Esta herramienta renombrará automáticamente los archivos PDF en función de su contenido. Analiza el documento para encontrar el título más adecuado a partir del texto."
+
+[pdfCommentAgent]
+submit = "Generar comentarios"
+prompt.label = "¿Sobre qué debería comentar la IA?"
+prompt.placeholder = "p. ej., Señala fechas ambiguas y sugiere aclaraciones"
+
+[pdfCommentAgent.settings]
+title = "Instrucciones de comentarios"
+
+[pdfCommentAgent.results]
+title = "PDF con comentarios"
+
+[pdfCommentAgent.error]
+failed = "No se pudieron generar los comentarios"
+emptyPrompt = "Describe sobre qué debería comentar la IA"
+tooLong = "El prompt es demasiado largo (máximo {{max}} caracteres)"
 
 [autoSizeSplitPDF]
 tags = "pdf,dividir,documento,organización"
 
 [autoSplitPDF]
-description = "Imprimir, Insertar, Escanear, cargar, y déjenos separar automáticamente sus documentos. No se necesita clasificación manual."
+description = "Imprime, inserta, escanea o carga, y deja que separemos automáticamente tus documentos. No se necesita clasificación manual."
 dividerDownload2 = "Descargar 'Divisor automático (con instrucciones).pdf'"
 duplexMode = "Modo Dúplex (Escaneado de ambas caras)"
 formPrompt = "Entregar PDF conteniendo divisores de página de Stirling-PDF:"
@@ -1931,8 +1935,8 @@ title = "Dividir PDF automáticamente"
 
 [autoSplitPDF.selectText]
 1 = "Imprimir algunas hojas divisorias desde la parte inferior (Blanco y negro está bien)."
-2 = "Escanee todos sus documentos a la vez insertando la hoja divisoria entre ellos."
-3 = "Cargue un único archivo PDF escaneado de gran tamaño y deje que Stirling PDF se encargue del resto."
+2 = "Escanea todos tus documentos a la vez insertando la hoja divisoria entre ellos."
+3 = "Carga un único archivo PDF escaneado de gran tamaño y deja que Stirling PDF se encargue del resto."
 4 = "Las páginas divisorias son automáticamente detectadas y eliminadas, garantizando un buen documento final."
 
 [backendHealth]
@@ -2106,7 +2110,7 @@ title = "Rango"
 toPlaceholder = "Hasta"
 
 [bulkSelection.syntax]
-text = "Use números, rangos, palabras clave y progresiones (n comienza en 0). Se admiten paréntesis."
+text = "Usa números, rangos, palabras clave y progresiones (n comienza en 0). Se admiten paréntesis."
 title = "Conceptos básicos de sintaxis"
 
 [bulkSelection.syntax.bullets]
@@ -2457,15 +2461,15 @@ stepTitle = "Modo de firma"
 [certSign.signMode.tooltip.auto]
 text = "Firma con un certificado <b>autofirmado</b> del servidor. Mismo <b>sello contra manipulaciones</b> y <b>registro de auditoría</b>; normalmente muestra <b>No verificado</b> en los visores."
 title = "Automático - Configuración cero, sello de sistema instantáneo"
-use = "Usar cuando: necesite velocidad e identidad interna consistente en revisiones y registros."
+use = "Úsalo cuando necesites velocidad e identidad interna consistente en revisiones y registros."
 
 [certSign.signMode.tooltip.header]
 title = "Acerca de las firmas PDF"
 
 [certSign.signMode.tooltip.manual]
-text = "Use sus propios archivos de certificado para identidad alineada con su marca. Puede mostrar <b>Confiable</b> cuando su CA/cadena es reconocida."
+text = "Usa tus propios archivos de certificado para una identidad alineada con tu marca. Puede mostrarse <b>Confiable</b> cuando la CA/cadena sea reconocida."
 title = "Manual - Traiga su certificado"
-use = "Usar para: atención al cliente, legal, cumplimiento."
+use = "Úsalo para: atención al cliente, legal y cumplimiento."
 
 [certSign.signMode.tooltip.overview]
 text = "Ambos modos sellan el documento (cualquier edición se marca como manipulación) y registran quién/cuándo/cómo para auditoría. La confianza del visor depende de la cadena de certificados."
@@ -2481,9 +2485,9 @@ title = "Acerca de la gestión de firmas"
 [certSign.tooltip.overview]
 bullet1 = "Verificar firmas existentes y su validez"
 bullet2 = "Ver información detallada sobre firmantes y certificados"
-bullet3 = "Añadir nuevas firmas digitales para asegurar sus documentos"
+bullet3 = "Añadir nuevas firmas digitales para asegurar tus documentos"
 bullet4 = "Múltiples archivos compatibles con navegación fácil"
-text = "Esta herramienta le permite verificar si sus PDFs están firmados digitalmente y añadir nuevas firmas digitales. Las firmas digitales demuestran quién creó o aprobó un documento y muestran si ha sido cambiado desde la firma."
+text = "Esta herramienta te permite verificar si tus PDF están firmados digitalmente y añadir nuevas firmas digitales. Las firmas digitales demuestran quién creó o aprobó un documento y muestran si se ha cambiado desde la firma."
 title = "¿Qué puede hacer esta herramienta?"
 
 [certSign.tooltip.signing]
@@ -2500,17 +2504,17 @@ bullet1 = "Muestra si las firmas son válidas o inválidas"
 bullet2 = "Muestra información del firmante y fecha de firma"
 bullet3 = "Verifica si el documento fue modificado después de firmar"
 bullet4 = "Puede usar certificados personalizados para verificación"
-text = "Cuando verifica firmas, la herramienta le indica si son válidas, quién firmó el documento, cuándo se firmó y si el documento ha sido cambiado desde la firma."
+text = "Cuando verificas firmas, la herramienta te indica si son válidas, quién firmó el documento, cuándo se firmó y si el documento se ha cambiado desde la firma."
 title = "Verificar firmas"
 
 [changeCreds]
-changePassword = "Está usando las credenciales de inicio de sesión por defecto. Por favor, introduzca una contraseña nueva"
+changePassword = "Estás usando las credenciales de inicio de sesión por defecto. Por favor, introduce una contraseña nueva"
 changeUsername = "Actualiza tu nombre de usuario. Se cerrará tu sesión tras actualizar."
-confirmNewPassword = "Confirme la nueva contraseña"
+confirmNewPassword = "Confirma la nueva contraseña"
 credsUpdated = "Cuenta actualizada"
 description = "Cambios guardados. Vuelve a iniciar sesión."
 error = "No se pudo actualizar el nombre de usuario. Verifica tu contraseña e inténtalo de nuevo."
-header = "Actualice los detalles de su cuenta"
+header = "Actualiza los detalles de tu cuenta"
 newPassword = "Nueva contraseña"
 newUsername = "Nuevo usuario"
 oldPassword = "Contraseña actual"
@@ -2682,7 +2686,7 @@ text = "Cambia los permisos del documento, permitiendo/prohibiendo el acceso a d
 title = "Cambiar permisos"
 
 [changePermissions.tooltip.warning]
-text = "Para hacer estos permisos inmutables, use la herramienta Agregar Contraseña para establecer una contraseña de propietario."
+text = "Para hacer estos permisos inmutables, usa la herramienta Agregar Contraseña para establecer una contraseña de propietario."
 
 [chat.progress]
 analyzing = "Analizando su solicitud..."
@@ -2965,9 +2969,9 @@ deleteFailed = "Error al eliminar la cuenta."
 deleteFailedTitle = "No se puede eliminar la cuenta"
 deleteWarning = "Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos."
 enterEmailConfirm = "Para confirmar la eliminación, introduce tu dirección de correo electrónico ({{email}}) a continuación:"
-guestDescription = "Ha iniciado sesión como invitado. Considere actualizar su cuenta arriba."
+guestDescription = "Has iniciado sesión como invitado. Considera actualizar tu cuenta arriba."
 label = "Resumen"
-manageAccountPreferences = "Administre las preferencias de su cuenta"
+manageAccountPreferences = "Administra las preferencias de tu cuenta"
 signedInAs = "Sesión iniciada como"
 title = "Configuración de Cuenta"
 
@@ -2998,13 +3002,13 @@ title = "Contraseñas y Seguridad"
 update = "Actualizar contraseña"
 
 [config.account.upgrade]
-description = "¡Vincule su cuenta para preservar su historial y acceder a más funciones!"
+description = "¡Vincula tu cuenta para preservar tu historial y acceder a más funciones!"
 email = "Correo electrónico"
-emailPassword = "o ingrese su correo electrónico y contraseña"
-emailPlaceholder = "Ingrese su correo electrónico"
+emailPassword = "o introduce tu correo electrónico y contraseña"
+emailPlaceholder = "Introduce tu correo electrónico"
 linkWith = "Vincular con"
 password = "Contraseña (opcional)"
-passwordNote = "Deje vacío para usar solo verificación por correo electrónico"
+passwordNote = "Deja vacío para usar solo verificación por correo electrónico"
 passwordPlaceholder = "Establecer una contraseña"
 socialLogin = "Actualizar con Cuenta Social"
 title = "Actualizar Cuenta de Invitado"
@@ -3014,19 +3018,19 @@ upgradeButton = "Actualizar Cuenta"
 chartAriaLabel = "Uso de créditos: incluidos {{includedUsed}} de {{includedTotal}}, comprados {{purchasedUsed}} de {{purchasedTotal}}"
 copyKeyAriaLabel = "Copiar clave API"
 creditsRemaining = "Créditos Restantes"
-description = "Su clave API para acceder al conjunto de herramientas PDF de Stirling. Cópiela a su proyecto o actualice para generar una nueva."
+description = "Tu clave API para acceder al conjunto de herramientas PDF de Stirling. Cópiala en tu proyecto o actualízala para generar una nueva."
 docsDescription = "Más información sobre cómo integrar con Stirling PDF:"
 docsLink = "Documentación de la API"
 docsTitle = "Documentación de la API"
-generateError = "No pudimos generar su clave API."
+generateError = "No pudimos generar tu clave API."
 goToAccount = "Ir a Cuenta"
-guestInfo = "Los usuarios invitados no reciben claves API. Cree una cuenta para obtener una clave API que pueda usar en sus aplicaciones."
+guestInfo = "Los usuarios invitados no reciben claves API. Crea una cuenta para obtener una clave API que puedas usar en tus aplicaciones."
 includedCredits = "Créditos incluidos"
 intro = "Usa tu clave de API para acceder de forma programática a las capacidades de procesamiento de Stirling PDF."
 label = "Clave API"
 lastApiUse = "Último Uso de API"
 nextReset = "Próximo Restablecimiento"
-overlayMessage = "Genere una clave para ver créditos y créditos disponibles"
+overlayMessage = "Genera una clave para ver créditos y créditos disponibles"
 publicKeyAriaLabel = "Clave API pública"
 purchasedCredits = "Créditos comprados"
 refreshAriaLabel = "Actualizar clave API"
@@ -3045,10 +3049,10 @@ failedToRetrieveApiKey = "No se pudo obtener la clave de API de la respuesta."
 
 [config.apiKeys.refreshModal]
 confirmCta = "Actualizar Claves"
-confirmPrompt = "¿Está seguro de que desea continuar?"
-impact = "Cualquier aplicación o servicio que esté utilizando actualmente estas claves dejará de funcionar hasta que las actualice con las nuevas claves."
+confirmPrompt = "¿Estás seguro de que deseas continuar?"
+impact = "Cualquier aplicación o servicio que esté utilizando actualmente estas claves dejará de funcionar hasta que las actualices con las nuevas claves."
 title = "Actualizar Claves API"
-warning = "⚠️ Advertencia: Esta acción generará nuevas claves API y hará que sus claves anteriores sean inválidas."
+warning = "⚠️ Advertencia: Esta acción generará nuevas claves API y hará que tus claves anteriores sean inválidas."
 
 [config.overview]
 description = "Ajustes actuales de la aplicación y detalles de configuración."
@@ -3124,7 +3128,7 @@ maintainAspectRatio = "Mantener Relación de Aspecto"
 markdown = "Markdown"
 maxAttachmentSize = "Tamaño máximo de archivo adjunto (MB)"
 multiple = "Múltiple"
-noFileSelected = "No se seleccionó ningún archivo. Use el panel de archivos para agregar archivos."
+noFileSelected = "No se seleccionó ningún archivo. Usa el panel de archivos para agregar archivos."
 odpExt = "Presentación OpenDocument (.odp)"
 odtExt = "Texto OpenDocument (.odt)"
 officeDocs = "Documentos de Office (Word, Excel, PowerPoint)"
@@ -3346,7 +3350,7 @@ selectArea = "Seleccionar Área de Recorte"
 [crop.tooltip]
 description = "Seleccione el área a recortar de su PDF arrastrando y redimensionando la superposición azul en la miniatura."
 drag = "Arrastre la superposición para mover el área de recorte"
-precision = "Use entradas de coordenadas para posicionamiento preciso"
+precision = "Usa entradas de coordenadas para un posicionamiento preciso"
 resize = "Arrastre las esquinas y bordes para redimensionar"
 title = "Cómo Recortar PDFs"
 
@@ -3451,7 +3455,7 @@ failed = "No se pudo actualizar el índice"
 
 [editTableOfContents.info]
 line1 = "Cada marcador necesita un título descriptivo y la página que debe abrir."
-line2 = "Use marcadores hijos para crear una jerarquía para capítulos, secciones o subsecciones."
+line2 = "Usa marcadores hijos para crear una jerarquía de capítulos, secciones o subsecciones."
 line3 = "Importe marcadores del PDF seleccionado o de un archivo JSON para ahorrar tiempo."
 
 [editTableOfContents.messages]
@@ -4137,6 +4141,11 @@ desc = "Renombra automáticamente un archivo PDF basándose en su encabezado det
 tags = "auto-detectar,basado-en-encabezado,organizar,reetiquetar"
 title = "Renombrar Automáticamente Archivo PDF"
 
+[home.pdfCommentAgent]
+desc = "Pide a la IA que anote un PDF con comentarios de notas adhesivas según tu indicación"
+tags = "IA,agente,comentario,anotar,nota adhesiva,revisión,feedback,notas"
+title = "Añadir comentarios con IA"
+
 [home.autoSizeSplitPDF]
 desc = "Divide un solo PDF en múltiples documentos según su tamaño, número de páginas, o número de documento"
 tags = "auto,dividir,tamaño"
@@ -4539,58 +4548,58 @@ signIn = "Iniciar sesión"
 
 [login]
 accountCreatedSuccess = "¡Cuenta creada correctamente! Ya puedes iniciar sesión."
-alreadyLoggedIn = "Ya ha iniciado sesión en"
-alreadyLoggedIn2 = "dispositivos. Cierre sesión en los dispositivos y vuelva a intentarlo."
+alreadyLoggedIn = "Ya has iniciado sesión en"
+alreadyLoggedIn2 = "dispositivos. Cierra sesión en los dispositivos y vuelve a intentarlo."
 backToSignIn = "Volver a iniciar sesión"
 cancel = "Cancelar"
-changePasswordWarning = "Cambie su contraseña tras iniciar sesión por primera vez"
+changePasswordWarning = "Cambia tu contraseña tras iniciar sesión por primera vez"
 credentialsUpdated = "Tus credenciales se han actualizado. Vuelve a iniciar sesión."
 debug = "Depurar"
 defaultCredentials = "Credenciales de inicio de sesión predeterminadas"
-dontHaveAccount = "¿No tiene una cuenta? Registrarse"
+dontHaveAccount = "¿No tienes una cuenta? Registrarse"
 email = "Correo electrónico"
-enterEmail = "Introduzca su correo electrónico"
-enterEmailForMagicLink = "Introduzca su correo electrónico para el enlace mágico"
+enterEmail = "Introduce tu correo electrónico"
+enterEmailForMagicLink = "Introduce tu correo electrónico para el enlace mágico"
 enterMfaCode = "Introduce el código de 6 dígitos"
-enterPassword = "Introduzca su contraseña"
+enterPassword = "Introduce tu contraseña"
 enterUsername = "Introduce el nombre de usuario"
 failedToSignIn = "Error al iniciar sesión con {{provider}}: {{message}}"
 forgotPassword = "¿Has olvidado tu contraseña?"
 header = "Iniciar sesión"
 home = "Inicio"
 invalid = "Nombre de usuario o contraseña erróneos."
-locked = "Su cuenta se ha bloqueado."
+locked = "Tu cuenta se ha bloqueado."
 loggingIn = "Iniciando sesión..."
 logIn = "Iniciar sesión"
 login = "Iniciar sesión"
-logoutMessage = "Ha cerrado sesión."
-magicLinkSent = "¡Enlace mágico enviado a {{email}}! Revise su correo electrónico y haga clic en el enlace para iniciar sesión."
-maxUsersReached = "Se alcanzó el número máximo de usuarios para su licencia actual. Póngase en contacto con el administrador para actualizar su plan o añadir más plazas."
+logoutMessage = "Has cerrado sesión."
+magicLinkSent = "¡Enlace mágico enviado a {{email}}! Revisa tu correo electrónico y haz clic en el enlace para iniciar sesión."
+maxUsersReached = "Se alcanzó el número máximo de usuarios para tu licencia actual. Ponte en contacto con el administrador para actualizar tu plan o añadir más plazas."
 mfaCode = "Código de autenticación"
 mfaPromptBody = "Introduce el código de autenticación de tu aplicación de autenticación para continuar."
 mfaPromptTitle = "Autenticación de dos factores"
 mfaRequired = "Se requiere código de dos factores"
 oauth2AccessDenied = "Acceso denegado"
-oAuth2AdminBlockedUser = "El registro o inicio de sesión de usuarios no registrados está actualmente bloqueado. Por favor, póngase en contacto con el administrador."
+oAuth2AdminBlockedUser = "El registro o inicio de sesión de usuarios no registrados está actualmente bloqueado. Por favor, ponte en contacto con el administrador."
 oAuth2AutoCreateDisabled = "Usuario de creación automática de OAUTH2 DESACTIVADO"
 oauth2InvalidIdToken = "Token de identificación no válido"
 oauth2invalidRequest = "Solicitud no válida"
 oauth2InvalidTokenResponse = "Respuesta de token no válida"
 oauth2InvalidUserInfoResponse = "Respuesta de información de usuario no válida"
 oauth2RequestNotFound = "Solicitud de autorización no encontrada"
-oAuth2RequiresLicense = "El inicio de sesión OAuth/SSO requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
+oAuth2RequiresLicense = "El inicio de sesión OAuth/SSO requiere una licencia de pago (Server o Enterprise). Ponte en contacto con el administrador para actualizar tu plan."
 or = "O"
 password = "Contraseña"
 passwordChangedSuccess = "¡Contraseña cambiada correctamente! Inicia sesión con tu nueva contraseña."
-passwordResetSent = "¡Enlace de restablecimiento de contraseña enviado a {{email}}! Revise su correo electrónico y siga las instrucciones."
+passwordResetSent = "¡Enlace de restablecimiento de contraseña enviado a {{email}}! Revisa tu correo electrónico y sigue las instrucciones."
 passwordUpdatedSuccess = "Tu contraseña se ha actualizado correctamente."
-pleaseEnterBoth = "Por favor, introduzca tanto el correo electrónico como la contraseña"
-pleaseEnterEmail = "Por favor, introduzca su dirección de correo electrónico"
+pleaseEnterBoth = "Por favor, introduce tanto el correo electrónico como la contraseña"
+pleaseEnterEmail = "Por favor, introduce tu dirección de correo electrónico"
 relyingPartyRegistrationNotFound = "No hay registro de terceros confiables"
 rememberme = "Recordarme"
 resetHelp = "Introduce tu correo electrónico para recibir un enlace seguro para restablecer tu contraseña. Si el enlace ha caducado, por favor solicita uno nuevo."
 resetYourPassword = "Restablecer tu contraseña"
-saml2RequiresLicense = "El inicio de sesión SAML requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
+saml2RequiresLicense = "El inicio de sesión SAML requiere una licencia de pago (Server o Enterprise). Ponte en contacto con el administrador para actualizar tu plan."
 sending = "Enviando…"
 sendMagicLink = "Enviar Enlace Mágico"
 sendResetLink = "Enviar enlace de restablecimiento"
@@ -4598,22 +4607,22 @@ sessionExpired = "Tu sesión ha expirado. Vuelve a iniciar sesión."
 signin = "Iniciar sesión"
 signInAnonymously = "Registrarse como Invitado"
 signingIn = "Iniciando sesión..."
-signinTitle = "Por favor, inicie sesión"
+signinTitle = "Por favor, inicia sesión"
 signInWith = "Iniciar sesión con"
 signOut = "Cerrar Sesión"
 ssoSignIn = "Iniciar sesión a través del inicio de sesión único"
 subtitle = "Vuelve a iniciar sesión en Stirling PDF"
 title = "Iniciar sesión"
-toManySessions = "Tiene demasiadas sesiones activas"
+toManySessions = "Tienes demasiadas sesiones activas"
 unexpectedError = "Error inesperado: {{message}}"
 updatePassword = "Actualizar contraseña"
 useEmailInstead = "Iniciar sesión con correo electrónico"
 useMagicLink = "Usar enlace mágico en su lugar"
-userIsDisabled = "El usuario está desactivado, actualmente el acceso está bloqueado para ese nombre de usuario. Por favor, póngase en contacto con el administrador."
+userIsDisabled = "El usuario está desactivado, actualmente el acceso está bloqueado para ese nombre de usuario. Por favor, ponte en contacto con el administrador."
 username = "Nombre de usuario"
 verifyingMfa = "Verificando..."
 verifyMfa = "Verificar código"
-youAreLoggedIn = "¡Ha iniciado sesión!"
+youAreLoggedIn = "¡Has iniciado sesión!"
 
 [login.slides.edit]
 alt = "Editar PDFs"
@@ -5274,7 +5283,7 @@ bullet1 = "<strong>all</strong> → selecciona todas las páginas"
 title = "Palabras clave especiales"
 
 [pageSelection.tooltip.syntax]
-text = "Use números, rangos, palabras clave y progresiones (n comienza en 0). Se admiten paréntesis."
+text = "Usa números, rangos, palabras clave y progresiones (n comienza en 0). Se admiten paréntesis."
 title = "Conceptos Básicos de Sintaxis"
 
 [pageSelection.tooltip.syntax.bullets]
@@ -5383,7 +5392,7 @@ title = "Organizador de páginas"
 
 [pdfOrganiser.desc]
 BOOKLET_SORT = "Organice páginas para impresión de folletos (última, primera, segunda, penúltima, …)."
-CUSTOM = "Use una secuencia personalizada de números de página o expresiones para definir un nuevo orden."
+CUSTOM = "Usa una secuencia personalizada de números de página o expresiones para definir un nuevo orden."
 DUPLEX_SORT = "Intercale frentes y luego reversos como si un escáner dúplex escaneara todos los frentes y luego todos los reversos (1, n, 2, n-1, …)."
 DUPLICATE = "Duplique cada página según el recuento de orden personalizado (por ejemplo, 4 duplica cada página 4 veces)."
 ODD_EVEN_MERGE = "Combine dos PDF alternando páginas: impares del primero, pares del segundo."
@@ -6365,7 +6374,7 @@ title = "Umbral de Blancura de Píxeles"
 [removeBlanks.tooltip.whitePercent]
 bullet1 = "Valores más bajos (por ejemplo, 80%) = Más páginas eliminadas"
 bullet2 = "Valores más altos (por ejemplo, 95%) = Solo se eliminan páginas muy en blanco"
-bullet3 = "Use valores más altos para documentos con fondos claros"
+bullet3 = "Usa valores más altos para documentos con fondos claros"
 text = "Establece el porcentaje mínimo de píxeles blancos requerido para que una página se considere en blanco y se elimine."
 title = "Umbral de Porcentaje Blanco"
 
@@ -6422,7 +6431,7 @@ failed = "Se produjo un error al eliminar páginas."
 placeholder = "Seleccione un archivo PDF en la vista principal para comenzar"
 
 [removePages.pageNumbers]
-error = "Formato de número de página no válido. Use números, rangos (1-5) o expresiones matemáticas (2n+1)"
+error = "Formato de número de página no válido. Usa números, rangos (1-5) o expresiones matemáticas (2n+1)"
 label = "Páginas a Eliminar"
 placeholder = "por ejemplo, 1,3,5-8,10"
 
@@ -6595,7 +6604,7 @@ failed = "Se produjo un error al rotar el PDF."
 title = "Vista Previa de Rotación"
 
 [rotate.tooltip.controls]
-text = "Use los botones de rotación para ajustar la orientación. El botón izquierdo rota en sentido antihorario, el botón derecho rota en sentido horario. Cada clic rota 90 grados."
+text = "Usa los botones de rotación para ajustar la orientación. El botón izquierdo rota en sentido antihorario y el botón derecho en sentido horario. Cada clic rota 90 grados."
 title = "Controles"
 
 [rotate.tooltip.description]
@@ -6709,7 +6718,7 @@ problem4 = "Fotos inclinadas no enderezadas → reduzca el Umbral de Ángulo a ~
 problem5 = "Cuadros de polvo/ruido → aumente el Área Mínima de Contorno a 1000-2000"
 quickFixes = "Soluciones rápidas"
 setupTips = "Consejos de configuración"
-tip1 = "Use un fondo plano y claro"
+tip1 = "Usa un fondo plano y claro"
 tip2 = "Deje un pequeño espacio (≈1 cm) entre fotos"
 tip3 = "Escanee a 300-600 DPI"
 tip4 = "Limpie el cristal del escáner"
@@ -6727,6 +6736,8 @@ noResults = "No se encontraron resultados"
 placeholder = "Ingrese término de búsqueda..."
 searching = "Buscando..."
 title = "Buscar PDF"
+
+[selfHosted]
 
 [selfHosted.offline]
 hideTools = "Ocultar herramientas no disponibles ▴"
@@ -7225,7 +7236,7 @@ defaultLabel = "Firma"
 defaultTextLabel = "Firma escrita"
 delete = "Eliminar"
 description = "Reutilice firmas guardadas en cualquier momento."
-emptyDescription = "Dibuje, suba o escriba una firma arriba y luego use \"Guardar en la biblioteca\" para mantener hasta {{max}} favoritas listas para usar."
+emptyDescription = "Dibuja, sube o escribe una firma arriba y luego usa \"Guardar en la biblioteca\" para mantener hasta {{max}} favoritas listas para usar."
 emptyTitle = "Aún no hay firmas guardadas"
 heading = "Firmas guardadas"
 label = "Etiqueta"
@@ -7394,7 +7405,7 @@ tooltip = "Ingrese el número de páginas para cada archivo dividido"
 [split.methods.byPageDivider]
 desc = "División automática con hojas divisoras"
 name = "Divisor de Páginas"
-tooltip = "Use hojas divisoras con código QR entre documentos al escanear"
+tooltip = "Usa hojas divisoras con código QR entre documentos al escanear"
 
 [split.methods.byPages]
 desc = "Extraer páginas específicas (1,3,5-10)"
@@ -7458,7 +7469,7 @@ settings = "Configuración"
 bullet1 = "Nivel de Marcador: En qué nivel dividir (1=nivel superior)"
 bullet2 = "Incluir Metadatos: Preservar propiedades del documento"
 bullet3 = "Permitir Duplicados: Manejar nombres de marcadores repetidos"
-text = "Use marcadores de PDF para dividir automáticamente en límites de capítulos. Requiere PDFs con estructura de marcadores."
+text = "Usa marcadores de PDF para dividir automáticamente en límites de capítulos. Requiere PDFs con estructura de marcadores."
 title = "Dividir por Capítulos"
 
 [split.tooltip.byCount]
@@ -7495,7 +7506,7 @@ title = "Dividir por separador de páginas"
 bullet1 = "Puntos de división únicos: 3,7 (divide después de las páginas 3 y 7)"
 bullet2 = "Puntos de división por rango: 3-8 (divide antes de la página 3 y después de la página 8)"
 bullet3 = "Mixto: 2,5-10,15 (divide después de la página 2, antes de la página 5, después de la página 10 y después de la página 15)"
-text = "Divida su PDF en números de página específicos. Usar 'n' divide después de la página n. Usar 'n-m' divide antes de la página n y después de la página m."
+text = "Divide tu PDF en números de página específicos. Usa 'n' para dividir después de la página n. Usa 'n-m' para dividir antes de la página n y después de la página m."
 title = "Dividir en Números de Página"
 
 [split.tooltip.byPoster]
@@ -7514,8 +7525,8 @@ text = "Divida cada página en una cuadrícula de secciones. Útil para dividir 
 title = "Dividir por Secciones de Cuadrícula"
 
 [split.tooltip.bySize]
-bullet1 = "Use MB para archivos más grandes (ej. 10MB)"
-bullet2 = "Use KB para archivos más pequeños (ej. 500KB)"
+bullet1 = "Usa MB para archivos más grandes (ej. 10MB)"
+bullet2 = "Usa KB para archivos más pequeños (ej. 500KB)"
 bullet3 = "El sistema dividirá en límites de página"
 text = "Crear múltiples PDFs que no excedan un tamaño de archivo especificado. Ideal para limitaciones de tamaño de archivo o archivos adjuntos de correo electrónico."
 title = "Dividir por Tamaño de Archivo"
@@ -8294,7 +8305,7 @@ title = "Configuración de Apariencia"
 title = "Carga de Imagen"
 
 [watermark.tooltip.file.recommendations]
-bullet1 = "Use logos o sellos con fondos transparentes"
+bullet1 = "Usa logos o sellos con fondos transparentes"
 bullet2 = "Los diseños simples funcionan mejor que las imágenes complejas"
 bullet3 = "Considere el tamaño final del documento al elegir la resolución"
 text = "Consejos para obtener resultados óptimos de marcas de agua de imagen."
@@ -8373,7 +8384,7 @@ title = "Selección de Tipo de Marca de Agua"
 bullet1 = "Cargue cualquier formato de imagen"
 bullet2 = "Mantiene la calidad de la imagen"
 bullet3 = "Perfecto para logos y sellos"
-text = "Use logos, sellos o cualquier imagen como marca de agua. Excelente para marca e identificación visual."
+text = "Usa logos, sellos o cualquier imagen como marca de agua. Excelente para marca e identificación visual."
 title = "Marcas de Agua de Imagen"
 
 [watermark.tooltip.type.text]
@@ -8595,7 +8606,7 @@ description = "Genera un enlace seguro que permite al usuario establecer su prop
 email = "Dirección de correo electrónico"
 emailDescription = "Opcional: deja en blanco para un enlace de invitación general que pueda usar cualquiera"
 emailFailed = "Enlace de invitación generado, pero falló el correo"
-emailFailedDetails = "Error: {0}. Por favor, comparte el enlace de invitación manualmente."
+emailFailedDetails = "Error: {0}. Por favor, comparta el enlace de invitación manualmente."
 emailOptional = "Opcional: deja en blanco para un enlace de invitación general"
 emailPlaceholder = "user@example.com (opcional)"
 emailRequired = "Se requiere una dirección de correo electrónico"
