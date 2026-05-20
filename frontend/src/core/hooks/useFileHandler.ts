@@ -8,7 +8,12 @@ export const useFileHandler = () => {
   const addFiles = useCallback(
     async (
       files: File[],
-      options: { insertAfterPageId?: string; selectFiles?: boolean } = {},
+      options: {
+        insertAfterPageId?: string;
+        selectFiles?: boolean;
+        /** Persist to IDB without dispatching to workspace state. */
+        skipWorkspaceDispatch?: boolean;
+      } = {},
     ): Promise<StirlingFile[]> => {
       // Merge default options with passed options - passed options take precedence
       const mergedOptions = { selectFiles: true, ...options };

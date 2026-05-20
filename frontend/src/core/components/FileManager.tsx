@@ -6,7 +6,6 @@ import type { FileId } from "@app/types/file";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { Tool } from "@app/types/tool";
 import MobileLayout from "@app/components/fileManager/MobileLayout";
 import DesktopLayout from "@app/components/fileManager/DesktopLayout";
 import DragOverlay from "@app/components/fileManager/DragOverlay";
@@ -20,8 +19,14 @@ import { loadScript } from "@app/utils/scriptLoader";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 
+/**
+ * Structural prop: anything that exposes an optional `supportedFormats`
+ * string array. Both `Tool` (from `@app/types/tool`) and `ToolRegistryEntry`
+ * (from `@app/data/toolsTaxonomy`) satisfy this, so callers can pass either
+ * without an `as any` cast.
+ */
 interface FileManagerProps {
-  selectedTool?: Tool | null;
+  selectedTool?: { supportedFormats?: string[] } | null;
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {

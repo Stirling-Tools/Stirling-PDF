@@ -1,0 +1,198 @@
+/* Secondary navigator panel that slides out from the main FileSidebar
+   when the user enters the My Files workbench.
+
+   Pattern:
+   - Outer panel is a flex item whose `width` transitions. The inner
+     content keeps a fixed natural width and the outer `overflow: hidden`
+     clips it during the slide so the user sees the panel grow from the
+     edge rather than the content shrinking.
+   - Inner content separately fades + nudges in for an attentive feel.
+
+   Styled to mirror the main FileSidebar - same toolbar background, same
+   section-header treatment, same icon weight - so the two read as one
+   unified surface. */
+
+.folder-tree-panel {
+  width: 0;
+  flex-shrink: 0;
+  background: var(--bg-toolbar);
+  border-right: 0 solid var(--border-subtle);
+  overflow: hidden;
+  height: 100%;
+  pointer-events: none;
+  position: relative;
+}
+
+.folder-tree-panel[data-active="true"] {
+  width: var(--folder-tree-panel-width, 16rem);
+  border-right-width: 1px;
+  pointer-events: auto;
+}
+
+.folder-tree-panel-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateX(-1rem);
+  /* Only fade/slide; width is driven by the inline custom property so
+   * dragging the resizer doesn't animate. */
+  transition:
+    opacity 0.18s ease,
+    transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.folder-tree-panel[data-active="true"] .folder-tree-panel-inner {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 0.04s;
+}
+
+/* Drag handle on the right edge. */
+.folder-tree-panel-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.folder-tree-panel-resizer:hover,
+.folder-tree-panel-resizer:focus-visible {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 35%,
+    transparent
+  );
+  outline: none;
+}
+
+/* Section header - matches .file-sidebar-section-header in FileSidebar.css */
+.folder-tree-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px 6px 18px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.folder-tree-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Tree rows - mirror .file-sidebar-action-row from FileSidebar.css so the
+   slide-out folder navigator reads as a continuation of the main sidebar's
+   design language. Same row height, padding, font weight, muted icon
+   treatment. The hover/active state uses the same --hover-bg pill that
+   the sidebar's other rows do, with no heavy accent bar. */
+
+.files-page-tree-list {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 12px;
+}
+
+.files-page-tree-node {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 4px;
+  margin: 0 8px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  position: relative;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.files-page-tree-node:hover {
+  background: var(--hover-bg);
+}
+
+.files-page-tree-node.is-active {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.files-page-tree-node.is-drop-target {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px var(--accent-interactive, #6366f1);
+  color: var(--text-primary);
+}
+
+.files-page-tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.files-page-tree-toggle svg {
+  font-size: 16px !important;
+}
+
+.files-page-tree-spacer {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.files-page-tree-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  margin-left: 8px;
+  font-size: 18px;
+}
+
+.files-page-tree-icon svg {
+  font-size: 18px !important;
+}
+
+.files-page-tree-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 12px;
+}
+
+.files-page-tree-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+@media (max-width: 900px) {
+  /* Cap the user width on narrow viewports so the tree can't squeeze
+   * out the file grid. The custom property is still honoured but capped. */
+  .folder-tree-panel[data-active="true"] {
+    width: min(var(--folder-tree-panel-width, 14rem), 14rem);
+  }
+}

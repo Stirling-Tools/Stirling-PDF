@@ -240,6 +240,9 @@ interface AddFileOptions {
   // Auto-selection after adding
   selectFiles?: boolean;
 
+  /** Persist to IDB without dispatching to workspace state. */
+  skipWorkspaceDispatch?: boolean;
+
   // Auto-unzip control
   autoUnzip?: boolean;
   autoUnzipFileLimit?: number;
@@ -498,8 +501,8 @@ export async function addFiles(
       });
     }
 
-    // Batch dispatch all files at once — one render instead of N sequential renders
-    if (stirlingFileStubs.length > 0) {
+    // Batch dispatch in one render. Suppressed by skipWorkspaceDispatch.
+    if (stirlingFileStubs.length > 0 && !options.skipWorkspaceDispatch) {
       dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs } });
     }
 

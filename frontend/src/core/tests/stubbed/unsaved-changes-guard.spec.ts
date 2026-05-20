@@ -31,11 +31,11 @@ test.describe("Unsaved changes navigation guard", () => {
       await page.goto("/split");
     }
 
-    // After arriving at /split the file picker should still list the
+    // After arriving at /split the My Files page should still list the
     // previously uploaded sample (NavigationGuard either kept us on
     // /merge or moved us with state intact). A "no files" empty state
     // here would indicate the guard silently dropped the workbench.
-    await page.getByTestId("files-button").click();
+    await page.getByTestId("my-files-button").click();
     await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
       timeout: 5_000,
     });

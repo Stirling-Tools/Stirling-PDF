@@ -4,6 +4,7 @@
  */
 
 import { ToolId } from "@app/types/toolId";
+import { FolderId } from "@app/types/folder";
 
 declare const tag: unique symbol;
 export type FileId = string & { readonly [tag]: "FileId" };
@@ -36,6 +37,17 @@ export interface BaseFileMetadata {
   parentFileId?: FileId; // Immediate parent file ID
   toolHistory?: ToolOperation[]; // Tool chain for history tracking
 
+  /**
+   * The cloud folder this file lives in. Semantics:
+   * - `remoteStorageId == null` → file is local-only; folderId MUST be null.
+   * - `remoteStorageId != null && folderId == null` → file is at the cloud root.
+   * - `remoteStorageId != null && folderId == X` → file lives in cloud folder X.
+   *
+   * The "Local" pseudo-folder in the UI is the predicate `remoteStorageId == null`;
+   * it has no corresponding {@code folderId} value. Folders are a server-only concept.
+   */
+  folderId?: FolderId | null;
+
   // Remote storage tracking
   remoteStorageId?: number; // Server-side storage ID for this file chain
   remoteStorageUpdatedAt?: number; // Timestamp when chain was last uploaded
@@ -44,6 +56,7 @@ export interface BaseFileMetadata {
   remoteAccessRole?: string; // Access role for shared server files
   remoteSharedViaLink?: boolean; // True when imported from a share link
   remoteHasShareLinks?: boolean; // True when owner has shared this file
+  remoteHasUserShares?: boolean; // True when owner has invited specific users
   remoteShareToken?: string; // Share token when file is from a share link
 }
 

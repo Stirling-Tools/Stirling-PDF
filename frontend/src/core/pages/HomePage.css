@@ -93,6 +93,16 @@
   touch-action: pan-x pinch-zoom;
 }
 
+/* /files mobile: skip the slider entirely. The FileManagerView fills the
+   viewport between the (suppressed) top toggle and the bottom nav, getting
+   back ~120px of vertical room and avoiding the side-scroll surface. */
+.mobile-files-full {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
 .mobile-slider::-webkit-scrollbar {
   display: none;
 }

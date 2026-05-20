@@ -3,6 +3,7 @@ export const BASE_WORKBENCH_TYPES = [
   "viewer",
   "pageEditor",
   "fileEditor",
+  "myFiles",
 ] as const;
 
 export type BaseWorkbenchType = (typeof BASE_WORKBENCH_TYPES)[number];

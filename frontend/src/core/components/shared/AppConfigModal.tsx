@@ -112,10 +112,17 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
 
-    // Navigate back to home when closing modal
-    navigate("/", { replace: true });
+    // Pop back to whatever the user came from (files / viewer / tools).
+    // location.key === "default" means /settings was the first entry in
+    // this tab (deep link / refresh), so there's nothing to pop to;
+    // fall back to home in that case.
+    if (location.key === "default") {
+      navigate("/", { replace: true });
+    } else {
+      navigate(-1);
+    }
     onClose();
-  }, [confirmIfDirty, navigate, onClose]);
+  }, [confirmIfDirty, location.key, navigate, onClose]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
