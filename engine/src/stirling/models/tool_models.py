@@ -984,6 +984,28 @@ class RearrangePagesParams(ApiModel):
     )
 
 
+class Strategy(StrEnum):
+    auto = "AUTO"
+    overlay_only = "OVERLAY_ONLY"
+    image_finalize = "IMAGE_FINALIZE"
+
+
+class RedactImageBox(ApiModel):
+    page_index: int = Field(..., description="0-based page index")
+    x1: float = Field(..., description="Left edge in PDF user-space (origin bottom-left, Y up)")
+    x2: float = Field(..., description="Right edge")
+    y1: float = Field(..., description="Bottom edge")
+    y2: float = Field(..., description="Top edge")
+
+
+class RedactTextRange(ApiModel):
+    end_string: str = Field(
+        "",
+        description="Exclusive end marker - first line after the redacted block, copied verbatim. Empty string means redact to the end of the document.",
+    )
+    start_string: str = Field(..., description="First line of the block to redact, copied verbatim")
+
+
 class RedactionArea(ApiModel):
     """
     A list of areas that should be redacted
@@ -1333,6 +1355,22 @@ class VectorToPdfParams(ApiModel):
     prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
+class RedactExecuteParams(ApiModel):
+    convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to a flattened image")
+    custom_padding: float = Field(0, description="Extra padding (pts) around each redaction box")
+    image_boxes: list[RedactImageBox] = Field([], description="Images to redact by bounding box", validate_default=True)
+    image_pages: list[int] = Field(
+        [], description="1-based page numbers to scan for images when redactAllImages is true"
+    )
+    page_numbers: list[int] = Field([], description="1-based page numbers to redact entirely")
+    redact_all_images: bool = Field(False, description="Redact every image")
+    redact_color: str = Field("#000000", description="Hex colour for the redaction fill")
+    regex_patterns: list[str] = Field([], description="Regex patterns to redact")
+    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
+    text_ranges: list[RedactTextRange] = Field([], description="Multi-line sections to redact", validate_default=True)
+    texts_to_redact: list[str] = Field([], description="Single-line values to redact")
+
+
 class RedactParams(ApiModel):
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
     page_numbers: str = Field(
@@ -1407,6 +1445,7 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
+        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1475,6 +1514,7 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
+        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1544,6 +1584,7 @@ type ParamToolModel = (
     | SessionsParams
     | ValidateCertificateParams
     | RedactParams
+    | RedactExecuteParams
     | RemovePasswordParams
     | SanitizePdfParams
     | TimestampPdfParams
@@ -1614,6 +1655,7 @@ class ToolEndpoint(StrEnum):
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
+    REDACT_EXECUTE = "/api/v1/security/redact-execute"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
@@ -1682,6 +1724,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
+    ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
     ToolEndpoint.TIMESTAMP_PDF: TimestampPdfParams,

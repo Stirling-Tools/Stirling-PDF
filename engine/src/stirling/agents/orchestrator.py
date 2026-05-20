@@ -86,7 +86,9 @@ class OrchestratorAgent:
             system_prompt=(
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
-                "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
+                "Use delegate_pdf_edit for any requested modification of one or more PDFs,"
+                " including redaction (PII, names, phone numbers, sections, images, sensitive"
+                " content) — all redaction goes through delegate_pdf_edit. "
                 "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.service;
 
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -8,13 +9,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
+import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
+import org.apache.pdfbox.util.Matrix;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,6 +42,7 @@ import stirling.software.SPDF.pdf.parser.PdfModels.TextFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
@@ -122,6 +133,7 @@ public class PdfContentExtractor {
             }
             csvStrings.add(sw.toString());
         }
+
         return csvStrings;
     }
 
@@ -295,7 +307,6 @@ public class PdfContentExtractor {
     private List<AiWorkflowTextSelection> extractPageText(
             PDDocument document, List<Integer> selectedPages, int maxCharacters)
             throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
         List<AiWorkflowTextSelection> pages = new ArrayList<>();
         int remainingCharacters = maxCharacters;
 
@@ -304,10 +315,29 @@ public class PdfContentExtractor {
                 break;
             }
 
+            PDFTextStripper textStripper = new PDFTextStripper();
+            textStripper.setSortByPosition(true);
             textStripper.setStartPage(pageNumber);
             textStripper.setEndPage(pageNumber);
 
             String pageText = textStripper.getText(document).trim();
+
+            // Prepend page dimensions so the AI agent can reason about absolute coordinates.
+            PDPage page = document.getPage(pageNumber - 1);
+            PDRectangle bbox = page.getBBox();
+            String dimensionHeader =
+                    String.format(
+                            "--- Page dimensions: %.0fx%.0f pts"
+                                    + " (PDF user-space: origin bottom-left, Y up) ---\n",
+                            bbox.getWidth(), bbox.getHeight());
+            pageText = dimensionHeader + pageText;
+
+            // Append image metadata so the AI agent can reason about images spatially.
+            String imageAnnotation = buildImageAnnotation(document, pageNumber - 1);
+            if (!imageAnnotation.isEmpty()) {
+                pageText = pageText + imageAnnotation;
+            }
+
             if (pageText.isBlank()) {
                 continue;
             }
@@ -325,6 +355,56 @@ public class PdfContentExtractor {
             remainingCharacters -= clippedText.length();
         }
         return pages;
+    }
+
+    /**
+     * Builds a human-readable description of all images on a page to append to page text. Uses PDF
+     * user-space coordinates (origin bottom-left, Y up) so the AI can reference exact bounding
+     * boxes when requesting image redaction.
+     */
+    private String buildImageAnnotation(PDDocument document, int pageIndex) {
+        try {
+            List<ImageBlock> images = extractImagePositions(document, pageIndex);
+            if (images.isEmpty()) {
+                return "";
+            }
+            PDPage page = document.getPage(pageIndex);
+            PDRectangle bbox = page.getBBox();
+            float pageWidth = bbox.getWidth();
+            float pageHeight = bbox.getHeight();
+
+            StringBuilder sb = new StringBuilder("\n\n--- Images on this page ---");
+            for (int i = 0; i < images.size(); i++) {
+                ImageBlock img = images.get(i);
+                String position = spatialLabel(img, pageWidth, pageHeight);
+                float w = img.x2() - img.x1();
+                float h = img.y2() - img.y1();
+                sb.append(
+                        String.format(
+                                "\nImage %d: position=%s, size=%.0fx%.0f pts,"
+                                        + " bounds=(x1=%.0f, y1=%.0f, x2=%.0f, y2=%.0f)",
+                                i + 1, position, w, h, img.x1(), img.y1(), img.x2(), img.y2()));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to extract image positions for page {}: {}", pageIndex, e.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Returns a human-readable spatial label (e.g. "top-left", "center") for an image based on its
+     * centre relative to the page dimensions. Coordinates are in PDF user-space (Y up).
+     */
+    private static String spatialLabel(ImageBlock img, float pageWidth, float pageHeight) {
+        float cx = (img.x1() + img.x2()) / 2f;
+        float cy = (img.y1() + img.y2()) / 2f;
+
+        String horiz = cx < pageWidth / 3f ? "left" : cx < 2 * pageWidth / 3f ? "center" : "right";
+        // PDF Y increases upward, so higher Y = higher on the page = "top"
+        String vert = cy > 2 * pageHeight / 3f ? "top" : cy > pageHeight / 3f ? "middle" : "bottom";
+        return vert + "-" + horiz;
     }
 
     private ExtractedFileText buildExtractedFileText(
@@ -345,6 +425,221 @@ public class PdfContentExtractor {
             end--;
         }
         return text.substring(0, end);
+    }
+
+    // -----------------------------------------------------------------------
+    // Text position finding
+    // -----------------------------------------------------------------------
+
+    /**
+     * A located text match inside a PDF: 0-based page index and bounding box in PDFBox coordinates
+     * (origin bottom-left).
+     */
+    public record TextBlock(int pageIndex, float x1, float y1, float x2, float y2) {}
+
+    /**
+     * An image found on a PDF page: 0-based page index and bounding box in PDF user-space
+     * coordinates (origin bottom-left, Y increases upward).
+     */
+    public record ImageBlock(int pageIndex, float x1, float y1, float x2, float y2) {}
+
+    /**
+     * Extract the bounding boxes of all raster/vector images on the given (0-based) page.
+     *
+     * @param document the open PDF
+     * @param pageIndex 0-based page index
+     * @return list of located images in document order
+     */
+    public List<ImageBlock> extractImagePositions(PDDocument document, int pageIndex)
+            throws IOException {
+        PDPage page = document.getPage(pageIndex);
+        ImageBoundsExtractor extractor = new ImageBoundsExtractor(page, pageIndex);
+        extractor.processPage(page);
+        return extractor.getImageBlocks();
+    }
+
+    /**
+     * Find all occurrences of {@code pattern} in {@code document} and return their bounding boxes.
+     *
+     * @param document the open PDF
+     * @param pattern the search string or regex
+     * @param useRegex {@code true} to treat {@code pattern} as a regular expression
+     * @return list of located matches, in page order
+     */
+    public List<TextBlock> findTextPositions(PDDocument document, String pattern, boolean useRegex)
+            throws IOException {
+        LocalTextFinder finder = new LocalTextFinder(pattern, useRegex);
+        finder.getText(document);
+        return finder.found;
+    }
+
+    private static final class LocalTextFinder extends PDFTextStripper {
+
+        private final String searchTerm;
+        private final boolean useRegex;
+        final List<TextBlock> found = new ArrayList<>();
+
+        private final List<TextPosition> pagePositions = new ArrayList<>();
+        private final StringBuilder pageText = new StringBuilder();
+
+        LocalTextFinder(String searchTerm, boolean useRegex) throws IOException {
+            this.searchTerm = searchTerm;
+            this.useRegex = useRegex;
+            setWordSeparator(" ");
+            setLineSeparator("\n");
+        }
+
+        @Override
+        protected void startPage(PDPage page) throws IOException {
+            super.startPage(page);
+            pagePositions.clear();
+            pageText.setLength(0);
+        }
+
+        @Override
+        protected void writeString(String text, List<TextPosition> positions) {
+            pageText.append(text);
+            pagePositions.addAll(positions);
+        }
+
+        @Override
+        protected void writeWordSeparator() {
+            pageText.append(getWordSeparator());
+            pagePositions.add(null);
+        }
+
+        @Override
+        protected void writeLineSeparator() {
+            pageText.append(getLineSeparator());
+            pagePositions.add(null);
+        }
+
+        @Override
+        protected void endPage(PDPage page) throws IOException {
+            String text = pageText.toString();
+            if (!text.isEmpty() && searchTerm != null && !searchTerm.isBlank()) {
+                String term = searchTerm.trim();
+                String regex = useRegex ? term : "\\Q" + term + "\\E";
+                Pattern pat = RegexPatternUtils.getInstance().createSearchPattern(regex, true);
+                Matcher matcher = pat.matcher(text);
+                while (matcher.find()) {
+                    float minX = Float.MAX_VALUE;
+                    float minY = Float.MAX_VALUE;
+                    float maxX = -Float.MAX_VALUE;
+                    float maxY = -Float.MAX_VALUE;
+                    boolean hit = false;
+                    for (int i = matcher.start(); i < matcher.end(); i++) {
+                        if (i < pagePositions.size()) {
+                            TextPosition tp = pagePositions.get(i);
+                            if (tp != null) {
+                                hit = true;
+                                minX = Math.min(minX, tp.getX());
+                                maxX = Math.max(maxX, tp.getX() + tp.getWidth());
+                                minY = Math.min(minY, tp.getY() - tp.getHeight());
+                                maxY = Math.max(maxY, tp.getY());
+                            }
+                        }
+                    }
+                    if (hit) {
+                        found.add(new TextBlock(getCurrentPageNo() - 1, minX, minY, maxX, maxY));
+                    }
+                }
+            }
+            super.endPage(page);
+        }
+    }
+
+    /**
+     * PDFGraphicsStreamEngine that intercepts {@code drawImage} calls and records each image's
+     * bounding box in PDF user space (origin bottom-left, Y up) by reading the current
+     * transformation matrix.
+     */
+    private static final class ImageBoundsExtractor extends PDFGraphicsStreamEngine {
+
+        private final int pageIndex;
+        private final List<ImageBlock> imageBlocks = new ArrayList<>();
+        private final Point2D.Float currentPoint = new Point2D.Float();
+
+        ImageBoundsExtractor(PDPage page, int pageIndex) {
+            super(page);
+            this.pageIndex = pageIndex;
+        }
+
+        List<ImageBlock> getImageBlocks() {
+            return imageBlocks;
+        }
+
+        @Override
+        public void drawImage(PDImage pdImage) throws IOException {
+            Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
+            // An image occupies the unit square (0,0)→(1,1) in image space.
+            // Transform all four corners through the CTM to get the page-space bounding box.
+            float a = ctm.getScaleX();
+            float b = ctm.getShearY();
+            float c = ctm.getShearX();
+            float d = ctm.getScaleY();
+            float e = ctm.getTranslateX();
+            float f = ctm.getTranslateY();
+            float[] xs = {e, a + e, c + e, a + c + e};
+            float[] ys = {f, b + f, d + f, b + d + f};
+            float x1 = Float.MAX_VALUE, y1 = Float.MAX_VALUE;
+            float x2 = -Float.MAX_VALUE, y2 = -Float.MAX_VALUE;
+            for (float x : xs) {
+                x1 = Math.min(x1, x);
+                x2 = Math.max(x2, x);
+            }
+            for (float y : ys) {
+                y1 = Math.min(y1, y);
+                y2 = Math.max(y2, y);
+            }
+            imageBlocks.add(new ImageBlock(pageIndex, x1, y1, x2, y2));
+        }
+
+        // ---------- required abstract methods (no-op for path operations) ----------
+
+        @Override
+        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) {}
+
+        @Override
+        public void clip(int windingRule) {}
+
+        @Override
+        public void moveTo(float x, float y) {
+            currentPoint.setLocation(x, y);
+        }
+
+        @Override
+        public void lineTo(float x, float y) {
+            currentPoint.setLocation(x, y);
+        }
+
+        @Override
+        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) {
+            currentPoint.setLocation(x3, y3);
+        }
+
+        @Override
+        public Point2D getCurrentPoint() {
+            return currentPoint;
+        }
+
+        @Override
+        public void closePath() {}
+
+        @Override
+        public void endPath() {}
+
+        @Override
+        public void strokePath() {}
+
+        @Override
+        public void fillPath(int windingRule) {}
+
+        @Override
+        public void fillAndStrokePath(int windingRule) {}
+
+        @Override
+        public void shadingFill(COSName shadingName) {}
     }
 
     // --- Types shared with AiWorkflowService (package-private) ---

@@ -6,7 +6,7 @@ from typing import Literal, overload
 
 from pydantic import Field
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
+from pydantic_ai.output import NativeOutput, ToolOutput
 
 from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
 from stirling.contracts import (
@@ -39,11 +39,31 @@ class PdfEditPlanSelection(ApiModel):
     summary: str
 
 
-type PdfEditPlanOutput = PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | NeedContentResponse
+class PdfEditNeedContentSelection(ApiModel):
+    """LLM-facing variant of need_content: the model signals it needs document content and gives
+    a reason; the file list is filled in by Python from the authoritative request.files so the
+    LLM can't fabricate file ids.
+    """
+
+    outcome: Literal["need_content"] = "need_content"
+    reason: str
+    max_pages: int | None = None
+    max_characters: int | None = None
+
+
+type PdfEditPlanOutput = (
+    PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | PdfEditNeedContentSelection
+)
 
 
 class PdfEditSelectionAgent:
-    def __init__(self, runtime: AppRuntime, base_system_prompt: str, *, allow_need_content: bool) -> None:
+    def __init__(
+        self,
+        runtime: AppRuntime,
+        base_system_prompt: str,
+        *,
+        allow_need_content: bool,
+    ) -> None:
         self.runtime = runtime
         output_types: list[type[PdfEditPlanOutput]] = [
             PdfEditPlanSelection,
@@ -52,7 +72,7 @@ class PdfEditSelectionAgent:
         ]
         system_prompt = base_system_prompt
         if allow_need_content:
-            output_types.append(NeedContentResponse)
+            output_types.append(PdfEditNeedContentSelection)
             system_prompt += (
                 " Return need_content when planning a correct answer requires inspecting the actual PDF "
                 "page text (e.g. 'split after every page that says NEW PAGE', "
@@ -98,13 +118,22 @@ class PdfEditParameterSelector:
         parameter_model = OPERATIONS[operation_id]
         prompt = self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps)
         logger.debug("[pdf-edit params %s] prompt:\n%s", operation_id.name, prompt)
+        instructions = (
+            f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
+            "Do not include fields from any other operation."
+        )
+        if operation_id == ToolEndpoint.REDACT_EXECUTE:
+            instructions += (
+                " For regexPatterns, account for the common format variants of whatever pattern "
+                "the user asked to redact — different separators, optional prefixes/suffixes, "
+                "grouped vs unbroken digits, locale spellings, etc. — so partial matches don't "
+                "leak. Cover the realistic shapes the data appears in, not every conceivable form."
+            )
+        # ToolOutput bypasses Anthropic's grammar compiler, which times out on complex schemas.
         parameter_result = await self.agent.run(
             prompt,
-            output_type=NativeOutput(parameter_model),
-            instructions=(
-                f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
-                "Do not include fields from any other operation."
-            ),
+            output_type=ToolOutput(parameter_model),
+            instructions=instructions,
         )
         logger.debug("[pdf-edit params %s] output: %s", operation_id.name, Pretty(parameter_result.output))
         return parameter_result.output
@@ -173,8 +202,7 @@ class PdfEditAgent:
             request.enabled_endpoints,
             request.user_message,
         )
-        supported_operations = self._get_supported_operations(request)
-        unavailable_operations = self._get_unavailable_operations(supported_operations)
+        supported_operations, unavailable_operations = self._classify_operations(request)
         if not supported_operations:
             return EditCannotDoResponse(reason="No PDF edit operations are available on this server.")
         selection = await self._select_plan(
@@ -183,9 +211,9 @@ class PdfEditAgent:
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
             logger.info("[pdf-edit] selection -> %s: %s", selection.outcome, Pretty(selection))
             return selection
-        if isinstance(selection, NeedContentResponse):
+        if isinstance(selection, PdfEditNeedContentSelection):
             logger.info("[pdf-edit] selection -> need_content: %s", selection.reason)
-            return self._fill_need_content_defaults(selection, request)
+            return self._build_need_content_response(selection, request)
         enabled = set(supported_operations)
         unsupported = [op for op in selection.operations if op not in enabled]
         if unsupported:
@@ -228,7 +256,9 @@ class PdfEditAgent:
     ) -> PdfEditPlanOutput:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
         agent = self._build_selection_agent(
-            supported_operations, unavailable_operations, allow_need_content=can_request_content
+            supported_operations,
+            unavailable_operations,
+            allow_need_content=can_request_content,
         )
         return await agent.select(self._build_selection_prompt(request, supported_operations, unavailable_operations))
 
@@ -263,7 +293,6 @@ class PdfEditAgent:
                 "merging, or extracting pages then re-inserting them). "
                 "Only return cannot_do when no sequence of the supported operations could achieve the request. "
                 "Do not produce operation parameters in this stage. "
-                "Return need_clarification when the request is genuinely ambiguous. "
                 "Return plan when a reasonable multi-step plan can be created. "
                 "Never return partial plans."
             ),
@@ -291,13 +320,20 @@ class PdfEditAgent:
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
 
-    def _get_supported_operations(self, request: PdfEditRequest) -> Iterable[ToolEndpoint]:
-        return request.enabled_endpoints
+    # Endpoints reserved for direct API / manual UI use; never exposed to the AI agent.
+    # The agent's only AI-driven redaction route is REDACT_EXECUTE.
+    _AGENT_HIDDEN_ENDPOINTS: frozenset[ToolEndpoint] = frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT})
 
-    @staticmethod
-    def _get_unavailable_operations(supported_operations: Iterable[ToolEndpoint]) -> Iterable[ToolEndpoint]:
-        supported_set = set(supported_operations)
-        return [op for op in OPERATIONS if op not in supported_set]
+    def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
+        """Split the universe of operations into (supported, unavailable) from the agent's
+        point of view. Endpoints in `_AGENT_HIDDEN_ENDPOINTS` are filtered out regardless
+        of enabled state — they exist on the server but only callers outside the AI
+        pipeline (the manual redact UI, direct API consumers) can invoke them.
+        """
+        enabled_set = set(request.enabled_endpoints)
+        supported = [op for op in request.enabled_endpoints if op not in self._AGENT_HIDDEN_ENDPOINTS]
+        unavailable = [op for op in OPERATIONS if op not in enabled_set and op not in self._AGENT_HIDDEN_ENDPOINTS]
+        return supported, unavailable
 
     @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
@@ -326,18 +362,19 @@ class PdfEditAgent:
                     lines.append(f"    {name}")
         return "\n".join(lines)
 
-    def _fill_need_content_defaults(
+    def _build_need_content_response(
         self,
-        selection: NeedContentResponse,
+        selection: PdfEditNeedContentSelection,
         request: PdfEditRequest,
     ) -> NeedContentResponse:
-        files = selection.files or [
-            NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
-        ]
+        # The file list is filled in here from request.files so the selection LLM never gets to
+        # invent file ids (it only sees file names in the prompt and would slugify them).
         return NeedContentResponse(
             resume_with=SupportedCapability.PDF_EDIT,
             reason=selection.reason,
-            files=files,
+            files=[
+                NeedContentFileRequest(file=file, content_types=[PdfContentType.PAGE_TEXT]) for file in request.files
+            ],
             max_pages=selection.max_pages or self.runtime.settings.max_pages,
             max_characters=selection.max_characters or self.runtime.settings.max_characters,
         )
