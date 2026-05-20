@@ -85,8 +85,9 @@
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
   min-width: 14rem;
-  max-width: 22rem;
+  max-width: 40rem;
   flex: 1 1 14rem;
+  margin: 0 0.5rem;
 }
 
 .files-page-search input {

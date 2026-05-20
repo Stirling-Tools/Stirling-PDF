@@ -154,6 +154,15 @@
   background-color: var(--hover-bg);
 }
 
+.file-sidebar-action-row.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+.file-sidebar-action-row.disabled:hover {
+  background-color: transparent;
+}
+
 .file-sidebar-action-icon {
   color: var(--text-muted) !important;
   font-size: 18px !important;

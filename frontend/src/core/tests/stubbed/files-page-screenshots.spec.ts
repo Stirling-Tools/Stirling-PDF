@@ -8,6 +8,7 @@ interface SeedFile {
   id: string;
   name: string;
   remoteStorageId: number | null;
+  folderId?: string | null;
 }
 
 async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
@@ -54,7 +55,7 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
           originalFileId: f.id,
           parentFileId: null,
           toolHistory: [],
-          folderId: null,
+          folderId: f.folderId ?? null,
           remoteStorageId: f.remoteStorageId,
           remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
           remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
@@ -483,6 +484,58 @@ test.describe("Files page screenshots", () => {
     await page.screenshot({
       path: shotPath("14_dark_details_panel_save_to_server"),
     });
+  });
+
+  test("19_delete_folder_dialog", async ({ page }) => {
+    const FOLDER_ID = "22222222-2222-4333-8444-555555555555";
+    await stubStorageApis(page);
+    // Seed a file inside the Reports folder so the checkbox appears.
+    await seedFiles(page, [
+      {
+        id: "alpha",
+        name: "alpha.pdf",
+        remoteStorageId: 9001,
+        folderId: FOLDER_ID,
+      },
+      {
+        id: "bravo",
+        name: "bravo.pdf",
+        remoteStorageId: 9002,
+        folderId: FOLDER_ID,
+      },
+    ]);
+    await page.route("**/api/v1/storage/folders", async (route: Route) => {
+      await route.fulfill({
+        json: [
+          {
+            id: FOLDER_ID,
+            name: "Reports",
+            parentFolderId: null,
+            color: null,
+            icon: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+      });
+    });
+    await page.goto("/files", { waitUntil: "domcontentloaded" });
+    // Wait for the Reports folder card or list row.
+    await expect(page.getByText("Reports").first()).toBeVisible({
+      timeout: 5_000,
+    });
+    // Open the kebab on the folder card.
+    const folderCard = page
+      .locator(".files-page-card.is-folder")
+      .filter({ hasText: "Reports" })
+      .first();
+    await folderCard.getByRole("button", { name: /Folder actions/i }).click();
+    await page.getByRole("menuitem", { name: /Delete folder/i }).click();
+    await expect(
+      page.getByRole("dialog", { name: /Delete folder\?/i }),
+    ).toBeVisible({ timeout: 3_000 });
+    await settle(page);
+    await page.screenshot({ path: shotPath("19_delete_folder_dialog") });
   });
 
   test("10_subtoolbar_phone_hidden", async ({ page }) => {

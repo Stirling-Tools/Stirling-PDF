@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
@@ -18,6 +18,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
@@ -27,8 +28,14 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
-import { FilesPageProvider } from "@app/contexts/FilesPageContext";
-// FolderTreePanel no longer rendered.
+import {
+  FilesPageProvider,
+  useFilesPage,
+} from "@app/contexts/FilesPageContext";
+import { useFolders } from "@app/contexts/FolderContext";
+import { useFileHandler } from "@app/hooks/useFileHandler";
+import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
+import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import "@app/pages/HomePage.css";
 
@@ -452,8 +459,9 @@ export default function HomePage() {
             h="100%"
             className="flex-nowrap flex"
           >
-            <FileSidebar
+            <MyFilesAwareFileSidebar
               ref={quickAccessRef}
+              active={navigationState.workbench === "myFiles"}
               collapsed={fileSidebarCollapsed}
               toggleAriaLabel={
                 navigationState.workbench === "myFiles"
@@ -475,6 +483,7 @@ export default function HomePage() {
               }}
               onOpenSettings={() => setConfigModalOpen(true)}
             />
+            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <ToolPanel />}
             <FileManager selectedTool={selectedTool} />
@@ -488,3 +497,66 @@ export default function HomePage() {
     </div>
   );
 }
+
+interface MyFilesAwareFileSidebarProps extends FileSidebarProps {
+  active: boolean;
+}
+
+/** Wraps FileSidebar with /files-aware overrides when `active`. */
+const MyFilesAwareFileSidebar = forwardRef<
+  HTMLDivElement,
+  MyFilesAwareFileSidebarProps
+>(function MyFilesAwareFileSidebar(props, ref) {
+  const { active, ...rest } = props;
+  if (!active) {
+    return <FileSidebar ref={ref} {...rest} />;
+  }
+  return <MyFilesSidebarOverrides ref={ref} {...rest} />;
+});
+
+const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
+  function MyFilesSidebarOverrides(props, ref) {
+    const { t } = useTranslation();
+    const filesPage = useFilesPage();
+    const folders = useFolders();
+    const { addFiles } = useFileHandler();
+
+    const handleUpload = useCallback(
+      async (files: File[]) => {
+        await addFiles(files, { skipWorkspaceDispatch: true });
+        await filesPage.refresh();
+      },
+      [addFiles, filesPage],
+    );
+
+    const newFolderDisabledReason = !folders.serverReachable
+      ? t(
+          "filesPage.newFolderStorageDisabled",
+          "Server folder storage isn't available. Ask your admin to enable storage in settings.",
+        )
+      : null;
+
+    return (
+      <FileSidebar
+        ref={ref}
+        {...props}
+        onSearchClick={() => {
+          if (props.collapsed && props.onToggleCollapse) {
+            props.onToggleCollapse();
+          }
+          window.dispatchEvent(new Event("files-page:focus-search"));
+        }}
+        onUploadFiles={handleUpload}
+        onPickGoogleDriveFiles={handleUpload}
+        extraAction={{
+          icon: <CreateNewFolderIcon />,
+          label: t("filesPage.newFolder", "New folder"),
+          onClick: () => filesPage.openNewFolderDialog(),
+          disabled: newFolderDisabledReason !== null,
+          disabledTooltip: newFolderDisabledReason ?? undefined,
+          testId: "files-rail-new-folder",
+        }}
+      />
+    );
+  },
+);

@@ -12,7 +12,6 @@ import {
   Button,
   Drawer,
   Group,
-  Menu,
   MultiSelect,
   SegmentedControl,
   Select,
@@ -21,7 +20,6 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
@@ -31,10 +29,8 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
@@ -63,6 +59,7 @@ import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
+import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
@@ -135,7 +132,10 @@ export default function FileManagerView() {
     moveFilesTo,
     moveFolderTo,
     removeFiles,
+    promptDeleteFolder,
     deleteFolder,
+    deleteFolderDialog,
+    closeDeleteFolderDialog,
     setFolderAppearance,
   } = filesPage;
 
@@ -621,6 +621,12 @@ export default function FileManagerView() {
 
   // ─── keyboard shortcuts ─────────────────────────────────────────────────
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  // External focus trigger (used by the FileSidebar rail Search button).
+  useEffect(() => {
+    const onFocus = () => searchInputRef.current?.focus();
+    window.addEventListener("files-page:focus-search", onFocus);
+    return () => window.removeEventListener("files-page:focus-search", onFocus);
+  }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const active = document.activeElement as HTMLElement | null;
@@ -748,14 +754,6 @@ export default function FileManagerView() {
   return (
     <div className="files-page" ref={dropZoneRef}>
       <header className="files-page-header">
-        <Button
-          variant="subtle"
-          size="sm"
-          leftSection={<KeyboardArrowLeftIcon fontSize="small" />}
-          onClick={handleClose}
-        >
-          {t("filesPage.back", "Back")}
-        </Button>
         {/* Breadcrumb only for folder-rooted tabs. */}
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
         {(currentTab === "local" ||
@@ -806,127 +804,40 @@ export default function FileManagerView() {
               setRefreshing(false);
             }
           };
-          // Tooltip carries the disabled reason when the button is greyed.
-          const newFolderButton = (
-            <Tooltip
-              label={newFolderDisabledReason ?? ""}
-              disabled={newFolderDisabledReason === null}
-              withinPortal
-              multiline
-              w={260}
-              position="bottom-end"
-            >
-              <Button
-                leftSection={<CreateNewFolderIcon fontSize="small" />}
-                variant="default"
-                size="sm"
-                disabled={newFolderDisabledReason !== null}
-                onClick={() => openNewFolderDialog()}
-                data-disabled={newFolderDisabledReason !== null || undefined}
-                styles={{
-                  root: {
-                    // Keep tooltip hoverable while button is disabled.
-                    pointerEvents:
-                      newFolderDisabledReason !== null ? "auto" : undefined,
-                  },
-                }}
-              >
-                {t("filesPage.newFolder", "New folder")}
-              </Button>
-            </Tooltip>
-          );
           return (
-            <div className="files-page-header-actions">
+            <>
               <SearchField
                 ref={searchInputRef}
                 value={search}
                 onChange={setSearch}
               />
-              {/* Refresh - inline on desktop, folded into the kebab on mobile. */}
-              <Tooltip
-                label={t("filesPage.refresh", "Refresh from server")}
-                withinPortal
-              >
-                <ActionIcon
-                  variant="default"
-                  size="md"
-                  data-mobile-hide="true"
-                  loading={refreshing}
-                  disabled={refreshing}
-                  aria-busy={refreshing}
-                  onClick={handleRefresh}
-                  aria-label={t("filesPage.refresh", "Refresh from server")}
-                >
-                  <RefreshIcon />
-                </ActionIcon>
-              </Tooltip>
-              {/* New folder - inline on desktop, folded into the kebab on mobile. */}
-              <span data-mobile-hide="true" style={{ display: "inline-flex" }}>
+              <div className="files-page-header-actions">
                 <Tooltip
-                  label={
-                    newFolderDisabledReason ??
-                    t("filesPage.newFolder", "New folder")
-                  }
+                  label={t("filesPage.refresh", "Refresh from server")}
                   withinPortal
                 >
-                  {/* Wrap so tooltip fires while button is disabled. */}
-                  {newFolderDisabledReason ? (
-                    <span style={{ display: "inline-flex" }}>
-                      {newFolderButton}
-                    </span>
-                  ) : (
-                    newFolderButton
-                  )}
-                </Tooltip>
-              </span>
-              <Button
-                leftSection={<UploadFileIcon fontSize="small" />}
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {t("filesPage.upload", "Upload")}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                style={{ display: "none" }}
-                onChange={onFileInputChange}
-              />
-              {/* Mobile overflow kebab; CSS hides this above 640px. */}
-              <Menu shadow="md" position="bottom-end" withinPortal>
-                <Menu.Target>
                   <ActionIcon
                     variant="default"
                     size="md"
-                    data-desktop-hide="true"
-                    aria-label={t(
-                      "filesPage.moreActions",
-                      "More folder actions",
-                    )}
-                  >
-                    <MoreVertIcon />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<RefreshIcon fontSize="small" />}
+                    loading={refreshing}
                     disabled={refreshing}
+                    aria-busy={refreshing}
                     onClick={handleRefresh}
+                    aria-label={t("filesPage.refresh", "Refresh from server")}
                   >
-                    {t("filesPage.refresh", "Refresh from server")}
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    disabled={newFolderDisabledReason !== null}
-                    onClick={() => openNewFolderDialog()}
-                  >
-                    {newFolderDisabledReason ??
-                      t("filesPage.newFolder", "New folder")}
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </div>
+                    <RefreshIcon />
+                  </ActionIcon>
+                </Tooltip>
+                {/* Hidden input fired by the empty-state CTA Upload button. */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={onFileInputChange}
+                />
+              </div>
+            </>
           );
         })()}
       </header>
@@ -1048,54 +959,6 @@ export default function FileManagerView() {
           })()}
 
           <div className="files-page-toolbar">
-            {/* Upload + New folder; hidden on phones (corner buttons cover). */}
-            <div className="files-page-toolbar-create" data-mobile-hide="true">
-              <Tooltip
-                label={t("filesPage.upload", "Upload")}
-                withinPortal
-                openDelay={400}
-              >
-                <Button
-                  size="sm"
-                  leftSection={<UploadFileIcon fontSize="small" />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t("filesPage.upload", "Upload")}
-                </Button>
-              </Tooltip>
-              <Tooltip
-                label={
-                  newFolderDisabledReason ??
-                  t("filesPage.newFolder", "New folder")
-                }
-                withinPortal
-                multiline
-                w={260}
-              >
-                {newFolderDisabledReason ? (
-                  <span style={{ display: "inline-flex" }}>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      leftSection={<CreateNewFolderIcon fontSize="small" />}
-                      disabled
-                      styles={{ root: { pointerEvents: "auto" } }}
-                    >
-                      {t("filesPage.newFolder", "New folder")}
-                    </Button>
-                  </span>
-                ) : (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    leftSection={<CreateNewFolderIcon fontSize="small" />}
-                    onClick={() => openNewFolderDialog()}
-                  >
-                    {t("filesPage.newFolder", "New folder")}
-                  </Button>
-                )}
-              </Tooltip>
-            </div>
             <span className="files-page-toolbar-info">
               {loading
                 ? t("filesPage.loading", "Loading…")
@@ -1438,15 +1301,7 @@ export default function FileManagerView() {
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
               onRenameFolder={openRenameFolderDialog}
-              onDeleteFolder={(folder) => {
-                deleteFolder(folder).catch((err) =>
-                  folders.setError(
-                    err instanceof Error
-                      ? `Could not delete folder: ${err.message}`
-                      : "Could not delete folder.",
-                  ),
-                );
-              }}
+              onDeleteFolder={promptDeleteFolder}
               onChangeFolderAppearance={(folderId, appearance) => {
                 setFolderAppearance(folderId, appearance).catch((err) =>
                   folders.setError(
@@ -1572,6 +1427,27 @@ export default function FileManagerView() {
         }
         onClose={closeFolderNameDialog}
         onSubmit={submitFolderName}
+      />
+
+      <DeleteFolderDialog
+        opened={deleteFolderDialog.folder !== null}
+        folder={deleteFolderDialog.folder}
+        fileCount={deleteFolderDialog.fileCount}
+        onClose={closeDeleteFolderDialog}
+        onConfirm={async (deleteContents) => {
+          const target = deleteFolderDialog.folder;
+          if (!target) return;
+          try {
+            await deleteFolder(target, deleteContents);
+          } catch (err) {
+            folders.setError(
+              err instanceof Error
+                ? `Could not delete folder: ${err.message}`
+                : "Could not delete folder.",
+            );
+            throw err;
+          }
+        }}
       />
 
       {/* Save-to-server modal; keyed on target so updates don't retarget. */}

@@ -46,6 +46,21 @@ export interface FileSidebarProps {
   toggleAriaLabel?: string;
   /** Icon override for the toggle button (e.g. back-arrow on /files). */
   toggleIcon?: React.ReactNode;
+  /** Override the Open-from-computer handler (e.g. upload to /files folder). */
+  onUploadFiles?: (files: File[]) => void | Promise<void>;
+  /** Override the Google Drive handler. */
+  onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
+  /** Override the Search row click (e.g. focus the /files search input). */
+  onSearchClick?: () => void;
+  /** Extra action row inserted under Open-from-computer (e.g. New folder). */
+  extraAction?: {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    disabledTooltip?: string;
+    testId?: string;
+  };
 }
 
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
@@ -56,6 +71,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onOpenSettings,
       toggleAriaLabel,
       toggleIcon,
+      onUploadFiles,
+      onPickGoogleDriveFiles,
+      onSearchClick,
+      extraAction,
     },
     ref,
   ) {
@@ -149,11 +168,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     // Handle search activation
     const handleSearchClick = useCallback(() => {
+      if (onSearchClick) {
+        onSearchClick();
+        return;
+      }
       if (collapsed && onToggleCollapse) {
         onToggleCollapse();
       }
       setSearchActive(true);
-    }, [collapsed, onToggleCollapse]);
+    }, [collapsed, onToggleCollapse, onSearchClick]);
 
     const handleSearchClose = useCallback(() => {
       setSearchActive(false);
@@ -170,11 +193,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const handleGoogleDriveClick = useCallback(async () => {
       if (!isGoogleDriveEnabled) return;
       const files = await openGoogleDrivePicker({ multiple: true });
-      if (files.length > 0) {
-        await addFiles(files);
-        if (!isMultiTool) {
-          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-        }
+      if (files.length === 0) return;
+      if (onPickGoogleDriveFiles) {
+        await onPickGoogleDriveFiles(files);
+        return;
+      }
+      await addFiles(files);
+      if (!isMultiTool) {
+        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
     }, [
       isGoogleDriveEnabled,
@@ -182,6 +208,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       addFiles,
       navActions,
       isMultiTool,
+      onPickGoogleDriveFiles,
     ]);
 
     // Toggle file in/out of workbench
@@ -302,22 +329,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const handleNativeFilePick = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Accept whatever the user picked - per-tool validation (e.g. the
-        // convert tool's PNG -> PDF flow) happens downstream against each
-        // tool's `supportedFormats`. The earlier PDF-only filter here was
-        // too aggressive and silently dropped legitimate non-PDF inputs.
+        // Per-tool validation happens downstream.
         const files = Array.from(e.target.files ?? []);
         if (files.length > 0) {
-          await addFiles(files);
-          if (!isMultiTool) {
-            navActions.setWorkbench(
-              files.length === 1 ? "viewer" : "fileEditor",
-            );
+          if (onUploadFiles) {
+            await onUploadFiles(files);
+          } else {
+            await addFiles(files);
+            if (!isMultiTool) {
+              navActions.setWorkbench(
+                files.length === 1 ? "viewer" : "fileEditor",
+              );
+            }
           }
         }
         e.target.value = "";
       },
-      [addFiles, navActions, isMultiTool],
+      [addFiles, navActions, isMultiTool, onUploadFiles],
     );
 
     const shouldHideGoogleDrive =
@@ -489,6 +517,49 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </div>
             </Tooltip>
+
+            {extraAction && (
+              <Tooltip
+                label={extraAction.disabledTooltip ?? extraAction.label}
+                position="right"
+                withinPortal
+                multiline
+                w={240}
+                disabled={
+                  !collapsed &&
+                  !(extraAction.disabled && extraAction.disabledTooltip)
+                }
+              >
+                <div
+                  className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
+                  data-testid={extraAction.testId}
+                  onClick={() => {
+                    if (extraAction.disabled) return;
+                    extraAction.onClick();
+                  }}
+                  role="button"
+                  tabIndex={extraAction.disabled ? -1 : 0}
+                  aria-disabled={extraAction.disabled}
+                  aria-label={extraAction.label}
+                  onKeyDown={(e) => {
+                    if (extraAction.disabled) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      extraAction.onClick();
+                    }
+                  }}
+                >
+                  <span className="file-sidebar-action-icon">
+                    {extraAction.icon}
+                  </span>
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {extraAction.label}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+            )}
 
             <Tooltip
               label={t("fileSidebar.myFiles", "My Files")}

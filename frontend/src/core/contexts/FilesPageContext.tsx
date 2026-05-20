@@ -101,7 +101,18 @@ interface FilesPageContextValue {
     newParentId: FolderId | null,
   ) => Promise<void>;
   removeFiles: (fileIds: FileId[]) => Promise<void>;
-  deleteFolder: (folder: FolderRecord) => Promise<void>;
+  /** Open the confirmation dialog; consumer renders DeleteFolderDialog. */
+  promptDeleteFolder: (folder: FolderRecord) => void;
+  /** Confirmed delete; pass deleteContents=true to also remove files inside. */
+  deleteFolder: (
+    folder: FolderRecord,
+    deleteContents: boolean,
+  ) => Promise<void>;
+  deleteFolderDialog: {
+    folder: FolderRecord | null;
+    fileCount: number;
+  };
+  closeDeleteFolderDialog: () => void;
   setFolderAppearance: (
     folderId: FolderId,
     appearance: { color?: string; icon?: string | null },
@@ -374,11 +385,19 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [folders],
   );
 
-  const deleteFolder = useCallback(
-    async (folder: FolderRecord) => {
-      // Walk the full subtree for the confirm count.
-      const subtreeIds = new Set<FolderId>([folder.id]);
-      const stack: FolderId[] = [folder.id];
+  const [deleteFolderDialog, setDeleteFolderDialog] = useState<{
+    folder: FolderRecord | null;
+    fileCount: number;
+  }>({ folder: null, fileCount: 0 });
+  const closeDeleteFolderDialog = useCallback(
+    () => setDeleteFolderDialog({ folder: null, fileCount: 0 }),
+    [],
+  );
+
+  const filesInSubtree = useCallback(
+    (folderId: FolderId): FileId[] => {
+      const subtreeIds = new Set<FolderId>([folderId]);
+      const stack: FolderId[] = [folderId];
       while (stack.length > 0) {
         const cur = stack.pop()!;
         for (const childId of folders.getChildFolderIds(cur)) {
@@ -387,22 +406,36 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
           stack.push(childId);
         }
       }
-      const filesInside = allFiles.filter((f) => {
-        const fid = f.folderId ?? null;
-        return fid !== null && subtreeIds.has(fid);
-      }).length;
-      const ok = window.confirm(
-        t(
-          "filesPage.deleteFolderConfirm",
-          'Delete folder "{{name}}"? Files inside will be moved to All files. {{count}} file(s) affected.',
-          { name: folder.name, count: filesInside },
-        ),
-      );
-      if (!ok) return;
+      return allFiles
+        .filter((f) => {
+          const fid = f.folderId ?? null;
+          return fid !== null && subtreeIds.has(fid);
+        })
+        .map((f) => f.id);
+    },
+    [allFiles, folders],
+  );
+
+  const promptDeleteFolder = useCallback(
+    (folder: FolderRecord) => {
+      const fileCount = filesInSubtree(folder.id).length;
+      setDeleteFolderDialog({ folder, fileCount });
+    },
+    [filesInSubtree],
+  );
+
+  const deleteFolder = useCallback(
+    async (folder: FolderRecord, deleteContents: boolean) => {
+      if (deleteContents) {
+        const fileIds = filesInSubtree(folder.id);
+        if (fileIds.length > 0) {
+          await fileActions.removeFiles(fileIds, true);
+        }
+      }
       await folders.deleteFolder(folder.id);
       await refresh();
     },
-    [allFiles, folders, refresh, t],
+    [fileActions, filesInSubtree, folders, refresh],
   );
 
   // Memoise to avoid re-rendering every FileCard on unrelated state churn.
@@ -439,7 +472,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       moveFilesTo,
       moveFolderTo,
       removeFiles,
+      promptDeleteFolder,
       deleteFolder,
+      deleteFolderDialog,
+      closeDeleteFolderDialog,
       setFolderAppearance,
     }),
     [
@@ -467,7 +503,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       moveFilesTo,
       moveFolderTo,
       removeFiles,
+      promptDeleteFolder,
       deleteFolder,
+      deleteFolderDialog,
+      closeDeleteFolderDialog,
       setFolderAppearance,
     ],
   );
