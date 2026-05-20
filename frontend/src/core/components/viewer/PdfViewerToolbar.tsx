@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Button, Paper, Group, NumberInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Paper,
+  Group,
+  NumberInput,
+  Slider,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -12,6 +19,8 @@ import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import WbTwilightIcon from "@mui/icons-material/WbTwilight";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -291,31 +300,48 @@ export function PdfViewerToolbar({
 
       {/* Zoom Controls */}
       <Group gap={4} align="center" style={{ marginLeft: 16 }}>
-        <Button
+        <ActionIcon
           variant="subtle"
           color="blue"
-          size="md"
-          radius="xl"
+          radius="md"
           onClick={handleZoomOut}
-          style={{ minWidth: "2rem", padding: 0 }}
-          title={t("viewer.zoomOut", "Zoom out")}
+          aria-label={t("viewer.zoomOut", "Zoom out")}
         >
-          −
-        </Button>
-        <span style={{ minWidth: "2.5rem", textAlign: "center" }}>
+          <ZoomOutIcon fontSize="small" />
+        </ActionIcon>
+        <Slider
+          value={Math.min(Math.max(displayZoomPercent, 20), 500)}
+          min={20}
+          max={500}
+          step={5}
+          onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
+          size="xs"
+          styles={{
+            root: { width: "6rem" },
+            thumb: { width: 14, height: 14 },
+            track: { height: 3 },
+          }}
+          label={null}
+        />
+        <ActionIcon
+          variant="subtle"
+          color="blue"
+          radius="md"
+          onClick={handleZoomIn}
+          aria-label={t("viewer.zoomIn", "Zoom in")}
+        >
+          <ZoomInIcon fontSize="small" />
+        </ActionIcon>
+        <span
+          style={{
+            minWidth: "2.5rem",
+            textAlign: "center",
+            fontSize: 12,
+            color: "var(--text-muted)",
+          }}
+        >
           {displayZoomPercent}%
         </span>
-        <Button
-          variant="subtle"
-          color="blue"
-          size="md"
-          radius="xl"
-          onClick={handleZoomIn}
-          style={{ minWidth: "2rem", padding: 0 }}
-          title={t("viewer.zoomIn", "Zoom in")}
-        >
-          +
-        </Button>
       </Group>
     </Paper>
   );

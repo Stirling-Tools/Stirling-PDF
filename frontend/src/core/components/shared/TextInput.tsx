@@ -36,6 +36,8 @@ export interface TextInputProps {
   "aria-label"?: string;
   /** Focus event handler */
   onFocus?: () => void;
+  /** Allow the icon to receive pointer events (e.g. when icon is a clickable button) */
+  iconClickable?: boolean;
 }
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
@@ -56,6 +58,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       readOnly = false,
       "aria-label": ariaLabel,
       onFocus,
+      iconClickable = false,
       ...props
     },
     ref,
@@ -76,7 +79,10 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {icon && (
           <span
             className={styles.icon}
-            style={{ color: "var(--search-text-and-icon-color)" }}
+            style={{
+              pointerEvents: iconClickable ? "auto" : "none",
+              left: "12px",
+            }}
           >
             {icon}
           </span>
@@ -96,8 +102,6 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           aria-label={ariaLabel}
           onFocus={onFocus}
           style={{
-            backgroundColor: "var(--input-bg)",
-            color: "var(--search-text-and-icon-color)",
             paddingRight: shouldShowClearButton ? "40px" : "12px",
             paddingLeft: icon ? "40px" : "12px",
           }}
@@ -108,7 +112,6 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             type="button"
             className={styles.clearButton}
             onClick={handleClear}
-            style={{ color: "var(--search-text-and-icon-color)" }}
             aria-label="Clear input"
           >
             <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />

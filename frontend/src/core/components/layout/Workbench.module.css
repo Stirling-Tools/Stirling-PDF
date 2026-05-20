@@ -1,3 +1,24 @@
+/* WorkbenchBar slide-in/out animation using CSS grid trick */
+.workbenchBarWrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 280ms ease;
+}
+
+.workbenchBarWrapper[data-hidden="true"] {
+  grid-template-rows: 0fr;
+}
+
+.workbenchBarWrapper[data-no-transition="true"] {
+  transition: none;
+}
+
+/* Direct child must have min-height: 0 so the row can collapse below content size */
+.workbenchBarInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .workbenchScrollable {
   overflow-y: auto !important;
   overflow-x: hidden !important;

@@ -1,6 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import {
+  useToolWorkflow,
+  useToolWorkflowActions,
+} from "@app/contexts/ToolWorkflowContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import ToolPicker from "@app/components/tools/ToolPicker";
 import SearchResults from "@app/components/tools/SearchResults";
@@ -8,15 +11,18 @@ import ToolRenderer from "@app/components/tools/ToolRenderer";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import rainbowStyles from "@app/styles/rainbow.module.css";
-import { ActionIcon, ScrollArea } from "@mantine/core";
+import { ActionIcon, Button, ScrollArea } from "@mantine/core";
 import { ToolId } from "@app/types/toolId";
 import { useIsMobile } from "@app/hooks/useIsMobile";
-import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
 import { useTranslation } from "react-i18next";
 import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
+import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
-import { useRightRail } from "@app/contexts/RightRailContext";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SearchIcon from "@mui/icons-material/Search";
 import "@app/components/tools/ToolPanel.css";
 
 // No props needed - component uses context
@@ -25,7 +31,7 @@ export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
-  const { toolPanelRef, quickAccessRef, rightRailRef } = sidebarRefs;
+  const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
 
   const {
@@ -36,15 +42,21 @@ export default function ToolPanel() {
     toolRegistry,
     setSearchQuery,
     selectedToolKey,
-    handleToolSelect,
-    setPreviewFile,
     toolPanelMode,
-    setToolPanelMode,
-    setLeftPanelView,
+    sidebarsVisible,
     readerMode,
   } = useToolWorkflow();
+  const {
+    handleToolSelect,
+    handleBackToTools,
+    setPreviewFile,
+    setToolPanelMode,
+    setLeftPanelView,
+    setReaderMode,
+    setSidebarsVisible,
+  } = useToolWorkflowActions();
 
-  const { setAllRightRailButtonsDisabled } = useRightRail();
+  const { setAllButtonsDisabled } = useWorkbenchBar();
   const { preferences, updatePreference } = usePreferences();
 
   const isFullscreenMode = toolPanelMode === "fullscreen";
@@ -54,33 +66,46 @@ export default function ToolPanel() {
     leftPanelView === "toolPicker" &&
     !isMobile &&
     toolPickerVisible;
-  const isRTL =
-    typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
-  // Disable right rail buttons when fullscreen mode is active
+  // Disable workbench bar buttons when fullscreen mode is active
   useEffect(() => {
-    setAllRightRailButtonsDisabled(fullscreenExpanded);
-  }, [fullscreenExpanded, setAllRightRailButtonsDisabled]);
+    setAllButtonsDisabled(fullscreenExpanded);
+  }, [fullscreenExpanded, setAllButtonsDisabled]);
 
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
     toolPanelRef,
     quickAccessRef,
-    rightRailRef,
   });
 
-  const toggleLabel = isFullscreenMode
-    ? t("toolPanel.toggle.sidebar", "Switch to sidebar mode")
-    : t("toolPanel.toggle.fullscreen", "Switch to fullscreen mode");
-
-  const handleModeToggle = () => {
-    const nextMode = isFullscreenMode ? "sidebar" : "fullscreen";
-    setToolPanelMode(nextMode);
-
-    if (nextMode === "fullscreen" && leftPanelView !== "toolPicker") {
-      setLeftPanelView("toolPicker");
-    }
+  const handleExpand = () => {
+    if (readerMode) setReaderMode(false);
+    if (leftPanelView === "hidden") setLeftPanelView("toolPicker");
+    if (!sidebarsVisible) setSidebarsVisible(true);
   };
+
+  const handleCollapse = () => {
+    setLeftPanelView("hidden");
+  };
+
+  const [focusSearch, setFocusSearch] = useState(false);
+  const focusSearchOnNextOpen = useRef(false);
+
+  const handleExpandAndSearch = () => {
+    focusSearchOnNextOpen.current = true;
+    handleExpand();
+  };
+
+  // Once the panel becomes visible, consume the focus-search request
+  useEffect(() => {
+    if (isPanelVisible && focusSearchOnNextOpen.current) {
+      focusSearchOnNextOpen.current = false;
+      setFocusSearch(true);
+      // Reset after one render so autoFocus doesn't re-fire on subsequent renders
+      const id = setTimeout(() => setFocusSearch(false), 100);
+      return () => clearTimeout(id);
+    }
+  }, [isPanelVisible]);
 
   const computedWidth = () => {
     if (isMobile) {
@@ -88,11 +113,16 @@ export default function ToolPanel() {
     }
 
     if (!isPanelVisible) {
-      return "0";
+      return "3.5rem";
     }
 
     return "18.5rem";
   };
+
+  const handleSelect = useCallback(
+    (id: string) => handleToolSelect(id as ToolId),
+    [handleToolSelect],
+  );
 
   const matchedTextMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -109,7 +139,7 @@ export default function ToolPanel() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${
         isRainbowMode ? rainbowStyles.rainbowPaper : ""
       } ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
@@ -117,21 +147,52 @@ export default function ToolPanel() {
         padding: "0",
       }}
     >
-      {!fullscreenExpanded && (
+      {!fullscreenExpanded && !isPanelVisible && !isMobile && (
+        <div className="tool-panel__collapsed-strip">
+          <ActionIcon
+            variant="outline"
+            color="gray.4"
+            radius="xl"
+            size="md"
+            className="tool-panel__expand-btn"
+            onClick={handleExpand}
+            aria-label={t("toolPanel.expand", "Expand panel")}
+          >
+            <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            radius="md"
+            size="md"
+            className="tool-panel__collapsed-search-btn"
+            onClick={handleExpandAndSearch}
+            aria-label={t("toolPanel.search", "Search tools")}
+            style={{ marginTop: "8px" }}
+          >
+            <SearchIcon sx={{ fontSize: "1.25rem" }} />
+          </ActionIcon>
+        </div>
+      )}
+
+      {!fullscreenExpanded && isPanelVisible && (
         <div
           style={{
-            opacity: isMobile || isPanelVisible ? 1 : 0,
+            opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             height: "100%",
             display: "flex",
             flexDirection: "column",
           }}
         >
+          {/* Viewer mode tools — annotate, redact, form fill */}
+          <ToolPanelViewerBar />
+
           <div
             className="tool-panel__search-row"
             style={{
-              backgroundColor: "var(--tool-panel-search-bg)",
-              borderBottom: "1px solid var(--tool-panel-search-border-bottom)",
+              backgroundColor: "transparent",
+              borderBottom: "1px solid var(--border-subtle)",
             }}
           >
             <ToolSearch
@@ -139,36 +200,26 @@ export default function ToolPanel() {
               onChange={setSearchQuery}
               toolRegistry={toolRegistry}
               mode="filter"
+              autoFocus={focusSearch}
             />
-            {!isMobile && leftPanelView === "toolPicker" && (
-              <Tooltip
-                content={toggleLabel}
-                position="bottom"
-                arrow={true}
-                openOnFocus={false}
-              >
-                <ActionIcon
-                  variant="subtle"
-                  radius="xl"
-                  style={{ color: "var(--right-rail-icon)" }}
-                  onClick={handleModeToggle}
-                  aria-label={toggleLabel}
-                  className="tool-panel__mode-toggle"
-                >
-                  <DoubleArrowIcon
-                    fontSize="small"
-                    style={{ transform: isRTL ? "scaleX(-1)" : undefined }}
-                  />
-                </ActionIcon>
-              </Tooltip>
-            )}
+            <ActionIcon
+              variant="outline"
+              radius="xl"
+              size="md"
+              onClick={handleCollapse}
+              aria-label={t("toolPanel.collapse", "Collapse panel")}
+              className="tool-panel__expand-btn"
+              style={{ flexShrink: 0 }}
+            >
+              <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+            </ActionIcon>
           </div>
 
           {searchQuery.trim().length > 0 ? (
             <div className="flex-1 flex flex-col overflow-y-auto">
               <SearchResults
                 filteredTools={filteredTools}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
+                onSelect={handleSelect}
                 searchQuery={searchQuery}
               />
             </div>
@@ -176,7 +227,7 @@ export default function ToolPanel() {
             <div className="flex-1 flex flex-col overflow-auto">
               <ToolPicker
                 selectedToolKey={selectedToolKey}
-                onSelect={(id) => handleToolSelect(id as ToolId)}
+                onSelect={handleSelect}
                 filteredTools={filteredTools}
                 isSearching={Boolean(
                   searchQuery && searchQuery.trim().length > 0,
@@ -185,6 +236,26 @@ export default function ToolPanel() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
+              <div
+                style={{
+                  borderBottom: "1px solid var(--border-subtle)",
+                  flexShrink: 0,
+                }}
+              >
+                <Button
+                  variant="light"
+                  color="blue"
+                  size="sm"
+                  fullWidth
+                  radius={0}
+                  leftSection={<ArrowBackIcon sx={{ fontSize: "0.9rem" }} />}
+                  onClick={handleBackToTools}
+                  aria-label={t("toolPanel.backToTools", "Back to tools")}
+                  styles={{ root: { justifyContent: "flex-start" } }}
+                >
+                  {t("toolPanel.backToTools", "Back to tools")}
+                </Button>
+              </div>
               <div className="flex-1 min-h-0 overflow-hidden">
                 <ScrollArea h="100%">
                   {selectedToolKey ? (
@@ -224,7 +295,6 @@ export default function ToolPanel() {
             )
           }
           onExitFullscreenMode={() => setToolPanelMode("sidebar")}
-          toggleLabel={toggleLabel}
           geometry={fullscreenGeometry}
         />
       )}

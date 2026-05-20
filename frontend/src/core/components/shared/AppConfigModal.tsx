@@ -108,11 +108,26 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const runningEE = config?.runningEE ?? false;
   const loginEnabled = config?.enableLogin ?? false;
 
+  const handleClose = useCallback(async () => {
+    const canProceed = await confirmIfDirty();
+    if (!canProceed) return;
+
+    // Navigate back to home when closing modal
+    navigate("/", { replace: true });
+    onClose();
+  }, [confirmIfDirty, navigate, onClose]);
+
+  // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
+  const handleCloseSync = useCallback(() => {
+    void handleClose();
+  }, [handleClose]);
+
   // Left navigation structure and icons
   const configNavSections = useConfigNavSections(
     isAdmin,
     runningEE,
     loginEnabled,
+    handleCloseSync,
   );
 
   const activeLabel = useMemo(() => {
@@ -130,15 +145,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     }
     return null;
   }, [configNavSections, active]);
-
-  const handleClose = useCallback(async () => {
-    const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
-
-    // Navigate back to home when closing modal
-    navigate("/", { replace: true });
-    onClose();
-  }, [confirmIfDirty, navigate, onClose]);
 
   const handleNavigation = useCallback(
     async (key: NavKey) => {
@@ -164,6 +170,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       overlayProps={{ opacity: 0.35, blur: 2 }}
       padding={0}
       fullScreen={isMobile}
+      styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
     >
       <div className="modal-container">
         {/* Left navigation */}

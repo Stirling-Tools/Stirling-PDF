@@ -1806,7 +1806,11 @@ title = "Smart namnbyte"
 [automate]
 copyToSaved = "Kopiera till Sparade"
 desc = "Bygg arbetsflöden i flera steg genom att kedja samman PDF-verktyg. Idealiskt för återkommande uppgifter."
+export = "Exportera"
 exportForFolderScanning = "Exportera för mappskanning"
+import = "Importera"
+importPartialSuccess = "Importerades med {{count}} ej matchade åtgärd(er): {{ops}}"
+importSuccess = "Importerad automatisering: {{name}}"
 invalidStep = "Ogiltigt steg"
 reviewTitle = "Resultat av automatisering"
 title = "Automatisera"
@@ -1822,6 +1826,7 @@ title = "Konfigurera {{toolName}}"
 [automate.creation]
 createTitle = "Skapa automatisering"
 editTitle = "Redigera automatisering"
+export = "Exportera"
 exportForFolderScanning = "Exportera för mappskanning"
 intro = "Automatiseringar kör verktyg sekventiellt. Lägg till verktyg i den ordning du vill att de ska köras för att komma igång."
 save = "Spara automatisering"
@@ -1852,8 +1857,27 @@ confirm = "Gå tillbaka"
 message = "Du har osparade ändringar. Är du säker på att du vill gå tillbaka? Alla ändringar kommer att gå förlorade."
 title = "Osparade ändringar"
 
+[automate.entryMenu]
+label = "Öppna meny för {{title}}"
+
 [automate.files]
 placeholder = "Välj filer att bearbeta med denna automatisering"
+
+[automate.importModal]
+cancel = "Avbryt"
+confirm = "Importera"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Släpp JSON här eller klicka för att välja en fil"
+dropSubhint = "Både Automate- och Folder Scanning-konfigurationer accepteras"
+dropzoneAriaLabel = "Släpp en automations-JSON-fil här"
+intro = "Släpp en JSON-fil eller klistra in dess innehåll nedan. Formatet (Automate eller Folder Scanning) upptäcks automatiskt."
+opCount = "{{count}} åtgärd(er)"
+parseError = "Kunde inte tolka: {{message}}"
+pasteLabel = "Eller klistra in JSON"
+pastePlaceholder = "Klistra in din automations-JSON här…"
+title = "Importera automatisering"
+unresolved = "Ej matchade: {{ops}}"
 
 [automate.run]
 title = "Kör automatisering"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Kör {{tool}} (steg {{step}} av {{total}})..."
 extracting_content = "Extraherar innehåll från dina dokument..."
 processing = "Bearbetar extraherat innehåll..."
 thinking = "Tänker..."
+whole_doc_compression_round = "Sammanställer anteckningar..."
+whole_doc_read_done = "Läste klart dokumentet..."
+whole_doc_read_started = "Läser dokumentet..."
+whole_doc_slice_done = "Läser dokumentet... ({{percent}}% slutfört)"
 
 [chat.toolsUsed]
 summary = "Körde {{count}} verktyg"
@@ -2712,6 +2740,7 @@ used = "använt"
 [compare]
 addFilesHint = "Lägg till PDF:er i steget Filer för att kunna välja."
 clearSelected = "Rensa valda"
+clearSlot = "Ta bort fil"
 cta = "Jämför"
 header = "Jämför PDF-filer"
 loading = "Jämför..."
@@ -2764,6 +2793,7 @@ title = "Dessa PDF:er ser mycket olika ut"
 [compare.edited]
 label = "Redigerad PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Välj ursprunglig PDF först"
 
 [compare.error]
 filesMissing = "Kunde inte hitta de valda filerna. Välj dem igen."
@@ -2846,6 +2876,7 @@ pageLabel = "Sida"
 confirm = "Byt och kör igen"
 confirmBody = "Detta kommer att köra om verktyget. Är du säker på att du vill byta ordning på Original och Redigerad?"
 confirmTitle = "Kör jämförelse igen?"
+label = "Byt"
 
 [compare.toasts]
 unlinkedBody = "Tips: Pil upp/ned rullar båda panelerna; panorering flyttar bara den aktiva panelen."
@@ -3476,6 +3507,8 @@ unlockAll = "Använd för alla ({{count}})"
 unlockAllPartialFail = "Fel lösenord för: {{names}}"
 unlockAllSuccess = "Låste upp {{count}} fil(er)."
 unlockPrompt = "Lås upp PDF för att fortsätta"
+viewerLocked = "Denna PDF är lösenordsskyddad"
+viewerUnlock = "Lås upp"
 
 [encryptedPdfUnlock.password]
 label = "PDF-lösenord"
@@ -3583,6 +3616,9 @@ or = "eller"
 
 [fileEditor]
 addFiles = "Lägg till filer"
+pageCount = "{{count}} sidor"
+pageCount_one = "{{count}} sida"
+pageCount_other = "{{count}} sidor"
 
 [fileManager]
 active = "Aktiv"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Ändringar inte uppladdade"
 clearAll = "Rensa allt"
 clearSelection = "Rensa markering"
 clickToUpload = "Klicka för att ladda upp filer"
+closeAllFiles = "Stäng alla filer"
 closeFile = "Stäng fil"
 cloudFile = "Molnfil"
 copyCreated = "Kopia sparad på den här enheten."
@@ -3665,6 +3702,7 @@ selectAll = "Välj allt"
 selectedCount = "{{count}} markerade"
 selectedFiles = "Markerade filer"
 share = "Dela"
+shared = "Delad"
 sharedByYou = "Delad av dig"
 sharedEditNoticeBody = "Du har inte redigeringsrättigheter till serverversionen av den här filen. Alla ändringar du gör sparas som en lokal kopia."
 sharedEditNoticeConfirm = "Jag förstår"
@@ -3704,6 +3742,41 @@ size = "Filstorlek"
 title = "Filer"
 upload = "Ladda upp"
 uploadFiles = "Ladda upp filer"
+
+[fileSelectorPicker]
+empty = "Inga filer tillgängliga"
+placeholder = "Välj fil"
+search = "Filtrera filer…"
+tabListLabel = "Sparade filer, arbetsbänk, uppladdning"
+upload = "Ladda upp från dator"
+
+[fileSelectorPicker.sort]
+dateAsc = "Äldst först"
+dateDesc = "Nyast först"
+dateLabel = "Senaste"
+nameAsc = "A till Ö"
+nameDesc = "Ö till A"
+nameLabel = "A–Ö"
+
+[fileSelectorPicker.tabs]
+saved = "Sparade filer"
+upload = "Ladda upp"
+workbench = "Arbetsbänk"
+
+[fileSidebar]
+addFiles = "Lägg till filer"
+collapse = "Fäll ihop sidofält"
+dropHint = "Öppna filer för att komma igång"
+expand = "Expandera sidofält"
+files = "Filer"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive är inte konfigurerat"
+noFiles = "Inga filer ännu"
+openFileManager = "Öppna filhanteraren"
+openFromComputer = "Öppna från dator"
+openSettings = "Öppna inställningar"
+search = "Sök"
+searchPlaceholder = "Sök filer..."
 
 [fileToPDF]
 credit = "Denna tjänst använder LibreOffice och Unoconv för filkonvertering."
@@ -4202,6 +4275,11 @@ title = "Överlagra PDF:er"
 desc = "Slå samman flera sidor av ett PDF-dokument till en enda sida"
 tags = "layout,arrangera,kombinera"
 title = "Flersidig layout"
+
+[home.pdfCommentAgent]
+desc = "Be AI att kommentera en PDF med klisterlappskommentarer utifrån din prompt"
+tags = "AI,agent,kommentar,annotera,klisterlapp,granskning,feedback,anteckningar"
+title = "Lägg till AI-kommentarer"
 
 [home.pdfOrganiser]
 desc = "Ta bort/ordna om sidor i valfri ordning"
@@ -4903,7 +4981,6 @@ fileUpload = "Använd knappen <strong>Filer</strong> för att ladda upp eller v�
 leftPanel = "Den vänstra panelen <strong>Verktyg</strong> listar allt du kan göra. Bläddra i kategorier eller sök för att snabbt hitta ett verktyg."
 pageEditorView = "Byt till Sidredigerare för att ordna om, rotera eller ta bort sidor."
 quickAccess = "Börja i panelen <strong>Snabbåtkomst</strong> för att hoppa mellan Reader, Automate, dina filer och alla guider."
-rightRail = "Den <strong>Högra panelen</strong> innehåller snabba åtgärder för att välja filer, byta tema eller språk och ladda ned resultat."
 topBar = "I översta listen kan du växla mellan <strong>Visare</strong>, <strong>Sidredigerare</strong> och <strong>Aktiva filer</strong>."
 wrapUp = "Detta är nytt i V2. Öppna menyn <strong>Guider</strong> när som helst för att spela upp detta, verktygsturen eller administratörsturen igen."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Välj månadsvis"
 selectYearly = "Välj årsvis"
 title = "Välj din faktureringsperiod"
 totalForSeats = "Totalt ({{count}} platser)"
+
+[pdfCommentAgent]
+submit = "Generera kommentarer"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Beskriv vad AI ska kommentera"
+failed = "Misslyckades med att generera kommentarer"
+tooLong = "Prompten är för lång (högst {{max}} tecken)"
+
+[pdfCommentAgent.prompt]
+label = "Vad ska AI kommentera?"
+placeholder = "t.ex. Flagga alla otydliga datum och föreslå förtydliganden"
+
+[pdfCommentAgent.results]
+title = "Kommenterad PDF"
+
+[pdfCommentAgent.settings]
+title = "Instruktioner för kommentarer"
 
 [pdfOrganiser]
 header = "PDF-sidorganisatör"
@@ -6486,46 +6581,6 @@ title = "Hög kontrast"
 text = "Invertera alla färger i PDF:en helt och hållet, vilket skapar en negativliknande effekt. Användbart för att skapa mörkt läge-versioner av dokument eller minska ansträngning för ögonen i svagt ljus."
 title = "Invertera alla färger"
 
-[rightRail]
-annotations = "Annoteringar"
-applyRedactionsFirst = "Tillämpa maskningar först"
-closePdf = "Stäng PDF"
-closeSelected = "Stäng markerade filer"
-deleteSelected = "Ta bort markerade sidor"
-deselectAll = "Avmarkera alla"
-downloadAll = "Ladda ner alla"
-downloadSelected = "Ladda ner markerade filer"
-draw = "Rita"
-exitRedaction = "Avsluta maskeringsläge"
-exportAll = "Exportera PDF"
-exportSelected = "Exportera markerade sidor"
-formFill = "Fyll i formulär"
-language = "Språk"
-panMode = "Panoreringsläge"
-print = "Skriv ut PDF"
-readAloud = "Läs upp"
-readAloudLanguage = "Språk"
-readAloudSpeed = "Hastighet"
-redact = "Maskera"
-rotateLeft = "Rotera åt vänster"
-rotateRight = "Rotera åt höger"
-ruler = "Linjal / Mätning"
-save = "Spara"
-saveAll = "Spara alla"
-saveAs = "Spara som"
-saveChanges = "Spara ändringar"
-search = "Sök i PDF"
-selectAll = "Välj allt"
-selectByNumber = "Välj efter sidnummer"
-selectLanguage = "Välj språk"
-toggleAnnotations = "Växla synlighet för anteckningar"
-toggleAttachments = "Visa/dölj bilagor"
-toggleBookmarks = "Visa/dölj bokmärken"
-toggleComments = "Kommentarer"
-toggleLayers = "Växla lager"
-toggleSidebar = "Växla sidofält"
-toggleTheme = "Växla tema"
-
 [rotate]
 rotateLeft = "Rotera moturs"
 rotateRight = "Rotera medurs"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Dölj otillgängliga konverteringar"
 hideUnavailableConversionsDescription = "Ta bort inaktiverade konverteringsalternativ i verktyget Konvertera istället för att visa dem nedtonade."
 hideUnavailableTools = "Dölj otillgängliga verktyg"
 hideUnavailableToolsDescription = "Ta bort verktyg som har inaktiverats av din server istället för att visa dem nedtonade."
+language = "Språk"
+languageDescription = "Välj visningsspråk"
 logout = "Logga ut"
 setAsDefault = "Ange som standard"
+theme = "Tema"
+themeDark = "Mörkt"
+themeDescription = "Växla mellan ljust och mörkt läge"
+themeLight = "Ljust"
 title = "Allmänt"
 user = "Användare"
 
@@ -6810,6 +6871,20 @@ title = "Versionsinformation"
 auto = "Auto"
 fitPage = "Anpassa till sida"
 fitWidth = "Anpassa till bredd"
+
+[settings.help]
+label = "Guider"
+title = "Hjälp"
+
+[settings.help.adminTour]
+description = "Utforska teamhantering, systeminställningar och företagsfunktioner."
+start = "Starta"
+title = "Administratörsguide"
+
+[settings.help.toolsTour]
+description = "Gå igenom uppladdning av filer, val av verktyg och granskning av resultat."
+start = "Starta"
+title = "Verktygsguide"
 
 [settings.hotkeys]
 capturing = "Tryck på tangenter… (Esc för att avbryta)"
@@ -7780,6 +7855,8 @@ settings = "Inställningar"
 [tool]
 endpointUnavailable = "Detta verktyg är inte tillgängligt på din server."
 endpointUnavailableClickable = "Inte tillgängligt i detta läge. Klicka för att logga in."
+filesLoading = "Filer laddas fortfarande, vänta."
+filesLoadingProgress = "{{loaded}} / {{total}} filer laddas..."
 invalidParams = "Fyll i de obligatoriska inställningarna."
 noFiles = "Lägg till en fil för att komma igång."
 scopeFiles = "filer"
@@ -7789,10 +7866,15 @@ singleFileScope = "Gäller endast: {{fileName}}"
 viewerMode = "Byt till filredigeraren för att välja flera filer."
 
 [toolPanel]
+allTools = "Alla verktyg"
 alpha = "Alfa"
+backToTools = "Tillbaka till verktyg"
+collapse = "Fäll ihop panel"
 comingSoon = "Kommer snart:"
+expand = "Expandera panel"
 placeholder = "Välj ett verktyg för att komma igång"
 premiumFeature = "Premiumfunktion:"
+search = "Sök verktyg"
 
 [toolPanel.fullscreen]
 comingSoon = "Kommer snart:"
@@ -8342,6 +8424,51 @@ bullet2 = "Genomskinliga bakgrunder rekommenderas för bästa resultat"
 bullet3 = "Bilden kommer att skalas för att passa signaturområdet"
 description = "Ladda upp en i förväg skapad signaturbild. Idealiskt om du har en skannad signatur eller företagslogotyp."
 title = "Ladda upp signaturbild"
+
+[workbenchBar]
+activeFiles = "Aktiva filer"
+annotations = "Anteckningar"
+applyRedactionsFirst = "Tillämpa maskeringar först"
+closeAll = "Stäng alla filer"
+closePdf = "Stäng PDF"
+closeSelected = "Stäng valda filer"
+deleteSelected = "Ta bort valda sidor"
+deselectAll = "Avmarkera alla"
+downloadAll = "Ladda ner alla"
+downloadSelected = "Ladda ner valda filer"
+draw = "Rita"
+exitRedaction = "Avsluta maskeringsläge"
+exportAll = "Exportera PDF"
+exportSelected = "Exportera valda sidor"
+formFill = "Fyll i formulär"
+language = "Språk"
+multiTool = "Multiverktyg"
+panMode = "Panoreringsläge"
+print = "Skriv ut PDF"
+readAloud = "Läs upp"
+readAloudLanguage = "Språk"
+readAloudSpeed = "Hastighet"
+redact = "Maskera"
+rotateLeft = "Rotera åt vänster"
+rotateRight = "Rotera åt höger"
+ruler = "Linjal / Mät"
+save = "Spara"
+saveAll = "Spara alla"
+saveAs = "Spara som"
+saveChanges = "Spara ändringar"
+search = "Sök i PDF"
+selectAll = "Markera alla"
+selectByNumber = "Markera efter sidnummer"
+selectLanguage = "Välj språk"
+share = "Dela"
+toggleAnnotations = "Visa/dölj anteckningar"
+toggleAttachments = "Visa/dölj bilagor"
+toggleBookmarks = "Visa/dölj bokmärken"
+toggleComments = "Kommentarer"
+toggleLayers = "Visa/dölj lager"
+toggleSidebar = "Visa/dölj sidofält"
+toggleTheme = "Växla tema"
+viewer = "Visare"
 
 [workspace]
 title = "Arbetsyta"
