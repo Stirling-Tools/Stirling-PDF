@@ -1,0 +1,19 @@
+.portal-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text-2);
+}
+
+.portal-shell__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevent grid blowout on narrow content */
+}
+
+.portal-shell__view {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  animation: fadeInUp var(--motion-enter) both;
+}

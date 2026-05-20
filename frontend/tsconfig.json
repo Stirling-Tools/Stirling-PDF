@@ -34,7 +34,8 @@
       /* Specify a set of entries that re-map imports to additional lookup locations. */
       "@app/*": ["src/desktop/*", "src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["src/shared/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

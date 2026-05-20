@@ -107,6 +107,13 @@ tasks:
       - task: dev:_run
         vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
+  dev:portal:
+    desc: "Start developer portal dev server"
+    deps: [prepare]
+    cmds:
+      - task: dev:_run
+        vars: { MODE: portal, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+
   # ============================================================
   # Build
   # ============================================================
@@ -150,6 +157,24 @@ tasks:
     deps: [prepare]
     cmds:
       - npx vite build --mode prototypes
+
+  build:portal:
+    desc: "Build developer portal"
+    deps: [prepare]
+    cmds:
+      - npx vite build --mode portal
+
+  storybook:
+    desc: "Start Storybook dev server"
+    deps: [install]
+    cmds:
+      - npx storybook dev -p 6006 {{.CLI_ARGS}}
+
+  storybook:build:
+    desc: "Build static Storybook"
+    deps: [install]
+    cmds:
+      - npx storybook build {{.CLI_ARGS}}
 
   # ============================================================
   # Code quality
@@ -231,6 +256,12 @@ tasks:
     cmds:
       - npx tsc --noEmit --project src/prototypes/tsconfig.json
 
+  typecheck:portal:
+    desc: "Typecheck developer portal build variant"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project src/portal/tsconfig.json
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -240,6 +271,7 @@ tasks:
       - task: typecheck:desktop
       - task: typecheck:scripts
       - task: typecheck:prototypes
+      - task: typecheck:portal
 
   # ============================================================
   # Quality Gate
@@ -261,6 +293,7 @@ tasks:
       - task: format:check
       - task: build
       - task: test
+      - task: storybook:build
 
   # ============================================================
   # Test

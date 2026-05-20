@@ -1,0 +1,70 @@
+.portal-search__input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.25rem 0.25rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-4);
+}
+
+.portal-search__input {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: 0.9375rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-1);
+}
+
+.portal-search__input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.portal-search__esc {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--radius-xs);
+  background: var(--color-bg-muted);
+  color: var(--color-text-4);
+}
+
+.portal-search__results {
+  padding-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.portal-search__group-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-section-label);
+  padding: 0 0.5rem 0.375rem;
+}
+
+.portal-search__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-2);
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.portal-search__item:hover {
+  background: var(--color-bg-hover);
+}
+
+.portal-search__item-hint {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+}

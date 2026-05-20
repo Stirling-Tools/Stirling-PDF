@@ -4,7 +4,8 @@
     "paths": {
       "@app/*": ["src/saas/*", "src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["src/shared/*"]
     }
   },
   "exclude": [
