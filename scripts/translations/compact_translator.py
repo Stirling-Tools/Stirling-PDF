@@ -15,7 +15,7 @@ import tomllib  # Python 3.11+ (stdlib)
 class CompactTranslationExtractor:
     def __init__(
         self,
-        locales_dir: str = "frontend/public/locales",
+        locales_dir: str = "frontend/editor/public/locales",
         ignore_file: str = "scripts/ignore_translation.toml",
     ):
         self.locales_dir = Path(locales_dir)
@@ -143,7 +143,7 @@ def main():
     parser.add_argument("language", help="Language code (e.g., de-DE, fr-FR)")
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(

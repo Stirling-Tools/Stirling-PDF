@@ -12,10 +12,15 @@
  */
 
 import { existsSync, writeFileSync } from "fs";
-import { join } from "path";
+import { dirname, join, resolve } from "path";
+import { fileURLToPath } from "url";
 
-// npm scripts run from the directory containing package.json (frontend/)
-const root = process.cwd();
+// .env files live next to the editor's vite.config.ts (frontend/editor/).
+// Resolve relative to this script regardless of where the build was invoked.
+// `import.meta.dirname` would be tidier but isn't available under tsx's CJS
+// transpilation today, so go via fileURLToPath for portability.
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const root = resolve(scriptDir, "..");
 const args = process.argv.slice(2);
 const isDesktop = args.includes("--desktop");
 const isSaas = args.includes("--saas");
@@ -23,7 +28,7 @@ const isSaas = args.includes("--saas");
 function template(parent: string): string {
   return [
     "###############################################################################",
-    `# Local overrides for \`frontend/${parent}\``,
+    `# Local overrides for \`frontend/editor/${parent}\``,
     "# Put API keys and machine-specific settings here. Any variable defined here",
     `# takes precedence over the committed \`${parent}\``,
     "###############################################################################",

@@ -5,8 +5,12 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-const srcGlobs = ["src/**/*.{js,mjs,jsx,ts,tsx}"];
-const nodeGlobs = ["scripts/**/*.{js,ts,mjs}", "*.config.{js,ts,mjs}"];
+const srcGlobs = ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"];
+const nodeGlobs = [
+  "editor/scripts/**/*.{js,ts,mjs}",
+  "editor/*.config.{js,ts,mjs}",
+  "*.config.{js,ts,mjs}",
+];
 
 const baseRestrictedImportPatterns = [
   { regex: "^\\.", message: "Use @app/* imports instead of relative imports." },
@@ -19,7 +23,19 @@ const baseRestrictedImportPatterns = [
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
-    ignores: ["dist", "node_modules", "public", "src-tauri"],
+    ignores: [
+      "dist",
+      "dist-portal",
+      "node_modules",
+      "playwright-report",
+      "storybook-static",
+      "test-results",
+      "editor/dist",
+      "editor/public",
+      "editor/src-tauri",
+      "editor/playwright-report",
+      "editor/test-results",
+    ],
   },
   eslint.configs.recommended,
   tseslint.configs.recommended,
@@ -55,10 +71,10 @@ export default defineConfig(
     },
   },
   // Desktop-only packages must not be imported from core or proprietary code.
-  // Use the stub/shadow pattern instead: define a stub in src/core/ and override in src/desktop/.
+  // Use the stub/shadow pattern instead: define a stub in editor/src/core/ and override in editor/src/desktop/.
   {
     files: srcGlobs,
-    ignores: ["src/desktop/**"],
+    ignores: ["editor/src/desktop/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -68,7 +84,7 @@ export default defineConfig(
             {
               regex: "^@tauri-apps/",
               message:
-                "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
+                "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
             },
           ],
         },
@@ -78,10 +94,10 @@ export default defineConfig(
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {
     files: [
-      "src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/saas/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/saas/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
     ],
     languageOptions: {
       parserOptions: {

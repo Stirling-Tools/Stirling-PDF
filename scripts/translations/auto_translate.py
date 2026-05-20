@@ -55,16 +55,20 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
     print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
-    golden_path = find_translation_file(Path("frontend/public/locales/en-GB"))
-    lang_path = find_translation_file(Path(f"frontend/public/locales/{language_code}"))
+    golden_path = find_translation_file(Path("frontend/editor/public/locales/en-GB"))
+    lang_path = find_translation_file(
+        Path(f"frontend/editor/public/locales/{language_code}")
+    )
 
     if not golden_path:
-        print("Error: Golden truth file not found in frontend/public/locales/en-GB")
+        print(
+            "Error: Golden truth file not found in frontend/editor/public/locales/en-GB"
+        )
         return None
 
     if not lang_path:
         print(
-            f"Error: Language file not found in frontend/public/locales/{language_code}"
+            f"Error: Language file not found in frontend/editor/public/locales/{language_code}"
         )
         return None
 

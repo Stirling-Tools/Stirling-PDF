@@ -18,7 +18,7 @@ import tomli_w
 
 
 class AITranslationHelper:
-    def __init__(self, locales_dir: str = "frontend/public/locales"):
+    def __init__(self, locales_dir: str = "frontend/editor/public/locales"):
         self.locales_dir = Path(locales_dir)
         self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
 
@@ -391,7 +391,7 @@ def main():
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
 

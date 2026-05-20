@@ -1,13 +1,17 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, copyFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 if (process.platform !== "win32") {
   process.exit(0);
 }
 
-const frontendDir = process.cwd();
-const tauriDir = resolve(frontendDir, "src-tauri");
+// build-provisioner is invoked from the workspace root (frontend/); resolve
+// src-tauri relative to this script so it doesn't depend on cwd.
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const editorDir = resolve(scriptDir, "..");
+const tauriDir = resolve(editorDir, "src-tauri");
 const provisionerManifest = join(tauriDir, "provisioner", "Cargo.toml");
 
 execFileSync(

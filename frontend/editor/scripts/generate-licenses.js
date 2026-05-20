@@ -28,7 +28,9 @@ const OUTPUT_FILE = path.join(
   "assets",
   "3rdPartyLicenses.json",
 );
-const PACKAGE_JSON = path.join(__dirname, "..", "package.json");
+// package.json lives at the workspace root (frontend/), not editor/. The
+// script is at frontend/editor/scripts/, so walk up two levels.
+const PACKAGE_JSON = path.join(__dirname, "..", "..", "package.json");
 
 // Ensure the output directory exists
 const outputDir = path.dirname(OUTPUT_FILE);

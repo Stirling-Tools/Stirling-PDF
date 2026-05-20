@@ -3,14 +3,14 @@ version: '3'
 tasks:
   install:
     desc: "Install Playwright browsers"
-    dir: frontend
+    dir: frontend/editor
     deps: [ ':frontend:install' ]
     cmds:
       - npx playwright install {{.CLI_ARGS}} --with-deps
 
   stubbed:
     desc: "Run stubbed E2E tests"
-    dir: frontend
+    dir: frontend/editor
     deps: [ ':frontend:prepare' ]
     cmds:
       - npx playwright test --project=stubbed {{.CLI_ARGS}}
@@ -72,7 +72,7 @@ tasks:
   live:runner:
     internal: true
     deps: [ ':frontend:prepare' ]
-    dir: frontend
+    dir: frontend/editor
     vars:
       BASE_DIR: '{{.ROOT_DIR}}/.test-state/playwright'
     cmds:
@@ -141,14 +141,14 @@ tasks:
       up first with:
         task e2e:oauth:up
         task e2e:saml:up
-    dir: frontend
+    dir: frontend/editor
     deps: [ ':frontend:prepare' ]
     cmds:
       - npx playwright test --project=enterprise {{.CLI_ARGS}}
 
   cross-browser:
     desc: "Run stubbed E2E tests on Chromium, Firefox, and WebKit"
-    dir: frontend
+    dir: frontend/editor
     deps: [ ':frontend:prepare' ]
     cmds:
       - npx playwright test --project=stubbed --project=stubbed-firefox --project=stubbed-webkit {{.CLI_ARGS}}

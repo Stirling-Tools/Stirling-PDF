@@ -15,7 +15,7 @@ import tomli_w
 
 
 class TOMLBeautifier:
-    def __init__(self, locales_dir: str = "frontend/public/locales"):
+    def __init__(self, locales_dir: str = "frontend/editor/public/locales"):
         self.locales_dir = Path(locales_dir)
         self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
         self.golden_structure = self._load_toml(self.golden_truth_file)
@@ -225,7 +225,7 @@ def main():
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument("--language", help="Restructure specific language only")
