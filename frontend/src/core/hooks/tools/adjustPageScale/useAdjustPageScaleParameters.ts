@@ -17,14 +17,18 @@ export enum PageSize {
   LEGAL = "LEGAL",
 }
 
+export type Orientation = "PORTRAIT" | "LANDSCAPE";
+
 export interface AdjustPageScaleParameters extends BaseParameters {
   scaleFactor: number;
   pageSize: PageSize;
+  orientation: Orientation;
 }
 
 export const defaultParameters: AdjustPageScaleParameters = {
   scaleFactor: 1.0,
   pageSize: PageSize.KEEP,
+  orientation: "PORTRAIT",
 };
 
 export type AdjustPageScaleParametersHook =

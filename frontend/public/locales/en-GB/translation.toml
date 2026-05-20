@@ -494,6 +494,11 @@ title = "Adjust Page Scale"
 [adjustPageScale.error]
 failed = "An error occurred while adjusting the page scale."
 
+[adjustPageScale.orientation]
+label = "Page orientation"
+landscape = "Landscape"
+portrait = "Portrait"
+
 [adjustPageScale.pageSize]
 keep = "Keep Original Size"
 label = "Target Page Size"

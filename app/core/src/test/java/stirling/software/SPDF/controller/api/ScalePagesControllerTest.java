@@ -237,7 +237,8 @@ class ScalePagesControllerTest {
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
-        request.setPageSize("A4_LANDSCAPE");
+        request.setPageSize("A4");
+        request.setOrientation("LANDSCAPE");
         request.setScaleFactor(1.0f);
 
         setupFactory();
