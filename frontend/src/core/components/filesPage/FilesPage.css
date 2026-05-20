@@ -9,34 +9,40 @@
 }
 
 .files-page-header {
-  display: flex;
+  /* 3-column grid keeps the search bar position-stable regardless of
+   * breadcrumb length. Left column flexes for the breadcrumb (truncating
+   * via overflow:hidden), middle column holds the search, right column
+   * holds the action buttons right-aligned. */
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
-  /* Match WorkbenchBar (48px min-height + 0 8px padding) so the chrome reads
-     as one consistent toolbar across the viewer / files / tools surfaces. */
   min-height: 48px;
   padding: 0 0.5rem;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-toolbar);
   flex-shrink: 0;
-  flex-wrap: wrap;
 }
 
 .files-page-header-actions {
-  margin-left: auto;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .files-page-breadcrumbs {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  flex-wrap: wrap;
   font-size: 0.95rem;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.files-page-breadcrumbs::-webkit-scrollbar {
+  display: none;
 }
 
 .files-page-breadcrumb {
@@ -84,10 +90,9 @@
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
-  min-width: 14rem;
-  max-width: 40rem;
-  flex: 1 1 14rem;
-  margin: 0 0.5rem;
+  /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
+  width: 100%;
+  min-width: 0;
 }
 
 .files-page-search input {
@@ -1280,13 +1285,13 @@
    and the first to go. Same for "Upload" - the user can use the
    centre drop overlay. */
 @media (max-width: 640px) {
+  /* Drop the 3-column grid on phones; flex-wrap lets the search slip onto
+   * its own row when chrome is too cramped to share. */
   .files-page-header {
-    flex-wrap: nowrap;
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.4rem;
     padding: 0 0.4rem;
-    /* No horizontal scroll: the previous `overflow-x: auto` let buttons
-       run off-screen invisibly. Action collapsing into the kebab keeps
-       everything visible. */
     overflow-x: hidden;
   }
   .files-page-header [data-mobile-hide="true"] {
@@ -1300,8 +1305,12 @@
     display: none !important;
   }
   .files-page-header-actions {
+    margin-left: auto;
     gap: 0.3rem;
     flex-wrap: nowrap;
+  }
+  .files-page-search {
+    flex: 1 1 100%;
   }
   .files-page-breadcrumbs {
     font-size: 0.85rem;
