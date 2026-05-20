@@ -255,7 +255,7 @@ export default function ProviderCard({
         </Group>
 
         {/* Expandable Settings */}
-        <Collapse in={expanded}>
+        <Collapse expanded={expanded}>
           <Stack gap="md" mt="xs">
             {/* Documentation Link */}
             {provider.documentationUrl && (

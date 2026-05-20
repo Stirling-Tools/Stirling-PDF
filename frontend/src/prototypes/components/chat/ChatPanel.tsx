@@ -158,7 +158,7 @@ function ToolsUsedBlock({
           </Text>
         </Group>
       </UnstyledButton>
-      <Collapse in={expanded}>
+      <Collapse expanded={expanded}>
         <List
           type="ordered"
           size="xs"

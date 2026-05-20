@@ -339,9 +339,7 @@ const AdminUsageSection: React.FC = () => {
             <Group>
               <SegmentedControl
                 value={displayMode}
-                onChange={(value) =>
-                  setDisplayMode(value as "top10" | "top20" | "all")
-                }
+                onChange={(value) => setDisplayMode(value)}
                 disabled={showDemoData}
                 data={[
                   {
@@ -378,7 +376,7 @@ const AdminUsageSection: React.FC = () => {
             </Text>
             <SegmentedControl
               value={dataType}
-              onChange={(value) => setDataType(value as "all" | "api" | "ui")}
+              onChange={(value) => setDataType(value)}
               disabled={showDemoData}
               data={[
                 {

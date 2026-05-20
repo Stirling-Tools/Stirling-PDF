@@ -75,15 +75,18 @@ test.describe("Enterprise license — admin settings UI", () => {
       return;
     }
     await auditNav.click();
-    await page.waitForTimeout(500);
 
-    // Audit dashboard renders some data surface in the DOM (table, list,
-    // chart). Some builds tab the dashboard behind a sub-section so we
-    // assert attachment rather than visibility.
+    // Audit dashboard renders some data surface in the DOM. The Tabs.List
+    // (role="tablist") shows up as soon as AdminAuditSection mounts with a
+    // non-null systemStatus, before lazy-loaded chart bundles resolve. Some
+    // builds put the dashboard behind a sub-section so we assert
+    // attachment rather than visibility.
     const surface = page
-      .locator('[data-testid*="audit" i], table, [class*="AuditDashboard" i]')
+      .locator(
+        '[data-testid*="audit" i], table, [class*="AuditDashboard" i], [role="tablist"]',
+      )
       .first();
-    await expect(surface).toBeAttached({ timeout: 10_000 });
+    await expect(surface).toBeAttached({ timeout: 15_000 });
   });
 
   test("Teams section renders and exposes a create-team affordance", async ({

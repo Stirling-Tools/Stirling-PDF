@@ -39,7 +39,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
 
   return (
     <Stack gap="lg" style={{ padding: "1rem 2rem" }}>
-      <Grid gutter="xl" style={{ marginTop: "1rem" }}>
+      <Grid gap="xl" style={{ marginTop: "1rem" }}>
         {/* Monthly Option */}
         {planGroup.monthly && (
           <Grid.Col span={6}>

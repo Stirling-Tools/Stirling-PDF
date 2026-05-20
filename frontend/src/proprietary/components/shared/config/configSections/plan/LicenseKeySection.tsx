@@ -131,7 +131,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
         )}
       </Button>
 
-      <Collapse in={showLicenseKey} mt="md">
+      <Collapse expanded={showLicenseKey} mt="md">
         <Stack gap="md">
           <Alert
             variant="light"
@@ -233,7 +233,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
           <SegmentedControl
             value={inputMethod}
             onChange={(value) => {
-              setInputMethod(value as "text" | "file");
+              setInputMethod(value);
               // Clear opposite input when switching
               if (value === "text") setLicenseFile(null);
               if (value === "file") setLicenseKeyInput("");

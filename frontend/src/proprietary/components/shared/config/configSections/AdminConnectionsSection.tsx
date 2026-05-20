@@ -726,7 +726,7 @@ export default function AdminConnectionsSection() {
             </div>
 
             {/* Mobile Scanner Settings - Only show when enabled */}
-            <Collapse in={settings?.enableMobileScanner || false}>
+            <Collapse expanded={settings?.enableMobileScanner || false}>
               <Stack
                 gap="md"
                 mt="md"

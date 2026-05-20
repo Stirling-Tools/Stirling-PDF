@@ -161,7 +161,7 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
         <SegmentedControl
           value={timePeriod}
           onChange={(value) => {
-            onTimePeriodChange?.(value as "day" | "week" | "month");
+            onTimePeriodChange?.(value);
           }}
           disabled={!loginEnabled}
           data={[

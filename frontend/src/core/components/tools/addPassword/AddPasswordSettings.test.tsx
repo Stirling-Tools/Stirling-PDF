@@ -53,7 +53,7 @@ describe("AddPasswordSettings", () => {
 
     // Should render key length select input
     expect(
-      screen.getByRole("textbox", { name: /keyLength/i }),
+      screen.getByRole("combobox", { name: /keyLength/i }),
     ).toBeInTheDocument();
   });
 
@@ -128,7 +128,7 @@ describe("AddPasswordSettings", () => {
     );
 
     // Check password inputs are disabled
-    const passwordInputs = screen.getAllByRole("textbox");
+    const passwordInputs = screen.getAllByRole("combobox");
     passwordInputs.forEach((input) => {
       expect(input).toBeDisabled();
     });
@@ -151,7 +151,7 @@ describe("AddPasswordSettings", () => {
     );
 
     // Check password inputs are enabled
-    const passwordInputs = screen.getAllByRole("textbox");
+    const passwordInputs = screen.getAllByRole("combobox");
     passwordInputs.forEach((input) => {
       expect(input).not.toBeDisabled();
     });

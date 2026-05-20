@@ -77,7 +77,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
         </Button>
       </div>
 
-      <Collapse in={showComparison}>
+      <Collapse expanded={showComparison}>
         <Card padding="lg" radius="md" withBorder className="mt-4">
           <Text size="lg" fw={600} mb="md">
             {t("plan.featureComparison", "Feature Comparison")}
