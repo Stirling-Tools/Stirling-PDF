@@ -28,27 +28,23 @@ test.describe("Reader — in-document text search", () => {
       timeout: 10_000,
     });
 
-    // The viewer toolbar exposes a search button or the search input directly.
-    const searchTrigger = page
-      .getByRole("button", { name: /search|find/i })
-      .or(page.getByPlaceholder(/search|find in document/i))
+    // The WorkbenchBar exposes a "Search PDF" button (aria-label="Search PDF")
+    // that opens a Popover with the in-document search input.
+    // We target this button specifically to avoid matching the FileSidebar's
+    // "Search" button (a <div role="button">) which appears earlier in the DOM.
+    const searchBtn = page
+      .getByRole("button", { name: /^Search PDF$/i })
       .first();
 
-    if (
-      !(await searchTrigger.isVisible({ timeout: 5_000 }).catch(() => false))
-    ) {
-      test.skip(true, "Reader toolbar search not visible on this build");
+    if (!(await searchBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
+      test.skip(true, "Search PDF button not visible on this build");
       return;
     }
 
-    // If it's a button, click it to open the input; if it's an input
-    // already, fill directly.
-    const tag = await searchTrigger.evaluate((el) => el.tagName);
-    if (tag === "BUTTON") {
-      await searchTrigger.click();
-    }
+    await searchBtn.click();
 
-    const input = page.getByPlaceholder(/search|find/i).first();
+    // The SearchInterface renders inside a Popover with placeholder "Enter search term..."
+    const input = page.getByPlaceholder(/enter search term/i).first();
     await expect(input).toBeVisible({ timeout: 5_000 });
     await input.fill("page");
     await expect(input).toHaveValue("page");

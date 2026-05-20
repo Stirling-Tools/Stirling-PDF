@@ -120,6 +120,7 @@ function ReviewStepContent<TParams = unknown>({
 
       {onUndo && (
         <Tooltip
+          position="left"
           content={t(
             "undoOperationTooltip",
             "Click to undo the last operation and restore the original files",

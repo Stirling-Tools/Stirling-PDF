@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, ReactNode } from "react";
 
 interface BannerContextType {
   banner: ReactNode;
@@ -10,10 +10,10 @@ const BannerContext = createContext<BannerContextType | undefined>(undefined);
 export function BannerProvider({ children }: { children: ReactNode }) {
   const [banner, setBanner] = useState<ReactNode>(null);
 
+  const value = useMemo(() => ({ banner, setBanner }), [banner]);
+
   return (
-    <BannerContext.Provider value={{ banner, setBanner }}>
-      {children}
-    </BannerContext.Provider>
+    <BannerContext.Provider value={value}>{children}</BannerContext.Provider>
   );
 }
 

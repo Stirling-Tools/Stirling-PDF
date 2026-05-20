@@ -2,11 +2,13 @@ package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -21,6 +23,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -30,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
@@ -44,6 +48,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -252,6 +257,183 @@ class AiWorkflowServiceTest {
     }
 
     @Test
+    void parameterListOfStructuredObjectsIsJsonEncodedAsSingleField() throws IOException {
+        // Endpoints like /general/edit-text and /security/redact bind a List<StructuredObject>
+        // from a single JSON form field via a property editor. The plan executor must
+        // pre-serialize such lists rather than splitting them into repeated form fields.
+        String editTextEndpoint = "/api/v1/general/edit-text";
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"Find and replace",
+                  "steps":[
+                    {"tool":"%s","parameters":{
+                      "edits":[{"find":"foo","replace":"bar"},{"find":"baz","replace":"qux"}],
+                      "useRegex":false
+                    }}
+                  ]
+                }
+                """
+                        .formatted(editTextEndpoint));
+        when(toolMetadataService.isMultiInput(editTextEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(editTextEndpoint)).thenReturn(false);
+        stubEndpoint(editTextEndpoint, pdfResource("edited", "edited.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(input, "find and replace"));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(editTextEndpoint), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+
+        // The structured-list field must be serialized as ONE JSON-string entry, not multiple
+        // entries.
+        List<Object> editsValues = body.get("edits");
+        assertNotNull(editsValues);
+        assertEquals(1, editsValues.size());
+        assertEquals(
+                "[{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}]",
+                editsValues.get(0));
+
+        // Primitive fields keep the original behavior (single value, not JSON-wrapped).
+        List<Object> useRegex = body.get("useRegex");
+        assertNotNull(useRegex);
+        assertEquals(1, useRegex.size());
+        assertEquals(false, useRegex.get(0));
+    }
+
+    @Test
+    void parameterListOfPrimitivesIsSentAsRepeatedFormFields() throws IOException {
+        // Endpoints like /misc/ocr-pdf bind List<String> via Spring's repeated-form-field
+        // convention. The executor must preserve that behavior for primitive lists.
+        String ocrEndpoint = "/api/v1/misc/ocr-pdf";
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"OCR the document",
+                  "steps":[
+                    {"tool":"%s","parameters":{"languages":["eng","fra","deu"]}}
+                  ]
+                }
+                """
+                        .formatted(ocrEndpoint));
+        when(toolMetadataService.isMultiInput(ocrEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ocrEndpoint)).thenReturn(false);
+        stubEndpoint(ocrEndpoint, pdfResource("ocred", "ocred.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(input, "ocr"));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq(ocrEndpoint), bodyCaptor.capture());
+        List<Object> languages = bodyCaptor.getValue().get("languages");
+        assertNotNull(languages);
+        assertEquals(List.of("eng", "fra", "deu"), languages);
+    }
+
+    @Test
+    void toolTimeoutSurfacesAsCannotContinueWithFriendlyMessage() throws IOException {
+        // When an internal tool hangs, InternalApiClient throws InternalApiTimeoutException after
+        // its read timeout fires. The workflow must convert that into a clean CANNOT_CONTINUE
+        // outcome so the user sees an actionable message rather than the request hanging forever.
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE_ENDPOINT), any()))
+                .thenThrow(
+                        new InternalApiTimeoutException(
+                                ROTATE_ENDPOINT,
+                                java.time.Duration.ofSeconds(300),
+                                new java.io.IOException("Read timed out")));
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate"));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertNotNull(result.getReason());
+        assertTrue(
+                result.getReason().contains(ROTATE_ENDPOINT),
+                "reason should mention the failing tool path: " + result.getReason());
+        assertTrue(
+                result.getReason().contains("300"),
+                "reason should mention the timeout duration: " + result.getReason());
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
+    @Test
+    void planTimeoutOnLaterStepStillSurfacesCleanly() throws IOException {
+        // Multi-step plans must also handle a hung tool gracefully (no partial leaks) and the
+        // failure message must identify which step failed so the user can iterate.
+        MockMultipartFile input = pdf("input.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"plan",
+                  "summary":"Rotate then compress",
+                  "steps":[
+                    {"tool":"%s","parameters":{"angle":90}},
+                    {"tool":"%s","parameters":{}}
+                  ]
+                }
+                """
+                        .formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
+        // No fileStorage stub here: the second step times out before any output reaches storage.
+        when(internalApiClient.post(eq(COMPRESS_ENDPOINT), any()))
+                .thenThrow(
+                        new InternalApiTimeoutException(
+                                COMPRESS_ENDPOINT,
+                                java.time.Duration.ofSeconds(300),
+                                new java.io.IOException("Read timed out")));
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate then compress"));
+
+        assertEquals(AiWorkflowOutcome.CANNOT_CONTINUE, result.getOutcome());
+        assertTrue(result.getReason().contains(COMPRESS_ENDPOINT));
+        // The first step actually executed; the failure happened on the second.
+        verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+        verify(internalApiClient, times(1)).post(eq(COMPRESS_ENDPOINT), any());
+    }
+
+    @Test
+    void generateFileStoresContentDirectlyWithoutToolCall() throws IOException {
+        MockMultipartFile input = pdf("report.pdf", "bytes");
+        stubOrchestrator(
+                """
+                {
+                  "outcome":"generate_file",
+                  "content":"# Hello\\n\\nWorld",
+                  "filename":"report-reconstruction.md",
+                  "summary":"Reconstructed the document as a Markdown file."
+                }
+                """);
+        AtomicInteger ids = stubFileStorage();
+
+        AiWorkflowResponse result = service.orchestrate(requestFor(input, "convert to markdown"));
+
+        assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
+        assertEquals(1, result.getResultFiles().size());
+        assertEquals("report-reconstruction.md", result.getResultFiles().get(0).getFileName());
+        assertEquals("file-1", result.getResultFiles().get(0).getFileId());
+        assertEquals(1, ids.get());
+        // No tool endpoint should be called — content goes directly to file storage.
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
     void toolCallWithoutEndpointFallsBackToCannotContinue() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator("{\"outcome\":\"tool_call\",\"parameters\":{}}");
@@ -264,7 +446,7 @@ class AiWorkflowServiceTest {
     }
 
     @Test
-    void needIngestExtractsPageTextAndPostsToRagThenRetries() throws IOException {
+    void needIngestExtractsPageTextAndPostsThenRetries() throws IOException {
         MockMultipartFile input = pdf("report.pdf", "bytes");
         when(fileIdStrategy.idFor(any())).thenReturn("report-id");
 
@@ -276,37 +458,64 @@ class AiWorkflowServiceTest {
                 .thenReturn("page content");
 
         int[] orchestratorCalls = {0};
-        when(aiEngineClient.post(eq("/api/v1/orchestrator"), anyString()))
-                .thenAnswer(
+        doAnswer(
                         inv -> {
                             orchestratorCalls[0]++;
+                            String responseJson;
                             if (orchestratorCalls[0] == 1) {
-                                return """
-                                       {
-                                         "outcome":"need_ingest",
-                                         "resumeWith":"pdf_question",
-                                         "reason":"ingest first",
-                                         "filesToIngest":[{"id":"report-id","name":"report.pdf"}],
-                                         "contentTypes":["page_text"]
-                                       }
-                                       """;
+                                responseJson =
+                                        """
+                                        {
+                                          "outcome":"need_ingest",
+                                          "resumeWith":"pdf_question",
+                                          "reason":"ingest first",
+                                          "filesToIngest":[{"id":"report-id","name":"report.pdf"}],
+                                          "contentTypes":["page_text"]
+                                        }
+                                        """;
+                            } else {
+                                responseJson =
+                                        """
+                                        {"outcome":"answer","answer":"done","evidence":[]}
+                                        """;
                             }
-                            return """
-                                   {"outcome":"answer","answer":"done","evidence":[]}
-                                   """;
-                        });
+                            Consumer<String> consumer = inv.getArgument(2);
+                            consumer.accept(wrapAsResultEvent(responseJson));
+                            return null;
+                        })
+                .when(aiEngineClient)
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/rag/documents"), anyString());
-        verify(aiEngineClient, times(2)).post(eq("/api/v1/orchestrator"), anyString());
+        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString());
+        verify(aiEngineClient, times(2)).streamPost(eq("/api/v1/orchestrator"), anyString(), any());
     }
 
     // --- helpers ---
 
     private void stubOrchestrator(String responseJson) throws IOException {
-        when(aiEngineClient.post(eq("/api/v1/orchestrator"), anyString())).thenReturn(responseJson);
+        doAnswer(
+                        inv -> {
+                            Consumer<String> consumer = inv.getArgument(2);
+                            consumer.accept(wrapAsResultEvent(responseJson));
+                            return null;
+                        })
+                .when(aiEngineClient)
+                .streamPost(eq("/api/v1/orchestrator"), anyString(), any());
+    }
+
+    /**
+     * Wrap a unary orchestrator response JSON as the NDJSON "result" event the streaming endpoint
+     * emits, so existing tests can keep their per-outcome JSON literals.
+     */
+    private String wrapAsResultEvent(String responseJson) throws IOException {
+        return objectMapper
+                .createObjectNode()
+                .put("event", "result")
+                .set("response", objectMapper.readTree(responseJson))
+                .toString();
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
