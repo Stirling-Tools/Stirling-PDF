@@ -16,9 +16,11 @@ import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
+import { reconcileServerFiles } from "@app/services/fileSyncService";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /** View-toggle modes; tuple keeps the union and iterator in sync. */
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
@@ -126,18 +128,27 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const indexedDB = useIndexedDB();
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
+  const { config: appConfig } = useAppConfig();
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Narrow dep so refresh isn't recreated on every folders field change.
   const setFoldersError = folders.setError;
+  const storageEnabled = appConfig?.storageEnabled === true;
+  const shareLinksEnabled = appConfig?.storageShareLinksEnabled === true;
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const stubs = await fileStorage.getAllStirlingFileStubs();
-      setAllFiles(stubs.filter((s) => s.isLeaf !== false));
-      // Don't clear errors here; let dismiss or pullFromServer handle them.
+      const localStubs = await fileStorage.getAllStirlingFileStubs();
+      const localLeaf = localStubs.filter((s) => s.isLeaf !== false);
+      // Render the cache immediately while the server fetch is in flight.
+      setAllFiles(localLeaf);
+      const merged = await reconcileServerFiles(localLeaf, {
+        storageEnabled,
+        shareLinksEnabled,
+      });
+      setAllFiles(merged);
     } catch (err) {
       console.error("[FilesPageContext] refresh failed", err);
       setFoldersError(
@@ -146,7 +157,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [setFoldersError]);
+  }, [setFoldersError, storageEnabled, shareLinksEnabled]);
 
   useEffect(() => {
     void refresh();

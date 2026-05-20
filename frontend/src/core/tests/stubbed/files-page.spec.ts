@@ -11,8 +11,29 @@ interface SeedFile {
   toolHistory?: Array<{ toolId: string; timestamp: number }>;
 }
 
-/** Seed IDB before the React app boots. */
+/** Seed IDB + register the cloud entries with the server stub. */
 async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
+  // Build the server-side view from the cloud entries so reconcileServerFiles
+  // sees them as still-existing on the server (otherwise they get detached).
+  const serverFiles = files
+    .filter((f) => f.remoteStorageId != null)
+    .map((f) => ({
+      id: f.remoteStorageId,
+      fileName: f.name,
+      contentType: "application/pdf",
+      sizeBytes: 1024,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      owner: "testuser",
+      ownedByCurrentUser: true,
+      accessRole: "owner",
+      shareLinks: [],
+      filePurpose: "generic",
+      folderId: null,
+    }));
+  await page.route("**/api/v1/storage/files", (route: Route) =>
+    route.fulfill({ json: serverFiles }),
+  );
   await page.addInitScript((records) => {
     const open = window.indexedDB.open("stirling-pdf-files", 4);
     open.onupgradeneeded = (event) => {
@@ -512,6 +533,46 @@ test.describe("Files page", () => {
       await expect(
         page.locator('[data-testid="files-rail-new-folder"]'),
       ).toBeVisible();
+    });
+  });
+
+  test.describe("Server file sync", () => {
+    test.use({ autoGoto: false });
+
+    test("Server-only files appear in /files on a fresh browser", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      // No local IDB seed. Override the GET /api/v1/storage/files route
+      // to return a file that the server knows about. The /files grid
+      // should pull this in via the new sync path.
+      await page.route("**/api/v1/storage/files", (route: Route) =>
+        route.fulfill({
+          json: [
+            {
+              id: 9001,
+              fileName: "cross-browser.pdf",
+              contentType: "application/pdf",
+              sizeBytes: 4096,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              owner: "testuser",
+              ownedByCurrentUser: true,
+              accessRole: "owner",
+              shareLinks: [],
+              filePurpose: "generic",
+              folderId: null,
+            },
+          ],
+        }),
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      // The file lands as a synthesised server stub.
+      await expect(
+        page
+          .locator(".files-page-card:not(.is-folder)")
+          .filter({ hasText: "cross-browser.pdf" }),
+      ).toBeVisible({ timeout: 5_000 });
     });
   });
 
