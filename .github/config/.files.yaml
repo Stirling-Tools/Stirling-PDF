@@ -1,6 +1,8 @@
 build: &build
   - build.gradle
   - app/(common|core|proprietary)/build.gradle
+  - Taskfile.yml
+  - .taskfiles/backend.yml
 
 openapi: &openapi
   - *build
@@ -39,6 +41,9 @@ project: &project
   - frontend/**
   - docker/**
   - scripts/RestartHelper.java
+  - Taskfile.yml
+  - .taskfiles/backend.yml
+  - .taskfiles/docker.yml
 
 frontend: &frontend
   - frontend/**
@@ -54,6 +59,9 @@ frontend: &frontend
   - scripts/summarize_type3_signatures.py
   - scripts/type3_to_cff.py
   - scripts/update_type3_library.py
+  - Taskfile.yml
+  - .taskfiles/frontend.yml
+  - .taskfiles/e2e.yml
 
 # Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
 # job on changes to any of these.
@@ -65,6 +73,8 @@ tauri: &tauri
   - frontend/package-lock.json
   - frontend/vite.config.ts
   - .github/workflows/tauri-build.yml
+  - Taskfile.yml
+  - .taskfiles/desktop.yml
 
 # Files that affect the AI engine (Python tool models, fixers, tests). Gate
 # the engine validation job on changes to engine sources or to the Java
@@ -73,6 +83,8 @@ engine: &engine
   - engine/**
   - app/(common|core|proprietary)/src/main/java/**
   - .github/workflows/ai-engine.yml
+  - Taskfile.yml
+  - .taskfiles/engine.yml
 
 licenses-frontend: &licenses-frontend
   - ".github/workflows/frontend-backend-licenses-update.yml"
