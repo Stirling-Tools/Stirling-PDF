@@ -5,13 +5,19 @@ name: Playwright E2E (live backend)
 # server.
 on:
   workflow_call:
+    inputs:
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
 
 permissions:
   contents: read
 
 jobs:
   playwright-e2e-live:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
     timeout-minutes: 30
     steps:
       - name: Harden Runner

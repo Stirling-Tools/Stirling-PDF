@@ -1,12 +1,12 @@
 name: Depot Core Scaling Benchmark
 
-# Lets us see how Gradle / docker buildx scale across Depot runner sizes.
-# Push to any branch starting with `bench/` to trigger; matrix runs on
-# 2, 4, 8, 16, 32 vCPU Depot runners in parallel so step durations in the
-# Actions UI give a direct side-by-side comparison.
+# Fans out the slow reusable workflows (docker-compose-tests, playwright e2e
+# variants, test-build-docker) across a matrix of Depot runner sizes so we
+# can see how each scales with cores. Each row in the Actions UI shows the
+# job at one vCPU count; per-step durations give the direct comparison.
 #
-# Cache settings: both jobs run with --no-build-cache / --no-cache so the
-# numbers reflect actual compile/build work, not Depot remote cache hits.
+# Push to any branch starting with `bench/` to trigger, or use the
+# "Run workflow" button on the workflow page.
 
 on:
   push:
@@ -16,119 +16,61 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  actions: write
+  packages: read
+  checks: write
+  security-events: write
 
 jobs:
-  gradle:
-    name: gradle backend:build (${{ matrix.cores }} vCPU)
+  docker-compose-tests:
     strategy:
       fail-fast: false
       matrix:
-        cores: [2, 4, 8, 16, 32]
-    runs-on: depot-ubuntu-24.04-${{ matrix.cores }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
-        with:
-          egress-policy: audit
+        cores: ['4', '8', '16', '32']
+    uses: ./.github/workflows/docker-compose-tests.yml
+    secrets: inherit
+    with:
+      docker-base-changed: 'false'
+      depot_cores: ${{ matrix.cores }}
 
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
-          df -h /
-
-      - name: Verify runner CPU count
-        run: |
-          echo "nproc reports: $(nproc)"
-          lscpu | head -10
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-
-      - name: Gradle build (no cache, force rebuild)
-        run: |
-          set -eu
-          /usr/bin/time -v ./gradlew :stirling-pdf:build --no-build-cache --rerun-tasks 2>&1 | tail -40
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-          STIRLING_PDF_DESKTOP_UI: false
-
-  docker-buildx:
-    name: docker buildx embedded (${{ matrix.cores }} vCPU)
+  playwright-e2e:
     strategy:
       fail-fast: false
       matrix:
-        cores: [2, 4, 8, 16, 32]
-    runs-on: depot-ubuntu-24.04-${{ matrix.cores }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
-        with:
-          egress-policy: audit
+        cores: ['4', '8', '16', '32']
+    uses: ./.github/workflows/e2e-stubbed.yml
+    secrets: inherit
+    with:
+      depot_cores: ${{ matrix.cores }}
 
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  playwright-e2e-live:
+    strategy:
+      fail-fast: false
+      matrix:
+        cores: ['4', '8', '16', '32']
+    uses: ./.github/workflows/e2e-live.yml
+    secrets: inherit
+    with:
+      depot_cores: ${{ matrix.cores }}
 
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
-          df -h /
+  playwright-e2e-enterprise:
+    strategy:
+      fail-fast: false
+      matrix:
+        cores: ['4', '8', '16', '32']
+    uses: ./.github/workflows/build-enterprise.yml
+    secrets: inherit
+    with:
+      depot_cores: ${{ matrix.cores }}
 
-      - name: Verify runner CPU count
-        run: |
-          echo "nproc reports: $(nproc)"
-
-      # Same prep as test-build-docker.yml so the docker build has a JAR
-      # to copy in. Not timed; the next step is what we're benchmarking.
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
-
-      - name: Build JAR (prep, not timed)
-        run: task backend:build
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-          STIRLING_PDF_DESKTOP_UI: false
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-
-      - name: Docker buildx (no cache, amd64 only)
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        with:
-          context: .
-          file: ./docker/embedded/Dockerfile
-          push: false
-          platforms: linux/amd64
-          no-cache: true
+  test-build-docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        cores: ['4', '8', '16', '32']
+    uses: ./.github/workflows/test-build-docker.yml
+    secrets: inherit
+    with:
+      docker-base-changed: 'false'
+      depot_cores: ${{ matrix.cores }}

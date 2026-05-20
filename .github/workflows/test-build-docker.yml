@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: "false"
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
 
 permissions:
   contents: read
@@ -32,7 +37,7 @@ jobs:
   # spring-security=true matrix entry if `task backend:build` and
   # `task backend:build:ci` produce equivalent JARs (verify before wiring).
   test-build-docker-images:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
     permissions:
       contents: read
       id-token: write
@@ -189,7 +194,7 @@ jobs:
           if-no-files-found: warn
 
   test-build-unoserver-image:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || ''depot-ubuntu-24.04-8'' }}'
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
     permissions:
       contents: read
       id-token: write
