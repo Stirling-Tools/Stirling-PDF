@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -134,13 +135,22 @@ public class ReactRoutingController {
     public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
-                return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedIndexHtml);
+                return ResponseEntity.ok()
+                        .cacheControl(CacheControl.noCache().mustRevalidate())
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(cachedIndexHtml);
             }
             // Fallback: process on each request (dev mode or cache failed)
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(processIndexHtml());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(processIndexHtml());
         } catch (Exception ex) {
             log.error("Failed to serve index.html, returning fallback", ex);
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(buildFallbackHtml());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildFallbackHtml());
         }
     }
 
