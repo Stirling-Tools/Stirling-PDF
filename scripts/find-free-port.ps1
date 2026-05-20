@@ -4,7 +4,25 @@
 # emits a random free port in 20000-49999. Probes by attempting to bind a
 # TcpListener on loopback. Tracks picks within this run so outputs are
 # guaranteed distinct from each other.
-param([int[]]$Preferred)
+param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$Preferred
+)
+
+$normalizedPreferred = @()
+foreach ($item in $Preferred) {
+    foreach ($token in ($item -split ',')) {
+        $trimmed = $token.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed)) { continue }
+        $parsed = 0
+        if (-not [int]::TryParse($trimmed, [ref]$parsed)) {
+            throw "Invalid port value: '$trimmed'"
+        }
+        $normalizedPreferred += $parsed
+    }
+}
+
+$Preferred = $normalizedPreferred
 
 $script:picked = @()
 
