@@ -7,6 +7,7 @@ import {
   PdfActionType,
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
+import { getExternalHref, openExternalUrl } from "@app/utils/openExternalUrl";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -310,19 +311,11 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           });
         } else if (action.type === PdfActionType.URI) {
           const uri = action.uri;
-          try {
-            const url = new URL(uri, window.location.href);
-            if (["http:", "https:", "mailto:"].includes(url.protocol)) {
-              window.open(uri, "_blank", "noopener,noreferrer");
-            } else {
-              console.warn(
-                "[LinkLayer] Blocked unsafe URL protocol:",
-                url.protocol,
-              );
+          void openExternalUrl(uri).then((opened) => {
+            if (!opened) {
+              console.warn("[LinkLayer] Blocked unsafe URL:", uri);
             }
-          } catch {
-            window.open(uri, "_blank", "noopener,noreferrer");
-          }
+          });
         }
       }
 
@@ -353,6 +346,11 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         const top = annotationLink.rect.origin.y * scale;
         const width = annotationLink.rect.size.width * scale;
         const height = annotationLink.rect.size.height * scale;
+        const externalHref =
+          annotationLink.target?.type === "action" &&
+          annotationLink.target.action.type === PdfActionType.URI
+            ? getExternalHref(annotationLink.target.action.uri)
+            : null;
 
         // Flip toolbar below if link is near the top of the page
         const flipped =
@@ -363,7 +361,9 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           <React.Fragment key={annotationLink.id}>
             {/* Hit-area overlay */}
             <a
-              href="#"
+              href={externalHref ?? "#"}
+              target={externalHref ? "_blank" : undefined}
+              rel={externalHref ? "noopener noreferrer" : undefined}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
