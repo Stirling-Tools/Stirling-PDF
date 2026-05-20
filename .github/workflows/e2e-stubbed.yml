@@ -7,17 +7,17 @@ on:
   workflow_call:
     inputs:
       depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking. Tuned to 8 to match the other playwright workflows; bench showed flat scaling above 8."
         required: false
         type: string
-        default: "4"
+        default: "8"
 
 permissions:
   contents: read
 
 jobs:
   playwright-e2e:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''4'') }}'
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1

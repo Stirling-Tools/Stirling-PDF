@@ -12,17 +12,17 @@ on:
         type: string
         default: "false"
       depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking. Tuned to 4 because bench showed 16 was within noise of 4."
         required: false
         type: string
-        default: "8"
+        default: "4"
 
 permissions:
   contents: read
 
 jobs:
   docker-compose-tests:
-    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''8'') }}'
+    runs-on: '${{ (github.event.pull_request && (github.event.pull_request.head.repo.fork || !contains(fromJSON(''["OWNER","MEMBER","COLLABORATOR"]''), github.event.pull_request.author_association))) && ''ubuntu-latest'' || format(''depot-ubuntu-24.04-{0}'', inputs.depot_cores || ''4'') }}'
     permissions:
       actions: write
       contents: read
