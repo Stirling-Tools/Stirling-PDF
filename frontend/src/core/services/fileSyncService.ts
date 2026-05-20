@@ -33,6 +33,11 @@ interface StoredFileResponse {
 interface AccessedShareLinkResponse {
   shareToken?: string | null;
   fileId?: number | null;
+  fileName?: string | null;
+  owner?: string | null;
+  ownedByCurrentUser?: boolean;
+  createdAt?: string | null;
+  lastAccessedAt?: string | null;
 }
 
 export interface ReconcileOptions {
@@ -227,8 +232,9 @@ export async function reconcileServerFiles(
       "/api/v1/storage/share-links/accessed",
       { suppressErrorToast: true, skipAuthRedirect: true } as any,
     );
+    const sharedLinks = Array.isArray(response.data) ? response.data : [];
     const allowed = new Set(
-      (Array.isArray(response.data) ? response.data : [])
+      sharedLinks
         .map((l) => l.shareToken)
         .filter((t): t is string => Boolean(t)),
     );
@@ -267,6 +273,50 @@ export async function reconcileServerFiles(
       // Fire-and-forget; the in-memory list is the user-visible source.
       void Promise.all(writes).catch(() => {});
     }
+
+    // Synthesize ephemeral shared-{token} stubs for share-links the user has
+    // accessed but doesn't have cached locally yet. Materialize on demand.
+    const existingShareTokens = new Set(
+      combinedStubs
+        .map((stub) => stub.remoteShareToken)
+        .filter((token): token is string => Boolean(token)),
+    );
+    const sharedStubs: StirlingFileStub[] = [];
+    for (const link of sharedLinks) {
+      if (!link || !link.shareToken) continue;
+      if (existingShareTokens.has(link.shareToken)) continue;
+      const accessedMs = link.lastAccessedAt
+        ? new Date(link.lastAccessedAt).getTime()
+        : link.createdAt
+          ? new Date(link.createdAt).getTime()
+          : Date.now();
+      const lastModified = Number.isFinite(accessedMs)
+        ? accessedMs
+        : Date.now();
+      const name = normalizeServerFileName(link.fileName || "shared-file");
+      const id = `shared-${link.shareToken}` as FileId;
+      sharedStubs.push({
+        id,
+        name,
+        type: "application/octet-stream",
+        size: 0,
+        lastModified,
+        createdAt: lastModified,
+        isLeaf: true,
+        originalFileId: id,
+        versionNumber: 1,
+        toolHistory: [],
+        quickKey: `${name}|0|${lastModified}`,
+        remoteStorageId: link.fileId ?? undefined,
+        remoteStorageUpdatedAt: lastModified,
+        remoteOwnerUsername: link.owner ?? undefined,
+        remoteOwnedByCurrentUser: false,
+        remoteSharedViaLink: true,
+        remoteHasShareLinks: false,
+        remoteShareToken: link.shareToken,
+      });
+    }
+    combinedStubs = [...combinedStubs, ...sharedStubs];
   } catch (err) {
     console.warn("[fileSyncService] failed to pull share-links", err);
   }
@@ -301,33 +351,47 @@ export async function materializeServerStubs(
 ): Promise<StirlingFileStub[]> {
   const out: StirlingFileStub[] = [];
   for (const stub of stubs) {
-    const needsDownload =
+    const isServerStub =
       typeof stub.id === "string" &&
       stub.id.startsWith("server-") &&
       typeof stub.remoteStorageId === "number";
-    if (!needsDownload) {
+    const isSharedStub =
+      typeof stub.id === "string" &&
+      stub.id.startsWith("shared-") &&
+      typeof stub.remoteShareToken === "string";
+    if (!isServerStub && !isSharedStub) {
       out.push(stub);
       continue;
     }
     try {
-      const response = await apiClient.get(
-        `/api/v1/storage/files/${stub.remoteStorageId}/download`,
-        {
-          responseType: "blob",
-          suppressErrorToast: true,
-          skipAuthRedirect: true,
-        } as any,
-      );
-      const headers = response.headers ?? {};
-      const contentType =
-        (typeof headers.get === "function"
-          ? headers.get("content-type")
-          : headers["content-type"] || headers["Content-Type"]) || "";
-      const disposition =
-        (typeof headers.get === "function"
-          ? headers.get("content-disposition")
-          : headers["content-disposition"] || headers["Content-Disposition"]) ||
-        "";
+      const downloadUrl = isSharedStub
+        ? `/api/v1/storage/share-links/${stub.remoteShareToken}`
+        : `/api/v1/storage/files/${stub.remoteStorageId}/download`;
+      const response = await apiClient.get(downloadUrl, {
+        responseType: "blob",
+        suppressErrorToast: true,
+        skipAuthRedirect: true,
+      } as any);
+      const rawHeaders = (response.headers ?? {}) as Record<string, unknown> & {
+        get?: (name: string) => string | null;
+      };
+      const readHeader = (name: string): string => {
+        if (typeof rawHeaders.get === "function") {
+          return rawHeaders.get(name) ?? "";
+        }
+        const lower = rawHeaders[name];
+        const upper =
+          rawHeaders[
+            name.replace(/(^|-)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase())
+          ];
+        return (
+          (typeof lower === "string" && lower) ||
+          (typeof upper === "string" && upper) ||
+          ""
+        );
+      };
+      const contentType = readHeader("content-type");
+      const disposition = readHeader("content-disposition");
       const filename =
         parseContentDispositionFilename(disposition) || stub.name;
       const blob = response.data as Blob;
@@ -355,8 +419,9 @@ export async function materializeServerStubs(
         remoteOwnerUsername: stub.remoteOwnerUsername,
         remoteOwnedByCurrentUser: stub.remoteOwnedByCurrentUser,
         remoteAccessRole: stub.remoteAccessRole,
-        remoteSharedViaLink: false,
+        remoteSharedViaLink: isSharedStub ? true : false,
         remoteHasShareLinks: stub.remoteHasShareLinks,
+        remoteShareToken: isSharedStub ? stub.remoteShareToken : undefined,
       };
       helpers.updateStub(newId, remoteUpdates);
       await fileStorage.updateFileMetadata(newId, remoteUpdates);

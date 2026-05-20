@@ -593,6 +593,61 @@ test.describe("Files page", () => {
       expect(downloadHit).toBe(true);
     });
 
+    test("Shared-link file appears in /files and materializes on open", async ({
+      page,
+    }) => {
+      await stubStorageApis(page, { sharingEnabled: true });
+      const SHARE_TOKEN = "tok-abc-123";
+      // Owner-side listing has no entry for the shared file.
+      await page.route("**/api/v1/storage/files", (route: Route) =>
+        route.fulfill({ json: [] }),
+      );
+      await page.route(
+        "**/api/v1/storage/share-links/accessed",
+        (route: Route) =>
+          route.fulfill({
+            json: [
+              {
+                shareToken: SHARE_TOKEN,
+                fileId: 4242,
+                fileName: "shared-report.pdf",
+                owner: "alice",
+                ownedByCurrentUser: false,
+                createdAt: new Date().toISOString(),
+                lastAccessedAt: new Date().toISOString(),
+              },
+            ],
+          }),
+      );
+      let shareDownloadHit = false;
+      await page.route(
+        `**/api/v1/storage/share-links/${SHARE_TOKEN}`,
+        (route: Route) => {
+          shareDownloadHit = true;
+          route.fulfill({
+            status: 200,
+            headers: {
+              "content-type": "application/pdf",
+              "content-disposition": 'attachment; filename="shared-report.pdf"',
+            },
+            body: Buffer.from("%PDF-1.4\n%%EOF", "utf8"),
+          });
+        },
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      const card = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "shared-report.pdf" });
+      await expect(card).toBeVisible({ timeout: 5_000 });
+      // Open the card and confirm the share-link download endpoint fires.
+      await card.getByRole("button", { name: /File actions/i }).click();
+      await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
+      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
+        timeout: 5_000,
+      });
+      expect(shareDownloadHit).toBe(true);
+    });
+
     test("Server-only files appear in /files on a fresh browser", async ({
       page,
     }) => {
