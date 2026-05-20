@@ -250,27 +250,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Login to Depot Registry
-        if: env.USE_DEPOT == 'true'
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: vvcxn7cpft.registry.depot.dev
-          username: x-token
-          password: ${{ secrets.DEPOT_TOKEN }}
-
-      - name: Mirror stirling-pdf-base to Depot Registry (idempotent, test-only)
-        if: env.USE_DEPOT == 'true'
-        run: |
-          set -eu
-          SRC="stirlingtools/stirling-pdf-base:latest"
-          DST="vvcxn7cpft.registry.depot.dev/stirling-pdf-base:latest"
-          if docker manifest inspect "$DST" >/dev/null 2>&1; then
-            echo "Base image already on Depot Registry, skipping mirror"
-          else
-            echo "Mirroring multi-arch $SRC -> $DST"
-            docker buildx imagetools create -t "$DST" "$SRC"
-          fi
-
       - name: Build and push PR-specific image (Depot)
         if: env.USE_DEPOT == 'true'
         uses: depot/build-push-action@v1
@@ -283,7 +262,6 @@ jobs:
           build-args: |
             VERSION_TAG=alpha
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
-            BASE_IMAGE=vvcxn7cpft.registry.depot.dev/stirling-pdf-base:latest
           platforms: linux/amd64
 
       - name: Build and push PR-specific image (Docker fork fallback)
