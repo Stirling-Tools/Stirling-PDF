@@ -360,7 +360,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Settings updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/saveUser")
     public ResponseEntity<?> saveUser(
             @RequestParam(name = "username", required = true) String username,
@@ -468,7 +468,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User created successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/inviteUsers")
     public ResponseEntity<?> inviteUsers(
             @RequestParam(name = "emails", required = true) String emails,
@@ -585,7 +585,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changeRole")
     @Transactional
     public ResponseEntity<?> changeRole(
@@ -651,7 +651,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User role updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changePasswordForUser")
     public ResponseEntity<?> changePasswordForUser(
             @RequestParam(name = "username") String username,
@@ -725,7 +725,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User password updated successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/changeUserEnabled/{username}")
     public ResponseEntity<?> changeUserEnabled(
             @PathVariable("username") String username,
@@ -777,7 +777,7 @@ public class UserController {
                 Map.of("message", "User " + (enabled ? "enabled" : "disabled") + " successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/unlockUser/{username}")
     @Audited(type = AuditEventType.SETTINGS_CHANGED, level = AuditLevel.BASIC)
     public ResponseEntity<?> unlockUser(@PathVariable("username") String username) {
@@ -785,7 +785,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "User account unlocked successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> deleteUser(

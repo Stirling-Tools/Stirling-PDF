@@ -47,7 +47,7 @@ public class UIDataTessdataController {
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
     @GetMapping("/tessdata-languages")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "List installed and remotely available tessdata languages")
     public ResponseEntity<TessdataLanguagesResponse> getTessdataLanguages() {
         TessdataLanguagesResponse response = new TessdataLanguagesResponse();
@@ -58,7 +58,7 @@ public class UIDataTessdataController {
     }
 
     @PostMapping("/tessdata/download")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Download selected tessdata languages from the official repository")
     public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(
             @RequestBody TessdataDownloadRequest request) {

@@ -1,3 +1,8 @@
+// Supabase client. Relocated out of frontend/src/core/services/ during the SaaS<->OSS
+// consolidation so the Supabase SDK never reaches the OSS core bundle. Lives in
+// :proprietary because licensing/checkout/billing flows in proprietary mode use it; the
+// :saas mode bundle picks it up via the existing @app/* path mapping (saas to proprietary
+// to core).
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;

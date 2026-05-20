@@ -50,13 +50,7 @@ public class AsyncConfig {
         return adapter;
     }
 
-    /**
-     * AI orchestration runs on a background executor, so the incoming request's {@code
-     * SecurityContext} must be propagated for downstream calls to see the authenticated user.
-     * Without this, {@code JobOwnershipService} scopes job keys without a user prefix and
-     * authenticated downloads fail with 403; {@code InternalApiClient} also falls back to the
-     * internal-API-user key instead of the caller's.
-     */
+    /** Propagates the request's SecurityContext onto background AI-orchestration threads. */
     @Bean(name = "aiStreamExecutor")
     public Executor aiStreamExecutor() {
         TaskExecutorAdapter adapter =

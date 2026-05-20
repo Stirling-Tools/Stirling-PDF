@@ -4,7 +4,6 @@ import static stirling.software.proprietary.security.configuration.ee.KeygenLice
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -28,28 +27,26 @@ public class EEAppConfig {
         migrateEnterpriseSettingsToPremium(this.applicationProperties);
     }
 
-    @Profile("security")
+    @Profile("security & !saas")
     @Bean(name = "runningProOrHigher")
-    @Primary
     public boolean runningProOrHigher() {
         License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
         return license == License.SERVER || license == License.ENTERPRISE;
     }
 
-    @Profile("security")
+    @Profile("security & !saas")
     @Bean(name = "license")
-    @Primary
     public String licenseType() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
     }
 
-    @Profile("security")
+    @Profile("security & !saas")
     @Bean(name = "runningEE")
-    @Primary
     public boolean runningEnterprise() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
     }
 
+    @Profile("security & !saas")
     @Bean(name = "SSOAutoLogin")
     public boolean ssoAutoLogin() {
         return applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();

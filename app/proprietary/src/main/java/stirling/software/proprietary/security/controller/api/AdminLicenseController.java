@@ -40,7 +40,7 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin License Management", description = "Admin-only License Management APIs")
 public class AdminLicenseController {
 

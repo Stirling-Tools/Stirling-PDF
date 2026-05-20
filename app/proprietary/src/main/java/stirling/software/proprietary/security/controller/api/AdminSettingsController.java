@@ -51,7 +51,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @AdminApi
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 public class AdminSettingsController {
 

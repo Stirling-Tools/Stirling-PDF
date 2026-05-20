@@ -21,6 +21,7 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.util.ExceptionUtils;
 
 @SecurityApi
@@ -37,7 +38,10 @@ public class VerifyPDFController {
                             + "Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards "
                             + "from the document's XMP metadata and validates compliance. "
                             + "Input:PDF Output:JSON Type:SISO")
-    @AutoJobPostMapping(value = "/verify-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/verify-pdf",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     public ResponseEntity<List<PDFVerificationResult>> verifyPDF(
             @ModelAttribute PDFVerificationRequest request) {
 

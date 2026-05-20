@@ -30,6 +30,7 @@ import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -42,7 +43,10 @@ public class ExtractCSVController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TabulaTableParser tabulaTableParser;
 
-    @AutoJobPostMapping(value = "/pdf/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/pdf/csv",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @CsvConversionResponse
     @Operation(
             summary = "Extracts a CSV document from a PDF",

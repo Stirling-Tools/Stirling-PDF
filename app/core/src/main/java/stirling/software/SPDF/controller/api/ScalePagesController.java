@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -114,7 +115,10 @@ public class ScalePagesController {
         return sizeMap;
     }
 
-    @AutoJobPostMapping(value = "/scale-pages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/scale-pages",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =

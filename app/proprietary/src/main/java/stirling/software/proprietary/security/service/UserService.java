@@ -338,6 +338,22 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsername(username);
     }
 
+    /** Resolves a user by Supabase auth UUID; empty for rows with no supabase_id. */
+    public Optional<User> findBySupabaseId(UUID supabaseId) {
+        return userRepository.findBySupabaseId(supabaseId);
+    }
+
+    @Transactional
+    public void trackApiKeyFirstUse(User user) {
+        // No-op default; saas mode overrides via SaasUserExtensionService#trackApiKeyFirstUse.
+    }
+
+    /** Low-level user persistence; bypasses {@link #saveUserCore}'s settings/audit lifecycle. */
+    @Transactional
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
     public Optional<User> findByUsernameIgnoreCase(String username) {
         return userRepository.findByUsernameIgnoreCase(username);
     }

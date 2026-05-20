@@ -40,7 +40,10 @@ RUN gradle dependencies --no-daemon || true
 COPY . .
 
 ARG PROTOTYPES_BUILD=false
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+ARG STIRLING_FLAVOR=proprietary
+ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
+
+RUN STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
       -PprototypesMode=${PROTOTYPES_BUILD} \

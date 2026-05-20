@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.AnalysisApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -32,7 +33,10 @@ public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @AutoJobPostMapping(value = "/page-count", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/page-count",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF page count",
@@ -43,7 +47,10 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/basic-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/basic-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get basic PDF information",
@@ -60,7 +67,8 @@ public class AnalysisController {
 
     @AutoJobPostMapping(
             value = "/document-properties",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get PDF document properties",
@@ -90,7 +98,10 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/page-dimensions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/page-dimensions",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get page dimensions for all pages",
@@ -110,7 +121,10 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/form-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/form-fields",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get form field information",
@@ -134,7 +148,10 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/annotation-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/annotation-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get annotation information",
@@ -159,7 +176,10 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/font-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/font-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get font information",
@@ -185,7 +205,10 @@ public class AnalysisController {
         }
     }
 
-    @AutoJobPostMapping(value = "/security-info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/security-info",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JsonDataResponse
     @Operation(
             summary = "Get security information",

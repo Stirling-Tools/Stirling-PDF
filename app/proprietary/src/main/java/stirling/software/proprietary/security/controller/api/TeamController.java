@@ -30,7 +30,7 @@ public class TeamController {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<?> createTeam(@RequestParam("name") String name) {
         if (teamRepository.existsByNameIgnoreCase(name)) {
@@ -43,7 +43,7 @@ public class TeamController {
         return ResponseEntity.ok(Map.of("message", "Team created successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/rename")
     public ResponseEntity<?> renameTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
@@ -69,7 +69,7 @@ public class TeamController {
         return ResponseEntity.ok(Map.of("message", "Team renamed successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/delete")
     @Transactional
     public ResponseEntity<?> deleteTeam(@RequestParam("teamId") Long teamId) {
@@ -100,7 +100,7 @@ public class TeamController {
         return ResponseEntity.ok(Map.of("message", "Team deleted successfully"));
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/addUser")
     @Transactional
     public ResponseEntity<?> addUserToTeam(

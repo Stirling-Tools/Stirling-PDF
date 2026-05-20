@@ -16,6 +16,9 @@ public enum Role {
     // Unlimited access
     USER("ROLE_USER", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.user"),
 
+    // Paid tier; set by Stripe webhooks under saas mode.
+    PRO_USER("ROLE_PRO_USER", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.proUser"),
+
     // 40 API calls Per Day, 40 web calls
     LIMITED_API_USER("ROLE_LIMITED_API_USER", 40, 40, "adminUserSettings.apiUser"),
 

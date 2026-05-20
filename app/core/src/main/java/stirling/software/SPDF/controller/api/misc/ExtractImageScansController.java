@@ -32,6 +32,7 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
@@ -56,7 +57,8 @@ public class ExtractImageScansController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/extract-image-scans")
+            value = "/extract-image-scans",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @MultiFileResponse
     @Operation(
             summary = "Extract image scans from an input file",

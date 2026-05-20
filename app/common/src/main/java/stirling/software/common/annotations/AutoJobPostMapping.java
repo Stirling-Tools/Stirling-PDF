@@ -75,8 +75,8 @@ public @interface AutoJobPostMapping {
     boolean queueable() default false;
 
     /**
-     * Relative resource weight (1–100) used by the scheduler to prioritise / throttle jobs. Values
-     * below 1 are clamped to&nbsp;1, values above 100 to&nbsp;100.
+     * Relative resource weight (1-100). See {@link
+     * stirling.software.common.enumeration.ResourceWeight} for the standard tiers.
      */
-    int resourceWeight() default 50;
+    int resourceWeight() default 1;
 }

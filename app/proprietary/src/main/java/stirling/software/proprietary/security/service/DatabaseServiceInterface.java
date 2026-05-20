@@ -20,4 +20,7 @@ public interface DatabaseServiceInterface {
     List<Pair<FileInfo, Boolean>> deleteAllBackups();
 
     List<Pair<FileInfo, Boolean>> deleteLastBackup();
+
+    /** Display string for the active database product/version. */
+    String getH2Version();
 }

@@ -49,7 +49,10 @@ public class ConvertPdfToVideoController {
 
     // ffmpeg disabled due to raised CVEs
     /*
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/video")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/pdf/video",
+            resourceWeight = ResourceWeight.XLARGE_WEIGHT)
     @Operation(
             summary = "Convert PDF to Video Slideshow",
             description =

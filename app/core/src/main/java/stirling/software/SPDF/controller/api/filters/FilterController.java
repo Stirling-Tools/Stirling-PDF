@@ -27,6 +27,7 @@ import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.FilterApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -42,7 +43,8 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-contains-text")
+            value = "/filter-contains-text",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -75,7 +77,8 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-contains-image")
+            value = "/filter-contains-image",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Checks if a PDF contains an image",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -107,7 +110,8 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-page-count")
+            value = "/filter-page-count",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -138,7 +142,10 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-page-size")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Checks if a PDF is of a certain size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -175,7 +182,10 @@ public class FilterController {
                 : ResponseEntity.noContent().build();
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/filter-file-size")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-file-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Checks if a PDF is a set file size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -205,7 +215,8 @@ public class FilterController {
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            value = "/filter-page-rotation")
+            value = "/filter-page-rotation",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
             description = "Input:PDF Output:Boolean Type:SISO")

@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
@@ -559,7 +560,10 @@ public class ScannerEffectController {
         }
     }
 
-    @AutoJobPostMapping(value = "/scanner-effect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/scanner-effect",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =
