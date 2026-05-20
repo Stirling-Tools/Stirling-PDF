@@ -6914,12 +6914,22 @@ customBadge = "Custom"
 defaultLabel = "Default: {{shortcut}}"
 description = "Customize keyboard shortcuts for quick tool access. Click \"Change shortcut\" and press a new key combination. Press Esc to cancel."
 errorConflict = "Shortcut already used by {{tool}}."
+navigationTitle = "Navigation"
 none = "Not assigned"
 noShortcut = "No shortcut set"
 reset = "Reset"
 searchPlaceholder = "Search tools..."
 shortcut = "Shortcut"
 title = "Keyboard Shortcuts"
+toolShortcutsTitle = "Tool Shortcuts"
+
+[settings.hotkeys.actions.fileCycleNext]
+description = "Cycle to the next open PDF"
+name = "Switch to next file"
+
+[settings.hotkeys.actions.fileCyclePrev]
+description = "Cycle to the previous open PDF"
+name = "Switch to previous file"
 
 [settings.hotkeys.errorModifier]
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
