@@ -10,6 +10,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -82,6 +83,10 @@ interface FileGridProps {
   ) => void;
   onRemoveFiles: (fileIds: FileId[]) => void;
   onPromptMoveFiles: (fileIds: FileId[]) => void;
+  /** "Save to server" - per-file action shown in kebab when the file is
+   *  local-only (no remoteStorageId). Optional so the prop is harmless
+   *  when storage is disabled; FileManagerView gates the wiring. */
+  onSaveToServer?: (file: StirlingFileStub) => void;
   /** Optional - when supplied the list-view column headers become
    *  sortable. */
   sortMode?: FilesPageSortMode;
@@ -250,6 +255,7 @@ function GridView({
   onChangeFolderAppearance,
   onRemoveFiles,
   onPromptMoveFiles,
+  onSaveToServer,
 }: FileGridProps) {
   return (
     <div className="files-page-grid" role="list">
@@ -299,6 +305,9 @@ function GridView({
                   : [entry.file!.id];
                 onPromptMoveFiles(target);
               }}
+              onSaveToServer={
+                onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
+              }
             />
           );
         }
@@ -499,6 +508,11 @@ interface FileCardProps {
   onQuickView: () => void;
   onRemove: () => void;
   onMove: () => void;
+  /** Optional - kebab shows a "Save to server" item only when this
+   *  callback is supplied AND the file has no remoteStorageId. The
+   *  caller decides whether the action is even available (storage
+   *  enabled, sign-in state, etc). */
+  onSaveToServer?: () => void;
 }
 
 function FileCard({
@@ -513,6 +527,7 @@ function FileCard({
   onQuickView,
   onRemove,
   onMove,
+  onSaveToServer,
 }: FileCardProps) {
   const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -686,6 +701,21 @@ function FileCard({
             >
               {t("filesPage.moveTo", "Move to…")}
             </Menu.Item>
+            {/* "Save to server" - per-file shortcut for the same
+                bulk-toolbar action. Hidden once the file is already
+                synced (no useful op left) and when no callback was
+                supplied (storage feature disabled). */}
+            {onSaveToServer && file.remoteStorageId == null && (
+              <Menu.Item
+                leftSection={<CloudUploadIcon fontSize="small" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSaveToServer();
+                }}
+              >
+                {t("filesPage.saveToServer", "Save to server")}
+              </Menu.Item>
+            )}
             <Menu.Divider />
             <Menu.Item
               color="red"
@@ -717,6 +747,7 @@ function ListView({
   onMoveFolder,
   onRenameFolder,
   onDeleteFolder,
+  onSaveToServer,
   onChangeFolderAppearance,
   onRemoveFiles,
   onPromptMoveFiles,
@@ -847,6 +878,9 @@ function ListView({
                   : [entry.file!.id];
                 onPromptMoveFiles(target);
               }}
+              onSaveToServer={
+                onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
+              }
             />
           );
         }
@@ -1040,6 +1074,8 @@ interface FileRowProps {
   onQuickView: () => void;
   onRemove: () => void;
   onMove: () => void;
+  /** See FileCardProps - same per-file save action, shown in row kebab. */
+  onSaveToServer?: () => void;
 }
 
 function FileRow({
@@ -1054,6 +1090,7 @@ function FileRow({
   onQuickView,
   onRemove,
   onMove,
+  onSaveToServer,
 }: FileRowProps) {
   const { t } = useTranslation();
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1225,6 +1262,18 @@ function FileRow({
           >
             {t("filesPage.moveTo", "Move to…")}
           </Menu.Item>
+          {/* See FileCard kebab - same hide-when-already-on-server rule. */}
+          {onSaveToServer && file.remoteStorageId == null && (
+            <Menu.Item
+              leftSection={<CloudUploadIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveToServer();
+              }}
+            >
+              {t("filesPage.saveToServer", "Save to server")}
+            </Menu.Item>
+          )}
           <Menu.Divider />
           <Menu.Item
             color="red"

@@ -238,9 +238,16 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
+      // Two entry points share the same accessible name when a local
+      // file is selected: the toolbar bulk button AND the details
+      // panel button. Assert via `.first()` so the test stays green
+      // even though strict-mode would otherwise reject the multi-match.
+      await expect(
+        page.getByRole("button", { name: /^Save to server$/i }).first(),
+      ).toBeVisible();
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toBeVisible();
+      ).toHaveCount(2);
     });
 
     test("Save to server hidden when ONLY cloud files selected", async ({
@@ -254,6 +261,37 @@ test.describe("Files page", () => {
         .click();
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
+      ).toHaveCount(0);
+    });
+
+    test("Per-file kebab has Save to server item for local file", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      // Open the per-card kebab WITHOUT first selecting - the kebab
+      // entry must work straight from the card so the user doesn't have
+      // to round-trip through the toolbar.
+      const localCard = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "local-a.pdf" });
+      await localCard.getByRole("button", { name: /File actions/i }).click();
+      await expect(
+        page.getByRole("menuitem", { name: /^Save to server$/i }),
+      ).toBeVisible();
+    });
+
+    test("Per-file kebab hides Save to server for cloud file", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      // Cloud file's kebab shouldn't show a Save-to-server option -
+      // there's nothing to upload.
+      const cloudCard = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "cloud-a.pdf" });
+      await cloudCard.getByRole("button", { name: /File actions/i }).click();
+      await expect(
+        page.getByRole("menuitem", { name: /^Save to server$/i }),
       ).toHaveCount(0);
     });
   });

@@ -12,6 +12,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LinkIcon from "@mui/icons-material/Link";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import { FileId, ToolOperation } from "@app/types/file";
 import { ToolId } from "@app/types/toolId";
@@ -36,6 +37,10 @@ interface FileDetailsPanelProps {
   onQuickView: (fileId: FileId) => void;
   onMove: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
+  /** Upload the given local-only files to the server. Optional - the
+   *  panel only renders the "Save to server" action when supplied AND
+   *  the current selection contains at least one local-only file. */
+  onSaveToServer?: (files: StirlingFileStub[]) => void;
 }
 
 export function FileDetailsPanel({
@@ -47,6 +52,7 @@ export function FileDetailsPanel({
   onQuickView,
   onMove,
   onRemove,
+  onSaveToServer,
 }: FileDetailsPanelProps) {
   const { t } = useTranslation();
   const { sharingEnabled } = useSharingEnabled();
@@ -96,6 +102,11 @@ export function FileDetailsPanel({
   const single = files.length === 1 ? files[0]! : null;
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const ext = single ? (single.name.split(".").pop() ?? "").toUpperCase() : "";
+  // Subset still needing a server upload. Drives visibility of the
+  // "Save to server" action in the right-side bulk actions - same
+  // rule as the toolbar bulk button: if every selected file is
+  // already on the server, the action has nothing to do.
+  const localOnlyFiles = files.filter((f) => f.remoteStorageId == null);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -322,6 +333,19 @@ export function FileDetailsPanel({
           >
             {t("filesPage.moveTo", "Move to…")}
           </Button>
+          {/* "Save to server" - mirrors the toolbar bulk button so the
+              action is still reachable when the inline toolbar is hidden
+              or the user is working from the details panel. Shown only
+              when at least one selected file is still local-only. */}
+          {onSaveToServer && localOnlyFiles.length > 0 && (
+            <Button
+              leftSection={<CloudUploadIcon fontSize="small" />}
+              variant="default"
+              onClick={() => onSaveToServer(localOnlyFiles)}
+            >
+              {t("filesPage.saveToServer", "Save to server")}
+            </Button>
+          )}
           <Button
             leftSection={<DeleteIcon fontSize="small" />}
             color="red"

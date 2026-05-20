@@ -98,11 +98,18 @@ export default function FileManagerView() {
   // viewports (641-800) a smaller drawer keeps some grid context visible.
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
-  // "Save to server" confirmation modal - opens when the user invokes the
-  // bulk-action button for selected local-only files. Targets root (no
-  // folder assignment); folder-assignment requires the explicit drop-on-
-  // folder flow.
-  const [saveToServerOpen, setSaveToServerOpen] = useState(false);
+  // "Save to server" confirmation modal target. When non-null the modal
+  // is open against this explicit file set. Two entry points feed it:
+  //   1. Bulk toolbar/details button - uses the current local-only
+  //      selection (`localOnlySelectedStubs`).
+  //   2. Per-file kebab "Save to server" - uses [file] so the action
+  //      hits exactly the row the user clicked, regardless of any wider
+  //      multi-select state.
+  // Targets root in both cases (no folder assignment); folder-assignment
+  // requires the explicit drop-on-folder flow.
+  const [saveToServerTarget, setSaveToServerTarget] = useState<
+    StirlingFileStub[] | null
+  >(null);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -1267,7 +1274,9 @@ export default function FileManagerView() {
                             size="sm"
                             variant="default"
                             leftSection={<CloudUploadIcon fontSize="small" />}
-                            onClick={() => setSaveToServerOpen(true)}
+                            onClick={() =>
+                              setSaveToServerTarget(localOnlySelectedStubs)
+                            }
                             aria-label={t(
                               "filesPage.saveToServer",
                               "Save to server",
@@ -1526,6 +1535,7 @@ export default function FileManagerView() {
               }}
               onRemoveFiles={handleRemoveFiles}
               onPromptMoveFiles={promptMoveFiles}
+              onSaveToServer={(file) => setSaveToServerTarget([file])}
             />
             {isDraggingExternal && (
               <div className="files-page-drop-overlay" aria-live="polite">
@@ -1564,6 +1574,7 @@ export default function FileManagerView() {
             onQuickView={handleQuickView}
             onMove={promptMoveFiles}
             onRemove={handleRemoveFiles}
+            onSaveToServer={(files) => setSaveToServerTarget(files)}
           />
         )}
       </div>
@@ -1605,6 +1616,7 @@ export default function FileManagerView() {
               onQuickView={handleQuickView}
               onMove={promptMoveFiles}
               onRemove={handleRemoveFiles}
+              onSaveToServer={(files) => setSaveToServerTarget(files)}
             />
           )}
         </Drawer>
@@ -1642,14 +1654,16 @@ export default function FileManagerView() {
         onSubmit={submitFolderName}
       />
 
-      {/* Save-to-server confirmation modal. Snapshots the local-only
-          subset at open time via key={...} so a selection change while
-          the modal is open doesn't quietly retarget the upload. */}
+      {/* Save-to-server confirmation modal. `saveToServerTarget` is the
+          snapshot of files to upload set at open time, so changes to
+          selection (or the file list) while the modal is open can't
+          quietly retarget the upload. The key forces a fresh modal
+          instance each time the target changes. */}
       <BulkUploadToServerModal
-        key={`save-${localOnlySelectedStubs.map((s) => s.id).join(",")}`}
-        opened={saveToServerOpen && localOnlySelectedStubs.length > 0}
-        onClose={() => setSaveToServerOpen(false)}
-        files={localOnlySelectedStubs}
+        key={`save-${(saveToServerTarget ?? []).map((s) => s.id).join(",")}`}
+        opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
+        onClose={() => setSaveToServerTarget(null)}
+        files={saveToServerTarget ?? []}
         onUploaded={refresh}
       />
     </div>
