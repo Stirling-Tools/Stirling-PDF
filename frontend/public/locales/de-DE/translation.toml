@@ -1806,7 +1806,11 @@ title = "Intelligente Umbenennung"
 [automate]
 copyToSaved = "In gespeicherte kopieren"
 desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen. Ideal für wiederkehrende Aufgaben."
+export = "Exportieren"
 exportForFolderScanning = "Für Ordnerscan exportieren"
+import = "Importieren"
+importPartialSuccess = "Importiert mit {{count}} nicht zugeordneten Operation(en): {{ops}}"
+importSuccess = "Automatisierung importiert: {{name}}"
 invalidStep = "Ungültiger Schritt"
 reviewTitle = "Automatisierungsergebnisse"
 title = "Automatisieren"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} konfigurieren"
 [automate.creation]
 createTitle = "Automatisierung erstellen"
 editTitle = "Automatisierung bearbeiten"
+export = "Exportieren"
 exportForFolderScanning = "Für Ordnerscan exportieren"
 intro = "Automatisierungen führen Werkzeuge sequenziell aus. Fügen Sie Werkzeuge in der gewünschten Reihenfolge hinzu, um zu beginnen."
 save = "Automatisierung speichern"
@@ -1852,8 +1857,27 @@ confirm = "Zurückgehen"
 message = "Sie haben ungespeicherte Änderungen. Sind Sie sicher, dass Sie zurückgehen möchten? Alle Änderungen gehen verloren."
 title = "Ungespeicherte Änderungen"
 
+[automate.entryMenu]
+label = "Menü für {{title}} öffnen"
+
 [automate.files]
 placeholder = "Wählen Sie Dateien aus, die mit dieser Automatisierung verarbeitet werden sollen"
+
+[automate.importModal]
+cancel = "Abbrechen"
+confirm = "Importieren"
+detectedAutomation = "Automate-JSON"
+detectedFolderScan = "Ordnerscan-JSON"
+dropHint = "JSON hierher ziehen oder klicken, um eine Datei auszuwählen"
+dropSubhint = "Sowohl Automate- als auch Ordnerscan-Konfigurationen werden akzeptiert"
+dropzoneAriaLabel = "Automatisierungs-JSON-Datei hier ablegen"
+intro = "Ziehen Sie eine JSON-Datei hierher oder fügen Sie ihren Inhalt unten ein. Das Format (Automate oder Ordnerscan) wird automatisch erkannt."
+opCount = "{{count}} Operation(en)"
+parseError = "Konnte nicht geparst werden: {{message}}"
+pasteLabel = "Oder JSON einfügen"
+pastePlaceholder = "Fügen Sie hier Ihr Automatisierungs-JSON ein…"
+title = "Automatisierung importieren"
+unresolved = "Nicht zugeordnet: {{ops}}"
 
 [automate.run]
 title = "Automatisierung ausführen"
@@ -2670,6 +2694,10 @@ executing_tool_step = "{{tool}} wird ausgeführt (Schritt {{step}} von {{total}}
 extracting_content = "Inhalte werden aus Ihren Dokumenten extrahiert..."
 processing = "Extrahierte Inhalte werden verarbeitet..."
 thinking = "Es wird nachgedacht..."
+whole_doc_compression_round = "Notizen werden zusammengeführt..."
+whole_doc_read_done = "Dokument wurde eingelesen..."
+whole_doc_read_started = "Dokument wird eingelesen..."
+whole_doc_slice_done = "Dokument wird eingelesen... ({{percent}}% abgeschlossen)"
 
 [chat.toolsUsed]
 summary = "{{count}} Tools ausgeführt"
@@ -2712,6 +2740,7 @@ used = "verwendet"
 [compare]
 addFilesHint = "Fügen Sie PDFs im Schritt Dateien hinzu, um die Auswahl zu aktivieren."
 clearSelected = "Auswahl löschen"
+clearSlot = "Datei entfernen"
 cta = "Vergleichen"
 header = "PDFs vergleichen"
 loading = "Vergleiche..."
@@ -2764,6 +2793,7 @@ title = "Diese PDFs sehen sehr unterschiedlich aus"
 [compare.edited]
 label = "Bearbeitetes PDF"
 placeholder = "Bearbeitete PDF auswählen"
+selectBaseFirst = "Zuerst die Original-PDF auswählen"
 
 [compare.error]
 filesMissing = "Die ausgewählten Dateien konnten nicht gefunden werden. Bitte wählen Sie sie erneut aus."
@@ -2846,6 +2876,7 @@ pageLabel = "Seite"
 confirm = "Tauschen und erneut ausführen"
 confirmBody = "Dadurch wird das Tool erneut ausgeführt. Sind Sie sicher, dass Sie die Reihenfolge von Original und Bearbeitet tauschen möchten?"
 confirmTitle = "Vergleich erneut ausführen?"
+label = "Tauschen"
 
 [compare.toasts]
 unlinkedBody = "Tipp: Pfeil hoch/runter scrollen beide Bereiche; Verschieben bewegt nur den aktiven Bereich."
@@ -3476,6 +3507,8 @@ unlockAll = "Für alle verwenden ({{count}})"
 unlockAllPartialFail = "Falsches Passwort für: {{names}}"
 unlockAllSuccess = "{{count}} Datei(en) entsperrt."
 unlockPrompt = "PDF entsperren, um fortzufahren"
+viewerLocked = "Dieses PDF ist passwortgeschützt"
+viewerUnlock = "Entsperren"
 
 [encryptedPdfUnlock.password]
 label = "PDF-Passwort"
@@ -3583,6 +3616,9 @@ or = "oder"
 
 [fileEditor]
 addFiles = "Dateien hinzufügen"
+pageCount = "{{count}} Seiten"
+pageCount_one = "{{count}} Seite"
+pageCount_other = "{{count}} Seiten"
 
 [fileManager]
 active = "Aktiv"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Änderungen nicht hochgeladen"
 clearAll = "Alles löschen"
 clearSelection = "Auswahl aufheben"
 clickToUpload = "Klicken zum Hochladen von Dateien"
+closeAllFiles = "Alle Dateien schließen"
 closeFile = "Datei schließen"
 cloudFile = "Cloud-Datei"
 copyCreated = "Kopie auf diesem Gerät gespeichert."
@@ -3665,6 +3702,7 @@ selectAll = "Alle auswählen"
 selectedCount = "{{count}} ausgewählt"
 selectedFiles = "Ausgewählte Dateien"
 share = "Freigeben"
+shared = "Freigegeben"
 sharedByYou = "Von Ihnen freigegeben"
 sharedEditNoticeBody = "Sie haben keine Bearbeitungsrechte für die Serverversion dieser Datei. Alle Änderungen werden als lokale Kopie gespeichert."
 sharedEditNoticeConfirm = "Verstanden"
@@ -3704,6 +3742,41 @@ size = "Dateigröße"
 title = "Dateien"
 upload = "Hochladen"
 uploadFiles = "Dateien hochladen"
+
+[fileSelectorPicker]
+empty = "Keine Dateien verfügbar"
+placeholder = "Datei auswählen"
+search = "Dateien filtern…"
+tabListLabel = "Gespeicherte Dateien, Arbeitsbereich, Hochladen"
+upload = "Vom Computer hochladen"
+
+[fileSelectorPicker.sort]
+dateAsc = "Älteste zuerst"
+dateDesc = "Neueste zuerst"
+dateLabel = "Neueste"
+nameAsc = "A bis Z"
+nameDesc = "Z bis A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Gespeicherte Dateien"
+upload = "Hochladen"
+workbench = "Arbeitsbereich"
+
+[fileSidebar]
+addFiles = "Dateien hinzufügen"
+collapse = "Seitenleiste einklappen"
+dropHint = "Öffnen Sie Dateien, um zu beginnen"
+expand = "Seitenleiste ausklappen"
+files = "Dateien"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive ist nicht konfiguriert"
+noFiles = "Noch keine Dateien"
+openFileManager = "Dateimanager öffnen"
+openFromComputer = "Vom Computer öffnen"
+openSettings = "Einstellungen öffnen"
+search = "Suchen"
+searchPlaceholder = "Dateien suchen..."
 
 [fileToPDF]
 credit = "Dieser Dienst verwendet LibreOffice und Unoconv für die Dateikonvertierung."
@@ -4202,6 +4275,11 @@ title = "PDFs überlagern"
 desc = "Mehrere Seiten eines PDF zu einer Seite zusammenführen"
 tags = "layout,anordnen,kombinieren"
 title = "Mehrseitiges Layout"
+
+[home.pdfCommentAgent]
+desc = "Bitten Sie die KI, eine PDF basierend auf Ihrer Eingabe mit Haftnotiz-Kommentaren zu versehen"
+tags = "KI,agent,kommentar,annotieren,haftnotiz,review,feedback,notizen"
+title = "KI-Kommentare hinzufügen"
 
 [home.pdfOrganiser]
 desc = "Seiten entfernen und Seitenreihenfolge ändern"
@@ -4903,7 +4981,6 @@ fileUpload = "Verwenden Sie die Schaltfläche <strong>Dateien</strong>, um eine 
 leftPanel = "Die linke <strong>Tools</strong>-Leiste zeigt alles, was Sie tun können. Durchsuchen Sie Kategorien oder suchen Sie, um schnell ein Tool zu finden."
 pageEditorView = "Wechseln Sie zum Seiteneditor, um Seiten neu anzuordnen, zu drehen oder zu löschen."
 quickAccess = "Starten Sie im Bereich <strong>Schnellzugriff</strong>, um zwischen Reader, Automate, Ihren Dateien und allen Touren zu wechseln."
-rightRail = "Die <strong>rechte Leiste</strong> enthält Schnellaktionen zum Auswählen von Dateien, Ändern des Designs oder der Sprache und zum Herunterladen von Ergebnissen."
 topBar = "Die obere Leiste ermöglicht den Wechsel zwischen <strong>Viewer</strong>, <strong>Seiteneditor</strong> und <strong>Aktive Dateien</strong>."
 wrapUp = "Das ist neu in V2. Öffnen Sie jederzeit das Menü <strong>Touren</strong>, um diese, die Tools-Tour oder die Admin-Tour erneut abzuspielen."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Monatlich wählen"
 selectYearly = "Jährlich wählen"
 title = "Abrechnungszeitraum wählen"
 totalForSeats = "Gesamt ({{count}} Plätze)"
+
+[pdfCommentAgent]
+submit = "Kommentare erstellen"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Bitte beschreiben Sie, worüber die KI kommentieren soll"
+failed = "Erstellen der Kommentare fehlgeschlagen"
+tooLong = "Eingabe ist zu lang (maximal {{max}} Zeichen)"
+
+[pdfCommentAgent.prompt]
+label = "Worüber soll die KI kommentieren?"
+placeholder = "z. B. unklare Datumsangaben markieren und Klarstellungen vorschlagen"
+
+[pdfCommentAgent.results]
+title = "Kommentiertes PDF"
+
+[pdfCommentAgent.settings]
+title = "Anweisungen für Kommentare"
 
 [pdfOrganiser]
 header = "PDF Seitenorganisation"
@@ -6486,46 +6581,6 @@ title = "Hoher Kontrast"
 text = "Alle Farben im PDF vollständig invertieren und einen negativähnlichen Effekt erzeugen. Nützlich, um Dark-Mode-Versionen von Dokumenten zu erstellen oder die Augenbelastung bei schwachem Licht zu reduzieren."
 title = "Alle Farben invertieren"
 
-[rightRail]
-annotations = "Annotations"
-applyRedactionsFirst = "Apply redactions first"
-closePdf = "PDF schließen"
-closeSelected = "Ausgewählte Dateien schließen"
-deleteSelected = "Ausgewählte Seiten löschen"
-deselectAll = "Auswahl aufheben"
-downloadAll = "Alle herunterladen"
-downloadSelected = "Ausgewählte Dateien herunterladen"
-draw = "Draw"
-exitRedaction = "Exit Redaction Mode"
-exportAll = "PDF exportieren"
-exportSelected = "Ausgewählte Seiten exportieren"
-formFill = "Fill Form"
-language = "Sprache"
-panMode = "Verschiebemodus"
-print = "PDF drucken"
-readAloud = "Vorlesen"
-readAloudLanguage = "Sprache"
-readAloudSpeed = "Geschwindigkeit"
-redact = "Redact"
-rotateLeft = "Nach links drehen"
-rotateRight = "Nach rechts drehen"
-ruler = "Lineal / Messen"
-save = "Save"
-saveAll = "Alle speichern"
-saveAs = "Speichern unter"
-saveChanges = "Änderungen speichern"
-search = "PDF durchsuchen"
-selectAll = "Alle auswählen"
-selectByNumber = "Nach Seitenzahlen auswählen"
-selectLanguage = "Sprache auswählen"
-toggleAnnotations = "Anmerkungen ein-/ausblenden"
-toggleAttachments = "Toggle Attachments"
-toggleBookmarks = "Lesezeichen ein-/ausblenden"
-toggleComments = "Kommentare"
-toggleLayers = "Ebenen umschalten"
-toggleSidebar = "Seitenleiste umschalten"
-toggleTheme = "Design wechseln"
-
 [rotate]
 rotateLeft = "Gegen den Uhrzeigersinn drehen"
 rotateRight = "Im Uhrzeigersinn drehen"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Nicht verfügbare Konvertierungen ausblenden"
 hideUnavailableConversionsDescription = "Deaktivierte Konvertierungsoptionen im Konvertieren-Tool ausblenden statt ausgegraut anzuzeigen."
 hideUnavailableTools = "Nicht verfügbare Tools ausblenden"
 hideUnavailableToolsDescription = "Deaktivierte Tools vom Server ausblenden statt ausgegraut anzuzeigen."
+language = "Sprache"
+languageDescription = "Anzeigesprache auswählen"
 logout = "Abmelden"
 setAsDefault = "Als Standard festlegen"
+theme = "Design"
+themeDark = "Dunkel"
+themeDescription = "Zwischen hellem und dunklem Modus wechseln"
+themeLight = "Hell"
 title = "Allgemein"
 user = "Benutzer"
 
@@ -6810,6 +6871,20 @@ title = "Version Information"
 auto = "Automatisch"
 fitPage = "An Seite anpassen"
 fitWidth = "An Breite anpassen"
+
+[settings.help]
+label = "Touren"
+title = "Hilfe"
+
+[settings.help.adminTour]
+description = "Erkunden Sie Teamverwaltung, Systemeinstellungen und Unternehmensfunktionen."
+start = "Start"
+title = "Admin-Tour"
+
+[settings.help.toolsTour]
+description = "Schritt für Schritt: Dateien hochladen, ein Tool auswählen und Ergebnisse prüfen."
+start = "Start"
+title = "Tool-Tour"
 
 [settings.hotkeys]
 capturing = "Tasten drücken… (Esc zum Abbrechen)"
@@ -7780,6 +7855,8 @@ settings = "Einstellungen"
 [tool]
 endpointUnavailable = "Dieses Tool ist auf Ihrem Server nicht verfügbar."
 endpointUnavailableClickable = "In diesem Modus nicht verfügbar. Klicken Sie, um sich anzumelden."
+filesLoading = "Dateien werden noch geladen, bitte warten."
+filesLoadingProgress = "{{loaded}} / {{total}} Dateien werden geladen..."
 invalidParams = "Erforderliche Einstellungen ausfüllen."
 noFiles = "Fügen Sie eine Datei hinzu, um zu beginnen."
 scopeFiles = "Dateien"
@@ -7789,10 +7866,15 @@ singleFileScope = "Wird nur angewendet auf: {{fileName}}"
 viewerMode = "Zum Datei-Editor wechseln, um mehrere Dateien auszuwählen."
 
 [toolPanel]
+allTools = "Alle Tools"
 alpha = "Alpha"
+backToTools = "Zurück zu den Tools"
+collapse = "Bereich einklappen"
 comingSoon = "Demnächst verfügbar:"
+expand = "Bereich ausklappen"
 placeholder = "Wählen Sie ein Tool, um zu starten"
 premiumFeature = "Premium-Funktion:"
+search = "Tools durchsuchen"
 
 [toolPanel.fullscreen]
 comingSoon = "Demnächst:"
@@ -8342,6 +8424,51 @@ bullet2 = "Transparente Hintergründe für beste Ergebnisse empfohlen"
 bullet3 = "Das Bild wird an den Signaturbereich angepasst"
 description = "Laden Sie ein bereits erstelltes Signaturbild hoch. Ideal, wenn Sie eine eingescannte Unterschrift oder ein Firmenlogo haben."
 title = "Signaturbild hochladen"
+
+[workbenchBar]
+activeFiles = "Aktive Dateien"
+annotations = "Anmerkungen"
+applyRedactionsFirst = "Schwärzungen zuerst anwenden"
+closeAll = "Alle Dateien schließen"
+closePdf = "PDF schließen"
+closeSelected = "Ausgewählte Dateien schließen"
+deleteSelected = "Ausgewählte Seiten löschen"
+deselectAll = "Alle abwählen"
+downloadAll = "Alle herunterladen"
+downloadSelected = "Ausgewählte Dateien herunterladen"
+draw = "Zeichnen"
+exitRedaction = "Schwärzungsmodus beenden"
+exportAll = "PDF exportieren"
+exportSelected = "Ausgewählte Seiten exportieren"
+formFill = "Formular ausfüllen"
+language = "Sprache"
+multiTool = "Multitool"
+panMode = "Verschiebemodus"
+print = "PDF drucken"
+readAloud = "Vorlesen"
+readAloudLanguage = "Sprache"
+readAloudSpeed = "Geschwindigkeit"
+redact = "Schwärzen"
+rotateLeft = "Nach links drehen"
+rotateRight = "Nach rechts drehen"
+ruler = "Lineal / Messen"
+save = "Speichern"
+saveAll = "Alle speichern"
+saveAs = "Speichern unter"
+saveChanges = "Änderungen speichern"
+search = "PDF durchsuchen"
+selectAll = "Alle auswählen"
+selectByNumber = "Nach Seitenzahlen auswählen"
+selectLanguage = "Sprache auswählen"
+share = "Teilen"
+toggleAnnotations = "Anmerkungen ein-/ausblenden"
+toggleAttachments = "Anhänge ein-/ausblenden"
+toggleBookmarks = "Lesezeichen ein-/ausblenden"
+toggleComments = "Kommentare"
+toggleLayers = "Ebenen ein-/ausblenden"
+toggleSidebar = "Seitenleiste ein-/ausblenden"
+toggleTheme = "Design umschalten"
+viewer = "Viewer"
 
 [workspace]
 title = "Arbeitsbereich"

@@ -19,7 +19,7 @@ export function useFileActionTerminology() {
     mobileUpload: t("landing.mobileUpload", "Upload from Mobile"),
     uploadFromComputer: t("landing.openFromComputer", "Open from computer"),
     download: t("save", "Save"),
-    downloadAll: t("rightRail.saveAll", "Save All"),
+    downloadAll: t("workbenchBar.saveAll", "Save All"),
     downloadSelected: t("fileManager.saveSelected", "Save Selected"),
     downloadUnavailable: t("saveUnavailable", "Save unavailable for this item"),
     noFilesInStorage: t(

@@ -34,9 +34,9 @@ logger = logging.getLogger(__name__)
 
 class PdfEditPlanSelection(ApiModel):
     outcome: Literal["plan"] = "plan"
+    rationale: str
     operations: list[ToolEndpoint] = Field(min_length=1)
     summary: str
-    rationale: str | None = None
 
 
 type PdfEditPlanOutput = PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | NeedContentResponse
@@ -254,10 +254,16 @@ class PdfEditAgent:
                 "Plan PDF edit requests. "
                 f"Supported operations are: {self._get_operations_prompt(supported_operations)}."
                 f"{unavailable_clause} "
+                "Each operation in the user-facing prompt is listed with its full set of parameters. "
+                "Treat that list as authoritative: an operation can ONLY do what its listed parameters "
+                "and description allow. "
                 "Return an ordered list of one or more supported operations for the plan. "
+                "Chain multiple operations together whenever the request needs effects that no single "
+                "supported operation provides on its own (for example, splitting then rotating then "
+                "merging, or extracting pages then re-inserting them). "
+                "Only return cannot_do when no sequence of the supported operations could achieve the request. "
                 "Do not produce operation parameters in this stage. "
                 "Return need_clarification when the request is genuinely ambiguous. "
-                "Return cannot_do when the request is outside the supported operations. "
                 "Return plan when a reasonable multi-step plan can be created. "
                 "Never return partial plans."
             ),
@@ -280,7 +286,7 @@ class PdfEditAgent:
             f"Conversation history:\n{format_conversation_history(request.conversation_history)}\n"
             f"User request: {request.user_message}\n"
             f"Files: {format_file_names(request.files)}\n"
-            f"Supported operations: {self._get_operations_prompt(supported_operations)}\n"
+            f"Supported operations:\n{self._get_supported_operations_prompt(supported_operations)}\n"
             f"{unavailable_line}"
             f"Extracted page text:\n{format_page_text(request.page_text)}"
         )
@@ -296,6 +302,29 @@ class PdfEditAgent:
     @staticmethod
     def _get_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
         return ", ".join(f"{op.name} ({op.value})" for op in operations)
+
+    @staticmethod
+    def _get_supported_operations_prompt(operations: Iterable[ToolEndpoint]) -> str:
+        """Render each operation with its description and a flat list of param descriptions.
+
+        The selection step decides which tool fits the user's request, so it just needs
+        what each tool does and what knobs it has, not the full schema.
+        """
+        lines: list[str] = []
+        for op in operations:
+            schema = OPERATIONS[op].model_json_schema()
+            head = f"- {op.name} ({op.value})"
+            description = (schema.get("description") or "").strip()
+            if description:
+                head += f": {description}"
+            lines.append(head)
+            for name, prop in (schema.get("properties") or {}).items():
+                param_description = (prop.get("description") or "").strip()
+                if param_description:
+                    lines.append(f"    {name}: {param_description}")
+                else:
+                    lines.append(f"    {name}")
+        return "\n".join(lines)
 
     def _fill_need_content_defaults(
         self,

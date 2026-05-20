@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 export interface CommentAuthorValue {
   displayName: string;
@@ -15,8 +15,9 @@ export function CommentAuthorProvider({
   children: ReactNode;
   displayName?: string;
 }) {
+  const value = useMemo(() => ({ displayName }), [displayName]);
   return (
-    <CommentAuthorContext.Provider value={{ displayName }}>
+    <CommentAuthorContext.Provider value={value}>
       {children}
     </CommentAuthorContext.Provider>
   );

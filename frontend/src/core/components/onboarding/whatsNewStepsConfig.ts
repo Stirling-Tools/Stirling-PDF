@@ -1,58 +1,14 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
-
-async function waitForElement(
-  selector: string,
-  timeoutMs = 7000,
-  intervalMs = 100,
-): Promise<void> {
-  if (typeof document === "undefined") return;
-  const start = Date.now();
-  // Immediate hit
-  if (document.querySelector(selector)) return;
-
-  return new Promise((resolve) => {
-    const check = () => {
-      if (document.querySelector(selector) || Date.now() - start >= timeoutMs) {
-        resolve();
-        return;
-      }
-      setTimeout(check, intervalMs);
-    };
-    check();
-  });
-}
-
-async function waitForHighlightable(
-  selector: string,
-  timeoutMs = 7000,
-  intervalMs = 500,
-): Promise<void> {
-  if (typeof document === "undefined") return;
-  const start = Date.now();
-
-  return new Promise((resolve) => {
-    const check = () => {
-      const el = document.querySelector<HTMLElement>(selector);
-      const isVisible = !!el && el.getClientRects().length > 0;
-      if (isVisible || Date.now() - start >= timeoutMs) {
-        // Nudge Reactour to recalc positions in case layout shifted
-        window.dispatchEvent(new Event("resize"));
-        requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-        resolve();
-        return;
-      }
-      setTimeout(check, intervalMs);
-    };
-    check();
-  });
-}
+import {
+  waitForElement,
+  waitForHighlightable,
+} from "@app/components/onboarding/tourUtils";
 
 export enum WhatsNewTourStep {
   QUICK_ACCESS,
   LEFT_PANEL,
   FILE_UPLOAD,
-  RIGHT_RAIL,
   TOP_BAR,
   PAGE_EDITOR_VIEW,
   ACTIVE_FILES_VIEW,
@@ -68,7 +24,6 @@ interface WhatsNewStepActions {
   switchToViewer: () => void;
   switchToPageEditor: () => void;
   switchToActiveFiles: () => void;
-  selectFirstFile: () => void;
 }
 
 interface CreateWhatsNewStepsConfigArgs {
@@ -89,7 +44,6 @@ export function createWhatsNewStepsConfig({
     switchToViewer,
     switchToPageEditor,
     switchToActiveFiles,
-    selectFirstFile,
   } = actions;
 
   return {
@@ -124,34 +78,15 @@ export function createWhatsNewStepsConfig({
       ),
       position: "right",
       padding: 10,
-      action: async () => {
-        openFilesModal();
-        await waitForElement('[data-tour="file-sources"]', 5000, 100);
-      },
       actionAfter: async () => {
+        openFilesModal();
+        await waitForElement('[data-tour="file-sources"]', 5000);
         await Promise.resolve(loadSampleFile());
         closeFilesModal();
         switchToViewer();
         // wait for file render and top controls to mount
-        await waitForElement('[data-tour="view-switcher"]', 7000, 100);
-        await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
-      },
-    },
-    [WhatsNewTourStep.RIGHT_RAIL]: {
-      selector: '[data-tour="right-rail-controls"]',
-      highlightedSelectors: [
-        '[data-tour="right-rail-controls"]',
-        '[data-tour="right-rail-settings"]',
-      ],
-      content: t(
-        "onboarding.whatsNew.rightRail",
-        "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results.",
-      ),
-      position: "left",
-      padding: 10,
-      action: async () => {
-        await waitForElement('[data-tour="right-rail-controls"]', 7000, 100);
-        selectFirstFile();
+        await waitForElement('[data-tour="view-switcher"]', 7000);
+        await waitForHighlightable('[data-tour="view-switcher"]', 7000);
       },
     },
     [WhatsNewTourStep.TOP_BAR]: {
@@ -165,8 +100,8 @@ export function createWhatsNewStepsConfig({
       // Ensure the switcher has mounted before this step renders
       action: async () => {
         switchToViewer();
-        await waitForElement('[data-tour="view-switcher"]', 7000, 100);
-        await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
+        await waitForElement('[data-tour="view-switcher"]', 7000);
+        await waitForHighlightable('[data-tour="view-switcher"]', 7000);
       },
     },
     [WhatsNewTourStep.PAGE_EDITOR_VIEW]: {
@@ -179,8 +114,8 @@ export function createWhatsNewStepsConfig({
       padding: 8,
       action: async () => {
         switchToPageEditor();
-        await waitForElement('[data-tour="view-switcher"]', 7000, 100);
-        await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
+        await waitForElement('[data-tour="view-switcher"]', 7000);
+        await waitForHighlightable('[data-tour="view-switcher"]', 7000);
       },
     },
     [WhatsNewTourStep.ACTIVE_FILES_VIEW]: {
@@ -193,8 +128,8 @@ export function createWhatsNewStepsConfig({
       padding: 8,
       action: async () => {
         switchToActiveFiles();
-        await waitForElement('[data-tour="view-switcher"]', 7000, 100);
-        await waitForHighlightable('[data-tour="view-switcher"]', 7000, 500);
+        await waitForElement('[data-tour="view-switcher"]', 7000);
+        await waitForHighlightable('[data-tour="view-switcher"]', 7000);
       },
     },
     [WhatsNewTourStep.WRAP_UP]: {

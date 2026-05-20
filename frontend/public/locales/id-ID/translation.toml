@@ -1806,7 +1806,11 @@ title = "Penggantian Nama Cerdas"
 [automate]
 copyToSaved = "Salin ke Tersimpan"
 desc = "Bangun alur kerja multi-langkah dengan merangkaikan aksi PDF. Ideal untuk tugas berulang."
+export = "Ekspor"
 exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
+import = "Impor"
+importPartialSuccess = "Diimpor dengan {{count}} operasi yang tidak dipetakan: {{ops}}"
+importSuccess = "Otomatisasi diimpor: {{name}}"
 invalidStep = "Langkah tidak valid"
 reviewTitle = "Hasil Otomatisasi"
 title = "Otomatisasi"
@@ -1822,6 +1826,7 @@ title = "Konfigurasi {{toolName}}"
 [automate.creation]
 createTitle = "Buat Otomatisasi"
 editTitle = "Edit Otomatisasi"
+export = "Ekspor"
 exportForFolderScanning = "Ekspor untuk Pemindaian Folder"
 intro = "Otomatisasi menjalankan alat secara berurutan. Untuk memulai, tambahkan alat sesuai urutan yang Anda inginkan."
 save = "Simpan Otomatisasi"
@@ -1852,8 +1857,27 @@ confirm = "Kembali"
 message = "Anda memiliki perubahan yang belum disimpan. Yakin ingin kembali? Semua perubahan akan hilang."
 title = "Perubahan Belum Disimpan"
 
+[automate.entryMenu]
+label = "Buka menu untuk {{title}}"
+
 [automate.files]
 placeholder = "Pilih file untuk diproses dengan otomatisasi ini"
+
+[automate.importModal]
+cancel = "Batal"
+confirm = "Impor"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Letakkan JSON di sini atau klik untuk memilih file"
+dropSubhint = "Konfigurasi Automate dan Folder Scanning keduanya diterima"
+dropzoneAriaLabel = "Letakkan file JSON otomatisasi di sini"
+intro = "Letakkan file JSON atau tempelkan isinya di bawah. Formatnya (Automate atau Folder Scanning) terdeteksi otomatis."
+opCount = "{{count}} operasi"
+parseError = "Tidak dapat mengurai: {{message}}"
+pasteLabel = "Atau tempel JSON"
+pastePlaceholder = "Tempel JSON otomatisasi Anda di sini…"
+title = "Impor otomatisasi"
+unresolved = "Tidak dipetakan: {{ops}}"
 
 [automate.run]
 title = "Jalankan Otomatisasi"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Menjalankan {{tool}} (langkah {{step}} dari {{total}})...
 extracting_content = "Mengekstrak konten dari dokumen Anda..."
 processing = "Memproses konten yang diekstrak..."
 thinking = "Berpikir..."
+whole_doc_compression_round = "Menggabungkan catatan..."
+whole_doc_read_done = "Selesai membaca dokumen..."
+whole_doc_read_started = "Membaca dokumen..."
+whole_doc_slice_done = "Membaca dokumen... ({{percent}}% selesai)"
 
 [chat.toolsUsed]
 summary = "Menjalankan {{count}} alat"
@@ -2712,6 +2740,7 @@ used = "terpakai"
 [compare]
 addFilesHint = "Tambahkan PDF di langkah Berkas untuk mengaktifkan pemilihan."
 clearSelected = "Bersihkan yang dipilih"
+clearSlot = "Hapus file"
 cta = "Bandingkan"
 header = "Bandingkan PDF"
 loading = "Membandingkan..."
@@ -2764,6 +2793,7 @@ title = "PDF ini terlihat sangat berbeda"
 [compare.edited]
 label = "PDF yang Diedit"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Pilih PDF asli terlebih dahulu"
 
 [compare.error]
 filesMissing = "Tidak dapat menemukan berkas yang dipilih. Silakan pilih kembali."
@@ -2846,6 +2876,7 @@ pageLabel = "Halaman"
 confirm = "Tukar dan Jalankan Ulang"
 confirmBody = "Ini akan menjalankan ulang alat. Anda yakin ingin menukar urutan Asli dan Diedit?"
 confirmTitle = "Jalankan ulang perbandingan?"
+label = "Tukar"
 
 [compare.toasts]
 unlinkedBody = "Tip: Panah Atas/Bawah menggulir kedua panel; penggeseran hanya memindahkan panel aktif."
@@ -3476,6 +3507,8 @@ unlockAll = "Gunakan untuk semua ({{count}})"
 unlockAllPartialFail = "Kata sandi salah untuk: {{names}}"
 unlockAllSuccess = "Berhasil membuka kunci {{count}} file."
 unlockPrompt = "Buka kunci PDF untuk melanjutkan"
+viewerLocked = "PDF ini dilindungi kata sandi"
+viewerUnlock = "Buka kunci"
 
 [encryptedPdfUnlock.password]
 label = "Sandi PDF"
@@ -3583,6 +3616,9 @@ or = "atau"
 
 [fileEditor]
 addFiles = "Tambahkan File"
+pageCount = "{{count}} halaman"
+pageCount_one = "{{count}} halaman"
+pageCount_other = "{{count}} halaman"
 
 [fileManager]
 active = "Aktif"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Perubahan tidak diunggah"
 clearAll = "Bersihkan Semua"
 clearSelection = "Bersihkan Pilihan"
 clickToUpload = "Klik untuk mengunggah file"
+closeAllFiles = "Tutup semua file"
 closeFile = "Tutup File"
 cloudFile = "File cloud"
 copyCreated = "Salinan disimpan ke perangkat ini."
@@ -3665,6 +3702,7 @@ selectAll = "Pilih Semua"
 selectedCount = "{{count}} dipilih"
 selectedFiles = "File Terpilih"
 share = "Bagikan"
+shared = "Dibagikan"
 sharedByYou = "Dibagikan oleh Anda"
 sharedEditNoticeBody = "Anda tidak memiliki hak edit untuk versi server dari file ini. Perubahan yang Anda lakukan akan disimpan sebagai salinan lokal."
 sharedEditNoticeConfirm = "Mengerti"
@@ -3704,6 +3742,41 @@ size = "Ukuran File"
 title = "File"
 upload = "Unggah"
 uploadFiles = "Unggah File"
+
+[fileSelectorPicker]
+empty = "Tidak ada file yang tersedia"
+placeholder = "Pilih file"
+search = "Saring file…"
+tabListLabel = "File tersimpan, Workbench, unggah"
+upload = "Unggah dari komputer"
+
+[fileSelectorPicker.sort]
+dateAsc = "Terlama dulu"
+dateDesc = "Terbaru dulu"
+dateLabel = "Terbaru"
+nameAsc = "A ke Z"
+nameDesc = "Z ke A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "File tersimpan"
+upload = "Unggah"
+workbench = "Workbench"
+
+[fileSidebar]
+addFiles = "Tambahkan file"
+collapse = "Ciutkan bilah samping"
+dropHint = "Buka file untuk memulai"
+expand = "Perluas bilah samping"
+files = "File"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive belum dikonfigurasi"
+noFiles = "Belum ada file"
+openFileManager = "Buka pengelola file"
+openFromComputer = "Buka dari komputer"
+openSettings = "Buka pengaturan"
+search = "Cari"
+searchPlaceholder = "Cari file..."
 
 [fileToPDF]
 credit = "Layanan ini menggunakan LibreOffice dan Unoconv untuk konversi berkas."
@@ -4202,6 +4275,11 @@ title = "Tumpuk PDF"
 desc = "Menggabungkan beberapa halaman dokumen PDF menjadi satu halaman"
 tags = "tata-letak,atur,gabungkan"
 title = "Tata Letak Multi-Halaman"
+
+[home.pdfCommentAgent]
+desc = "Minta AI memberi anotasi pada PDF dengan komentar catatan tempel berdasarkan prompt Anda"
+tags = "AI,agen,komentar,anotasi,catatan tempel,ulasan,umpan balik,catatan"
+title = "Tambahkan komentar AI"
 
 [home.pdfOrganiser]
 desc = "Menghapus/Mengatur ulang halaman dalam urutan apa pun"
@@ -4903,7 +4981,6 @@ fileUpload = "Gunakan tombol <strong>Files</strong> untuk mengunggah atau memili
 leftPanel = "Panel <strong>Alat</strong> di kiri menampilkan semua yang bisa Anda lakukan. Jelajahi kategori atau cari untuk menemukan alat dengan cepat."
 pageEditorView = "Beralih ke Editor Halaman untuk mengurutkan ulang, memutar, atau menghapus halaman."
 quickAccess = "Mulai dari panel <strong>Akses Cepat</strong> untuk beralih antara Penampil, Automate, file Anda, dan semua tur."
-rightRail = "<strong>Panel Kanan</strong> berisi tindakan cepat untuk memilih file, mengubah tema atau bahasa, dan mengunduh hasil."
 topBar = "Bilah atas memungkinkan Anda beralih antara <strong>Penampil</strong>, <strong>Editor Halaman</strong>, dan <strong>File Aktif</strong>."
 wrapUp = "Itulah yang baru di V2. Buka menu <strong>Tur</strong> kapan saja untuk memutar ulang ini, tur Alat, atau tur Admin."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Pilih Bulanan"
 selectYearly = "Pilih Tahunan"
 title = "Pilih Periode Penagihan"
 totalForSeats = "Total ({{count}} seat)"
+
+[pdfCommentAgent]
+submit = "Hasilkan komentar"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Jelaskan hal yang harus dikomentari AI"
+failed = "Gagal menghasilkan komentar"
+tooLong = "Prompt terlalu panjang (maksimum {{max}} karakter)"
+
+[pdfCommentAgent.prompt]
+label = "Apa yang harus dikomentari AI?"
+placeholder = "mis. Tandai tanggal yang ambigu dan sarankan klarifikasi"
+
+[pdfCommentAgent.results]
+title = "PDF dengan komentar"
+
+[pdfCommentAgent.settings]
+title = "Instruksi komentar"
 
 [pdfOrganiser]
 header = "Pengaturan Halaman PDF"
@@ -6486,46 +6581,6 @@ title = "Kontras Tinggi"
 text = "Membalik semua warna dalam PDF sepenuhnya, menciptakan efek seperti negatif. Berguna untuk membuat versi mode gelap dokumen atau mengurangi ketegangan mata dalam kondisi cahaya rendah."
 title = "Balik Semua Warna"
 
-[rightRail]
-annotations = "Anotasi"
-applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
-closePdf = "Tutup PDF"
-closeSelected = "Tutup File Terpilih"
-deleteSelected = "Hapus Halaman Terpilih"
-deselectAll = "Batalkan Semua Pilihan"
-downloadAll = "Unduh Semua"
-downloadSelected = "Unduh File Terpilih"
-draw = "Gambar"
-exitRedaction = "Keluar dari Mode Redaksi"
-exportAll = "Ekspor PDF"
-exportSelected = "Ekspor Halaman Terpilih"
-formFill = "Isi Formulir"
-language = "Bahasa"
-panMode = "Mode Geser"
-print = "Cetak PDF"
-readAloud = "Baca Nyaring"
-readAloudLanguage = "Bahasa"
-readAloudSpeed = "Kecepatan"
-redact = "Redaksi"
-rotateLeft = "Putar Kiri"
-rotateRight = "Putar Kanan"
-ruler = "Penggaris / Ukur"
-save = "Simpan"
-saveAll = "Simpan Semua"
-saveAs = "Simpan Sebagai"
-saveChanges = "Simpan Perubahan"
-search = "Cari PDF"
-selectAll = "Pilih Semua"
-selectByNumber = "Pilih berdasarkan Nomor Halaman"
-selectLanguage = "Pilih bahasa"
-toggleAnnotations = "Alihkan Visibilitas Anotasi"
-toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
-toggleBookmarks = "Tampilkan/Sembunyikan Bookmark"
-toggleComments = "Komentar"
-toggleLayers = "Alihkan Lapisan"
-toggleSidebar = "Alihkan Sidebar"
-toggleTheme = "Alihkan Tema"
-
 [rotate]
 rotateLeft = "Putar Berlawanan Arah Jarum Jam"
 rotateRight = "Putar Searah Jarum Jam"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Sembunyikan konversi yang tidak tersedia"
 hideUnavailableConversionsDescription = "Hapus opsi konversi yang dinonaktifkan di alat Convert alih-alih menampilkannya pudar."
 hideUnavailableTools = "Sembunyikan alat yang tidak tersedia"
 hideUnavailableToolsDescription = "Hapus alat yang dinonaktifkan oleh server Anda alih-alih menampilkannya pudar."
+language = "Bahasa"
+languageDescription = "Pilih bahasa tampilan"
 logout = "Keluar"
 setAsDefault = "Jadikan Default"
+theme = "Tema"
+themeDark = "Gelap"
+themeDescription = "Beralih antara mode terang dan gelap"
+themeLight = "Terang"
 title = "Umum"
 user = "Pengguna"
 
@@ -6810,6 +6871,20 @@ title = "Informasi Versi"
 auto = "Otomatis"
 fitPage = "Pas ke halaman"
 fitWidth = "Pas ke lebar"
+
+[settings.help]
+label = "Tur"
+title = "Bantuan"
+
+[settings.help.adminTour]
+description = "Jelajahi manajemen tim, pengaturan sistem, dan fitur enterprise."
+start = "Mulai"
+title = "Tur Admin"
+
+[settings.help.toolsTour]
+description = "Jelajahi proses mengunggah file, memilih alat, dan meninjau hasil."
+start = "Mulai"
+title = "Tur Alat"
 
 [settings.hotkeys]
 capturing = "Tekan tombol… (Esc untuk membatalkan)"
@@ -7780,6 +7855,8 @@ settings = "Pengaturan"
 [tool]
 endpointUnavailable = "Alat ini tidak tersedia di server Anda."
 endpointUnavailableClickable = "Tidak tersedia dalam mode ini. Klik untuk masuk."
+filesLoading = "File masih dimuat, harap tunggu."
+filesLoadingProgress = "{{loaded}} / {{total}} file sedang dimuat..."
 invalidParams = "Isi pengaturan yang diperlukan."
 noFiles = "Tambahkan berkas untuk memulai."
 scopeFiles = "file"
@@ -7789,10 +7866,15 @@ singleFileScope = "Hanya diterapkan pada: {{fileName}}"
 viewerMode = "Beralih ke editor file untuk memilih beberapa file."
 
 [toolPanel]
+allTools = "Semua alat"
 alpha = "Alpha"
+backToTools = "Kembali ke alat"
+collapse = "Ciutkan panel"
 comingSoon = "Segera hadir:"
+expand = "Perluas panel"
 placeholder = "Pilih alat untuk memulai"
 premiumFeature = "Fitur premium:"
+search = "Cari alat"
 
 [toolPanel.fullscreen]
 comingSoon = "Segera hadir:"
@@ -8342,6 +8424,51 @@ bullet2 = "Latar belakang transparan direkomendasikan untuk hasil terbaik"
 bullet3 = "Gambar akan diubah ukurannya agar sesuai dengan area tanda tangan"
 description = "Unggah gambar tanda tangan yang sudah dibuat. Ideal jika Anda memiliki tanda tangan hasil pemindaian atau logo perusahaan."
 title = "Unggah Gambar Tanda Tangan"
+
+[workbenchBar]
+activeFiles = "File Aktif"
+annotations = "Anotasi"
+applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
+closeAll = "Tutup semua file"
+closePdf = "Tutup PDF"
+closeSelected = "Tutup File yang Dipilih"
+deleteSelected = "Hapus Halaman yang Dipilih"
+deselectAll = "Batalkan semua pilihan"
+downloadAll = "Unduh Semua"
+downloadSelected = "Unduh File yang Dipilih"
+draw = "Gambar"
+exitRedaction = "Keluar dari Mode Redaksi"
+exportAll = "Ekspor PDF"
+exportSelected = "Ekspor Halaman yang Dipilih"
+formFill = "Isi Formulir"
+language = "Bahasa"
+multiTool = "Multi-Tool"
+panMode = "Mode Geser"
+print = "Cetak PDF"
+readAloud = "Baca Nyaring"
+readAloudLanguage = "Bahasa"
+readAloudSpeed = "Kecepatan"
+redact = "Redaksi"
+rotateLeft = "Putar Kiri"
+rotateRight = "Putar Kanan"
+ruler = "Penggaris / Ukur"
+save = "Simpan"
+saveAll = "Simpan Semua"
+saveAs = "Simpan Sebagai"
+saveChanges = "Simpan Perubahan"
+search = "Cari PDF"
+selectAll = "Pilih Semua"
+selectByNumber = "Pilih berdasarkan Nomor Halaman"
+selectLanguage = "Pilih bahasa"
+share = "Bagikan"
+toggleAnnotations = "Tampilkan/Sembunyikan Anotasi"
+toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
+toggleBookmarks = "Tampilkan/Sembunyikan Penanda Halaman"
+toggleComments = "Komentar"
+toggleLayers = "Tampilkan/Sembunyikan Lapisan"
+toggleSidebar = "Tampilkan/Sembunyikan Bilah Samping"
+toggleTheme = "Beralih Tema"
+viewer = "Penampil"
 
 [workspace]
 title = "Ruang Kerja"

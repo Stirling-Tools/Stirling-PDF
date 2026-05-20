@@ -7,21 +7,18 @@ import {
   Badge,
   Button,
   Box,
-  Image,
-  ThemeIcon,
   ActionIcon,
   Tooltip,
-  Loader,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 
 import { StirlingFileStub } from "@app/types/fileContext";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
-import { useIndexedDBThumbnail } from "@app/hooks/useIndexedDBThumbnail";
+import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
+import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface FileCardProps {
   file: File;
@@ -47,15 +44,15 @@ const FileCard = ({
   isSupported = true,
 }: FileCardProps) => {
   const { t } = useTranslation();
-  // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
-  const { thumbnail: indexedDBThumb, isGenerating } =
-    useIndexedDBThumbnail(fileStub);
-  const thumb = fileStub?.thumbnailUrl || indexedDBThumb;
+  const {
+    isEncrypted,
+    thumbnail: thumb,
+    isGenerating,
+  } = useFileThumbnail(fileStub);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Show loading state during hydration: PDF file without thumbnail yet
   const isPdf = file.type === "application/pdf";
-  const isHydrating = isPdf && !thumb && !isGenerating;
+  const isHydrating = isPdf && !isEncrypted && !thumb && !isGenerating;
 
   return (
     <Card
@@ -73,8 +70,7 @@ const FileCard = ({
           ? "2px solid var(--mantine-color-blue-6)"
           : undefined,
         backgroundColor: isSelected ? "var(--mantine-color-blue-0)" : undefined,
-        opacity: isSupported ? 1 : 0.5,
-        filter: isSupported ? "none" : "grayscale(50%)",
+        opacity: 1,
       }}
       onDoubleClick={onDoubleClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -146,51 +142,13 @@ const FileCard = ({
               )}
             </div>
           )}
-          {thumb ? (
-            <Image
-              src={thumb}
-              alt="PDF thumbnail"
-              height={110}
-              width={80}
-              fit="contain"
-              radius="sm"
-            />
-          ) : isGenerating || isHydrating ? (
-            <Stack align="center" justify="center" gap="xs">
-              <Loader size="sm" />
-              <Text size="xs" c="dimmed">
-                Loading...
-              </Text>
-            </Stack>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ThemeIcon
-                variant="light"
-                color={file.size > 100 * 1024 * 1024 ? "orange" : "red"}
-                size={60}
-                radius="sm"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <PictureAsPdfIcon style={{ fontSize: 40 }} />
-              </ThemeIcon>
-              {file.size > 100 * 1024 * 1024 && (
-                <Text size="xs" c="dimmed" mt={4}>
-                  Large File
-                </Text>
-              )}
-            </div>
-          )}
+          <DocumentThumbnail
+            file={file}
+            thumbnail={thumb || undefined}
+            isEncrypted={isEncrypted}
+            isLoading={isGenerating || isHydrating}
+            iconSize="3rem"
+          />
         </Box>
 
         <Text fw={500} size="sm" lineClamp={1} ta="center">

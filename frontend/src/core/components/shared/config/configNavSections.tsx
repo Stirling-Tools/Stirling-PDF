@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { NavKey } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
+import HelpSection from "@app/components/shared/config/configSections/HelpSection";
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -34,6 +35,7 @@ export const useConfigNavSections = (
   _isAdmin: boolean = false,
   _runningEE: boolean = false,
   _loginEnabled: boolean = false,
+  onRequestClose: () => void = () => {},
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
@@ -52,6 +54,19 @@ export const useConfigNavSections = (
           label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
           icon: "keyboard-rounded",
           component: <HotkeysSection />,
+        },
+      ],
+    },
+    {
+      title: t("settings.help.title", "Help"),
+      items: [
+        {
+          key: "help",
+          label: t("settings.help.label", "Tours"),
+          icon: "help-rounded",
+          component: (
+            <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
+          ),
         },
       ],
     },

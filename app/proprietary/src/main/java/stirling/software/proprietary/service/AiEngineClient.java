@@ -7,6 +7,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -81,6 +83,70 @@ public class AiEngineClient {
         log.debug("AI engine responded with status {}", response.statusCode());
         checkResponseStatus(response);
         return response.body();
+    }
+
+    /**
+     * POST a JSON body and consume the response as a stream of NDJSON lines. Each line is passed to
+     * {@code lineConsumer} in arrival order; the call returns when the engine closes the stream.
+     *
+     * <p>This is the right shape for long-running orchestrator calls that emit incremental
+     * progress. The total HTTP timeout is the long-running timeout (typically 600s+), but in
+     * practice line arrival keeps the connection logically alive: as long as the engine emits
+     * events, the work is progressing. Genuine engine hangs still hit the total timeout.
+     */
+    public void streamPost(String path, String jsonBody, Consumer<String> lineConsumer)
+            throws IOException {
+        ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
+        if (!config.isEnabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+        }
+
+        String url = config.getUrl().stripTrailing() + path;
+        Duration timeout = Duration.ofSeconds(config.getLongRunningTimeoutSeconds());
+        log.debug(
+                "Proxying AI engine streaming request to {} (timeout {}s)",
+                url,
+                timeout.toSeconds());
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/x-ndjson")
+                        .timeout(timeout)
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build();
+
+        HttpResponse<Stream<String>> response;
+        try {
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
+        } catch (HttpTimeoutException e) {
+            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+        }
+
+        int status = response.statusCode();
+        if (status >= 400) {
+            throw new ResponseStatusException(
+                    HttpStatus.valueOf(status >= 500 ? 502 : status),
+                    "AI engine returned error: " + status);
+        }
+
+        try (Stream<String> lines = response.body()) {
+            lines.forEach(
+                    line -> {
+                        if (!line.isEmpty()) {
+                            lineConsumer.accept(line);
+                        }
+                    });
+        }
     }
 
     public String get(String path) throws IOException {

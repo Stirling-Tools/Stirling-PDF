@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
+import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
@@ -140,13 +141,32 @@ public class AiEngineController {
     }
 
     private void runOrchestrationStream(AiWorkflowRequest request, SseEmitter emitter) {
+        AiWorkflowService.ProgressListener listener =
+                new AiWorkflowService.ProgressListener() {
+                    @Override
+                    public void onProgress(AiWorkflowProgressEvent event) {
+                        sendEvent(emitter, "progress", event);
+                    }
+
+                    @Override
+                    public void onHeartbeat() {
+                        // Forward upstream heartbeats so the SSE pipe stays visibly alive between
+                        // real progress events; if the frontend has gone away, sendEvent throws,
+                        // which propagates up through the stream consumer and closes our upstream
+                        // engine connection so the engine can cancel its in-flight workflow.
+                        sendEvent(emitter, "heartbeat", Map.of());
+                    }
+                };
         try {
-            AiWorkflowResponse result =
-                    aiWorkflowService.orchestrate(
-                            request, progress -> sendEvent(emitter, "progress", progress));
+            AiWorkflowResponse result = aiWorkflowService.orchestrate(request, listener);
             registerFileResultAsJob(result);
             sendEvent(emitter, "result", result);
             emitter.complete();
+        } catch (ClientDisconnectedException e) {
+            // The frontend gave up mid-stream. The exception unwinding through orchestrate()
+            // already closed the upstream engine connection (engine sees disconnect and cancels).
+            // The emitter is already toast; nothing useful left to send.
+            log.debug("Client disconnected mid-stream; aborting workflow", e);
         } catch (Exception e) {
             log.error("AI orchestration stream failed", e);
             // Emit an error frame for the frontend and then complete normally. Using
@@ -192,7 +212,21 @@ public class AiEngineController {
         try {
             emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
         } catch (IOException e) {
-            log.debug("Failed to send SSE event (client may have disconnected)", e);
+            // Surface the disconnect so the streaming pipeline unwinds: callers higher up close
+            // the upstream engine connection, which lets the engine cancel its in-flight workflow.
+            // Without this, the engine would keep producing (and billing for) tokens whose results
+            // nobody is reading.
+            throw new ClientDisconnectedException("Client disconnected from SSE stream", e);
+        }
+    }
+
+    /**
+     * Thrown by {@link #sendEvent} when the SSE emitter's underlying connection is gone. Treated as
+     * a signal to abort the workflow, not as an error to report.
+     */
+    private static final class ClientDisconnectedException extends RuntimeException {
+        ClientDisconnectedException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 

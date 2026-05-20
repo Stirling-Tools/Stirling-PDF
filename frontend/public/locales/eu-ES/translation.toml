@@ -1806,7 +1806,11 @@ title = "Berriz-izendatze adimenduna"
 [automate]
 copyToSaved = "Gordetakoetara kopiatu"
 desc = "Eraiki hainbat pausoko lan-fluxuak PDF ekintzak kateatuz. Egokia zeregin errepikakorretarako."
+export = "Esportatu"
 exportForFolderScanning = "Karpeta-eskaneatzerako esportatu"
+import = "Inportatu"
+importPartialSuccess = "Inportatuta, {{count}} mapatu gabeko eragiketa: {{ops}}"
+importSuccess = "Automatizazioa inportatuta: {{name}}"
 invalidStep = "Urrats baliogabea"
 reviewTitle = "Automatizazioaren emaitzak"
 title = "Automatizatu"
@@ -1822,6 +1826,7 @@ title = "Konfiguratu {{toolName}}"
 [automate.creation]
 createTitle = "Automatizazioa sortu"
 editTitle = "Automatizazioa editatu"
+export = "Esportatu"
 exportForFolderScanning = "Karpeta-eskaneatzerako esportatu"
 intro = "Automatizazioek tresnak sekuentzialki exekutatzen dituzte. Hasteko, gehitu tresnak exekutatu nahi dituzun ordenan."
 save = "Automatizazioa gorde"
@@ -1852,8 +1857,27 @@ confirm = "Itzuli atzera"
 message = "Aldaketak gorde gabe dituzu. Ziur atzera nahi duzula? Aldaketa guztiak galduko dira."
 title = "Gorde gabeko aldaketak"
 
+[automate.entryMenu]
+label = "Ireki {{title}}-rako menua"
+
 [automate.files]
 placeholder = "Hautatu automatizazio honekin prozesatuko diren fitxategiak"
+
+[automate.importModal]
+cancel = "Ezeztatu"
+confirm = "Inportatu"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Karpeta-eskaneatze JSON"
+dropHint = "Jaregin JSON hemen edo egin klik fitxategi bat aukeratzeko"
+dropSubhint = "Bai Automate bai Karpeta-eskaneatze konfigurazioak onartzen dira"
+dropzoneAriaLabel = "Jaregin automatizazioaren JSON fitxategi bat hemen"
+intro = "Jaregin JSON fitxategi bat edo itsatsi bere edukia behean. Formatua (Automate edo Karpeta-eskaneatzea) automatikoki detektatuko da."
+opCount = "{{count}} eragiketa"
+parseError = "Ezin izan da analizatu: {{message}}"
+pasteLabel = "Edo itsatsi JSON"
+pastePlaceholder = "Itsatsi zure automatizazioaren JSONa hemen…"
+title = "Inportatu automatizazioa"
+unresolved = "Mapatu gabe: {{ops}}"
 
 [automate.run]
 title = "Automatizazioa exekutatu"
@@ -2670,6 +2694,10 @@ executing_tool_step = "{{tool}} exekutatzen ({{total}}etik {{step}}. urratsa)...
 extracting_content = "Zure dokumentuetatik edukia erauzten..."
 processing = "Erauzi den edukia prozesatzen..."
 thinking = "Pentsatzen..."
+whole_doc_compression_round = "Oharrak bateratzen..."
+whole_doc_read_done = "Dokumentua irakurtzen amaituta..."
+whole_doc_read_started = "Dokumentua irakurtzen..."
+whole_doc_slice_done = "Dokumentua irakurtzen... ({{percent}}% osatuta)"
 
 [chat.toolsUsed]
 summary = "{{count}} tresna exekutatu dira"
@@ -2712,6 +2740,7 @@ used = "erabilita"
 [compare]
 addFilesHint = "Gehitu PDFak Fitxategiak urratsean hautapena gaitzeko."
 clearSelected = "Garbitu hautatutakoa"
+clearSlot = "Kendu fitxategia"
 cta = "Konparatu"
 header = "Konparatu PDF fitxategiak"
 loading = "Konparatzen..."
@@ -2764,6 +2793,7 @@ title = "PDF hauek oso desberdinak dirudite"
 [compare.edited]
 label = "Editatutako PDFa"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Hautatu jatorrizko PDFa lehenik"
 
 [compare.error]
 filesMissing = "Ezin izan dira hautatutako fitxategiak aurkitu. Mesedez, hautatu berriro."
@@ -2846,6 +2876,7 @@ pageLabel = "Orria"
 confirm = "Trukatu eta berriro exekutatu"
 confirmBody = "Honek tresna berriro exekutatuko du. Ziur zaude Jatorrizkoa eta Editatutakoa ordenaz trukatu nahi dituzula?"
 confirmTitle = "Berriro exekutatu konparazioa?"
+label = "Trukatu"
 
 [compare.toasts]
 unlinkedBody = "Iradokizuna: Goian/Behean gezia sakatuta bi paneletan korritzen da; panoramikak panel aktiboa bakarrik mugitzen du."
@@ -3476,6 +3507,8 @@ unlockAll = "Erabili guztientzat ({{count}})"
 unlockAllPartialFail = "Pasahitz okerra honentzat: {{names}}"
 unlockAllSuccess = "{{count}} fitxategi desblokeatu dira."
 unlockPrompt = "Desblokeatu PDFa jarraitzeko"
+viewerLocked = "PDF hau pasahitzarekin babestuta dago"
+viewerUnlock = "Desblokeatu"
 
 [encryptedPdfUnlock.password]
 label = "PDF pasahitza"
@@ -3583,6 +3616,9 @@ or = "edo"
 
 [fileEditor]
 addFiles = "Fitxategiak gehitu"
+pageCount = "{{count}} orri"
+pageCount_one = "{{count}} orri"
+pageCount_other = "{{count}} orri"
 
 [fileManager]
 active = "Aktibo"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Aldaketak ez dira igo"
 clearAll = "Denak garbitu"
 clearSelection = "Hautapena garbitu"
 clickToUpload = "Egin klik fitxategiak igotzeko"
+closeAllFiles = "Itxi fitxategi guztiak"
 closeFile = "Itxi fitxategia"
 cloudFile = "Hodeiko fitxategia"
 copyCreated = "Kopia gailu honetan gorde da."
@@ -3665,6 +3702,7 @@ selectAll = "Hautatu dena"
 selectedCount = "{{count}} hautatuta"
 selectedFiles = "Hautatutako fitxategiak"
 share = "Partekatu"
+shared = "Partekatua"
 sharedByYou = "Zuk partekatua"
 sharedEditNoticeBody = "Ez duzu zerbitzariko bertsio hau editatzeko baimenik. Egiten dituzun edizioak kopia lokal gisa gordeko dira."
 sharedEditNoticeConfirm = "Ulertuta"
@@ -3704,6 +3742,41 @@ size = "Fitxategi-tamaina"
 title = "Fitxategiak"
 upload = "Igo"
 uploadFiles = "Igo fitxategiak"
+
+[fileSelectorPicker]
+empty = "Ez dago fitxategirik erabilgarri"
+placeholder = "Hautatu fitxategia"
+search = "Iragazi fitxategiak…"
+tabListLabel = "Gordetako fitxategiak, lan-mahaia, kargatu"
+upload = "Kargatu ordenagailutik"
+
+[fileSelectorPicker.sort]
+dateAsc = "Zaharrenak lehenik"
+dateDesc = "Berrienak lehenik"
+dateLabel = "Azkenak"
+nameAsc = "A-tik Z-ra"
+nameDesc = "Z-tik A-ra"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Gordetako fitxategiak"
+upload = "Kargatu"
+workbench = "Lan-mahaia"
+
+[fileSidebar]
+addFiles = "Gehitu fitxategiak"
+collapse = "Tolestu alboko barra"
+dropHint = "Ireki fitxategiak hasteko"
+expand = "Zabaldu alboko barra"
+files = "Fitxategiak"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive ez dago konfiguratuta"
+noFiles = "Oraindik ez dago fitxategirik"
+openFileManager = "Ireki fitxategi-kudeatzailea"
+openFromComputer = "Ireki ordenagailutik"
+openSettings = "Ireki ezarpenak"
+search = "Bilatu"
+searchPlaceholder = "Bilatu fitxategiak..."
 
 [fileToPDF]
 credit = "Zerbitzu honek LibreOffice eta Unoconv erabiltzen ditu fitxategiak bihurtzeko"
@@ -4202,6 +4275,11 @@ title = "Gainjarri PDFak"
 desc = "Elkartu orri bakar batean PDF dokumentu baten zenbait orrialde"
 tags = "diseinua,antolatu,kombinatu"
 title = "Zenbait orrialderen diseinua"
+
+[home.pdfCommentAgent]
+desc = "Eskatu AIri, zure eskaeraren arabera, PDF bat ohar itsaskorren iruzkinekin anotatzeko"
+tags = "AI,agente,iruzkin,anotatu,ohar itsaskorra,berrikuspena,feedback,oharrak"
+title = "Gehitu AIren iruzkinak"
 
 [home.pdfOrganiser]
 desc = "Ezabatu/Berrantolatu orrialdeak edozein ordenatan"
@@ -4903,7 +4981,6 @@ fileUpload = "Erabili <strong>Fitxategiak</strong> botoia PDF bat kargatzeko edo
 leftPanel = "Ezkerreko <strong>Tresnak</strong> panelean egin ditzakezun guztiak zerrendatzen dira. Arakatu kategoriak edo bilatu tresna bat azkar aurkitzeko."
 pageEditorView = "Aldatu Orrialde-editorera orriak berrantolatzeko, biratzeko edo ezabatzeko."
 quickAccess = "Hasi <strong>Sarbide azkarraren</strong> errailean Irakurlearen, Automatizazioaren, zure fitxategien eta ibilbide guztien artean jauzi egiteko."
-rightRail = "<strong>Eskuineko errailak</strong> fitxategiak hautatzeko, gaia edo hizkuntza aldatzeko eta emaitzak deskargatzeko ekintza azkarrak ditu."
 topBar = "Goiko barrak <strong>Ikustaile</strong>, <strong>Orrialde-editorea</strong> eta <strong>Fitxategi aktiboak</strong> artean aldatzeko aukera ematen du."
 wrapUp = "Hori da V2ko berritasuna. Ireki <strong>Ibilbideak</strong> menua edozein unetan hau, Tresnen ibilbidea edo Administratzailearen ibilbidea berriro ikusteko."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Aukeratu hilero"
 selectYearly = "Aukeratu urtero"
 title = "Aukeratu fakturazio epea"
 totalForSeats = "Guztira ({{count}} eserleku)"
+
+[pdfCommentAgent]
+submit = "Sortu iruzkinak"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Mesedez, azaldu AIk zertaz egin behar duen iruzkina"
+failed = "Ezin izan dira iruzkinak sortu"
+tooLong = "Eskaera luzeegia da (gehienez {{max}} karaktere)"
+
+[pdfCommentAgent.prompt]
+label = "Zertaz egin behar du iruzkina AIk?"
+placeholder = "adib. Markatu data anbiguo guztiak eta proposatu argibideak"
+
+[pdfCommentAgent.results]
+title = "Iruzkindutako PDFa"
+
+[pdfCommentAgent.settings]
+title = "Iruzkinen jarraibideak"
 
 [pdfOrganiser]
 header = "PDF orrialdeen antolatzailea"
@@ -6486,46 +6581,6 @@ title = "Kontraste handia"
 text = "PDFko kolore guztiak erabat alderantzikatu, negatibo moduko efektua sortuz. Erabilgarria da dokumentuen gaueko bertsioak sortzeko edo argi gutxiko inguruneetan nekea murrizteko."
 title = "Kolore guztiak alderantzikatu"
 
-[rightRail]
-annotations = "Oharpenak"
-applyRedactionsFirst = "Lehenik aplikatu zentsurak"
-closePdf = "Itxi PDFa"
-closeSelected = "Itxi hautatutako fitxategiak"
-deleteSelected = "Ezabatu hautatutako orriak"
-deselectAll = "Deshautatu dena"
-downloadAll = "Deskargatu dena"
-downloadSelected = "Deskargatu hautatutako fitxategiak"
-draw = "Marraztu"
-exitRedaction = "Irten zentsura modutik"
-exportAll = "Esportatu PDFa"
-exportSelected = "Esportatu hautatutako orriak"
-formFill = "Bete inprimakia"
-language = "Hizkuntza"
-panMode = "Pan modua"
-print = "Inprimatu PDFa"
-readAloud = "Ozen irakurri"
-readAloudLanguage = "Hizkuntza"
-readAloudSpeed = "Abiadura"
-redact = "Zentsuratu"
-rotateLeft = "Biratu ezkerrera"
-rotateRight = "Biratu eskuinera"
-ruler = "Erregela / Neurketa"
-save = "Gorde"
-saveAll = "Gorde dena"
-saveAs = "Gorde honela"
-saveChanges = "Aldaketak gorde"
-search = "Bilatu PDF"
-selectAll = "Hautatu dena"
-selectByNumber = "Hautatu orri-zenbakien arabera"
-selectLanguage = "Hautatu hizkuntza"
-toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
-toggleAttachments = "Eranskinak erakutsi/ezkutatu"
-toggleBookmarks = "Laster-markak txandakatu"
-toggleComments = "Iruzkinak"
-toggleLayers = "Txandakatu geruzak"
-toggleSidebar = "Alboko barra txandakatu"
-toggleTheme = "Gaia txandakatu"
-
 [rotate]
 rotateLeft = "Biratu erlojuaren aurkako noranzkoan"
 rotateRight = "Biratu erlojuaren noranzkoan"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Eskura ez dauden bihurketak ezkutatu"
 hideUnavailableConversionsDescription = "Kendu desgaitutako bihurketa aukerak Convert tresnan gris gisa erakutsi ordez."
 hideUnavailableTools = "Eskura ez dauden tresnak ezkutatu"
 hideUnavailableToolsDescription = "Kendu zure zerbitzariak desgaitu dituen tresnak gris gisa erakutsi ordez."
+language = "Hizkuntza"
+languageDescription = "Aukeratu bistaratze-hizkuntza"
 logout = "Amaitu saioa"
 setAsDefault = "Ezarri lehenetsia"
+theme = "Gaia"
+themeDark = "Iluna"
+themeDescription = "Aldatu modu argi eta ilunaren artean"
+themeLight = "Argia"
 title = "Orokorra"
 user = "Erabiltzailea"
 
@@ -6810,6 +6871,20 @@ title = "Bertsio-informazioa"
 auto = "Auto"
 fitPage = "Orrira doitu"
 fitWidth = "Zabalerara doitu"
+
+[settings.help]
+label = "Gida-bisitak"
+title = "Laguntza"
+
+[settings.help.adminTour]
+description = "Aztertu talde-kudeaketa, sistemaren ezarpenak eta enpresa-ezaugarriak."
+start = "Hasi"
+title = "Admin gida-bisita"
+
+[settings.help.toolsTour]
+description = "Ikasi fitxategiak kargatzen, tresna bat aukeratzen eta emaitzak berrikusten."
+start = "Hasi"
+title = "Tresnen gida-bisita"
 
 [settings.hotkeys]
 capturing = "Sakatu teklak… (Esc bertan behera uzteko)"
@@ -7780,6 +7855,8 @@ settings = "Ezarpenak"
 [tool]
 endpointUnavailable = "Tresna hau ez dago erabilgarri zure zerbitzarian."
 endpointUnavailableClickable = "Modu honetan ez dago eskuragarri. Egin klik saioa hasteko."
+filesLoading = "Fitxategiak oraindik kargatzen ari dira, itxaron mesedez."
+filesLoadingProgress = "{{loaded}} / {{total}} fitxategi kargatzen..."
 invalidParams = "Bete beharrezko ezarpenak."
 noFiles = "Gehitu fitxategi bat hasteko."
 scopeFiles = "fitxategiak"
@@ -7789,10 +7866,15 @@ singleFileScope = "Honetara soilik aplikatzen da: {{fileName}}"
 viewerMode = "Aldatu fitxategi editoreara hainbat fitxategi hautatzeko."
 
 [toolPanel]
+allTools = "Tresna guztiak"
 alpha = "Alpha"
+backToTools = "Itzuli tresnetara"
+collapse = "Tolestu panela"
 comingSoon = "Laster eskuragarri:"
+expand = "Zabaldu panela"
 placeholder = "Aukeratu tresna bat hasteko"
 premiumFeature = "Premium ezaugarria:"
+search = "Bilatu tresnak"
 
 [toolPanel.fullscreen]
 comingSoon = "Laster:"
@@ -8342,6 +8424,51 @@ bullet2 = "Atzeko plano gardenak gomendatzen dira emaitza onenak lortzeko"
 bullet3 = "Irudia sinadura-eremura egokitzeko tamainaz aldatuko da"
 description = "Igo aldez aurretik sortutako sinadura-irudia. Ideala sinadura eskaneatua edo enpresako logotipoa baduzu."
 title = "Igo sinadura-irudia"
+
+[workbenchBar]
+activeFiles = "Fitxategi aktiboak"
+annotations = "Anotazioak"
+applyRedactionsFirst = "Aplikatu zentsurak lehenik"
+closeAll = "Itxi fitxategi guztiak"
+closePdf = "Itxi PDFa"
+closeSelected = "Itxi hautatutako fitxategiak"
+deleteSelected = "Ezabatu hautatutako orriak"
+deselectAll = "Kendu hautaketa guztia"
+downloadAll = "Deskargatu dena"
+downloadSelected = "Deskargatu hautatutako fitxategiak"
+draw = "Marraztu"
+exitRedaction = "Irten zentsura modutik"
+exportAll = "Esportatu PDFa"
+exportSelected = "Esportatu hautatutako orriak"
+formFill = "Bete inprimakia"
+language = "Hizkuntza"
+multiTool = "Multi-tresna"
+panMode = "Pan modua"
+print = "Inprimatu PDFa"
+readAloud = "Ozen irakurri"
+readAloudLanguage = "Hizkuntza"
+readAloudSpeed = "Abiadura"
+redact = "Zentsuratu"
+rotateLeft = "Biratu ezkerrera"
+rotateRight = "Biratu eskuinera"
+ruler = "Erregela / Neurtu"
+save = "Gorde"
+saveAll = "Gorde dena"
+saveAs = "Gorde honela"
+saveChanges = "Gorde aldaketak"
+search = "Bilatu PDFan"
+selectAll = "Hautatu dena"
+selectByNumber = "Hautatu orri-zenbakien arabera"
+selectLanguage = "Hautatu hizkuntza"
+share = "Partekatu"
+toggleAnnotations = "Txandakatu anotazioen ikusgarritasuna"
+toggleAttachments = "Txandakatu eranskinak"
+toggleBookmarks = "Txandakatu laster-markak"
+toggleComments = "Iruzkinak"
+toggleLayers = "Txandakatu geruzak"
+toggleSidebar = "Txandakatu alboko barra"
+toggleTheme = "Txandakatu gaia"
+viewer = "Ikustailea"
 
 [workspace]
 title = "Lan-espazioa"

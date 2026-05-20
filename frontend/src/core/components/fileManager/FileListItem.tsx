@@ -39,7 +39,6 @@ import { alert } from "@app/components/toast";
 interface FileListItemProps {
   file: StirlingFileStub;
   isSelected: boolean;
-  isSupported: boolean;
   onSelect: (shiftKey?: boolean) => void;
   onRemove: () => void;
   onDownload?: () => void;
@@ -53,7 +52,6 @@ interface FileListItemProps {
 const FileListItem: React.FC<FileListItemProps> = ({
   file,
   isSelected,
-  isSupported,
   onSelect,
   onRemove,
   onDownload,
@@ -187,15 +185,12 @@ const FileListItem: React.FC<FileListItemProps> = ({
       <Box
         p="sm"
         style={{
-          cursor: isHistoryFile || isActive ? "default" : "pointer",
-          backgroundColor: isActive
-            ? "var(--file-active-bg)"
-            : isSelected
+          cursor: isHistoryFile ? "default" : "pointer",
+          backgroundColor:
+            isSelected || shouldShowHovered
               ? "var(--mantine-color-gray-1)"
-              : shouldShowHovered
-                ? "var(--mantine-color-gray-1)"
-                : "var(--bg-file-list)",
-          opacity: isSupported ? 1 : 0.5,
+              : "var(--bg-file-list)",
+          opacity: 1,
           transition: "background-color 0.15s ease",
           userSelect: "none",
           WebkitUserSelect: "none",
@@ -206,9 +201,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
             ? "3px solid var(--mantine-color-blue-4)"
             : "none", // Visual indicator for history
         }}
-        onClick={
-          isHistoryFile || isActive ? undefined : (e) => onSelect(e.shiftKey)
-        }
+        onClick={isHistoryFile ? undefined : (e) => onSelect(e.shiftKey)}
         onDoubleClick={onDoubleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -218,16 +211,14 @@ const FileListItem: React.FC<FileListItemProps> = ({
             <Box>
               {/* Checkbox for regular files only */}
               <Checkbox
-                checked={isActive || isSelected}
+                checked={isSelected}
                 onChange={() => {}} // Handled by parent onClick
                 size="sm"
                 pl="sm"
                 pr="xs"
-                disabled={isActive}
-                color={isActive ? "green" : undefined}
                 styles={{
                   input: {
-                    cursor: isActive ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                   },
                 }}
               />

@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import CoreToolButton from "@core/components/tools/toolPicker/ToolButton";
 import { getToolDisabledReason } from "@app/components/tools/fullscreen/shared";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import {
+  useToolWorkflowActions,
+  useToolWorkflowData,
+} from "@app/contexts/ToolWorkflowContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   connectionModeService,
@@ -18,7 +21,8 @@ type CoreToolButtonProps = React.ComponentProps<typeof CoreToolButton>;
  * In selfhosted/saas mode the tool renders as visually unavailable (dimmed, no badge).
  */
 const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
-  const { toolAvailability, handleToolSelectForced } = useToolWorkflow();
+  const { toolAvailability } = useToolWorkflowData();
+  const { handleToolSelectForced } = useToolWorkflowActions();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
   const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
@@ -55,4 +59,4 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   );
 };
 
-export default ToolButton;
+export default memo(ToolButton);

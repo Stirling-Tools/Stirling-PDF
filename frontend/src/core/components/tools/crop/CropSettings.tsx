@@ -12,7 +12,7 @@ import {
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
-import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import { useAllFiles } from "@app/contexts/FileContext";
 import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
@@ -34,17 +34,17 @@ const CONTAINER_SIZE = 250; // Fit within actual pane width
 
 const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   const { t } = useTranslation();
-  const { selectedFiles, selectedFileStubs } = useSelectedFiles();
+  const { files, fileStubs } = useAllFiles();
 
-  // Get the first selected file for preview
+  // Get the first file for preview
   const selectedStub = useMemo(() => {
-    return selectedFileStubs.length > 0 ? selectedFileStubs[0] : null;
-  }, [selectedFileStubs]);
+    return fileStubs.length > 0 ? fileStubs[0] : null;
+  }, [fileStubs]);
 
-  // Get the first selected file for PDF processing
+  // Get the first file for PDF processing
   const selectedFile = useMemo(() => {
-    return selectedFiles.length > 0 ? selectedFiles[0] : null;
-  }, [selectedFiles]);
+    return files.length > 0 ? files[0] : null;
+  }, [files]);
 
   // Get thumbnail for the selected file
   const [thumbnail, setThumbnail] = useState<string | null>(null);

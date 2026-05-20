@@ -25,7 +25,6 @@ interface PageEditorControlsProps {
   onPageBreak: () => void;
   onPageBreakAll: () => void;
 
-  // Export functions (moved to right rail)
   onExportAll: () => void;
   exportLoading: boolean;
 
@@ -138,9 +137,7 @@ const PageEditorControls = ({
             disabled={!canUndo}
             variant="subtle"
             style={{
-              color: canUndo
-                ? "var(--right-rail-icon)"
-                : "var(--right-rail-icon-disabled)",
+              color: canUndo ? "var(--text-secondary)" : "var(--text-muted)",
             }}
             radius="md"
             size="lg"
@@ -154,9 +151,7 @@ const PageEditorControls = ({
             disabled={!canRedo}
             variant="subtle"
             style={{
-              color: canRedo
-                ? "var(--right-rail-icon)"
-                : "var(--right-rail-icon-disabled)",
+              color: canRedo ? "var(--text-secondary)" : "var(--text-muted)",
             }}
             radius="md"
             size="lg"
@@ -183,8 +178,8 @@ const PageEditorControls = ({
             style={{
               color:
                 selectedPageIds.length > 0
-                  ? "var(--right-rail-icon)"
-                  : "var(--right-rail-icon-disabled)",
+                  ? "var(--text-secondary)"
+                  : "var(--text-muted)",
             }}
             radius="md"
             size="lg"
@@ -200,8 +195,8 @@ const PageEditorControls = ({
             style={{
               color:
                 selectedPageIds.length > 0
-                  ? "var(--right-rail-icon)"
-                  : "var(--right-rail-icon-disabled)",
+                  ? "var(--text-secondary)"
+                  : "var(--text-muted)",
             }}
             radius="md"
             size="lg"
@@ -217,8 +212,8 @@ const PageEditorControls = ({
             style={{
               color:
                 selectedPageIds.length > 0
-                  ? "var(--right-rail-icon)"
-                  : "var(--right-rail-icon-disabled)",
+                  ? "var(--text-secondary)"
+                  : "var(--text-muted)",
             }}
             radius="md"
             size="lg"
@@ -234,8 +229,8 @@ const PageEditorControls = ({
             style={{
               color:
                 selectedPageIds.length > 0
-                  ? "var(--right-rail-icon)"
-                  : "var(--right-rail-icon-disabled)",
+                  ? "var(--text-secondary)"
+                  : "var(--text-muted)",
             }}
             radius="md"
             size="lg"
@@ -251,8 +246,8 @@ const PageEditorControls = ({
             style={{
               color:
                 selectedPageIds.length > 0
-                  ? "var(--right-rail-icon)"
-                  : "var(--right-rail-icon-disabled)",
+                  ? "var(--text-secondary)"
+                  : "var(--text-muted)",
             }}
             radius="md"
             size="lg"

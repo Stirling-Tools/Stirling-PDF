@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 
@@ -27,6 +28,7 @@ import stirling.software.common.util.GeneralUtils;
 class ExtractCSVControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TabulaTableParser tabulaTableParser;
 
     @InjectMocks private ExtractCSVController controller;
 

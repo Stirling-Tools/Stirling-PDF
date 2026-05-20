@@ -11,7 +11,7 @@ from stirling.agents import (
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
-from stirling.rag import RagService
+from stirling.documents import DocumentService
 from stirling.services import AppRuntime
 
 
@@ -39,8 +39,8 @@ def get_execution_planning_agent(request: Request) -> ExecutionPlanningAgent:
     return request.app.state.execution_planning_agent
 
 
-def get_rag_service(request: Request) -> RagService:
-    return request.app.state.runtime.rag_service
+def get_document_service(request: Request) -> DocumentService:
+    return request.app.state.runtime.documents
 
 
 def get_math_auditor_agent(request: Request) -> MathAuditorAgent:

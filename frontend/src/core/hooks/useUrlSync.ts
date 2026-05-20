@@ -60,15 +60,14 @@ export function useNavigationUrlSync(
     firePixel(currentPath);
 
     const route = parseToolRoute(registry);
-    if (route.toolId !== selectedTool) {
-      if (route.toolId) {
+    if (route.toolId) {
+      // URL specifies a tool — navigate to it (URL takes precedence over startup view preference)
+      if (route.toolId !== selectedTool) {
         checkPremiumAndSelect(route.toolId);
-      } else if (selectedTool !== null) {
-        // Only clear selection if we actually had a tool selected
-        // Don't clear on initial load when selectedTool starts as null
-        clearToolSelection();
       }
     }
+    // When the URL is the home path (no tool), leave selectedTool untouched so that
+    // the startup view preference (defaultStartupView) is respected.
 
     hasInitialized.current = true;
   }, [checkPremiumAndSelect, config, enableSync, registry, selectedTool]); // Include dependencies

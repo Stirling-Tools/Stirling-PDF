@@ -1806,7 +1806,11 @@ title = "Đổi tên thông minh"
 [automate]
 copyToSaved = "Sao chép vào Đã lưu"
 desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các thao tác PDF. Lý tưởng cho tác vụ lặp lại."
+export = "Xuất"
 exportForFolderScanning = "Xuất cho quét thư mục"
+import = "Nhập"
+importPartialSuccess = "Đã nhập với {{count}} thao tác chưa ánh xạ: {{ops}}"
+importSuccess = "Đã nhập tự động hóa: {{name}}"
 invalidStep = "Bước không hợp lệ"
 reviewTitle = "Kết quả tự động hóa"
 title = "Tự động hóa"
@@ -1822,6 +1826,7 @@ title = "Cấu hình {{toolName}}"
 [automate.creation]
 createTitle = "Tạo tự động hóa"
 editTitle = "Chỉnh sửa tự động hóa"
+export = "Xuất"
 exportForFolderScanning = "Xuất cho quét thư mục"
 intro = "Tự động hóa chạy các công cụ tuần tự. Để bắt đầu, hãy thêm công cụ theo thứ tự bạn muốn chạy."
 save = "Lưu tự động hóa"
@@ -1852,8 +1857,27 @@ confirm = "Quay lại"
 message = "Bạn có thay đổi chưa lưu. Bạn có chắc muốn quay lại? Mọi thay đổi sẽ bị mất."
 title = "Thay đổi chưa lưu"
 
+[automate.entryMenu]
+label = "Mở menu cho {{title}}"
+
 [automate.files]
 placeholder = "Chọn tệp để xử lý với tự động hóa này"
+
+[automate.importModal]
+cancel = "Hủy"
+confirm = "Nhập"
+detectedAutomation = "JSON Tự động hóa"
+detectedFolderScan = "JSON Quét thư mục"
+dropHint = "Thả JSON vào đây hoặc nhấp để chọn một tệp"
+dropSubhint = "Chấp nhận cả cấu hình Tự động hóa và Quét thư mục"
+dropzoneAriaLabel = "Thả một tệp JSON tự động hóa vào đây"
+intro = "Thả một tệp JSON hoặc dán nội dung của nó bên dưới. Định dạng (Tự động hóa hoặc Quét thư mục) được phát hiện tự động."
+opCount = "{{count}} thao tác"
+parseError = "Không thể phân tích cú pháp: {{message}}"
+pasteLabel = "Hoặc dán JSON"
+pastePlaceholder = "Dán JSON tự động hóa của bạn vào đây…"
+title = "Nhập tự động hóa"
+unresolved = "Chưa ánh xạ: {{ops}}"
 
 [automate.run]
 title = "Chạy tự động hóa"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Đang chạy {{tool}} (bước {{step}} trên {{total}}).
 extracting_content = "Đang trích xuất nội dung từ tài liệu của bạn..."
 processing = "Đang xử lý nội dung đã trích xuất..."
 thinking = "Đang suy nghĩ..."
+whole_doc_compression_round = "Đang hợp nhất ghi chú..."
+whole_doc_read_done = "Đã đọc xong tài liệu..."
+whole_doc_read_started = "Đang đọc tài liệu..."
+whole_doc_slice_done = "Đang đọc tài liệu... ({{percent}}% hoàn tất)"
 
 [chat.toolsUsed]
 summary = "Đã chạy {{count}} công cụ"
@@ -2712,6 +2740,7 @@ used = "đã dùng"
 [compare]
 addFilesHint = "Thêm PDF ở bước Tệp để bật lựa chọn."
 clearSelected = "Xóa lựa chọn"
+clearSlot = "Gỡ tệp"
 cta = "So sánh"
 header = "So sánh PDF"
 loading = "Đang so sánh..."
@@ -2764,6 +2793,7 @@ title = "Các PDF này có vẻ rất khác nhau"
 [compare.edited]
 label = "PDF đã chỉnh sửa"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Chọn PDF gốc trước"
 
 [compare.error]
 filesMissing = "Không thể định vị các tệp đã chọn. Vui lòng chọn lại."
@@ -2846,6 +2876,7 @@ pageLabel = "Trang"
 confirm = "Hoán đổi và chạy lại"
 confirmBody = "Thao tác này sẽ chạy lại công cụ. Bạn có chắc muốn hoán đổi thứ tự của Gốc và Đã chỉnh sửa không?"
 confirmTitle = "Chạy lại so sánh?"
+label = "Hoán đổi"
 
 [compare.toasts]
 unlinkedBody = "Mẹo: Phím Mũi tên Lên/Xuống cuộn cả hai khung; thao tác di chuyển chỉ ảnh hưởng khung đang hoạt động."
@@ -3476,6 +3507,8 @@ unlockAll = "Dùng cho tất cả ({{count}})"
 unlockAllPartialFail = "Sai mật khẩu cho: {{names}}"
 unlockAllSuccess = "Đã mở khóa {{count}} tệp."
 unlockPrompt = "Mở khóa PDF để tiếp tục"
+viewerLocked = "PDF này được bảo vệ bằng mật khẩu"
+viewerUnlock = "Mở khóa"
 
 [encryptedPdfUnlock.password]
 label = "Mật khẩu PDF"
@@ -3583,6 +3616,9 @@ or = "hoặc"
 
 [fileEditor]
 addFiles = "Thêm tệp"
+pageCount = "{{count}} trang"
+pageCount_one = "{{count}} trang"
+pageCount_other = "{{count}} trang"
 
 [fileManager]
 active = "Hoạt động"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Thay đổi chưa được tải lên"
 clearAll = "Xóa tất cả"
 clearSelection = "Xóa lựa chọn"
 clickToUpload = "Nhấp để tải tệp lên"
+closeAllFiles = "Đóng tất cả tệp"
 closeFile = "Đóng tệp"
 cloudFile = "Tệp đám mây"
 copyCreated = "Đã lưu bản sao vào thiết bị này."
@@ -3665,6 +3702,7 @@ selectAll = "Chọn tất cả"
 selectedCount = "{{count}} đã chọn"
 selectedFiles = "Các tệp đã chọn"
 share = "Chia sẻ"
+shared = "Đã chia sẻ"
 sharedByYou = "Bạn đã chia sẻ"
 sharedEditNoticeBody = "Bạn không có quyền chỉnh sửa bản trên máy chủ của tệp này. Mọi chỉnh sửa bạn thực hiện sẽ được lưu thành bản sao cục bộ."
 sharedEditNoticeConfirm = "Đã hiểu"
@@ -3704,6 +3742,41 @@ size = "Kích thước tệp"
 title = "Tệp"
 upload = "Tải lên"
 uploadFiles = "Tải tệp lên"
+
+[fileSelectorPicker]
+empty = "Không có tệp nào"
+placeholder = "Chọn tệp"
+search = "Lọc tệp…"
+tabListLabel = "Tệp đã lưu, bàn làm việc, tải lên"
+upload = "Tải lên từ máy tính"
+
+[fileSelectorPicker.sort]
+dateAsc = "Cũ nhất trước"
+dateDesc = "Mới nhất trước"
+dateLabel = "Mới nhất"
+nameAsc = "A đến Z"
+nameDesc = "Z đến A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Tệp đã lưu"
+upload = "Tải lên"
+workbench = "Bàn làm việc"
+
+[fileSidebar]
+addFiles = "Thêm tệp"
+collapse = "Thu gọn thanh bên"
+dropHint = "Mở tệp để bắt đầu"
+expand = "Mở rộng thanh bên"
+files = "Tệp"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive chưa được cấu hình"
+noFiles = "Chưa có tệp nào"
+openFileManager = "Mở trình quản lý tệp"
+openFromComputer = "Mở từ máy tính"
+openSettings = "Mở cài đặt"
+search = "Tìm kiếm"
+searchPlaceholder = "Tìm kiếm tệp..."
 
 [fileToPDF]
 credit = "Dịch vụ này sử dụng LibreOffice và Unoconv để chuyển đổi tệp."
@@ -4202,6 +4275,11 @@ title = "Chồng lớp PDF"
 desc = "Ghép nhiều trang của tài liệu PDF thành một trang duy nhất"
 tags = "bố cục,sắp xếp,kết hợp"
 title = "Bố cục nhiều trang"
+
+[home.pdfCommentAgent]
+desc = "Yêu cầu AI chú thích PDF bằng ghi chú dán dựa trên lời nhắc của bạn"
+tags = "AI,tác nhân,bình luận,chú thích,ghi chú dán,đánh giá,phản hồi,ghi chú"
+title = "Thêm bình luận bằng AI"
 
 [home.pdfOrganiser]
 desc = "Xóa/Sắp xếp lại trang theo bất kỳ thứ tự nào"
@@ -4903,7 +4981,6 @@ fileUpload = "Dùng nút <strong>Tệp</strong> để tải lên hoặc chọn m
 leftPanel = "Bảng <strong>Công cụ</strong> bên trái liệt kê mọi việc bạn có thể làm. Duyệt theo danh mục hoặc tìm kiếm để nhanh chóng tìm công cụ."
 pageEditorView = "Chuyển sang Trình chỉnh sửa trang để sắp xếp lại, xoay hoặc xóa trang."
 quickAccess = "Bắt đầu tại thanh <strong>Truy cập nhanh</strong> để chuyển giữa Reader, Automate, tệp của bạn và tất cả các hướng dẫn."
-rightRail = "<strong>Thanh bên phải</strong> có các thao tác nhanh để chọn tệp, đổi chủ đề hoặc ngôn ngữ, và tải kết quả."
 topBar = "Thanh trên cho phép bạn chuyển giữa <strong>Trình xem</strong>, <strong>Trình chỉnh sửa trang</strong> và <strong>Tệp đang hoạt động</strong>."
 wrapUp = "Đó là những điểm mới trong V2. Mở menu <strong>Hướng dẫn</strong> bất cứ lúc nào để xem lại nội dung này, tour Công cụ hoặc tour Quản trị."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Chọn theo tháng"
 selectYearly = "Chọn theo năm"
 title = "Chọn chu kỳ thanh toán"
 totalForSeats = "Tổng ({{count}} ghế)"
+
+[pdfCommentAgent]
+submit = "Tạo bình luận"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Vui lòng mô tả AI nên bình luận về điều gì"
+failed = "Không tạo được bình luận"
+tooLong = "Lời nhắc quá dài (tối đa {{max}} ký tự)"
+
+[pdfCommentAgent.prompt]
+label = "AI nên bình luận về điều gì?"
+placeholder = "ví dụ: Đánh dấu mọi ngày tháng mơ hồ và đề xuất làm rõ"
+
+[pdfCommentAgent.results]
+title = "PDF đã được bình luận"
+
+[pdfCommentAgent.settings]
+title = "Hướng dẫn bình luận"
 
 [pdfOrganiser]
 header = "Sắp xếp trang PDF"
@@ -6486,46 +6581,6 @@ title = "Tương phản cao"
 text = "Đảo hoàn toàn tất cả màu trong PDF, tạo hiệu ứng giống âm bản. Hữu ích để tạo phiên bản chế độ tối hoặc giảm mỏi mắt trong điều kiện thiếu sáng."
 title = "Đảo tất cả màu"
 
-[rightRail]
-annotations = "Chú thích"
-applyRedactionsFirst = "Áp dụng bôi đen trước"
-closePdf = "Đóng PDF"
-closeSelected = "Đóng các tệp đã chọn"
-deleteSelected = "Xóa các trang đã chọn"
-deselectAll = "Bỏ chọn tất cả"
-downloadAll = "Tải xuống tất cả"
-downloadSelected = "Tải xuống các tệp đã chọn"
-draw = "Vẽ"
-exitRedaction = "Thoát chế độ bôi đen"
-exportAll = "Xuất PDF"
-exportSelected = "Xuất các trang đã chọn"
-formFill = "Điền biểu mẫu"
-language = "Ngôn ngữ"
-panMode = "Chế độ kéo"
-print = "In PDF"
-readAloud = "Đọc thành tiếng"
-readAloudLanguage = "Ngôn ngữ"
-readAloudSpeed = "Tốc độ"
-redact = "Bôi đen"
-rotateLeft = "Xoay trái"
-rotateRight = "Xoay phải"
-ruler = "Thước / Đo"
-save = "Lưu"
-saveAll = "Lưu tất cả"
-saveAs = "Lưu dưới dạng"
-saveChanges = "Lưu thay đổi"
-search = "Tìm kiếm PDF"
-selectAll = "Chọn tất cả"
-selectByNumber = "Chọn theo số trang"
-selectLanguage = "Chọn ngôn ngữ"
-toggleAnnotations = "Chuyển đổi hiển thị chú thích"
-toggleAttachments = "Bật/Tắt tệp đính kèm"
-toggleBookmarks = "Bật/tắt dấu trang"
-toggleComments = "Bình luận"
-toggleLayers = "Chuyển đổi Lớp"
-toggleSidebar = "Chuyển đổi thanh bên"
-toggleTheme = "Chuyển đổi chủ đề"
-
 [rotate]
 rotateLeft = "Xoay ngược chiều kim đồng hồ"
 rotateRight = "Xoay theo chiều kim đồng hồ"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Ẩn chuyển đổi không khả dụng"
 hideUnavailableConversionsDescription = "Loại bỏ tùy chọn chuyển đổi bị vô hiệu hóa trong công cụ Chuyển đổi thay vì hiển thị mờ."
 hideUnavailableTools = "Ẩn công cụ không khả dụng"
 hideUnavailableToolsDescription = "Loại bỏ các công cụ bị server của bạn vô hiệu hóa thay vì hiển thị mờ."
+language = "Ngôn ngữ"
+languageDescription = "Chọn ngôn ngữ hiển thị"
 logout = "Đăng xuất"
 setAsDefault = "Đặt làm mặc định"
+theme = "Chủ đề"
+themeDark = "Tối"
+themeDescription = "Chuyển giữa chế độ sáng và tối"
+themeLight = "Sáng"
 title = "Chung"
 user = "Người dùng"
 
@@ -6810,6 +6871,20 @@ title = "Thông tin phiên bản"
 auto = "Tự động"
 fitPage = "Vừa trang"
 fitWidth = "Vừa chiều rộng"
+
+[settings.help]
+label = "Tour"
+title = "Trợ giúp"
+
+[settings.help.adminTour]
+description = "Khám phá quản lý nhóm, cài đặt hệ thống và các tính năng doanh nghiệp."
+start = "Bắt đầu"
+title = "Tour quản trị"
+
+[settings.help.toolsTour]
+description = "Tìm hiểu cách tải lên tệp, chọn công cụ và xem lại kết quả."
+start = "Bắt đầu"
+title = "Tour công cụ"
 
 [settings.hotkeys]
 capturing = "Nhấn phím… (Esc để hủy)"
@@ -7780,6 +7855,8 @@ settings = "Cài đặt"
 [tool]
 endpointUnavailable = "Công cụ này không khả dụng trên máy chủ của bạn."
 endpointUnavailableClickable = "Không khả dụng ở chế độ này. Nhấp để đăng nhập."
+filesLoading = "Các tệp vẫn đang tải, vui lòng đợi."
+filesLoadingProgress = "{{loaded}} / {{total}} tệp đang tải..."
 invalidParams = "Điền các cài đặt bắt buộc."
 noFiles = "Thêm tệp để bắt đầu."
 scopeFiles = "tệp"
@@ -7789,10 +7866,15 @@ singleFileScope = "Chỉ áp dụng cho: {{fileName}}"
 viewerMode = "Chuyển sang trình chỉnh sửa tệp để chọn nhiều tệp."
 
 [toolPanel]
+allTools = "Tất cả công cụ"
 alpha = "Alpha"
+backToTools = "Quay lại công cụ"
+collapse = "Thu gọn bảng"
 comingSoon = "Sắp ra mắt:"
+expand = "Mở rộng bảng"
 placeholder = "Chọn một công cụ để bắt đầu"
 premiumFeature = "Tính năng Premium:"
+search = "Tìm kiếm công cụ"
 
 [toolPanel.fullscreen]
 comingSoon = "Sắp ra mắt:"
@@ -8342,6 +8424,51 @@ bullet2 = "Khuyến nghị nền trong suốt để có kết quả tốt nhất
 bullet3 = "Hình ảnh sẽ được đổi kích thước để vừa vùng chữ ký"
 description = "Tải lên hình ảnh chữ ký đã tạo sẵn. Lý tưởng nếu bạn có chữ ký quét hoặc logo công ty."
 title = "Tải lên hình ảnh chữ ký"
+
+[workbenchBar]
+activeFiles = "Tệp đang mở"
+annotations = "Chú thích"
+applyRedactionsFirst = "Áp dụng bôi đen trước"
+closeAll = "Đóng tất cả tệp"
+closePdf = "Đóng PDF"
+closeSelected = "Đóng các tệp đã chọn"
+deleteSelected = "Xóa các trang đã chọn"
+deselectAll = "Bỏ chọn tất cả"
+downloadAll = "Tải xuống tất cả"
+downloadSelected = "Tải xuống các tệp đã chọn"
+draw = "Vẽ"
+exitRedaction = "Thoát chế độ bôi đen"
+exportAll = "Xuất PDF"
+exportSelected = "Xuất các trang đã chọn"
+formFill = "Điền biểu mẫu"
+language = "Ngôn ngữ"
+multiTool = "Công cụ đa năng"
+panMode = "Chế độ di chuyển"
+print = "In PDF"
+readAloud = "Đọc to"
+readAloudLanguage = "Ngôn ngữ"
+readAloudSpeed = "Tốc độ"
+redact = "Bôi đen"
+rotateLeft = "Xoay trái"
+rotateRight = "Xoay phải"
+ruler = "Thước / Đo"
+save = "Lưu"
+saveAll = "Lưu tất cả"
+saveAs = "Lưu dưới dạng"
+saveChanges = "Lưu thay đổi"
+search = "Tìm kiếm trong PDF"
+selectAll = "Chọn tất cả"
+selectByNumber = "Chọn theo số trang"
+selectLanguage = "Chọn ngôn ngữ"
+share = "Chia sẻ"
+toggleAnnotations = "Bật/Tắt hiển thị chú thích"
+toggleAttachments = "Bật/Tắt tệp đính kèm"
+toggleBookmarks = "Bật/Tắt dấu trang"
+toggleComments = "Bình luận"
+toggleLayers = "Bật/Tắt lớp"
+toggleSidebar = "Bật/Tắt thanh bên"
+toggleTheme = "Bật/Tắt chủ đề"
+viewer = "Trình xem"
 
 [workspace]
 title = "Không gian làm việc"

@@ -15,6 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--search-text-and-icon-color);
 }
 
 .input {
@@ -26,6 +27,8 @@
   outline: none;
   box-shadow: none;
   transition: box-shadow 0.2s ease;
+  background-color: var(--input-bg);
+  color: var(--search-text-and-icon-color);
 }
 
 .input::placeholder {
@@ -62,6 +65,7 @@
   justify-content: center;
   font-size: 16px;
   transition: background-color 0.2s ease;
+  color: var(--search-text-and-icon-color);
 }
 
 .clearButton:hover {

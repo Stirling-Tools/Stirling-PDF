@@ -184,8 +184,6 @@ public class ConvertPdfJsonController {
 
         validateJobAccess(jobId);
 
-        byte[] pdfBytes = pdfJsonConversionService.exportUpdatedPages(jobId, document);
-
         String baseName =
                 (filename != null && !filename.isBlank())
                         ? FILE_EXTENSION_PATTERN
@@ -197,13 +195,18 @@ public class ConvertPdfJsonController {
                                 .orElse("document");
         String docName = baseName.endsWith(".pdf") ? baseName : baseName + ".pdf";
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-        try {
-            Files.write(tempOut.getPath(), pdfBytes);
+        try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            pdfJsonConversionService.exportUpdatedPages(jobId, document, os);
         } catch (Exception e) {
             tempOut.close();
             throw e;
         }
-        return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
+        try {
+            return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
     }
 
     @GetMapping(value = "/pdf/text-editor/page/{jobId}/{pageNumber}")

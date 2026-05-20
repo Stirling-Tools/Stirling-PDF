@@ -29,7 +29,9 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import {
   useChat,
   AiWorkflowPhase,
+  isKnownEngineProgressDetail,
   type AiWorkflowProgress,
+  type AnyEngineProgressDetail,
 } from "@app/components/chat/ChatContext";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import "@app/components/chat/ChatPanel.css";
@@ -90,7 +92,39 @@ function formatProgress(
         })
       : t("chat.progress.executing_tool_generic");
   }
+  if (progress.phase === AiWorkflowPhase.ENGINE_PROGRESS) {
+    return formatEngineProgress(progress.engineDetail, t);
+  }
   return t(`chat.progress.${progress.phase}`);
+}
+
+/**
+ * Render an engine-side progress event (e.g. chunked-reasoner slice progress) into a user-facing
+ * message. Falls through to the generic processing label for unknown sub-phases so adding new
+ * engine events doesn't break the UI before the frontend learns about them.
+ */
+function formatEngineProgress(
+  detail: AnyEngineProgressDetail | undefined,
+  t: TranslateFn,
+): string {
+  if (!detail || !isKnownEngineProgressDetail(detail)) {
+    return t("chat.progress.processing");
+  }
+  switch (detail.phase) {
+    case "whole_doc_read_started":
+      return t("chat.progress.whole_doc_read_started");
+    case "whole_doc_slice_done": {
+      const percent =
+        detail.total > 0
+          ? Math.round((detail.completed / detail.total) * 100)
+          : 0;
+      return t("chat.progress.whole_doc_slice_done", { percent });
+    }
+    case "whole_doc_compression_round":
+      return t("chat.progress.whole_doc_compression_round");
+    case "whole_doc_read_done":
+      return t("chat.progress.whole_doc_read_done");
+  }
 }
 
 function ToolsUsedBlock({

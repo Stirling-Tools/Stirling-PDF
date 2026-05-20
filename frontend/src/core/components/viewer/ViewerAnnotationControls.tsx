@@ -1,0 +1,242 @@
+import React, { useCallback } from "react";
+import { ActionIcon } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { ViewerContext } from "@app/contexts/ViewerContext";
+import { useSignature } from "@app/contexts/SignatureContext";
+import { useFileState, useFileContext } from "@app/contexts/FileContext";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import {
+  useNavigationState,
+  useNavigationGuard,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useRedactionMode, useRedaction } from "@app/contexts/RedactionContext";
+import {
+  defaultParameters,
+  RedactParameters,
+} from "@app/hooks/tools/redact/useRedactParameters";
+import { RedactionMode } from "@embedpdf/plugin-redaction";
+
+interface ViewerAnnotationControlsProps {
+  currentView: string;
+  disabled?: boolean;
+}
+
+export default function ViewerAnnotationControls({
+  currentView,
+  disabled = false,
+}: ViewerAnnotationControlsProps) {
+  const { t } = useTranslation();
+  const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
+
+  // Viewer context for PDF controls - safely handle when not available
+  const viewerContext = React.useContext(ViewerContext);
+
+  // Signature context for accessing drawing API
+  const { historyApiRef, isPlacementMode } = useSignature();
+
+  // File state for save functionality
+  const { state, selectors } = useFileState();
+  const { actions: fileActions } = useFileContext();
+  const activeFiles = selectors.getFiles();
+
+  // Check if we're in sign mode or redaction mode
+  const { selectedTool } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
+  const isSignMode = selectedTool === "sign";
+  const isRedactMode = selectedTool === "redact";
+
+  // Get redaction pending state and navigation guard
+  const { isRedacting: _isRedacting } = useRedactionMode();
+  const { requestNavigation, setHasUnsavedChanges, hasUnsavedChanges } =
+    useNavigationGuard();
+  const {
+    setRedactionMode,
+    activateRedact,
+    setRedactionConfig,
+    setRedactionsApplied,
+    redactionApiRef,
+    setActiveType,
+  } = useRedaction();
+
+  // Check if we're in any annotation tool that should disable the toggle
+  const isInAnnotationTool =
+    selectedTool === "annotate" ||
+    selectedTool === "sign" ||
+    selectedTool === "addImage" ||
+    selectedTool === "addText";
+
+  // Check if we're on annotate tool to highlight the button
+  const isAnnotateActive = selectedTool === "annotate";
+  const annotationsHidden = viewerContext
+    ? !viewerContext.isAnnotationsVisible
+    : false;
+
+  // Persist annotations to file if there are unsaved changes
+  const saveAnnotationsIfNeeded = async () => {
+    if (
+      !viewerContext?.exportActions?.saveAsCopy ||
+      currentView !== "viewer" ||
+      !historyApiRef?.current?.canUndo()
+    )
+      return;
+    if (activeFiles.length === 0 || state.files.ids.length === 0) return;
+
+    try {
+      const arrayBuffer = await viewerContext.exportActions.saveAsCopy();
+      if (!arrayBuffer) return;
+
+      const file = new File([new Blob([arrayBuffer])], activeFiles[0].name, {
+        type: "application/pdf",
+      });
+      const parentStub = selectors.getStirlingFileStub(state.files.ids[0]);
+      if (!parentStub) return;
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+        [file],
+        parentStub,
+        "redact",
+      );
+      await fileActions.consumeFiles(
+        [state.files.ids[0]],
+        stirlingFiles,
+        stubs,
+      );
+
+      // Clear unsaved changes flags after successful save
+      setHasUnsavedChanges(false);
+      setRedactionsApplied(false);
+    } catch (error) {
+      console.error("Error auto-saving annotations before redaction:", error);
+    }
+  };
+
+  const exitRedactionMode = useCallback(() => {
+    navActions.setToolAndWorkbench(null, "viewer");
+    setLeftPanelView("toolPicker");
+    setRedactionMode(false);
+    setActiveType(null);
+  }, [navActions, setLeftPanelView, setRedactionMode, setActiveType]);
+
+  // Handle redaction mode toggle
+  const handleRedactionToggle = async () => {
+    if (isRedactMode) {
+      exitRedactionMode();
+    } else {
+      const hasAnnotationChanges = historyApiRef?.current?.canUndo() ?? false;
+
+      const enterRedactionMode = async () => {
+        await saveAnnotationsIfNeeded();
+
+        const manualConfig: RedactParameters = {
+          ...defaultParameters,
+          mode: "manual",
+        };
+        setRedactionConfig(manualConfig);
+
+        navActions.setToolAndWorkbench("redact", "viewer");
+
+        setSidebarsVisible(true);
+        setLeftPanelView("toolContent");
+
+        setRedactionMode(true);
+        setTimeout(() => {
+          const currentType = redactionApiRef.current?.getActiveType?.();
+          if (currentType !== RedactionMode.Redact) {
+            activateRedact();
+          }
+        }, 200);
+      };
+
+      if (hasAnnotationChanges) {
+        requestNavigation(enterRedactionMode);
+      } else {
+        await enterRedactionMode();
+      }
+    }
+  };
+
+  const handleToggleAnnotationsVisibility = useCallback(() => {
+    if (!annotationsHidden && hasUnsavedChanges) {
+      requestNavigation(() => viewerContext?.toggleAnnotationsVisibility());
+    } else {
+      viewerContext?.toggleAnnotationsVisibility();
+    }
+  }, [annotationsHidden, hasUnsavedChanges, requestNavigation, viewerContext]);
+
+  // NOTE: This early return is placed AFTER all hooks to satisfy React's rules of hooks
+  if (isSignMode) {
+    return null;
+  }
+
+  return (
+    <>
+      <Tooltip
+        content={
+          isRedactMode
+            ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
+            : t("workbenchBar.redact", "Redact")
+        }
+        position="bottom"
+        offset={16}
+        arrow
+        portalTarget={document.body}
+      >
+        <ActionIcon
+          variant={isRedactMode ? "filled" : "subtle"}
+          color={isRedactMode ? "blue" : undefined}
+          radius="md"
+          className="workbench-bar-action-icon"
+          onClick={handleRedactionToggle}
+          disabled={disabled || currentView !== "viewer"}
+        >
+          <LocalIcon
+            icon="scan-delete-rounded"
+            width="1.25rem"
+            height="1.25rem"
+          />
+        </ActionIcon>
+      </Tooltip>
+
+      <Tooltip
+        content={t(
+          "workbenchBar.toggleAnnotations",
+          "Toggle Annotations Visibility",
+        )}
+        position="bottom"
+        offset={16}
+        arrow
+        portalTarget={document.body}
+      >
+        <ActionIcon
+          variant={annotationsHidden ? "filled" : "subtle"}
+          color={annotationsHidden ? "blue" : undefined}
+          radius="md"
+          className="workbench-bar-action-icon"
+          onClick={handleToggleAnnotationsVisibility}
+          disabled={
+            disabled ||
+            currentView !== "viewer" ||
+            (isInAnnotationTool && !isAnnotateActive) ||
+            isPlacementMode
+          }
+          data-active={annotationsHidden ? "true" : undefined}
+          aria-pressed={annotationsHidden}
+        >
+          <LocalIcon
+            icon={
+              viewerContext?.isAnnotationsVisible
+                ? "visibility"
+                : "preview-off-rounded"
+            }
+            width="1.25rem"
+            height="1.25rem"
+          />
+        </ActionIcon>
+      </Tooltip>
+    </>
+  );
+}

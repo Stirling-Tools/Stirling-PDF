@@ -17,7 +17,7 @@ import {
   AppConfigRetryOptions,
   useAppConfig,
 } from "@app/contexts/AppConfigContext";
-import { RightRailProvider } from "@app/contexts/RightRailContext";
+import { WorkbenchBarProvider } from "@app/contexts/WorkbenchBarContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
@@ -139,13 +139,13 @@ export function AppProviders({
                                   <RedactionProvider>
                                     <FormFillProvider>
                                       <AnnotationProvider>
-                                        <RightRailProvider>
+                                        <WorkbenchBarProvider>
                                           <TourOrchestrationProvider>
                                             <AdminTourOrchestrationProvider>
                                               {children}
                                             </AdminTourOrchestrationProvider>
                                           </TourOrchestrationProvider>
-                                        </RightRailProvider>
+                                        </WorkbenchBarProvider>
                                       </AnnotationProvider>
                                     </FormFillProvider>
                                   </RedactionProvider>

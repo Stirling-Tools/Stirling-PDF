@@ -1,0 +1,283 @@
+/* ── Trigger ─────────────────────────────────────── */
+.trigger {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-surface);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  user-select: none;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.trigger:hover:not(.triggerDisabled) {
+  border-color: var(--mantine-color-blue-5);
+}
+
+.triggerDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.triggerOpen {
+  border-color: var(--mantine-color-blue-5);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--mantine-color-blue-5) 20%, transparent);
+}
+
+/* ── Popover dropdown ────────────────────────────── */
+.dropdown {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-md) !important;
+  min-width: 340px;
+}
+
+/* ── Header area (tabs + sort) ───────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.45rem;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+
+.tabGroup {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+}
+
+/* One slim row: Saved files | Workbench | Upload (text only, no icon) */
+.slimTabBar {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+  max-height: 26px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-default-hover) 85%,
+    transparent
+  );
+  padding: 1px;
+  gap: 1px;
+  box-sizing: border-box;
+}
+
+.slimTab,
+.slimTabActive {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  padding: 1px 0.35rem;
+  border-radius: calc(var(--radius-sm) - 2px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
+}
+
+.slimTab {
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+}
+
+.slimTab:hover {
+  color: var(--mantine-color-text);
+  background: color-mix(in srgb, var(--mantine-color-body) 60%, transparent);
+}
+
+.slimTabActive {
+  background: var(--mantine-color-blue-filled);
+  color: #fff;
+}
+
+.slimTabUpload {
+  flex: 0 0 auto;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.15;
+  padding: 1px 0.45rem;
+  border-radius: calc(var(--radius-sm) - 2px);
+  white-space: nowrap;
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+}
+
+.slimTabUpload:hover:not(:disabled) {
+  color: var(--mantine-color-blue-filled);
+  background: color-mix(in srgb, var(--mantine-color-blue-1) 35%, transparent);
+}
+
+.slimTabUpload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Sort button group ───────────────────────────── */
+.sortGroup {
+  display: flex;
+  gap: 2px;
+  background: var(--mantine-color-default-hover);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.sortBtn {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.6;
+  transition:
+    background 0.1s,
+    color 0.1s;
+  white-space: nowrap;
+}
+
+.sortBtn:hover {
+  color: var(--mantine-color-text);
+}
+
+.sortBtnActive {
+  background: var(--mantine-color-blue-filled);
+  color: white;
+}
+
+.sortArrow {
+  opacity: 0.85;
+  font-size: 0.65rem;
+  vertical-align: middle;
+}
+
+/* ── Search / filter row ─────────────────────────── */
+.searchRow {
+  padding: 0.3rem 0.45rem;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+
+.searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  height: 1.625rem;
+  padding: 0 0.5rem;
+  font-size: 0.7rem;
+  border: 1px solid var(--border-subtle, var(--border-default));
+  border-radius: var(--radius-sm);
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--mantine-color-dimmed);
+}
+
+.searchInput:focus {
+  border-color: var(--mantine-color-blue-5);
+}
+
+/* hide browser clear button in Safari */
+.searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* ── Scrollable file list ────────────────────────── */
+.list {
+  padding: 0;
+}
+
+/* ── Individual file row ─────────────────────────── */
+.fileItem {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border-default);
+  text-align: left;
+  transition: background 0.08s ease;
+}
+
+.fileItem:first-child {
+  border-top: none;
+}
+
+.fileItem:hover:not(:disabled) {
+  background: var(--mantine-color-default-hover);
+}
+
+.fileItem:disabled {
+  cursor: wait;
+}
+
+.fileItemContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fileName {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--mantine-color-text);
+}
+
+.fileMeta {
+  font-size: 0.6875rem;
+  color: var(--mantine-color-dimmed);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Empty / loading states ──────────────────────── */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--mantine-color-dimmed);
+}

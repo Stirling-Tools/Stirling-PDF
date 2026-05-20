@@ -31,8 +31,9 @@ test.describe("Navigation", () => {
     await page.locator('a[href="/merge"]').first().click();
     await expect(page).toHaveURL(/\/merge/);
 
+    // In the redesigned UI, "Back to tools" button replaces the old "Tools" link
     await page
-      .getByRole("link", { name: /^Tools$/i })
+      .getByRole("button", { name: /Back to tools/i })
       .first()
       .click();
     await expect(page).toHaveURL("/");

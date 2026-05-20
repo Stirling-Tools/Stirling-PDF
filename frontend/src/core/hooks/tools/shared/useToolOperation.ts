@@ -121,7 +121,7 @@ export const useToolOperation = <TParams>(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
       // Validation
       if (selectedFiles.length === 0) {
-        actions.setError(t("noFileSelected", "No files selected"));
+        actions.setError(t("noFileSelected", "No file loaded"));
         return;
       }
 
@@ -459,7 +459,7 @@ export const useToolOperation = <TParams>(
                       inputStirlingFileStubs[0],
                     newToolOperation,
                     file,
-                    thumbnail,
+                    metadata?.thumbnailUrl || thumbnail,
                     metadata,
                   ),
               );
@@ -523,7 +523,7 @@ export const useToolOperation = <TParams>(
                   createNewStirlingFileStub(
                     file,
                     undefined,
-                    thumbnail,
+                    metadata?.thumbnailUrl || thumbnail,
                     metadata,
                   ),
               );

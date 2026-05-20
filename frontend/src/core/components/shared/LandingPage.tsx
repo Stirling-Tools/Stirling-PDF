@@ -8,6 +8,7 @@ import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { LandingDocumentStack } from "@app/components/shared/LandingDocumentStack";
 import { LandingActions } from "@app/components/shared/LandingActions";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import "@app/components/shared/LandingPage.css";
 
 const LandingPage = () => {
@@ -79,9 +80,10 @@ const LandingPage = () => {
       >
         <LandingDocumentStack />
 
-        <h1 className="landing-title">
-          {t("landing.heroTitle", "Stirling PDF")}
-        </h1>
+        <Wordmark
+          alt={t("landing.heroTitle", "Stirling PDF")}
+          className="landing-title"
+        />
         <p className="landing-subtitle">
           {t(
             "landing.heroSubtitle",

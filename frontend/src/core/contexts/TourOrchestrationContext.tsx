@@ -30,6 +30,7 @@ interface TourOrchestrationContextType {
   // File operations
   selectFirstFile: () => void;
   pinFile: () => void;
+  revealFileCardHoverMenu: () => void;
 
   // Crop settings (placeholder for now)
   modifyCropSettings: () => void;
@@ -192,6 +193,20 @@ export const TourOrchestrationProvider: React.FC<{
     window.dispatchEvent(event);
   }, []);
 
+  const revealFileCardHoverMenu = useCallback(() => {
+    // The hover menu is hidden via CSS until the card is hovered.
+    // Override data-force-visible so the CSS rule makes it opacity:1 / pointer-events:auto,
+    // then nudge Reactour to re-measure the now-visible pin button.
+    const menu = document.querySelector(
+      '[data-hover-action-menu-mode="cssHover"]',
+    ) as HTMLElement | null;
+    if (menu) {
+      menu.setAttribute("data-force-visible", "true");
+      window.dispatchEvent(new Event("resize"));
+      requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    }
+  }, []);
+
   const executeTool = useCallback(() => {
     // Trigger the run button click
     const runButton = document.querySelector(
@@ -213,6 +228,7 @@ export const TourOrchestrationProvider: React.FC<{
     switchToActiveFiles,
     selectFirstFile,
     pinFile,
+    revealFileCardHoverMenu,
     modifyCropSettings,
     executeTool,
   };

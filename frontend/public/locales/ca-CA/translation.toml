@@ -1806,7 +1806,11 @@ title = "Canvi de nom intel·ligent"
 [automate]
 copyToSaved = "Copia a Desats"
 desc = "Creeu fluxos de treball de diversos passos encadenant accions de PDF. Ideal per a tasques recurrents."
+export = "Exporta"
 exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
+import = "Importa"
+importPartialSuccess = "S’ha importat amb {{count}} operacions sense correspondència: {{ops}}"
+importSuccess = "Automatització importada: {{name}}"
 invalidStep = "Pas no vàlid"
 reviewTitle = "Resultats de l’automatització"
 title = "Automatitza"
@@ -1822,6 +1826,7 @@ title = "Configura {{toolName}}"
 [automate.creation]
 createTitle = "Crea automatització"
 editTitle = "Edita automatització"
+export = "Exporta"
 exportForFolderScanning = "Exporta per a l'escaneig de carpetes"
 intro = "Les automatitzacions executen les eines seqüencialment. Per començar, afegiu les eines en l’ordre que voleu que s’executin."
 save = "Desa l’automatització"
@@ -1852,8 +1857,27 @@ confirm = "Torna enrere"
 message = "Teniu canvis no desats. Esteu segur que voleu tornar enrere? Es perdran tots els canvis."
 title = "Canvis no desats"
 
+[automate.entryMenu]
+label = "Obre el menú per a {{title}}"
+
 [automate.files]
 placeholder = "Seleccioneu fitxers per processar amb aquesta automatització"
+
+[automate.importModal]
+cancel = "Cancel·la"
+confirm = "Importa"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "JSON d’escaneig de carpetes"
+dropHint = "Deixa anar el JSON aquí o fes clic per triar un fitxer"
+dropSubhint = "S’accepten tant les configuracions d’Automate com les d’escaneig de carpetes"
+dropzoneAriaLabel = "Deixa anar aquí un fitxer JSON d’automatització"
+intro = "Deixa anar un fitxer JSON o enganxa’n el contingut a continuació. El format (Automate o escaneig de carpetes) es detecta automàticament."
+opCount = "{{count}} operació(ns)"
+parseError = "No s’ha pogut analitzar: {{message}}"
+pasteLabel = "O enganxa el JSON"
+pastePlaceholder = "Enganxa aquí el JSON de l’automatització…"
+title = "Importa automatització"
+unresolved = "Sense correspondència: {{ops}}"
 
 [automate.run]
 title = "Executa l’automatització"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Executant {{tool}} (pas {{step}} de {{total}})..."
 extracting_content = "Extraient el contingut dels teus documents..."
 processing = "Processant el contingut extret..."
 thinking = "Pensant..."
+whole_doc_compression_round = "S’estan consolidant les notes..."
+whole_doc_read_done = "S’ha acabat de llegir el document..."
+whole_doc_read_started = "S’està llegint el document..."
+whole_doc_slice_done = "S’està llegint el document... ({{percent}}% complet)"
 
 [chat.toolsUsed]
 summary = "S'han executat {{count}} eines"
@@ -2712,6 +2740,7 @@ used = "utilitzats"
 [compare]
 addFilesHint = "Afegeix PDFs al pas Fitxers per habilitar la selecció."
 clearSelected = "Esborra la selecció"
+clearSlot = "Elimina el fitxer"
 cta = "Compara"
 header = "Compara PDF"
 loading = "Comparant..."
@@ -2764,6 +2793,7 @@ title = "Aquests PDFs semblen molt diferents"
 [compare.edited]
 label = "PDF editat"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Selecciona primer el PDF original"
 
 [compare.error]
 filesMissing = "No s'han pogut localitzar els fitxers seleccionats. Torna a seleccionar-los."
@@ -2846,6 +2876,7 @@ pageLabel = "Pàgina"
 confirm = "Intercanvia i torna a executar"
 confirmBody = "Això tornarà a executar l'eina. Segur que vols intercanviar l'ordre d'Original i Editat?"
 confirmTitle = "Tornar a executar la comparació?"
+label = "Intercanvia"
 
 [compare.toasts]
 unlinkedBody = "Consell: Fletxa amunt/avall desplaça ambdós panells; la panoràmica només mou el panell actiu."
@@ -3476,6 +3507,8 @@ unlockAll = "Aplica-ho a tots ({{count}})"
 unlockAllPartialFail = "Contrasenya incorrecta per a: {{names}}"
 unlockAllSuccess = "S'han desbloquejat {{count}} fitxer(s)."
 unlockPrompt = "Desbloqueja el PDF per continuar"
+viewerLocked = "Aquest PDF està protegit amb contrasenya"
+viewerUnlock = "Desbloqueja"
 
 [encryptedPdfUnlock.password]
 label = "Contrasenya del PDF"
@@ -3583,6 +3616,9 @@ or = "o"
 
 [fileEditor]
 addFiles = "Afegeix fitxers"
+pageCount = "{{count}} pàgines"
+pageCount_one = "{{count}} pàgina"
+pageCount_other = "{{count}} pàgines"
 
 [fileManager]
 active = "Actiu"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Canvis no pujats"
 clearAll = "Neteja-ho tot"
 clearSelection = "Neteja la selecció"
 clickToUpload = "Feu clic per pujar fitxers"
+closeAllFiles = "Tanca tots els fitxers"
 closeFile = "Tanca el fitxer"
 cloudFile = "Fitxer al núvol"
 copyCreated = "Còpia desada en aquest dispositiu."
@@ -3665,6 +3702,7 @@ selectAll = "Selecciona-ho tot"
 selectedCount = "{{count}} seleccionats"
 selectedFiles = "Fitxers seleccionats"
 share = "Comparteix"
+shared = "Compartit"
 sharedByYou = "Compartits per tu"
 sharedEditNoticeBody = "No tens drets d'edició de la versió al servidor d'aquest fitxer. Qualsevol edició que facis es desarà com a còpia local."
 sharedEditNoticeConfirm = "Entesos"
@@ -3704,6 +3742,41 @@ size = "Mida del fitxer"
 title = "Fitxers"
 upload = "Puja"
 uploadFiles = "Puja fitxers"
+
+[fileSelectorPicker]
+empty = "No hi ha fitxers disponibles"
+placeholder = "Selecciona un fitxer"
+search = "Filtra fitxers…"
+tabListLabel = "Fitxers desats, àrea de treball, pujada"
+upload = "Puja des de l’ordinador"
+
+[fileSelectorPicker.sort]
+dateAsc = "Més antics primer"
+dateDesc = "Més nous primer"
+dateLabel = "Més recents"
+nameAsc = "De la A a la Z"
+nameDesc = "De la Z a la A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Fitxers desats"
+upload = "Puja"
+workbench = "Àrea de treball"
+
+[fileSidebar]
+addFiles = "Afegeix fitxers"
+collapse = "Redueix la barra lateral"
+dropHint = "Obre fitxers per començar"
+expand = "Amplia la barra lateral"
+files = "Fitxers"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive no està configurat"
+noFiles = "Encara no hi ha fitxers"
+openFileManager = "Obre el gestor de fitxers"
+openFromComputer = "Obre des de l’ordinador"
+openSettings = "Obre la configuració"
+search = "Cerca"
+searchPlaceholder = "Cerca fitxers..."
 
 [fileToPDF]
 credit = "Utilitza LibreOffice i Unoconv per a la conversió."
@@ -4202,6 +4275,11 @@ title = "Superposar PDFs"
 desc = "Fusiona diverses pàgines d'un document PDF en una sola pàgina"
 tags = "disposició,organitza,combina"
 title = "Disposició Multi-Pàgina"
+
+[home.pdfCommentAgent]
+desc = "Demana a la IA que anoti un PDF amb comentaris en notes adhesives segons la indicació"
+tags = "IA,agent,comentari,anotar,nota adhesiva,revisió,comentaris,notes"
+title = "Afegeix comentaris amb IA"
 
 [home.pdfOrganiser]
 desc = "Elimina/reorganitza pàgines en qualsevol ordre"
@@ -4903,7 +4981,6 @@ fileUpload = "Utilitza el botó <strong>Fitxers</strong> per pujar o triar un PD
 leftPanel = "El panell esquerre de <strong>Eines</strong> llista tot el que pots fer. Navega per categories o cerca per trobar una eina ràpidament."
 pageEditorView = "Canvia a l'Editor de pàgines per reordenar, girar o suprimir pàgines."
 quickAccess = "Comença a la barra de <strong>Accés ràpid</strong> per saltar entre el Lector, Automatitza, els teus fitxers i totes les visites guiades."
-rightRail = "La <strong>barra dreta</strong> conté accions ràpides per seleccionar fitxers, canviar el tema o l’idioma i baixar els resultats."
 topBar = "La barra superior et permet canviar entre el <strong>Visor</strong>, l’<strong>Editor de pàgines</strong> i els <strong>Fitxers actius</strong>."
 wrapUp = "Això és el que hi ha de nou a la V2. Obre el menú de <strong>Visites guiades</strong> en qualsevol moment per tornar a veure aquesta, la visita d’Eines o la d’Administració."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Selecciona mensual"
 selectYearly = "Selecciona anual"
 title = "Tria el període de facturació"
 totalForSeats = "Total ({{count}} seients)"
+
+[pdfCommentAgent]
+submit = "Genera comentaris"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Descriu sobre què hauria de comentar la IA"
+failed = "No s’han pogut generar els comentaris"
+tooLong = "La instrucció és massa llarga (màxim {{max}} caràcters)"
+
+[pdfCommentAgent.prompt]
+label = "Sobre què hauria de comentar la IA?"
+placeholder = "p. ex., marca qualsevol data ambigua i suggereix aclariments"
+
+[pdfCommentAgent.results]
+title = "PDF amb comentaris"
+
+[pdfCommentAgent.settings]
+title = "Instruccions dels comentaris"
 
 [pdfOrganiser]
 header = "Organitzador de Pàgines PDF"
@@ -6486,46 +6581,6 @@ title = "Alt contrast"
 text = "Inverteix completament tots els colors del PDF, creant un efecte similar a un negatiu. Útil per crear versions en mode fosc dels documents o reduir la fatiga visual en condicions de poca llum."
 title = "Inverteix tots els colors"
 
-[rightRail]
-annotations = "Anotacions"
-applyRedactionsFirst = "Aplica primer les redaccions"
-closePdf = "Tanca el PDF"
-closeSelected = "Tanca els fitxers seleccionats"
-deleteSelected = "Suprimeix les pàgines seleccionades"
-deselectAll = "Desselecciona-ho tot"
-downloadAll = "Descarrega-ho tot"
-downloadSelected = "Descarrega els fitxers seleccionats"
-draw = "Dibuixa"
-exitRedaction = "Surt del mode de redacció"
-exportAll = "Exporta el PDF"
-exportSelected = "Exporta les pàgines seleccionades"
-formFill = "Omplir formulari"
-language = "Idioma"
-panMode = "Mode de desplaçament"
-print = "Imprimeix el PDF"
-readAloud = "Lectura en veu alta"
-readAloudLanguage = "Idioma"
-readAloudSpeed = "Velocitat"
-redact = "Redacta"
-rotateLeft = "Gira a l'esquerra"
-rotateRight = "Gira a la dreta"
-ruler = "Regle / Mesura"
-save = "Desa"
-saveAll = "Desa-ho tot"
-saveAs = "Desa com a"
-saveChanges = "Desa els canvis"
-search = "Cerca al PDF"
-selectAll = "Selecciona-ho tot"
-selectByNumber = "Selecciona per números de pàgina"
-selectLanguage = "Selecciona l’idioma"
-toggleAnnotations = "Mostra/oculta les anotacions"
-toggleAttachments = "Mostra/amaga els adjunts"
-toggleBookmarks = "Mostra/amaga marcadors"
-toggleComments = "Comentaris"
-toggleLayers = "Commuta les capes"
-toggleSidebar = "Mostra/oculta la barra lateral"
-toggleTheme = "Canvia el tema"
-
 [rotate]
 rotateLeft = "Gira en sentit antihorari"
 rotateRight = "Gira en sentit horari"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Amaga les conversions no disponibles"
 hideUnavailableConversionsDescription = "Elimina les opcions de conversió desactivades a l'eina Convertir en lloc de mostrar-les en gris."
 hideUnavailableTools = "Amaga les eines no disponibles"
 hideUnavailableToolsDescription = "Elimina les eines que el teu servidor ha desactivat en lloc de mostrar-les en gris."
+language = "Idioma"
+languageDescription = "Tria l’idioma de visualització"
 logout = "Tanca la sessió"
 setAsDefault = "Estableix per defecte"
+theme = "Tema"
+themeDark = "Fosc"
+themeDescription = "Canvia entre el mode clar i el mode fosc"
+themeLight = "Clar"
 title = "General"
 user = "Usuari"
 
@@ -6810,6 +6871,20 @@ title = "Informació de la versió"
 auto = "Automàtic"
 fitPage = "Ajusta a la pàgina"
 fitWidth = "Ajusta a l'amplada"
+
+[settings.help]
+label = "Visites guiades"
+title = "Ajuda"
+
+[settings.help.adminTour]
+description = "Explora la gestió d’equips, la configuració del sistema i les funcions empresarials."
+start = "Inicia"
+title = "Visita d’administració"
+
+[settings.help.toolsTour]
+description = "Recorregut per pujar fitxers, triar una eina i revisar els resultats."
+start = "Inicia"
+title = "Visita de les eines"
 
 [settings.hotkeys]
 capturing = "Prem les tecles… (Esc per cancel·lar)"
@@ -7780,6 +7855,8 @@ settings = "Configuració"
 [tool]
 endpointUnavailable = "Aquesta eina no està disponible al teu servidor."
 endpointUnavailableClickable = "No disponible en aquest mode. Fes clic per iniciar sessió."
+filesLoading = "Els fitxers encara s’estan carregant, si us plau, espereu."
+filesLoadingProgress = "{{loaded}} / {{total}} fitxers carregant..."
 invalidParams = "Omple els paràmetres requerits."
 noFiles = "Afegeix un fitxer per començar."
 scopeFiles = "fitxers"
@@ -7789,10 +7866,15 @@ singleFileScope = "S'aplica només a: {{fileName}}"
 viewerMode = "Canvia a l'editor de fitxers per seleccionar diversos fitxers."
 
 [toolPanel]
+allTools = "Totes les eines"
 alpha = "Alfa"
+backToTools = "Torna a les eines"
+collapse = "Redueix el panell"
 comingSoon = "Aviat disponible:"
+expand = "Amplia el panell"
 placeholder = "Tria una eina per començar"
 premiumFeature = "Funció premium:"
+search = "Cerca eines"
 
 [toolPanel.fullscreen]
 comingSoon = "Properament:"
@@ -8342,6 +8424,51 @@ bullet2 = "Es recomana fons transparents per obtenir els millors resultats"
 bullet3 = "La imatge es redimensionarà per ajustar-se a l'àrea de la signatura"
 description = "Pugeu una imatge de signatura ja creada. Ideal si teniu una signatura escanejada o el logotip de l'empresa."
 title = "Pujar imatge de la signatura"
+
+[workbenchBar]
+activeFiles = "Fitxers actius"
+annotations = "Anotacions"
+applyRedactionsFirst = "Aplica primer les censures"
+closeAll = "Tanca tots els fitxers"
+closePdf = "Tanca el PDF"
+closeSelected = "Tanca els fitxers seleccionats"
+deleteSelected = "Suprimeix les pàgines seleccionades"
+deselectAll = "Desselecciona-ho tot"
+downloadAll = "Descarrega-ho tot"
+downloadSelected = "Descarrega els fitxers seleccionats"
+draw = "Dibuixa"
+exitRedaction = "Surt del mode de censura"
+exportAll = "Exporta el PDF"
+exportSelected = "Exporta les pàgines seleccionades"
+formFill = "Omple el formulari"
+language = "Idioma"
+multiTool = "Eina múltiple"
+panMode = "Mode de desplaçament"
+print = "Imprimeix el PDF"
+readAloud = "Llegeix en veu alta"
+readAloudLanguage = "Idioma"
+readAloudSpeed = "Velocitat"
+redact = "Censura"
+rotateLeft = "Gira a l’esquerra"
+rotateRight = "Gira a la dreta"
+ruler = "Regle / Mesura"
+save = "Desa"
+saveAll = "Desa-ho tot"
+saveAs = "Desa com a"
+saveChanges = "Desa els canvis"
+search = "Cerca al PDF"
+selectAll = "Selecciona-ho tot"
+selectByNumber = "Selecciona per números de pàgina"
+selectLanguage = "Selecciona l’idioma"
+share = "Comparteix"
+toggleAnnotations = "Mostra/oculta les anotacions"
+toggleAttachments = "Mostra/oculta els adjunts"
+toggleBookmarks = "Mostra/oculta els marcadors"
+toggleComments = "Comentaris"
+toggleLayers = "Mostra/oculta les capes"
+toggleSidebar = "Mostra/oculta la barra lateral"
+toggleTheme = "Canvia el tema"
+viewer = "Visor"
 
 [workspace]
 title = "Espai de treball"

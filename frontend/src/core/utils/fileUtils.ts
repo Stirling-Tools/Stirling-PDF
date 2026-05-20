@@ -107,7 +107,7 @@ export type NonPdfFileType =
   | "html"
   | "unknown";
 
-const IMAGE_EXTENSIONS = new Set([
+export const IMAGE_EXTENSIONS = new Set([
   "png",
   "jpg",
   "jpeg",
@@ -123,6 +123,17 @@ const JSON_EXTENSIONS = new Set(["json"]);
 const TEXT_EXTENSIONS = new Set(["txt"]);
 const MARKDOWN_EXTENSIONS = new Set(["md", "markdown"]);
 const HTML_EXTENSIONS = new Set(["html", "htm"]);
+
+/** All file extensions that the built-in viewer can render. */
+export const VIEWER_SUPPORTED_EXTENSIONS: string[] = [
+  "pdf",
+  ...IMAGE_EXTENSIONS,
+  ...CSV_EXTENSIONS,
+  ...JSON_EXTENSIONS,
+  ...TEXT_EXTENSIONS,
+  ...MARKDOWN_EXTENSIONS,
+  ...HTML_EXTENSIONS,
+];
 
 /**
  * Detects the non-PDF file type category for viewer routing.

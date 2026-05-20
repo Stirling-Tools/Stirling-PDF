@@ -538,7 +538,7 @@ export function CommentsSidebar({
         top: 0,
         bottom: 0,
         width: SIDEBAR_WIDTH,
-        backgroundColor: "var(--right-rail-bg)",
+        backgroundColor: "var(--bg-file-manager)",
         borderLeft: "1px solid var(--border-subtle)",
         zIndex: 998,
         display: "flex",

@@ -54,8 +54,9 @@ test.describe("Settings dialog", () => {
   }) => {
     await openSettings(page);
     await closeSettings(page);
+    // Verify the main UI is restored — the FileSidebar is always visible
     await expect(
-      page.locator('[data-tour="quick-access-bar"]').first(),
+      page.locator('[data-testid="files-button"]').first(),
     ).toBeVisible();
   });
 
@@ -70,8 +71,14 @@ test.describe("Settings dialog", () => {
       return;
     }
 
+    // Click the visible label wrapper rather than the hidden input directly —
+    // force-clicking the input doesn't register a state change in Firefox.
+    const toggleLabel = dialog
+      .locator('label:has(input[role="switch"]), .mantine-Switch-body')
+      .first();
+
     const before = await toggle.isChecked();
-    await toggle.click({ force: true });
+    await toggleLabel.click();
     const after = await toggle.isChecked();
     expect(after).not.toBe(before);
 
@@ -83,7 +90,7 @@ test.describe("Settings dialog", () => {
 
     // Restore
     if (persisted !== before) {
-      await toggle.click({ force: true });
+      await toggleLabel.click();
     }
   });
 

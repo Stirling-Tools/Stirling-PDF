@@ -177,11 +177,7 @@ export const useToolManagement = (): ToolManagementResult => {
       if (preferences.hideUnavailableTools && (!isAvailable || isComingSoon)) {
         return;
       }
-      availableToolRegistry[toolKey] = {
-        ...baseTool,
-        name: baseTool.name,
-        description: baseTool.description,
-      };
+      availableToolRegistry[toolKey] = baseTool;
     });
     return availableToolRegistry;
   }, [baseRegistry, preferences.hideUnavailableTools, toolAvailability]);

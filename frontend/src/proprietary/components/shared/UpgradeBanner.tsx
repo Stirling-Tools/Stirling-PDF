@@ -360,7 +360,8 @@ const UpgradeBanner: React.FC = () => {
           closeIconColor="#fff"
           buttonVariant="white"
           buttonColor="blue"
-          minHeight={64}
+          minHeight={48}
+          compact
         />
       )}
       {renderUrgentBanner()}

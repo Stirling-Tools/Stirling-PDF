@@ -209,13 +209,6 @@
   --icon-config-bg: #9ca3af;
   --icon-config-color: #ffffff;
 
-  /* RightRail (light) */
-  --right-rail-bg: #f5f6f8; /* light background */
-  --right-rail-foreground: #e3e4e5; /* panel behind custom tool icons */
-  --right-rail-icon: #4b5563; /* icon color */
-  --right-rail-icon-disabled: #cecece; /* disabled icon */
-  --right-rail-pan-active-bg: #eaeaea;
-
   /* Colors for tooltips */
   --tooltip-title-bg: #dbefff;
   --tooltip-title-color: #31528e;
@@ -228,7 +221,7 @@
   --icon-inactive-color: #ffffff;
 
   /* New theme colors for text and icons */
-  --tools-text-and-icon-color: #374151;
+  --tools-text-and-icon-color: var(--text-primary);
 
   /* Tool picker sticky header variables (light mode) */
   --tool-header-bg: #dbefff;
@@ -251,6 +244,7 @@
 
   /* Placeholder text colors */
   --search-text-and-icon-color: #6b7382;
+  --input-bg: #ffffff;
 
   /* Tool panel search bar background colors */
   --tool-panel-search-bg: #eff1f4;
@@ -552,13 +546,6 @@
   --icon-inactive-bg: #2a2f36;
   --icon-inactive-color: #6e7581;
 
-  /* RightRail (dark) */
-  --right-rail-bg: #1f2329; /* dark background */
-  --right-rail-foreground: #2a2f36; /* panel behind custom tool icons */
-  --right-rail-icon: #bcbebf; /* icon color */
-  --right-rail-icon-disabled: #43464b; /* disabled icon */
-  --right-rail-pan-active-bg: #eaeaea;
-
   /* Dark mode tooltip colors */
   --tooltip-title-bg: #4b525a;
   --tooltip-title-color: #fff;
@@ -620,7 +607,7 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
 
-  --tools-text-and-icon-color: #d0d6dc;
+  --tools-text-and-icon-color: var(--text-primary);
 
   /* Tool picker sticky header variables (dark mode) */
   --tool-header-bg: #2a2f36;
@@ -639,6 +626,7 @@
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #ffffff !important;
+  --input-bg: #4b525a;
 
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1f2329;
@@ -1006,6 +994,17 @@
 
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
+}
+
+/* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */
+.wordmark-dark-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .wordmark-light-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .wordmark-dark-only {
+  display: block;
 }
 
 /* Theme-aware image display utilities */

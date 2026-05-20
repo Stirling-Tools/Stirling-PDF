@@ -1806,7 +1806,11 @@ title = "Inteligentné premenovanie"
 [automate]
 copyToSaved = "Skopírovať do Uložených"
 desc = "Vytvárajte viacstupňové pracovné postupy spájaním akcií s PDF. Ideálne pre opakujúce sa úlohy."
+export = "Exportovať"
 exportForFolderScanning = "Exportovať pre skenovanie priečinka"
+import = "Importovať"
+importPartialSuccess = "Importované s {{count}} nemapovanými operáciami: {{ops}}"
+importSuccess = "Importovaná automatizácia: {{name}}"
 invalidStep = "Neplatný krok"
 reviewTitle = "Výsledky automatizácie"
 title = "Automatizácia"
@@ -1822,6 +1826,7 @@ title = "Nakonfigurujte {{toolName}}"
 [automate.creation]
 createTitle = "Vytvoriť automatizáciu"
 editTitle = "Upraviť automatizáciu"
+export = "Exportovať"
 exportForFolderScanning = "Exportovať pre skenovanie priečinka"
 intro = "Automatizácie spúšťajú nástroje postupne. Začnite pridaním nástrojov v poradí, v akom ich chcete spúšťať."
 save = "Uložiť automatizáciu"
@@ -1852,8 +1857,27 @@ confirm = "Vrátiť sa späť"
 message = "Máte neuložené zmeny. Naozaj sa chcete vrátiť? Všetky zmeny sa stratia."
 title = "Neuložené zmeny"
 
+[automate.entryMenu]
+label = "Otvoriť ponuku pre {{title}}"
+
 [automate.files]
 placeholder = "Vyberte súbory na spracovanie touto automatizáciou"
+
+[automate.importModal]
+cancel = "Zrušiť"
+confirm = "Importovať"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Sem presuňte JSON alebo kliknite a vyberte súbor"
+dropSubhint = "Akceptujú sa konfigurácie Automate aj Folder Scanning"
+dropzoneAriaLabel = "Sem presuňte JSON súbor automatizácie"
+intro = "Presuňte sem súbor JSON alebo nižšie prilepte jeho obsah. Formát (Automate alebo Folder Scanning) sa zistí automaticky."
+opCount = "{{count}} operácií"
+parseError = "Nepodarilo sa analyzovať: {{message}}"
+pasteLabel = "Alebo prilepte JSON"
+pastePlaceholder = "Sem prilepte JSON automatizácie…"
+title = "Import automatizácie"
+unresolved = "Nemapované: {{ops}}"
 
 [automate.run]
 title = "Spustiť automatizáciu"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Spúšťam {{tool}} (krok {{step}} z {{total}})..."
 extracting_content = "Extrahujem obsah z vašich dokumentov..."
 processing = "Spracovávam extrahovaný obsah..."
 thinking = "Premýšľanie..."
+whole_doc_compression_round = "Zlučovanie poznámok..."
+whole_doc_read_done = "Dokončené čítanie dokumentu..."
+whole_doc_read_started = "Čítanie dokumentu..."
+whole_doc_slice_done = "Čítanie dokumentu... ({{percent}}% dokončené)"
 
 [chat.toolsUsed]
 summary = "Spustených {{count}} nástrojov"
@@ -2712,6 +2740,7 @@ used = "použité"
 [compare]
 addFilesHint = "Pridajte PDF v kroku Súbory, aby ste povolili výber."
 clearSelected = "Vymazať výber"
+clearSlot = "Odstrániť súbor"
 cta = "Porovnať"
 header = "Porovnať PDF"
 loading = "Porovnávanie..."
@@ -2764,6 +2793,7 @@ title = "Tieto PDF vyzerajú veľmi odlišne"
 [compare.edited]
 label = "Upravené PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Najprv vyberte pôvodný súbor PDF"
 
 [compare.error]
 filesMissing = "Nepodarilo sa nájsť vybrané súbory. Vyberte ich znova."
@@ -2846,6 +2876,7 @@ pageLabel = "Strana"
 confirm = "Vymeniť a spustiť znova"
 confirmBody = "Týmto sa nástroj spustí znova. Naozaj chcete vymeniť poradie pôvodného a upraveného?"
 confirmTitle = "Spustiť porovnanie znova?"
+label = "Vymeniť"
 
 [compare.toasts]
 unlinkedBody = "Tip: Šípky Hore/Dole rolujú oba panely; posúvanie presúva len aktívny panel."
@@ -3476,6 +3507,8 @@ unlockAll = "Použiť pre všetky ({{count}})"
 unlockAllPartialFail = "Nesprávne heslo pre: {{names}}"
 unlockAllSuccess = "Odomknutých {{count}} súborov."
 unlockPrompt = "Odomknite PDF na pokračovanie"
+viewerLocked = "Tento súbor PDF je chránený heslom"
+viewerUnlock = "Odomknúť"
 
 [encryptedPdfUnlock.password]
 label = "Heslo PDF"
@@ -3583,6 +3616,9 @@ or = "alebo"
 
 [fileEditor]
 addFiles = "Pridať súbory"
+pageCount = "{{count}} strán"
+pageCount_one = "{{count}} strana"
+pageCount_other = "{{count}} strán"
 
 [fileManager]
 active = "Aktívne"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Zmeny neboli nahrané"
 clearAll = "Vymazať všetko"
 clearSelection = "Zrušiť výber"
 clickToUpload = "Kliknite pre nahratie súborov"
+closeAllFiles = "Zavrieť všetky súbory"
 closeFile = "Zatvoriť súbor"
 cloudFile = "Cloudový súbor"
 copyCreated = "Kópia uložená do tohto zariadenia."
@@ -3665,6 +3702,7 @@ selectAll = "Vybrať všetko"
 selectedCount = "{{count}} vybraných"
 selectedFiles = "Vybrané súbory"
 share = "Zdieľať"
+shared = "Zdieľané"
 sharedByYou = "Zdieľané vami"
 sharedEditNoticeBody = "Nemáte práva na úpravu serverovej verzie tohto súboru. Všetky úpravy sa uložia ako lokálna kópia."
 sharedEditNoticeConfirm = "Rozumiem"
@@ -3704,6 +3742,41 @@ size = "Veľkosť súboru"
 title = "Súbory"
 upload = "Nahrať"
 uploadFiles = "Nahrať súbory"
+
+[fileSelectorPicker]
+empty = "Žiadne dostupné súbory"
+placeholder = "Vyberte súbor"
+search = "Filtrovať súbory…"
+tabListLabel = "Uložené súbory, pracovná plocha, nahratie"
+upload = "Nahrať z počítača"
+
+[fileSelectorPicker.sort]
+dateAsc = "Najstaršie ako prvé"
+dateDesc = "Najnovšie ako prvé"
+dateLabel = "Najnovšie"
+nameAsc = "A po Z"
+nameDesc = "Z po A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Uložené súbory"
+upload = "Nahratie"
+workbench = "Pracovná plocha"
+
+[fileSidebar]
+addFiles = "Pridať súbory"
+collapse = "Zbaliť bočný panel"
+dropHint = "Ak chcete začať, otvorte súbory"
+expand = "Rozbaliť bočný panel"
+files = "Súbory"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive nie je nakonfigurovaný"
+noFiles = "Zatiaľ žiadne súbory"
+openFileManager = "Otvoriť správcu súborov"
+openFromComputer = "Otvoriť z počítača"
+openSettings = "Otvoriť nastavenia"
+search = "Hľadať"
+searchPlaceholder = "Hľadať súbory..."
 
 [fileToPDF]
 credit = "Táto služba používa LibreOffice a Unoconv pre konverziu súborov."
@@ -4202,6 +4275,11 @@ title = "Prekrývanie PDF"
 desc = "Zlúčte viacero stránok PDF dokumentu do jednej stránky"
 tags = "rozloženie,usporiadať,skombinovať"
 title = "Viacstranové usporiadanie"
+
+[home.pdfCommentAgent]
+desc = "Požiadajte AI, aby anotovala PDF pomocou lepiacich poznámok na základe vášho zadania"
+tags = "AI,agent,komentár,anotácia,lepiaca poznámka,kontrola,spätná väzba,poznámky"
+title = "Pridať komentáre AI"
 
 [home.pdfOrganiser]
 desc = "Odstráňte/preusporiadajte stránky v ľubovoľnom poradí"
@@ -4903,7 +4981,6 @@ fileUpload = "Použite tlačidlo <strong>Súbory</strong> na nahratie alebo výb
 leftPanel = "Ľavý panel <strong>Nástroje</strong> obsahuje všetko, čo môžete robiť. Prezrite si kategórie alebo hľadajte nástroj rýchlo."
 pageEditorView = "Prepnite do Editora strán na zmenu poradia, otáčanie alebo odstránenie strán."
 quickAccess = "Začnite na lište <strong>Rýchly prístup</strong> a prepnite sa medzi Prehliadačom, Automatizáciou, vašimi súbormi a všetkými prehliadkami."
-rightRail = "<strong>Pravý panel</strong> obsahuje rýchle akcie na výber súborov, zmenu témy alebo jazyka a stiahnutie výsledkov."
 topBar = "Horná lišta umožňuje prepínať medzi <strong>Prehliadač</strong>, <strong>Editor strán</strong> a <strong>Aktívne súbory</strong>."
 wrapUp = "To je všetko nové vo V2. Otvorte menu <strong>Prehliadky</strong> kedykoľvek a prehrajte si znova toto, prehliadku Nástrojov alebo Administrátorskú prehliadku."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Vybrať mesačne"
 selectYearly = "Vybrať ročne"
 title = "Vyberte fakturačné obdobie"
 totalForSeats = "Spolu ({{count}} miest)"
+
+[pdfCommentAgent]
+submit = "Vygenerovať komentáre"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Popíšte, k čomu má AI pridať komentáre"
+failed = "Nepodarilo sa vygenerovať komentáre"
+tooLong = "Zadanie je príliš dlhé (maximum {{max}} znakov)"
+
+[pdfCommentAgent.prompt]
+label = "Na čo má AI komentovať?"
+placeholder = "napr. Označte všetky nejednoznačné dátumy a navrhnite upresnenia"
+
+[pdfCommentAgent.results]
+title = "PDF s komentármi"
+
+[pdfCommentAgent.settings]
+title = "Pokyny ku komentárom"
 
 [pdfOrganiser]
 header = "Organizátor stránok PDF"
@@ -6486,46 +6581,6 @@ title = "Vysoký kontrast"
 text = "Úplne invertuje všetky farby v PDF a vytvorí efekt podobný negatívu. Užitočné na vytváranie verzií dokumentov v tmavom režime alebo na zníženie namáhania očí pri slabom osvetlení."
 title = "Invertovať všetky farby"
 
-[rightRail]
-annotations = "Anotácie"
-applyRedactionsFirst = "Najprv použite začiernenia"
-closePdf = "Zavrieť PDF"
-closeSelected = "Zavrieť vybrané súbory"
-deleteSelected = "Odstrániť vybrané strany"
-deselectAll = "Zrušiť výber"
-downloadAll = "Stiahnuť všetko"
-downloadSelected = "Stiahnuť vybrané súbory"
-draw = "Kresliť"
-exitRedaction = "Ukončiť režim začiernenia"
-exportAll = "Exportovať PDF"
-exportSelected = "Exportovať vybrané strany"
-formFill = "Vyplniť formulár"
-language = "Jazyk"
-panMode = "Režim posunu"
-print = "Vytlačiť PDF"
-readAloud = "Čítanie nahlas"
-readAloudLanguage = "Jazyk"
-readAloudSpeed = "Rýchlosť"
-redact = "Začierniť"
-rotateLeft = "Otočiť doľava"
-rotateRight = "Otočiť doprava"
-ruler = "Pravítko / meranie"
-save = "Uložiť"
-saveAll = "Uložiť všetko"
-saveAs = "Uložiť ako"
-saveChanges = "Uložiť zmeny"
-search = "Hľadať v PDF"
-selectAll = "Vybrať všetko"
-selectByNumber = "Vybrať podľa čísel strán"
-selectLanguage = "Vyberte jazyk"
-toggleAnnotations = "Prepnúť zobrazenie anotácií"
-toggleAttachments = "Zobraziť/skryť prílohy"
-toggleBookmarks = "Prepnúť záložky"
-toggleComments = "Komentáre"
-toggleLayers = "Prepnúť vrstvy"
-toggleSidebar = "Prepnúť bočný panel"
-toggleTheme = "Prepnúť tému"
-
 [rotate]
 rotateLeft = "Otočiť proti smeru hodinových ručičiek"
 rotateRight = "Otočiť v smere hodinových ručičiek"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Skryť nedostupné konverzie"
 hideUnavailableConversionsDescription = "Odstrániť zakázané možnosti konverzie v nástroji Konvertovať namiesto ich sivého zobrazenia."
 hideUnavailableTools = "Skryť nedostupné nástroje"
 hideUnavailableToolsDescription = "Odstrániť nástroje zakázané vaším serverom namiesto ich sivého zobrazenia."
+language = "Jazyk"
+languageDescription = "Vyberte jazyk rozhrania"
 logout = "Odhlásiť sa"
 setAsDefault = "Nastaviť ako predvolené"
+theme = "Téma"
+themeDark = "Tmavá"
+themeDescription = "Prepínať medzi svetlým a tmavým režimom"
+themeLight = "Svetlá"
 title = "Všeobecné"
 user = "Používateľ"
 
@@ -6810,6 +6871,20 @@ title = "Informácie o verzii"
 auto = "Automaticky"
 fitPage = "Prispôsobiť stránke"
 fitWidth = "Prispôsobiť šírke"
+
+[settings.help]
+label = "Prehliadky"
+title = "Pomoc"
+
+[settings.help.adminTour]
+description = "Preskúmajte správu tímu, systémové nastavenia a podnikové funkcie."
+start = "Spustiť"
+title = "Administrátorská prehliadka"
+
+[settings.help.toolsTour]
+description = "Prejdite si nahrávanie súborov, výber nástroja a kontrolu výsledkov."
+start = "Spustiť"
+title = "Prehliadka nástrojov"
 
 [settings.hotkeys]
 capturing = "Stlačte klávesy… (Esc zruší)"
@@ -7780,6 +7855,8 @@ settings = "Nastavenia"
 [tool]
 endpointUnavailable = "Tento nástroj nie je na vašom serveri dostupný."
 endpointUnavailableClickable = "V tomto režime nie je k dispozícii. Kliknite pre prihlásenie."
+filesLoading = "Súbory sa ešte načítavajú, počkajte prosím."
+filesLoadingProgress = "{{loaded}} / {{total}} súborov sa načítava..."
 invalidParams = "Vyplňte povinné nastavenia."
 noFiles = "Pridajte súbor a začnite."
 scopeFiles = "súbory"
@@ -7789,10 +7866,15 @@ singleFileScope = "Použije sa len na: {{fileName}}"
 viewerMode = "Ak chcete vybrať viac súborov, prepnite do editora súborov."
 
 [toolPanel]
+allTools = "Všetky nástroje"
 alpha = "Alfa"
+backToTools = "Späť na nástroje"
+collapse = "Zbaliť panel"
 comingSoon = "Už čoskoro:"
+expand = "Rozbaliť panel"
 placeholder = "Vyberte nástroj, aby ste začali"
 premiumFeature = "Prémiová funkcia:"
+search = "Hľadať nástroje"
 
 [toolPanel.fullscreen]
 comingSoon = "Už čoskoro:"
@@ -8342,6 +8424,51 @@ bullet2 = "Pre najlepší výsledok sa odporúča priehľadné pozadie"
 bullet3 = "Obrázok bude zmenený, aby sa prispôsobil oblasti podpisu"
 description = "Nahrajte vopred vytvorený obrázok podpisu. Ideálne, ak máte naskenovaný podpis alebo logo spoločnosti."
 title = "Nahrať obrázok podpisu"
+
+[workbenchBar]
+activeFiles = "Aktívne súbory"
+annotations = "Anotácie"
+applyRedactionsFirst = "Najprv použiť začiernenia"
+closeAll = "Zavrieť všetky súbory"
+closePdf = "Zavrieť PDF"
+closeSelected = "Zavrieť vybrané súbory"
+deleteSelected = "Odstrániť vybrané strany"
+deselectAll = "Zrušiť výber všetkých"
+downloadAll = "Stiahnuť všetko"
+downloadSelected = "Stiahnuť vybrané súbory"
+draw = "Kresliť"
+exitRedaction = "Ukončiť režim začiernenia"
+exportAll = "Exportovať PDF"
+exportSelected = "Exportovať vybrané strany"
+formFill = "Vyplniť formulár"
+language = "Jazyk"
+multiTool = "Multinástroj"
+panMode = "Režim posunu"
+print = "Tlačiť PDF"
+readAloud = "Čítať nahlas"
+readAloudLanguage = "Jazyk"
+readAloudSpeed = "Rýchlosť"
+redact = "Začierniť"
+rotateLeft = "Otočiť doľava"
+rotateRight = "Otočiť doprava"
+ruler = "Pravítko / Meranie"
+save = "Uložiť"
+saveAll = "Uložiť všetko"
+saveAs = "Uložiť ako"
+saveChanges = "Uložiť zmeny"
+search = "Hľadať v PDF"
+selectAll = "Vybrať všetko"
+selectByNumber = "Vybrať podľa čísel strán"
+selectLanguage = "Vybrať jazyk"
+share = "Zdieľať"
+toggleAnnotations = "Prepnúť viditeľnosť anotácií"
+toggleAttachments = "Prepnúť prílohy"
+toggleBookmarks = "Prepnúť záložky"
+toggleComments = "Komentáre"
+toggleLayers = "Prepnúť vrstvy"
+toggleSidebar = "Prepnúť bočný panel"
+toggleTheme = "Prepnúť tému"
+viewer = "Prehliadač"
 
 [workspace]
 title = "Pracovný priestor"

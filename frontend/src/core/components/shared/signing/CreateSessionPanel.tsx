@@ -43,11 +43,11 @@ const CreateSessionPanel = ({
         <>
           <div className="quick-access-popout__section">
             <div className="quick-access-popout__label">
-              {t("quickAccess.selectedFile", "Selected file")}
+              {t("quickAccess.selectedFile", "File")}
             </div>
             <div className="quick-access-popout__row-title">
               {selectedFiles[0]?.name ||
-                t("quickAccess.noFile", "No file selected")}
+                t("quickAccess.noFile", "No file loaded")}
             </div>
           </div>
 

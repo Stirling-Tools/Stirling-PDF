@@ -78,9 +78,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({
       ) : null}
       <span className="tool-panel__fullscreen-body">
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Text fw={600} size="sm" className="tool-panel__fullscreen-name">
-            {tool.name}
-          </Text>
+          <Text className="tool-panel__fullscreen-name">{tool.name}</Text>
           {tool.versionStatus === "alpha" && (
             <Badge size="xs" variant="light" color="orange">
               {/* we can add more translations for different badges in future, like beta, etc. */}

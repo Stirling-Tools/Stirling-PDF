@@ -1806,7 +1806,11 @@ title = "نام‌گذاری هوشمند"
 [automate]
 copyToSaved = "کپی به ذخیره‌شده‌ها"
 desc = "با زنجیره‌کردن اقدامات PDF، گردش‌کار چندمرحله‌ای بسازید. مناسب وظایف تکرارشونده."
+export = "خروجی گرفتن"
 exportForFolderScanning = "برون‌بری برای اسکن پوشه"
+import = "وارد کردن"
+importPartialSuccess = "با {{count}} عملیات نگاشت‌نشده وارد شد: {{ops}}"
+importSuccess = "خودکارسازی وارد شد: {{name}}"
 invalidStep = "گام نامعتبر"
 reviewTitle = "نتایج اتوماسیون"
 title = "اتوماسیون"
@@ -1822,6 +1826,7 @@ title = "پیکربندی {{toolName}}"
 [automate.creation]
 createTitle = "ایجاد اتوماسیون"
 editTitle = "ویرایش اتوماسیون"
+export = "خروجی گرفتن"
 exportForFolderScanning = "برون‌بری برای اسکن پوشه"
 intro = "اتوماسیون‌ها ابزارها را به‌صورت ترتیبی اجرا می‌کنند. برای شروع، ابزارها را به ترتیبی که می‌خواهید اجرا شوند اضافه کنید."
 save = "ذخیره اتوماسیون"
@@ -1852,8 +1857,27 @@ confirm = "بازگشت"
 message = "شما تغییرات ذخیره‌نشده دارید. مطمئنید می‌خواهید برگردید؟ همه تغییرات از بین می‌رود."
 title = "تغییرات ذخیره‌نشده"
 
+[automate.entryMenu]
+label = "باز کردن منو برای {{title}}"
+
 [automate.files]
 placeholder = "فایل‌ها را برای پردازش با این اتوماسیون انتخاب کنید"
+
+[automate.importModal]
+cancel = "انصراف"
+confirm = "وارد کردن"
+detectedAutomation = "JSON خودکارسازی"
+detectedFolderScan = "JSON اسکن پوشه"
+dropHint = "JSON را اینجا رها کنید یا برای انتخاب فایل کلیک کنید"
+dropSubhint = "هر دو پیکربندی خودکارسازی و اسکن پوشه پذیرفته می‌شوند"
+dropzoneAriaLabel = "یک فایل JSON خودکارسازی را اینجا رها کنید"
+intro = "یک فایل JSON را رها کنید یا محتوای آن را در پایین بچسبانید. قالب (خودکارسازی یا اسکن پوشه) به‌صورت خودکار شناسایی می‌شود."
+opCount = "{{count}} عملیات"
+parseError = "امکان تجزیه نبود: {{message}}"
+pasteLabel = "یا JSON را بچسبانید"
+pastePlaceholder = "JSON خودکارسازی خود را اینجا بچسبانید…"
+title = "وارد کردن خودکارسازی"
+unresolved = "نگاشت‌نشده: {{ops}}"
 
 [automate.run]
 title = "اجرای اتوماسیون"
@@ -2670,6 +2694,10 @@ executing_tool_step = "در حال اجرای {{tool}} (گام {{step}} از {{t
 extracting_content = "در حال استخراج محتوا از اسناد شما..."
 processing = "در حال پردازش محتوای استخراج‌شده..."
 thinking = "در حال فکر کردن..."
+whole_doc_compression_round = "در حال تجمیع یادداشت‌ها..."
+whole_doc_read_done = "خواندن سند به پایان رسید..."
+whole_doc_read_started = "در حال خواندن سند..."
+whole_doc_slice_done = "در حال خواندن سند... ({{percent}}% تکمیل)"
 
 [chat.toolsUsed]
 summary = "{{count}} ابزار اجرا شد"
@@ -2712,6 +2740,7 @@ used = "مصرف‌شده"
 [compare]
 addFilesHint = "برای فعال شدن انتخاب، PDFها را در گام فایل‌ها اضافه کنید."
 clearSelected = "پاک کردن انتخاب‌شده‌ها"
+clearSlot = "حذف فایل"
 cta = "مقایسه"
 header = "مقایسه PDFها"
 loading = "در حال مقایسه..."
@@ -2764,6 +2793,7 @@ title = "این PDFها بسیار متفاوت به نظر می‌رسند"
 [compare.edited]
 label = "PDF ویرایش‌شده"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "ابتدا PDF اصلی را انتخاب کنید"
 
 [compare.error]
 filesMissing = "یافتن فایل‌های انتخاب‌شده ممکن نبود. لطفاً دوباره آن‌ها را انتخاب کنید."
@@ -2846,6 +2876,7 @@ pageLabel = "صفحه"
 confirm = "جابه‌جا و دوباره اجرا کن"
 confirmBody = "این کار ابزار را دوباره اجرا می‌کند. مطمئنید می‌خواهید ترتیب «اصلی» و «ویرایش‌شده» را عوض کنید؟"
 confirmTitle = "مقایسه دوباره انجام شود؟"
+label = "تعویض"
 
 [compare.toasts]
 unlinkedBody = "نکته: کلیدهای جهت بالا/پایین هر دو پنل را اسکرول می‌کنند؛ جابه‌جایی فقط پنل فعال را حرکت می‌دهد."
@@ -3476,6 +3507,8 @@ unlockAll = "برای همه استفاده کنید ({{count}})"
 unlockAllPartialFail = "رمز عبور نادرست برای: {{names}}"
 unlockAllSuccess = "{{count}} پرونده قفل‌گشایی شد."
 unlockPrompt = "قفل PDF را باز کنید تا ادامه دهید"
+viewerLocked = "این PDF با گذرواژه محافظت شده است"
+viewerUnlock = "باز کردن قفل"
 
 [encryptedPdfUnlock.password]
 label = "گذرواژه PDF"
@@ -3583,6 +3616,9 @@ or = "یا"
 
 [fileEditor]
 addFiles = "افزودن فایل‌ها"
+pageCount = "{{count}} صفحه"
+pageCount_one = "{{count}} صفحه"
+pageCount_other = "{{count}} صفحه"
 
 [fileManager]
 active = "فعال"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "تغییرات بارگذاری نشده‌اند"
 clearAll = "پاک‌کردن همه"
 clearSelection = "پاک‌کردن انتخاب"
 clickToUpload = "برای بارگذاری فایل‌ها کلیک کنید"
+closeAllFiles = "بستن همهٔ فایل‌ها"
 closeFile = "بستن فایل"
 cloudFile = "فایل ابری"
 copyCreated = "رونوشت در این دستگاه ذخیره شد."
@@ -3665,6 +3702,7 @@ selectAll = "انتخاب همه"
 selectedCount = "{{count}} مورد انتخاب‌شده"
 selectedFiles = "فایل‌های انتخاب‌شده"
 share = "اشتراک‌گذاری"
+shared = "اشتراکی"
 sharedByYou = "اشتراک‌گذاری‌شده توسط شما"
 sharedEditNoticeBody = "شما حق ویرایش نسخه سروری این فایل را ندارید. هر ویرایشی انجام دهید به‌صورت یک نسخه محلی ذخیره خواهد شد."
 sharedEditNoticeConfirm = "متوجه شدم"
@@ -3704,6 +3742,41 @@ size = "اندازه فایل"
 title = "فایل‌ها"
 upload = "بارگذاری"
 uploadFiles = "بارگذاری فایل‌ها"
+
+[fileSelectorPicker]
+empty = "هیچ فایلی موجود نیست"
+placeholder = "انتخاب فایل"
+search = "فیلتر فایل‌ها…"
+tabListLabel = "فایل‌های ذخیره‌شده، محیط کار، بارگذاری"
+upload = "بارگذاری از رایانه"
+
+[fileSelectorPicker.sort]
+dateAsc = "قدیمی‌ترین ابتدا"
+dateDesc = "جدیدترین ابتدا"
+dateLabel = "جدیدترین"
+nameAsc = "A تا Z"
+nameDesc = "Z تا A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "فایل‌های ذخیره‌شده"
+upload = "بارگذاری"
+workbench = "محیط کار"
+
+[fileSidebar]
+addFiles = "افزودن فایل‌ها"
+collapse = "جمع کردن نوار کناری"
+dropHint = "برای شروع فایل‌ها را باز کنید"
+expand = "گسترش نوار کناری"
+files = "فایل‌ها"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive پیکربندی نشده است"
+noFiles = "هنوز فایلی نیست"
+openFileManager = "باز کردن مدیریت فایل"
+openFromComputer = "باز کردن از رایانه"
+openSettings = "باز کردن تنظیمات"
+search = "جستجو"
+searchPlaceholder = "جستجوی فایل‌ها..."
 
 [fileToPDF]
 credit = "این سرویس از LibreOffice و Unoconv برای تبدیل فایل استفاده می‌کند."
@@ -4202,6 +4275,11 @@ title = "هم‌پوشانی PDF‌ها"
 desc = "ادغام چندین صفحه یک سند PDF در یک صفحه واحد"
 tags = "چیدمان,آرایش,ترکیب"
 title = "طرح‌بندی چند صفحه‌ای"
+
+[home.pdfCommentAgent]
+desc = "از AI بخواهید بر اساس دستور شما یک PDF را با دیدگاه‌های یادداشت‌چسبان حاشیه‌نویسی کند"
+tags = "AI,عامل,دیدگاه,حاشیه‌نویسی,یادداشت چسبان,بازبینی,بازخورد,یادداشت‌ها"
+title = "افزودن دیدگاه‌های AI"
 
 [home.pdfOrganiser]
 desc = "حذف/بازآرایی صفحات به ترتیب دلخواه"
@@ -4903,7 +4981,6 @@ fileUpload = "از دکمه <strong>Files</strong> برای آپلود یا ان
 leftPanel = "پنل <strong>Tools</strong> در سمت چپ همه کارهایی که می‌توانید انجام دهید را فهرست می‌کند. برای یافتن سریع ابزار، دسته‌ها را مرور کنید یا جستجو نمایید."
 pageEditorView = "به ویرایشگر صفحات بروید تا صفحات را مرتب، بچرخانید یا حذف کنید."
 quickAccess = "از نوار <strong>Quick Access</strong> شروع کنید تا بین Reader، Automate، فایل‌ها و همه تورها جابه‌جا شوید."
-rightRail = "<strong>نوار کناری راست</strong> شامل اقدامات سریع برای انتخاب فایل‌ها، تغییر پوسته یا زبان، و دانلود نتایج است."
 topBar = "نوار بالا به شما اجازه می‌دهد بین <strong>Viewer</strong>، <strong>Page Editor</strong> و <strong>Active Files</strong> جابه‌جا شوید."
 wrapUp = "این‌ها موارد جدید در V2 هستند. هر زمان منوی <strong>Tours</strong> را باز کنید تا این تور، تور ابزارها یا تور مدیریت را دوباره پخش کنید."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "انتخاب ماهانه"
 selectYearly = "انتخاب سالانه"
 title = "دوره صورتحساب خود را انتخاب کنید"
 totalForSeats = "جمع ({{count}} صندلی)"
+
+[pdfCommentAgent]
+submit = "تولید دیدگاه‌ها"
+
+[pdfCommentAgent.error]
+emptyPrompt = "لطفاً توضیح دهید AI دربارهٔ چه چیزی باید نظر بدهد"
+failed = "تولید دیدگاه‌ها ناموفق بود"
+tooLong = "دستور خیلی بلند است (حداکثر {{max}} نویسه)"
+
+[pdfCommentAgent.prompt]
+label = "AI باید دربارهٔ چه چیزی نظر بدهد؟"
+placeholder = "مثلاً هر تاریخ مبهمی را علامت بزن و پیشنهاد شفاف‌سازی بده"
+
+[pdfCommentAgent.results]
+title = "PDF دارای دیدگاه‌ها"
+
+[pdfCommentAgent.settings]
+title = "دستورالعمل دیدگاه‌ها"
 
 [pdfOrganiser]
 header = "سازماندهی صفحات PDF"
@@ -6486,46 +6581,6 @@ title = "کنتراست بالا"
 text = "تمام رنگ‌های PDF را کاملاً وارونه می‌کند و اثری شبیه نگاتیو ایجاد می‌کند. برای ساخت نسخه‌های حالت تاریک اسناد یا کاهش فشار چشم در نور کم مفید است."
 title = "وارونه‌سازی همه رنگ‌ها"
 
-[rightRail]
-annotations = "حاشیه‌نویسی‌ها"
-applyRedactionsFirst = "ابتدا سانسورها را اعمال کنید"
-closePdf = "بستن PDF"
-closeSelected = "بستن فایل‌های انتخاب‌شده"
-deleteSelected = "حذف صفحات انتخاب‌شده"
-deselectAll = "لغو انتخاب همه"
-downloadAll = "دانلود همه"
-downloadSelected = "دانلود فایل‌های انتخاب‌شده"
-draw = "رسم"
-exitRedaction = "خروج از حالت سانسور"
-exportAll = "برون‌بری PDF"
-exportSelected = "برون‌بری صفحات انتخاب‌شده"
-formFill = "پر کردن فرم"
-language = "زبان"
-panMode = "حالت پیمایش"
-print = "چاپ PDF"
-readAloud = "بلندخوانی"
-readAloudLanguage = "زبان"
-readAloudSpeed = "سرعت"
-redact = "سانسور"
-rotateLeft = "چرخش به چپ"
-rotateRight = "چرخش به راست"
-ruler = "خط‌کش / اندازه‌گیری"
-save = "ذخیره"
-saveAll = "ذخیره همه"
-saveAs = "ذخیره به‌صورت"
-saveChanges = "ذخیره تغییرات"
-search = "جستجوی PDF"
-selectAll = "انتخاب همه"
-selectByNumber = "انتخاب بر اساس شماره صفحات"
-selectLanguage = "انتخاب زبان"
-toggleAnnotations = "تغییر وضعیت نمایش حاشیه‌نویسی‌ها"
-toggleAttachments = "نمایش/پنهان‌کردن پیوست‌ها"
-toggleBookmarks = "نمایش/پنهان‌کردن نشانک‌ها"
-toggleComments = "نظرات"
-toggleLayers = "تغییر وضعیت لایه‌ها"
-toggleSidebar = "تغییر وضعیت نوار کناری"
-toggleTheme = "تغییر تم"
-
 [rotate]
 rotateLeft = "چرخش پادساعت‌گرد"
 rotateRight = "چرخش ساعت‌گرد"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "مخفی‌کردن تبدیل‌های غیردر
 hideUnavailableConversionsDescription = "به‌جای نمایش خاکستری، گزینه‌های تبدیل غیرفعال در ابزار Convert را حذف می‌کند."
 hideUnavailableTools = "مخفی‌کردن ابزارهای غیردردسترس"
 hideUnavailableToolsDescription = "به‌جای نمایش خاکستری، ابزارهایی را که سرور شما غیرفعال کرده حذف می‌کند."
+language = "زبان"
+languageDescription = "زبان نمایش را انتخاب کنید"
 logout = "خروج"
 setAsDefault = "تنظیم به‌عنوان پیش‌فرض"
+theme = "تم"
+themeDark = "تیره"
+themeDescription = "میان حالت روشن و تیره جابه‌جا شوید"
+themeLight = "روشن"
 title = "عمومی"
 user = "کاربر"
 
@@ -6810,6 +6871,20 @@ title = "اطلاعات نسخه"
 auto = "خودکار"
 fitPage = "متناسب با صفحه"
 fitWidth = "متناسب با عرض"
+
+[settings.help]
+label = "تورهای راهنما"
+title = "راهنما"
+
+[settings.help.adminTour]
+description = "مدیریت تیم، تنظیمات سیستم، و قابلیت‌های سازمانی را بررسی کنید."
+start = "شروع"
+title = "تور مدیر"
+
+[settings.help.toolsTour]
+description = "مراحل بارگذاری فایل‌ها، انتخاب ابزار، و بازبینی نتایج را طی کنید."
+start = "شروع"
+title = "تور ابزارها"
 
 [settings.hotkeys]
 capturing = "کلیدها را فشار دهید… (Esc برای انصراف)"
@@ -7780,6 +7855,8 @@ settings = "تنظیمات"
 [tool]
 endpointUnavailable = "این ابزار روی سرور شما در دسترس نیست."
 endpointUnavailableClickable = "در این حالت در دسترس نیست. برای ورود کلیک کنید."
+filesLoading = "فایل‌ها همچنان در حال بارگذاری هستند، لطفاً صبر کنید."
+filesLoadingProgress = "{{loaded}} / {{total}} فایل در حال بارگذاری..."
 invalidParams = "تنظیمات لازم را تکمیل کنید."
 noFiles = "برای شروع یک فایل اضافه کنید."
 scopeFiles = "پرونده‌ها"
@@ -7789,10 +7866,15 @@ singleFileScope = "فقط اعمال می‌شود روی: {{fileName}}"
 viewerMode = "برای انتخاب چندین پرونده به ویرایشگر پرونده بروید."
 
 [toolPanel]
+allTools = "همهٔ ابزارها"
 alpha = "آلفا"
+backToTools = "بازگشت به ابزارها"
+collapse = "جمع کردن پنل"
 comingSoon = "به‌زودی:"
+expand = "گسترش پنل"
 placeholder = "برای شروع یک ابزار انتخاب کنید"
 premiumFeature = "ویژگی پرمیوم:"
+search = "جستجوی ابزارها"
 
 [toolPanel.fullscreen]
 comingSoon = "به‌زودی:"
@@ -8342,6 +8424,51 @@ bullet2 = "برای بهترین نتیجه پس‌زمینه‌های شفاف 
 bullet3 = "تصویر برای تناسب با ناحیه امضا تغییر اندازه می‌یابد"
 description = "یک تصویر امضای ازپیش‌ساخته را بارگذاری کنید. ایده‌آل اگر امضای اسکن‌شده یا نشان شرکت دارید."
 title = "بارگذاری تصویر امضا"
+
+[workbenchBar]
+activeFiles = "فایل‌های فعال"
+annotations = "حاشیه‌نویسی‌ها"
+applyRedactionsFirst = "ابتدا پنهان‌سازی‌ها را اعمال کنید"
+closeAll = "بستن همهٔ فایل‌ها"
+closePdf = "بستن PDF"
+closeSelected = "بستن فایل‌های منتخب"
+deleteSelected = "حذف صفحات منتخب"
+deselectAll = "لغو انتخاب همه"
+downloadAll = "دانلود همه"
+downloadSelected = "دانلود فایل‌های منتخب"
+draw = "رسم"
+exitRedaction = "خروج از حالت پنهان‌سازی"
+exportAll = "خروجی گرفتن از PDF"
+exportSelected = "خروجی گرفتن از صفحات منتخب"
+formFill = "پر کردن فرم"
+language = "زبان"
+multiTool = "ابزار چندگانه"
+panMode = "حالت جابه‌جایی"
+print = "چاپ PDF"
+readAloud = "خواندن با صدای بلند"
+readAloudLanguage = "زبان"
+readAloudSpeed = "سرعت"
+redact = "پنهان‌سازی"
+rotateLeft = "چرخش به چپ"
+rotateRight = "چرخش به راست"
+ruler = "خط‌کش / اندازه‌گیری"
+save = "ذخیره"
+saveAll = "ذخیره همه"
+saveAs = "ذخیره به‌عنوان"
+saveChanges = "ذخیره تغییرات"
+search = "جستجو در PDF"
+selectAll = "انتخاب همه"
+selectByNumber = "انتخاب بر اساس شماره‌های صفحه"
+selectLanguage = "انتخاب زبان"
+share = "اشتراک‌گذاری"
+toggleAnnotations = "نمایش/مخفی کردن حاشیه‌نویسی‌ها"
+toggleAttachments = "نمایش/مخفی کردن پیوست‌ها"
+toggleBookmarks = "نمایش/مخفی کردن نشانک‌ها"
+toggleComments = "دیدگاه‌ها"
+toggleLayers = "نمایش/مخفی کردن لایه‌ها"
+toggleSidebar = "نمایش/مخفی کردن نوار کناری"
+toggleTheme = "تغییر تم"
+viewer = "نمایشگر"
 
 [workspace]
 title = "فضای کاری"

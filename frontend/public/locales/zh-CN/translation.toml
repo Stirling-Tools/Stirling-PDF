@@ -1806,7 +1806,11 @@ title = "智能重命名"
 [automate]
 copyToSaved = "复制到“已保存”"
 desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
+export = "导出"
 exportForFolderScanning = "导出用于文件夹扫描"
+import = "导入"
+importPartialSuccess = "已导入，其中 {{count}} 个操作未映射：{{ops}}"
+importSuccess = "已导入自动化：{{name}}"
 invalidStep = "无效步骤"
 reviewTitle = "自动化结果"
 title = "自动化"
@@ -1822,6 +1826,7 @@ title = "配置 {{toolName}}"
 [automate.creation]
 createTitle = "创建自动化"
 editTitle = "编辑自动化"
+export = "导出"
 exportForFolderScanning = "导出用于文件夹扫描"
 intro = "自动化会按顺序运行工具。开始前，请按希望的顺序添加工具。"
 save = "保存自动化"
@@ -1852,8 +1857,27 @@ confirm = "返回"
 message = "您有未保存的更改。确定要返回吗？所有更改都将丢失。"
 title = "未保存的更改"
 
+[automate.entryMenu]
+label = "打开 {{title}} 的菜单"
+
 [automate.files]
 placeholder = "选择要用此自动化处理的文件"
+
+[automate.importModal]
+cancel = "取消"
+confirm = "导入"
+detectedAutomation = "自动化 JSON"
+detectedFolderScan = "文件夹扫描 JSON"
+dropHint = "将 JSON 拖到此处或点击选择文件"
+dropSubhint = "支持自动化和文件夹扫描配置"
+dropzoneAriaLabel = "在此处拖放一个自动化 JSON 文件"
+intro = "拖放一个 JSON 文件或在下方粘贴其内容。系统会自动检测格式（自动化或文件夹扫描）。"
+opCount = "{{count}} 个操作"
+parseError = "无法解析：{{message}}"
+pasteLabel = "或粘贴 JSON"
+pastePlaceholder = "在此粘贴您的自动化 JSON…"
+title = "导入自动化"
+unresolved = "未映射：{{ops}}"
 
 [automate.run]
 title = "运行自动化"
@@ -2670,6 +2694,10 @@ executing_tool_step = "正在运行 {{tool}}（第 {{step}} 步，共 {{total}} 
 extracting_content = "正在从您的文档中提取内容..."
 processing = "正在处理提取的内容..."
 thinking = "思考中..."
+whole_doc_compression_round = "正在合并笔记..."
+whole_doc_read_done = "已读完文档..."
+whole_doc_read_started = "正在读取文档..."
+whole_doc_slice_done = "正在读取文档...（已完成 {{percent}}%）"
 
 [chat.toolsUsed]
 summary = "已运行 {{count}} 个工具"
@@ -2712,6 +2740,7 @@ used = "已用"
 [compare]
 addFilesHint = "在“文件”步骤中添加 PDF 以启用选择。"
 clearSelected = "清除已选择"
+clearSlot = "移除文件"
 cta = "比较"
 header = "比较PDF"
 loading = "正在比较..."
@@ -2764,6 +2793,7 @@ title = "这些 PDF 看起来差异很大"
 [compare.edited]
 label = "已编辑 PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "请先选择原始 PDF"
 
 [compare.error]
 filesMissing = "无法找到所选文件。请重新选择。"
@@ -2846,6 +2876,7 @@ pageLabel = "页"
 confirm = "交换并重新运行"
 confirmBody = "这将重新运行工具。确定要交换原始和已编辑的顺序吗？"
 confirmTitle = "重新运行比较？"
+label = "交换"
 
 [compare.toasts]
 unlinkedBody = "提示：上/下箭头同时滚动两个窗格；平移只移动活动窗格。"
@@ -3476,6 +3507,8 @@ unlockAll = "用于全部（{{count}}）"
 unlockAllPartialFail = "以下项的密码错误：{{names}}"
 unlockAllSuccess = "已解锁 {{count}} 个文件。"
 unlockPrompt = "解锁 PDF 以继续"
+viewerLocked = "此 PDF 受密码保护"
+viewerUnlock = "解锁"
 
 [encryptedPdfUnlock.password]
 label = "PDF 密码"
@@ -3583,6 +3616,9 @@ or = "或"
 
 [fileEditor]
 addFiles = "添加文件"
+pageCount = "{{count}} 页"
+pageCount_one = "{{count}} 页"
+pageCount_other = "{{count}} 页"
 
 [fileManager]
 active = "活跃"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "更改未上传"
 clearAll = "全部清除"
 clearSelection = "清除所选"
 clickToUpload = "点击以上传文件"
+closeAllFiles = "关闭所有文件"
 closeFile = "关闭文件"
 cloudFile = "云端文件"
 copyCreated = "副本已保存到此设备。"
@@ -3665,6 +3702,7 @@ selectAll = "选择所有"
 selectedCount = "已选 {{count}}"
 selectedFiles = "已选文件"
 share = "共享"
+shared = "共享"
 sharedByYou = "您共享的"
 sharedEditNoticeBody = "您对该文件的服务器版本没有编辑权限。您进行的任何编辑将保存为本地副本。"
 sharedEditNoticeConfirm = "知道了"
@@ -3704,6 +3742,41 @@ size = "文件大小"
 title = "文件"
 upload = "上传"
 uploadFiles = "上传文件"
+
+[fileSelectorPicker]
+empty = "没有可用文件"
+placeholder = "选择文件"
+search = "筛选文件…"
+tabListLabel = "已保存文件、工作台、上传"
+upload = "从电脑上传"
+
+[fileSelectorPicker.sort]
+dateAsc = "最早的在前"
+dateDesc = "最新的在前"
+dateLabel = "最新"
+nameAsc = "A 到 Z"
+nameDesc = "Z 到 A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "已保存文件"
+upload = "上传"
+workbench = "工作台"
+
+[fileSidebar]
+addFiles = "添加文件"
+collapse = "折叠侧边栏"
+dropHint = "打开文件以开始"
+expand = "展开侧边栏"
+files = "文件"
+googleDrive = "Google Drive"
+googleDriveDisabled = "未配置 Google Drive"
+noFiles = "暂无文件"
+openFileManager = "打开文件管理器"
+openFromComputer = "从电脑打开"
+openSettings = "打开设置"
+search = "搜索"
+searchPlaceholder = "搜索文件..."
 
 [fileToPDF]
 credit = "此服务使用 LibreOffice 和 Unoconv 进行文件转换。"
@@ -4202,6 +4275,11 @@ title = "叠加 PDF"
 desc = "将 PDF 文档的多个页面合并成一页"
 tags = "布局,排列,组合"
 title = "多页布局"
+
+[home.pdfCommentAgent]
+desc = "根据您的提示，让 AI 在 PDF 上添加便签评论"
+tags = "AI,代理,评论,注释,便签,审阅,反馈,笔记"
+title = "添加 AI 评论"
 
 [home.pdfOrganiser]
 desc = "按任意顺序删除/重新排列页面。"
@@ -4903,7 +4981,6 @@ fileUpload = "使用<strong>文件</strong>按钮上传或选择最近的 PDF。
 leftPanel = "左侧的<strong>工具</strong>面板列出所有可用功能。按类别浏览或搜索快速找到工具。"
 pageEditorView = "切换到页面编辑器以重新排序、旋转或删除页面。"
 quickAccess = "从<strong>快速访问</strong>栏开始，在阅读器、自动化、您的文件和所有导览之间快速切换。"
-rightRail = "<strong>右侧栏</strong>用于快速操作：选择文件、更改主题或语言、下载结果。"
 topBar = "顶部栏可在<strong>查看器</strong>、<strong>页面编辑器</strong>和<strong>活动文件</strong>之间切换。"
 wrapUp = "以上是 V2 的新变化。随时打开<strong>导览</strong>菜单重看本导览、工具导览或管理员导览。"
 
@@ -5278,6 +5355,24 @@ selectMonthly = "选择按月"
 selectYearly = "选择按年"
 title = "选择您的计费周期"
 totalForSeats = "合计（{{count}} 席位）"
+
+[pdfCommentAgent]
+submit = "生成评论"
+
+[pdfCommentAgent.error]
+emptyPrompt = "请描述 AI 应该评论的内容"
+failed = "生成评论失败"
+tooLong = "提示过长（最多 {{max}} 个字符）"
+
+[pdfCommentAgent.prompt]
+label = "AI 应该评论什么？"
+placeholder = "例如：标记任何含糊的日期并提出澄清建议"
+
+[pdfCommentAgent.results]
+title = "带评论的 PDF"
+
+[pdfCommentAgent.settings]
+title = "评论指令"
 
 [pdfOrganiser]
 header = "PDF 页面排序"
@@ -6486,46 +6581,6 @@ title = "高对比度"
 text = "完全反转 PDF 中的所有颜色，形成类似底片的效果。用于创建文档的深色模式版本，或在弱光环境下减轻眼疲劳。"
 title = "反转所有颜色"
 
-[rightRail]
-annotations = "注释"
-applyRedactionsFirst = "请先应用涂黑"
-closePdf = "关闭 PDF"
-closeSelected = "关闭所选文件"
-deleteSelected = "删除所选页面"
-deselectAll = "取消选择所有"
-downloadAll = "全部下载"
-downloadSelected = "下载所选文件"
-draw = "绘制"
-exitRedaction = "退出涂黑模式"
-exportAll = "导出 PDF"
-exportSelected = "导出所选页面"
-formFill = "填写表单"
-language = "语言"
-panMode = "平移模式"
-print = "打印 PDF"
-readAloud = "朗读"
-readAloudLanguage = "语言"
-readAloudSpeed = "速度"
-redact = "涂黑"
-rotateLeft = "向左旋转"
-rotateRight = "向右旋转"
-ruler = "标尺/测量"
-save = "保存"
-saveAll = "全部保存"
-saveAs = "另存为"
-saveChanges = "保存更改"
-search = "搜索 PDF"
-selectAll = "选择所有"
-selectByNumber = "按页码选择"
-selectLanguage = "选择语言"
-toggleAnnotations = "切换注释可见性"
-toggleAttachments = "切换附件"
-toggleBookmarks = "切换书签"
-toggleComments = "评论"
-toggleLayers = "切换图层"
-toggleSidebar = "切换侧边栏"
-toggleTheme = "切换主题"
-
 [rotate]
 rotateLeft = "逆时针旋转"
 rotateRight = "顺时针旋转"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "隐藏不可用转换"
 hideUnavailableConversionsDescription = "在“转换”工具中移除已禁用的转换选项，而非灰显显示。"
 hideUnavailableTools = "隐藏不可用工具"
 hideUnavailableToolsDescription = "将服务器禁用的工具从列表中移除，而非灰显显示。"
+language = "语言"
+languageDescription = "选择显示语言"
 logout = "退出登录"
 setAsDefault = "设为默认"
+theme = "主题"
+themeDark = "深色"
+themeDescription = "在浅色和深色模式间切换"
+themeLight = "浅色"
 title = "通用"
 user = "用户"
 
@@ -6810,6 +6871,20 @@ title = "版本信息"
 auto = "自动"
 fitPage = "适合页面"
 fitWidth = "适合宽度"
+
+[settings.help]
+label = "导览"
+title = "帮助"
+
+[settings.help.adminTour]
+description = "了解团队管理、系统设置和企业功能。"
+start = "开始"
+title = "管理员导览"
+
+[settings.help.toolsTour]
+description = "演示上传文件、选择工具并查看结果。"
+start = "开始"
+title = "工具导览"
 
 [settings.hotkeys]
 capturing = "按下按键…（按 Esc 取消）"
@@ -7780,6 +7855,8 @@ settings = "设置"
 [tool]
 endpointUnavailable = "此工具在您的服务器上不可用。"
 endpointUnavailableClickable = "此模式下不可用。点击以登录。"
+filesLoading = "文件仍在加载，请稍候。"
+filesLoadingProgress = "{{loaded}} / {{total}} 个文件正在加载..."
 invalidParams = "请填写必填设置。"
 noFiles = "添加文件以开始。"
 scopeFiles = "文件"
@@ -7789,10 +7866,15 @@ singleFileScope = "仅应用于：{{fileName}}"
 viewerMode = "切换到文件编辑器以选择多个文件。"
 
 [toolPanel]
+allTools = "所有工具"
 alpha = "Alpha"
+backToTools = "返回工具"
+collapse = "折叠面板"
 comingSoon = "即将推出："
+expand = "展开面板"
 placeholder = "选择一个工具以开始"
 premiumFeature = "高级功能："
+search = "搜索工具"
 
 [toolPanel.fullscreen]
 comingSoon = "即将推出："
@@ -8342,6 +8424,51 @@ bullet2 = "建议使用透明背景以获得最佳效果"
 bullet3 = "图像将调整大小以适配签名区域"
 description = "上传预先制作的签名图像。如果您有扫描的签名或公司徽标，理想之选。"
 title = "上传签名图像"
+
+[workbenchBar]
+activeFiles = "活动文件"
+annotations = "注释"
+applyRedactionsFirst = "先应用涂黑"
+closeAll = "关闭所有文件"
+closePdf = "关闭 PDF"
+closeSelected = "关闭所选文件"
+deleteSelected = "删除所选页面"
+deselectAll = "取消全选"
+downloadAll = "全部下载"
+downloadSelected = "下载所选文件"
+draw = "绘图"
+exitRedaction = "退出涂黑模式"
+exportAll = "导出 PDF"
+exportSelected = "导出所选页面"
+formFill = "填写表单"
+language = "语言"
+multiTool = "多功能工具"
+panMode = "平移模式"
+print = "打印 PDF"
+readAloud = "朗读"
+readAloudLanguage = "语言"
+readAloudSpeed = "速度"
+redact = "涂黑"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+ruler = "标尺/测量"
+save = "保存"
+saveAll = "全部保存"
+saveAs = "另存为"
+saveChanges = "保存更改"
+search = "搜索 PDF"
+selectAll = "全选"
+selectByNumber = "按页码选择"
+selectLanguage = "选择语言"
+share = "分享"
+toggleAnnotations = "切换注释显示"
+toggleAttachments = "切换附件"
+toggleBookmarks = "切换书签"
+toggleComments = "评论"
+toggleLayers = "切换图层"
+toggleSidebar = "切换侧边栏"
+toggleTheme = "切换主题"
+viewer = "查看器"
 
 [workspace]
 title = "工作区"

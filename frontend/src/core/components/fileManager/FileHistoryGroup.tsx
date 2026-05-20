@@ -11,7 +11,6 @@ interface FileHistoryGroupProps {
   onDownloadSingle: (file: StirlingFileStub) => void;
   onFileDoubleClick: (file: StirlingFileStub) => void;
   onHistoryFileRemove: (file: StirlingFileStub) => void;
-  isFileSupported: (fileName: string) => boolean;
 }
 
 const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
@@ -21,7 +20,6 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
   onDownloadSingle,
   onFileDoubleClick,
   onHistoryFileRemove,
-  isFileSupported,
 }) => {
   const { t } = useTranslation();
 
@@ -50,7 +48,6 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
               key={`history-${historyFile.id}-${historyFile.versionNumber || 1}`}
               file={historyFile}
               isSelected={false} // History files are not selectable
-              isSupported={isFileSupported(historyFile.name)}
               onSelect={() => {}} // No selection for history files
               onRemove={() => onHistoryFileRemove(historyFile)} // Remove specific history file
               onDownload={() => onDownloadSingle(historyFile)}

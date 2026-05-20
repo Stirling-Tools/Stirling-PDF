@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { extractPDFMetadata } from "@app/services/pdfMetadataService";
-import { useSelectedFiles } from "@app/contexts/file/fileHooks";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 interface MetadataExtractionParams {
@@ -11,7 +11,7 @@ interface MetadataExtractionParams {
 }
 
 export const useMetadataExtraction = (params: MetadataExtractionParams) => {
-  const { selectedFiles } = useSelectedFiles();
+  const selectedFiles = useViewScopedFiles();
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
   const previousFileCountRef = useRef(0);

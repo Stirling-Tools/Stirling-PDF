@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { ToolRegistryEntry, getToolUrlPath } from "@app/data/toolsTaxonomy";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
 import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
 import { ToolId } from "@app/types/toolId";
 
@@ -21,7 +21,7 @@ export function useToolNavigation(): {
     tool: ToolRegistryEntry,
   ) => ToolNavigationProps;
 } {
-  const { handleToolSelect } = useToolWorkflow();
+  const { handleToolSelect } = useToolWorkflowActions();
 
   const getToolNavigation = useCallback(
     (toolId: string, tool: ToolRegistryEntry): ToolNavigationProps => {

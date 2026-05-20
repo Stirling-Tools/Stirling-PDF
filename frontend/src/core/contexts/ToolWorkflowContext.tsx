@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
 } from "react";
 import {
   useToolManagement,
@@ -121,6 +122,46 @@ const ToolWorkflowContext =
 if (!existingContext) {
   (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
 }
+
+/**
+ * Slim subset contexts for hot consumers that don't need the full state.
+ *
+ *  - `useToolWorkflowActions()` — referentially-stable callbacks.
+ *  - `useToolWorkflowData()` — tool registry, availability, favorites.
+ */
+export interface ToolWorkflowActionsValue {
+  selectTool: (toolId: ToolId | null) => void;
+  clearToolSelection: () => void;
+  toggleFavorite: (toolId: ToolId) => void;
+  handleToolSelect: (toolId: ToolId) => void;
+  handleToolSelectForced: (toolId: ToolId) => void;
+  handleBackToTools: () => void;
+  handleReaderToggle: () => void;
+  setSidebarsVisible: (visible: boolean) => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent" | "hidden") => void;
+  setReaderMode: (mode: boolean) => void;
+  setToolPanelMode: (mode: ToolPanelMode) => void;
+  setPreviewFile: (file: File | null) => void;
+  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
+  setSearchQuery: (query: string) => void;
+  registerToolReset: (toolId: string, resetFunction: () => void) => void;
+  resetTool: (toolId: string) => void;
+}
+
+export interface ToolWorkflowDataValue {
+  toolAvailability: ToolAvailabilityMap;
+  toolRegistry: Partial<ToolRegistry>;
+  favoriteTools: ToolId[];
+  getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
+  isFavorite: (toolId: ToolId) => boolean;
+}
+
+const ToolWorkflowActionsContext = createContext<
+  ToolWorkflowActionsValue | undefined
+>(undefined);
+const ToolWorkflowDataContext = createContext<
+  ToolWorkflowDataValue | undefined
+>(undefined);
 
 // Provider component
 interface ToolWorkflowProviderProps {
@@ -355,6 +396,29 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setLeftPanelView,
   ]);
 
+  // When in multi-tool, sync left panel visibility with workbench:
+  // hide the panel on pageEditor, show it when navigating to viewer/fileEditor.
+  const prevMultiToolWorkbenchRef = React.useRef<WorkbenchType | null>(null);
+  useEffect(() => {
+    const prev = prevMultiToolWorkbenchRef.current;
+    prevMultiToolWorkbenchRef.current = navigationState.workbench;
+
+    if (navigationState.selectedTool !== "multiTool") return;
+
+    if (navigationState.workbench === "pageEditor" && prev !== "pageEditor") {
+      setLeftPanelView("hidden");
+    } else if (
+      navigationState.workbench !== "pageEditor" &&
+      prev === "pageEditor"
+    ) {
+      setLeftPanelView("toolPicker");
+    }
+  }, [
+    navigationState.workbench,
+    navigationState.selectedTool,
+    setLeftPanelView,
+  ]);
+
   // Tool reset methods
   const registerToolReset = useCallback(
     (toolId: string, resetFunction: () => void) => {
@@ -511,6 +575,124 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     true,
   );
 
+  // Ref-backed wrappers so callback identities stay stable across renders.
+  const handleToolSelectRef = useRef(handleToolSelect);
+  handleToolSelectRef.current = handleToolSelect;
+  const stableHandleToolSelect = useCallback(
+    (id: ToolId) => handleToolSelectRef.current(id),
+    [],
+  );
+
+  const handleToolSelectForcedRef = useRef(handleToolSelectForced);
+  handleToolSelectForcedRef.current = handleToolSelectForced;
+  const stableHandleToolSelectForced = useCallback(
+    (id: ToolId) => handleToolSelectForcedRef.current(id),
+    [],
+  );
+
+  const handleBackToToolsRef = useRef(handleBackToTools);
+  handleBackToToolsRef.current = handleBackToTools;
+  const stableHandleBackToTools = useCallback(
+    () => handleBackToToolsRef.current(),
+    [],
+  );
+
+  const handleReaderToggleRef = useRef(handleReaderToggle);
+  handleReaderToggleRef.current = handleReaderToggle;
+  const stableHandleReaderToggle = useCallback(
+    () => handleReaderToggleRef.current(),
+    [],
+  );
+
+  const setReaderModeRef = useRef(setReaderMode);
+  setReaderModeRef.current = setReaderMode;
+  const stableSetReaderMode = useCallback(
+    (mode: boolean) => setReaderModeRef.current(mode),
+    [],
+  );
+
+  const setPreviewFileRef = useRef(setPreviewFile);
+  setPreviewFileRef.current = setPreviewFile;
+  const stableSetPreviewFile = useCallback(
+    (file: File | null) => setPreviewFileRef.current(file),
+    [],
+  );
+
+  const setToolPanelModeRef = useRef(setToolPanelMode);
+  setToolPanelModeRef.current = setToolPanelMode;
+  const stableSetToolPanelMode = useCallback(
+    (mode: ToolPanelMode) => setToolPanelModeRef.current(mode),
+    [],
+  );
+
+  const selectToolRef = useRef(actions.setSelectedTool);
+  selectToolRef.current = actions.setSelectedTool;
+  const stableSelectTool = useCallback(
+    (id: ToolId | null) => selectToolRef.current(id),
+    [],
+  );
+
+  const stableClearToolSelection = useCallback(
+    () => selectToolRef.current(null),
+    [],
+  );
+
+  const actionsValue = useMemo<ToolWorkflowActionsValue>(
+    () => ({
+      selectTool: stableSelectTool,
+      clearToolSelection: stableClearToolSelection,
+      toggleFavorite,
+      handleToolSelect: stableHandleToolSelect,
+      handleToolSelectForced: stableHandleToolSelectForced,
+      handleBackToTools: stableHandleBackToTools,
+      handleReaderToggle: stableHandleReaderToggle,
+      setSidebarsVisible,
+      setLeftPanelView,
+      setReaderMode: stableSetReaderMode,
+      setToolPanelMode: stableSetToolPanelMode,
+      setPreviewFile: stableSetPreviewFile,
+      setPageEditorFunctions,
+      setSearchQuery,
+      registerToolReset,
+      resetTool,
+    }),
+    [
+      stableSelectTool,
+      stableClearToolSelection,
+      toggleFavorite,
+      stableHandleToolSelect,
+      stableHandleToolSelectForced,
+      stableHandleBackToTools,
+      stableHandleReaderToggle,
+      setSidebarsVisible,
+      setLeftPanelView,
+      stableSetReaderMode,
+      stableSetToolPanelMode,
+      stableSetPreviewFile,
+      setPageEditorFunctions,
+      setSearchQuery,
+      registerToolReset,
+      resetTool,
+    ],
+  );
+
+  const dataValue = useMemo<ToolWorkflowDataValue>(
+    () => ({
+      toolAvailability,
+      toolRegistry,
+      favoriteTools,
+      getSelectedTool,
+      isFavorite,
+    }),
+    [
+      toolAvailability,
+      toolRegistry,
+      favoriteTools,
+      getSelectedTool,
+      isFavorite,
+    ],
+  );
+
   // Properly memoized context value
   const contextValue = useMemo(
     (): ToolWorkflowContextValue => ({
@@ -594,10 +776,36 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   return (
-    <ToolWorkflowContext.Provider value={contextValue}>
-      {children}
-    </ToolWorkflowContext.Provider>
+    <ToolWorkflowActionsContext.Provider value={actionsValue}>
+      <ToolWorkflowDataContext.Provider value={dataValue}>
+        <ToolWorkflowContext.Provider value={contextValue}>
+          {children}
+        </ToolWorkflowContext.Provider>
+      </ToolWorkflowDataContext.Provider>
+    </ToolWorkflowActionsContext.Provider>
   );
+}
+
+/** Tool-workflow callbacks with referentially-stable identities. */
+export function useToolWorkflowActions(): ToolWorkflowActionsValue {
+  const ctx = useContext(ToolWorkflowActionsContext);
+  if (!ctx) {
+    throw new Error(
+      "useToolWorkflowActions must be used within ToolWorkflowProvider",
+    );
+  }
+  return ctx;
+}
+
+/** Tool registry, availability, and favorites — stable while unchanged. */
+export function useToolWorkflowData(): ToolWorkflowDataValue {
+  const ctx = useContext(ToolWorkflowDataContext);
+  if (!ctx) {
+    throw new Error(
+      "useToolWorkflowData must be used within ToolWorkflowProvider",
+    );
+  }
+  return ctx;
 }
 
 // Custom hook to use the context

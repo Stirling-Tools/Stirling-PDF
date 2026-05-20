@@ -8,13 +8,11 @@ import {
   Checkbox,
   ScrollArea,
   Box,
-  Image,
   Badge,
-  ThemeIcon,
   SimpleGrid,
 } from "@mantine/core";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useTranslation } from "react-i18next";
+import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { FileId } from "@app/types/file";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 
@@ -200,26 +198,23 @@ const FilePickerModal = ({
                             height: 80,
                             border: "1px solid var(--mantine-color-gray-3)",
                             borderRadius: 4,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "var(--mantine-color-gray-0)",
+                            backgroundColor: "white",
                             flexShrink: 0,
+                            overflow: "hidden",
                           }}
                         >
-                          {file.thumbnail ? (
-                            <Image
-                              src={file.thumbnail}
-                              alt="PDF thumbnail"
-                              height={70}
-                              width={50}
-                              fit="contain"
-                            />
-                          ) : (
-                            <ThemeIcon variant="light" color="red" size={40}>
-                              <PictureAsPdfIcon style={{ fontSize: 24 }} />
-                            </ThemeIcon>
-                          )}
+                          <DocumentThumbnail
+                            file={file}
+                            thumbnail={
+                              file.processedFile?.isEncrypted
+                                ? undefined
+                                : file.thumbnail
+                            }
+                            isEncrypted={Boolean(
+                              file.processedFile?.isEncrypted,
+                            )}
+                            iconSize="2rem"
+                          />
                         </Box>
 
                         {/* File info */}

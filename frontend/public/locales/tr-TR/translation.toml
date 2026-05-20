@@ -1806,7 +1806,11 @@ title = "Akıllı Yeniden Adlandırma"
 [automate]
 copyToSaved = "Kayıtlıya Kopyala"
 desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları oluşturun. Tekrarlayan görevler için idealdir."
+export = "Dışa aktar"
 exportForFolderScanning = "Klasör Tarama için Dışa Aktar"
+import = "İçe aktar"
+importPartialSuccess = "Eşleştirilmemiş {{count}} işlemle içe aktarıldı: {{ops}}"
+importSuccess = "İçe aktarılan otomasyon: {{name}}"
 invalidStep = "Geçersiz adım"
 reviewTitle = "Otomasyon Sonuçları"
 title = "Otomatikleştir"
@@ -1822,6 +1826,7 @@ title = "{{toolName}} ayarlarını yapılandır"
 [automate.creation]
 createTitle = "Otomasyon Oluştur"
 editTitle = "Otomasyonu Düzenle"
+export = "Dışa aktar"
 exportForFolderScanning = "Klasör Tarama için Dışa Aktar"
 intro = "Otomasyonlar araçları sırayla çalıştırır. Başlamak için, çalıştırılmasını istediğiniz sırayla araçlar ekleyin."
 save = "Otomasyonu Kaydet"
@@ -1852,8 +1857,27 @@ confirm = "Geri Dön"
 message = "Kaydedilmemiş değişiklikleriniz var. Geri dönmek istediğinize emin misiniz? Tüm değişiklikler kaybolacak."
 title = "Kaydedilmemiş Değişiklikler"
 
+[automate.entryMenu]
+label = "{{title}} için menüyü aç"
+
 [automate.files]
 placeholder = "Bu otomasyonla işlenecek dosyaları seçin"
+
+[automate.importModal]
+cancel = "İptal"
+confirm = "İçe aktar"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "JSON'u buraya bırakın ya da bir dosya seçmek için tıklayın"
+dropSubhint = "Automate ve Folder Scanning yapılandırmaları kabul edilir"
+dropzoneAriaLabel = "Bir otomasyon JSON dosyasını buraya bırakın"
+intro = "Bir JSON dosyasını bırakın veya içeriğini aşağıya yapıştırın. Biçim (Automate veya Folder Scanning) otomatik olarak algılanır."
+opCount = "{{count}} işlem"
+parseError = "Ayrıştırılamadı: {{message}}"
+pasteLabel = "Ya da JSON yapıştırın"
+pastePlaceholder = "Otomasyon JSON'unuzu buraya yapıştırın…"
+title = "Otomasyonu içe aktar"
+unresolved = "Eşleştirilmemiş: {{ops}}"
 
 [automate.run]
 title = "Otomasyonu Çalıştır"
@@ -2670,6 +2694,10 @@ executing_tool_step = "{{tool}} çalıştırılıyor ({{total}} adımdan {{step}
 extracting_content = "Belgelerinizden içerik çıkarılıyor..."
 processing = "Çıkarılan içerik işleniyor..."
 thinking = "Düşünüyor..."
+whole_doc_compression_round = "Notlar birleştiriliyor..."
+whole_doc_read_done = "Belge okuma tamamlandı..."
+whole_doc_read_started = "Belge okunuyor..."
+whole_doc_slice_done = "Belge okunuyor... (%{{percent}} tamamlandı)"
 
 [chat.toolsUsed]
 summary = "{{count}} araç çalıştırıldı"
@@ -2712,6 +2740,7 @@ used = "kullanılan"
 [compare]
 addFilesHint = "Seçimi etkinleştirmek için Dosyalar adımında PDF'ler ekleyin."
 clearSelected = "Seçileni temizle"
+clearSlot = "Dosyayı kaldır"
 cta = "Karşılaştır"
 header = "PDF'leri Karşılaştır"
 loading = "Karşılaştırılıyor..."
@@ -2764,6 +2793,7 @@ title = "Bu PDF'ler oldukça farklı görünüyor"
 [compare.edited]
 label = "Düzenlenmiş PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Önce orijinal PDF'yi seçin"
 
 [compare.error]
 filesMissing = "Seçili dosyalar bulunamadı. Lütfen yeniden seçin."
@@ -2846,6 +2876,7 @@ pageLabel = "Sayfa"
 confirm = "Sırayı değiştir ve yeniden çalıştır"
 confirmBody = "Bu işlem aracı yeniden çalıştıracaktır. Orijinal ve Düzenlenmiş'in sırasını değiştirmek istediğinizden emin misiniz?"
 confirmTitle = "Karşılaştırma tekrar çalıştırılsın mı?"
+label = "Yer değiştir"
 
 [compare.toasts]
 unlinkedBody = "İpucu: Yukarı/Aşağı Ok her iki bölmeyi de kaydırır; sürükleme yalnızca etkin bölmeyi hareket ettirir."
@@ -3476,6 +3507,8 @@ unlockAll = "Tümüne uygula ({{count}})"
 unlockAllPartialFail = "Şu dosyalar için parola yanlış: {{names}}"
 unlockAllSuccess = "{{count}} dosyanın kilidi açıldı."
 unlockPrompt = "Devam etmek için PDF'nin kilidini açın"
+viewerLocked = "Bu PDF parola korumalı"
+viewerUnlock = "Kilidi aç"
 
 [encryptedPdfUnlock.password]
 label = "PDF parolası"
@@ -3583,6 +3616,9 @@ or = "veya"
 
 [fileEditor]
 addFiles = "Dosya Ekle"
+pageCount = "{{count}} sayfa"
+pageCount_one = "{{count}} sayfa"
+pageCount_other = "{{count}} sayfa"
 
 [fileManager]
 active = "Aktif"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Değişiklikler yüklenmedi"
 clearAll = "Tümünü Temizle"
 clearSelection = "Seçimi Temizle"
 clickToUpload = "Dosya yüklemek için tıklayın"
+closeAllFiles = "Tüm dosyaları kapat"
 closeFile = "Dosyayı Kapat"
 cloudFile = "Bulut dosyası"
 copyCreated = "Kopya bu cihaza kaydedildi."
@@ -3665,6 +3702,7 @@ selectAll = "Tümünü Seç"
 selectedCount = "{{count}} seçildi"
 selectedFiles = "Seçilen Dosyalar"
 share = "Paylaş"
+shared = "Paylaşılan"
 sharedByYou = "Sizin paylaştıklarınız"
 sharedEditNoticeBody = "Bu dosyanın sunucudaki sürümünde düzenleme hakkınız yok. Yapacağınız düzenlemeler yerel bir kopya olarak kaydedilir."
 sharedEditNoticeConfirm = "Anladım"
@@ -3704,6 +3742,41 @@ size = "Dosya Boyutu"
 title = "Dosyalar"
 upload = "Yükle"
 uploadFiles = "Dosya Yükle"
+
+[fileSelectorPicker]
+empty = "Kullanılabilir dosya yok"
+placeholder = "Dosya seç"
+search = "Dosyaları filtrele…"
+tabListLabel = "Kayıtlı dosyalar, Workbench, yükleme"
+upload = "Bilgisayardan yükle"
+
+[fileSelectorPicker.sort]
+dateAsc = "En eskiler önce"
+dateDesc = "En yeniler önce"
+dateLabel = "En yeni"
+nameAsc = "A'dan Z'ye"
+nameDesc = "Z'den A'ya"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Kayıtlı dosyalar"
+upload = "Yükle"
+workbench = "Workbench"
+
+[fileSidebar]
+addFiles = "Dosya ekle"
+collapse = "Kenar çubuğunu daralt"
+dropHint = "Başlamak için dosya açın"
+expand = "Kenar çubuğunu genişlet"
+files = "Dosyalar"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive yapılandırılmamış"
+noFiles = "Henüz dosya yok"
+openFileManager = "Dosya yöneticisini aç"
+openFromComputer = "Bilgisayardan aç"
+openSettings = "Ayarları aç"
+search = "Ara"
+searchPlaceholder = "Dosyalarda ara..."
 
 [fileToPDF]
 credit = "Bu hizmet dosya dönüşümü için LibreOffice ve Unoconv'u kullanır."
@@ -4202,6 +4275,11 @@ title = "PDF'leri Bindirme"
 desc = "Bir PDF belgesinin çoklu sayfalarını tek bir sayfada birleştirir"
 tags = "düzen,yerleştir,birleştir"
 title = "Çoklu-Sayfa Düzeni"
+
+[home.pdfCommentAgent]
+desc = "İsteminize göre bir PDF'yi yapışkan not yorumlarıyla açıklaması için AI'dan isteyin"
+tags = "AI,aracı,yorum,açıklama,yapışkan not,inceleme,geri bildirim,notlar"
+title = "AI yorumları ekle"
 
 [home.pdfOrganiser]
 desc = "Sayfaları herhangi bir sırayla kaldırın/düzenleyin"
@@ -4903,7 +4981,6 @@ fileUpload = "<strong>Dosyalar</strong> düğmesini kullanarak bir PDF yükleyin
 leftPanel = "Soldaki <strong>Araçlar</strong> paneli yapabileceklerinizin tümünü listeler. Kategorilere göz atın veya hızlıca bir araç bulmak için arayın."
 pageEditorView = "Sayfaları yeniden sıralamak, döndürmek veya silmek için Sayfa Düzenleyiciye geçin."
 quickAccess = "Okuyucu, Otomasyon, dosyalarınız ve tüm turlar arasında geçiş yapmak için <strong>Hızlı Erişim</strong> panelinden başlayın."
-rightRail = "<strong>Sağ Panel</strong>, dosya seçme, tema veya dil değiştirme ve sonuçları indirme için hızlı işlemler barındırır."
 topBar = "Üst çubuk, <strong>Görüntüleyici</strong>, <strong>Sayfa Düzenleyici</strong> ve <strong>Aktif Dosyalar</strong> arasında geçiş yapmanızı sağlar."
 wrapUp = "V2'deki yenilikler bunlar. Bunu, Araçlar turunu veya Yönetici turunu yeniden izlemek için <strong>Turlar</strong> menüsünü istediğiniz zaman açın."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Aylığı Seç"
 selectYearly = "Yıllığı Seç"
 title = "Faturalandırma Döneminizi Seçin"
 totalForSeats = "Toplam ({{count}} koltuk)"
+
+[pdfCommentAgent]
+submit = "Yorumları oluştur"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Lütfen AI'nin neye yorum yapması gerektiğini açıklayın"
+failed = "Yorumlar oluşturulamadı"
+tooLong = "İstem çok uzun (en fazla {{max}} karakter)"
+
+[pdfCommentAgent.prompt]
+label = "AI neye yorum yapmalı?"
+placeholder = "örn. Belirsiz tarihleri işaretleyin ve netleştirme önerin"
+
+[pdfCommentAgent.results]
+title = "Yorumlanmış PDF"
+
+[pdfCommentAgent.settings]
+title = "Yorum talimatları"
 
 [pdfOrganiser]
 header = "PDF Sayfa Organizatörü"
@@ -6486,46 +6581,6 @@ title = "Yüksek Kontrast"
 text = "PDF'deki tüm renkleri tamamen ters çevirerek negatif benzeri bir etki oluşturur. Düşük ışık koşullarında göz yorgunluğunu azaltmak veya belgelerin koyu mod sürümlerini oluşturmak için kullanışlıdır."
 title = "Tüm Renkleri Ters Çevir"
 
-[rightRail]
-annotations = "Açıklamalar"
-applyRedactionsFirst = "Önce karartmaları uygula"
-closePdf = "PDF'yi Kapat"
-closeSelected = "Seçilen Dosyaları Kapat"
-deleteSelected = "Seçilen Sayfaları Sil"
-deselectAll = "Seçimi Kaldır"
-downloadAll = "Tümünü İndir"
-downloadSelected = "Seçilen Dosyaları İndir"
-draw = "Çiz"
-exitRedaction = "Karartma Modundan Çık"
-exportAll = "PDF'yi Dışa Aktar"
-exportSelected = "Seçilen Sayfaları Dışa Aktar"
-formFill = "Formu Doldur"
-language = "Dil"
-panMode = "Kaydırma Modu"
-print = "PDF'yi Yazdır"
-readAloud = "Sesli Oku"
-readAloudLanguage = "Dil"
-readAloudSpeed = "Hız"
-redact = "Karart"
-rotateLeft = "Sola Döndür"
-rotateRight = "Sağa Döndür"
-ruler = "Cetvel / Ölçüm"
-save = "Kaydet"
-saveAll = "Tümünü Kaydet"
-saveAs = "Farklı Kaydet"
-saveChanges = "Değişiklikleri Kaydet"
-search = "PDF Ara"
-selectAll = "Tümünü Seç"
-selectByNumber = "Sayfa Numaralarına Göre Seç"
-selectLanguage = "Dil seçin"
-toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
-toggleAttachments = "Ekleri Göster/Gizle"
-toggleBookmarks = "Yer imlerini aç/kapat"
-toggleComments = "Yorumlar"
-toggleLayers = "Katmanları Aç/Kapat"
-toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
-toggleTheme = "Temayı Değiştir"
-
 [rotate]
 rotateLeft = "Saat yönünün tersine döndür"
 rotateRight = "Saat yönünde döndür"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Kullanılamayan dönüşümleri gizle"
 hideUnavailableConversionsDescription = "Gri gösterilmek yerine Dönüştür aracındaki devre dışı seçenekleri kaldırın."
 hideUnavailableTools = "Kullanılamayan araçları gizle"
 hideUnavailableToolsDescription = "Gri gösterilmek yerine sunucunuz tarafından devre dışı bırakılan araçları kaldırın."
+language = "Dil"
+languageDescription = "Görüntüleme dilini seçin"
 logout = "Oturumu kapat"
 setAsDefault = "Varsayılan Yap"
+theme = "Tema"
+themeDark = "Koyu"
+themeDescription = "Açık ve koyu mod arasında geçiş yapın"
+themeLight = "Açık"
 title = "Genel"
 user = "Kullanıcı"
 
@@ -6810,6 +6871,20 @@ title = "Sürüm Bilgileri"
 auto = "Otomatik"
 fitPage = "Sayfaya sığdır"
 fitWidth = "Genişliğe sığdır"
+
+[settings.help]
+label = "Turlar"
+title = "Yardım"
+
+[settings.help.adminTour]
+description = "Ekip yönetimini, sistem ayarlarını ve kurumsal özellikleri keşfedin."
+start = "Başlat"
+title = "Yönetici Turu"
+
+[settings.help.toolsTour]
+description = "Dosya yükleme, araç seçme ve sonuçları gözden geçirme adımlarını inceleyin."
+start = "Başlat"
+title = "Araçlar Turu"
 
 [settings.hotkeys]
 capturing = "Tuşlara basın… (İptal için Esc)"
@@ -7780,6 +7855,8 @@ settings = "Ayarlar"
 [tool]
 endpointUnavailable = "Bu araç sunucunuzda kullanılamıyor."
 endpointUnavailableClickable = "Bu modda kullanılamaz. Oturum açmak için tıklayın."
+filesLoading = "Dosyalar hâlâ yükleniyor, lütfen bekleyin."
+filesLoadingProgress = "{{loaded}} / {{total}} dosya yükleniyor..."
 invalidParams = "Gerekli ayarları doldurun."
 noFiles = "Başlamak için bir dosya ekleyin."
 scopeFiles = "dosyalar"
@@ -7789,10 +7866,15 @@ singleFileScope = "Yalnızca şu dosyaya uygulanıyor: {{fileName}}"
 viewerMode = "Birden çok dosya seçmek için dosya düzenleyiciye geçin."
 
 [toolPanel]
+allTools = "Tüm araçlar"
 alpha = "Alfa"
+backToTools = "Araçlara geri dön"
+collapse = "Paneli daralt"
 comingSoon = "Yakında:"
+expand = "Paneli genişlet"
 placeholder = "Başlamak için bir araç seçin"
 premiumFeature = "Premium özellik:"
+search = "Araçlarda ara"
 
 [toolPanel.fullscreen]
 comingSoon = "Yakında:"
@@ -8342,6 +8424,51 @@ bullet2 = "En iyi sonuçlar için şeffaf arka plan önerilir"
 bullet3 = "Görüntü, imza alanına sığacak şekilde yeniden boyutlandırılacaktır"
 description = "Önceden oluşturulmuş bir imza görüntüsü yükleyin. Taranmış bir imzanız veya şirket logonuz varsa idealdir."
 title = "İmza Görüntüsü Yükle"
+
+[workbenchBar]
+activeFiles = "Etkin dosyalar"
+annotations = "Ek açıklamalar"
+applyRedactionsFirst = "Önce karartmaları uygula"
+closeAll = "Tüm dosyaları kapat"
+closePdf = "PDF'yi kapat"
+closeSelected = "Seçili dosyaları kapat"
+deleteSelected = "Seçili sayfaları sil"
+deselectAll = "Tümünün seçimini kaldır"
+downloadAll = "Tümünü indir"
+downloadSelected = "Seçili dosyaları indir"
+draw = "Çiz"
+exitRedaction = "Karartma modundan çık"
+exportAll = "PDF'yi dışa aktar"
+exportSelected = "Seçili sayfaları dışa aktar"
+formFill = "Form doldur"
+language = "Dil"
+multiTool = "Çoklu araç"
+panMode = "Kaydırma modu"
+print = "PDF'yi yazdır"
+readAloud = "Sesli oku"
+readAloudLanguage = "Dil"
+readAloudSpeed = "Hız"
+redact = "Karart"
+rotateLeft = "Sola döndür"
+rotateRight = "Sağa döndür"
+ruler = "Cetvel / Ölçüm"
+save = "Kaydet"
+saveAll = "Tümünü kaydet"
+saveAs = "Farklı kaydet"
+saveChanges = "Değişiklikleri kaydet"
+search = "PDF'de ara"
+selectAll = "Tümünü seç"
+selectByNumber = "Sayfa numaralarına göre seç"
+selectLanguage = "Dil seç"
+share = "Paylaş"
+toggleAnnotations = "Ek açıklamaların görünürlüğünü değiştir"
+toggleAttachments = "Ekleri göster/gizle"
+toggleBookmarks = "Yer imlerini göster/gizle"
+toggleComments = "Yorumlar"
+toggleLayers = "Katmanları göster/gizle"
+toggleSidebar = "Kenar çubuğunu göster/gizle"
+toggleTheme = "Temayı değiştir"
+viewer = "Görüntüleyici"
 
 [workspace]
 title = "Çalışma Alanı"
