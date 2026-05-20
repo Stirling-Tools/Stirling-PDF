@@ -11,9 +11,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -112,6 +115,37 @@ class WebResponseUtilsTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(0, response.getHeaders().getContentLength());
+    }
+
+    @Test
+    void pdfDocToWebResponse_writesClassicXrefTable() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+
+            ResponseEntity<byte[]> response =
+                    WebResponseUtils.pdfDocToWebResponse(document, "doc.pdf");
+
+            String body = new String(response.getBody(), StandardCharsets.ISO_8859_1);
+            assertTrue(body.matches("(?s).*\\Rxref\\R.*"));
+            assertFalse(body.contains("/Type /XRef"));
+        }
+    }
+
+    @Test
+    void pdfDocToWebResponse_withTempFileWritesClassicXrefTable() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+
+            ResponseEntity<Resource> response =
+                    WebResponseUtils.pdfDocToWebResponse(document, "doc.pdf", tempFileManager);
+
+            String body;
+            try (InputStream in = response.getBody().getInputStream()) {
+                body = new String(in.readAllBytes(), StandardCharsets.ISO_8859_1);
+            }
+            assertTrue(body.matches("(?s).*\\Rxref\\R.*"));
+            assertFalse(body.contains("/Type /XRef"));
+        }
     }
 
     @Test
