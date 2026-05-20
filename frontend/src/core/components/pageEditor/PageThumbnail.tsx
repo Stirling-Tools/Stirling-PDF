@@ -33,6 +33,7 @@ interface PageThumbnailProps {
   selectionMode: boolean;
   movingPage: number | null;
   isAnimating: boolean;
+  isOverTarget?: boolean;
   isBoxSelected?: boolean;
   clearBoxSelection?: () => void;
   activeDragIds: string[];
@@ -79,6 +80,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   selectionMode,
   movingPage,
   isAnimating,
+  isOverTarget = false,
   isBoxSelected = false,
   clearBoxSelection,
   activeDragIds,
@@ -545,8 +547,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
             background: "rgba(162, 201, 255, 0.8)",
             padding: "6px 8px",
             borderRadius: 8,
-            zIndex: 2,
-            opacity: 0,
+            zIndex: 20,
+            opacity: isHovered || (isOverTarget && !isDragging) ? 0.6 : 0,
             transition: "opacity 0.2s ease-in-out",
           }}
         >

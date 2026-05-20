@@ -605,6 +605,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       justMoved: boolean,
       dragHandleProps?: any,
       zoomLevelParam?: number,
+      isOverTarget?: boolean,
     ) => {
       gridItemRefsRef.current = refs;
       const fileColorIndex = page.originalFileId
@@ -628,6 +629,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
           justMoved={justMoved}
           pageRefs={refs}
           dragHandleProps={dragHandleProps}
+          isOverTarget={isOverTarget}
           onReorderPages={handleReorderPages}
           onTogglePage={togglePage}
           onAnimateReorder={animateReorder}
