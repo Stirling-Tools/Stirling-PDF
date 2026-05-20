@@ -152,7 +152,11 @@ class StubEmbeddingService:
 def documents() -> DocumentService:
     """Each DocumentService test gets its own fresh ephemeral store to avoid dimension conflicts."""
     store = SqliteVecStore.ephemeral()
-    return DocumentService(embedder=StubEmbeddingService(), store=store, default_top_k=3)  # type: ignore[arg-type]
+    return DocumentService(
+        embedder=StubEmbeddingService(),  # pyrefly: ignore [bad-argument-type]
+        store=store,
+        default_top_k=3,
+    )
 
 
 def _pages(text: str) -> list[PageText]:
@@ -265,7 +269,7 @@ async def _invoke_search_knowledge(capability: RagCapability, query: str, max_re
     toolset = capability.toolset
     assert isinstance(toolset, FunctionToolset)
     tool = toolset.tools["search_knowledge"]
-    return await tool.function(query=query, max_results=max_results)  # type: ignore[call-arg]
+    return await tool.function(query=query, max_results=max_results)
 
 
 class TestRagCapability:
@@ -345,12 +349,24 @@ class TestRagCapability:
         cap = RagCapability(documents, max_searches=2)
         tool_def = _dummy_tool_def()
 
-        assert await cap._prepare_search_knowledge(None, tool_def) is tool_def  # type: ignore[arg-type]
+        assert (
+            await cap._prepare_search_knowledge(
+                None,  # pyrefly: ignore [bad-argument-type]
+                tool_def,  # pyrefly: ignore [bad-argument-type]
+            )
+            is tool_def
+        )
 
         await _invoke_search_knowledge(cap, "content")
         await _invoke_search_knowledge(cap, "content")
 
-        assert await cap._prepare_search_knowledge(None, tool_def) is None  # type: ignore[arg-type]
+        assert (
+            await cap._prepare_search_knowledge(
+                None,  # pyrefly: ignore [bad-argument-type]
+                tool_def,  # pyrefly: ignore [bad-argument-type]
+            )
+            is None
+        )
 
 
 def _dummy_tool_def() -> object:

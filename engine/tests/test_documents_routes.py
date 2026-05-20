@@ -45,7 +45,7 @@ class StubEmbedder:
 
 def _build_service() -> DocumentService:
     return DocumentService(
-        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        embedder=StubEmbedder(),  # pyrefly: ignore [bad-argument-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=3,
     )
