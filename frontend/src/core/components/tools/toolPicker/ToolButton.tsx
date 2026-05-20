@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Button, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -10,7 +10,10 @@ import FitText from "@app/components/shared/FitText";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import {
+  useToolWorkflowActions,
+  useToolWorkflowData,
+} from "@app/contexts/ToolWorkflowContext";
 import type { ToolId } from "@app/types/toolId";
 import {
   getToolDisabledReason,
@@ -46,7 +49,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
-  const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
+  const { isFavorite, toolAvailability } = useToolWorkflowData();
+  const { toggleFavorite } = useToolWorkflowActions();
   const disabledReason = getToolDisabledReason(
     id,
     tool,
@@ -309,4 +313,4 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   );
 };
 
-export default ToolButton;
+export default memo(ToolButton);
