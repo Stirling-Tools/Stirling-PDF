@@ -21,6 +21,8 @@ permissions:
   packages: read
   checks: write
   security-events: write
+  id-token: write
+  issues: write
 
 jobs:
   docker-compose-tests:
