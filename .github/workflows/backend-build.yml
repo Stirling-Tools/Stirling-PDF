@@ -1,7 +1,7 @@
 name: Backend build, format check, and coverage
 
-# Reusable workflow called from build.yml. Runs the full backend build matrix
-# (JDK 21/25 × spring-security on/off), Spotless formatting check, JUnit, and
+# Reusable workflow called from build.yml. Runs the backend build matrix
+# (JDK 25 × spring-security on/off), Spotless formatting check, JUnit, and
 # posts Jacoco coverage to PRs.
 on:
   workflow_call:
@@ -18,7 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk-version: [21, 25]
+        # JDK 25 is the floor: JPDFium's published artifacts require
+        # org.gradle.jvm.version=25 (FFM is final at 22+, JPDFium picked 25
+        # as its source target). Earlier JDKs can't even resolve the dep.
+        jdk-version: [25]
         spring-security: [true, false]
     steps:
       - name: Harden Runner
