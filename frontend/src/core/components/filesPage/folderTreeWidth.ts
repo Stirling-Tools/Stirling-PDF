@@ -1,9 +1,9 @@
 import { FolderRecord } from "@app/types/folder";
 
 const STORAGE_KEY = "stirling-folder-tree-width";
-export const MIN_WIDTH = 180;
+export const MIN_WIDTH = 210;
 export const MAX_WIDTH = 480;
-const DEFAULT_WIDTH = 256;
+const DEFAULT_WIDTH = 272;
 
 const ROW_FONT =
   '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';

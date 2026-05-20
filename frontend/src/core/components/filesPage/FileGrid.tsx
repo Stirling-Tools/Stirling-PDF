@@ -80,7 +80,14 @@ interface FileGridProps {
   sortMode?: FilesPageSortMode;
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
-  currentTab?: "all" | "local" | "cloud" | "recent" | "shared";
+  currentTab?:
+    | "all"
+    | "local"
+    | "cloud"
+    | "recent"
+    | "shared"
+    | "sharedByMe"
+    | "imSharing";
   /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
@@ -178,7 +185,14 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 
 interface EmptyStateProps {
   /** Drives copy + iconography. */
-  tab?: "all" | "local" | "cloud" | "recent" | "shared";
+  tab?:
+    | "all"
+    | "local"
+    | "cloud"
+    | "recent"
+    | "shared"
+    | "sharedByMe"
+    | "imSharing";
   /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
@@ -235,6 +249,22 @@ function EmptyState({
           hintKey: "filesPage.empty.shared.hint",
           hintFallback: "When someone shares a file via link, it appears here.",
         };
+      case "sharedByMe":
+        return {
+          titleKey: "filesPage.empty.sharedByMe.title",
+          titleFallback: "No share links yet",
+          hintKey: "filesPage.empty.sharedByMe.hint",
+          hintFallback:
+            "Create a share link on any of your files to surface it here.",
+        };
+      case "imSharing":
+        return {
+          titleKey: "filesPage.empty.imSharing.title",
+          titleFallback: "Not sharing with anyone yet",
+          hintKey: "filesPage.empty.imSharing.hint",
+          hintFallback:
+            "Invite a teammate to one of your files to see it listed here.",
+        };
       case "all":
       default:
         return {
@@ -246,13 +276,15 @@ function EmptyState({
         };
     }
   })();
-  // Recent/Shared are read-only; Local is cloud-only for folders.
-  const showUpload = Boolean(onUpload) && tab !== "recent" && tab !== "shared";
+  // Recent/Shared tabs are read-only filters; Local is cloud-only for folders.
+  const readOnlyTab =
+    tab === "recent" ||
+    tab === "shared" ||
+    tab === "sharedByMe" ||
+    tab === "imSharing";
+  const showUpload = Boolean(onUpload) && !readOnlyTab;
   const showCreateFolder =
-    Boolean(onCreateFolder) &&
-    tab !== "recent" &&
-    tab !== "shared" &&
-    tab !== "local";
+    Boolean(onCreateFolder) && !readOnlyTab && tab !== "local";
   const showCtas = showUpload || showCreateFolder;
   return (
     <div className="files-page-empty">

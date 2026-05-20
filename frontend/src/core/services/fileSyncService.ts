@@ -26,6 +26,8 @@ interface StoredFileResponse {
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
   shareLinks?: Array<{ token?: string | null }>;
+  sharedUsers?: Array<{ username?: string | null }>;
+  sharedWithUsers?: string[];
   filePurpose?: string | null;
   folderId?: string | null;
 }
@@ -166,6 +168,9 @@ export async function reconcileServerFiles(
         remoteAccessRole: serverFile.accessRole ?? stub.remoteAccessRole,
         remoteSharedViaLink: stub.remoteSharedViaLink,
         remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
+        remoteHasUserShares: Boolean(
+          serverFile.sharedUsers?.length || serverFile.sharedWithUsers?.length,
+        ),
         remoteStorageUpdatedAt:
           typeof updatedAtMs === "number" && Number.isFinite(updatedAtMs)
             ? updatedAtMs
@@ -213,6 +218,9 @@ export async function reconcileServerFiles(
         remoteAccessRole: file.accessRole ?? undefined,
         remoteSharedViaLink: false,
         remoteHasShareLinks: Boolean(file.shareLinks?.length),
+        remoteHasUserShares: Boolean(
+          file.sharedUsers?.length || file.sharedWithUsers?.length,
+        ),
         folderId: (file.folderId as any) ?? null,
       });
     }

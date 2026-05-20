@@ -39,7 +39,14 @@ export type FilesPageOriginFilter =
   | "shared-with-me";
 
 /** all|local|cloud|recent|shared filter presets. */
-export type FilesPageTab = "all" | "local" | "cloud" | "recent" | "shared";
+export type FilesPageTab =
+  | "all"
+  | "local"
+  | "cloud"
+  | "recent"
+  | "shared"
+  | "sharedByMe"
+  | "imSharing";
 
 export interface FolderNameDialogState {
   mode: "new" | "rename" | null;

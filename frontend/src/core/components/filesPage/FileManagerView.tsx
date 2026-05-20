@@ -158,9 +158,14 @@ export default function FileManagerView() {
     }
   }, [location.pathname, foldersById, setCurrentFolderId]);
 
-  // Bounce off the Shared tab when sharing isn't enabled.
+  // Bounce off any share-related tab when sharing isn't enabled.
   useEffect(() => {
-    if (!sharingEnabled && currentTab === "shared") {
+    if (
+      !sharingEnabled &&
+      (currentTab === "shared" ||
+        currentTab === "sharedByMe" ||
+        currentTab === "imSharing")
+    ) {
       setCurrentTab("all");
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
@@ -205,7 +210,9 @@ export default function FileManagerView() {
     if (
       currentTab === "local" ||
       currentTab === "recent" ||
-      currentTab === "shared"
+      currentTab === "shared" ||
+      currentTab === "sharedByMe" ||
+      currentTab === "imSharing"
     ) {
       return [];
     }
@@ -252,6 +259,20 @@ export default function FileManagerView() {
       }
       case "shared":
         return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
+      case "sharedByMe":
+        // Files I own that have at least one outgoing public share link.
+        return allFiles.filter(
+          (f) =>
+            f.remoteOwnedByCurrentUser !== false &&
+            f.remoteHasShareLinks === true,
+        );
+      case "imSharing":
+        // Files I own that I've shared directly with specific users.
+        return allFiles.filter(
+          (f) =>
+            f.remoteOwnedByCurrentUser !== false &&
+            f.remoteHasUserShares === true,
+        );
       case "all":
       default:
         // Search widens to the subtree.
@@ -750,7 +771,12 @@ export default function FileManagerView() {
         "Folders are cloud-only - save a file to the cloud to organise it.",
       );
     }
-    if (currentTab === "recent" || currentTab === "shared") {
+    if (
+      currentTab === "recent" ||
+      currentTab === "shared" ||
+      currentTab === "sharedByMe" ||
+      currentTab === "imSharing"
+    ) {
       return t(
         "filesPage.newFolderTabUnavailable",
         "Switch to All or Cloud to create folders.",
@@ -772,7 +798,9 @@ export default function FileManagerView() {
         {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
         {(currentTab === "local" ||
           currentTab === "recent" ||
-          currentTab === "shared") && (
+          currentTab === "shared" ||
+          currentTab === "sharedByMe" ||
+          currentTab === "imSharing") && (
           <div
             style={{
               fontSize: "0.95rem",
@@ -785,7 +813,11 @@ export default function FileManagerView() {
               ? t("filesPage.tabName.local", "Local")
               : currentTab === "recent"
                 ? t("filesPage.tabName.recent", "Recent")
-                : t("filesPage.tabName.shared", "Shared with me")}
+                : currentTab === "shared"
+                  ? t("filesPage.tabName.shared", "Shared with me")
+                  : currentTab === "sharedByMe"
+                    ? t("filesPage.tabName.sharedByMe", "Shared by me")
+                    : t("filesPage.tabName.imSharing", "Sharing")}
           </div>
         )}
         {(() => {
@@ -932,12 +964,20 @@ export default function FileManagerView() {
             const TAB_DEFS = [
               { id: "all", label: t("filesPage.tabs.all", "All") },
               { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              // Shared only when sharingEnabled.
+              // Sharing tabs only when sharingEnabled.
               ...(sharingEnabled
                 ? [
                     {
                       id: "shared" as const,
                       label: t("filesPage.tabs.shared", "Shared with me"),
+                    },
+                    {
+                      id: "sharedByMe" as const,
+                      label: t("filesPage.tabs.sharedByMe", "Shared by me"),
+                    },
+                    {
+                      id: "imSharing" as const,
+                      label: t("filesPage.tabs.imSharing", "Sharing"),
                     },
                   ]
                 : []),

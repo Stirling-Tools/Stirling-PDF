@@ -78,7 +78,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px 6px 14px;
+  padding: 12px 18px 6px 18px;
   margin-top: 4px;
   flex-shrink: 0;
 }
@@ -109,7 +109,7 @@
   height: 32px;
   padding: 0 14px;
   border-radius: 4px;
-  margin: 0 4px;
+  margin: 0 8px;
   cursor: pointer;
   user-select: none;
   color: var(--text-secondary);

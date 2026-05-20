@@ -56,6 +56,7 @@ export interface BaseFileMetadata {
   remoteAccessRole?: string; // Access role for shared server files
   remoteSharedViaLink?: boolean; // True when imported from a share link
   remoteHasShareLinks?: boolean; // True when owner has shared this file
+  remoteHasUserShares?: boolean; // True when owner has invited specific users
   remoteShareToken?: string; // Share token when file is from a share link
 }
 

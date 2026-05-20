@@ -683,6 +683,103 @@ test.describe("Files page", () => {
           .filter({ hasText: "cross-browser.pdf" }),
       ).toBeVisible({ timeout: 5_000 });
     });
+
+    test("Shared-by-me tab lists only files I own with share links", async ({
+      page,
+    }) => {
+      await stubStorageApis(page, { sharingEnabled: true });
+      // Three server files: one shared via link (owned by me), one shared
+      // with users (owned by me), one plain mine, and one owned by someone else.
+      await page.route("**/api/v1/storage/files", (route: Route) =>
+        route.fulfill({
+          json: [
+            {
+              id: 1,
+              fileName: "link-shared.pdf",
+              contentType: "application/pdf",
+              sizeBytes: 100,
+              createdAt: new Date().toISOString(),
+              owner: "admin",
+              ownedByCurrentUser: true,
+              accessRole: "owner",
+              shareLinks: [{ token: "tok1" }],
+              sharedUsers: [],
+              filePurpose: "generic",
+              folderId: null,
+            },
+            {
+              id: 2,
+              fileName: "user-shared.pdf",
+              contentType: "application/pdf",
+              sizeBytes: 100,
+              createdAt: new Date().toISOString(),
+              owner: "admin",
+              ownedByCurrentUser: true,
+              accessRole: "owner",
+              shareLinks: [],
+              sharedUsers: [{ username: "bob" }],
+              filePurpose: "generic",
+              folderId: null,
+            },
+            {
+              id: 3,
+              fileName: "plain-mine.pdf",
+              contentType: "application/pdf",
+              sizeBytes: 100,
+              createdAt: new Date().toISOString(),
+              owner: "admin",
+              ownedByCurrentUser: true,
+              accessRole: "owner",
+              shareLinks: [],
+              sharedUsers: [],
+              filePurpose: "generic",
+              folderId: null,
+            },
+            {
+              id: 4,
+              fileName: "from-someone-else.pdf",
+              contentType: "application/pdf",
+              sizeBytes: 100,
+              createdAt: new Date().toISOString(),
+              owner: "alice",
+              ownedByCurrentUser: false,
+              accessRole: "viewer",
+              shareLinks: [],
+              sharedUsers: [],
+              filePurpose: "generic",
+              folderId: null,
+            },
+          ],
+        }),
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      // Wait for the 4 cards to land via server sync.
+      await expect(
+        page.locator(".files-page-card:not(.is-folder)"),
+      ).toHaveCount(4, { timeout: 5_000 });
+
+      // "Shared by me" -> only link-shared.pdf
+      await page.locator("#filesPage-tab-sharedByMe").click();
+      const sharedByMeCards = page.locator(".files-page-card:not(.is-folder)");
+      await expect(sharedByMeCards).toHaveCount(1, { timeout: 3_000 });
+      await expect(sharedByMeCards.first()).toContainText("link-shared.pdf");
+
+      // "I'm sharing" -> only user-shared.pdf
+      await page.locator("#filesPage-tab-imSharing").click();
+      const imSharingCards = page.locator(".files-page-card:not(.is-folder)");
+      await expect(imSharingCards).toHaveCount(1, { timeout: 3_000 });
+      await expect(imSharingCards.first()).toContainText("user-shared.pdf");
+
+      // "Shared with me" -> only from-someone-else.pdf
+      await page.locator("#filesPage-tab-shared").click();
+      const sharedWithMeCards = page.locator(
+        ".files-page-card:not(.is-folder)",
+      );
+      await expect(sharedWithMeCards).toHaveCount(1, { timeout: 3_000 });
+      await expect(sharedWithMeCards.first()).toContainText(
+        "from-someone-else.pdf",
+      );
+    });
   });
 
   test.describe("Folder tree panel resize", () => {
