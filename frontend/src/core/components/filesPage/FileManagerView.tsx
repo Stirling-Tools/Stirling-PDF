@@ -746,7 +746,7 @@ export default function FileManagerView() {
     if (!folders.serverReachable) {
       return t(
         "filesPage.newFolderStorageDisabled",
-        "Server folder storage isn't available. Ask your admin to enable storage in settings (security.enableLogin + storage.enabled) - the feature exists but is opt-in.",
+        "Server folder storage isn't enabled. Ask your admin to turn it on.",
       );
     }
     return null;
@@ -834,7 +834,7 @@ export default function FileManagerView() {
                     label={newFolderDisabledReason}
                     withinPortal
                     multiline
-                    w={260}
+                    w={220}
                   >
                     <span style={{ display: "inline-flex" }}>
                       <Button

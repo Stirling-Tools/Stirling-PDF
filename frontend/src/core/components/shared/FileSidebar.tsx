@@ -523,8 +523,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 label={extraAction.disabledTooltip ?? extraAction.label}
                 position="right"
                 withinPortal
-                multiline
-                w={240}
+                // Only force a wide multiline box when the long disabled
+                // reason is shown; the short label fits one line.
+                multiline={Boolean(
+                  extraAction.disabled && extraAction.disabledTooltip,
+                )}
+                w={
+                  extraAction.disabled && extraAction.disabledTooltip
+                    ? 220
+                    : undefined
+                }
                 disabled={
                   !collapsed &&
                   !(extraAction.disabled && extraAction.disabledTooltip)
