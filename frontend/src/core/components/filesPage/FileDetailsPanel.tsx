@@ -328,7 +328,7 @@ export function FileDetailsPanel({
             variant="light"
             onClick={() => onRemove(selectedFileIds)}
           >
-            {t("filesPage.remove", "Remove from storage")}
+            {t("filesPage.remove", "Delete")}
           </Button>
         </div>
       </div>

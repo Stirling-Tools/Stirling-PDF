@@ -398,7 +398,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const ok = window.confirm(
         t(
           "filesPage.removeConfirm",
-          "Remove {{count}} file(s) from storage? This deletes them permanently.",
+          "Delete {{count}} file(s)? This cannot be undone.",
           { count: fileIds.length },
         ),
       );

@@ -695,7 +695,7 @@ function FileCard({
                 onRemove();
               }}
             >
-              {t("filesPage.remove", "Remove from storage")}
+              {t("filesPage.remove", "Delete")}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
@@ -1234,7 +1234,7 @@ function FileRow({
               onRemove();
             }}
           >
-            {t("filesPage.remove", "Remove from storage")}
+            {t("filesPage.remove", "Delete")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
