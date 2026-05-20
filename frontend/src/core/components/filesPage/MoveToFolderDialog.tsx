@@ -1,9 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Button, Group, Modal, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Group,
+  Modal,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import HomeIcon from "@mui/icons-material/Home";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -19,6 +28,20 @@ interface MoveToFolderDialogProps {
   disabledFolderId?: FolderId | null;
   initialFolderId?: FolderId | null;
   onConfirm: (folderId: FolderId | null) => void | Promise<void>;
+  /**
+   * Optional - when supplied, the dialog renders an inline "Create new
+   * folder" affordance that calls this back with the desired name and
+   * the currently-highlighted target as parent. After creation the new
+   * folder becomes the move target so the user can confirm the move
+   * without bouncing out of the dialog.
+   *
+   * When omitted (e.g. caller doesn't have server folder write access)
+   * the affordance is hidden entirely.
+   */
+  onCreateFolder?: (
+    name: string,
+    parentFolderId: FolderId | null,
+  ) => Promise<FolderRecord>;
 }
 
 export function MoveToFolderDialog({
@@ -28,11 +51,18 @@ export function MoveToFolderDialog({
   disabledFolderId,
   initialFolderId = ROOT_FOLDER_ID,
   onConfirm,
+  onCreateFolder,
 }: MoveToFolderDialogProps) {
   const { t } = useTranslation();
   const [target, setTarget] = useState<FolderId | null>(initialFolderId);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Inline create-folder state. Hidden by default - reveal via the
+  // "Create new folder" button below the tree. Keeping it in the same
+  // dialog avoids the user having to cancel out, create, and come back.
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   // Reset when reopening with a new initial.
   React.useEffect(() => {
@@ -40,6 +70,9 @@ export function MoveToFolderDialog({
       setTarget(initialFolderId);
       setSubmitting(false);
       setError(null);
+      setCreatingFolder(false);
+      setNewFolderName("");
+      setCreating(false);
     }
   }, [opened, initialFolderId]);
 
@@ -142,6 +175,104 @@ export function MoveToFolderDialog({
             />
           ))}
         </div>
+        {/* Inline "Create new folder" affordance. Hidden until the user
+            clicks the button so the dialog stays compact. Once revealed
+            it creates a folder under the currently-highlighted target
+            (the chosen parent) and selects the new folder so the user
+            can immediately confirm the move. */}
+        {onCreateFolder &&
+          (() => {
+            const trimmedName = newFolderName.trim();
+            const handleCreate = async () => {
+              if (trimmedName.length === 0) return;
+              setCreating(true);
+              setError(null);
+              try {
+                const created = await onCreateFolder(
+                  trimmedName,
+                  // The selected destination is the parent. If the user
+                  // picked "All files" (root), the new folder sits at root.
+                  target === ROOT_FOLDER_ID ? null : target,
+                );
+                setTarget(created.id);
+                setCreatingFolder(false);
+                setNewFolderName("");
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : t(
+                        "filesPage.moveDialog.newFolderError",
+                        "Could not create folder. Try again.",
+                      ),
+                );
+              } finally {
+                setCreating(false);
+              }
+            };
+            const handleCancel = () => {
+              setCreatingFolder(false);
+              setNewFolderName("");
+            };
+            return creatingFolder ? (
+              <Group gap="xs" align="flex-end" wrap="nowrap">
+                <TextInput
+                  label={t(
+                    "filesPage.moveDialog.newFolderLabel",
+                    "New folder name",
+                  )}
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.currentTarget.value)}
+                  placeholder={t(
+                    "filesPage.moveDialog.newFolderPlaceholder",
+                    "Folder name",
+                  )}
+                  style={{ flex: 1 }}
+                  disabled={creating}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreate();
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      handleCancel();
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button
+                  variant="default"
+                  onClick={handleCancel}
+                  disabled={creating}
+                >
+                  {t("filesPage.moveDialog.newFolderCancel", "Cancel")}
+                </Button>
+                <Button
+                  loading={creating}
+                  disabled={trimmedName.length === 0}
+                  onClick={handleCreate}
+                >
+                  {t("filesPage.moveDialog.newFolderCreate", "Create")}
+                </Button>
+              </Group>
+            ) : (
+              <Button
+                variant="subtle"
+                size="sm"
+                leftSection={<CreateNewFolderIcon fontSize="small" />}
+                onClick={() => {
+                  setCreatingFolder(true);
+                  setNewFolderName("");
+                }}
+                styles={{ root: { alignSelf: "flex-start" } }}
+              >
+                {t(
+                  "filesPage.moveDialog.newFolderToggle",
+                  "Create new folder…",
+                )}
+              </Button>
+            );
+          })()}
         {error && (
           <Alert
             color="red"

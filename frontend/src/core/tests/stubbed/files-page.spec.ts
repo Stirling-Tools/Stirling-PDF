@@ -96,15 +96,30 @@ async function stubStorageApis(
   opts: { storageEnabled?: boolean; sharingEnabled?: boolean } = {},
 ): Promise<void> {
   const { storageEnabled = true, sharingEnabled = false } = opts;
+  // No `enableLogin` field - if we set it the AppConfig context triggers
+  // the auth/login flow on mount, which redirects away from /files. The
+  // server-side ConfigController normally derives storageEnabled from
+  // enableLogin AND storage.enabled, but here we set storageEnabled
+  // directly so the FolderContext serverReachable pipeline runs without
+  // the auth side-effects.
+  const configPayload = {
+    appVersion: "test",
+    storageEnabled,
+    storageSharingEnabled: sharingEnabled,
+    storageShareLinksEnabled: sharingEnabled,
+  };
+  // The app reads its config from `/api/v1/config/app-config` via the
+  // AppConfigContext hook on mount. `serverReachable` (and therefore
+  // the New folder / Create folder gating) depends on
+  // `appConfig.storageEnabled === true` flipping the
+  // `pullFromServer` pipeline. We stub both the modern app-config path
+  // and the older bare `/config` path so historical callers still
+  // resolve cleanly.
+  await page.route("**/api/v1/config/app-config", (route: Route) =>
+    route.fulfill({ json: configPayload }),
+  );
   await page.route("**/api/v1/config", (route: Route) =>
-    route.fulfill({
-      json: {
-        appVersion: "test",
-        storageEnabled,
-        storageSharingEnabled: sharingEnabled,
-        storageShareLinksEnabled: sharingEnabled,
-      },
-    }),
+    route.fulfill({ json: configPayload }),
   );
   await page.route("**/api/v1/storage/folders", (route: Route) =>
     route.fulfill({ json: [] }),
@@ -466,6 +481,75 @@ test.describe("Files page", () => {
       // button-trigger refactor.
       await cards.nth(1).click({ modifiers: ["Control"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
+    });
+  });
+
+  test.describe("Empty-state CTAs", () => {
+    test.use({ autoGoto: false });
+
+    test("renders Upload + Create folder CTAs when grid is empty", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      // No seedFiles - grid is empty so EmptyState renders.
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      // Wait for the empty state itself rather than card visibility -
+      // gotoFilesPage's card-visibility wait would time out here.
+      await expect(page.locator(".files-page-empty")).toBeVisible({
+        timeout: 5_000,
+      });
+      // Both CTAs centered in the grid area where the eye lands.
+      await expect(
+        page
+          .locator(".files-page-empty-actions")
+          .getByRole("button", { name: /Upload files/i }),
+      ).toBeVisible();
+      await expect(
+        page
+          .locator(".files-page-empty-actions")
+          .getByRole("button", { name: /Create folder/i }),
+      ).toBeVisible();
+    });
+
+    test("Create folder CTA disabled when storage isn't reachable", async ({
+      page,
+    }) => {
+      // Storage disabled - the New folder action is gated and the CTA
+      // should mirror that gating with a disabled state.
+      await stubStorageApis(page, { storageEnabled: false });
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      await expect(page.locator(".files-page-empty")).toBeVisible({
+        timeout: 5_000,
+      });
+      const createCta = page
+        .locator(".files-page-empty-actions")
+        .getByRole("button", { name: /Create folder/i });
+      await expect(createCta).toBeVisible();
+      await expect(createCta).toBeDisabled();
+    });
+  });
+
+  test.describe("Move dialog inline create-folder", () => {
+    test.use({ autoGoto: false });
+
+    test("Move dialog shows Create new folder affordance", async ({ page }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "to-move", name: "to-move.pdf", remoteStorageId: null },
+      ]);
+      await gotoFilesPage(page);
+      // Open the move dialog via the per-file kebab.
+      const card = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "to-move.pdf" });
+      await card.getByRole("button", { name: /File actions/i }).click();
+      await page.getByRole("menuitem", { name: /Move to/i }).click();
+      // The dialog now exposes an inline "Create new folder…" toggle
+      // so the user can spin up a destination folder without leaving
+      // the dialog.
+      await expect(
+        page.getByRole("button", { name: /Create new folder/i }),
+      ).toBeVisible();
     });
   });
 });

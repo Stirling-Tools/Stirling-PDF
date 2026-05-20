@@ -790,6 +790,33 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
+  // Why "New folder" is/isn't available right now. Used by the header
+  // button AND the empty-state CTA so both surfaces explain themselves
+  // consistently (and stay in lockstep if the gating rules change).
+  // null = button is actionable; string = disabled with this reason
+  // shown via tooltip.
+  const newFolderDisabledReason: string | null = useMemo(() => {
+    if (currentTab === "local") {
+      return t(
+        "filesPage.localFoldersUnavailable",
+        "Folders are cloud-only - save a file to the cloud to organise it.",
+      );
+    }
+    if (currentTab === "recent" || currentTab === "shared") {
+      return t(
+        "filesPage.newFolderTabUnavailable",
+        "Switch to All or Cloud to create folders.",
+      );
+    }
+    if (!folders.serverReachable) {
+      return t(
+        "filesPage.newFolderStorageDisabled",
+        "Server folder storage isn't available. Ask your admin to enable storage in settings (security.enableLogin + storage.enabled) - the feature exists but is opt-in.",
+      );
+    }
+    return null;
+  }, [currentTab, folders.serverReachable, t]);
+
   return (
     <div className="files-page" ref={dropZoneRef}>
       <header className="files-page-header">
@@ -858,23 +885,6 @@ export default function FileManagerView() {
               setRefreshing(false);
             }
           };
-          const newFolderDisabledReason =
-            currentTab === "local"
-              ? t(
-                  "filesPage.localFoldersUnavailable",
-                  "Folders are cloud-only - save a file to the cloud to organise it.",
-                )
-              : currentTab === "recent" || currentTab === "shared"
-                ? t(
-                    "filesPage.newFolderTabUnavailable",
-                    "Switch to All or Cloud to create folders.",
-                  )
-                : !folders.serverReachable
-                  ? t(
-                      "filesPage.newFolderStorageDisabled",
-                      "Server folder storage isn't available. Ask your admin to enable storage in settings (security.enableLogin + storage.enabled) - the feature exists but is opt-in.",
-                    )
-                  : null;
           // Wrap the button in a Tooltip so the disabled state EXPLAINS
           // itself - users were left wondering why "New folder" was greyed
           // out. The label tells them the feature exists and points at how
@@ -1144,6 +1154,61 @@ export default function FileManagerView() {
           })()}
 
           <div className="files-page-toolbar">
+            {/* Primary file actions sit at the START of the toolbar -
+                immediately above the grid, in the user's eye-line.
+                The corner header buttons are still there for muscle
+                memory, but on widescreen monitors the top-right corner
+                is a long way from where attention actually lands; this
+                row solves that. Hidden on very narrow viewports
+                (≤480px) where the corner buttons are close enough and
+                the toolbar can't spare the horizontal space. */}
+            <div className="files-page-toolbar-create" data-mobile-hide="true">
+              <Tooltip
+                label={t("filesPage.upload", "Upload")}
+                withinPortal
+                openDelay={400}
+              >
+                <Button
+                  size="sm"
+                  leftSection={<UploadFileIcon fontSize="small" />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {t("filesPage.upload", "Upload")}
+                </Button>
+              </Tooltip>
+              <Tooltip
+                label={
+                  newFolderDisabledReason ??
+                  t("filesPage.newFolder", "New folder")
+                }
+                withinPortal
+                multiline
+                w={260}
+              >
+                {newFolderDisabledReason ? (
+                  <span style={{ display: "inline-flex" }}>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      leftSection={<CreateNewFolderIcon fontSize="small" />}
+                      disabled
+                      styles={{ root: { pointerEvents: "auto" } }}
+                    >
+                      {t("filesPage.newFolder", "New folder")}
+                    </Button>
+                  </span>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    leftSection={<CreateNewFolderIcon fontSize="small" />}
+                    onClick={() => openNewFolderDialog()}
+                  >
+                    {t("filesPage.newFolder", "New folder")}
+                  </Button>
+                )}
+              </Tooltip>
+            </div>
             <span className="files-page-toolbar-info">
               {loading
                 ? t("filesPage.loading", "Loading…")
@@ -1536,6 +1601,13 @@ export default function FileManagerView() {
               onRemoveFiles={handleRemoveFiles}
               onPromptMoveFiles={promptMoveFiles}
               onSaveToServer={(file) => setSaveToServerTarget([file])}
+              // Center-of-grid CTAs when the empty state shows - same
+              // handlers the corner header buttons use so behaviour
+              // (disabled tooltips, native file picker, dialog) is
+              // identical regardless of where the user clicks from.
+              onEmptyUpload={() => fileInputRef.current?.click()}
+              onEmptyCreateFolder={() => openNewFolderDialog()}
+              newFolderDisabledReason={newFolderDisabledReason}
             />
             {isDraggingExternal && (
               <div className="files-page-drop-overlay" aria-live="polite">
@@ -1635,6 +1707,16 @@ export default function FileManagerView() {
             await moveFolderTo(moveDialog.folderId, target);
           }
         }}
+        // Inline-create folder while picking a move target. Only wired
+        // when the server is reachable - matches the gating on the
+        // header New folder button so the dialog doesn't expose an
+        // affordance that would fail.
+        onCreateFolder={
+          folders.serverReachable
+            ? (name, parentFolderId) =>
+                folders.createFolder(name, parentFolderId)
+            : undefined
+        }
       />
 
       <FolderNameDialog

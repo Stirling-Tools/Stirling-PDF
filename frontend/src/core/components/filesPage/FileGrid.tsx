@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Checkbox, Menu } from "@mantine/core";
+import { ActionIcon, Button, Checkbox, Menu, Tooltip } from "@mantine/core";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -11,6 +11,8 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -96,17 +98,45 @@ interface FileGridProps {
   /** Cloud reachability - switches the cloud empty state between
    *  "no files yet" and "no cached cloud files". */
   serverReachable?: boolean;
+  /** Empty-state CTAs - center-of-grid call-to-action buttons rendered
+   *  when there are no entries. The corner header buttons are still
+   *  there for power users, but the wide-monitor "where do I click?"
+   *  problem goes away when the actions are surfaced where the eye
+   *  actually lands. Both are optional - pass undefined to hide the
+   *  matching button. `newFolderDisabledReason` mirrors the header
+   *  button's disabled gating; when non-null the CTA shows a tooltip
+   *  with the reason instead of being a working button. */
+  onEmptyUpload?: () => void;
+  onEmptyCreateFolder?: () => void;
+  newFolderDisabledReason?: string | null;
 }
 
 export function FileGrid(props: FileGridProps & { loading?: boolean }) {
-  const { viewMode, entries, loading, currentTab, serverReachable } = props;
+  const {
+    viewMode,
+    entries,
+    loading,
+    currentTab,
+    serverReachable,
+    onEmptyUpload,
+    onEmptyCreateFolder,
+    newFolderDisabledReason,
+  } = props;
 
   if (loading && entries.length === 0) {
     return <SkeletonGrid viewMode={viewMode} />;
   }
 
   if (entries.length === 0) {
-    return <EmptyState tab={currentTab} serverReachable={serverReachable} />;
+    return (
+      <EmptyState
+        tab={currentTab}
+        serverReachable={serverReachable}
+        onUpload={onEmptyUpload}
+        onCreateFolder={onEmptyCreateFolder}
+        newFolderDisabledReason={newFolderDisabledReason}
+      />
+    );
   }
 
   if (viewMode === "list") {
@@ -175,9 +205,21 @@ interface EmptyStateProps {
   /** Whether the cloud backend is currently reachable; switches the cloud
    *  empty state from "no files yet" to "no cached cloud files". */
   serverReachable?: boolean;
+  /** CTAs - see FileGridProps. Optional; if absent, the button hides. */
+  onUpload?: () => void;
+  onCreateFolder?: () => void;
+  /** When non-null, the New folder CTA is disabled with this reason
+   *  surfaced via a tooltip. Mirrors the header button's gating. */
+  newFolderDisabledReason?: string | null;
 }
 
-function EmptyState({ tab = "all", serverReachable = true }: EmptyStateProps) {
+function EmptyState({
+  tab = "all",
+  serverReachable = true,
+  onUpload,
+  onCreateFolder,
+  newFolderDisabledReason,
+}: EmptyStateProps) {
   const { t } = useTranslation();
   const { titleKey, titleFallback, hintKey, hintFallback } = (() => {
     switch (tab) {
@@ -229,6 +271,17 @@ function EmptyState({ tab = "all", serverReachable = true }: EmptyStateProps) {
         };
     }
   })();
+  // CTAs are suppressed on the "recent" and "shared" tabs since neither
+  // upload-to-server nor create-folder semantically apply there (recent
+  // is read-only, shared mirrors files from other accounts). The "local"
+  // empty state hides create-folder too because folders are cloud-only.
+  const showUpload = Boolean(onUpload) && tab !== "recent" && tab !== "shared";
+  const showCreateFolder =
+    Boolean(onCreateFolder) &&
+    tab !== "recent" &&
+    tab !== "shared" &&
+    tab !== "local";
+  const showCtas = showUpload || showCreateFolder;
   return (
     <div className="files-page-empty">
       <span className="files-page-empty-icon">
@@ -236,6 +289,51 @@ function EmptyState({ tab = "all", serverReachable = true }: EmptyStateProps) {
       </span>
       <div className="files-page-empty-title">{t(titleKey, titleFallback)}</div>
       <div className="files-page-empty-hint">{t(hintKey, hintFallback)}</div>
+      {showCtas && (
+        <div className="files-page-empty-actions">
+          {showUpload && (
+            <Button
+              size="md"
+              leftSection={<UploadFileIcon fontSize="small" />}
+              onClick={onUpload}
+            >
+              {t("filesPage.empty.uploadCta", "Upload files")}
+            </Button>
+          )}
+          {showCreateFolder &&
+            (newFolderDisabledReason ? (
+              <Tooltip
+                label={newFolderDisabledReason}
+                withinPortal
+                multiline
+                w={260}
+              >
+                {/* Wrap so the tooltip still hovers when the button is
+                    disabled - Mantine strips pointer events otherwise. */}
+                <span style={{ display: "inline-flex" }}>
+                  <Button
+                    size="md"
+                    variant="default"
+                    leftSection={<CreateNewFolderIcon fontSize="small" />}
+                    disabled
+                    styles={{ root: { pointerEvents: "auto" } }}
+                  >
+                    {t("filesPage.empty.newFolderCta", "Create folder")}
+                  </Button>
+                </span>
+              </Tooltip>
+            ) : (
+              <Button
+                size="md"
+                variant="default"
+                leftSection={<CreateNewFolderIcon fontSize="small" />}
+                onClick={onCreateFolder}
+              >
+                {t("filesPage.empty.newFolderCta", "Create folder")}
+              </Button>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
