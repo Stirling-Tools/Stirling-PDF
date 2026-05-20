@@ -20,10 +20,11 @@
   overflow: hidden;
   height: 100%;
   pointer-events: none;
+  position: relative;
 }
 
 .folder-tree-panel[data-active="true"] {
-  width: 16rem;
+  width: var(--folder-tree-panel-width, 16rem);
   border-right-width: 1px;
   pointer-events: auto;
 }
@@ -32,10 +33,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 16rem;
+  width: 100%;
   overflow-y: auto;
   opacity: 0;
   transform: translateX(-1rem);
+  /* Only fade/slide; width is driven by the inline custom property so
+   * dragging the resizer doesn't animate. */
   transition:
     opacity 0.18s ease,
     transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -45,6 +48,29 @@
   opacity: 1;
   transform: translateX(0);
   transition-delay: 0.04s;
+}
+
+/* Drag handle on the right edge. */
+.folder-tree-panel-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.folder-tree-panel-resizer:hover,
+.folder-tree-panel-resizer:focus-visible {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 35%,
+    transparent
+  );
+  outline: none;
 }
 
 /* Section header - matches .file-sidebar-section-header in FileSidebar.css */
@@ -164,10 +190,9 @@
 }
 
 @media (max-width: 900px) {
+  /* Cap the user width on narrow viewports so the tree can't squeeze
+   * out the file grid. The custom property is still honoured but capped. */
   .folder-tree-panel[data-active="true"] {
-    width: 14rem;
-  }
-  .folder-tree-panel-inner {
-    width: 14rem;
+    width: min(var(--folder-tree-panel-width, 14rem), 14rem);
   }
 }

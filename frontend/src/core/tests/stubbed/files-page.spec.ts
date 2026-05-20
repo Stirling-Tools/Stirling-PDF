@@ -479,4 +479,39 @@ test.describe("Files page", () => {
       ).toBeVisible();
     });
   });
+
+  test.describe("Folder tree panel resize", () => {
+    test.use({ autoGoto: false });
+
+    test("Resize handle is present and keyboard-adjustable", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
+      ]);
+      await gotoFilesPage(page);
+      const handle = page.locator(".folder-tree-panel-resizer").first();
+      await expect(handle).toBeVisible();
+      const before = await page.evaluate(() => {
+        const el = document.querySelector(
+          ".folder-tree-panel[data-active='true']",
+        ) as HTMLElement | null;
+        return el?.getBoundingClientRect().width ?? 0;
+      });
+      await handle.focus();
+      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("ArrowRight");
+      const after = await page.evaluate(() => {
+        const el = document.querySelector(
+          ".folder-tree-panel[data-active='true']",
+        ) as HTMLElement | null;
+        return el?.getBoundingClientRect().width ?? 0;
+      });
+      // Four 8px steps = +32px.
+      expect(after).toBeGreaterThanOrEqual(before + 24);
+    });
+  });
 });
