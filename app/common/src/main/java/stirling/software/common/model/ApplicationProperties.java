@@ -622,6 +622,7 @@ public class ApplicationProperties {
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide;
+        private Boolean enableOnboarding = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private int maxDPI;

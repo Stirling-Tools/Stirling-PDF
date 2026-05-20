@@ -18,6 +18,7 @@ export interface OnboardingRuntimeState {
   tourType: "admin" | "tools" | "whatsnew";
   isDesktopApp: boolean;
   desktopSlideEnabled: boolean;
+  onboardingEnabled: boolean,
   analyticsNotConfigured: boolean;
   analyticsEnabled: boolean;
   licenseNotice: {
@@ -71,6 +72,7 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
   firstLoginUsername: "",
   usingDefaultCredentials: false,
   desktopSlideEnabled: true,
+  onboardingEnabled: true,
   requiresMfaSetup: false,
 };
 

@@ -18,6 +18,7 @@ export interface AppConfig {
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
   enableDesktopInstallSlide?: boolean;
+  enableOnboarding?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   termsAndConditions?: string;
