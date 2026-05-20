@@ -13,6 +13,7 @@
  */
 
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ActionIcon, Divider } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -42,6 +43,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getHomeNavigation } = useSidebarNavigation();
+  const navigate = useNavigate();
 
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
   // Special case: multiTool should always show even when sidebars are hidden
@@ -167,9 +169,16 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
                   component="a"
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
+                    const homeHref = getHomeNavigation().href;
                     const performNavigation = () => {
                       setActiveButton("tools");
                       handleBackToTools();
+                      // Mirror the anchor's href via the router. The state→URL
+                      // sync in useNavigationUrlSync (selectedTool → null →
+                      // clearToolRoute) does not fire reliably on webkit; this
+                      // keeps the URL in lockstep with the declared destination
+                      // on every browser.
+                      navigate(homeHref);
                     };
                     if (hasUnsavedChanges) {
                       e.preventDefault();
