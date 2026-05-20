@@ -62,11 +62,20 @@ echo "Target bootJar: $BOOTJAR ($(du -h "$BOOTJAR" | cut -f1))"
 WORK=$(mktemp -d)
 trap "rm -rf '$WORK'" EXIT
 
-# Pull just the JPDFium darwin native jars out of the bootJar — leave
-# everything else alone.
-( cd "$WORK" && jar xf "$BOOTJAR" 'BOOT-INF/lib/jpdfium-natives-darwin-x64-*.jar' \
-                                 'BOOT-INF/lib/jpdfium-natives-darwin-arm64-*.jar' ) \
-    2>/dev/null || true
+# Resolve the exact paths of the JPDFium darwin native jars inside the
+# bootJar — `jar xf` doesn't support glob patterns in its path args, so
+# we have to list-then-extract by exact path.
+mapfile -t NATIVE_JAR_PATHS < <(jar tf "$BOOTJAR" \
+    | grep -E '^BOOT-INF/lib/jpdfium-natives-darwin-(x64|arm64)-.*\.jar$' || true)
+
+if [ "${#NATIVE_JAR_PATHS[@]}" = 0 ]; then
+    echo "No JPDFium darwin natives in bootJar; nothing to sign"
+    exit 0
+fi
+
+# Extract those exact entries to $WORK/BOOT-INF/lib/*.jar.
+( cd "$WORK" && jar xf "$BOOTJAR" "${NATIVE_JAR_PATHS[@]}" ) \
+    || { echo "jar xf failed to extract natives jars" >&2; exit 1; }
 
 ANY_SIGNED=0
 for nat_jar in "$WORK/BOOT-INF/lib"/jpdfium-natives-darwin-*.jar; do
