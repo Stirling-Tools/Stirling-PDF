@@ -185,7 +185,7 @@ export class UpdateService {
    */
   async getCurrentVersionFromGitHub(): Promise<string> {
     const url =
-      "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/master/build.gradle";
+      "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/build.gradle";
 
     try {
       const response = await fetch(url);
