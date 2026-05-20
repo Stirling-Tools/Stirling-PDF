@@ -7,8 +7,13 @@
 
 import apiClient from "@app/services/apiClient";
 import { fileStorage } from "@app/services/fileStorage";
-import { StirlingFileStub } from "@app/types/fileContext";
+import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
+import {
+  isZipBundle,
+  loadShareBundleEntries,
+  parseContentDispositionFilename,
+} from "@app/services/shareBundleUtils";
 
 interface StoredFileResponse {
   id: number;
@@ -82,7 +87,7 @@ export async function reconcileServerFiles(
     return localStubs;
   }
 
-  let combinedStubs = localStubs;
+  let combinedStubs: StirlingFileStub[];
   const localRemoteIds = new Set(
     localStubs
       .map((s) => s.remoteStorageId)
@@ -267,4 +272,98 @@ export async function reconcileServerFiles(
   }
 
   return combinedStubs;
+}
+
+/**
+ * Download bytes for any server-only stubs (id starts with "server-") and
+ * ingest them into IDB. Returns a stub list where the server-only entries
+ * are replaced with proper local stubs that point to the freshly-cached
+ * IDB rows. Local stubs are passed through untouched.
+ *
+ * Pass `addFiles` (from FileContext.addFilesWithOptions) and
+ * `updateStub` (from FileContext.updateStirlingFileStub) so this util
+ * stays React-free; the caller provides the wiring.
+ */
+export async function materializeServerStubs(
+  stubs: StirlingFileStub[],
+  helpers: {
+    addFiles: (
+      files: File[],
+      options: {
+        selectFiles: boolean;
+        autoUnzip: boolean;
+        skipAutoUnzip: boolean;
+        allowDuplicates: boolean;
+      },
+    ) => Promise<StirlingFile[]>;
+    updateStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
+  },
+): Promise<StirlingFileStub[]> {
+  const out: StirlingFileStub[] = [];
+  for (const stub of stubs) {
+    const needsDownload =
+      typeof stub.id === "string" &&
+      stub.id.startsWith("server-") &&
+      typeof stub.remoteStorageId === "number";
+    if (!needsDownload) {
+      out.push(stub);
+      continue;
+    }
+    try {
+      const response = await apiClient.get(
+        `/api/v1/storage/files/${stub.remoteStorageId}/download`,
+        {
+          responseType: "blob",
+          suppressErrorToast: true,
+          skipAuthRedirect: true,
+        } as any,
+      );
+      const headers = response.headers ?? {};
+      const contentType =
+        (typeof headers.get === "function"
+          ? headers.get("content-type")
+          : headers["content-type"] || headers["Content-Type"]) || "";
+      const disposition =
+        (typeof headers.get === "function"
+          ? headers.get("content-disposition")
+          : headers["content-disposition"] || headers["Content-Disposition"]) ||
+        "";
+      const filename =
+        parseContentDispositionFilename(disposition) || stub.name;
+      const blob = response.data as Blob;
+
+      // Server bundle: extract latest file(s) inside.
+      const bundle = isZipBundle(contentType, filename)
+        ? await loadShareBundleEntries(blob).catch(() => null)
+        : null;
+      const files: File[] = bundle
+        ? bundle.files
+        : [new File([blob], filename, { type: contentType || blob.type })];
+
+      const ingested = await helpers.addFiles(files, {
+        selectFiles: false,
+        autoUnzip: false,
+        skipAutoUnzip: true,
+        allowDuplicates: true,
+      });
+      if (ingested.length === 0) continue;
+      const primary = ingested[ingested.length - 1]!;
+      const newId = primary.fileId as FileId;
+      const remoteUpdates = {
+        remoteStorageId: stub.remoteStorageId,
+        remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
+        remoteOwnerUsername: stub.remoteOwnerUsername,
+        remoteOwnedByCurrentUser: stub.remoteOwnedByCurrentUser,
+        remoteAccessRole: stub.remoteAccessRole,
+        remoteSharedViaLink: false,
+        remoteHasShareLinks: stub.remoteHasShareLinks,
+      };
+      helpers.updateStub(newId, remoteUpdates);
+      await fileStorage.updateFileMetadata(newId, remoteUpdates);
+      out.push({ ...stub, ...remoteUpdates, id: newId, originalFileId: newId });
+    } catch (err) {
+      console.warn("[fileSyncService] failed to materialize server stub", err);
+    }
+  }
+  return out;
 }

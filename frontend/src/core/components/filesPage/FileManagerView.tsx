@@ -61,6 +61,7 @@ import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerMo
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
+import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
@@ -502,14 +503,26 @@ export default function FileManagerView() {
           clearFilesPageReturnRoute();
         }
 
-        await fileActions.addStirlingFileStubs(stubs, {
+        // Server-only stubs have no bytes in IDB; download + ingest first.
+        const materialized = await materializeServerStubs(stubs, {
+          addFiles: fileActions.addFilesWithOptions,
+          updateStub: fileActions.updateStirlingFileStub,
+        });
+        if (materialized.length !== stubs.length) {
+          // At least one server download failed; refresh so the grid
+          // reflects any successful ingests and the user can retry.
+          await refresh();
+          return;
+        }
+
+        await fileActions.addStirlingFileStubs(materialized, {
           selectFiles: false,
         });
         // Branch on requested stubs so already-active files still activate.
-        if (stubs.length === 1) {
-          setActiveFileId(stubs[0]!.id);
+        if (materialized.length === 1) {
+          setActiveFileId(materialized[0]!.id);
           navActions.setWorkbench("viewer");
-        } else if (stubs.length > 1) {
+        } else if (materialized.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
         navigate("/");

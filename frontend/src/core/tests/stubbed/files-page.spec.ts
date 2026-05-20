@@ -539,6 +539,60 @@ test.describe("Files page", () => {
   test.describe("Server file sync", () => {
     test.use({ autoGoto: false });
 
+    test("Server-only file downloads bytes when opened", async ({ page }) => {
+      await stubStorageApis(page);
+      const REMOTE_ID = 9001;
+      await page.route("**/api/v1/storage/files", (route: Route) =>
+        route.fulfill({
+          json: [
+            {
+              id: REMOTE_ID,
+              fileName: "cross-browser.pdf",
+              contentType: "application/pdf",
+              sizeBytes: 4096,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              owner: "testuser",
+              ownedByCurrentUser: true,
+              accessRole: "owner",
+              shareLinks: [],
+              filePurpose: "generic",
+              folderId: null,
+            },
+          ],
+        }),
+      );
+      let downloadHit = false;
+      await page.route(
+        `**/api/v1/storage/files/${REMOTE_ID}/download`,
+        (route: Route) => {
+          downloadHit = true;
+          route.fulfill({
+            status: 200,
+            headers: {
+              "content-type": "application/pdf",
+              "content-disposition": 'attachment; filename="cross-browser.pdf"',
+            },
+            body: Buffer.from("%PDF-1.4\n%%EOF", "utf8"),
+          });
+        },
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+      const card = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "cross-browser.pdf" });
+      await expect(card).toBeVisible({ timeout: 5_000 });
+      // Open via Add to workspace (kebab > Add to workspace).
+      await card.getByRole("button", { name: /File actions/i }).click();
+      await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
+      // The materializer should have hit the download endpoint and
+      // routed the user to the viewer (/).
+      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
+        timeout: 5_000,
+      });
+      expect(downloadHit).toBe(true);
+    });
+
     test("Server-only files appear in /files on a fresh browser", async ({
       page,
     }) => {
