@@ -21,6 +21,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -828,7 +829,42 @@ export default function FileManagerView() {
                     <RefreshIcon />
                   </ActionIcon>
                 </Tooltip>
-                {/* Hidden input fired by the empty-state CTA Upload button. */}
+                {newFolderDisabledReason ? (
+                  <Tooltip
+                    label={newFolderDisabledReason}
+                    withinPortal
+                    multiline
+                    w={260}
+                  >
+                    <span style={{ display: "inline-flex" }}>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        leftSection={<CreateNewFolderIcon fontSize="small" />}
+                        disabled
+                        styles={{ root: { pointerEvents: "auto" } }}
+                      >
+                        {t("filesPage.newFolder", "New folder")}
+                      </Button>
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    leftSection={<CreateNewFolderIcon fontSize="small" />}
+                    onClick={() => openNewFolderDialog()}
+                  >
+                    {t("filesPage.newFolder", "New folder")}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  leftSection={<UploadFileIcon fontSize="small" />}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {t("filesPage.upload", "Upload")}
+                </Button>
                 <input
                   ref={fileInputRef}
                   type="file"

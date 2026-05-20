@@ -167,6 +167,20 @@
   color: var(--text-muted) !important;
   font-size: 18px !important;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+/* When the icon is a wrapper around an SVG (extraAction case), force
+ * the SVG to inherit the wrapper's 18px sizing instead of MUI's default
+ * 1.5rem so it matches the other rail icons. */
+.file-sidebar-action-icon > svg {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
 }
 
 .file-sidebar-action-label {

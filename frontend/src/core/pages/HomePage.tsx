@@ -523,10 +523,17 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const handleUpload = useCallback(
       async (files: File[]) => {
-        await addFiles(files, { skipWorkspaceDispatch: true });
+        const added = await addFiles(files, { skipWorkspaceDispatch: true });
         await filesPage.refresh();
+        // If the user is inside a cloud folder, place uploads there.
+        if (folders.currentFolderId !== null && added.length > 0) {
+          await filesPage.moveFilesTo(
+            added.map((f) => f.fileId),
+            folders.currentFolderId,
+          );
+        }
       },
-      [addFiles, filesPage],
+      [addFiles, filesPage, folders.currentFolderId],
     );
 
     const newFolderDisabledReason = !folders.serverReachable
@@ -541,9 +548,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         ref={ref}
         {...props}
         onSearchClick={() => {
-          if (props.collapsed && props.onToggleCollapse) {
-            props.onToggleCollapse();
-          }
+          // Just focus the central search field; don't toggle collapse
+          // (which on /files navigates back home).
           window.dispatchEvent(new Event("files-page:focus-search"));
         }}
         onUploadFiles={handleUpload}
