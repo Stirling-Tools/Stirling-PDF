@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
@@ -24,7 +24,7 @@ import { AUTOMATION_STEPS } from "@app/constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
   const { actions } = useNavigationActions();
   const { registerToolReset } = useToolWorkflow();
 
@@ -45,6 +45,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     deleteAutomation,
     refreshAutomations,
     copyFromSuggested,
+    importAutomation,
   } = useSavedAutomations();
 
   // Use ref to store the latest reset function to avoid closure issues
@@ -153,6 +154,8 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 );
               }
             }}
+            onImportAutomation={importAutomation}
+            onImportError={(message) => onError?.(message)}
             toolRegistry={toolRegistry}
           />
         );

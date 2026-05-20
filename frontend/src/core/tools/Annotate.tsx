@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useNavigation } from "@app/contexts/NavigationContext";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import { BaseToolProps } from "@app/types/tool";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
@@ -74,7 +74,7 @@ const isKnownAnnotationTool = (
 const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedTool, workbench, hasUnsavedChanges } = useNavigation();
-  const { selectedFiles } = useFileSelection();
+  const { files: allFiles } = useAllFiles();
   const {
     signatureApiRef,
     annotationApiRef,
@@ -682,7 +682,7 @@ const Annotate = (_props: BaseToolProps) => {
     });
 
   const steps =
-    selectedFiles.length === 0
+    allFiles.length === 0
       ? []
       : [
           {
@@ -725,7 +725,7 @@ const Annotate = (_props: BaseToolProps) => {
         ];
   return createToolFlow({
     files: {
-      selectedFiles,
+      selectedFiles: allFiles,
       isCollapsed: false,
     },
     steps,

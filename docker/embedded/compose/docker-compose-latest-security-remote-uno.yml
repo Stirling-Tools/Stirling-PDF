@@ -57,38 +57,34 @@ services:
 
   unoserver1:
     container_name: UNO-Server-1
-    # NOTE: This image needs to be updated to unoserver 3.6 to match Stirling-PDF's client version
-    # Current :latest uses 3.4 which causes API mismatch errors
-    image: ghcr.io/unoconv/unoserver-docker:latest
+    # See docker/unoserver/VERSION for available tags.
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
+    environment:
+      UNOSERVER_PORT: "2003"
+      UNOSERVER_UNO_PORT: "2002"
+      UNOSERVER_CONVERSION_TIMEOUT: "1800"
+      # Recycle hourly to bound LibreOffice memory; 0 disables, floor 60s.
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
     volumes:
       - stirling-tmp:/tmp/stirling-pdf:rw
     expose:
       - "2003"
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/2003' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     networks:
       - stirling-network
     restart: on-failure:5
 
   unoserver2:
     container_name: UNO-Server-2
-    # NOTE: This image needs to be updated to unoserver 3.6 to match Stirling-PDF's client version
-    # Current :latest uses 3.4 which causes API mismatch errors
-    image: ghcr.io/unoconv/unoserver-docker:latest
+    image: ghcr.io/stirling-tools/stirling-unoserver:latest
+    environment:
+      UNOSERVER_PORT: "2003"
+      UNOSERVER_UNO_PORT: "2002"
+      UNOSERVER_CONVERSION_TIMEOUT: "1800"
+      UNOSERVER_RECYCLE_INTERVAL_SECONDS: "3600"
     volumes:
       - stirling-tmp:/tmp/stirling-pdf:rw
     expose:
       - "2003"
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/2003' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     networks:
       - stirling-network
     restart: on-failure:5

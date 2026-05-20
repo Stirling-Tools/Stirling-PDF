@@ -1806,7 +1806,11 @@ title = "Cambio de nombre inteligente"
 [automate]
 copyToSaved = "Copiar a guardados"
 desc = "Cree flujos de trabajo de varios pasos encadenando acciones de PDF. Ideal para tareas recurrentes."
+export = "Exportar"
 exportForFolderScanning = "Exportar para el escaneo de carpetas"
+import = "Importar"
+importPartialSuccess = "Importado con {{count}} operación(es) sin asignar: {{ops}}"
+importSuccess = "Automatización importada: {{name}}"
 invalidStep = "Paso inválido"
 reviewTitle = "Resultados de automatización"
 title = "Automatizar"
@@ -1822,6 +1826,7 @@ title = "Configurar {{toolName}}"
 [automate.creation]
 createTitle = "Crear automatización"
 editTitle = "Editar automatización"
+export = "Exportar"
 exportForFolderScanning = "Exportar para el escaneo de carpetas"
 intro = "Las automatizaciones ejecutan herramientas de forma secuencial. Para comenzar, añada herramientas en el orden en que desea que se ejecuten."
 save = "Guardar automatización"
@@ -1852,8 +1857,27 @@ confirm = "Volver"
 message = "Tiene cambios sin guardar. ¿Está seguro de que desea volver? Se perderán todos los cambios."
 title = "Cambios sin guardar"
 
+[automate.entryMenu]
+label = "Abrir menú para {{title}}"
+
 [automate.files]
 placeholder = "Seleccione archivos para procesar con esta automatización"
+
+[automate.importModal]
+cancel = "Cancelar"
+confirm = "Importar"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "JSON de exploración de carpetas"
+dropHint = "Suelta JSON aquí o haz clic para elegir un archivo"
+dropSubhint = "Se aceptan configuraciones de Automate y de exploración de carpetas"
+dropzoneAriaLabel = "Suelta aquí un archivo JSON de automatización"
+intro = "Suelta un archivo JSON o pega su contenido a continuación. El formato (Automate o exploración de carpetas) se detecta automáticamente."
+opCount = "{{count}} operación(es)"
+parseError = "No se pudo analizar: {{message}}"
+pasteLabel = "O pega JSON"
+pastePlaceholder = "Pega aquí tu JSON de automatización…"
+title = "Importar automatización"
+unresolved = "Sin asignar: {{ops}}"
 
 [automate.run]
 title = "Ejecutar automatización"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Ejecutando {{tool}} (paso {{step}} de {{total}})..."
 extracting_content = "Extrayendo contenido de sus documentos..."
 processing = "Procesando el contenido extraído..."
 thinking = "Pensando..."
+whole_doc_compression_round = "Consolidando notas..."
+whole_doc_read_done = "Lectura del documento finalizada..."
+whole_doc_read_started = "Leyendo el documento..."
+whole_doc_slice_done = "Leyendo el documento... ({{percent}}% completado)"
 
 [chat.toolsUsed]
 summary = "Se ejecutaron {{count}} herramientas"
@@ -2712,6 +2740,7 @@ used = "usado"
 [compare]
 addFilesHint = "Añade PDF en el paso Archivos para habilitar la selección."
 clearSelected = "Borrar selección"
+clearSlot = "Eliminar archivo"
 cta = "Comparar"
 header = "Comparar archivos PDF"
 loading = "Comparando..."
@@ -2764,6 +2793,7 @@ title = "Estos PDF parecen muy diferentes"
 [compare.edited]
 label = "PDF editado"
 placeholder = "Seleccionar el PDF editado"
+selectBaseFirst = "Selecciona primero el PDF original"
 
 [compare.error]
 filesMissing = "No se pueden localizar los archivos seleccionados. Vuelve a seleccionarlos."
@@ -2846,6 +2876,7 @@ pageLabel = "Página"
 confirm = "Intercambiar y volver a ejecutar"
 confirmBody = "Esto volverá a ejecutar la herramienta. ¿Seguro que quieres intercambiar el orden de Original y Editado?"
 confirmTitle = "¿Volver a ejecutar la comparación?"
+label = "Intercambiar"
 
 [compare.toasts]
 unlinkedBody = "Consejo: las flechas Arriba/Abajo desplazan ambos paneles; arrastrar solo mueve el panel activo."
@@ -3476,6 +3507,8 @@ unlockAll = "Usar para todos ({{count}})"
 unlockAllPartialFail = "Contraseña incorrecta para: {{names}}"
 unlockAllSuccess = "Se desbloquearon {{count}} archivo(s)."
 unlockPrompt = "Desbloquee el PDF para continuar"
+viewerLocked = "Este PDF está protegido con contraseña"
+viewerUnlock = "Desbloquear"
 
 [encryptedPdfUnlock.password]
 label = "Contraseña del PDF"
@@ -3583,6 +3616,9 @@ or = "o"
 
 [fileEditor]
 addFiles = "Añadir archivos"
+pageCount = "{{count}} páginas"
+pageCount_one = "{{count}} página"
+pageCount_other = "{{count}} páginas"
 
 [fileManager]
 active = "Activo"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Cambios no subidos"
 clearAll = "Limpiar Todo"
 clearSelection = "Limpiar Selección"
 clickToUpload = "Haga clic para cargar archivos"
+closeAllFiles = "Cerrar todos los archivos"
 closeFile = "Cerrar archivo"
 cloudFile = "Archivo en la nube"
 copyCreated = "Copia guardada en este dispositivo."
@@ -3665,6 +3702,7 @@ selectAll = "Seleccionar Todo"
 selectedCount = "{{count}} seleccionados"
 selectedFiles = "Archivos Seleccionados"
 share = "Compartir"
+shared = "Compartido"
 sharedByYou = "Compartidos por ti"
 sharedEditNoticeBody = "No tienes derechos de edición sobre la versión en el servidor de este archivo. Cualquier edición que hagas se guardará como una copia local."
 sharedEditNoticeConfirm = "Entendido"
@@ -3704,6 +3742,41 @@ size = "Tamaño del archivo"
 title = "Archivos"
 upload = "Cargar"
 uploadFiles = "Cargar Archivos"
+
+[fileSelectorPicker]
+empty = "No hay archivos disponibles"
+placeholder = "Seleccionar archivo"
+search = "Filtrar archivos…"
+tabListLabel = "Archivos guardados, área de trabajo, subir"
+upload = "Subir desde el ordenador"
+
+[fileSelectorPicker.sort]
+dateAsc = "Más antiguos primero"
+dateDesc = "Más recientes primero"
+dateLabel = "Más recientes"
+nameAsc = "De la A a la Z"
+nameDesc = "De la Z a la A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Archivos guardados"
+upload = "Subir"
+workbench = "Área de trabajo"
+
+[fileSidebar]
+addFiles = "Añadir archivos"
+collapse = "Contraer barra lateral"
+dropHint = "Abre archivos para empezar"
+expand = "Expandir barra lateral"
+files = "Archivos"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive no está configurado"
+noFiles = "Aún no hay archivos"
+openFileManager = "Abrir gestor de archivos"
+openFromComputer = "Abrir desde el ordenador"
+openSettings = "Abrir configuración"
+search = "Buscar"
+searchPlaceholder = "Buscar archivos..."
 
 [fileToPDF]
 credit = "Este servicio usa LibreOffice y Unoconv para la conversión de archivos"
@@ -4202,6 +4275,11 @@ title = "Superponer PDFs"
 desc = "Combinar múltiples páginas de un documento PDF en una sola página"
 tags = "diseño,organizar,combinar"
 title = "Diseño de varias páginas"
+
+[home.pdfCommentAgent]
+desc = "Pide a la IA que anote un PDF con comentarios tipo nota adhesiva según tu indicación"
+tags = "IA,agente,comentario,anotar,nota adhesiva,revisión,comentarios,notas"
+title = "Añadir comentarios con IA"
 
 [home.pdfOrganiser]
 desc = "Eliminar o reorganizar páginas en cualquier orden"
@@ -4903,7 +4981,6 @@ fileUpload = "Usa el botón de <strong>Archivos</strong> para subir o elegir un 
 leftPanel = "El panel izquierdo de <strong>Herramientas</strong> lista todo lo que puedes hacer. Explora categorías o busca para encontrar una herramienta rápidamente."
 pageEditorView = "Cambia al Editor de páginas para reordenar, rotar o eliminar páginas."
 quickAccess = "Empieza en el panel de <strong>Acceso rápido</strong> para cambiar entre Lector, Automatizar, tus archivos y todos los recorridos."
-rightRail = "El <strong>Panel derecho</strong> contiene acciones rápidas para seleccionar archivos, cambiar el tema o el idioma y descargar resultados."
 topBar = "La barra superior te permite cambiar entre <strong>Visor</strong>, <strong>Editor de páginas</strong> y <strong>Archivos activos</strong>."
 wrapUp = "Eso es lo nuevo en V2. Abre el menú de <strong>Recorridos</strong> en cualquier momento para repetir este, el de Herramientas o el de Administración."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Seleccionar mensual"
 selectYearly = "Seleccionar anual"
 title = "Elija su periodo de facturación"
 totalForSeats = "Total ({{count}} plazas)"
+
+[pdfCommentAgent]
+submit = "Generar comentarios"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Describe sobre qué debe comentar la IA"
+failed = "Error al generar los comentarios"
+tooLong = "La indicación es demasiado larga (máximo {{max}} caracteres)"
+
+[pdfCommentAgent.prompt]
+label = "¿Sobre qué debe comentar la IA?"
+placeholder = "p. ej., señala cualquier fecha ambigua y sugiere aclaraciones"
+
+[pdfCommentAgent.results]
+title = "PDF comentado"
+
+[pdfCommentAgent.settings]
+title = "Instrucciones para los comentarios"
 
 [pdfOrganiser]
 header = "Organizador de páginas PDF"
@@ -6486,46 +6581,6 @@ title = "Alto contraste"
 text = "Invierte completamente todos los colores del PDF, creando un efecto similar a un negativo. Útil para crear versiones en modo oscuro de documentos o reducir la fatiga visual en condiciones de poca luz."
 title = "Invertir todos los colores"
 
-[rightRail]
-annotations = "Anotaciones"
-applyRedactionsFirst = "Aplica primero las censuras"
-closePdf = "Cerrar PDF"
-closeSelected = "Cerrar Archivos Seleccionados"
-deleteSelected = "Eliminar Páginas Seleccionadas"
-deselectAll = "Deseleccionar Todo"
-downloadAll = "Descargar Todo"
-downloadSelected = "Descargar Archivos Seleccionados"
-draw = "Dibujar"
-exitRedaction = "Salir del modo de censura"
-exportAll = "Exportar PDF"
-exportSelected = "Exportar páginas seleccionadas"
-formFill = "Rellenar formulario"
-language = "Idioma"
-panMode = "Modo de Desplazamiento"
-print = "Imprimir PDF"
-readAloud = "Leer en Voz Alta"
-readAloudLanguage = "Idioma"
-readAloudSpeed = "Velocidad"
-redact = "Censurar"
-rotateLeft = "Rotar a la Izquierda"
-rotateRight = "Rotar a la Derecha"
-ruler = "Regla / Medir"
-save = "Guardar"
-saveAll = "Guardar todo"
-saveAs = "Guardar como"
-saveChanges = "Guardar cambios"
-search = "Buscar en PDF"
-selectAll = "Seleccionar Todo"
-selectByNumber = "Seleccionar por Números de Página"
-selectLanguage = "Seleccionar idioma"
-toggleAnnotations = "Mostrar/ocultar anotaciones"
-toggleAttachments = "Mostrar/ocultar adjuntos"
-toggleBookmarks = "Mostrar/ocultar marcadores"
-toggleComments = "Comentarios"
-toggleLayers = "Alternar capas"
-toggleSidebar = "Alternar Barra Lateral"
-toggleTheme = "Alternar Tema"
-
 [rotate]
 rotateLeft = "Rotar en sentido antihorario"
 rotateRight = "Rotar en sentido horario"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Ocultar conversiones no disponibles"
 hideUnavailableConversionsDescription = "Eliminar las opciones de conversión desactivadas en la herramienta Convertir en lugar de mostrarlas en gris."
 hideUnavailableTools = "Ocultar herramientas no disponibles"
 hideUnavailableToolsDescription = "Eliminar las herramientas desactivadas por su servidor en lugar de mostrarlas en gris."
+language = "Idioma"
+languageDescription = "Elige el idioma de la interfaz"
 logout = "Cerrar sesión"
 setAsDefault = "Establecer como predeterminado"
+theme = "Tema"
+themeDark = "Oscuro"
+themeDescription = "Cambia entre el modo claro y oscuro"
+themeLight = "Claro"
 title = "General"
 user = "Usuario"
 
@@ -6810,6 +6871,20 @@ title = "Información de la versión"
 auto = "Automático"
 fitPage = "Ajustar a la página"
 fitWidth = "Ajustar al ancho"
+
+[settings.help]
+label = "Recorridos"
+title = "Ayuda"
+
+[settings.help.adminTour]
+description = "Explora la gestión del equipo, la configuración del sistema y las funciones empresariales."
+start = "Iniciar"
+title = "Recorrido de administración"
+
+[settings.help.toolsTour]
+description = "Recorre la carga de archivos, la elección de una herramienta y la revisión de resultados."
+start = "Iniciar"
+title = "Recorrido de herramientas"
 
 [settings.hotkeys]
 capturing = "Pulsa las teclas… (Esc para cancelar)"
@@ -7780,6 +7855,8 @@ settings = "Ajustes"
 [tool]
 endpointUnavailable = "Esta herramienta no está disponible en tu servidor."
 endpointUnavailableClickable = "No disponible en este modo. Haz clic para iniciar sesión."
+filesLoading = "Los archivos aún se están cargando; espera, por favor."
+filesLoadingProgress = "{{loaded}} / {{total}} archivos cargándose..."
 invalidParams = "Rellena los ajustes obligatorios."
 noFiles = "Añade un archivo para comenzar."
 scopeFiles = "archivos"
@@ -7789,10 +7866,15 @@ singleFileScope = "Solo se aplica a: {{fileName}}"
 viewerMode = "Cambie al editor de archivos para seleccionar varios archivos."
 
 [toolPanel]
+allTools = "Todas las herramientas"
 alpha = "Alfa"
+backToTools = "Volver a las herramientas"
+collapse = "Contraer panel"
 comingSoon = "Próximamente:"
+expand = "Expandir panel"
 placeholder = "Elige una herramienta para empezar"
 premiumFeature = "Función Premium:"
+search = "Buscar herramientas"
 
 [toolPanel.fullscreen]
 comingSoon = "Próximamente:"
@@ -8342,6 +8424,51 @@ bullet2 = "Se recomiendan fondos transparentes para mejores resultados"
 bullet3 = "La imagen se ajustará para encajar en el área de la firma"
 description = "Sube una imagen de firma ya creada. Ideal si tienes una firma escaneada o el logotipo de la empresa."
 title = "Subir imagen de la firma"
+
+[workbenchBar]
+activeFiles = "Archivos activos"
+annotations = "Anotaciones"
+applyRedactionsFirst = "Aplicar redacciones primero"
+closeAll = "Cerrar todos los archivos"
+closePdf = "Cerrar PDF"
+closeSelected = "Cerrar archivos seleccionados"
+deleteSelected = "Eliminar páginas seleccionadas"
+deselectAll = "Deseleccionar todo"
+downloadAll = "Descargar todo"
+downloadSelected = "Descargar archivos seleccionados"
+draw = "Dibujar"
+exitRedaction = "Salir del modo de redacción"
+exportAll = "Exportar PDF"
+exportSelected = "Exportar páginas seleccionadas"
+formFill = "Rellenar formulario"
+language = "Idioma"
+multiTool = "Multiherramienta"
+panMode = "Modo desplazar"
+print = "Imprimir PDF"
+readAloud = "Leer en voz alta"
+readAloudLanguage = "Idioma"
+readAloudSpeed = "Velocidad"
+redact = "Redactar"
+rotateLeft = "Girar a la izquierda"
+rotateRight = "Girar a la derecha"
+ruler = "Regla / Medir"
+save = "Guardar"
+saveAll = "Guardar todo"
+saveAs = "Guardar como"
+saveChanges = "Guardar cambios"
+search = "Buscar en PDF"
+selectAll = "Seleccionar todo"
+selectByNumber = "Seleccionar por números de página"
+selectLanguage = "Seleccionar idioma"
+share = "Compartir"
+toggleAnnotations = "Alternar visibilidad de las anotaciones"
+toggleAttachments = "Alternar adjuntos"
+toggleBookmarks = "Alternar marcadores"
+toggleComments = "Comentarios"
+toggleLayers = "Alternar capas"
+toggleSidebar = "Alternar barra lateral"
+toggleTheme = "Alternar tema"
+viewer = "Visor"
 
 [workspace]
 title = "Espacio de trabajo"

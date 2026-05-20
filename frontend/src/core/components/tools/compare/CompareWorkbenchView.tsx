@@ -14,14 +14,14 @@ import {
 import { CompareResultData, CompareWorkbenchData } from "@app/types/compare";
 import ComparePixelWorkbenchView from "@app/components/tools/compare/ComparePixelWorkbenchView";
 import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useRightRailButtons } from "@app/hooks/useRightRailButtons";
+import { useWorkbenchBarButtons } from "@app/hooks/useWorkbenchBarButtons";
 import CompareDocumentPane from "@app/components/tools/compare/CompareDocumentPane";
 import { useComparePagePreviews } from "@app/components/tools/compare/hooks/useComparePagePreviews";
 import { useComparePanZoom } from "@app/components/tools/compare/hooks/useComparePanZoom";
 import { useCompareHighlights } from "@app/components/tools/compare/hooks/useCompareHighlights";
 import { useCompareChangeNavigation } from "@app/components/tools/compare/hooks/useCompareChangeNavigation";
 import "@app/components/tools/compare/compareView.css";
-import { useCompareRightRailButtons } from "@app/components/tools/compare/hooks/useCompareRightRailButtons";
+import { useCompareWorkbenchBarButtons } from "@app/components/tools/compare/hooks/useCompareWorkbenchBarButtons";
 import {
   alert,
   updateToast,
@@ -209,7 +209,7 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
       })
     );
 
-  const rightRailButtons = useCompareRightRailButtons({
+  const workbenchBarButtons = useCompareWorkbenchBarButtons({
     layout,
     toggleLayout,
     isPanMode,
@@ -230,7 +230,7 @@ const CompareTextWorkbenchView = ({ data }: CompareTextWorkbenchViewProps) => {
     comparisonScrollRef,
   });
 
-  useRightRailButtons(rightRailButtons);
+  useWorkbenchBarButtons(workbenchBarButtons);
 
   // Rendering progress toast for very large PDFs
   const LARGE_PAGE_THRESHOLD = 400; // show banner when one or both exceed threshold

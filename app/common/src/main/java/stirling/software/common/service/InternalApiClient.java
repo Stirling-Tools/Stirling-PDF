@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,15 +13,18 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -50,16 +54,29 @@ public class InternalApiClient {
     private final UserServiceInterface userService;
     private final TempFileManager tempFileManager;
     private final Environment environment;
+    private final Duration readTimeout;
+    private final RestTemplate restTemplate;
 
     public InternalApiClient(
             ServletContext servletContext,
             @Autowired(required = false) UserServiceInterface userService,
             TempFileManager tempFileManager,
-            Environment environment) {
+            Environment environment,
+            ApplicationProperties applicationProperties) {
         this.servletContext = servletContext;
         this.userService = userService;
         this.tempFileManager = tempFileManager;
         this.environment = environment;
+        ApplicationProperties.InternalApi internalApi = applicationProperties.getInternalApi();
+        // A bounded read timeout is what protects the workflow when an internal tool hangs
+        // (e.g. an infinite loop in a PDF processing service). The connect timeout is short
+        // because this is a loopback call; if connecting takes longer than a few seconds the
+        // local server is itself unhealthy.
+        this.readTimeout = Duration.ofSeconds(internalApi.getReadTimeoutSeconds());
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(internalApi.getConnectTimeoutSeconds()));
+        factory.setReadTimeout(readTimeout);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     /**
@@ -74,7 +91,6 @@ public class InternalApiClient {
         validateUrl(endpointPath);
         String url = getBaseUrl() + endpointPath;
 
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
         if (apiKey != null && !apiKey.isEmpty()) {
@@ -84,26 +100,38 @@ public class InternalApiClient {
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
         RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
 
-        return restTemplate.execute(
-                url,
-                HttpMethod.POST,
-                requestCallback,
-                response -> {
-                    try {
-                        TempFile tempFile = tempFileManager.createManagedTempFile("internal-api");
-                        Files.copy(
-                                response.getBody(),
-                                tempFile.getPath(),
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        String filename = extractFilename(response.getHeaders());
-                        TempFileResource resource = new TempFileResource(tempFile, filename);
-                        return ResponseEntity.status(response.getStatusCode())
-                                .headers(response.getHeaders())
-                                .body(resource);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
+        try {
+            return restTemplate.execute(
+                    url,
+                    HttpMethod.POST,
+                    requestCallback,
+                    response -> {
+                        try {
+                            TempFile tempFile =
+                                    tempFileManager.createManagedTempFile("internal-api");
+                            Files.copy(
+                                    response.getBody(),
+                                    tempFile.getPath(),
+                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            String filename = extractFilename(response.getHeaders());
+                            TempFileResource resource = new TempFileResource(tempFile, filename);
+                            return ResponseEntity.status(response.getStatusCode())
+                                    .headers(response.getHeaders())
+                                    .body(resource);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+        } catch (ResourceAccessException e) {
+            // RestTemplate wraps low-level I/O failures in ResourceAccessException. Only the
+            // SocketTimeoutException-rooted case is a real timeout; other I/O failures (connection
+            // refused, DNS, etc.) propagate as-is so the upstream generic handler can describe
+            // them accurately.
+            if (e.getCause() instanceof java.net.SocketTimeoutException) {
+                throw new InternalApiTimeoutException(endpointPath, readTimeout, e);
+            }
+            throw e;
+        }
     }
 
     /**

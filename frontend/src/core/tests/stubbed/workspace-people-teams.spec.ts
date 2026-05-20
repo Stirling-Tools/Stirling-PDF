@@ -39,7 +39,7 @@ test.describe("26. Workspace Features", () => {
         // Step 2: Verify the teams management section loads
         await page.waitForTimeout(500);
         const bodyContent = await page
-          .locator('[role="dialog"], [class*="modal"], [class*="settings"]')
+          .locator(".mantine-Modal-content")
           .first()
           .textContent();
         expect(bodyContent).toBeTruthy();

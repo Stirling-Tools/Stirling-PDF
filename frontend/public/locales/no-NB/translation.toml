@@ -1806,7 +1806,11 @@ title = "Smart navngivning"
 [automate]
 copyToSaved = "Kopier til Lagrede"
 desc = "Bygg flertrinns arbeidsflyter ved å kjede sammen PDF-handlinger. Ideelt for gjentakende oppgaver."
+export = "Eksporter"
 exportForFolderScanning = "Eksporter for mappeskanning"
+import = "Importer"
+importPartialSuccess = "Importert med {{count}} ikke-tilordnede operasjon(er): {{ops}}"
+importSuccess = "Importert automatisering: {{name}}"
 invalidStep = "Ugyldig trinn"
 reviewTitle = "Resultater av automatisering"
 title = "Automatiser"
@@ -1822,6 +1826,7 @@ title = "Konfigurer {{toolName}}"
 [automate.creation]
 createTitle = "Opprett automatisering"
 editTitle = "Rediger automatisering"
+export = "Eksporter"
 exportForFolderScanning = "Eksporter for mappeskanning"
 intro = "Automatiseringer kjører verktøy sekvensielt. For å komme i gang, legg til verktøy i den rekkefølgen du vil at de skal kjøres."
 save = "Lagre automatisering"
@@ -1852,8 +1857,27 @@ confirm = "Gå tilbake"
 message = "Du har ulagrede endringer. Er du sikker på at du vil gå tilbake? Alle endringer vil gå tapt."
 title = "Ulagrede endringer"
 
+[automate.entryMenu]
+label = "Åpne meny for {{title}}"
+
 [automate.files]
 placeholder = "Velg filer som skal behandles med denne automatiseringen"
+
+[automate.importModal]
+cancel = "Avbryt"
+confirm = "Importer"
+detectedAutomation = "Automate JSON"
+detectedFolderScan = "Folder Scanning JSON"
+dropHint = "Slipp JSON her eller klikk for å velge en fil"
+dropSubhint = "Både Automate- og Folder Scanning-konfigurasjoner godtas"
+dropzoneAriaLabel = "Slipp en JSON-fil for automatisering her"
+intro = "Slipp en JSON-fil eller lim inn innholdet nedenfor. Formatet (Automate eller Folder Scanning) oppdages automatisk."
+opCount = "{{count}} operasjon(er)"
+parseError = "Kunne ikke tolke: {{message}}"
+pasteLabel = "Eller lim inn JSON"
+pastePlaceholder = "Lim inn din automatiserings-JSON her…"
+title = "Importer automatisering"
+unresolved = "Ikke-tilordnet: {{ops}}"
 
 [automate.run]
 title = "Kjør automatisering"
@@ -2670,6 +2694,10 @@ executing_tool_step = "Kjører {{tool}} (steg {{step}} av {{total}})..."
 extracting_content = "Henter ut innhold fra dokumentene dine..."
 processing = "Behandler hentet innhold..."
 thinking = "Tenker..."
+whole_doc_compression_round = "Sammenstiller notater..."
+whole_doc_read_done = "Ferdig med å lese dokumentet..."
+whole_doc_read_started = "Leser dokumentet..."
+whole_doc_slice_done = "Leser dokumentet... ({{percent}}% fullført)"
 
 [chat.toolsUsed]
 summary = "Kjørte {{count}} verktøy"
@@ -2712,6 +2740,7 @@ used = "brukt"
 [compare]
 addFilesHint = "Legg til PDF-er i Filer-trinnet for å aktivere valg."
 clearSelected = "Tøm valgte"
+clearSlot = "Fjern fil"
 cta = "Sammenlign"
 header = "Sammenlign PDF-er"
 loading = "Sammenligner..."
@@ -2764,6 +2793,7 @@ title = "Disse PDF-ene ser svært forskjellige ut"
 [compare.edited]
 label = "Redigert PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Velg original PDF først"
 
 [compare.error]
 filesMissing = "Kan ikke finne de valgte filene. Velg dem på nytt."
@@ -2846,6 +2876,7 @@ pageLabel = "Side"
 confirm = "Bytt og kjør på nytt"
 confirmBody = "Dette vil kjøre verktøyet på nytt. Er du sikker på at du vil bytte rekkefølgen på Original og Redigert?"
 confirmTitle = "Kjøre sammenligning på nytt?"
+label = "Bytt om"
 
 [compare.toasts]
 unlinkedBody = "Tips: Pil opp/ned ruller begge ruter; panorering flytter bare den aktive ruten."
@@ -3476,6 +3507,8 @@ unlockAll = "Bruk for alle ({{count}})"
 unlockAllPartialFail = "Feil passord for: {{names}}"
 unlockAllSuccess = "Låste opp {{count}} fil(er)."
 unlockPrompt = "Lås opp PDF for å fortsette"
+viewerLocked = "Denne PDF-filen er passordbeskyttet"
+viewerUnlock = "Lås opp"
 
 [encryptedPdfUnlock.password]
 label = "PDF-passord"
@@ -3583,6 +3616,9 @@ or = "eller"
 
 [fileEditor]
 addFiles = "Legg til filer"
+pageCount = "{{count}} sider"
+pageCount_one = "{{count}} side"
+pageCount_other = "{{count}} sider"
 
 [fileManager]
 active = "Aktiv"
@@ -3591,6 +3627,7 @@ changesNotUploaded = "Endringer ikke lastet opp"
 clearAll = "Tøm alt"
 clearSelection = "Fjern markering"
 clickToUpload = "Klikk for å laste opp filer"
+closeAllFiles = "Lukk alle filer"
 closeFile = "Lukk fil"
 cloudFile = "Skyfil"
 copyCreated = "Kopi lagret på denne enheten."
@@ -3665,6 +3702,7 @@ selectAll = "Velg alle"
 selectedCount = "{{count}} valgt"
 selectedFiles = "Valgte filer"
 share = "Del"
+shared = "Delt"
 sharedByYou = "Delt av deg"
 sharedEditNoticeBody = "Du har ikke redigeringsrettigheter til serverversjonen av denne filen. Eventuelle endringer du gjør, lagres som en lokal kopi."
 sharedEditNoticeConfirm = "Forstått"
@@ -3704,6 +3742,41 @@ size = "Filstørrelse"
 title = "Filer"
 upload = "Last opp"
 uploadFiles = "Last opp filer"
+
+[fileSelectorPicker]
+empty = "Ingen filer tilgjengelig"
+placeholder = "Velg fil"
+search = "Filtrer filer…"
+tabListLabel = "Lagrede filer, arbeidsområde, opplasting"
+upload = "Last opp fra datamaskin"
+
+[fileSelectorPicker.sort]
+dateAsc = "Eldste først"
+dateDesc = "Nyeste først"
+dateLabel = "Nyeste"
+nameAsc = "A til Å"
+nameDesc = "Å til A"
+nameLabel = "A–Å"
+
+[fileSelectorPicker.tabs]
+saved = "Lagrede filer"
+upload = "Opplasting"
+workbench = "Arbeidsområde"
+
+[fileSidebar]
+addFiles = "Legg til filer"
+collapse = "Skjul sidepanel"
+dropHint = "Åpne filer for å komme i gang"
+expand = "Utvid sidepanel"
+files = "Filer"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive er ikke konfigurert"
+noFiles = "Ingen filer ennå"
+openFileManager = "Åpne filbehandler"
+openFromComputer = "Åpne fra datamaskin"
+openSettings = "Åpne innstillinger"
+search = "Søk"
+searchPlaceholder = "Søk i filer..."
 
 [fileToPDF]
 credit = "Denne tjenesten bruker LibreOffice og Unoconv for filkonvertering."
@@ -4202,6 +4275,11 @@ title = "Overlay PDF-er"
 desc = "Slå sammen flere sider av en PDF-dokument til en enkelt side"
 tags = "oppsett,arranger,kombiner"
 title = "Flersidig Layout"
+
+[home.pdfCommentAgent]
+desc = "Be AI om å annotere en PDF med klistrelapp-kommentarer basert på instruksjonen din"
+tags = "AI,agent,kommentar,annotering,klistrelapp,gjennomgang,tilbakemelding,notater"
+title = "Legg til AI-kommentarer"
 
 [home.pdfOrganiser]
 desc = "Fjern/omorganiser sider i hvilken som helst rekkefølge"
@@ -4903,7 +4981,6 @@ fileUpload = "Bruk <strong>Filer</strong>-knappen for å laste opp eller velge e
 leftPanel = "Det venstre <strong>Verktøy</strong>-panelet viser alt du kan gjøre. Bla i kategorier eller søk for å finne et verktøy raskt."
 pageEditorView = "Bytt til sideeditoren for å endre rekkefølge, rotere eller slette sider."
 quickAccess = "Start i <strong>Hurtigtilgang</strong>-panelet for å hoppe mellom Leser, Automatiser, filene dine og alle omvisningene."
-rightRail = "I <strong>Høyre panel</strong> finner du hurtighandlinger for å velge filer, endre tema eller språk, og laste ned resultater."
 topBar = "Toppfeltet lar deg bytte mellom <strong>Viser</strong>, <strong>Sideeditor</strong> og <strong>Aktive filer</strong>."
 wrapUp = "Det er det som er nytt i V2. Åpne <strong>Omvisninger</strong>-menyen når som helst for å spille av denne, verktøyomvisningen eller admin-omvisningen."
 
@@ -5278,6 +5355,24 @@ selectMonthly = "Velg månedlig"
 selectYearly = "Velg årlig"
 title = "Velg faktureringsperiode"
 totalForSeats = "Totalt ({{count}} plasser)"
+
+[pdfCommentAgent]
+submit = "Generer kommentarer"
+
+[pdfCommentAgent.error]
+emptyPrompt = "Beskriv hva AI-en skal kommentere på"
+failed = "Kunne ikke generere kommentarer"
+tooLong = "Prompten er for lang (maksimum {{max}} tegn)"
+
+[pdfCommentAgent.prompt]
+label = "Hva skal AI-en kommentere på?"
+placeholder = "f.eks. Flagg eventuelle tvetydige datoer og foreslå presiseringer"
+
+[pdfCommentAgent.results]
+title = "Kommentert PDF"
+
+[pdfCommentAgent.settings]
+title = "Kommentarinstruksjoner"
 
 [pdfOrganiser]
 header = "PDF-sideorganisering"
@@ -6486,46 +6581,6 @@ title = "Høy kontrast"
 text = "Inverterer alle farger i PDF-en fullstendig og skaper en negativ-effekt. Nyttig for å lage mørk-modus-versjoner av dokumenter eller redusere øyebelastning i lite lys."
 title = "Inverter alle farger"
 
-[rightRail]
-annotations = "Merknader"
-applyRedactionsFirst = "Bruk sladding først"
-closePdf = "Lukk PDF"
-closeSelected = "Lukk valgte filer"
-deleteSelected = "Slett valgte sider"
-deselectAll = "Fjern all markering"
-downloadAll = "Last ned alle"
-downloadSelected = "Last ned valgte filer"
-draw = "Tegn"
-exitRedaction = "Avslutt sladdemodus"
-exportAll = "Eksporter PDF"
-exportSelected = "Eksporter valgte sider"
-formFill = "Fyll ut skjema"
-language = "Språk"
-panMode = "Panoreringsmodus"
-print = "Skriv ut PDF"
-readAloud = "Opplesing"
-readAloudLanguage = "Språk"
-readAloudSpeed = "Hastighet"
-redact = "Sladd"
-rotateLeft = "Roter til venstre"
-rotateRight = "Roter til høyre"
-ruler = "Linjal / Måling"
-save = "Lagre"
-saveAll = "Lagre alle"
-saveAs = "Lagre som"
-saveChanges = "Lagre endringer"
-search = "Søk i PDF"
-selectAll = "Velg alle"
-selectByNumber = "Velg etter sidenummer"
-selectLanguage = "Velg språk"
-toggleAnnotations = "Vis/skjul merknader"
-toggleAttachments = "Vis/skjul vedlegg"
-toggleBookmarks = "Veksle bokmerker"
-toggleComments = "Kommentarer"
-toggleLayers = "Veksle lag"
-toggleSidebar = "Vis/skjul sidepanel"
-toggleTheme = "Bytt tema"
-
 [rotate]
 rotateLeft = "Roter mot klokken"
 rotateRight = "Roter med klokken"
@@ -6766,8 +6821,14 @@ hideUnavailableConversions = "Skjul utilgjengelige konverteringer"
 hideUnavailableConversionsDescription = "Fjern deaktiverte konverteringsvalg i Konverter-verktøyet i stedet for å vise dem nedtonet."
 hideUnavailableTools = "Skjul utilgjengelige verktøy"
 hideUnavailableToolsDescription = "Fjern verktøy som er deaktivert av serveren i stedet for å vise dem nedtonet."
+language = "Språk"
+languageDescription = "Velg visningsspråk"
 logout = "Logg ut"
 setAsDefault = "Sett som standard"
+theme = "Tema"
+themeDark = "Mørk"
+themeDescription = "Bytt mellom lys og mørk modus"
+themeLight = "Lys"
 title = "Generelt"
 user = "Bruker"
 
@@ -6810,6 +6871,20 @@ title = "Versjonsinformasjon"
 auto = "Auto"
 fitPage = "Tilpass side"
 fitWidth = "Tilpass bredde"
+
+[settings.help]
+label = "Omvisninger"
+title = "Hjelp"
+
+[settings.help.adminTour]
+description = "Utforsk teamadministrasjon, systeminnstillinger og bedriftsfunksjoner."
+start = "Start"
+title = "Admin-omvisning"
+
+[settings.help.toolsTour]
+description = "Gå gjennom opplasting av filer, valg av verktøy og gjennomgang av resultater."
+start = "Start"
+title = "Omvisning i verktøy"
 
 [settings.hotkeys]
 capturing = "Trykk taster… (Esc for å avbryte)"
@@ -7780,6 +7855,8 @@ settings = "Innstillinger"
 [tool]
 endpointUnavailable = "Dette verktøyet er ikke tilgjengelig på serveren din."
 endpointUnavailableClickable = "Ikke tilgjengelig i denne modusen. Klikk for å logge inn."
+filesLoading = "Filer lastes fortsatt, vennligst vent."
+filesLoadingProgress = "{{loaded}} / {{total}} filer lastes..."
 invalidParams = "Fyll inn de nødvendige innstillingene."
 noFiles = "Legg til en fil for å komme i gang."
 scopeFiles = "filer"
@@ -7789,10 +7866,15 @@ singleFileScope = "Gjelder kun: {{fileName}}"
 viewerMode = "Bytt til filredigereren for å velge flere filer."
 
 [toolPanel]
+allTools = "Alle verktøy"
 alpha = "Alpha"
+backToTools = "Tilbake til verktøy"
+collapse = "Skjul panel"
 comingSoon = "Kommer snart:"
+expand = "Utvid panel"
 placeholder = "Velg et verktøy for å komme i gang"
 premiumFeature = "Premium-funksjon:"
+search = "Søk i verktøy"
 
 [toolPanel.fullscreen]
 comingSoon = "Kommer snart:"
@@ -8342,6 +8424,51 @@ bullet2 = "Gjennomsiktige bakgrunner anbefales for best resultat"
 bullet3 = "Bildet vil størrelsestilpasses for å passe signaturområdet"
 description = "Last opp et forhåndslaget signaturbilde. Ideelt hvis du har en skannet signatur eller firmalogo."
 title = "Last opp signaturbilde"
+
+[workbenchBar]
+activeFiles = "Aktive filer"
+annotations = "Annoteringer"
+applyRedactionsFirst = "Bruk sladdingene først"
+closeAll = "Lukk alle filer"
+closePdf = "Lukk PDF"
+closeSelected = "Lukk valgte filer"
+deleteSelected = "Slett valgte sider"
+deselectAll = "Opphev valg av alle"
+downloadAll = "Last ned alt"
+downloadSelected = "Last ned valgte filer"
+draw = "Tegn"
+exitRedaction = "Avslutt sladdemodus"
+exportAll = "Eksporter PDF"
+exportSelected = "Eksporter valgte sider"
+formFill = "Fyll ut skjema"
+language = "Språk"
+multiTool = "Multiverktøy"
+panMode = "Panoreringsmodus"
+print = "Skriv ut PDF"
+readAloud = "Les opp"
+readAloudLanguage = "Språk"
+readAloudSpeed = "Hastighet"
+redact = "Sladd"
+rotateLeft = "Roter til venstre"
+rotateRight = "Roter til høyre"
+ruler = "Linjal / Måling"
+save = "Lagre"
+saveAll = "Lagre alt"
+saveAs = "Lagre som"
+saveChanges = "Lagre endringer"
+search = "Søk i PDF"
+selectAll = "Velg alle"
+selectByNumber = "Velg etter sidenummer"
+selectLanguage = "Velg språk"
+share = "Del"
+toggleAnnotations = "Veksle synlighet for annoteringer"
+toggleAttachments = "Veksle vedlegg"
+toggleBookmarks = "Veksle bokmerker"
+toggleComments = "Kommentarer"
+toggleLayers = "Veksle lag"
+toggleSidebar = "Veksle sidepanel"
+toggleTheme = "Veksle tema"
+viewer = "Visning"
 
 [workspace]
 title = "Arbeidsområde"
