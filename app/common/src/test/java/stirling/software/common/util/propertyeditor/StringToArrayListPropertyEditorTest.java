@@ -36,7 +36,7 @@ class StringToArrayListPropertyEditorTest {
         List<RedactionArea> list = (List<RedactionArea>) value;
         assertEquals(1, list.size(), "List should have 1 entry");
 
-        RedactionArea area = list.get(0);
+        RedactionArea area = list.getFirst();
         assertEquals(10.5, area.getX(), "X should be 10.5");
         assertEquals(20.5, area.getY(), "Y should be 20.5");
         assertEquals(100.0, area.getWidth(), "Width should be 100.0");
@@ -66,7 +66,7 @@ class StringToArrayListPropertyEditorTest {
         List<RedactionArea> list = (List<RedactionArea>) value;
         assertEquals(2, list.size(), "List should have 2 entries");
 
-        RedactionArea area1 = list.get(0);
+        RedactionArea area1 = list.getFirst();
         assertEquals(10.0, area1.getX(), "X should be 10.0");
         assertEquals(20.0, area1.getY(), "Y should be 20.0");
         assertEquals(1, area1.getPage(), "Page should be 1");
@@ -128,7 +128,7 @@ class StringToArrayListPropertyEditorTest {
         List<RedactionArea> list = (List<RedactionArea>) value;
         assertEquals(1, list.size(), "List should have 1 entry");
 
-        RedactionArea area = list.get(0);
+        RedactionArea area = list.getFirst();
         assertEquals(10.0, area.getX(), "X should be 10.0");
         assertEquals(20.0, area.getY(), "Y should be 20.0");
     }

@@ -214,13 +214,16 @@ public class PdfJsonImageService {
     }
 
     private String resolveImageFormat(PDImage image) {
-        if (image instanceof PDImageXObject xObject) {
-            String suffix = xObject.getSuffix();
-            if (suffix != null && !suffix.isBlank()) {
-                return suffix.toLowerCase(Locale.ROOT);
+        return switch (image) {
+            case PDImageXObject xObject -> {
+                String suffix = xObject.getSuffix();
+                if (suffix != null && !suffix.isBlank()) {
+                    yield suffix.toLowerCase(Locale.ROOT);
+                }
+                yield "png";
             }
-        }
-        return "png";
+            default -> "png";
+        };
     }
 
     private float fallbackWidth(PdfJsonImageElement element) {
@@ -420,7 +423,7 @@ public class PdfJsonImageService {
                 throws IOException {
             if (OperatorName.DRAW_OBJECT.equals(operator.getName())
                     && !operands.isEmpty()
-                    && operands.get(0) instanceof COSName name) {
+                    && operands.getFirst() instanceof COSName name) {
                 currentXObjectName = name;
             }
             super.processOperator(operator, operands);
@@ -431,22 +434,24 @@ public class PdfJsonImageService {
             if (pdImage == null) {
                 return null;
             }
-            if (pdImage instanceof PDImageXObject xObject) {
-                if (xObject.isStencil()) {
-                    return encodeImage(pdImage);
+            return switch (pdImage) {
+                case PDImageXObject xObject -> {
+                    if (xObject.isStencil()) {
+                        yield encodeImage(pdImage);
+                    }
+                    COSBase key = xObject.getCOSObject();
+                    EncodedImage cached = imageCache.get(key);
+                    if (cached != null) {
+                        yield cached;
+                    }
+                    EncodedImage encoded = encodeImage(pdImage);
+                    if (encoded != null) {
+                        imageCache.put(key, encoded);
+                    }
+                    yield encoded;
                 }
-                COSBase key = xObject.getCOSObject();
-                EncodedImage cached = imageCache.get(key);
-                if (cached != null) {
-                    return cached;
-                }
-                EncodedImage encoded = encodeImage(pdImage);
-                if (encoded != null) {
-                    imageCache.put(key, encoded);
-                }
-                return encoded;
-            }
-            return encodeImage(pdImage);
+                default -> encodeImage(pdImage);
+            };
         }
 
         private Bounds computeBounds(Matrix ctm) {

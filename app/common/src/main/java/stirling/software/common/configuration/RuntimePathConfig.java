@@ -74,7 +74,7 @@ public class RuntimePathConfig {
                         defaultWatchedFolders,
                         watchedFoldersDirs,
                         pipeline != null ? pipeline.getWatchedFoldersDir() : null);
-        this.pipelineWatchedFoldersPath = this.pipelineWatchedFoldersPaths.get(0);
+        this.pipelineWatchedFoldersPath = this.pipelineWatchedFoldersPaths.getFirst();
         this.pipelineFinishedFoldersPath =
                 resolvePath(
                         defaultFinishedFolders,

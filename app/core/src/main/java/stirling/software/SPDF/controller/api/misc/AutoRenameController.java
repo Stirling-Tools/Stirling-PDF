@@ -109,16 +109,16 @@ public class AutoRenameController {
                             mergedLineInfos.sort(
                                     Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
                             String title =
-                                    mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;
+                                    mergedLineInfos.isEmpty()
+                                            ? null
+                                            : mergedLineInfos.getFirst().text;
 
                             return title != null
                                     ? title
                                     : (useFirstTextAsFallback
                                             ? (mergedLineInfos.isEmpty()
                                                     ? null
-                                                    : mergedLineInfos.get(
-                                                                    mergedLineInfos.size() - 1)
-                                                            .text)
+                                                    : mergedLineInfos.getLast().text)
                                             : null);
                         }
 

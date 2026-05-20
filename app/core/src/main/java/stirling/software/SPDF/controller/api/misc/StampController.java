@@ -510,14 +510,10 @@ public class StampController {
         float llx = pageSize.getLowerLeftX();
         float urx = pageSize.getUpperRightX();
         return switch (position % 3) {
-            case 1: // Left
-                yield llx + margin;
-            case 2: // Center
-                yield llx + (pageSize.getWidth() - contentWidth) / 2;
-            case 0: // Right
-                yield urx - contentWidth - margin;
-            default:
-                yield 0;
+            case 1 -> llx + margin; // Left
+            case 2 -> llx + (pageSize.getWidth() - contentWidth) / 2; // Center
+            case 0 -> urx - contentWidth - margin; // Right
+            default -> 0;
         };
     }
 
@@ -527,28 +523,26 @@ public class StampController {
         float pageHeight = pageSize.getHeight();
         float ury = pageSize.getUpperRightY();
         return switch ((position - 1) / 3) {
-            case 0: // Top - upper image edge flush below top margin
-                yield ury - margin - imageHeight;
-            case 1: // Middle - center image on page
-                yield lly + (pageHeight - imageHeight) / 2;
-            case 2: // Bottom - lower image edge at bottom margin
-                yield lly + margin;
-            default:
-                yield lly;
+            case 0 -> ury - margin - imageHeight; // Top - upper image edge flush below top margin
+            case 1 -> lly + (pageHeight - imageHeight) / 2; // Middle - center image on page
+            case 2 -> lly + margin; // Bottom - lower image edge at bottom margin
+            default -> lly;
         };
     }
 
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float margin) {
         return switch ((position - 1) / 3) {
-            case 0: // Top - first line near the top
-                yield pageSize.getUpperRightY() - margin;
-            case 1: // Middle - center of text block at page center
-                yield (pageSize.getHeight() + height) / 2;
-            case 2: // Bottom - first line positioned so last line is at bottom margin
-                yield pageSize.getLowerLeftY() + margin + height;
-            default:
-                yield 0;
+            case 0 -> pageSize.getUpperRightY() - margin; // Top - first line near the top
+            case 1 ->
+                    (pageSize.getHeight() + height)
+                            / 2; // Middle - center of text block at page center
+            case 2 ->
+                    pageSize.getLowerLeftY()
+                            + margin
+                            + height; // Bottom - first line positioned so last line is at bottom
+            // margin
+            default -> 0;
         };
     }
 

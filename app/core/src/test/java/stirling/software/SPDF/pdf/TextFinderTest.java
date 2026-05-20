@@ -385,7 +385,7 @@ class TextFinderTest {
             List<PDFText> foundTexts = textFinder.getFoundTexts();
 
             assertEquals(1, foundTexts.size());
-            assertEquals(0, foundTexts.get(0).getPageIndex());
+            assertEquals(0, foundTexts.getFirst().getPageIndex());
         }
     }
 
@@ -509,7 +509,7 @@ class TextFinderTest {
             List<PDFText> foundTexts = textFinder.getFoundTexts();
 
             assertEquals(1, foundTexts.size());
-            PDFText foundText = foundTexts.get(0);
+            PDFText foundText = foundTexts.getFirst();
 
             assertTrue(foundText.getX1() >= 0, "X1 should be non-negative");
             assertTrue(foundText.getY1() >= 0, "Y1 should be non-negative");
@@ -561,7 +561,7 @@ class TextFinderTest {
                     1,
                     foundTexts.size(),
                     "Should find exactly one standalone '1', not the ones embedded in other numbers/codes");
-            assertEquals("1", foundTexts.get(0).getText());
+            assertEquals("1", foundTexts.getFirst().getText());
         }
 
         @Test
@@ -634,7 +634,7 @@ class TextFinderTest {
             List<PDFText> foundTexts = textFinder.getFoundTexts();
 
             assertEquals(1, foundTexts.size(), "Should find '1' surrounded by parentheses");
-            assertEquals("1", foundTexts.get(0).getText());
+            assertEquals("1", foundTexts.getFirst().getText());
         }
 
         @Test

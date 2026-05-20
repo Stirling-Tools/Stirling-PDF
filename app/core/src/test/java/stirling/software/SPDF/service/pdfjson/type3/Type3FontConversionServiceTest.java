@@ -71,7 +71,7 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.SKIPPED, result.get(0).getStatus());
+        assertEquals(PdfJsonFontConversionStatus.SKIPPED, result.getFirst().getStatus());
     }
 
     @Test
@@ -91,7 +91,7 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.UNSUPPORTED, result.get(0).getStatus());
+        assertEquals(PdfJsonFontConversionStatus.UNSUPPORTED, result.getFirst().getStatus());
     }
 
     @Test
@@ -117,8 +117,8 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.SUCCESS, result.get(0).getStatus());
-        assertEquals("test-strategy", result.get(0).getStrategyId());
+        assertEquals(PdfJsonFontConversionStatus.SUCCESS, result.getFirst().getStatus());
+        assertEquals("test-strategy", result.getFirst().getStrategyId());
     }
 
     @Test
@@ -144,7 +144,7 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.FAILURE, result.get(0).getStatus());
+        assertEquals(PdfJsonFontConversionStatus.FAILURE, result.getFirst().getStatus());
     }
 
     @Test
@@ -170,8 +170,8 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.FAILURE, result.get(0).getStatus());
-        assertEquals("broken", result.get(0).getMessage());
+        assertEquals(PdfJsonFontConversionStatus.FAILURE, result.getFirst().getStatus());
+        assertEquals("broken", result.getFirst().getMessage());
     }
 
     @Test
@@ -196,8 +196,8 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.UNSUPPORTED, result.get(0).getStatus());
-        assertTrue(result.get(0).getMessage().contains("check failed"));
+        assertEquals(PdfJsonFontConversionStatus.UNSUPPORTED, result.getFirst().getStatus());
+        assertTrue(result.getFirst().getMessage().contains("check failed"));
     }
 
     @Test
@@ -226,6 +226,6 @@ class Type3FontConversionServiceTest {
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
-        assertEquals(PdfJsonFontConversionStatus.SUCCESS, result.get(0).getStatus());
+        assertEquals(PdfJsonFontConversionStatus.SUCCESS, result.getFirst().getStatus());
     }
 }

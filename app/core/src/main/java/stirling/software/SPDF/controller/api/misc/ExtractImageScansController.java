@@ -209,7 +209,7 @@ public class ExtractImageScansController {
             } else {
 
                 // Return the processed image as a response
-                byte[] imageBytes = processedImageBytes.get(0);
+                byte[] imageBytes = processedImageBytes.getFirst();
                 finalOutput = tempFileManager.createManagedTempFile(".png");
                 try (OutputStream out = Files.newOutputStream(finalOutput.getPath())) {
                     out.write(imageBytes);

@@ -751,7 +751,7 @@ public class ExceptionUtils {
         String targetDescription;
         if (errorInfo.affectedPages() != null && !errorInfo.affectedPages().isEmpty()) {
             if (errorInfo.affectedPages().size() == 1) {
-                targetDescription = "page " + errorInfo.affectedPages().get(0);
+                targetDescription = "page " + errorInfo.affectedPages().getFirst();
             } else {
                 targetDescription =
                         "pages "
@@ -848,7 +848,7 @@ public class ExceptionUtils {
             }
 
             // Use the first page number, or null if none found
-            Integer pageNumber = affectedPages.isEmpty() ? null : affectedPages.get(0);
+            Integer pageNumber = affectedPages.isEmpty() ? null : affectedPages.getFirst();
 
             return new GhostscriptErrorInfo(
                     ErrorCode.GHOSTSCRIPT_PAGE_DRAWING,
@@ -1089,21 +1089,22 @@ public class ExceptionUtils {
         requireNonNull(e, "exception");
         requireNonNull(operation, "operation");
 
-        if (e instanceof RuntimeException) {
-            return (RuntimeException) e;
-        }
-
-        if (e instanceof IOException) {
-            IOException ioException = handlePdfException((IOException) e, operation);
-            // BaseAppException extends IOException, wrap it in RuntimeException for rethrowing
-            if (ioException instanceof BaseAppException) {
-                return new RuntimeException(ioException);
+        return switch (e) {
+            case RuntimeException runtimeException -> runtimeException;
+            case IOException ioException -> {
+                IOException handled = handlePdfException(ioException, operation);
+                // BaseAppException extends IOException, wrap it in RuntimeException for rethrowing
+                if (handled instanceof BaseAppException) {
+                    yield new RuntimeException(handled);
+                }
+                yield new RuntimeException(createFileProcessingException(operation, e));
             }
-            return new RuntimeException(createFileProcessingException(operation, e));
-        }
-
-        return new RuntimeException(
-                MessageFormat.format("Error during {0}: {1}", operation, e.getMessage()), e);
+            default ->
+                    new RuntimeException(
+                            MessageFormat.format(
+                                    "Error during {0}: {1}", operation, e.getMessage()),
+                            e);
+        };
     }
 
     /**

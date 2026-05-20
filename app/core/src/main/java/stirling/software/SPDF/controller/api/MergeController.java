@@ -159,32 +159,6 @@ public class MergeController {
         };
     }
 
-    // Parse client file IDs from JSON string
-    private String[] parseClientFileIds(String clientFileIds) {
-        if (clientFileIds == null || clientFileIds.trim().isEmpty()) {
-            return new String[0];
-        }
-        try {
-            // Simple JSON array parsing - remove brackets and split by comma
-            String trimmed = clientFileIds.trim();
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                String inside = trimmed.substring(1, trimmed.length() - 1).trim();
-                if (inside.isEmpty()) {
-                    return new String[0];
-                }
-                String[] parts = inside.split(",");
-                String[] result = new String[parts.length];
-                for (int i = 0; i < parts.length; i++) {
-                    result[i] = QUOTE_WRAP_PATTERN.matcher(parts[i].trim()).replaceAll("");
-                }
-                return result;
-            }
-        } catch (Exception e) {
-            log.warn("Failed to parse client file IDs: {}", clientFileIds, e);
-        }
-        return new String[0];
-    }
-
     // Adds a table of contents to the merged document using filenames as chapter titles
     private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
         // Create the document outline

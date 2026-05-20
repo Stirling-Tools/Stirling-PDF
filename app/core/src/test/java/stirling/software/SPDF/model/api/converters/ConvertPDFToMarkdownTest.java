@@ -81,7 +81,7 @@ class ConvertPDFToMarkdownTest {
             assert construction.constructed().size() == 1;
 
             // And that the uploaded file was passed to processPdfToMarkdown()
-            PDFToFile created = construction.constructed().get(0);
+            PDFToFile created = construction.constructed().getFirst();
             ArgumentCaptor<MultipartFile> captor = ArgumentCaptor.forClass(MultipartFile.class);
             verify(created, times(1)).processPdfToMarkdown(captor.capture());
             MultipartFile passed = captor.getValue();

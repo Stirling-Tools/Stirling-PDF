@@ -328,7 +328,7 @@ public class AutoSplitPdfController {
                 }
 
                 if (!splitDocuments.isEmpty() && !isValidQrCode) {
-                    splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
+                    splitDocuments.getLast().addPage(document.getPage(page));
                 } else if (page == 0) {
                     PDDocument firstDocument = new PDDocument();
                     firstDocument.addPage(document.getPage(page));
