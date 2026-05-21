@@ -354,11 +354,7 @@ public class MergeController {
             int[] pageCounts;
             try {
                 pageCounts =
-                        mergeWithJpdfium(
-                                inputPaths,
-                                files,
-                                generateToc,
-                                mt.getFile().toPath());
+                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -454,34 +450,27 @@ public class MergeController {
     /**
      * JPDFium-backed merge with bookmark preservation.
      *
-     * <p>Opens every source PDF natively (off-heap PDFium arena allocator),
-     * captures each source's bookmarks with the page offset where its pages
-     * will land in the merged document, runs PDFium's page importer to
-     * assemble the merged content, builds a combined {@link BookmarkTree}
-     * (TOC chapter headers when {@code generateToc} is true, followed by
-     * the offset-translated source bookmarks), and writes the result to
-     * {@code outputPath} via the streaming
-     * {@link PdfBookmarkEditor#setBookmarks(PdfDocument, BookmarkTree, Path)}
-     * — which appends the outline as an incremental update and never
-     * materialises the merged file in heap.
+     * <p>Opens every source PDF natively (off-heap PDFium arena allocator), captures each source's
+     * bookmarks with the page offset where its pages will land in the merged document, runs
+     * PDFium's page importer to assemble the merged content, builds a combined {@link BookmarkTree}
+     * (TOC chapter headers when {@code generateToc} is true, followed by the offset-translated
+     * source bookmarks), and writes the result to {@code outputPath} via the streaming {@link
+     * PdfBookmarkEditor#setBookmarks(PdfDocument, BookmarkTree, Path)} — which appends the outline
+     * as an incremental update and never materialises the merged file in heap.
      *
-     * <p>This restores PDFBox's "source bookmarks survive the merge"
-     * behaviour without forcing us to load the merged 1.3 GB document back
-     * into a PDDocument graph (which would erase the 76% heap saving).
+     * <p>This restores PDFBox's "source bookmarks survive the merge" behaviour without forcing us
+     * to load the merged 1.3 GB document back into a PDDocument graph (which would erase the 76%
+     * heap saving).
      *
-     * @param inputPaths   staged source PDF paths in merge order
-     * @param files        original MultipartFiles — used for TOC chapter titles
-     * @param generateToc  when true, prepend a chapter-header bookmark per
-     *                     source (filename without extension, points at the
-     *                     first page of that source's contribution)
-     * @param outputPath   where the merged PDF should be written
+     * @param inputPaths staged source PDF paths in merge order
+     * @param files original MultipartFiles — used for TOC chapter titles
+     * @param generateToc when true, prepend a chapter-header bookmark per source (filename without
+     *     extension, points at the first page of that source's contribution)
+     * @param outputPath where the merged PDF should be written
      * @return page-count-per-input array, parallel to {@code inputPaths}
      */
     private int[] mergeWithJpdfium(
-            List<Path> inputPaths,
-            MultipartFile[] files,
-            boolean generateToc,
-            Path outputPath)
+            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
             throws IOException {
         if (inputPaths.isEmpty()) {
             // No-op merge — write an empty PDF placeholder so callers always get a file.
@@ -516,8 +505,7 @@ public class MergeController {
             }
 
             BookmarkTree combinedTree =
-                    buildCombinedBookmarkTree(
-                            files, pageOffsets, sourceBookmarks, generateToc);
+                    buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
 
             try (PdfDocument merged = PdfMerge.merge(docs)) {
                 if (combinedTree.entries().isEmpty()) {
@@ -545,15 +533,13 @@ public class MergeController {
     }
 
     /**
-     * Combine each source's bookmarks (with page-offset translation) plus
-     * the optional TOC chapter headers into a single flat {@link BookmarkTree}.
+     * Combine each source's bookmarks (with page-offset translation) plus the optional TOC chapter
+     * headers into a single flat {@link BookmarkTree}.
      *
-     * <p>Hierarchy is flattened: a source bookmark's children become
-     * siblings in the merged outline. This matches the existing
-     * {@link BookmarkTree.Builder} API surface (only {@code add} for
-     * top-level entries) and covers the common single-level outline case.
-     * For deeply-nested source outlines, titles are still preserved but
-     * parent/child structure is lost.
+     * <p>Hierarchy is flattened: a source bookmark's children become siblings in the merged
+     * outline. This matches the existing {@link BookmarkTree.Builder} API surface (only {@code add}
+     * for top-level entries) and covers the common single-level outline case. For deeply-nested
+     * source outlines, titles are still preserved but parent/child structure is lost.
      */
     private BookmarkTree buildCombinedBookmarkTree(
             MultipartFile[] files,
@@ -584,10 +570,9 @@ public class MergeController {
     }
 
     /**
-     * Walk {@code bm} and its descendants depth-first, appending each
-     * internal (GoTo-page) entry as a top-level bookmark with {@code offset}
-     * added to the page index. External-URI / launch bookmarks are skipped
-     * because they don't have a useful destination in the merged doc.
+     * Walk {@code bm} and its descendants depth-first, appending each internal (GoTo-page) entry as
+     * a top-level bookmark with {@code offset} added to the page index. External-URI / launch
+     * bookmarks are skipped because they don't have a useful destination in the merged doc.
      */
     private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark bm, int offset) {
         if (bm.isInternal() && bm.title() != null) {

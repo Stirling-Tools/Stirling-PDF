@@ -64,17 +64,25 @@ trap "rm -rf '$WORK'" EXIT
 
 # Resolve the exact paths of the JPDFium darwin native jars inside the
 # bootJar — `jar xf` doesn't support glob patterns in its path args, so
-# we have to list-then-extract by exact path.
-mapfile -t NATIVE_JAR_PATHS < <(jar tf "$BOOTJAR" \
+# we have to list-then-extract by exact path. Use a portable read loop
+# (mapfile is bash 4+; macOS ships bash 3.2 at /bin/bash).
+NATIVE_JAR_PATHS=()
+while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    NATIVE_JAR_PATHS+=("$line")
+done < <(jar tf "$BOOTJAR" \
     | grep -E '^BOOT-INF/lib/jpdfium-natives-darwin-(x64|arm64)-.*\.jar$' || true)
 
-if [ "${#NATIVE_JAR_PATHS[@]}" = 0 ]; then
+if [ "${#NATIVE_JAR_PATHS[@]:-0}" = 0 ]; then
     echo "No JPDFium darwin natives in bootJar; nothing to sign"
     exit 0
 fi
 
-# Extract those exact entries to $WORK/BOOT-INF/lib/*.jar.
-( cd "$WORK" && jar xf "$BOOTJAR" "${NATIVE_JAR_PATHS[@]}" ) \
+# Extract those exact entries to $WORK/BOOT-INF/lib/*.jar. The
+# ${ARR[@]+"${ARR[@]}"} guard expands the array only when set — works
+# around bash 3.2 treating "${ARR[@]}" as unbound under set -u even when
+# the array is empty.
+( cd "$WORK" && jar xf "$BOOTJAR" ${NATIVE_JAR_PATHS[@]+"${NATIVE_JAR_PATHS[@]}"} ) \
     || { echo "jar xf failed to extract natives jars" >&2; exit 1; }
 
 ANY_SIGNED=0

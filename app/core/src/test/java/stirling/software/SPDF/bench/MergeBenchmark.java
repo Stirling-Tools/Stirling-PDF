@@ -11,7 +11,6 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,12 +19,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
 import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -41,6 +37,8 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfMerge;
@@ -48,13 +46,11 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
 /**
- * Apples-to-apples memory benchmark for the merge tool: PDFBox's
- * {@link PDFMergerUtility} (old MergeController path) vs JPDFium's
- * {@link PdfMerge#mergeFiles(List)} (new path).
+ * Apples-to-apples memory benchmark for the merge tool: PDFBox's {@link PDFMergerUtility} (old
+ * MergeController path) vs JPDFium's {@link PdfMerge#mergeFiles(List)} (new path).
  *
- * <p>Generates two 100-page test PDFs each with a unique embedded JPEG per
- * page, merges them, samples heap usage every 25 ms during the merge, and
- * reports peak heap. Run with:
+ * <p>Generates two 100-page test PDFs each with a unique embedded JPEG per page, merges them,
+ * samples heap usage every 25 ms during the merge, and reports peak heap. Run with:
  *
  * <pre>{@code
  * ./gradlew :stirling-pdf:test --tests '*MergeBenchmark*' -i
@@ -67,6 +63,7 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
  * }</pre>
  *
  * <p>Outputs:
+ *
  * <ul>
  *   <li>Input PDF sizes
  *   <li>Pre-merge baseline heap (after forced GC)
@@ -75,20 +72,17 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
  *   <li>Memory improvement %
  * </ul>
  *
- * <p>Off-heap / native memory used by JPDFium is NOT counted toward "heap
- * peak" — that is the whole point of the comparison. PDFium's arena lives
- * outside the JVM heap, so off-heap usage shows up as RSS growth which we
- * report separately from {@code /proc/self/status} on Linux or
- * {@code GetProcessMemoryInfo} via JMX on Windows.
+ * <p>Off-heap / native memory used by JPDFium is NOT counted toward "heap peak" — that is the whole
+ * point of the comparison. PDFium's arena lives outside the JVM heap, so off-heap usage shows up as
+ * RSS growth which we report separately from {@code /proc/self/status} on Linux or {@code
+ * GetProcessMemoryInfo} via JMX on Windows.
  */
 public final class MergeBenchmark {
 
-    private static final int PAGES_PER_DOC =
-            Integer.getInteger("merge.bench.pages", 100);
+    private static final int PAGES_PER_DOC = Integer.getInteger("merge.bench.pages", 100);
     private static final int IMAGE_W = Integer.getInteger("merge.bench.imgW", 800);
     private static final int IMAGE_H = Integer.getInteger("merge.bench.imgH", 600);
-    private static final int DOC_COUNT =
-            Integer.getInteger("merge.bench.docs", 2);
+    private static final int DOC_COUNT = Integer.getInteger("merge.bench.docs", 2);
     // Inject this many internal bookmarks per generated input PDF. The
     // merged document should contain (DOC_COUNT × INTERNAL_BOOKMARKS)
     // entries from sources, plus DOC_COUNT chapter headers added by the
@@ -105,14 +99,16 @@ public final class MergeBenchmark {
             Boolean.parseBoolean(System.getProperty("merge.bench.toc", "false"));
     private static final boolean WITH_SIG_REMOVAL =
             Boolean.parseBoolean(System.getProperty("merge.bench.sigRemoval", "false"));
+
     /**
      * When true, the JPDFium engine writes TOC via {@link
-     * PdfBookmarkEditor#setBookmarks(PdfDocument, BookmarkTree, java.nio.file.Path)}
-     * (streaming, KB-scale heap) instead of doing a PDFBox load+save post-pass.
-     * Enables comparing the two TOC strategies in the same benchmark run.
+     * PdfBookmarkEditor#setBookmarks(PdfDocument, BookmarkTree, java.nio.file.Path)} (streaming,
+     * KB-scale heap) instead of doing a PDFBox load+save post-pass. Enables comparing the two TOC
+     * strategies in the same benchmark run.
      */
     private static boolean withJpdfiumToc =
             Boolean.parseBoolean(System.getProperty("merge.bench.jpdfiumToc", "false"));
+
     // Run each scenario this many times back-to-back, report median heap
     // and wall-clock. Cuts noise from GC scheduling + disk cache cold-start
     // on the first iteration. Median is ~immune to a single warm-up outlier.
@@ -135,10 +131,9 @@ public final class MergeBenchmark {
      *     -Dmerge.bench=true -Dmerge.bench.docs=4 -Dmerge.bench.pages=70
      * }</pre>
      *
-     * <p>Gated behind {@code -Dmerge.bench=true} so it stays out of normal
-     * CI runs — generating the 1+ GB of input PDFs takes ~60 s and the
-     * merges burn another ~30 s, neither of which belongs in regular
-     * test cycles.
+     * <p>Gated behind {@code -Dmerge.bench=true} so it stays out of normal CI runs — generating the
+     * 1+ GB of input PDFs takes ~60 s and the merges burn another ~30 s, neither of which belongs
+     * in regular test cycles.
      */
     @Test
     @EnabledIfSystemProperty(named = "merge.bench", matches = "true")
@@ -155,9 +150,9 @@ public final class MergeBenchmark {
      *   <li>merge + signature removal
      * </ol>
      *
-     * <p>Saves ~10 minutes of wall-clock vs running three separate test
-     * invocations because the 1+ GB of input PDFs only gets generated once.
-     * Gated behind {@code -Dmerge.bench=true} like the other benchmark.
+     * <p>Saves ~10 minutes of wall-clock vs running three separate test invocations because the 1+
+     * GB of input PDFs only gets generated once. Gated behind {@code -Dmerge.bench=true} like the
+     * other benchmark.
      */
     @Test
     @EnabledIfSystemProperty(named = "merge.bench", matches = "true")
@@ -183,13 +178,17 @@ public final class MergeBenchmark {
             System.out.printf(
                     "  generation took %,d ms (total input size %,d KB)%n%n",
                     (System.nanoTime() - t0) / 1_000_000,
-                    inputs.stream().mapToLong(p -> {
-                        try {
-                            return Files.size(p);
-                        } catch (IOException e) {
-                            return 0L;
-                        }
-                    }).sum() / 1024);
+                    inputs.stream()
+                                    .mapToLong(
+                                            p -> {
+                                                try {
+                                                    return Files.size(p);
+                                                } catch (IOException e) {
+                                                    return 0L;
+                                                }
+                                            })
+                                    .sum()
+                            / 1024);
 
             // One small warmup pass against a single doc — enough to JIT the
             // hot merge code paths without paying the full benchmark cost.
@@ -208,7 +207,8 @@ public final class MergeBenchmark {
 
             // Final summary table.
             System.out.println();
-            System.out.println("================================ Summary ================================");
+            System.out.println(
+                    "================================ Summary ================================");
             System.out.printf(
                     "%-18s | %-22s | %-22s | %-12s%n",
                     "Scenario", "PDFBox peak heap Δ", "JPDFium peak heap Δ", "Reduction");
@@ -221,10 +221,7 @@ public final class MergeBenchmark {
                                 : 100.0 * (r.pdfboxDelta - r.jpdfiumDelta) / r.pdfboxDelta;
                 System.out.printf(
                         "%-18s | %,17d KB    | %,17d KB    | %6.1f%%%n",
-                        r.name,
-                        r.pdfboxDelta / 1024,
-                        r.jpdfiumDelta / 1024,
-                        improvement);
+                        r.name, r.pdfboxDelta / 1024, r.jpdfiumDelta / 1024, improvement);
             }
             System.out.println(
                     "-------------------+------------------------+------------------------+------------");
@@ -245,15 +242,9 @@ public final class MergeBenchmark {
         }
     }
 
-    /**
-     * Run one scenario (defined by the two flags) on a shared set of inputs.
-     */
+    /** Run one scenario (defined by the two flags) on a shared set of inputs. */
     private static ScenarioRow runScenario(
-            String name,
-            List<Path> inputs,
-            Path workDir,
-            boolean toc,
-            boolean sig)
+            String name, List<Path> inputs, Path workDir, boolean toc, boolean sig)
             throws Exception {
         withToc = toc;
         withSigRemoval = sig;
@@ -286,7 +277,8 @@ public final class MergeBenchmark {
         int expectedTocChapters = toc ? inputs.size() : 0;
         System.out.printf(
                 "  expected: %d source + %d TOC chapter = %d top-level bookmarks%n%n",
-                expectedFromSources, expectedTocChapters,
+                expectedFromSources,
+                expectedTocChapters,
                 expectedFromSources + expectedTocChapters);
 
         return new ScenarioRow(
@@ -300,8 +292,8 @@ public final class MergeBenchmark {
     private record IterResult(
             long medianHeapDelta, long medianWallMs, long[] heapDeltas, long[] wallMsList) {}
 
-    private static IterResult runIterations(
-            String label, ThrowingRunnable task, long baseline) throws Exception {
+    private static IterResult runIterations(String label, ThrowingRunnable task, long baseline)
+            throws Exception {
         long[] heap = new long[ITERATIONS];
         long[] wall = new long[ITERATIONS];
         for (int i = 0; i < ITERATIONS; i++) {
@@ -331,12 +323,7 @@ public final class MergeBenchmark {
         }
         System.out.printf(
                 "  %-7s : peak heap +%,d KB (median), wall %,d ms (median), out %,d KB, bookmarks=%d%s%n",
-                label,
-                r.medianHeapDelta / 1024,
-                r.medianWallMs,
-                outBytes / 1024,
-                bookmarks,
-                iters);
+                label, r.medianHeapDelta / 1024, r.medianWallMs, outBytes / 1024, bookmarks, iters);
     }
 
     private static long median(long[] arr) {
@@ -385,9 +372,7 @@ public final class MergeBenchmark {
             // needs to see the hot code paths, not run on the full payload.
             long perDocBytes = Files.size(inputs.getFirst());
             List<Path> warmupInputs =
-                    perDocBytes > 50L * 1024 * 1024
-                            ? List.of(inputs.getFirst())
-                            : inputs;
+                    perDocBytes > 50L * 1024 * 1024 ? List.of(inputs.getFirst()) : inputs;
             System.out.printf(
                     "--- Warmup pass (results discarded, %d inputs) ---%n", warmupInputs.size());
             runPdfBoxMerge(warmupInputs, workDir.resolve("warmup-pdfbox.pdf"));
@@ -430,10 +415,8 @@ public final class MergeBenchmark {
             System.out.printf("  PDFBox  : +%,d KB%n", pdfboxDelta / 1024);
             System.out.printf("  JPDFium : +%,d KB%n", jpdfiumDelta / 1024);
             System.out.printf(
-                    "  JPDFium uses %.1f%% LESS heap than PDFBox for this merge%n",
-                    improvement);
-            System.out.printf(
-                    "  Absolute saving: %,d KB%n%n", (pdfboxDelta - jpdfiumDelta) / 1024);
+                    "  JPDFium uses %.1f%% LESS heap than PDFBox for this merge%n", improvement);
+            System.out.printf("  Absolute saving: %,d KB%n%n", (pdfboxDelta - jpdfiumDelta) / 1024);
 
             System.out.println("=== Wall-clock ===");
             System.out.printf("  PDFBox  : %,d ms%n", pdfboxResult.wallMs);
@@ -451,10 +434,9 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Build a PDF with the given page count. Each page gets a unique JPEG
-     * image (procedurally generated, ~30-40 KB per page) and a small text
-     * caption — close enough to a "report with figures" workload that the
-     * comparison reflects real merge cost.
+     * Build a PDF with the given page count. Each page gets a unique JPEG image (procedurally
+     * generated, ~30-40 KB per page) and a small text caption — close enough to a "report with
+     * figures" workload that the comparison reflects real merge cost.
      */
     private static void generateTestPdf(Path out, int pages) throws IOException {
         try (PDDocument doc = new PDDocument()) {
@@ -467,7 +449,8 @@ public final class MergeBenchmark {
                 PDImageXObject xobj = PDImageXObject.createFromByteArray(doc, jpegBytes, "img");
 
                 try (PDPageContentStream cs =
-                        new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, false)) {
+                        new PDPageContentStream(
+                                doc, page, PDPageContentStream.AppendMode.APPEND, false)) {
                     // Center the image with some margin
                     float pageW = page.getMediaBox().getWidth();
                     float pageH = page.getMediaBox().getHeight();
@@ -495,8 +478,7 @@ public final class MergeBenchmark {
                 for (int b = 0; b < INTERNAL_BOOKMARKS; b++) {
                     int pageIdx = Math.min(b * spacing, pages - 1);
                     PDOutlineItem item = new PDOutlineItem();
-                    item.setTitle(
-                            "Section " + (b + 1) + " — " + out.getFileName().toString());
+                    item.setTitle("Section " + (b + 1) + " — " + out.getFileName().toString());
                     item.setDestination(doc.getPage(pageIdx));
                     outline.addLast(item);
                 }
@@ -506,9 +488,8 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Open the merged PDF with JPDFium and count its bookmarks. Walks
-     * children recursively so nested outlines (chapter → section → ...)
-     * contribute every entry, not just the top level.
+     * Open the merged PDF with JPDFium and count its bookmarks. Walks children recursively so
+     * nested outlines (chapter → section → ...) contribute every entry, not just the top level.
      */
     private static int countBookmarks(Path pdf) {
         try (PdfDocument doc = PdfDocument.open(pdf)) {
@@ -534,15 +515,13 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Generate a unique-looking JPEG so PDF object dedup can't quietly
-     * collapse all pages into one image stream. We sweep hue per page,
-     * fill with random-noise pixels (high entropy → poor compression →
-     * bigger output), and draw some random circles on top.
+     * Generate a unique-looking JPEG so PDF object dedup can't quietly collapse all pages into one
+     * image stream. We sweep hue per page, fill with random-noise pixels (high entropy → poor
+     * compression → bigger output), and draw some random circles on top.
      *
-     * <p>Pixel noise fill is the key: a flat-colour rectangle JPEG-compresses
-     * to KBs regardless of dimensions; per-pixel random noise compresses
-     * close to the raw byte count, which is what we need to push a 100-page
-     * PDF into the hundreds-of-MB range.
+     * <p>Pixel noise fill is the key: a flat-colour rectangle JPEG-compresses to KBs regardless of
+     * dimensions; per-pixel random noise compresses close to the raw byte count, which is what we
+     * need to push a 100-page PDF into the hundreds-of-MB range.
      */
     private static byte[] generateRandomJpeg(Random rng, int w, int h) throws IOException {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
@@ -610,9 +589,10 @@ public final class MergeBenchmark {
                         PDDocumentCatalog catalog = doc.getDocumentCatalog();
                         PDAcroForm form = catalog.getAcroForm();
                         if (form != null) {
-                            List<PDField> sigs = form.getFields().stream()
-                                    .filter(PDSignatureField.class::isInstance)
-                                    .toList();
+                            List<PDField> sigs =
+                                    form.getFields().stream()
+                                            .filter(PDSignatureField.class::isInstance)
+                                            .toList();
                             if (!sigs.isEmpty()) {
                                 form.flatten(sigs, false);
                             }
@@ -638,8 +618,8 @@ public final class MergeBenchmark {
                     doc.save(output.toFile());
                 }
             } else {
-                java.nio.file.Files.move(stage1, output,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                java.nio.file.Files.move(
+                        stage1, output, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         } finally {
             java.nio.file.Files.deleteIfExists(stage1);
@@ -717,9 +697,10 @@ public final class MergeBenchmark {
             PDDocumentCatalog catalog = doc.getDocumentCatalog();
             PDAcroForm form = catalog.getAcroForm();
             if (form != null) {
-                List<PDField> sigs = form.getFields().stream()
-                        .filter(PDSignatureField.class::isInstance)
-                        .toList();
+                List<PDField> sigs =
+                        form.getFields().stream()
+                                .filter(PDSignatureField.class::isInstance)
+                                .toList();
                 if (!sigs.isEmpty()) {
                     form.flatten(sigs, false);
                 }
@@ -730,9 +711,9 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Recursively flatten a source's bookmark list into top-level entries
-     * of the combined BookmarkTree, translating each entry's pageIndex by
-     * the offset where its source's pages were inserted.
+     * Recursively flatten a source's bookmark list into top-level entries of the combined
+     * BookmarkTree, translating each entry's pageIndex by the offset where its source's pages were
+     * inserted.
      */
     private static void addBookmarkFlat(
             BookmarkTree.Builder builder,
@@ -749,8 +730,8 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Run {@code task} with a memory-sampling thread polling heap usage in
-     * the background. Returns peak heap-used seen during the run.
+     * Run {@code task} with a memory-sampling thread polling heap usage in the background. Returns
+     * peak heap-used seen during the run.
      */
     private static BenchResult profile(ThrowingRunnable task) throws Exception {
         forceGcQuiescence();
@@ -793,9 +774,9 @@ public final class MergeBenchmark {
     }
 
     /**
-     * Aggressively quiesce the heap so the next sample reflects the steady
-     * state, not lingering temporary objects from the previous step. Two GCs
-     * back-to-back plus a short sleep usually does it.
+     * Aggressively quiesce the heap so the next sample reflects the steady state, not lingering
+     * temporary objects from the previous step. Two GCs back-to-back plus a short sleep usually
+     * does it.
      */
     private static void forceGcQuiescence() {
         for (int i = 0; i < 3; i++) {
@@ -822,7 +803,8 @@ public final class MergeBenchmark {
     private record BenchResult(long peakHeapBytes, long peakNonHeapBytes, long wallMs) {
         void printSummary(String label, long baselineHeap) {
             long delta = peakHeapBytes - baselineHeap;
-            System.out.printf("  peak heap     : %,d KB (Δ %,d KB over baseline)%n",
+            System.out.printf(
+                    "  peak heap     : %,d KB (Δ %,d KB over baseline)%n",
                     peakHeapBytes / 1024, delta / 1024);
             System.out.printf("  peak non-heap : %,d KB%n", peakNonHeapBytes / 1024);
             System.out.printf("  wall-clock    : %,d ms%n", wallMs);
